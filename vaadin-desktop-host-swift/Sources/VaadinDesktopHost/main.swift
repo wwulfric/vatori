@@ -6,6 +6,7 @@ struct HostConfig {
     var repoRoot: String = FileManager.default.currentDirectoryPath
     var mavenRepo: String = ""
     var mavenExecutable: String = "mvn"
+    var transport: String = "compatibility-http"
     var title: String = "Vaadin Desktop"
     var width: Double = 1100
     var height: Double = 780
@@ -23,6 +24,8 @@ struct HostConfig {
                 config.mavenRepo = arguments.next() ?? config.mavenRepo
             case "--maven-executable":
                 config.mavenExecutable = arguments.next() ?? config.mavenExecutable
+            case "--transport":
+                config.transport = arguments.next() ?? config.transport
             case "--title":
                 config.title = arguments.next() ?? config.title
             case "--width":
@@ -87,13 +90,18 @@ final class LineReader {
 final class JavaSidecar {
     private let config: HostConfig
     private let onApplicationURL: (URL) -> Void
+    private let onFlowIpcEnvelope: (String, [String: Any]) -> Void
     private var process: Process?
+    private var stdinPipe: Pipe?
     private var stdoutPipe: Pipe?
     private var stderrPipe: Pipe?
 
-    init(config: HostConfig, onApplicationURL: @escaping (URL) -> Void) {
+    init(config: HostConfig,
+         onApplicationURL: @escaping (URL) -> Void,
+         onFlowIpcEnvelope: @escaping (String, [String: Any]) -> Void) {
         self.config = config
         self.onApplicationURL = onApplicationURL
+        self.onFlowIpcEnvelope = onFlowIpcEnvelope
     }
 
     func start() {
@@ -119,15 +127,19 @@ final class JavaSidecar {
         ]
 
         var environment = ProcessInfo.processInfo.environment
-        environment["VAADIN_DESKTOP_HOST"] = "headless"
+        environment["VAADIN_DESKTOP_HOST"] = config.transport == "flow-ipc" ? "flow-ipc" : "headless"
+        environment["VAADIN_DESKTOP_TRANSPORT"] = config.transport
         environment["VAADIN_DESKTOP_NATIVE_BRIDGE"] = "host-protocol"
         environment["VAADIN_DESKTOP_HOST_PROTOCOL"] = "stdout-v0"
         process.environment = environment
 
+        let stdinPipe = Pipe()
         let stdoutPipe = Pipe()
         let stderrPipe = Pipe()
+        process.standardInput = stdinPipe
         process.standardOutput = stdoutPipe
         process.standardError = stderrPipe
+        self.stdinPipe = stdinPipe
         self.stdoutPipe = stdoutPipe
         self.stderrPipe = stderrPipe
         self.process = process
@@ -161,7 +173,8 @@ final class JavaSidecar {
         trace("send", "launch.sidecar", [
             "command": "\(config.mavenExecutable) spring-boot:run",
             "modulePom": modulePom,
-            "nativeBridge": "host-protocol"
+            "nativeBridge": "host-protocol",
+            "transport": config.transport
         ])
 
         do {
@@ -176,11 +189,24 @@ final class JavaSidecar {
     }
 
     func terminate() {
+        if config.transport == "flow-ipc" {
+            sendFlowIpc("{\"version\":\"flow-ipc-v1\",\"type\":\"shutdown\",\"id\":\"shutdown\",\"correlationId\":\"shutdown\",\"sessionId\":\"flow-ipc-session\",\"uiId\":\"main\",\"route\":\"\",\"payload\":{},\"error\":null,\"timestamp\":0}")
+        }
         stdoutPipe?.fileHandleForReading.readabilityHandler = nil
         stderrPipe?.fileHandleForReading.readabilityHandler = nil
         if let process, process.isRunning {
             trace("send", "shutdown.sidecar", [:])
             process.terminate()
+        }
+    }
+
+    func sendFlowIpc(_ envelope: String) {
+        guard let stdinPipe else {
+            return
+        }
+        let line = "VFIPC1 \(envelope)\n"
+        if let data = line.data(using: .utf8) {
+            stdinPipe.fileHandleForWriting.write(data)
         }
     }
 
@@ -192,6 +218,10 @@ final class JavaSidecar {
             handleHostProtocolEnvelope(String(line.dropFirst(5)))
         }
 
+        if line.hasPrefix("VFIPC1 ") {
+            handleFlowIpcEnvelope(String(line.dropFirst(7)))
+        }
+
         if line.hasPrefix("Application URL: ") {
             let text = String(line.dropFirst("Application URL: ".count)).trimmingCharacters(in: .whitespacesAndNewlines)
             if let url = URL(string: text) {
@@ -199,6 +229,20 @@ final class JavaSidecar {
                     self.onApplicationURL(url)
                 }
             }
+        }
+    }
+
+    private func handleFlowIpcEnvelope(_ envelope: String) {
+        guard let data = envelope.data(using: .utf8),
+              let object = try? JSONSerialization.jsonObject(with: data) as? [String: Any] else {
+            trace("send", "error", [
+                "code": "invalidFlowIpcEnvelope",
+                "raw": envelope
+            ])
+            return
+        }
+        DispatchQueue.main.async {
+            self.onFlowIpcEnvelope(envelope, object)
         }
     }
 
@@ -230,7 +274,7 @@ final class JavaSidecar {
     }
 }
 
-final class WebViewHost: NSObject, NSApplicationDelegate, NSWindowDelegate, WKNavigationDelegate {
+final class WebViewHost: NSObject, NSApplicationDelegate, NSWindowDelegate, WKNavigationDelegate, WKScriptMessageHandler {
     private let config: HostConfig
     private var sidecar: JavaSidecar?
     private var window: NSWindow?
@@ -245,17 +289,19 @@ final class WebViewHost: NSObject, NSApplicationDelegate, NSWindowDelegate, WKNa
         trace("recv", "launch", [
             "host": "swift-appkit-wkwebview",
             "module": config.module,
-            "compatibilityMode": true,
-            "transport": "localhost-http"
+            "compatibilityMode": config.transport != "flow-ipc",
+            "transport": config.transport
         ])
         trace("send", "ready", [
             "host": "swift-appkit-wkwebview",
-            "protocol": "host-protocol-v0",
-            "compatibilityMode": true
+            "protocol": config.transport == "flow-ipc" ? "flow-ipc-v1" : "host-protocol-v0",
+            "compatibilityMode": config.transport != "flow-ipc"
         ])
 
         let sidecar = JavaSidecar(config: config) { [weak self] url in
             self?.openWindow(url: url)
+        } onFlowIpcEnvelope: { [weak self] raw, object in
+            self?.handleFlowIpcEnvelope(raw, object)
         }
         self.sidecar = sidecar
         sidecar.start()
@@ -307,6 +353,100 @@ final class WebViewHost: NSObject, NSApplicationDelegate, NSWindowDelegate, WKNa
         NSRunningApplication.current.activate(options: [.activateAllWindows])
         webView.load(URLRequest(url: url))
         trace("recv", "window.ready", ["label": "main"])
+    }
+
+    private func openFlowIpcWindow() {
+        guard !didOpenWindow else {
+            return
+        }
+        didOpenWindow = true
+
+        trace("send", "window.create", [
+            "label": "main",
+            "mode": "flow-ipc",
+            "compatibilityMode": false
+        ])
+
+        let contentRect = NSRect(x: 0, y: 0, width: config.width, height: config.height)
+        let window = NSWindow(
+            contentRect: contentRect,
+            styleMask: [.titled, .closable, .miniaturizable, .resizable],
+            backing: .buffered,
+            defer: false)
+
+        let userContentController = WKUserContentController()
+        userContentController.add(self, name: "flowIpc")
+
+        let configuration = WKWebViewConfiguration()
+        configuration.userContentController = userContentController
+        configuration.preferences.javaScriptCanOpenWindowsAutomatically = true
+        let webView = WKWebView(frame: contentRect, configuration: configuration)
+        webView.navigationDelegate = self
+        webView.autoresizingMask = [.width, .height]
+
+        window.title = config.title
+        window.contentView = webView
+        window.delegate = self
+        window.isReleasedWhenClosed = false
+        window.sharingType = .readOnly
+        window.level = .floating
+        window.collectionBehavior = [.canJoinAllSpaces, .fullScreenAuxiliary]
+        window.center()
+        window.makeKeyAndOrderFront(nil)
+        window.orderFrontRegardless()
+
+        self.window = window
+        self.webView = webView
+
+        NSRunningApplication.current.activate(options: [.activateAllWindows])
+        webView.loadHTMLString(flowIpcShell, baseURL: nil)
+        trace("recv", "window.ready", ["label": "main", "transport": "flow-ipc"])
+    }
+
+    private func handleFlowIpcEnvelope(_ raw: String, _ object: [String: Any]) {
+        let type = object["type"] as? String ?? "unknown"
+        trace("recv", type, [
+            "source": "java-sidecar",
+            "transport": "flow-ipc",
+            "envelope": object
+        ])
+        if type == "ready" {
+            openFlowIpcWindow()
+            return
+        }
+        if let webView {
+            let script = "window.VaadinDesktopIpc && window.VaadinDesktopIpc.receive(\(raw));"
+            webView.evaluateJavaScript(script) { _, error in
+                if let error {
+                    trace("send", "error", [
+                        "code": "flowIpcDeliverFailed",
+                        "message": error.localizedDescription,
+                        "type": type
+                    ])
+                }
+            }
+        }
+    }
+
+    func userContentController(_ userContentController: WKUserContentController, didReceive message: WKScriptMessage) {
+        guard message.name == "flowIpc" else {
+            return
+        }
+        guard let object = message.body as? [String: Any],
+              let data = try? JSONSerialization.data(withJSONObject: object),
+              let json = String(data: data, encoding: .utf8) else {
+            trace("send", "error", [
+                "code": "invalidWebViewFlowIpcMessage",
+                "body": String(describing: message.body)
+            ])
+            return
+        }
+        trace("send", object["type"] as? String ?? "unknown", [
+            "target": "java-sidecar",
+            "transport": "flow-ipc",
+            "envelope": object
+        ])
+        sidecar?.sendFlowIpc(json)
     }
 
     func windowWillClose(_ notification: Notification) {
@@ -415,6 +555,159 @@ final class WebViewHost: NSObject, NSApplicationDelegate, NSWindowDelegate, WKNa
         ])
     }
 }
+
+let flowIpcShell = #"""
+<!doctype html>
+<html>
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>Vaadin Flow over IPC</title>
+  <style>
+    :root {
+      color-scheme: light dark;
+      font-family: -apple-system, BlinkMacSystemFont, "SF Pro Text", system-ui, sans-serif;
+      background: Canvas;
+      color: CanvasText;
+    }
+    body {
+      margin: 0;
+      min-height: 100vh;
+      background: Canvas;
+    }
+    #app {
+      box-sizing: border-box;
+      min-height: 100vh;
+      padding: 28px;
+    }
+    .flow-layout {
+      display: flex;
+      flex-direction: column;
+      align-items: flex-start;
+      gap: 12px;
+    }
+    h1 {
+      margin: 0 0 6px;
+      font-size: 28px;
+      font-weight: 700;
+      letter-spacing: 0;
+    }
+    button {
+      appearance: auto;
+      font: inherit;
+      min-height: 32px;
+      padding: 4px 14px;
+    }
+    .flow-list {
+      display: grid;
+      grid-template-columns: 120px 160px 1fr;
+      gap: 1px;
+      margin-top: 10px;
+      border: 1px solid color-mix(in srgb, CanvasText 20%, transparent);
+      min-width: min(640px, 100%);
+      background: color-mix(in srgb, CanvasText 16%, transparent);
+    }
+    .flow-list span {
+      padding: 8px 10px;
+      background: Canvas;
+    }
+    #trace {
+      margin-top: 18px;
+      font-family: ui-monospace, SFMono-Regular, Menlo, monospace;
+      font-size: 12px;
+      color: color-mix(in srgb, CanvasText 65%, transparent);
+    }
+  </style>
+</head>
+<body>
+  <main id="app"></main>
+  <div id="trace"></div>
+  <script>
+    (function () {
+      const app = document.getElementById('app');
+      const trace = document.getElementById('trace');
+      let sequence = 0;
+
+      function envelope(type, payload) {
+        sequence += 1;
+        return {
+          version: 'flow-ipc-v1',
+          type,
+          id: 'webview-' + sequence,
+          correlationId: 'webview-' + sequence,
+          sessionId: 'flow-ipc-session',
+          uiId: 'main',
+          route: '',
+          payload: payload || {},
+          error: null,
+          timestamp: Date.now()
+        };
+      }
+
+      function send(type, payload) {
+        const message = envelope(type, payload);
+        trace.textContent = 'send ' + type + ' #' + message.id;
+        window.webkit.messageHandlers.flowIpc.postMessage(message);
+      }
+
+      function render(node) {
+        if (!node) {
+          app.textContent = 'No Flow IPC tree received.';
+          return;
+        }
+        app.replaceChildren(renderNode(node));
+      }
+
+      function renderNode(node) {
+        let element;
+        if (node.kind === 'button') {
+          element = document.createElement('button');
+          element.textContent = node.text || node.id;
+          element.addEventListener('click', () => {
+            send('event', { action: 'click', componentId: node.id });
+          });
+        } else if (node.tag === 'h1') {
+          element = document.createElement('h1');
+          element.textContent = node.text || '';
+        } else {
+          element = document.createElement('div');
+          if (node.kind === 'layout') {
+            element.className = 'flow-layout';
+          }
+          if (node.text) {
+            const text = document.createElement('span');
+            text.textContent = node.text;
+            element.appendChild(text);
+          }
+        }
+        element.dataset.flowId = node.id || '';
+        if (node.kind !== 'button') {
+          for (const child of node.children || []) {
+            element.appendChild(renderNode(child));
+          }
+        }
+        return element;
+      }
+
+      window.VaadinDesktopIpc = {
+        receive(message) {
+          trace.textContent = 'recv ' + message.type + ' #' + message.id;
+          if (message.type === 'bootstrapResponse' || message.type === 'patch') {
+            render(message.payload && message.payload.tree);
+          } else if (message.type === 'error') {
+            app.textContent = 'Flow IPC error: ' + JSON.stringify(message.error || message.payload);
+          }
+        }
+      };
+
+      document.addEventListener('DOMContentLoaded', () => {
+        send('bootstrapRequest', { route: '' });
+      });
+    })();
+  </script>
+</body>
+</html>
+"""#
 
 let config = HostConfig.parse()
 let application = NSApplication.shared

@@ -17,6 +17,9 @@ fi
 
 COMMAND="${1:-help}"
 MODULE="${2:-examples/counter-app}"
+if [[ "$COMMAND" == "dev-ipc" && $# -lt 2 ]]; then
+  MODULE="test-apps/flow-over-ipc-smoke-app"
+fi
 MAVEN_REPO="${MAVEN_REPO:-$ROOT/.m2/repository}"
 MODULE_POM="$ROOT/$MODULE/pom.xml"
 
@@ -37,7 +40,7 @@ case "$COMMAND" in
     install_module_with_dependencies
     exec mvn -U -Dmaven.repo.local="$MAVEN_REPO" -f "$MODULE_POM" spring-boot:run
     ;;
-  dev-swift|run-swift|dev-native|run-native)
+  dev-swift|run-swift|dev-native|run-native|dev-ipc|run-ipc)
     ensure_module
     install_module_with_dependencies
     if [[ ! -x /usr/bin/swiftc ]]; then
@@ -87,6 +90,10 @@ PLIST
     fi
     SWIFT_HOST_STDOUT="$SWIFT_HOST_BUILD/host.out.log"
     SWIFT_HOST_STDERR="$SWIFT_HOST_BUILD/host.err.log"
+    SWIFT_TRANSPORT="compatibility-http"
+    if [[ "$COMMAND" == "dev-ipc" || "$COMMAND" == "run-ipc" ]]; then
+      SWIFT_TRANSPORT="flow-ipc"
+    fi
     : > "$SWIFT_HOST_STDOUT"
     : > "$SWIFT_HOST_STDERR"
     echo "Vaadin Desktop Host logs:"
@@ -99,7 +106,8 @@ PLIST
       --module "$MODULE" \
       --repo-root "$ROOT" \
       --maven-repo "$MAVEN_REPO" \
-      --maven-executable "$MVN_EXE"
+      --maven-executable "$MVN_EXE" \
+      --transport "$SWIFT_TRANSPORT"
     STATUS=$?
     kill "$TAIL_PID" 2>/dev/null || true
     wait "$TAIL_PID" 2>/dev/null || true
@@ -115,12 +123,14 @@ PLIST
 Usage:
   bin/vaadin-desktop dev <module>
   bin/vaadin-desktop dev-swift <module>
+  bin/vaadin-desktop dev-ipc <module>
   bin/vaadin-desktop run <module>
   bin/vaadin-desktop package <module>
 
 Examples:
   bin/vaadin-desktop dev examples/counter-app
   bin/vaadin-desktop dev-swift test-apps/vaadin-desktop-smoke-app
+  bin/vaadin-desktop dev-ipc test-apps/flow-over-ipc-smoke-app
   bin/vaadin-desktop dev test-apps/vaadin-desktop-smoke-app
 USAGE
     ;;

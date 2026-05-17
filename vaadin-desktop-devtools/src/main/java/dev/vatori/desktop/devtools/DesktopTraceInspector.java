@@ -148,7 +148,8 @@ public final class DesktopTraceInspector {
             if (line.contains("\"type\":\"bootstrapResponse\"")
                     && line.contains("\"flowClientResources\"")
                     && line.contains("\"flow-client-classpath\"")
-                    && line.contains("META-INF/frontend/FlowClient.js")) {
+                    && line.contains("META-INF/frontend/FlowClient.js")
+                    && line.contains("\"ipcAugmented\":true")) {
                 summary.flowClientEngineResourceManifestObserved = true;
             }
             if (line.contains("\"type\":\"resourceRequest\"")
@@ -191,6 +192,8 @@ public final class DesktopTraceInspector {
                     && line.contains("flowClientEngineInitExported")
                     && line.contains("flowClientEngineInitialized")
                     && line.contains("flowClientEngineClientRegistered")
+                    && line.contains("flowClientEngineIpcMessageBridgeInstalled")
+                    && line.contains("flowClientEngineIpcResyncBridgeInstalled")
                     && line.contains("ROOT")
                     && line.contains("META-INF/frontend/FlowClient.js")) {
                 summary.flowClientEngineDomObserved = true;
@@ -208,11 +211,23 @@ public final class DesktopTraceInspector {
                     && containsLiteralField(line, "flowClientEngineXhrBridgeInstalled", "true")
                     && containsLiteralField(line, "flowClientEngineXhrRequestObserved", "true")
                     && containsLiteralField(line, "flowClientEngineXhrResponseObserved", "true")
-                    && containsLiteralField(line, "flowClientEngineXhrLastClientId", "1")
                     && containsLiteralField(line, "flowClientEngineEventPatchConsumed", "true")
                     && containsStringField(line, "flowClientEngineEventStatusText", "Clicks: 1")
                     && containsStringField(line, "flowClientEngineXhrError", "")) {
                 summary.flowClientEngineXhrDomObserved = true;
+            }
+            if (line.contains("\"type\":\"webview.dom\"")
+                    && containsLiteralField(line, "flowClientEngineIpcMessageBridgeInstalled", "true")
+                    && containsLiteralField(line, "flowClientEnginePushPatchConsumed", "true")
+                    && containsStringField(line, "flowClientEnginePushStatusText", "5 Server push over IPC READY")
+                    && containsLiteralField(line, "flowClientEngineQueuedMessageCount", "0")) {
+                summary.flowClientEnginePushDomObserved = true;
+            }
+            if (line.contains("\"type\":\"webview.dom\"")
+                    && containsLiteralField(line, "flowClientEngineIpcResyncBridgeInstalled", "true")
+                    && containsLiteralField(line, "flowClientEngineResyncRequested", "true")
+                    && containsLiteralField(line, "flowClientEngineResyncPatchConsumed", "true")) {
+                summary.flowClientEngineResyncDomObserved = true;
             }
             if (line.contains("\"type\":\"webview.dom\"")
                     && containsLiteralField(line, "flowClientEngineVisibleOwner", "true")
@@ -249,17 +264,19 @@ public final class DesktopTraceInspector {
             if (line.contains("\"type\":\"push\"")
                     && line.contains("\"source\":\"UidlWriter\"")
                     && line.contains("\"reason\":\"push\"")
+                    && line.contains("\"async\":true")
                     && line.contains("\"consumedByWebView\":true")
-                    && line.contains("\"minimum-webview-uidl-applier-fallback\"")) {
+                    && line.contains("\"flow-client-engine-visible\"")) {
                 summary.pushUidlObserved = true;
             }
             if (line.contains("\"type\":\"patch\"")
-                    && line.contains("\"source\":\"UidlWriter\"")
+                    && line.contains("\"source\":\"UidlRequestHandler\"")
                     && line.contains("\"reason\":\"resync\"")
+                    && line.contains("\"eventDispatch\":\"flow-client-xhr\"")
                     && line.contains("\"resync\":true")
                     && line.contains("resynchronize")
                     && line.contains("\"consumedByWebView\":true")
-                    && line.contains("\"minimum-webview-uidl-applier-fallback\"")) {
+                    && line.contains("\"flow-client-engine-visible\"")) {
                 summary.resyncUidlObserved = true;
             }
         }
@@ -316,6 +333,8 @@ public final class DesktopTraceInspector {
         private boolean flowClientEngineBootstrapDomObserved;
         private boolean flowClientEngineXhrDomObserved;
         private boolean flowClientEngineVisibleDomObserved;
+        private boolean flowClientEnginePushDomObserved;
+        private boolean flowClientEngineResyncDomObserved;
         private boolean uidlRpcDispatchObserved;
         private boolean webViewUidlRpcObserved;
         private boolean flowClientXhrAttachObserved;
@@ -348,6 +367,8 @@ public final class DesktopTraceInspector {
                     && flowClientEngineBootstrapDomObserved
                     && flowClientEngineXhrDomObserved
                     && flowClientEngineVisibleDomObserved
+                    && flowClientEnginePushDomObserved
+                    && flowClientEngineResyncDomObserved
                     && uidlRpcDispatchObserved
                     && webViewUidlRpcObserved
                     && flowClientXhrAttachObserved
@@ -384,6 +405,8 @@ public final class DesktopTraceInspector {
             System.out.println("Flow client engine bootstrap DOM observed: " + flowClientEngineBootstrapDomObserved);
             System.out.println("Flow client engine XHR DOM observed: " + flowClientEngineXhrDomObserved);
             System.out.println("Flow client engine visible DOM observed: " + flowClientEngineVisibleDomObserved);
+            System.out.println("Flow client engine push DOM observed: " + flowClientEnginePushDomObserved);
+            System.out.println("Flow client engine resync DOM observed: " + flowClientEngineResyncDomObserved);
             System.out.println("UIDL RPC dispatch observed: " + uidlRpcDispatchObserved);
             System.out.println("WebView UIDL RPC observed: " + webViewUidlRpcObserved);
             System.out.println("Flow client XHR attach observed: " + flowClientXhrAttachObserved);

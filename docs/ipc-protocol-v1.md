@@ -2,7 +2,7 @@
 
 Flow IPC Protocol v1 is the first runtime protocol for moving Vaadin Desktop beyond localhost HTTP compatibility mode.
 
-Current implementation status: **minimum runtime slice implemented**. It supports a local WebView shell, Java sidecar stdin/stdout transport, bootstrap, event, replace-root patch, command trace, push trace and shutdown. It does not yet carry Vaadin's native UIDL payload or the real Flow client engine.
+Current implementation status: **minimum runtime slice implemented**. It supports a local WebView shell, Java sidecar stdin/stdout transport, bootstrap, event, replace-root patch, desktop command/capabilityResult, push trace and shutdown. It does not yet carry Vaadin's native UIDL payload or the real Flow client engine.
 
 ## Prefixes
 
@@ -18,10 +18,16 @@ Flow IPC envelopes between WebView/host and Java sidecar:
 VFIPC1 {"version":"flow-ipc-v1","type":"bootstrapRequest",...}
 ```
 
-Desktop capability command envelopes from Java to host:
+Compatibility-mode desktop capability command envelopes from Java to host:
 
 ```text
 VDP1 {"type":"command","id":"desktop-command-1",...}
+```
+
+In `dev-ipc`, desktop capability commands also use `VFIPC1` Flow IPC envelopes:
+
+```text
+VFIPC1 {"version":"flow-ipc-v1","type":"command","id":"desktop-command-1",...}
 ```
 
 ## Envelope
@@ -96,6 +102,45 @@ The current patch payload is deliberately simple:
 ```
 
 This is not Vaadin UIDL yet. It is a repository-local adapter payload that proves the host/WebView/Java event and patch boundary without using a localhost HTTP server.
+
+## Current Command Payload
+
+Desktop API calls in `dev-ipc` use the same envelope with `type=command`:
+
+```json
+{
+  "type": "command",
+  "id": "desktop-command-3",
+  "correlationId": "desktop-command-3",
+  "payload": {
+    "command": "clipboard.writeText",
+    "args": {
+      "text": "Vaadin Flow over IPC clicks: 1"
+    }
+  }
+}
+```
+
+The Swift host responds with `type=capabilityResult`:
+
+```json
+{
+  "type": "capabilityResult",
+  "id": "capability-desktop-command-3",
+  "correlationId": "desktop-command-3",
+  "payload": {
+    "success": true,
+    "command": "clipboard.writeText",
+    "mode": "native-nspasteboard"
+  }
+}
+```
+
+Implemented host commands in `dev-ipc`:
+
+- `window.setTitle`: updates the AppKit `NSWindow` title.
+- `clipboard.writeText`: writes to macOS `NSPasteboard`.
+- `notification.show`: accepted as trace-only scaffold.
 
 ## Error Model
 

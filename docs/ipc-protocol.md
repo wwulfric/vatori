@@ -47,8 +47,8 @@ Planned minimum:
 Current implementation status:
 
 - `launch`, `ready`, `window.create`, `window.ready`, `command`, `capabilityResult`, `error` and `shutdown` are traced by `vaadin-desktop-host-swift`.
-- Java desktop commands are emitted from `HostProtocolNativeBridge` as stdout lines prefixed with `VDP1 `.
-- `dev-ipc` emits Flow IPC envelopes as stdout/stdin lines prefixed with `VFIPC1 `.
+- Compatibility-mode Java desktop commands are emitted from `HostProtocolNativeBridge` as stdout lines prefixed with `VDP1 `.
+- `dev-ipc` emits Flow IPC envelopes, including desktop `command` and `capabilityResult`, as stdout/stdin lines prefixed with `VFIPC1 `.
 - Compatibility modes still use HTTP for real Vaadin bootstrap, event, patch and push.
 
 ## Trace

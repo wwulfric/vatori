@@ -41,7 +41,7 @@ This starts the next-stage native host:
 - The host emits `webview.dom` and writes `.build/vaadin-desktop-host-swift/window-snapshot.png` to verify the real WKWebView rendered the Vaadin view.
 - Closing the window terminates the Java sidecar.
 
-Trace lines prefixed with `HOST_PROTOCOL` are host/runtime trace. Java-to-host command envelopes are emitted by the sidecar with the `VDP1 ` prefix.
+Trace lines prefixed with `HOST_PROTOCOL` are host/runtime trace. In compatibility mode, Java-to-host command envelopes are emitted by the sidecar with the `VDP1 ` prefix.
 
 ## Run the Flow IPC Runtime Slice
 
@@ -58,6 +58,13 @@ Expected trace characteristics:
 - Java sidecar emits `VFIPC1` envelopes.
 - The WebView loads a local HTML shell through `loadHTMLString`, not `http://127.0.0.1`.
 - Button click travels WebView -> Swift host -> Java sidecar -> Vaadin Button listener -> patch -> WebView.
+- Desktop API calls travel Java sidecar -> Swift host as `VFIPC1 command`, and host responses appear as `capabilityResult`.
+
+For repeatable real-window smoke verification without global mouse coordinates:
+
+```bash
+VAADIN_DESKTOP_FLOW_IPC_AUTO_CLICK=1 bash bin/vaadin-desktop dev-ipc test-apps/flow-over-ipc-smoke-app
+```
 
 Current limitation: this path uses a minimum repository-local renderer and replace-root patches. It does not yet use Vaadin UIDL or the full Flow client engine.
 

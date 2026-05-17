@@ -18,16 +18,17 @@ Responsibilities implemented now:
 - emits `webview.dom` inspection and writes `.build/vaadin-desktop-host-swift/window-snapshot.png` after WebView render,
 - reads Java desktop command envelopes prefixed with `VDP1 `,
 - closes the Java process when the desktop window closes,
-- in `dev-ipc`, loads a local WebView shell, receives WebView messages through `WKScriptMessageHandler`, forwards them to Java stdin and delivers Java `VFIPC1` responses back to WebView JavaScript.
+- in `dev-ipc`, loads a local WebView shell, receives WebView messages through `WKScriptMessageHandler`, forwards them to Java stdin and delivers Java `VFIPC1` responses back to WebView JavaScript,
+- in `dev-ipc`, handles `VFIPC1 command` for `window.setTitle`, `clipboard.writeText` and trace-only `notification.show`, then emits `capabilityResult`.
 
 Current compatibility boundary:
 
 - Flow bootstrap, client events, UIDL/patch responses and push still run through the embedded Spring Boot localhost server.
 - Desktop runtime commands can cross Java -> native host as Host Protocol v0 trace envelopes, but synchronous native return values are still scaffolded.
 - The WebView loads a local HTTP URL today. This is explicitly not the final Flow over IPC transport.
-- `dev-ipc` does not load a local HTTP URL for the smoke app, but it is still a minimum renderer rather than the complete Vaadin Flow client engine.
+- `dev-ipc` does not load a local HTTP URL for the smoke app and uses `VFIPC1` for desktop commands, but it is still a minimum renderer rather than the complete Vaadin Flow client engine.
 
-Verification note: on some managed macOS desktops, global `screencapture` can show a `loginwindow`/MDM overlay instead of normal app windows. In that case, use the WindowServer entry for `Vaadin Desktop Host`, `HOST_PROTOCOL webview.dom` and `window-snapshot.png` as the reliable verification artifacts.
+Verification note: on some managed macOS desktops, global `screencapture` or coordinate clicking can hit a `loginwindow`/MDM overlay instead of normal app windows. In that case, use the WindowServer entry for `Vaadin Desktop Host`, `HOST_PROTOCOL webview.dom`, the `VAADIN_DESKTOP_FLOW_IPC_AUTO_CLICK=1` WebView smoke hook and `window-snapshot.png` as the reliable verification artifacts.
 
 ## macOS Fallback Host
 

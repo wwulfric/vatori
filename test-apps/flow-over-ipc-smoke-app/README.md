@@ -20,4 +20,12 @@ Current scope:
 - The Swift/AppKit host loads a local WebView shell instead of a localhost URL.
 - Button events travel WebView -> Swift host -> Java stdin as `VFIPC1` envelopes.
 - Java listener execution updates Flow component state and returns a full replace-root patch.
+- Desktop API calls travel Java -> Swift host as `VFIPC1 command`.
+- The smoke view calls `window.setTitle`, `notification.show` and `clipboard.writeText`; Swift host returns `capabilityResult`, with clipboard backed by native `NSPasteboard`.
 - This is not the full Vaadin Flow client engine or UIDL adapter yet.
+
+For automated real-window verification:
+
+```bash
+VAADIN_DESKTOP_FLOW_IPC_AUTO_CLICK=1 bash bin/vaadin-desktop dev-ipc test-apps/flow-over-ipc-smoke-app
+```

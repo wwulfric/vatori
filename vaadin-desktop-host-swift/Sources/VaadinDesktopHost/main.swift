@@ -53,6 +53,81 @@ struct HostConfig {
     }
 }
 
+struct CapabilityManifest {
+    let path: String
+    let loaded: Bool
+    let permissionMode: String
+    let allowedCommands: Set<String>
+    let parseError: String
+
+    static func load(module: String) -> CapabilityManifest {
+        let path = "\(module)/desktop-capabilities.json"
+        guard FileManager.default.fileExists(atPath: path) else {
+            return CapabilityManifest(path: path,
+                                      loaded: false,
+                                      permissionMode: "allow-all-dev",
+                                      allowedCommands: [],
+                                      parseError: "")
+        }
+        guard let data = FileManager.default.contents(atPath: path) else {
+            return CapabilityManifest(path: path,
+                                      loaded: true,
+                                      permissionMode: "allow-all-dev",
+                                      allowedCommands: [],
+                                      parseError: "manifest-unreadable")
+        }
+        do {
+            let json = try JSONSerialization.jsonObject(with: data)
+            guard let object = json as? [String: Any] else {
+                return CapabilityManifest(path: path,
+                                          loaded: true,
+                                          permissionMode: "allow-all-dev",
+                                          allowedCommands: [],
+                                          parseError: "manifest-root-not-object")
+            }
+            let permissionMode = object["permissionMode"] as? String ?? "allow-all-dev"
+            let windows = object["windows"] as? [[String: Any]] ?? []
+            var commands = Set<String>()
+            for window in windows where (window["label"] as? String ?? "main") == "main" {
+                if let values = window["commands"] as? [String] {
+                    commands.formUnion(values)
+                }
+                if let values = window["capabilities"] as? [String] {
+                    commands.formUnion(values)
+                }
+            }
+            return CapabilityManifest(path: path,
+                                      loaded: true,
+                                      permissionMode: permissionMode,
+                                      allowedCommands: commands,
+                                      parseError: "")
+        } catch {
+            return CapabilityManifest(path: path,
+                                      loaded: true,
+                                      permissionMode: "allow-all-dev",
+                                      allowedCommands: [],
+                                      parseError: error.localizedDescription)
+        }
+    }
+
+    func allows(_ command: String) -> Bool {
+        if !loaded {
+            return true
+        }
+        return parseError.isEmpty && allowedCommands.contains(command)
+    }
+
+    func tracePayload() -> [String: Any] {
+        [
+            "path": path,
+            "loaded": loaded,
+            "permissionMode": permissionMode,
+            "allowedCommands": allowedCommands.sorted(),
+            "parseError": parseError
+        ]
+    }
+}
+
 func nowMillis() -> Int64 {
     Int64(Date().timeIntervalSince1970 * 1000)
 }
@@ -316,8 +391,8 @@ final class JavaSidecar {
 }
 
 final class WebViewHost: NSObject, NSApplicationDelegate, NSWindowDelegate, WKNavigationDelegate, WKScriptMessageHandler {
-    private let flowIpcCapabilityPermissionMode = "allow-all-dev"
     private let config: HostConfig
+    private let capabilityManifest: CapabilityManifest
     private var sidecar: JavaSidecar?
     private var window: NSWindow?
     private var webView: WKWebView?
@@ -325,6 +400,7 @@ final class WebViewHost: NSObject, NSApplicationDelegate, NSWindowDelegate, WKNa
 
     init(config: HostConfig) {
         self.config = config
+        self.capabilityManifest = CapabilityManifest.load(module: config.module)
     }
 
     func applicationDidFinishLaunching(_ notification: Notification) {
@@ -339,6 +415,9 @@ final class WebViewHost: NSObject, NSApplicationDelegate, NSWindowDelegate, WKNa
             "protocol": config.transport == "flow-ipc" ? "flow-ipc-v1" : "host-protocol-v0",
             "compatibilityMode": config.transport != "flow-ipc"
         ])
+        if config.transport == "flow-ipc" {
+            trace("recv", "capabilityManifest", capabilityManifest.tracePayload())
+        }
 
         let sidecar = JavaSidecar(config: config) { [weak self] url in
             self?.openWindow(url: url)
@@ -503,6 +582,17 @@ final class WebViewHost: NSObject, NSApplicationDelegate, NSWindowDelegate, WKNa
     }
 
     private func executeDesktopCommand(_ command: String, args: [String: Any]) -> [String: Any] {
+        if !capabilityManifest.allows(command) {
+            return capabilityPermission([
+                "success": false,
+                "command": command,
+                "error": capabilityManifest.parseError.isEmpty
+                    ? "Command not allowed by desktop-capabilities.json"
+                    : "Invalid desktop-capabilities.json: \(capabilityManifest.parseError)"
+            ], decision: "denied", reason: capabilityManifest.parseError.isEmpty
+                ? "manifest-denied"
+                : "manifest-invalid")
+        }
         switch command {
         case "window.setTitle":
             guard let title = args["title"] as? String else {
@@ -554,12 +644,15 @@ final class WebViewHost: NSObject, NSApplicationDelegate, NSWindowDelegate, WKNa
 
     private func capabilityPermission(_ result: [String: Any],
                                       decision: String = "allowed",
-                                      reason: String = "development-default") -> [String: Any] {
+                                      reason: String? = nil) -> [String: Any] {
         var payload = result
-        payload["permissionMode"] = flowIpcCapabilityPermissionMode
+        payload["permissionMode"] = capabilityManifest.permissionMode
         payload["permissionDecision"] = decision
-        payload["permissionReason"] = reason
+        payload["permissionReason"] = reason ?? (capabilityManifest.loaded ? "manifest-allow" : "development-default")
         payload["permissionScope"] = "window:main"
+        payload["permissionManifestLoaded"] = capabilityManifest.loaded
+        payload["permissionManifestPath"] = capabilityManifest.path
+        payload["permissionManifestCommands"] = capabilityManifest.allowedCommands.sorted().joined(separator: ",")
         return payload
     }
 

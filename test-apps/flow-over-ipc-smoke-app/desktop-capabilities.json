@@ -1,0 +1,14 @@
+{
+  "schemaVersion": 1,
+  "permissionMode": "allow-all-dev",
+  "windows": [
+    {
+      "label": "main",
+      "commands": [
+        "window.setTitle",
+        "notification.show",
+        "clipboard.writeText"
+      ]
+    }
+  ]
+}

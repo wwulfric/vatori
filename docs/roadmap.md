@@ -42,7 +42,7 @@ First issue candidates:
 
 ## v0.3: Capability Gateway
 
-- Add capability manifest.
+- Add capability manifest. The first `dev-ipc` scaffold now reads module-root `desktop-capabilities.json` and traces manifest-backed allow-all-dev decisions for the smoke app.
 - Enforce window/source/user-gesture checks.
 - Implement notifications, clipboard and file dialog through real native APIs.
 

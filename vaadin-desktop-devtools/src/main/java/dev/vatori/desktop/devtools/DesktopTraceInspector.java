@@ -89,6 +89,14 @@ public final class DesktopTraceInspector {
             if (line.contains("\"compatibilityMode\":false")) {
                 summary.compatibilityFalse = true;
             }
+            if (line.contains("\"type\":\"capabilityManifest\"")
+                    && line.contains("\"loaded\":true")
+                    && line.contains("\"permissionMode\":\"allow-all-dev\"")
+                    && line.contains("window.setTitle")
+                    && line.contains("clipboard.writeText")
+                    && line.contains("notification.show")) {
+                summary.capabilityManifestObserved = true;
+            }
             if (line.contains("\"serverSequenceScope\":\"java-sidecar-to-webview\"")
                     && line.contains("\"serverSequence\"")) {
                 summary.serverSequenceObserved = true;
@@ -113,6 +121,15 @@ public final class DesktopTraceInspector {
                     && line.contains("\"permissionDecision\":\"allowed\"")
                     && line.contains("\"permissionScope\":\"window:main\"")) {
                 summary.capabilityPermissionObserved = true;
+            }
+            if (line.contains("\"type\":\"capabilityResult\"")
+                    && line.contains("\"permissionManifestLoaded\":true")
+                    && line.contains("\"permissionReason\":\"manifest-allow\"")
+                    && line.contains("desktop-capabilities.json")
+                    && line.contains("window.setTitle")
+                    && line.contains("clipboard.writeText")
+                    && line.contains("notification.show")) {
+                summary.capabilityManifestResultObserved = true;
             }
             if (line.contains("\"type\":\"error\"")
                     && line.contains("webviewVerificationProbe")
@@ -357,6 +374,8 @@ public final class DesktopTraceInspector {
         private final Map<String, Integer> directions = new LinkedHashMap<>();
         private boolean flowIpcTransport;
         private boolean compatibilityFalse;
+        private boolean capabilityManifestObserved;
+        private boolean capabilityManifestResultObserved;
         private boolean serverSequenceObserved;
         private boolean flowIpcServerSequenceDomObserved;
         private boolean clickPatchObserved;
@@ -396,6 +415,8 @@ public final class DesktopTraceInspector {
             return types.keySet().containsAll(FLOW_IPC_REQUIRED_TYPES)
                     && flowIpcTransport
                     && compatibilityFalse
+                    && capabilityManifestObserved
+                    && capabilityManifestResultObserved
                     && serverSequenceObserved
                     && flowIpcServerSequenceDomObserved
                     && clickPatchObserved
@@ -439,6 +460,8 @@ public final class DesktopTraceInspector {
             System.out.println("Types: " + types);
             System.out.println("transport=flow-ipc: " + flowIpcTransport);
             System.out.println("compatibilityMode=false: " + compatibilityFalse);
+            System.out.println("capability manifest observed: " + capabilityManifestObserved);
+            System.out.println("capability manifest result observed: " + capabilityManifestResultObserved);
             System.out.println("server sequence observed: " + serverSequenceObserved);
             System.out.println("Flow IPC server sequence DOM observed: " + flowIpcServerSequenceDomObserved);
             System.out.println("click patch observed: " + clickPatchObserved);

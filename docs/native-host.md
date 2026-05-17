@@ -66,6 +66,8 @@ VAADIN_DESKTOP_HOST=browser bash bin/vaadin-desktop dev examples/counter-app
 ## Capability Permission Model
 
 `dev-ipc` uses an explicit development permission mode: `permissionMode=allow-all-dev`.
+For app-shaped verification projects, the Swift host looks for `desktop-capabilities.json`
+in the module root and records a `capabilityManifest` trace event when it is present.
 
 The current host allows the known v1 commands for the single main window:
 
@@ -73,14 +75,14 @@ The current host allows the known v1 commands for the single main window:
 - `clipboard.writeText`
 - `notification.show`
 
-Every `capabilityResult` includes `permissionMode`, `permissionDecision`, `permissionReason` and `permissionScope`. Known commands are marked `permissionDecision=allowed` with `permissionReason=development-default`; unknown commands are rejected with `permissionDecision=denied` and `permissionReason=unsupported-command`. This is intentionally not the final permission system. The production direction is a manifest-gated model with per-window, per-origin and per-capability grants.
+Every `capabilityResult` includes `permissionMode`, `permissionDecision`, `permissionReason` and `permissionScope`. When a manifest is loaded, known commands must be listed for the `main` window and successful calls are marked `permissionDecision=allowed` with `permissionReason=manifest-allow`; unsupported or unlisted commands are rejected with `permissionDecision=denied`. Results also include `permissionManifestLoaded`, `permissionManifestPath` and `permissionManifestCommands`. This is intentionally still a development permission system. The production direction is a stricter manifest-gated model with per-window, per-origin, user-gesture and per-capability grants.
 
 ## Next Native Host Work
 
 The real host still needs to:
 
 - replace the one-shot push/resync verification hooks with a real queue, ordering and reconnect model,
-- replace `allow-all-dev` with manifest-driven capability permissions.
+- replace `allow-all-dev` with production manifest-driven capability permissions.
 
 ## Why Not Call This Final
 

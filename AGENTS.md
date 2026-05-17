@@ -56,12 +56,12 @@ No-HTTP IPC slice:
 bash bin/vaadin-desktop dev-ipc test-apps/flow-over-ipc-smoke-app
 ```
 
-This runs the Swift host with `--transport flow-ipc`, loads a local WKWebView HTML shell and communicates with Java through `VFIPC1` stdin/stdout envelopes. It proves WebView event -> Java Button listener -> desktop command/capabilityResult -> patch -> WebView without localhost HTTP for the smoke app. The WebView bridge sends click events as Flow-client-shaped UIDL RPC payloads; Java emits real UIDL under `payload.uidl`, with bootstrap and one server-initiated push using `UidlWriter`, and events using `UidlRequestHandler`/`ServerRpcHandler`. Bootstrap, push and event patches are applied by a minimum WebView UIDL changes applier; the full Flow client engine is still not wired.
+This runs the Swift host with `--transport flow-ipc`, loads a local WKWebView HTML shell and communicates with Java through `VFIPC1` stdin/stdout envelopes. It proves WebView event -> Java Button listener -> desktop command/capabilityResult -> patch -> WebView without localhost HTTP for the smoke app. The WebView bridge sends click events as Flow-client-shaped UIDL RPC payloads; Java emits real UIDL under `payload.uidl`, with bootstrap, one server-initiated push and verification resync using `UidlWriter`, and events using `UidlRequestHandler`/`ServerRpcHandler`. Bootstrap, push and event patches are applied by a minimum WebView UIDL changes applier; resync currently consumes Vaadin's `resynchronize=true` signal and rebuilds from the local tree fallback. The full Flow client engine is still not wired.
 
 Repeatable real-window smoke verification can use:
 
 ```bash
-VAADIN_DESKTOP_FLOW_IPC_AUTO_CLICK=1 bash bin/vaadin-desktop dev-ipc test-apps/flow-over-ipc-smoke-app
+VAADIN_DESKTOP_FLOW_IPC_AUTO_CLICK=1 VAADIN_DESKTOP_FLOW_IPC_AUTO_RESYNC=1 bash bin/vaadin-desktop dev-ipc test-apps/flow-over-ipc-smoke-app
 ```
 
 ## Build And Run

@@ -59,7 +59,7 @@ Expected trace characteristics:
 - The WebView loads a local HTML shell through `loadHTMLString`, not `http://127.0.0.1`.
 - Button click travels WebView -> Swift host -> Java sidecar -> Vaadin Button listener -> patch -> WebView.
 - Bootstrap, server push, event patches and verification resync include real server-side UIDL under `payload.uidl`; click events are dispatched through `UidlRequestHandler`/`ServerRpcHandler`.
-- Bootstrap advertises Vaadin `flow-client` classpath resources; the WebView requests `FlowBootstrap.js` through IPC and verifies the returned Flow bootstrap entry.
+- Bootstrap advertises Vaadin `flow-client` classpath resources; the WebView requests `FlowBootstrap.js` through IPC, imports it as an ES module and verifies the returned Flow bootstrap entry.
 - Desktop API calls travel Java sidecar -> Swift host as `VFIPC1 command`, and host responses appear as `capabilityResult`.
 
 For repeatable real-window smoke verification without global mouse coordinates:
@@ -82,7 +82,7 @@ bash bin/uidl-rpc-smoke
 bash bin/flow-client-resource-smoke
 ```
 
-Current limitation: this path uses a minimum repository-local UIDL applier in the WebView. It now generates Vaadin UIDL, sends click events through the server-side Flow RPC path, consumes bootstrap/push/event UIDL `changes`, and can load `FlowBootstrap.js` over IPC; verification resync consumes Vaadin's `resynchronize=true` signal and rebuilds from the local tree fallback. The full Flow client engine is not wired yet.
+Current limitation: this path uses a minimum repository-local UIDL applier in the WebView. It now generates Vaadin UIDL, sends click events through the server-side Flow RPC path, consumes bootstrap/push/event UIDL `changes`, and can import `FlowBootstrap.js` over IPC; verification resync consumes Vaadin's `resynchronize=true` signal and rebuilds from the local tree fallback. The full Flow client engine is not wired yet.
 
 ## Run the Independent Smoke App
 

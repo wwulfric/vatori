@@ -89,4 +89,4 @@ It also keeps the developer-facing shape intact: the smoke app still uses ordina
 
 ## Next Adapter Step
 
-The next concrete step is to execute the loaded Flow client resources in the WebView and replace the minimum repository-local UIDL applier with the real Flow client engine, while tightening full resync semantics.
+The next concrete step is to initialize the imported Flow bootstrap/client resources in the WebView and replace the minimum repository-local UIDL applier with the real Flow client engine, while tightening full resync semantics.

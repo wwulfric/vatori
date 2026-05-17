@@ -192,7 +192,7 @@ Java checks the envelope `sessionId`/`uiId` and `securityKey`, then returns:
 }
 ```
 
-This proves no-HTTP resource delivery for the first real Flow client asset. The WebView verifies that the body contains `window.Vaadin.Flow.initApplication` and `export { init }`, but it does not yet execute the module as the real Flow client engine.
+This proves no-HTTP resource delivery for the first real Flow client asset. The WebView verifies that the body contains `window.Vaadin.Flow.initApplication` and `export { init }`, imports the body as a Blob-backed ES module, and checks that the module exports `init`. It does not yet call `init` or wire the broader `FlowClient.js` / GWT client engine into UIDL consumption.
 
 ## Current Push Payload
 
@@ -326,7 +326,7 @@ Errors use the same envelope with `type=error` and an `error` object:
 
 - `dev` and `dev-swift` remain compatibility HTTP modes.
 - `dev-ipc` uses Flow IPC Protocol v1 and must log `transport=flow-ipc` and `compatibilityMode=false`.
-- Full Flow client engine execution, client-side UIDL consumption, upload/download and full push/WebSocket replacement remain future work. The current resource loading slice only serves and verifies `FlowBootstrap.js` over IPC.
+- Full Flow client engine execution, client-side UIDL consumption, upload/download and full push/WebSocket replacement remain future work. The current resource loading slice serves, imports and verifies `FlowBootstrap.js` over IPC but does not initialize the real client engine.
 
 ## Trace Inspector
 
@@ -336,7 +336,7 @@ Run:
 bash bin/flow-ipc-trace-inspect --require-flow-ipc-v1 docs/traces/flow-ipc-v1.ndjson
 ```
 
-The inspector summarizes directions, message types and key markers. With `--require-flow-ipc-v1`, it requires `launch`, `ready`, `window.create`, `bootstrapRequest`, `bootstrapResponse`, `resourceRequest`, `resourceResponse`, `push`, `event`, `resync`, `command`, `capabilityResult`, `patch`, `webview.dom`, `webview.snapshot` and `shutdown`, plus `transport=flow-ipc`, `compatibilityMode=false`, a clicked-state patch, native clipboard evidence, `uidlRpcDispatch=true`, bootstrap/event/resync `sessionId` + `uiId` evidence, bootstrap `Vaadin-Security-Key` evidence, Flow client resource manifest/request/response/DOM evidence, a WebView event containing `uidlRpc` and `securityKey`, a resync request carrying `securityKey`, bootstrap UIDL writer markers, a server-initiated push UIDL consumed by the WebView, a resync `resynchronize=true` signal consumed by the WebView, and an event patch from `UidlRequestHandler`.
+The inspector summarizes directions, message types and key markers. With `--require-flow-ipc-v1`, it requires `launch`, `ready`, `window.create`, `bootstrapRequest`, `bootstrapResponse`, `resourceRequest`, `resourceResponse`, `push`, `event`, `resync`, `command`, `capabilityResult`, `patch`, `webview.dom`, `webview.snapshot` and `shutdown`, plus `transport=flow-ipc`, `compatibilityMode=false`, a clicked-state patch, native clipboard evidence, `uidlRpcDispatch=true`, bootstrap/event/resync `sessionId` + `uiId` evidence, bootstrap `Vaadin-Security-Key` evidence, Flow client resource manifest/request/response/DOM evidence including module import/export markers, a WebView event containing `uidlRpc` and `securityKey`, a resync request carrying `securityKey`, bootstrap UIDL writer markers, a server-initiated push UIDL consumed by the WebView, a resync `resynchronize=true` signal consumed by the WebView, and an event patch from `UidlRequestHandler`.
 
 Run the envelope scope rejection smoke with:
 

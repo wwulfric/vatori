@@ -1,0 +1,59 @@
+# Flow Integration
+
+## Current Integration
+
+`vaadin-desktop-flow` integrates real Vaadin Flow through Spring Boot:
+
+- The app uses `@SpringBootApplication`.
+- Views use normal `@Route`.
+- UI components are real Vaadin components.
+- `DesktopLauncher` starts Spring Boot on a random local port.
+- `SystemWebViewDesktopHost` receives the application URL and opens a macOS WKWebView desktop window by default.
+- `vaadin-desktop-host-swift` can start the Java app as a sidecar and open a Swift/AppKit WKWebView through `bin/vaadin-desktop dev-swift`.
+- `CompatibilityDesktopHost` remains available for headless/browser fallback modes.
+
+This means Vaadin Flow works today with ordinary Flow development patterns.
+
+## What Is Reused
+
+- Routing via `@Route`.
+- Component tree and server-side listener model.
+- Spring Boot auto-configuration from `vaadin-spring-boot-starter`.
+- Vaadin Grid, Button, Span, layouts and data providers.
+- Vaadin dev mode.
+
+## What Still Depends on HTTP/Servlet
+
+- Bootstrap page generation.
+- Vaadin session/request lifecycle.
+- Client event transport.
+- UIDL/patch response transport.
+- Push/WebSocket.
+- Frontend resource loading.
+- Upload/download.
+
+These dependencies are acceptable only because they are isolated as compatibility mode.
+
+## Code-Level Adapter Spike
+
+`flow-transport-adapter-spike/README.md` records the first real boundary found in the local Vaadin source tree:
+
+- `SynchronizedRequestHandler.java:58-68` already supports pre-reading body and post-lock response writing.
+- `UidlRequestHandler.java:122-173` is the event-to-UIDL path.
+- `UidlRequestHandler.java:191-202` delegates UIDL writing to `UidlWriter`.
+- `UidlWriter.java:120-195` can produce patch JSON from `UI`.
+- `ServerRpcHandler.java:343-353` and `VaadinService.java:1410-1424` still require `VaadinRequest` for deployment config and UI lookup.
+
+Conclusion: patch generation is not the hardest boundary. Request-derived session/UI/security context is the first hard dependency to isolate.
+
+## Target Flow over IPC Work
+
+Next work should replace the compatibility adapter with a real Flow transport adapter:
+
+1. Locate Flow client event handler entry points.
+2. Locate server-side patch/UIDL output points.
+3. Wrap them behind a `FlowTransport` SPI.
+4. Feed transport messages through `vaadin-desktop-ipc`.
+5. Load Flow client engine from a local asset protocol in the native host.
+
+The next concrete issue should wrap the UIDL path behind a repository-local adapter that accepts `(VaadinSession, UI, requestBody, metadata)` and returns UIDL JSON, while using a compatibility `VaadinRequest` only at the edge.

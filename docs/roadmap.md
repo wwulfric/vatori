@@ -23,7 +23,7 @@ Status: in progress in this repository.
 
 ## v0.2: Flow Transport Adapter Spike
 
-Status: first minimum runtime slice implemented, server-side UIDL writer integrated into `dev-ipc` bootstrap/push/resync payloads, WebView-produced UIDL RPC click dispatch wired, FlowBootstrap resource loading/import over IPC probed, full Flow client UIDL consumption still pending.
+Status: first minimum runtime slice implemented, server-side UIDL writer integrated into `dev-ipc` bootstrap/push/resync payloads, WebView-produced UIDL RPC click dispatch wired, FlowBootstrap resource loading/import/init over IPC probed, full Flow client UIDL consumption still pending.
 
 - Audit Vaadin Flow event and patch internals.
 - Extract a minimal adapter around bootstrap, event dispatch and UIDL/patch response.
@@ -32,11 +32,11 @@ Status: first minimum runtime slice implemented, server-side UIDL writer integra
 - `bash bin/uidl-adapter-smoke` now verifies that a desktop-shaped session/UI can drive Vaadin's real `UidlWriter` and produce UIDL `changes`/`syncId`.
 - `bash bin/uidl-rpc-smoke` now verifies that a real Flow event RPC can pass through `UidlRequestHandler`/`ServerRpcHandler` and produce a listener UIDL patch without a real HTTP socket.
 - `dev-ipc` bootstrap/push/patch/resync envelopes now include `payload.uidl`; bootstrap and one server-initiated push come from `UidlWriter`, verification resync carries Vaadin's `resynchronize=true` signal, and WebView-produced click RPC patches come from `UidlRequestHandler`/`ServerRpcHandler`. Bootstrap/push/event UIDL `changes` are consumed by a minimum WebView applier; resync rebuilds from the local tree fallback.
-- `dev-ipc` bootstrap now advertises Vaadin `flow-client` classpath resources, and the WebView requests/imports `FlowBootstrap.js` over IPC as the first no-HTTP frontend resource loading slice.
+- `dev-ipc` bootstrap now advertises Vaadin `flow-client` classpath resources, and the WebView requests/imports/initializes `FlowBootstrap.js` over IPC as the first no-HTTP frontend resource loading slice.
 
 First issue candidates:
 
-- Initialize the imported Flow bootstrap/client resources in WKWebView and replace the minimum repository-local UIDL applier with Flow client engine UIDL consumption.
+- Initialize the imported Flow client/GWT resources in WKWebView and replace the minimum repository-local UIDL applier with Flow client engine UIDL consumption.
 - Extend `DesktopVaadinRequest` to enforce full resync state from Host Protocol; minimum Flow IPC `sessionId`/`uiId`, `csrfToken`/security key, `syncId` and `clientId` preflight is already in place.
 - Replace the one-shot server-initiated push and verification-only resync with a real Flow push queue, ordering model and reconnect/resync path.
 

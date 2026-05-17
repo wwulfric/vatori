@@ -1,0 +1,7 @@
+interface:
+  display_name: "Vaadin Desktop Native Feel"
+  short_description: "Native-feel guidance for Vaadin Desktop apps"
+  default_prompt: "Use $vaadin-desktop-native-feel to review and improve this Vaadin Desktop app's native desktop behavior."
+
+policy:
+  allow_implicit_invocation: true

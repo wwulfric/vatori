@@ -1,0 +1,12 @@
+prototypes/**/out/
+*.class
+target/
+.build/
+.m2/
+.idea/
+.vscode/
+*.log
+.DS_Store
+vaadin-desktop-host-tauri/
+**/src/main/frontend/generated/
+**/src/main/frontend/index.html

@@ -134,10 +134,21 @@ public final class DesktopTraceInspector {
                     && line.contains("META-INF/frontend/FlowBootstrap.js")) {
                 summary.flowClientResourceManifestObserved = true;
             }
+            if (line.contains("\"type\":\"bootstrapResponse\"")
+                    && line.contains("\"flowClientResources\"")
+                    && line.contains("\"flow-client-classpath\"")
+                    && line.contains("META-INF/frontend/FlowClient.js")) {
+                summary.flowClientEngineResourceManifestObserved = true;
+            }
             if (line.contains("\"type\":\"resourceRequest\"")
                     && line.contains("META-INF/frontend/FlowBootstrap.js")
                     && line.contains("\"securityKey\"")) {
                 summary.flowClientResourceRequestObserved = true;
+            }
+            if (line.contains("\"type\":\"resourceRequest\"")
+                    && line.contains("META-INF/frontend/FlowClient.js")
+                    && line.contains("\"securityKey\"")) {
+                summary.flowClientEngineResourceRequestObserved = true;
             }
             if (line.contains("\"type\":\"resourceResponse\"")
                     && line.contains("\"flowClientResource\":true")
@@ -145,16 +156,33 @@ public final class DesktopTraceInspector {
                     && line.contains("\"bodyRedacted\":true")) {
                 summary.flowClientResourceResponseObserved = true;
             }
+            if (line.contains("\"type\":\"resourceResponse\"")
+                    && line.contains("\"flowClientResource\":true")
+                    && line.contains("META-INF/frontend/FlowClient.js")
+                    && line.contains("\"bodyRedacted\":true")) {
+                summary.flowClientEngineResourceResponseObserved = true;
+            }
             if (line.contains("\"type\":\"webview.dom\"")
                     && line.contains("flowClientResourceLoaded")
                     && line.contains("flowClientResourceVerified")
                     && line.contains("flowClientResourceModuleLoaded")
                     && line.contains("flowClientBootstrapExported")
                     && line.contains("flowClientBootstrapInitialized")
-                    && line.contains("flow-ipc-app")
+                    && line.contains("ROOT-2521314")
                     && line.contains("flowClientResourceExecuted")
                     && line.contains("META-INF/frontend/FlowBootstrap.js")) {
                 summary.flowClientResourceDomObserved = true;
+            }
+            if (line.contains("\"type\":\"webview.dom\"")
+                    && line.contains("flowClientEngineResourceLoaded")
+                    && line.contains("flowClientEngineResourceVerified")
+                    && line.contains("flowClientEngineModuleLoaded")
+                    && line.contains("flowClientEngineInitExported")
+                    && line.contains("flowClientEngineInitialized")
+                    && line.contains("flowClientEngineClientRegistered")
+                    && line.contains("ROOT")
+                    && line.contains("META-INF/frontend/FlowClient.js")) {
+                summary.flowClientEngineDomObserved = true;
             }
             if (line.contains("\"type\":\"event\"")
                     && line.contains("\"sessionId\":\"flow-ipc-session\"")
@@ -224,6 +252,10 @@ public final class DesktopTraceInspector {
         private boolean flowClientResourceRequestObserved;
         private boolean flowClientResourceResponseObserved;
         private boolean flowClientResourceDomObserved;
+        private boolean flowClientEngineResourceManifestObserved;
+        private boolean flowClientEngineResourceRequestObserved;
+        private boolean flowClientEngineResourceResponseObserved;
+        private boolean flowClientEngineDomObserved;
         private boolean uidlRpcDispatchObserved;
         private boolean webViewUidlRpcObserved;
         private boolean uidlPatchObserved;
@@ -246,6 +278,10 @@ public final class DesktopTraceInspector {
                     && flowClientResourceRequestObserved
                     && flowClientResourceResponseObserved
                     && flowClientResourceDomObserved
+                    && flowClientEngineResourceManifestObserved
+                    && flowClientEngineResourceRequestObserved
+                    && flowClientEngineResourceResponseObserved
+                    && flowClientEngineDomObserved
                     && uidlRpcDispatchObserved
                     && webViewUidlRpcObserved
                     && uidlPatchObserved
@@ -272,6 +308,10 @@ public final class DesktopTraceInspector {
             System.out.println("Flow client resource request observed: " + flowClientResourceRequestObserved);
             System.out.println("Flow client resource response observed: " + flowClientResourceResponseObserved);
             System.out.println("Flow client resource DOM observed: " + flowClientResourceDomObserved);
+            System.out.println("Flow client engine resource manifest observed: " + flowClientEngineResourceManifestObserved);
+            System.out.println("Flow client engine resource request observed: " + flowClientEngineResourceRequestObserved);
+            System.out.println("Flow client engine resource response observed: " + flowClientEngineResourceResponseObserved);
+            System.out.println("Flow client engine DOM observed: " + flowClientEngineDomObserved);
             System.out.println("UIDL RPC dispatch observed: " + uidlRpcDispatchObserved);
             System.out.println("WebView UIDL RPC observed: " + webViewUidlRpcObserved);
             System.out.println("UIDL request handler patch observed: " + uidlPatchObserved);

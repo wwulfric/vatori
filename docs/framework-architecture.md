@@ -34,9 +34,9 @@ This path is started with:
 bash bin/vaadin-desktop dev-ipc test-apps/flow-over-ipc-smoke-app
 ```
 
-It does not use localhost HTTP for bootstrap/push/event/patch/resync in the smoke app. Bootstrap advertises real Vaadin `flow-client` classpath resources, and the WebView loads, imports and initializes `FlowBootstrap.js` / `FlowClient.js` through IPC as the first local-resource bridge. Once the Flow client engine binds the bootstrap UIDL nodes, its container becomes the visible WebView surface; the repository-local rendered tree remains as a hidden fallback for push/resync diagnostics.
+It does not use localhost HTTP for bootstrap/push/event/patch/resync in the smoke app. Bootstrap advertises real Vaadin `flow-client` classpath resources, and the WebView loads, imports and initializes `FlowBootstrap.js` / `FlowClient.js` through IPC as the first local-resource bridge. Once the Flow client engine binds the bootstrap UIDL nodes, its container becomes the visible WebView surface; the repository-local rendered tree remains only as a diagnostic fallback for non-engine or failed-delivery paths.
 
-The Java side emits real server-side Vaadin UIDL under `payload.uidl`: bootstrap, one server-initiated push and verification resync come from `UidlWriter`, and click event patches come from `UidlRequestHandler`/`ServerRpcHandler`. The visible bootstrap and click event path is now consumed by the initialized Flow client engine through an IPC-backed XHR bridge; full push/resync consumption by the Flow client engine is the next transport milestone.
+The Java side emits real server-side Vaadin UIDL under `payload.uidl`: bootstrap and one server-initiated push come from `UidlWriter`, while click event and verification resync patches come from `UidlRequestHandler`/`ServerRpcHandler`. Bootstrap, click event patches, server push and the verification resync are now consumed by the initialized visible Flow client engine through IPC-backed bridge methods.
 
 ## Target Stack
 
@@ -70,4 +70,4 @@ Like Tauri, the intended shape is a small native host plus system WebView plus b
 
 Framework v0 uses real Vaadin Flow through `vaadin-spring-boot-starter`. Developers write standard Flow views with `@Route`, `Button`, `Grid`, `Span`, layouts and listeners.
 
-The current gap is transport completeness: `dev-ipc` removes HTTP for one constrained smoke app, has the visible Flow client engine emit click RPC payloads through an IPC-backed XHR bridge, routes those events through the server-side Flow UIDL RPC path, and fetches/imports/initializes real Flow bootstrap/GWT client resources over IPC. Full Flow still needs broader event/resource coverage plus push/resync semantics owned by the Flow client engine.
+The current gap is transport completeness: `dev-ipc` removes HTTP for one constrained smoke app, has the visible Flow client engine emit click and verification resync RPC payloads through an IPC-backed bridge, routes those messages through the server-side Flow UIDL RPC path, fetches/imports/initializes real Flow bootstrap/GWT client resources over IPC, and feeds one server push back into the visible Flow client engine. Full Flow still needs broader event/resource coverage plus real push queue, reconnect and production resource semantics.

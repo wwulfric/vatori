@@ -1,0 +1,8 @@
+#!/usr/bin/env bash
+set -euo pipefail
+
+ROOT="$(cd "$(dirname "${BASH_SOURCE[0]}")/.." && pwd)"
+CLASSES="$(bash "$ROOT/bin/compile")"
+
+java -cp "$CLASSES" dev.vatori.flowipc.host.MockHostMain
+

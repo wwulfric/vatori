@@ -1,0 +1,16 @@
+#!/usr/bin/env bash
+set -euo pipefail
+
+ROOT="$(cd "$(dirname "${BASH_SOURCE[0]}")/.." && pwd)"
+OUT="$ROOT/out/classes"
+mkdir -p "$OUT"
+
+SOURCES_FILE="$OUT/sources.list"
+find "$ROOT/src/main/java" -name '*.java' | sort > "$SOURCES_FILE"
+if [[ ! -s "$SOURCES_FILE" ]]; then
+  echo "No Java sources found under $ROOT/src/main/java" >&2
+  exit 1
+fi
+
+javac -d "$OUT" @"$SOURCES_FILE"
+echo "$OUT"

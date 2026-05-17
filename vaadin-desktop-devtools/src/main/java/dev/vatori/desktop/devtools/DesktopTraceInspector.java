@@ -150,6 +150,8 @@ public final class DesktopTraceInspector {
                     && line.contains("flowClientResourceVerified")
                     && line.contains("flowClientResourceModuleLoaded")
                     && line.contains("flowClientBootstrapExported")
+                    && line.contains("flowClientBootstrapInitialized")
+                    && line.contains("flow-ipc-app")
                     && line.contains("flowClientResourceExecuted")
                     && line.contains("META-INF/frontend/FlowBootstrap.js")) {
                 summary.flowClientResourceDomObserved = true;

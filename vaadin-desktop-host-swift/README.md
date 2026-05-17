@@ -27,7 +27,7 @@ Run the first no-HTTP IPC slice:
 bash bin/vaadin-desktop dev-ipc test-apps/flow-over-ipc-smoke-app
 ```
 
-`dev-swift` still uses localhost HTTP compatibility mode. `dev-ipc` does not load a localhost URL for the smoke app, sends click events and a verification resync over `VFIPC1`, applies bootstrap/push/event UIDL `changes` with a minimum local applier, and treats resync as a `resynchronize=true` reload signal until the full Flow client engine is wired.
+`dev-swift` still uses localhost HTTP compatibility mode. `dev-ipc` does not load a localhost URL for the smoke app. It imports FlowBootstrap/FlowClient in a hidden probe, bridges the Flow client engine's XHR transport over `VFIPC1`, sends real Flow client click RPCs through Java's `UidlRequestHandler`, applies the visible bootstrap/push/event UIDL `changes` with a minimum local applier, and treats resync as a `resynchronize=true` reload signal until the visible UI is fully owned by the Flow client engine.
 
 For repeatable real-window verification:
 

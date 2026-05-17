@@ -23,7 +23,7 @@ Status: in progress in this repository.
 
 ## v0.2: Flow Transport Adapter Spike
 
-Status: first minimum runtime slice implemented, server-side UIDL writer integrated into `dev-ipc` bootstrap/push/resync payloads, WebView-produced UIDL RPC click dispatch wired, FlowBootstrap and FlowClient resource loading/import/init over IPC probed, full Flow client UIDL consumption still pending.
+Status: first minimum runtime slice implemented, server-side UIDL writer integrated into `dev-ipc` bootstrap/push/resync payloads, Flow client XHR click dispatch wired over IPC, FlowBootstrap and FlowClient resource loading/import/init over IPC probed, hidden Flow client event patch consumption verified, visible Flow client ownership still pending.
 
 - Audit Vaadin Flow event and patch internals.
 - Extract a minimal adapter around bootstrap, event dispatch and UIDL/patch response.

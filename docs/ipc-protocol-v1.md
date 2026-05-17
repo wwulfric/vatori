@@ -2,7 +2,7 @@
 
 Flow IPC Protocol v1 is the first runtime protocol for moving Vaadin Desktop beyond localhost HTTP compatibility mode.
 
-Current implementation status: **minimum runtime slice implemented with UIDL writer, WebView-produced UIDL RPC dispatch, minimum UIDL patch consumption, one server-initiated UIDL push, one verification resync and one Flow client resource loading/init probe**. It supports a local WebView shell, Java sidecar stdin/stdout transport, bootstrap, event, replace-root patch, desktop command/capabilityResult, push, resync, resource request/response and shutdown. The runtime generates bootstrap and push UIDL with `UidlWriter`; bootstrap UIDL now carries Flow's `Vaadin-Security-Key`; verification resync receives Vaadin's `resynchronize=true` signal from `UidlWriter`; the WebView bridge sends click events as UIDL RPC bodies with CSRF/security key, `syncId`, `clientId` and Flow node id; Java dispatches them through `UidlRequestHandler`/`ServerRpcHandler` to produce event UIDL patches. Bootstrap advertises real Vaadin `flow-client` classpath resources and the WebView loads and initializes `FlowBootstrap.js` / `FlowClient.js` through IPC. The WebView applies bootstrap/push/event UIDL `changes` through a minimum applier and treats resync as a rebuild boundary, so this is closer to Flow client behavior but still not full Flow client engine parity.
+Current implementation status: **minimum runtime slice implemented with UIDL writer, IPC-backed Flow client XHR dispatch, minimum visible UIDL patch consumption, one server-initiated UIDL push, one verification resync and real Flow client resource loading/init probes**. It supports a local WebView shell, Java sidecar stdin/stdout transport, bootstrap, event, replace-root patch, desktop command/capabilityResult, push, resync, resource request/response and shutdown. The runtime generates bootstrap and push UIDL with `UidlWriter`; bootstrap UIDL now carries Flow's `Vaadin-Security-Key`; verification resync receives Vaadin's `resynchronize=true` signal from `UidlWriter`; the WebView imports `FlowBootstrap.js` and `FlowClient.js`, installs an `XMLHttpRequest` shim for the Flow client engine and sends the real Flow client click UIDL RPC over IPC with CSRF/security key, `syncId`, `clientId` and Flow node id. Java dispatches that body through `UidlRequestHandler`/`ServerRpcHandler` to produce event UIDL patches. The hidden Flow client probe consumes the event XHR response, while the visible WebView path still applies bootstrap/push/event UIDL `changes` through a minimum applier and treats resync as a rebuild boundary.
 
 ## Prefixes
 
@@ -36,20 +36,19 @@ VFIPC1 {"version":"flow-ipc-v1","type":"command","id":"desktop-command-1",...}
 {
   "version": "flow-ipc-v1",
   "type": "event",
-  "id": "webview-2",
-  "correlationId": "webview-2",
+  "id": "webview-3",
+  "correlationId": "webview-3",
   "sessionId": "flow-ipc-session",
   "uiId": "main",
   "route": "",
   "payload": {
-    "dispatch": "flow-client-rpc",
+    "dispatch": "flow-client-xhr",
     "componentId": "ipc-button",
     "nodeId": 16,
     "securityKey": "trace-csrf",
-    "event": "click",
+    "event": "uidl-rpc",
     "uidlRpc": {
       "csrfToken": "trace-csrf",
-      "securityKey": "trace-csrf",
       "rpc": [
         {
           "type": "event",
@@ -59,7 +58,7 @@ VFIPC1 {"version":"flow-ipc-v1","type":"command","id":"desktop-command-1",...}
         }
       ],
       "syncId": -1,
-      "clientId": 0
+      "clientId": 1
     }
   },
   "error": null,
@@ -132,7 +131,7 @@ The current patch payload has two parts:
 }
 ```
 
-The UIDL is real server-side Flow output. Bootstrap, push and event patches are consumed by the minimum WebView UIDL changes applier, so `consumedByWebView=true` is expected for `UidlWriter` bootstrap/push and `UidlRequestHandler` event patches. Resync uses Vaadin's real `resynchronize=true` signal and rebuilds from the local tree fallback until the full Flow client engine bridge replaces this behavior.
+The UIDL is real server-side Flow output. Bootstrap and push are consumed by the minimum visible WebView UIDL changes applier. Event patches are also mirrored into that visible applier, but the verified browser-engine path now sends the click through the real Flow client `XMLHttpRequest` layer and lets the hidden Flow client probe consume the `UidlRequestHandler` response. Resync uses Vaadin's real `resynchronize=true` signal and rebuilds from the local tree fallback until the visible UI is fully owned by the Flow client engine.
 
 ## Current Bootstrap Security Key
 
@@ -192,7 +191,7 @@ Java checks the envelope `sessionId`/`uiId` and `securityKey`, then returns:
 }
 ```
 
-This proves no-HTTP resource delivery for the first real Flow client assets. The WebView verifies that the bootstrap body contains `window.Vaadin.Flow.initApplication` and `export { init }`, imports it as a Blob-backed ES module, checks that the module exports `init`, and calls `FlowBootstrap.init` with an IPC bootstrap config. It then imports `FlowClient.js`, calls `FlowClient.init`, verifies that the GWT client registers a Flow client object, and checks bootstrap UIDL node bindings through `client.getByNodeId(...)`. Follow-up UIDL patches are still applied by the repository-local applier rather than being routed through that registered client.
+This proves no-HTTP resource delivery for the first real Flow client assets. The WebView verifies that the bootstrap body contains `window.Vaadin.Flow.initApplication` and `export { init }`, imports it as a Blob-backed ES module, checks that the module exports `init`, and calls `FlowBootstrap.init` with an IPC bootstrap config. It then imports `FlowClient.js`, calls `FlowClient.init`, verifies that the GWT client registers a Flow client object, checks bootstrap UIDL node bindings through `client.getByNodeId(...)`, installs an IPC-backed XHR bridge and verifies that the real Flow client consumes the click event UIDL patch in the hidden probe. The visible UI is still updated by the repository-local applier.
 
 ## Current Push Payload
 
@@ -218,20 +217,19 @@ This proves no-HTTP resource delivery for the first real Flow client assets. The
 
 ## Current Event Payload
 
-`dev-ipc` no longer sends only `{action, componentId}`. The WebView bridge now sends a Flow-client-shaped UIDL RPC object:
+`dev-ipc` no longer sends only `{action, componentId}`. The verified path calls the real Flow client engine. Its XHR request is intercepted by the Swift WebView bridge and forwarded as a Flow-client-shaped UIDL RPC object:
 
 ```json
 {
   "type": "event",
   "payload": {
-    "dispatch": "flow-client-rpc",
+    "dispatch": "flow-client-xhr",
     "componentId": "ipc-button",
     "nodeId": 16,
     "securityKey": "trace-csrf",
-    "event": "click",
+    "event": "uidl-rpc",
     "uidlRpc": {
       "csrfToken": "trace-csrf",
-      "securityKey": "trace-csrf",
       "rpc": [
         {
           "type": "event",
@@ -241,13 +239,13 @@ This proves no-HTTP resource delivery for the first real Flow client assets. The
         }
       ],
       "syncId": -1,
-      "clientId": 0
+      "clientId": 1
     }
   }
 }
 ```
 
-The Java side still retains a legacy translator for the old simplified event payload as a fallback, but the verified path is `dispatch=flow-client-rpc`.
+The Java side still retains a legacy translator for the old simplified event payload as a fallback, but the verified path is `dispatch=flow-client-xhr`. The first Flow client XHR message may be `attachExistingElementById` with `clientId=0`; the desktop runtime acknowledges it and advances Vaadin's internal client-to-server message id before the actual click RPC arrives with `clientId=1`.
 
 The Java runtime checks the outer envelope `sessionId` and `uiId` before event dispatch. A mismatch is rejected as `invalidClientState` before the UIDL RPC body reaches `UidlRequestHandler`.
 
@@ -336,7 +334,7 @@ Run:
 bash bin/flow-ipc-trace-inspect --require-flow-ipc-v1 docs/traces/flow-ipc-v1.ndjson
 ```
 
-The inspector summarizes directions, message types and key markers. With `--require-flow-ipc-v1`, it requires `launch`, `ready`, `window.create`, `bootstrapRequest`, `bootstrapResponse`, `resourceRequest`, `resourceResponse`, `push`, `event`, `resync`, `command`, `capabilityResult`, `patch`, `webview.dom`, `webview.snapshot` and `shutdown`, plus `transport=flow-ipc`, `compatibilityMode=false`, a clicked-state patch, native clipboard evidence, `uidlRpcDispatch=true`, bootstrap/event/resync `sessionId` + `uiId` evidence, bootstrap `Vaadin-Security-Key` evidence, Flow client resource manifest/request/response/DOM evidence including FlowBootstrap and FlowClient module import/export/init markers and bootstrap DOM node bindings, a WebView event containing `uidlRpc` and `securityKey`, a resync request carrying `securityKey`, bootstrap UIDL writer markers, a server-initiated push UIDL consumed by the WebView, a resync `resynchronize=true` signal consumed by the WebView, and an event patch from `UidlRequestHandler`.
+The inspector summarizes directions, message types and key markers. With `--require-flow-ipc-v1`, it requires `launch`, `ready`, `window.create`, `bootstrapRequest`, `bootstrapResponse`, `resourceRequest`, `resourceResponse`, `push`, `event`, `resync`, `command`, `capabilityResult`, `patch`, `webview.dom`, `webview.snapshot` and `shutdown`, plus `transport=flow-ipc`, `compatibilityMode=false`, a clicked-state patch, native clipboard evidence, `uidlRpcDispatch=true`, bootstrap/event/resync `sessionId` + `uiId` evidence, bootstrap `Vaadin-Security-Key` evidence, Flow client resource manifest/request/response/DOM evidence including FlowBootstrap and FlowClient module import/export/init markers, bootstrap DOM node bindings, an IPC-backed Flow client XHR bridge, a Flow client `attachExistingElementById` XHR request, a Flow client `click` UIDL RPC XHR request, a `flow-client-xhr` event patch consumed by the Flow client probe, a resync request carrying `securityKey`, bootstrap UIDL writer markers, a server-initiated push UIDL consumed by the WebView, and a resync `resynchronize=true` signal consumed by the WebView.
 
 Run the envelope scope rejection smoke with:
 

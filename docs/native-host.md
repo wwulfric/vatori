@@ -74,4 +74,4 @@ The real host still needs to:
 
 Embedding a localhost URL in WKWebView is compatibility mode. It is useful for proving framework ergonomics, real Flow app structure and desktop host lifecycle, but it is not Flow over IPC.
 
-The `dev-ipc` path is the first real no-HTTP IPC slice, but it is not final either: it proves host/WebView/Java message flow, WebView-produced UIDL RPC events, one verification resync, one server-initiated push, listener-driven patches, server-side UIDL generation, Flow client module initialization and bootstrap UIDL binding before the project swaps in Flow client engine patch consumption.
+The `dev-ipc` path is the first real no-HTTP IPC slice, but it is not final either: it proves host/WebView/Java message flow, IPC-backed Flow client XHR event dispatch, one verification resync, one server-initiated push, listener-driven patches, server-side UIDL generation, Flow client module initialization, bootstrap UIDL binding and hidden-probe event patch consumption before the visible UI is fully owned by the Flow client engine.

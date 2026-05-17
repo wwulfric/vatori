@@ -45,6 +45,7 @@ final class FlowIpcRuntime {
                 "runtime", "repository-local-flow-ipc-adapter",
                 "uidlWriter", true,
                 "uidlRpcDispatch", true,
+                "uidlRpcProducer", "webview-bridge",
                 "uidlConsumer", "trace-only"));
 
         try (BufferedReader reader = new BufferedReader(new InputStreamReader(System.in, StandardCharsets.UTF_8))) {
@@ -85,6 +86,13 @@ final class FlowIpcRuntime {
         payload.put("compatibilityMode", false);
         payload.put("route", route);
         payload.put("uidl", uidlPayload("bootstrap", false));
+        payload.put("clientState", Map.of(
+                "sessionId", flowSession.sessionId(),
+                "uiId", flowSession.uiId(),
+                "csrfToken", flowSession.csrfToken(),
+                "syncId", -1,
+                "clientId", 0,
+                "eventDispatch", "flow-client-rpc"));
         payload.put("tree", renderer.render(root));
         send("bootstrapResponse", nextId("bootstrap"), correlationIdOr(id, correlationId), payload);
         send("push", nextId("push"), correlationIdOr(id, correlationId), Map.of(
@@ -105,6 +113,13 @@ final class FlowIpcRuntime {
 
     private void handleEvent(String json, String id, String correlationId) {
         ensureBootstrapped();
+        String uidlRpc = JsonFields.object(json, "uidlRpc");
+        if (uidlRpc != null && !uidlRpc.isBlank()) {
+            FlowPatchResponse response = handleClientMessage(uidlRpc, JsonFields.integer(uidlRpc, "clientId", -1));
+            sendPatch("event", id, correlationId, response, "flow-client-rpc");
+            return;
+        }
+
         String action = JsonFields.string(json, "action");
         String componentId = JsonFields.string(json, "componentId");
         if (!"click".equals(action)) {
@@ -115,10 +130,21 @@ final class FlowIpcRuntime {
         if (target instanceof Button button) {
             int nodeId = button.getElement().getNode().getId();
             FlowPatchResponse response = handleDomEvent(nodeId, "click");
-            sendPatch("event", id, correlationId, response);
+            sendPatch("event", id, correlationId, response, "java-translated-rpc");
         } else {
             sendError("unsupportedTarget", "No clickable Vaadin Button registered for componentId=" + componentId,
                     id, correlationId);
+        }
+    }
+
+    private FlowPatchResponse handleClientMessage(String requestBody, int clientToServerMessageId) {
+        try {
+            int messageId = clientToServerMessageId < 0
+                    ? (int) clientToServerSequence.getAndIncrement()
+                    : clientToServerMessageId;
+            return flowSession.handleClientMessage(requestBody, messageId, false);
+        } catch (IOException error) {
+            throw new IllegalStateException("Unable to dispatch Flow UIDL RPC event: " + error.getMessage(), error);
         }
     }
 
@@ -135,12 +161,18 @@ final class FlowIpcRuntime {
     }
 
     private void sendPatch(String reason, String id, String correlationId, FlowPatchResponse uidlResponse) {
+        sendPatch(reason, id, correlationId, uidlResponse, uidlResponse == null ? "uidl-writer" : "unknown");
+    }
+
+    private void sendPatch(String reason, String id, String correlationId, FlowPatchResponse uidlResponse,
+                           String eventDispatch) {
         ensureBootstrapped();
         Map<String, Object> payload = new LinkedHashMap<>();
         payload.put("patchType", "replaceRoot");
         payload.put("reason", reason);
         payload.put("transport", "flow-ipc");
         payload.put("compatibilityMode", false);
+        payload.put("eventDispatch", eventDispatch);
         payload.put("uidl", uidlResponse == null
                 ? uidlPayload(reason, "resync".equals(reason))
                 : uidlPayload(reason, uidlResponse));
@@ -239,6 +271,54 @@ final class FlowIpcRuntime {
                 return null;
             }
             return unescape(matcher.group(1));
+        }
+
+        static int integer(String json, String field, int fallback) {
+            Matcher matcher = Pattern.compile(
+                    "\"" + Pattern.quote(field) + "\"\\s*:\\s*(-?\\d+)").matcher(json);
+            if (!matcher.find()) {
+                return fallback;
+            }
+            return Integer.parseInt(matcher.group(1));
+        }
+
+        static String object(String json, String field) {
+            Matcher matcher = Pattern.compile(
+                    "\"" + Pattern.quote(field) + "\"\\s*:\\s*\\{").matcher(json);
+            if (!matcher.find()) {
+                return null;
+            }
+            int start = matcher.end() - 1;
+            int depth = 0;
+            boolean inString = false;
+            boolean escaped = false;
+            for (int index = start; index < json.length(); index++) {
+                char character = json.charAt(index);
+                if (escaped) {
+                    escaped = false;
+                    continue;
+                }
+                if (character == '\\') {
+                    escaped = inString;
+                    continue;
+                }
+                if (character == '"') {
+                    inString = !inString;
+                    continue;
+                }
+                if (inString) {
+                    continue;
+                }
+                if (character == '{') {
+                    depth++;
+                } else if (character == '}') {
+                    depth--;
+                    if (depth == 0) {
+                        return json.substring(start, index + 1);
+                    }
+                }
+            }
+            return null;
         }
 
         private static String unescape(String value) {

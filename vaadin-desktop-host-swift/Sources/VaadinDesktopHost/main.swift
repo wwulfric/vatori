@@ -710,6 +710,11 @@ let flowIpcShell = #"""
       const trace = document.getElementById('trace');
       let sequence = 0;
       let autoClickDone = false;
+      const flowClientState = {
+        csrfToken: '',
+        syncId: -1,
+        clientId: 0
+      };
 
       function envelope(type, payload) {
         sequence += 1;
@@ -733,6 +738,53 @@ let flowIpcShell = #"""
         window.webkit.messageHandlers.flowIpc.postMessage(message);
       }
 
+      function updateClientState(payload) {
+        if (payload && payload.clientState) {
+          if (typeof payload.clientState.csrfToken === 'string') {
+            flowClientState.csrfToken = payload.clientState.csrfToken;
+          }
+          if (Number.isInteger(payload.clientState.syncId)) {
+            flowClientState.syncId = payload.clientState.syncId;
+          }
+          if (Number.isInteger(payload.clientState.clientId)) {
+            flowClientState.clientId = payload.clientState.clientId;
+          }
+        }
+        const body = payload && payload.uidl && payload.uidl.body;
+        if (typeof body === 'string' && body.length > 0) {
+          try {
+            const uidl = JSON.parse(body);
+            if (Number.isInteger(uidl.syncId)) {
+              flowClientState.syncId = uidl.syncId;
+            }
+          } catch (_) {
+            // The bridge still treats UIDL as an opaque payload until the Flow client engine consumes it.
+          }
+        }
+      }
+
+      function sendFlowEvent(node, eventType) {
+        const clientId = flowClientState.clientId++;
+        const uidlRpc = {
+          csrfToken: flowClientState.csrfToken,
+          rpc: [{
+            type: 'event',
+            node: node.nodeId,
+            event: eventType,
+            data: {}
+          }],
+          syncId: flowClientState.syncId,
+          clientId
+        };
+        send('event', {
+          dispatch: 'flow-client-rpc',
+          componentId: node.id,
+          nodeId: node.nodeId,
+          event: eventType,
+          uidlRpc
+        });
+      }
+
       function render(node) {
         if (!node) {
           app.textContent = 'No Flow IPC tree received.';
@@ -747,7 +799,7 @@ let flowIpcShell = #"""
           element = document.createElement('button');
           element.textContent = node.text || node.id;
           element.addEventListener('click', () => {
-            send('event', { action: 'click', componentId: node.id });
+            sendFlowEvent(node, 'click');
           });
         } else if (node.tag === 'h1') {
           element = document.createElement('h1');
@@ -776,6 +828,7 @@ let flowIpcShell = #"""
         receive(message) {
           trace.textContent = 'recv ' + message.type + ' #' + message.id;
           if (message.type === 'bootstrapResponse' || message.type === 'patch') {
+            updateClientState(message.payload);
             render(message.payload && message.payload.tree);
             if (message.type === 'bootstrapResponse' && window.__VAADIN_DESKTOP_FLOW_IPC_AUTO_CLICK__ && !autoClickDone) {
               autoClickDone = true;

@@ -80,6 +80,18 @@ public final class DesktopFlowRuntimeSession {
         return ui;
     }
 
+    public String csrfToken() {
+        return ui.getCsrfToken();
+    }
+
+    public String sessionId() {
+        return sessionId;
+    }
+
+    public int uiId() {
+        return uiId;
+    }
+
     public void runLocked(Runnable action) {
         session.lock();
         try {

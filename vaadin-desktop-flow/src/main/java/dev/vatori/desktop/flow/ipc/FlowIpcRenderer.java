@@ -31,6 +31,7 @@ final class FlowIpcRenderer {
 
         Map<String, Object> node = new LinkedHashMap<>();
         node.put("id", id);
+        node.put("nodeId", nodeId(component));
         String tag = tag(component);
         node.put("tag", tag);
         node.put("kind", kind(component, tag));
@@ -40,6 +41,14 @@ final class FlowIpcRenderer {
                 .map(this::renderComponent)
                 .toList());
         return node;
+    }
+
+    private static int nodeId(Component component) {
+        try {
+            return component.getElement().getNode().getId();
+        } catch (UnsupportedOperationException error) {
+            return -1;
+        }
     }
 
     private String id(Component component) {

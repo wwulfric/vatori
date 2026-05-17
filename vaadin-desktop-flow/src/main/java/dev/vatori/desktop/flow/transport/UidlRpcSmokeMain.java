@@ -36,5 +36,47 @@ public final class UidlRpcSmokeMain {
                 || !response.uidlJson().contains("\"syncId\"")) {
             throw new IllegalStateException("UIDL RPC smoke did not produce click listener patch");
         }
+
+        String invalidCsrfBody = eventBody("invalid-csrf-token", buttonNodeId, -1, 1);
+        try {
+            session.handleClientMessage(invalidCsrfBody, 1, false);
+            throw new IllegalStateException("UIDL RPC smoke accepted an invalid csrfToken");
+        } catch (SecurityException expected) {
+            System.out.println("invalid csrfToken rejected");
+        }
+
+        String staleSyncBody = eventBody(session.csrfToken(), buttonNodeId, -2, 1);
+        try {
+            session.handleClientMessage(staleSyncBody, 1, false);
+            throw new IllegalStateException("UIDL RPC smoke accepted a stale syncId");
+        } catch (IllegalStateException expected) {
+            System.out.println("stale syncId rejected");
+        }
+
+        String outOfOrderClientBody = eventBody(session.csrfToken(), buttonNodeId, -1, 3);
+        try {
+            session.handleClientMessage(outOfOrderClientBody, 3, false);
+            throw new IllegalStateException("UIDL RPC smoke accepted an out-of-order clientId");
+        } catch (IllegalStateException expected) {
+            System.out.println("out-of-order clientId rejected");
+        }
+    }
+
+    private static String eventBody(String csrfToken, int buttonNodeId, int syncId, int clientId) {
+        return """
+                {
+                  "csrfToken": "%s",
+                  "rpc": [
+                    {
+                      "type": "event",
+                      "node": %d,
+                      "event": "click",
+                      "data": {}
+                    }
+                  ],
+                  "syncId": %d,
+                  "clientId": %d
+                }
+                """.formatted(csrfToken, buttonNodeId, syncId, clientId);
     }
 }

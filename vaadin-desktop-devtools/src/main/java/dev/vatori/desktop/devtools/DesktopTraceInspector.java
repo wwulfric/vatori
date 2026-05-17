@@ -20,6 +20,8 @@ public final class DesktopTraceInspector {
             "window.create",
             "bootstrapRequest",
             "bootstrapResponse",
+            "resourceRequest",
+            "resourceResponse",
             "push",
             "event",
             "resync",
@@ -126,6 +128,28 @@ public final class DesktopTraceInspector {
                     && line.contains("\"uiId\":\"main\"")) {
                 summary.bootstrapScopeObserved = true;
             }
+            if (line.contains("\"type\":\"bootstrapResponse\"")
+                    && line.contains("\"flowClientResources\"")
+                    && line.contains("\"flow-client-classpath\"")
+                    && line.contains("META-INF/frontend/FlowBootstrap.js")) {
+                summary.flowClientResourceManifestObserved = true;
+            }
+            if (line.contains("\"type\":\"resourceRequest\"")
+                    && line.contains("META-INF/frontend/FlowBootstrap.js")
+                    && line.contains("\"securityKey\"")) {
+                summary.flowClientResourceRequestObserved = true;
+            }
+            if (line.contains("\"type\":\"resourceResponse\"")
+                    && line.contains("\"flowClientResource\":true")
+                    && line.contains("META-INF/frontend/FlowBootstrap.js")) {
+                summary.flowClientResourceResponseObserved = true;
+            }
+            if (line.contains("\"type\":\"webview.dom\"")
+                    && line.contains("flowClientResourceLoaded")
+                    && line.contains("flowClientResourceVerified")
+                    && line.contains("META-INF/frontend/FlowBootstrap.js")) {
+                summary.flowClientResourceDomObserved = true;
+            }
             if (line.contains("\"type\":\"event\"")
                     && line.contains("\"sessionId\":\"flow-ipc-session\"")
                     && line.contains("\"uiId\":\"main\"")) {
@@ -190,6 +214,10 @@ public final class DesktopTraceInspector {
         private boolean bootstrapScopeObserved;
         private boolean eventScopeObserved;
         private boolean resyncScopeObserved;
+        private boolean flowClientResourceManifestObserved;
+        private boolean flowClientResourceRequestObserved;
+        private boolean flowClientResourceResponseObserved;
+        private boolean flowClientResourceDomObserved;
         private boolean uidlRpcDispatchObserved;
         private boolean webViewUidlRpcObserved;
         private boolean uidlPatchObserved;
@@ -208,6 +236,10 @@ public final class DesktopTraceInspector {
                     && bootstrapScopeObserved
                     && eventScopeObserved
                     && resyncScopeObserved
+                    && flowClientResourceManifestObserved
+                    && flowClientResourceRequestObserved
+                    && flowClientResourceResponseObserved
+                    && flowClientResourceDomObserved
                     && uidlRpcDispatchObserved
                     && webViewUidlRpcObserved
                     && uidlPatchObserved
@@ -230,6 +262,10 @@ public final class DesktopTraceInspector {
             System.out.println("bootstrap scope observed: " + bootstrapScopeObserved);
             System.out.println("event scope observed: " + eventScopeObserved);
             System.out.println("resync scope observed: " + resyncScopeObserved);
+            System.out.println("Flow client resource manifest observed: " + flowClientResourceManifestObserved);
+            System.out.println("Flow client resource request observed: " + flowClientResourceRequestObserved);
+            System.out.println("Flow client resource response observed: " + flowClientResourceResponseObserved);
+            System.out.println("Flow client resource DOM observed: " + flowClientResourceDomObserved);
             System.out.println("UIDL RPC dispatch observed: " + uidlRpcDispatchObserved);
             System.out.println("WebView UIDL RPC observed: " + webViewUidlRpcObserved);
             System.out.println("UIDL request handler patch observed: " + uidlPatchObserved);

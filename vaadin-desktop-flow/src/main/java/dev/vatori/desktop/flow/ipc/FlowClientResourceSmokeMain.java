@@ -36,8 +36,12 @@ public final class FlowClientResourceSmokeMain {
                 || !clientText.contains("Vaadin.Flow.registerWidgetset")) {
             throw new IllegalStateException("FlowClient.js did not expose the expected Flow client entry");
         }
+        if (!clientText.contains("handleIpcMessage") || !clientText.contains("requestIpcResync")) {
+            throw new IllegalStateException("FlowClient.js did not expose the Flow IPC bridge methods");
+        }
         System.out.println("Flow client resources loaded from classpath: " + entries.size());
         System.out.println("FlowBootstrap.js bytes: " + bootstrapResponse.get("bytes"));
         System.out.println("FlowClient.js bytes: " + clientResponse.get("bytes"));
+        System.out.println("FlowClient.js IPC bridge: " + clientResponse.get("ipcAugmented"));
     }
 }

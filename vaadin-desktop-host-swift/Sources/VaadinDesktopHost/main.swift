@@ -638,8 +638,15 @@ final class WebViewHost: NSObject, NSApplicationDelegate, NSWindowDelegate, WKNa
           flowClientEngineXhrRequestObserved: !!(window.VaadinDesktopIpcDiagnostics && window.VaadinDesktopIpcDiagnostics.flowClientEngineXhrRequestObserved),
           flowClientEngineXhrResponseObserved: !!(window.VaadinDesktopIpcDiagnostics && window.VaadinDesktopIpcDiagnostics.flowClientEngineXhrResponseObserved),
           flowClientEngineXhrLastClientId: window.VaadinDesktopIpcDiagnostics ? window.VaadinDesktopIpcDiagnostics.flowClientEngineXhrLastClientId : -1,
+          flowClientEngineIpcMessageBridgeInstalled: !!(window.VaadinDesktopIpcDiagnostics && window.VaadinDesktopIpcDiagnostics.flowClientEngineIpcMessageBridgeInstalled),
+          flowClientEngineIpcResyncBridgeInstalled: !!(window.VaadinDesktopIpcDiagnostics && window.VaadinDesktopIpcDiagnostics.flowClientEngineIpcResyncBridgeInstalled),
           flowClientEngineEventPatchConsumed: !!(window.VaadinDesktopIpcDiagnostics && window.VaadinDesktopIpcDiagnostics.flowClientEngineEventPatchConsumed),
           flowClientEngineEventStatusText: window.VaadinDesktopIpcDiagnostics ? window.VaadinDesktopIpcDiagnostics.flowClientEngineEventStatusText : "",
+          flowClientEnginePushPatchConsumed: !!(window.VaadinDesktopIpcDiagnostics && window.VaadinDesktopIpcDiagnostics.flowClientEnginePushPatchConsumed),
+          flowClientEnginePushStatusText: window.VaadinDesktopIpcDiagnostics ? window.VaadinDesktopIpcDiagnostics.flowClientEnginePushStatusText : "",
+          flowClientEngineQueuedMessageCount: window.VaadinDesktopIpcDiagnostics ? window.VaadinDesktopIpcDiagnostics.flowClientEngineQueuedMessageCount : -1,
+          flowClientEngineResyncRequested: !!(window.VaadinDesktopIpcDiagnostics && window.VaadinDesktopIpcDiagnostics.flowClientEngineResyncRequested),
+          flowClientEngineResyncPatchConsumed: !!(window.VaadinDesktopIpcDiagnostics && window.VaadinDesktopIpcDiagnostics.flowClientEngineResyncPatchConsumed),
           flowClientEngineVisibleOwner: !!(window.VaadinDesktopIpcDiagnostics && window.VaadinDesktopIpcDiagnostics.flowClientEngineVisibleOwner),
           flowClientEngineVisibleRootId: window.VaadinDesktopIpcDiagnostics ? window.VaadinDesktopIpcDiagnostics.flowClientEngineVisibleRootId : "",
           flowClientEngineVisibleStatusText: window.VaadinDesktopIpcDiagnostics ? window.VaadinDesktopIpcDiagnostics.flowClientEngineVisibleStatusText : "",
@@ -822,6 +829,7 @@ let flowIpcShell = #"""
       const flowClientResourceRequests = new Set();
       const flowClientResourceExpectedSha256ByPath = new Map();
       const pendingFlowClientXhrRequests = new Map();
+      const queuedFlowClientEngineMessages = [];
       const flowClientState = {
         csrfToken: '',
         securityKey: '',
@@ -866,8 +874,15 @@ let flowIpcShell = #"""
         flowClientEngineXhrRequestObserved: false,
         flowClientEngineXhrResponseObserved: false,
         flowClientEngineXhrLastClientId: -1,
+        flowClientEngineIpcMessageBridgeInstalled: false,
+        flowClientEngineIpcResyncBridgeInstalled: false,
         flowClientEngineEventPatchConsumed: false,
         flowClientEngineEventStatusText: '',
+        flowClientEnginePushPatchConsumed: false,
+        flowClientEnginePushStatusText: '',
+        flowClientEngineQueuedMessageCount: 0,
+        flowClientEngineResyncRequested: false,
+        flowClientEngineResyncPatchConsumed: false,
         flowClientEngineVisibleOwner: false,
         flowClientEngineVisibleRootId: '',
         flowClientEngineVisibleStatusText: '',
@@ -1039,6 +1054,56 @@ let flowIpcShell = #"""
         }
       }
 
+      function deliverFlowClientEngineMessage(message, kind) {
+        const client = flowClientEngineClient();
+        const body = message && message.payload && message.payload.uidl && typeof message.payload.uidl.body === 'string'
+          ? message.payload.uidl.body
+          : '';
+        if (!client || typeof client.handleIpcMessage !== 'function' || !body
+            || !window.VaadinDesktopIpcDiagnostics.flowClientEngineBootstrapDomBound) {
+          return false;
+        }
+        try {
+          client.handleIpcMessage(body);
+          if (kind === 'push') {
+            window.VaadinDesktopIpcDiagnostics.flowClientEnginePushPatchConsumed = true;
+          } else if (kind === 'resync') {
+            window.VaadinDesktopIpcDiagnostics.flowClientEngineResyncPatchConsumed = true;
+          }
+          setTimeout(refreshFlowClientEngineDiagnostics, 0);
+          setTimeout(refreshFlowClientEngineDiagnostics, 100);
+          return true;
+        } catch (error) {
+          window.VaadinDesktopIpcDiagnostics.flowClientEngineXhrError = error && error.message ? error.message : String(error);
+          return false;
+        }
+      }
+
+      function queueFlowClientEngineMessage(message, kind) {
+        if (!message || !(message.payload && message.payload.uidl && typeof message.payload.uidl.body === 'string')) {
+          return false;
+        }
+        queuedFlowClientEngineMessages.push({ message, kind });
+        window.VaadinDesktopIpcDiagnostics.flowClientEngineQueuedMessageCount = queuedFlowClientEngineMessages.length;
+        return true;
+      }
+
+      function flushQueuedFlowClientEngineMessages() {
+        if (queuedFlowClientEngineMessages.length === 0) {
+          window.VaadinDesktopIpcDiagnostics.flowClientEngineQueuedMessageCount = 0;
+          return;
+        }
+        for (let index = 0; index < queuedFlowClientEngineMessages.length;) {
+          const item = queuedFlowClientEngineMessages[index];
+          if (deliverFlowClientEngineMessage(item.message, item.kind)) {
+            queuedFlowClientEngineMessages.splice(index, 1);
+          } else {
+            index += 1;
+          }
+        }
+        window.VaadinDesktopIpcDiagnostics.flowClientEngineQueuedMessageCount = queuedFlowClientEngineMessages.length;
+      }
+
       function installFlowIpcXhrBridge() {
         if (window.VaadinDesktopIpcDiagnostics.flowClientEngineXhrBridgeInstalled) {
           return;
@@ -1191,6 +1256,9 @@ let flowIpcShell = #"""
           : '';
         if (body) {
           window.VaadinDesktopIpcDiagnostics.flowClientEngineXhrResponseObserved = true;
+          if (message.payload && message.payload.reason === 'resync') {
+            window.VaadinDesktopIpcDiagnostics.flowClientEngineResyncPatchConsumed = true;
+          }
           autoClickInFlight = false;
           setTimeout(scheduleAutoClick, 160);
           try {
@@ -1257,6 +1325,16 @@ let flowIpcShell = #"""
       }
 
       function requestResync(reason) {
+        const client = flowClientEngineClient();
+        if (client && typeof client.requestIpcResync === 'function') {
+          window.VaadinDesktopIpcDiagnostics.flowClientEngineResyncRequested = true;
+          try {
+            client.requestIpcResync();
+            return;
+          } catch (error) {
+            window.VaadinDesktopIpcDiagnostics.flowClientEngineXhrError = error && error.message ? error.message : String(error);
+          }
+        }
         const securityKey = flowClientState.securityKey || flowClientState.csrfToken;
         send('resync', {
           reason,
@@ -1563,9 +1641,11 @@ let flowIpcShell = #"""
         window.VaadinDesktopIpcDiagnostics.flowClientEngineClientKeys = clientKeys.join(',');
         window.VaadinDesktopIpcDiagnostics.flowClientEngineInitialized = !!client && client.initializing === false;
         window.VaadinDesktopIpcDiagnostics.flowClientEngineClientRegistered = !!client && typeof client.sendEventMessage === 'function';
+        window.VaadinDesktopIpcDiagnostics.flowClientEngineIpcMessageBridgeInstalled = !!client && typeof client.handleIpcMessage === 'function';
+        window.VaadinDesktopIpcDiagnostics.flowClientEngineIpcResyncBridgeInstalled = !!client && typeof client.requestIpcResync === 'function';
         if (client && typeof client.getByNodeId === 'function') {
           const boundNodeIds = [];
-          for (const nodeId of [19, 16, 14, 12]) {
+          for (const nodeId of [19, 16, 14, 12, 21]) {
             try {
               if (client.getByNodeId(nodeId)) {
                 boundNodeIds.push(nodeId);
@@ -1589,6 +1669,12 @@ let flowIpcShell = #"""
           } catch (_) {
             window.VaadinDesktopIpcDiagnostics.flowClientEngineBootstrapButtonText = '';
           }
+          try {
+            const pushStatus = client.getByNodeId(21) || document.querySelector('#flow-client-engine-root #ipc-push-status');
+            window.VaadinDesktopIpcDiagnostics.flowClientEnginePushStatusText = pushStatus ? (pushStatus.textContent || '') : '';
+          } catch (_) {
+            window.VaadinDesktopIpcDiagnostics.flowClientEnginePushStatusText = '';
+          }
         }
         if (window.VaadinDesktopIpcDiagnostics.flowClientEngineClientRegistered) {
           window.VaadinDesktopIpcDiagnostics.flowClientEngineInitError = '';
@@ -1604,6 +1690,9 @@ let flowIpcShell = #"""
           window.VaadinDesktopIpcDiagnostics.flowClientEngineBootstrapStatusText;
         window.VaadinDesktopIpcDiagnostics.flowClientEngineEventPatchConsumed =
           /^Clicks:\s*[1-9]\d*/.test(window.VaadinDesktopIpcDiagnostics.flowClientEngineEventStatusText);
+        window.VaadinDesktopIpcDiagnostics.flowClientEnginePushPatchConsumed =
+          window.VaadinDesktopIpcDiagnostics.flowClientEnginePushPatchConsumed
+          || /Server push over IPC READY/.test(window.VaadinDesktopIpcDiagnostics.flowClientEnginePushStatusText);
         if (window.VaadinDesktopIpcDiagnostics.flowClientEngineEventPatchConsumed) {
           autoClickDone = true;
           autoClickInFlight = false;
@@ -1612,7 +1701,10 @@ let flowIpcShell = #"""
           flowClientEngineResourceBaseVerified
           && window.VaadinDesktopIpcDiagnostics.flowClientEngineInitExported
           && window.VaadinDesktopIpcDiagnostics.flowClientEngineInitialized
-          && window.VaadinDesktopIpcDiagnostics.flowClientEngineClientRegistered;
+          && window.VaadinDesktopIpcDiagnostics.flowClientEngineClientRegistered
+          && window.VaadinDesktopIpcDiagnostics.flowClientEngineIpcMessageBridgeInstalled
+          && window.VaadinDesktopIpcDiagnostics.flowClientEngineIpcResyncBridgeInstalled;
+        flushQueuedFlowClientEngineMessages();
       }
 
       function initializeFlowClientEngineModule(module) {
@@ -1685,7 +1777,10 @@ let flowIpcShell = #"""
       }
 
       async function handleFlowClientEngineResourceResponse(payload, body, metadataMatches) {
-        const bodyLooksLikeFlowClient = body.includes('export function init') && body.includes('Vaadin.Flow.registerWidgetset');
+        const bodyLooksLikeFlowClient = body.includes('export function init')
+          && body.includes('Vaadin.Flow.registerWidgetset')
+          && body.includes('handleIpcMessage')
+          && body.includes('requestIpcResync');
         flowClientEngineResourceBaseVerified = metadataMatches && bodyLooksLikeFlowClient;
         window.VaadinDesktopIpcDiagnostics.flowClientEngineResourceLoaded = true;
         window.VaadinDesktopIpcDiagnostics.flowClientEngineResourcePath = payload.path || '';
@@ -1716,19 +1811,25 @@ let flowIpcShell = #"""
         receive(message) {
           trace.textContent = 'recv ' + message.type + ' #' + message.id;
           if (message.type === 'bootstrapResponse' || message.type === 'patch' || message.type === 'push' || message.type === 'resync') {
-            completeFlowClientXhrIfPending(message);
+            const flowClientCompleted = completeFlowClientXhrIfPending(message);
             updateClientState(message.payload);
+            let flowClientOwnsMessage = flowClientCompleted;
+            if (message.type === 'push') {
+              flowClientOwnsMessage = deliverFlowClientEngineMessage(message, 'push') || queueFlowClientEngineMessage(message, 'push');
+            } else if (!flowClientCompleted && message.payload && message.payload.uidl && message.payload.uidl.resync === true) {
+              flowClientOwnsMessage = deliverFlowClientEngineMessage(message, 'resync') || queueFlowClientEngineMessage(message, 'resync');
+            }
             if (message.type === 'bootstrapResponse') {
               if (!applyUidlBootstrap(message.payload)) {
                 render(message.payload && message.payload.tree);
               }
               rememberFlowClientBootstrapPayload(message.payload);
               requestFlowClientResourceProbe(message.payload);
-            } else if (message.payload && message.payload.uidl && message.payload.uidl.resync === true) {
+            } else if (!flowClientOwnsMessage && message.payload && message.payload.uidl && message.payload.uidl.resync === true) {
               if (!applyUidlBootstrap(message.payload)) {
                 render(message.payload && message.payload.tree);
               }
-            } else if (!applyUidlPatch(message.payload)) {
+            } else if (!flowClientOwnsMessage && !applyUidlPatch(message.payload)) {
               render(message.payload && message.payload.tree);
             }
             if (message.type === 'patch' && message.payload && message.payload.reason === 'event' && window.__VAADIN_DESKTOP_FLOW_IPC_AUTO_RESYNC__ && !autoResyncDone) {

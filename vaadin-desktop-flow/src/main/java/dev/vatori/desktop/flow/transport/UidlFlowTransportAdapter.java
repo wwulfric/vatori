@@ -69,8 +69,13 @@ public final class UidlFlowTransportAdapter implements FlowTransportAdapter {
 
     @Override
     public String createUidl(UI ui, boolean resync) {
+        return createUidl(ui, false, resync);
+    }
+
+    @Override
+    public String createUidl(UI ui, boolean async, boolean resync) {
         Objects.requireNonNull(ui, "ui");
-        String uidlJson = uidlWriter.createUidl(ui, false, resync).toString();
+        String uidlJson = uidlWriter.createUidl(ui, async, resync).toString();
         ui.getInternals().setLastRequestResponse(uidlJson);
         return uidlJson;
     }

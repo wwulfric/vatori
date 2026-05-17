@@ -116,9 +116,13 @@ public final class DesktopFlowRuntimeSession {
     }
 
     public String createUidl(boolean resync) {
+        return createUidl(false, resync);
+    }
+
+    public String createUidl(boolean async, boolean resync) {
         session.lock();
         try {
-            String uidl = uidlAdapter.createUidl(ui, resync);
+            String uidl = uidlAdapter.createUidl(ui, async, resync);
             observeSyncId(uidl);
             return uidl;
         } finally {

@@ -17,13 +17,20 @@ import java.util.Properties;
 final class FlowClientResources {
     private static final String COMPILE_PROPERTIES =
             "META-INF/resources/VAADIN/static/client/compile.properties";
+    private static final String FLOW_CLIENT_JS = "META-INF/frontend/FlowClient.js";
+    private static final String FLOW_CLIENT_IPC_BRIDGE_NEEDLE = """
+            j.sendEventMessage=mI(function(a,b,c){var d=i.a.Z();d.Ab(a,b,c)});j.initializing=false;\
+            """;
+    private static final String FLOW_CLIENT_IPC_BRIDGE_REPLACEMENT = """
+            j.sendEventMessage=mI(function(a,b,c){var d=i.a.Z();d.Ab(a,b,c)});j.handleIpcMessage=mI(function(a){var b=typeof a==='string'?JSON.parse(a):a;Pr(i.a.X(),b)});j.requestIpcResync=mI(function(){Cs(Ic(wk(i.a,tf),16))});j.initializing=false;\
+            """;
 
     private final Map<String, Resource> resources;
 
     FlowClientResources() {
         Map<String, Resource> discovered = new LinkedHashMap<>();
         add(discovered, "META-INF/frontend/FlowBootstrap.js", "flow-bootstrap-module", true);
-        add(discovered, "META-INF/frontend/FlowClient.js", "flow-client-module", true);
+        add(discovered, FLOW_CLIENT_JS, "flow-client-module", true);
         add(discovered, "META-INF/frontend/Flow.js", "flow-module", true);
         add(discovered, "META-INF/frontend/index.js", "flow-index-module", true);
         add(discovered, COMPILE_PROPERTIES, "flow-client-compile-properties", true);
@@ -102,13 +109,24 @@ final class FlowClientResources {
             if (stream == null) {
                 return null;
             }
-            return new Resource(path, kind, stream.readAllBytes(), text);
+            byte[] bytes = stream.readAllBytes();
+            boolean ipcAugmented = false;
+            if (FLOW_CLIENT_JS.equals(path)) {
+                String source = new String(bytes, StandardCharsets.UTF_8);
+                if (!source.contains(FLOW_CLIENT_IPC_BRIDGE_NEEDLE)) {
+                    throw new IllegalStateException("Unable to install Flow IPC bridge into FlowClient.js");
+                }
+                source = source.replace(FLOW_CLIENT_IPC_BRIDGE_NEEDLE, FLOW_CLIENT_IPC_BRIDGE_REPLACEMENT);
+                bytes = source.getBytes(StandardCharsets.UTF_8);
+                ipcAugmented = true;
+            }
+            return new Resource(path, kind, bytes, text, ipcAugmented);
         } catch (IOException error) {
             throw new IllegalStateException("Unable to read Flow client resource " + path, error);
         }
     }
 
-    private record Resource(String path, String kind, byte[] bytes, boolean text) {
+    private record Resource(String path, String kind, byte[] bytes, boolean text, boolean ipcAugmented) {
         private Resource {
             Objects.requireNonNull(path, "path");
             Objects.requireNonNull(kind, "kind");
@@ -122,6 +140,7 @@ final class FlowClientResources {
             metadata.put("bytes", bytes.length);
             metadata.put("sha256", sha256(bytes));
             metadata.put("text", text);
+            metadata.put("ipcAugmented", ipcAugmented);
             return metadata;
         }
 

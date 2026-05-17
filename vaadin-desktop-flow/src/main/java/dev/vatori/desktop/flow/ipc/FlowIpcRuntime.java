@@ -197,6 +197,22 @@ final class FlowIpcRuntime {
         ensureBootstrapped();
         validateEnvelopeScope(json);
         validateSecurityKey(json);
+        String uidlRpc = JsonFields.object(json, "uidlRpc");
+        if (uidlRpc != null && !uidlRpc.isBlank()) {
+            String dispatch = JsonFields.string(json, "dispatch");
+            int clientId = JsonFields.integer(uidlRpc, "clientId", -1);
+            if (clientId >= 0) {
+                clientToServerSequence.accumulateAndGet(clientId + 1L, Math::max);
+            }
+            try {
+                FlowPatchResponse response = flowSession.handleClientMessage(uidlRpc, clientId, true);
+                sendPatch("resync", id, correlationId, response,
+                        dispatch == null || dispatch.isBlank() ? "flow-client-xhr" : dispatch);
+            } catch (IOException error) {
+                throw new IllegalStateException("Unable to dispatch Flow UIDL resync: " + error.getMessage(), error);
+            }
+            return;
+        }
         sendPatch("resync", id, correlationId);
     }
 
@@ -289,15 +305,19 @@ final class FlowIpcRuntime {
     }
 
     private Map<String, Object> uidlPayload(String reason, boolean resync) {
-        String uidlJson = "bootstrap".equals(reason) ? flowSession.createBootstrapUidl() : flowSession.createUidl(resync);
+        boolean async = "push".equals(reason);
+        String uidlJson = "bootstrap".equals(reason)
+                ? flowSession.createBootstrapUidl()
+                : flowSession.createUidl(async, resync);
         Map<String, Object> uidl = new LinkedHashMap<>();
         uidl.put("source", "UidlWriter");
         uidl.put("format", "vaadin-uidl-json");
         uidl.put("reason", reason);
         uidl.put("resync", resync);
+        uidl.put("async", async);
         uidl.put("desktopSession", true);
         uidl.put("consumedByWebView", true);
-        uidl.put("consumer", "bootstrap".equals(reason)
+        uidl.put("consumer", "bootstrap".equals(reason) || "push".equals(reason)
                 ? "flow-client-engine-visible"
                 : "minimum-webview-uidl-applier-fallback");
         uidl.put("containsChanges", uidlJson.contains("\"changes\""));

@@ -53,7 +53,8 @@ final class FlowIpcRuntime {
                 "uidlRpcDispatch", true,
                 "flowClientResourceLoading", "ipc-resource-request",
                 "uidlRpcProducer", "webview-bridge",
-                "uidlConsumer", "minimum-webview-uidl-applier"));
+                "uidlConsumer", "flow-client-engine-visible",
+                "uidlFallback", "minimum-webview-uidl-applier"));
 
         try (BufferedReader reader = new BufferedReader(new InputStreamReader(System.in, StandardCharsets.UTF_8))) {
             String line;
@@ -264,7 +265,7 @@ final class FlowIpcRuntime {
         payload.put("eventDispatch", eventDispatch);
         payload.put("uidl", uidlResponse == null
                 ? uidlPayload(reason, "resync".equals(reason))
-                : uidlPayload(reason, uidlResponse));
+                : uidlPayload(reason, uidlResponse, eventDispatch));
         payload.put("tree", renderer.render(root));
         send("patch", nextId("patch"), correlationIdOr(id, correlationId), payload);
     }
@@ -296,7 +297,9 @@ final class FlowIpcRuntime {
         uidl.put("resync", resync);
         uidl.put("desktopSession", true);
         uidl.put("consumedByWebView", true);
-        uidl.put("consumer", "minimum-webview-uidl-applier");
+        uidl.put("consumer", "bootstrap".equals(reason)
+                ? "flow-client-engine-visible"
+                : "minimum-webview-uidl-applier-fallback");
         uidl.put("containsChanges", uidlJson.contains("\"changes\""));
         uidl.put("containsSyncId", uidlJson.contains("\"syncId\""));
         uidl.put("containsSecurityKey", uidlJson.contains("\"" + ApplicationConstants.UIDL_SECURITY_TOKEN_ID + "\""));
@@ -304,7 +307,7 @@ final class FlowIpcRuntime {
         return uidl;
     }
 
-    private Map<String, Object> uidlPayload(String reason, FlowPatchResponse response) {
+    private Map<String, Object> uidlPayload(String reason, FlowPatchResponse response, String eventDispatch) {
         String uidlJson = response.uidlJson();
         Map<String, Object> uidl = new LinkedHashMap<>();
         uidl.put("source", "UidlRequestHandler");
@@ -313,7 +316,9 @@ final class FlowIpcRuntime {
         uidl.put("resync", response.resync());
         uidl.put("desktopSession", response.desktopVaadinRequestUsed());
         uidl.put("consumedByWebView", true);
-        uidl.put("consumer", "minimum-webview-uidl-applier");
+        uidl.put("consumer", "flow-client-xhr".equals(eventDispatch)
+                ? "flow-client-engine-visible"
+                : "minimum-webview-uidl-applier-fallback");
         uidl.put("statusCode", response.statusCode());
         uidl.put("contentType", response.contentType());
         uidl.put("containsChanges", uidlJson.contains("\"changes\""));

@@ -224,6 +224,11 @@ final class JavaSidecar {
 
     func terminate() {
         if config.transport == "flow-ipc" {
+            trace("send", "shutdown", [
+                "target": "java-sidecar",
+                "transport": "flow-ipc",
+                "reason": "host-terminate"
+            ])
             sendFlowIpc("{\"version\":\"flow-ipc-v1\",\"type\":\"shutdown\",\"id\":\"shutdown\",\"correlationId\":\"shutdown\",\"sessionId\":\"flow-ipc-session\",\"uiId\":\"main\",\"route\":\"\",\"payload\":{},\"error\":null,\"timestamp\":0}")
         }
         stdoutPipe?.fileHandleForReading.readabilityHandler = nil
@@ -600,13 +605,9 @@ final class WebViewHost: NSObject, NSApplicationDelegate, NSWindowDelegate, WKNa
               return "";
             }
             const clone = document.body.cloneNode(true);
-            const probeRoot = clone.querySelector("#flow-client-engine-probe-root");
-            if (probeRoot) {
-              probeRoot.remove();
-            }
             return clone.innerText.slice(0, 500);
           })(),
-          hasVaadinRoot: !!document.querySelector("vaadin-app-layout, vaadin-vertical-layout, flow-container-root"),
+          hasVaadinRoot: !!document.querySelector("vaadin-app-layout, vaadin-vertical-layout, flow-container-root, flow-container-root-2521314, #flow-client-engine-root"),
           elementCount: document.body ? document.body.querySelectorAll("*").length : 0,
           flowClientResourceLoaded: !!(window.VaadinDesktopIpcDiagnostics && window.VaadinDesktopIpcDiagnostics.flowClientResourceLoaded),
           flowClientResourcePath: window.VaadinDesktopIpcDiagnostics ? window.VaadinDesktopIpcDiagnostics.flowClientResourcePath : "",
@@ -639,6 +640,11 @@ final class WebViewHost: NSObject, NSApplicationDelegate, NSWindowDelegate, WKNa
           flowClientEngineXhrLastClientId: window.VaadinDesktopIpcDiagnostics ? window.VaadinDesktopIpcDiagnostics.flowClientEngineXhrLastClientId : -1,
           flowClientEngineEventPatchConsumed: !!(window.VaadinDesktopIpcDiagnostics && window.VaadinDesktopIpcDiagnostics.flowClientEngineEventPatchConsumed),
           flowClientEngineEventStatusText: window.VaadinDesktopIpcDiagnostics ? window.VaadinDesktopIpcDiagnostics.flowClientEngineEventStatusText : "",
+          flowClientEngineVisibleOwner: !!(window.VaadinDesktopIpcDiagnostics && window.VaadinDesktopIpcDiagnostics.flowClientEngineVisibleOwner),
+          flowClientEngineVisibleRootId: window.VaadinDesktopIpcDiagnostics ? window.VaadinDesktopIpcDiagnostics.flowClientEngineVisibleRootId : "",
+          flowClientEngineVisibleStatusText: window.VaadinDesktopIpcDiagnostics ? window.VaadinDesktopIpcDiagnostics.flowClientEngineVisibleStatusText : "",
+          flowClientEngineVisibleButtonText: window.VaadinDesktopIpcDiagnostics ? window.VaadinDesktopIpcDiagnostics.flowClientEngineVisibleButtonText : "",
+          flowClientEngineLocalFallbackHidden: !!(window.VaadinDesktopIpcDiagnostics && window.VaadinDesktopIpcDiagnostics.flowClientEngineLocalFallbackHidden),
           flowClientEngineXhrError: window.VaadinDesktopIpcDiagnostics ? window.VaadinDesktopIpcDiagnostics.flowClientEngineXhrError : "",
           flowClientEngineInitError: window.VaadinDesktopIpcDiagnostics ? window.VaadinDesktopIpcDiagnostics.flowClientEngineInitError : "",
           flowClientEngineResourceExecutionError: window.VaadinDesktopIpcDiagnostics ? window.VaadinDesktopIpcDiagnostics.flowClientEngineResourceExecutionError : ""
@@ -737,10 +743,22 @@ let flowIpcShell = #"""
       min-height: 100vh;
       background: Canvas;
     }
-    #app {
+    #app,
+    #flow-client-engine-root {
       box-sizing: border-box;
       min-height: 100vh;
       padding: 28px;
+    }
+    #app[hidden],
+    #flow-client-engine-root[hidden] {
+      display: none !important;
+    }
+    #flow-client-engine-root {
+      display: block;
+    }
+    flow-container-root-2521314 {
+      display: block;
+      min-height: calc(100vh - 56px);
     }
     .flow-layout {
       display: flex;
@@ -783,6 +801,7 @@ let flowIpcShell = #"""
 </head>
 <body>
   <main id="app"></main>
+  <section id="flow-client-engine-root" hidden></section>
   <div id="trace"></div>
   <script>
     (function () {
@@ -849,6 +868,11 @@ let flowIpcShell = #"""
         flowClientEngineXhrLastClientId: -1,
         flowClientEngineEventPatchConsumed: false,
         flowClientEngineEventStatusText: '',
+        flowClientEngineVisibleOwner: false,
+        flowClientEngineVisibleRootId: '',
+        flowClientEngineVisibleStatusText: '',
+        flowClientEngineVisibleButtonText: '',
+        flowClientEngineLocalFallbackHidden: false,
         flowClientEngineXhrError: '',
         flowClientEngineInitError: '',
         flowClientEngineResourceExecutionError: ''
@@ -943,6 +967,62 @@ let flowIpcShell = #"""
       function flowClientEngineClient() {
         const clients = window.Vaadin && window.Vaadin.Flow && window.Vaadin.Flow.clients ? window.Vaadin.Flow.clients : {};
         return clients[flowBootstrapClientId] || clients[flowBootstrapAppId] || null;
+      }
+
+      function flowClientEngineRoot() {
+        return document.getElementById('flow-client-engine-root');
+      }
+
+      function flowClientContainerTag() {
+        return 'flow-container-' + flowBootstrapAppId.toLowerCase();
+      }
+
+      function flowClientEngineElement(nodeId) {
+        const client = flowClientEngineClient();
+        if (client && typeof client.getByNodeId === 'function') {
+          try {
+            return client.getByNodeId(nodeId);
+          } catch (_) {
+            return null;
+          }
+        }
+        return null;
+      }
+
+      function flowClientEngineButton() {
+        return flowClientEngineElement(16)
+          || document.querySelector('#flow-client-engine-root #ipc-button')
+          || document.querySelector('#flow-client-engine-root [data-flow-id="ipc-button"]')
+          || document.querySelector('[data-flow-id="ipc-button"]');
+      }
+
+      function promoteFlowClientEngineToVisible() {
+        const root = flowClientEngineRoot();
+        const container = document.querySelector(flowClientContainerTag());
+        if (!root || !container || !window.VaadinDesktopIpcDiagnostics.flowClientEngineBootstrapDomBound) {
+          return false;
+        }
+        root.hidden = false;
+        root.style.display = '';
+        container.hidden = false;
+        container.style.display = '';
+        if (container.parentElement !== root) {
+          root.appendChild(container);
+        }
+        app.hidden = true;
+        app.style.display = 'none';
+        window.VaadinDesktopIpcDiagnostics.flowClientEngineVisibleOwner = true;
+        window.VaadinDesktopIpcDiagnostics.flowClientEngineVisibleRootId = root.id;
+        window.VaadinDesktopIpcDiagnostics.flowClientEngineLocalFallbackHidden = app.hidden;
+        return true;
+      }
+
+      function refreshFlowClientEngineVisibleDiagnostics() {
+        const status = flowClientEngineElement(14);
+        const button = flowClientEngineElement(16);
+        window.VaadinDesktopIpcDiagnostics.flowClientEngineVisibleStatusText = status ? (status.textContent || '') : '';
+        window.VaadinDesktopIpcDiagnostics.flowClientEngineVisibleButtonText = button ? (button.textContent || '') : '';
+        window.VaadinDesktopIpcDiagnostics.flowClientEngineLocalFallbackHidden = app.hidden;
       }
 
       function sendFlowClientEngineEvent(node, eventType) {
@@ -1140,7 +1220,7 @@ let flowIpcShell = #"""
           return;
         }
         const client = flowClientEngineClient();
-        const button = document.querySelector('[data-flow-id="ipc-button"]');
+        const button = flowClientEngineButton();
         if (button && client && typeof client.sendEventMessage === 'function' && window.VaadinDesktopIpcDiagnostics.flowClientEngineXhrBridgeInstalled) {
           if (autoClickAttempts >= 5) {
             autoClickDone = true;
@@ -1247,14 +1327,13 @@ let flowIpcShell = #"""
       }
 
       function ensureFlowClientContainer() {
-        const tag = 'flow-container-' + flowBootstrapAppId.toLowerCase();
-        let probeRoot = document.getElementById('flow-client-engine-probe-root');
-        if (!probeRoot) {
-          probeRoot = document.createElement('div');
-          probeRoot.id = 'flow-client-engine-probe-root';
-          probeRoot.hidden = true;
-          probeRoot.style.cssText = 'display: none !important;';
-          document.body.appendChild(probeRoot);
+        const tag = flowClientContainerTag();
+        let root = flowClientEngineRoot();
+        if (!root) {
+          root = document.createElement('section');
+          root.id = 'flow-client-engine-root';
+          root.hidden = true;
+          document.body.insertBefore(root, trace);
         }
         let container = document.querySelector(tag);
         if (!container) {
@@ -1262,9 +1341,9 @@ let flowIpcShell = #"""
           container.id = flowBootstrapAppId;
           container.hidden = true;
           container.style.display = 'none';
-          probeRoot.appendChild(container);
-        } else if (container.parentElement !== probeRoot) {
-          probeRoot.appendChild(container);
+          root.appendChild(container);
+        } else if (container.parentElement !== root) {
+          root.appendChild(container);
         }
         document.body.$ = document.body.$ || {};
         document.body.$[flowBootstrapAppId] = container;
@@ -1516,6 +1595,11 @@ let flowIpcShell = #"""
         } else if (clientKeys.length > 0) {
           window.VaadinDesktopIpcDiagnostics.flowClientEngineInitError = 'FlowClient.init has not registered sendEventMessage client yet';
         }
+        if (window.VaadinDesktopIpcDiagnostics.flowClientEngineClientRegistered
+            && window.VaadinDesktopIpcDiagnostics.flowClientEngineBootstrapDomBound) {
+          promoteFlowClientEngineToVisible();
+        }
+        refreshFlowClientEngineVisibleDiagnostics();
         window.VaadinDesktopIpcDiagnostics.flowClientEngineEventStatusText =
           window.VaadinDesktopIpcDiagnostics.flowClientEngineBootstrapStatusText;
         window.VaadinDesktopIpcDiagnostics.flowClientEngineEventPatchConsumed =

@@ -28,6 +28,7 @@
         <module>examples/grid-app</module>
         <module>examples/desktop-capabilities-app</module>
         <module>test-apps/vaadin-desktop-smoke-app</module>
+        <module>test-apps/flow-over-ipc-smoke-app</module>
     </modules>
 
     <properties>
@@ -48,4 +49,3 @@
         </dependencies>
     </dependencyManagement>
 </project>
-

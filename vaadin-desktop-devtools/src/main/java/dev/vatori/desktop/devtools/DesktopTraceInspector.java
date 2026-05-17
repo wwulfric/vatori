@@ -113,6 +113,13 @@ public final class DesktopTraceInspector {
                     && line.contains("\"minimum-webview-uidl-applier\"")) {
                 summary.uidlPatchObserved = true;
             }
+            if (line.contains("\"type\":\"push\"")
+                    && line.contains("\"source\":\"UidlWriter\"")
+                    && line.contains("\"reason\":\"push\"")
+                    && line.contains("\"consumedByWebView\":true")
+                    && line.contains("\"minimum-webview-uidl-applier\"")) {
+                summary.pushUidlObserved = true;
+            }
         }
         return summary;
     }
@@ -143,6 +150,7 @@ public final class DesktopTraceInspector {
         private boolean uidlRpcDispatchObserved;
         private boolean webViewUidlRpcObserved;
         private boolean uidlPatchObserved;
+        private boolean pushUidlObserved;
 
         public boolean hasRequiredFlowIpcTypes() {
             return types.keySet().containsAll(FLOW_IPC_REQUIRED_TYPES)
@@ -153,7 +161,8 @@ public final class DesktopTraceInspector {
                     && uidlWriterObserved
                     && uidlRpcDispatchObserved
                     && webViewUidlRpcObserved
-                    && uidlPatchObserved;
+                    && uidlPatchObserved
+                    && pushUidlObserved;
         }
 
         private void print(Path path) {
@@ -169,6 +178,7 @@ public final class DesktopTraceInspector {
             System.out.println("UIDL RPC dispatch observed: " + uidlRpcDispatchObserved);
             System.out.println("WebView UIDL RPC observed: " + webViewUidlRpcObserved);
             System.out.println("UIDL request handler patch observed: " + uidlPatchObserved);
+            System.out.println("server push UIDL observed: " + pushUidlObserved);
             List<String> missing = FLOW_IPC_REQUIRED_TYPES.stream()
                     .filter(type -> !types.containsKey(type))
                     .toList();

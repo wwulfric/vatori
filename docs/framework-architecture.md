@@ -18,6 +18,24 @@ This is intentionally marked as **compatibility mode** for the Flow UI transport
 
 The older `SystemWebViewDesktopHost` remains as a macOS fallback path.
 
+## Current IPC Slice
+
+```text
+Vaadin Flow View (@Route, Button, Span, Layout)
+  -> FlowIpcLauncher / FlowIpcRuntime
+  -> VFIPC1 stdin/stdout envelopes
+  -> vaadin-desktop-host-swift
+  -> WKWebView local HTML shell
+```
+
+This path is started with:
+
+```bash
+bash bin/vaadin-desktop dev-ipc test-apps/flow-over-ipc-smoke-app
+```
+
+It does not use localhost HTTP for bootstrap/event/patch in the smoke app. The current payload is still a repository-local rendered tree, not Vaadin UIDL.
+
 ## Target Stack
 
 ```text
@@ -34,8 +52,8 @@ The target stack removes local HTTP from the UI event/patch path. Framework v0 k
 ## Module Responsibilities
 
 - `vaadin-desktop-core`: public Java API for desktop apps.
-- `vaadin-desktop-flow`: compatibility adapter today; future home for Flow transport adapter.
-- `vaadin-desktop-ipc`: message envelope, trace and later stdio/socket transport.
+- `vaadin-desktop-flow`: compatibility adapter plus the first `FlowIpcLauncher`/`FlowIpcRuntime` slice.
+- `vaadin-desktop-ipc`: Host Protocol v0 envelope plus Flow IPC Protocol v1 envelope.
 - `vaadin-desktop-host`: Java host abstractions, macOS WKWebView fallback and native bridge implementations.
 - `vaadin-desktop-host-swift`: Swift/AppKit/WKWebView host spike that owns sidecar process lifecycle and system WebView.
 - `vaadin-desktop-devtools`: inspector and diagnostics.
@@ -50,4 +68,4 @@ Like Tauri, the intended shape is a small native host plus system WebView plus b
 
 Framework v0 uses real Vaadin Flow through `vaadin-spring-boot-starter`. Developers write standard Flow views with `@Route`, `Button`, `Grid`, `Span`, layouts and listeners.
 
-The current gap is transport: Flow still communicates over embedded HTTP/WebSocket. The repository now documents the first realistic extraction point around `UidlRequestHandler`/`ServerRpcHandler`/`UidlWriter`, but it has not removed `VaadinRequest` from the event path yet.
+The current gap is transport completeness: `dev-ipc` removes HTTP for one constrained smoke app, but full Flow still needs the real UIDL path around `UidlRequestHandler`/`ServerRpcHandler`/`UidlWriter` and a real Flow client engine bridge.

@@ -26,6 +26,7 @@ The current implementation is a real framework skeleton plus a compatibility tra
 - `vaadin-desktop-cli`: CLI scaffold.
 - `examples/*`: real Vaadin Flow example apps.
 - `test-apps/vaadin-desktop-smoke-app`: independent developer-style smoke app.
+- `test-apps/flow-over-ipc-smoke-app`: independent no-HTTP Flow IPC smoke app for the constrained `dev-ipc` runtime slice.
 - `prototypes/phase0-phase1-spike`: earlier non-HTTP mock Flow transport/IPC validation.
 - `flow-transport-adapter-spike`: current code-level Vaadin Flow UIDL/event/patch boundary analysis.
 
@@ -47,6 +48,14 @@ bash bin/vaadin-desktop dev-swift test-apps/vaadin-desktop-smoke-app
 This runs `vaadin-desktop-host-swift`, which starts the Java app as a sidecar, opens a native AppKit/WKWebView window after the sidecar prints `Application URL: ...`, traces Host Protocol v0 as `HOST_PROTOCOL ...`, reads Java command envelopes prefixed with `VDP1 `, and kills the Java process on window shutdown. It still loads the Flow UI through localhost HTTP compatibility mode.
 
 `dev-swift` launches the generated `.build/vaadin-desktop-host-swift/VaadinDesktopHost.app` via macOS LaunchServices. Logs are tailed from `.build/vaadin-desktop-host-swift/host.out.log` and `.build/vaadin-desktop-host-swift/host.err.log`. For real-window verification, check `HOST_PROTOCOL webview.dom` and `.build/vaadin-desktop-host-swift/window-snapshot.png`; on managed macOS desktops, global screenshots may be masked by a `loginwindow`/MDM overlay.
+
+No-HTTP IPC slice:
+
+```bash
+bash bin/vaadin-desktop dev-ipc test-apps/flow-over-ipc-smoke-app
+```
+
+This runs the Swift host with `--transport flow-ipc`, loads a local WKWebView HTML shell and communicates with Java through `VFIPC1` stdin/stdout envelopes. It proves WebView event -> Java Button listener -> patch -> WebView without localhost HTTP for the smoke app. It is not full Vaadin UIDL or the real Flow client engine yet.
 
 ## Build And Run
 
@@ -72,6 +81,12 @@ Run the Swift native host spike:
 
 ```bash
 bash bin/vaadin-desktop dev-swift test-apps/vaadin-desktop-smoke-app
+```
+
+Run the Flow IPC smoke app:
+
+```bash
+bash bin/vaadin-desktop dev-ipc test-apps/flow-over-ipc-smoke-app
 ```
 
 Host selection:
@@ -128,6 +143,9 @@ When making architecture decisions, prefer checking these local source trees bef
 - `docs/getting-started.md`: developer workflow.
 - `docs/flow-integration.md`: how real Vaadin Flow is integrated today.
 - `docs/ipc-protocol.md`: protocol envelope and message taxonomy.
+- `docs/ipc-protocol-v1.md`: Flow IPC v1 envelope and message taxonomy.
+- `docs/flow-over-ipc-runtime.md`: current `dev-ipc` runtime slice and limitations.
+- `docs/flow-transport-adapter.md`: current adapter implementation and next UIDL boundary.
 - `docs/native-host.md`: current WKWebView host and host roadmap.
 - `docs/roadmap.md`: next engineering phases.
 - `docs/flow-over-ipc-design.md`: original Chinese design package.

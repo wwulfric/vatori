@@ -8,11 +8,14 @@
 - Views use normal `@Route`.
 - UI components are real Vaadin components.
 - `DesktopLauncher` starts Spring Boot on a random local port.
+- `FlowIpcLauncher` starts a minimum no-HTTP Flow IPC sidecar for constrained smoke apps.
 - `SystemWebViewDesktopHost` receives the application URL and opens a macOS WKWebView desktop window by default.
 - `vaadin-desktop-host-swift` can start the Java app as a sidecar and open a Swift/AppKit WKWebView through `bin/vaadin-desktop dev-swift`.
 - `CompatibilityDesktopHost` remains available for headless/browser fallback modes.
 
 This means Vaadin Flow works today with ordinary Flow development patterns.
+
+`test-apps/flow-over-ipc-smoke-app` also uses ordinary Flow components and `@Route`, but it is launched through `FlowIpcLauncher` instead of Spring Boot web mode.
 
 ## What Is Reused
 
@@ -21,6 +24,7 @@ This means Vaadin Flow works today with ordinary Flow development patterns.
 - Spring Boot auto-configuration from `vaadin-spring-boot-starter`.
 - Vaadin Grid, Button, Span, layouts and data providers.
 - Vaadin dev mode.
+- In `dev-ipc`, server-side Button listener execution and basic component state mutation.
 
 ## What Still Depends on HTTP/Servlet
 
@@ -31,6 +35,8 @@ This means Vaadin Flow works today with ordinary Flow development patterns.
 - Push/WebSocket.
 - Frontend resource loading.
 - Upload/download.
+
+For the `dev-ipc` smoke app, the localhost HTTP transport is not used for bootstrap/event/patch. However, the current payload is not Vaadin UIDL and does not yet cover the full Flow client engine.
 
 These dependencies are acceptable only because they are isolated as compatibility mode.
 

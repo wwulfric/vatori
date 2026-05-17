@@ -43,6 +43,24 @@ This starts the next-stage native host:
 
 Trace lines prefixed with `HOST_PROTOCOL` are host/runtime trace. Java-to-host command envelopes are emitted by the sidecar with the `VDP1 ` prefix.
 
+## Run the Flow IPC Runtime Slice
+
+```bash
+bash bin/vaadin-desktop dev-ipc test-apps/flow-over-ipc-smoke-app
+```
+
+This starts the same Swift/AppKit host with `--transport flow-ipc`.
+
+Expected trace characteristics:
+
+- `transport=flow-ipc`
+- `compatibilityMode=false`
+- Java sidecar emits `VFIPC1` envelopes.
+- The WebView loads a local HTML shell through `loadHTMLString`, not `http://127.0.0.1`.
+- Button click travels WebView -> Swift host -> Java sidecar -> Vaadin Button listener -> patch -> WebView.
+
+Current limitation: this path uses a minimum repository-local renderer and replace-root patches. It does not yet use Vaadin UIDL or the full Flow client engine.
+
 ## Run the Independent Smoke App
 
 ```bash
@@ -95,3 +113,5 @@ public class MainView extends VerticalLayout {
 Framework v0 still starts an embedded Spring Boot web server on `127.0.0.1`. The macOS desktop window embeds that app in WKWebView, but the transport is still a transition layer, not the final Flow over IPC architecture.
 
 The Swift native path narrows the long-term host/runtime boundary, but Flow bootstrap, UIDL event handling and push are still compatibility HTTP unless a trace or document explicitly says otherwise.
+
+`dev-ipc` is the exception: it is the first no-HTTP runtime slice, but only for `test-apps/flow-over-ipc-smoke-app` and the constrained component/event set documented in `docs/flow-over-ipc-runtime.md`.

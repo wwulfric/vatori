@@ -23,15 +23,17 @@ Status: in progress in this repository.
 
 ## v0.2: Flow Transport Adapter Spike
 
-Status: started as `flow-transport-adapter-spike`.
+Status: first minimum runtime slice implemented, full UIDL adapter still pending.
 
 - Audit Vaadin Flow event and patch internals.
 - Extract a minimal adapter around bootstrap, event dispatch and UIDL/patch response.
 - Run one route without servlet request/response in the event path.
+- `dev-ipc` now runs `test-apps/flow-over-ipc-smoke-app` without localhost HTTP in the core event/patch path.
 
 First issue candidates:
 
 - Implement a repository-local adapter around `UidlRequestHandler` that returns UIDL JSON instead of writing `VaadinResponse`.
+- Replace the repository-local renderer in `FlowIpcRuntime` with a UIDL-producing adapter.
 - Prototype a desktop `VaadinRequest` adapter carrying session id, UI id, CSRF token and sync ids from Host Protocol.
 - Keep push out of scope until request/response UIDL works without HTTP sockets.
 

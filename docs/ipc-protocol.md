@@ -2,6 +2,8 @@
 
 Framework v0 keeps the envelope designed in `flow-ipc-protocol/protocol-v0.md` and starts moving it into `vaadin-desktop-ipc`. The next-stage host path adds Host Protocol v0 for Java sidecar, native host and WebView bridge coordination.
 
+Flow IPC Protocol v1 is documented in `docs/ipc-protocol-v1.md`. It adds `version`, `route` and `timestamp`, plus `bootstrapRequest`, `bootstrapResponse`, `event`, `patch`, `push` and `resync` for the `dev-ipc` runtime slice.
+
 ## Envelope
 
 ```json
@@ -46,7 +48,8 @@ Current implementation status:
 
 - `launch`, `ready`, `window.create`, `window.ready`, `command`, `capabilityResult`, `error` and `shutdown` are traced by `vaadin-desktop-host-swift`.
 - Java desktop commands are emitted from `HostProtocolNativeBridge` as stdout lines prefixed with `VDP1 `.
-- Real Flow `bootstrap`, `event`, `patch` and push still use compatibility-mode HTTP.
+- `dev-ipc` emits Flow IPC envelopes as stdout/stdin lines prefixed with `VFIPC1 `.
+- Compatibility modes still use HTTP for real Vaadin bootstrap, event, patch and push.
 
 ## Trace
 

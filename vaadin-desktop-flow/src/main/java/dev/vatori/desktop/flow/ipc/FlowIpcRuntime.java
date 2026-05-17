@@ -33,6 +33,7 @@ final class FlowIpcRuntime {
     private final FlowIpcRenderer renderer = new FlowIpcRenderer();
     private final FlowClientResources flowClientResources = new FlowClientResources();
     private final AtomicLong sequence = new AtomicLong();
+    private final AtomicLong serverSequence = new AtomicLong();
     private final AtomicLong clientToServerSequence = new AtomicLong();
     private Component root;
     private DesktopFlowRuntimeSession flowSession;
@@ -362,8 +363,11 @@ final class FlowIpcRuntime {
     }
 
     private void send(String type, String id, String correlationId, Map<String, Object> payload) {
+        Map<String, Object> sequencedPayload = new LinkedHashMap<>(payload);
+        sequencedPayload.put("serverSequence", serverSequence.incrementAndGet());
+        sequencedPayload.put("serverSequenceScope", "java-sidecar-to-webview");
         FlowIpcEnvelope envelope = FlowIpcEnvelope.message(type, id, correlationId,
-                IPC_SESSION_ID, IPC_UI_ID, route, payload);
+                IPC_SESSION_ID, IPC_UI_ID, route, sequencedPayload);
         System.out.println(PREFIX + IpcJson.stringify(envelope));
         System.out.flush();
     }

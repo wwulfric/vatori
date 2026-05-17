@@ -89,6 +89,19 @@ public final class DesktopTraceInspector {
             if (line.contains("\"compatibilityMode\":false")) {
                 summary.compatibilityFalse = true;
             }
+            if (line.contains("\"serverSequenceScope\":\"java-sidecar-to-webview\"")
+                    && line.contains("\"serverSequence\"")) {
+                summary.serverSequenceObserved = true;
+            }
+            if (line.contains("\"type\":\"webview.dom\"")
+                    && containsLiteralField(line, "flowIpcServerSequenceObserved", "true")
+                    && containsLiteralField(line, "flowIpcServerSequenceMonotonic", "true")
+                    && line.contains("bootstrapResponse:")
+                    && line.contains("resourceResponse:")
+                    && line.contains("push:")
+                    && line.contains("patch:")) {
+                summary.flowIpcServerSequenceDomObserved = true;
+            }
             if (line.contains("Clicks: 1")) {
                 summary.clickPatchObserved = true;
             }
@@ -231,7 +244,7 @@ public final class DesktopTraceInspector {
                     && containsLiteralField(line, "flowClientEngineXhrRequestObserved", "true")
                     && containsLiteralField(line, "flowClientEngineXhrResponseObserved", "true")
                     && containsLiteralField(line, "flowClientEngineEventPatchConsumed", "true")
-                    && containsStringField(line, "flowClientEngineEventStatusText", "Clicks: 1")
+                    && containsClickedStatusField(line, "flowClientEngineEventStatusText")
                     && containsStringField(line, "flowClientEngineXhrError", "")) {
                 summary.flowClientEngineXhrDomObserved = true;
             }
@@ -251,7 +264,7 @@ public final class DesktopTraceInspector {
             if (line.contains("\"type\":\"webview.dom\"")
                     && containsLiteralField(line, "flowClientEngineVisibleOwner", "true")
                     && containsStringField(line, "flowClientEngineVisibleRootId", "flow-client-engine-root")
-                    && containsStringField(line, "flowClientEngineVisibleStatusText", "Clicks: 1")
+                    && containsClickedStatusField(line, "flowClientEngineVisibleStatusText")
                     && containsStringField(line, "flowClientEngineVisibleButtonText", "Increment over IPC")
                     && containsLiteralField(line, "flowClientEngineLocalFallbackHidden", "true")) {
                 summary.flowClientEngineVisibleDomObserved = true;
@@ -323,6 +336,17 @@ public final class DesktopTraceInspector {
                 || line.contains("\\\"" + field + "\\\":\\\"" + value + "\\\"");
     }
 
+    private static boolean containsClickedStatusField(String line, String field) {
+        for (int digit = 1; digit <= 9; digit++) {
+            String prefix = "Clicks: " + digit;
+            if (line.contains("\"" + field + "\":\"" + prefix)
+                    || line.contains("\\\"" + field + "\\\":\\\"" + prefix)) {
+                return true;
+            }
+        }
+        return false;
+    }
+
     private static void usage() {
         System.out.println("Usage: bin/flow-ipc-trace-inspect [--require-flow-ipc-v1] <trace.ndjson>...");
     }
@@ -333,6 +357,8 @@ public final class DesktopTraceInspector {
         private final Map<String, Integer> directions = new LinkedHashMap<>();
         private boolean flowIpcTransport;
         private boolean compatibilityFalse;
+        private boolean serverSequenceObserved;
+        private boolean flowIpcServerSequenceDomObserved;
         private boolean clickPatchObserved;
         private boolean nativeClipboardObserved;
         private boolean capabilityPermissionObserved;
@@ -370,6 +396,8 @@ public final class DesktopTraceInspector {
             return types.keySet().containsAll(FLOW_IPC_REQUIRED_TYPES)
                     && flowIpcTransport
                     && compatibilityFalse
+                    && serverSequenceObserved
+                    && flowIpcServerSequenceDomObserved
                     && clickPatchObserved
                     && nativeClipboardObserved
                     && capabilityPermissionObserved
@@ -411,6 +439,8 @@ public final class DesktopTraceInspector {
             System.out.println("Types: " + types);
             System.out.println("transport=flow-ipc: " + flowIpcTransport);
             System.out.println("compatibilityMode=false: " + compatibilityFalse);
+            System.out.println("server sequence observed: " + serverSequenceObserved);
+            System.out.println("Flow IPC server sequence DOM observed: " + flowIpcServerSequenceDomObserved);
             System.out.println("click patch observed: " + clickPatchObserved);
             System.out.println("native clipboard observed: " + nativeClipboardObserved);
             System.out.println("capability permission observed: " + capabilityPermissionObserved);

@@ -676,6 +676,10 @@ final class WebViewHost: NSObject, NSApplicationDelegate, NSWindowDelegate, WKNa
           flowClientEngineListBound: !!(window.VaadinDesktopIpcDiagnostics && window.VaadinDesktopIpcDiagnostics.flowClientEngineListBound),
           flowClientEngineListItemCount: window.VaadinDesktopIpcDiagnostics ? window.VaadinDesktopIpcDiagnostics.flowClientEngineListItemCount : 0,
           flowClientEngineListText: window.VaadinDesktopIpcDiagnostics ? window.VaadinDesktopIpcDiagnostics.flowClientEngineListText : "",
+          flowIpcServerSequenceObserved: !!(window.VaadinDesktopIpcDiagnostics && window.VaadinDesktopIpcDiagnostics.flowIpcServerSequenceObserved),
+          flowIpcServerSequenceMonotonic: !!(window.VaadinDesktopIpcDiagnostics && window.VaadinDesktopIpcDiagnostics.flowIpcServerSequenceMonotonic),
+          flowIpcServerSequenceCount: window.VaadinDesktopIpcDiagnostics ? window.VaadinDesktopIpcDiagnostics.flowIpcServerSequenceCount : 0,
+          flowIpcServerSequences: window.VaadinDesktopIpcDiagnostics ? window.VaadinDesktopIpcDiagnostics.flowIpcServerSequences : "",
           flowClientEngineXhrBridgeInstalled: !!(window.VaadinDesktopIpcDiagnostics && window.VaadinDesktopIpcDiagnostics.flowClientEngineXhrBridgeInstalled),
           flowClientEngineXhrRequestObserved: !!(window.VaadinDesktopIpcDiagnostics && window.VaadinDesktopIpcDiagnostics.flowClientEngineXhrRequestObserved),
           flowClientEngineXhrResponseObserved: !!(window.VaadinDesktopIpcDiagnostics && window.VaadinDesktopIpcDiagnostics.flowClientEngineXhrResponseObserved),
@@ -875,6 +879,8 @@ let flowIpcShell = #"""
       const flowClientResourceExpectedSha256ByPath = new Map();
       const pendingFlowClientXhrRequests = new Map();
       const queuedFlowClientEngineMessages = [];
+      const flowIpcServerSequences = [];
+      let lastFlowIpcServerSequence = 0;
       const flowClientState = {
         csrfToken: '',
         securityKey: '',
@@ -918,6 +924,10 @@ let flowIpcShell = #"""
         flowClientEngineListBound: false,
         flowClientEngineListItemCount: 0,
         flowClientEngineListText: '',
+        flowIpcServerSequenceObserved: false,
+        flowIpcServerSequenceMonotonic: true,
+        flowIpcServerSequenceCount: 0,
+        flowIpcServerSequences: '',
         flowClientEngineXhrBridgeInstalled: false,
         flowClientEngineXhrRequestObserved: false,
         flowClientEngineXhrResponseObserved: false,
@@ -977,6 +987,22 @@ let flowIpcShell = #"""
         trace.textContent = 'send error #' + envelopeMessage.id;
         window.webkit.messageHandlers.flowIpc.postMessage(envelopeMessage);
         return envelopeMessage;
+      }
+
+      function observeFlowIpcServerSequence(message) {
+        const rawSequence = message && message.payload ? message.payload.serverSequence : undefined;
+        const serverSequence = Number(rawSequence);
+        if (!Number.isFinite(serverSequence) || serverSequence <= 0) {
+          return;
+        }
+        if (lastFlowIpcServerSequence > 0 && serverSequence <= lastFlowIpcServerSequence) {
+          window.VaadinDesktopIpcDiagnostics.flowIpcServerSequenceMonotonic = false;
+        }
+        lastFlowIpcServerSequence = serverSequence;
+        flowIpcServerSequences.push((message.type || 'unknown') + ':' + serverSequence);
+        window.VaadinDesktopIpcDiagnostics.flowIpcServerSequenceObserved = true;
+        window.VaadinDesktopIpcDiagnostics.flowIpcServerSequenceCount = flowIpcServerSequences.length;
+        window.VaadinDesktopIpcDiagnostics.flowIpcServerSequences = flowIpcServerSequences.join(',');
       }
 
       function updateClientState(payload) {
@@ -1905,6 +1931,7 @@ let flowIpcShell = #"""
       window.VaadinDesktopIpc = {
         receive(message) {
           trace.textContent = 'recv ' + message.type + ' #' + message.id;
+          observeFlowIpcServerSequence(message);
           if (message.type === 'bootstrapResponse' || message.type === 'patch' || message.type === 'push' || message.type === 'resync') {
             const flowClientCompleted = completeFlowClientXhrIfPending(message);
             updateClientState(message.payload);

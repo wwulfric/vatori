@@ -9,6 +9,7 @@ struct HostConfig {
     var transport: String = "compatibility-http"
     var flowIpcAutoClick: Bool = false
     var flowIpcAutoResync: Bool = false
+    var flowIpcAutoError: Bool = false
     var title: String = "Vaadin Desktop"
     var width: Double = 1100
     var height: Double = 780
@@ -47,6 +48,7 @@ struct HostConfig {
         }
         config.flowIpcAutoClick = ProcessInfo.processInfo.environment["VAADIN_DESKTOP_FLOW_IPC_AUTO_CLICK"] == "1"
         config.flowIpcAutoResync = ProcessInfo.processInfo.environment["VAADIN_DESKTOP_FLOW_IPC_AUTO_RESYNC"] == "1"
+        config.flowIpcAutoError = ProcessInfo.processInfo.environment["VAADIN_DESKTOP_FLOW_IPC_AUTO_ERROR"] == "1"
         return config
     }
 }
@@ -423,6 +425,10 @@ final class WebViewHost: NSObject, NSApplicationDelegate, NSWindowDelegate, WKNa
             let source = "window.__VAADIN_DESKTOP_FLOW_IPC_AUTO_RESYNC__ = true;"
             userContentController.addUserScript(WKUserScript(source: source, injectionTime: .atDocumentStart, forMainFrameOnly: true))
         }
+        if config.flowIpcAutoError {
+            let source = "window.__VAADIN_DESKTOP_FLOW_IPC_AUTO_ERROR__ = true;"
+            userContentController.addUserScript(WKUserScript(source: source, injectionTime: .atDocumentStart, forMainFrameOnly: true))
+        }
         userContentController.add(self, name: "flowIpc")
 
         let configuration = WKWebViewConfiguration()
@@ -680,6 +686,8 @@ final class WebViewHost: NSObject, NSApplicationDelegate, NSWindowDelegate, WKNa
           flowClientEngineQueuedMessageCount: window.VaadinDesktopIpcDiagnostics ? window.VaadinDesktopIpcDiagnostics.flowClientEngineQueuedMessageCount : -1,
           flowClientEngineResyncRequested: !!(window.VaadinDesktopIpcDiagnostics && window.VaadinDesktopIpcDiagnostics.flowClientEngineResyncRequested),
           flowClientEngineResyncPatchConsumed: !!(window.VaadinDesktopIpcDiagnostics && window.VaadinDesktopIpcDiagnostics.flowClientEngineResyncPatchConsumed),
+          flowClientEngineErrorReported: !!(window.VaadinDesktopIpcDiagnostics && window.VaadinDesktopIpcDiagnostics.flowClientEngineErrorReported),
+          flowClientEngineErrorCode: window.VaadinDesktopIpcDiagnostics ? window.VaadinDesktopIpcDiagnostics.flowClientEngineErrorCode : "",
           flowClientEngineVisibleOwner: !!(window.VaadinDesktopIpcDiagnostics && window.VaadinDesktopIpcDiagnostics.flowClientEngineVisibleOwner),
           flowClientEngineVisibleRootId: window.VaadinDesktopIpcDiagnostics ? window.VaadinDesktopIpcDiagnostics.flowClientEngineVisibleRootId : "",
           flowClientEngineVisibleStatusText: window.VaadinDesktopIpcDiagnostics ? window.VaadinDesktopIpcDiagnostics.flowClientEngineVisibleStatusText : "",
@@ -853,6 +861,7 @@ let flowIpcShell = #"""
       let autoClickReadinessAttempts = 0;
       let autoClickInFlight = false;
       let autoResyncDone = false;
+      let autoErrorProbeDone = false;
       const flowBootstrapAppId = 'ROOT-2521314';
       const flowBootstrapClientId = flowBootstrapAppId.replace(/-\d+$/, '');
       let flowClientResources = [];
@@ -916,6 +925,8 @@ let flowIpcShell = #"""
         flowClientEngineQueuedMessageCount: 0,
         flowClientEngineResyncRequested: false,
         flowClientEngineResyncPatchConsumed: false,
+        flowClientEngineErrorReported: false,
+        flowClientEngineErrorCode: '',
         flowClientEngineVisibleOwner: false,
         flowClientEngineVisibleRootId: '',
         flowClientEngineVisibleStatusText: '',
@@ -947,6 +958,19 @@ let flowIpcShell = #"""
         trace.textContent = 'send ' + type + ' #' + message.id;
         window.webkit.messageHandlers.flowIpc.postMessage(message);
         return message;
+      }
+
+      function sendWebViewError(code, message, details) {
+        const envelopeMessage = envelope('error', details || {});
+        envelopeMessage.error = {
+          code,
+          message
+        };
+        window.VaadinDesktopIpcDiagnostics.flowClientEngineErrorReported = true;
+        window.VaadinDesktopIpcDiagnostics.flowClientEngineErrorCode = code;
+        trace.textContent = 'send error #' + envelopeMessage.id;
+        window.webkit.messageHandlers.flowIpc.postMessage(envelopeMessage);
+        return envelopeMessage;
       }
 
       function updateClientState(payload) {
@@ -1377,6 +1401,23 @@ let flowIpcShell = #"""
         });
       }
 
+      function scheduleAutoErrorProbe() {
+        if (!window.__VAADIN_DESKTOP_FLOW_IPC_AUTO_ERROR__ || autoErrorProbeDone) {
+          return;
+        }
+        if (!window.VaadinDesktopIpcDiagnostics.flowClientEngineEventPatchConsumed) {
+          return;
+        }
+        if (window.__VAADIN_DESKTOP_FLOW_IPC_AUTO_RESYNC__
+            && !window.VaadinDesktopIpcDiagnostics.flowClientEngineResyncPatchConsumed) {
+          return;
+        }
+        autoErrorProbeDone = true;
+        setTimeout(() => sendWebViewError('webviewVerificationProbe',
+          'Verification error probe from WebView bridge',
+          { reason: 'verification-error-probe' }), 40);
+      }
+
       function requestFlowClientResourceProbe(payload) {
         flowClientResources = payload && payload.flowClientResources && Array.isArray(payload.flowClientResources.resources)
           ? payload.flowClientResources.resources
@@ -1738,6 +1779,7 @@ let flowIpcShell = #"""
           && window.VaadinDesktopIpcDiagnostics.flowClientEngineIpcMessageBridgeInstalled
           && window.VaadinDesktopIpcDiagnostics.flowClientEngineIpcResyncBridgeInstalled;
         flushQueuedFlowClientEngineMessages();
+        scheduleAutoErrorProbe();
       }
 
       function initializeFlowClientEngineModule(module) {

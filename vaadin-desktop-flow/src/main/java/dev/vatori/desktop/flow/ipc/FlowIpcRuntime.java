@@ -79,6 +79,7 @@ final class FlowIpcRuntime {
                 case "resourceRequest" -> handleResourceRequest(json, id, correlationId);
                 case "event" -> handleEvent(json, id, correlationId);
                 case "resync" -> handleResync(json, id, correlationId);
+                case "error" -> handleClientError(json, id);
                 case "shutdown" -> System.exit(0);
                 default -> sendError("unknownMessage", "Unsupported Flow IPC message type: " + type, id, correlationId);
             }
@@ -126,6 +127,19 @@ final class FlowIpcRuntime {
         }
         send("resourceResponse", nextId("resource"), correlationIdOr(id, correlationId),
                 flowClientResources.response(path));
+    }
+
+    private void handleClientError(String json, String id) {
+        String code = JsonFields.string(json, "code");
+        if (code == null || code.isBlank()) {
+            code = "webviewError";
+        }
+        String message = JsonFields.string(json, "message");
+        if (message == null || message.isBlank()) {
+            message = "WebView reported a Flow IPC error";
+        }
+        System.err.println("FLOW_IPC_CLIENT_ERROR id=" + id + " code=" + code + " message=" + message);
+        System.err.flush();
     }
 
     private void sendServerInitiatedPush(String id, String correlationId) {

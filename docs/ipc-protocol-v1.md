@@ -327,14 +327,20 @@ Errors use the same envelope with `type=error` and an `error` object:
 ```json
 {
   "type": "error",
+  "id": "webview-5",
+  "sessionId": "flow-ipc-session",
+  "uiId": "main",
+  "payload": {
+    "reason": "verification-error-probe"
+  },
   "error": {
-    "code": "unsupportedEvent",
-    "message": "Only click events are supported by the v1 minimum adapter."
+    "code": "webviewVerificationProbe",
+    "message": "Verification error probe from WebView bridge"
   }
 }
 ```
 
-`invalidCsrfToken` is emitted when a WebView `event` envelope carries a security key or UIDL RPC body whose `csrfToken` does not match the desktop `UI` token. `invalidClientState` is emitted for malformed or stale envelope/UIDL RPC metadata such as mismatched `sessionId`/`uiId`, missing/mismatched `syncId` or out-of-order `clientId`. The runtime rejects those messages before they reach `UidlRequestHandler`.
+`invalidCsrfToken` is emitted when a WebView `event` envelope carries a security key or UIDL RPC body whose `csrfToken` does not match the desktop `UI` token. `invalidClientState` is emitted for malformed or stale envelope/UIDL RPC metadata such as mismatched `sessionId`/`uiId`, missing/mismatched `syncId` or out-of-order `clientId`. The runtime rejects those messages before they reach `UidlRequestHandler`. The WebView bridge can also originate `type=error` envelopes; the verification hook uses `webviewVerificationProbe` so the trace contains a client-side error-reporting example without breaking the normal app path.
 
 ## Compatibility Strategy
 
@@ -350,7 +356,7 @@ Run:
 bash bin/flow-ipc-trace-inspect --require-flow-ipc-v1 docs/traces/flow-ipc-v1.ndjson
 ```
 
-The inspector summarizes directions, message types and key markers. With `--require-flow-ipc-v1`, it requires `launch`, `ready`, `window.create`, `bootstrapRequest`, `bootstrapResponse`, `resourceRequest`, `resourceResponse`, `push`, `event`, `resync`, `command`, `capabilityResult`, `patch`, `webview.dom`, `webview.snapshot` and `shutdown`, plus `transport=flow-ipc`, `compatibilityMode=false`, a clicked-state patch, native clipboard evidence, capability permission metadata with `permissionMode=allow-all-dev`, `uidlRpcDispatch=true`, bootstrap/event/resync `sessionId` + `uiId` evidence, bootstrap `Vaadin-Security-Key` evidence, Flow client resource manifest/request/response/DOM evidence including FlowBootstrap and augmented FlowClient module import/export/init markers, bootstrap DOM node bindings, an IPC-backed Flow client XHR bridge, a Flow client `attachExistingElementById` XHR request, a Flow client `click` UIDL RPC XHR request, a `flow-client-xhr` event patch consumed by the visible Flow client engine, `webview.dom` evidence that `flowClientEngineVisibleOwner=true` and the local fallback is hidden, a resync request carrying `securityKey`, bootstrap UIDL writer markers, a server-initiated async push UIDL consumed by the visible Flow client engine, and a resync `resynchronize=true` signal consumed by the visible Flow client engine.
+The inspector summarizes directions, message types and key markers. With `--require-flow-ipc-v1`, it requires `launch`, `ready`, `window.create`, `bootstrapRequest`, `bootstrapResponse`, `resourceRequest`, `resourceResponse`, `push`, `event`, `resync`, `command`, `capabilityResult`, `patch`, `error`, `webview.dom`, `webview.snapshot` and `shutdown`, plus `transport=flow-ipc`, `compatibilityMode=false`, a clicked-state patch, native clipboard evidence, capability permission metadata with `permissionMode=allow-all-dev`, WebView-originated error evidence, `uidlRpcDispatch=true`, bootstrap/event/resync `sessionId` + `uiId` evidence, bootstrap `Vaadin-Security-Key` evidence, Flow client resource manifest/request/response/DOM evidence including FlowBootstrap and augmented FlowClient module import/export/init markers, bootstrap DOM node bindings, an IPC-backed Flow client XHR bridge, a Flow client `attachExistingElementById` XHR request, a Flow client `click` UIDL RPC XHR request, a `flow-client-xhr` event patch consumed by the visible Flow client engine, `webview.dom` evidence that `flowClientEngineVisibleOwner=true` and the local fallback is hidden, a resync request carrying `securityKey`, bootstrap UIDL writer markers, a server-initiated async push UIDL consumed by the visible Flow client engine, and a resync `resynchronize=true` signal consumed by the visible Flow client engine.
 
 Run the envelope scope rejection smoke with:
 

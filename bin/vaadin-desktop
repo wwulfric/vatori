@@ -91,6 +91,12 @@ PLIST
     if [[ "${VAADIN_DESKTOP_FLOW_IPC_AUTO_CLICK:-}" == "1" ]]; then
       OPEN_ENV_ARGS+=(--env "VAADIN_DESKTOP_FLOW_IPC_AUTO_CLICK=1")
     fi
+    if [[ "${VAADIN_DESKTOP_FLOW_IPC_AUTO_RESYNC:-}" == "1" ]]; then
+      OPEN_ENV_ARGS+=(--env "VAADIN_DESKTOP_FLOW_IPC_AUTO_RESYNC=1")
+    fi
+    if [[ "${VAADIN_DESKTOP_FLOW_IPC_AUTO_ERROR:-}" == "1" ]]; then
+      OPEN_ENV_ARGS+=(--env "VAADIN_DESKTOP_FLOW_IPC_AUTO_ERROR=1")
+    fi
     SWIFT_HOST_STDOUT="$SWIFT_HOST_BUILD/host.out.log"
     SWIFT_HOST_STDERR="$SWIFT_HOST_BUILD/host.err.log"
     SWIFT_TRANSPORT="compatibility-http"

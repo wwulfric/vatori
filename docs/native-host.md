@@ -29,7 +29,7 @@ Current compatibility boundary:
 - The WebView loads a local HTTP URL today. This is explicitly not the final Flow over IPC transport.
 - `dev-ipc` does not load a local HTTP URL for the smoke app and uses `VFIPC1` for desktop commands. The WebView bridge sends click events and one verification resync from the visible Flow client, Java includes real `UidlWriter`/`UidlRequestHandler` output in IPC payloads, one server-initiated push UIDL update is delivered into the Flow client engine, and `FlowBootstrap.js` / `FlowClient.js` are loaded from the Java sidecar classpath through IPC, imported as modules and initialized with an IPC app config. The registered Flow client now owns the visible bootstrap, click-event patch, push and verification resync path through IPC-backed bridge methods.
 
-Verification note: on some managed macOS desktops, global `screencapture` or coordinate clicking can hit a `loginwindow`/MDM overlay instead of normal app windows. In that case, use the WindowServer entry for `Vaadin Desktop Host`, `HOST_PROTOCOL webview.dom`, the `VAADIN_DESKTOP_FLOW_IPC_AUTO_CLICK=1` / `VAADIN_DESKTOP_FLOW_IPC_AUTO_RESYNC=1` WebView smoke hooks and `window-snapshot.png` as the reliable verification artifacts.
+Verification note: on some managed macOS desktops, global `screencapture` or coordinate clicking can hit a `loginwindow`/MDM overlay instead of normal app windows. In that case, use the WindowServer entry for `Vaadin Desktop Host`, `HOST_PROTOCOL webview.dom`, the `VAADIN_DESKTOP_FLOW_IPC_AUTO_CLICK=1` / `VAADIN_DESKTOP_FLOW_IPC_AUTO_RESYNC=1` / `VAADIN_DESKTOP_FLOW_IPC_AUTO_ERROR=1` WebView smoke hooks and `window-snapshot.png` as the reliable verification artifacts.
 
 ## macOS Fallback Host
 

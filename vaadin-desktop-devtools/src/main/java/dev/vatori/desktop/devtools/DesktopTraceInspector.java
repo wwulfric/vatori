@@ -28,6 +28,7 @@ public final class DesktopTraceInspector {
             "command",
             "capabilityResult",
             "patch",
+            "error",
             "webview.dom",
             "webview.snapshot",
             "shutdown");
@@ -99,6 +100,11 @@ public final class DesktopTraceInspector {
                     && line.contains("\"permissionDecision\":\"allowed\"")
                     && line.contains("\"permissionScope\":\"window:main\"")) {
                 summary.capabilityPermissionObserved = true;
+            }
+            if (line.contains("\"type\":\"error\"")
+                    && line.contains("webviewVerificationProbe")
+                    && line.contains("verification-error-probe")) {
+                summary.webViewErrorObserved = true;
             }
             if (line.contains("\"source\":\"UidlWriter\"")
                     && line.contains("\"reason\":\"bootstrap\"")
@@ -323,6 +329,7 @@ public final class DesktopTraceInspector {
         private boolean clickPatchObserved;
         private boolean nativeClipboardObserved;
         private boolean capabilityPermissionObserved;
+        private boolean webViewErrorObserved;
         private boolean uidlWriterObserved;
         private boolean securityKeyObserved;
         private boolean resyncSecurityKeyObserved;
@@ -358,6 +365,7 @@ public final class DesktopTraceInspector {
                     && clickPatchObserved
                     && nativeClipboardObserved
                     && capabilityPermissionObserved
+                    && webViewErrorObserved
                     && uidlWriterObserved
                     && securityKeyObserved
                     && resyncSecurityKeyObserved
@@ -397,6 +405,7 @@ public final class DesktopTraceInspector {
             System.out.println("click patch observed: " + clickPatchObserved);
             System.out.println("native clipboard observed: " + nativeClipboardObserved);
             System.out.println("capability permission observed: " + capabilityPermissionObserved);
+            System.out.println("WebView error observed: " + webViewErrorObserved);
             System.out.println("UIDL writer observed: " + uidlWriterObserved);
             System.out.println("Flow security key observed: " + securityKeyObserved);
             System.out.println("resync security key observed: " + resyncSecurityKeyObserved);

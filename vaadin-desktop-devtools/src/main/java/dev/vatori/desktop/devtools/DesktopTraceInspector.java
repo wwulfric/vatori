@@ -96,8 +96,11 @@ public final class DesktopTraceInspector {
                     && line.contains("\"containsSyncId\":true")) {
                 summary.uidlWriterObserved = true;
             }
+            if (line.contains("\"uidlRpcDispatch\":true")) {
+                summary.uidlRpcDispatchObserved = true;
+            }
             if (line.contains("\"type\":\"patch\"")
-                    && line.contains("\"source\":\"UidlWriter\"")
+                    && line.contains("\"source\":\"UidlRequestHandler\"")
                     && line.contains("\"consumedByWebView\":false")) {
                 summary.uidlPatchObserved = true;
             }
@@ -128,6 +131,7 @@ public final class DesktopTraceInspector {
         private boolean clickPatchObserved;
         private boolean nativeClipboardObserved;
         private boolean uidlWriterObserved;
+        private boolean uidlRpcDispatchObserved;
         private boolean uidlPatchObserved;
 
         public boolean hasRequiredFlowIpcTypes() {
@@ -137,6 +141,7 @@ public final class DesktopTraceInspector {
                     && clickPatchObserved
                     && nativeClipboardObserved
                     && uidlWriterObserved
+                    && uidlRpcDispatchObserved
                     && uidlPatchObserved;
         }
 
@@ -150,7 +155,8 @@ public final class DesktopTraceInspector {
             System.out.println("click patch observed: " + clickPatchObserved);
             System.out.println("native clipboard observed: " + nativeClipboardObserved);
             System.out.println("UIDL writer observed: " + uidlWriterObserved);
-            System.out.println("UIDL patch observed: " + uidlPatchObserved);
+            System.out.println("UIDL RPC dispatch observed: " + uidlRpcDispatchObserved);
+            System.out.println("UIDL request handler patch observed: " + uidlPatchObserved);
             List<String> missing = FLOW_IPC_REQUIRED_TYPES.stream()
                     .filter(type -> !types.containsKey(type))
                     .toList();

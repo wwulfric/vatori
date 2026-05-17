@@ -23,8 +23,9 @@ public final class UidlRpcSmokeMain {
                 1,
                 "flow-ipc-uidl-rpc-smoke",
                 root);
-        String initialUidl = session.createUidl(false);
-        if (!initialUidl.contains("uidl-rpc-button") || !initialUidl.contains("\"syncId\"")) {
+        String initialUidl = session.createBootstrapUidl();
+        if (!initialUidl.contains("uidl-rpc-button") || !initialUidl.contains("\"syncId\"")
+                || !initialUidl.contains("\"Vaadin-Security-Key\"")) {
             throw new IllegalStateException("Initial UIDL did not expose the RPC smoke button");
         }
 
@@ -37,7 +38,7 @@ public final class UidlRpcSmokeMain {
             throw new IllegalStateException("UIDL RPC smoke did not produce click listener patch");
         }
 
-        String invalidCsrfBody = eventBody("invalid-csrf-token", buttonNodeId, -1, 1);
+        String invalidCsrfBody = eventBody("invalid-csrf-token", session.securityKey(), buttonNodeId, -1, 1);
         try {
             session.handleClientMessage(invalidCsrfBody, 1, false);
             throw new IllegalStateException("UIDL RPC smoke accepted an invalid csrfToken");
@@ -45,7 +46,15 @@ public final class UidlRpcSmokeMain {
             System.out.println("invalid csrfToken rejected");
         }
 
-        String staleSyncBody = eventBody(session.csrfToken(), buttonNodeId, -2, 1);
+        String invalidSecurityKeyBody = eventBody(session.csrfToken(), "invalid-security-key", buttonNodeId, -1, 1);
+        try {
+            session.handleClientMessage(invalidSecurityKeyBody, 1, false);
+            throw new IllegalStateException("UIDL RPC smoke accepted an invalid securityKey");
+        } catch (SecurityException expected) {
+            System.out.println("invalid securityKey rejected");
+        }
+
+        String staleSyncBody = eventBody(session.csrfToken(), session.securityKey(), buttonNodeId, -2, 1);
         try {
             session.handleClientMessage(staleSyncBody, 1, false);
             throw new IllegalStateException("UIDL RPC smoke accepted a stale syncId");
@@ -53,7 +62,7 @@ public final class UidlRpcSmokeMain {
             System.out.println("stale syncId rejected");
         }
 
-        String outOfOrderClientBody = eventBody(session.csrfToken(), buttonNodeId, -1, 3);
+        String outOfOrderClientBody = eventBody(session.csrfToken(), session.securityKey(), buttonNodeId, -1, 3);
         try {
             session.handleClientMessage(outOfOrderClientBody, 3, false);
             throw new IllegalStateException("UIDL RPC smoke accepted an out-of-order clientId");
@@ -62,10 +71,11 @@ public final class UidlRpcSmokeMain {
         }
     }
 
-    private static String eventBody(String csrfToken, int buttonNodeId, int syncId, int clientId) {
+    private static String eventBody(String csrfToken, String securityKey, int buttonNodeId, int syncId, int clientId) {
         return """
                 {
                   "csrfToken": "%s",
+                  "securityKey": "%s",
                   "rpc": [
                     {
                       "type": "event",
@@ -77,6 +87,6 @@ public final class UidlRpcSmokeMain {
                   "syncId": %d,
                   "clientId": %d
                 }
-                """.formatted(csrfToken, buttonNodeId, syncId, clientId);
+                """.formatted(csrfToken, securityKey, buttonNodeId, syncId, clientId);
     }
 }

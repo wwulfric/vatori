@@ -105,8 +105,21 @@ public final class DesktopTraceInspector {
             if (line.contains("\"type\":\"event\"")
                     && line.contains("\"dispatch\":\"flow-client-rpc\"")
                     && line.contains("\"uidlRpc\"")
-                    && line.contains("\"csrfToken\"")) {
+                    && line.contains("\"csrfToken\"")
+                    && line.contains("\"securityKey\"")) {
                 summary.webViewUidlRpcObserved = true;
+            }
+            if (line.contains("\"type\":\"bootstrapResponse\"")
+                    && line.contains("\"securityKey\"")
+                    && line.contains("Vaadin-Security-Key")
+                    && line.contains("\"containsSecurityKey\":true")) {
+                summary.securityKeyObserved = true;
+            }
+            if (line.contains("\"type\":\"resync\"")
+                    && line.contains("\"securityKey\"")
+                    && line.contains("\"syncId\"")
+                    && line.contains("\"clientId\"")) {
+                summary.resyncSecurityKeyObserved = true;
             }
             if (line.contains("\"type\":\"patch\"")
                     && line.contains("\"source\":\"UidlRequestHandler\"")
@@ -157,6 +170,8 @@ public final class DesktopTraceInspector {
         private boolean clickPatchObserved;
         private boolean nativeClipboardObserved;
         private boolean uidlWriterObserved;
+        private boolean securityKeyObserved;
+        private boolean resyncSecurityKeyObserved;
         private boolean uidlRpcDispatchObserved;
         private boolean webViewUidlRpcObserved;
         private boolean uidlPatchObserved;
@@ -170,6 +185,8 @@ public final class DesktopTraceInspector {
                     && clickPatchObserved
                     && nativeClipboardObserved
                     && uidlWriterObserved
+                    && securityKeyObserved
+                    && resyncSecurityKeyObserved
                     && uidlRpcDispatchObserved
                     && webViewUidlRpcObserved
                     && uidlPatchObserved
@@ -187,6 +204,8 @@ public final class DesktopTraceInspector {
             System.out.println("click patch observed: " + clickPatchObserved);
             System.out.println("native clipboard observed: " + nativeClipboardObserved);
             System.out.println("UIDL writer observed: " + uidlWriterObserved);
+            System.out.println("Flow security key observed: " + securityKeyObserved);
+            System.out.println("resync security key observed: " + resyncSecurityKeyObserved);
             System.out.println("UIDL RPC dispatch observed: " + uidlRpcDispatchObserved);
             System.out.println("WebView UIDL RPC observed: " + webViewUidlRpcObserved);
             System.out.println("UIDL request handler patch observed: " + uidlPatchObserved);

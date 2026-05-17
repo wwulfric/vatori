@@ -13,9 +13,10 @@ public final class UidlAdapterSmokeMain {
                 1,
                 "flow-ipc-uidl-smoke",
                 new Div(new Span("UIDL smoke over desktop adapter")));
-        String uidl = session.createUidl(false);
+        String uidl = session.createBootstrapUidl();
         System.out.println(uidl);
-        if (!uidl.contains("\"changes\"") || !uidl.contains("\"syncId\"")) {
+        if (!uidl.contains("\"changes\"") || !uidl.contains("\"syncId\"")
+                || !uidl.contains("\"Vaadin-Security-Key\"")) {
             throw new IllegalStateException("UIDL smoke did not produce expected Flow UIDL fields");
         }
     }

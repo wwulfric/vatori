@@ -595,7 +595,17 @@ final class WebViewHost: NSObject, NSApplicationDelegate, NSWindowDelegate, WKNa
           readyState: document.readyState,
           title: document.title,
           location: window.location.href,
-          bodyText: document.body ? document.body.innerText.slice(0, 500) : "",
+          bodyText: (() => {
+            if (!document.body) {
+              return "";
+            }
+            const clone = document.body.cloneNode(true);
+            const probeRoot = clone.querySelector("#flow-client-engine-probe-root");
+            if (probeRoot) {
+              probeRoot.remove();
+            }
+            return clone.innerText.slice(0, 500);
+          })(),
           hasVaadinRoot: !!document.querySelector("vaadin-app-layout, vaadin-vertical-layout, flow-container-root"),
           elementCount: document.body ? document.body.querySelectorAll("*").length : 0,
           flowClientResourceLoaded: !!(window.VaadinDesktopIpcDiagnostics && window.VaadinDesktopIpcDiagnostics.flowClientResourceLoaded),
@@ -608,7 +618,19 @@ final class WebViewHost: NSObject, NSApplicationDelegate, NSWindowDelegate, WKNa
           flowClientBootstrapAppId: window.VaadinDesktopIpcDiagnostics ? window.VaadinDesktopIpcDiagnostics.flowClientBootstrapAppId : "",
           flowClientResourceExecuted: !!(window.VaadinDesktopIpcDiagnostics && window.VaadinDesktopIpcDiagnostics.flowClientResourceExecuted),
           flowClientBootstrapInitError: window.VaadinDesktopIpcDiagnostics ? window.VaadinDesktopIpcDiagnostics.flowClientBootstrapInitError : "",
-          flowClientResourceExecutionError: window.VaadinDesktopIpcDiagnostics ? window.VaadinDesktopIpcDiagnostics.flowClientResourceExecutionError : ""
+          flowClientResourceExecutionError: window.VaadinDesktopIpcDiagnostics ? window.VaadinDesktopIpcDiagnostics.flowClientResourceExecutionError : "",
+          flowClientEngineResourceLoaded: !!(window.VaadinDesktopIpcDiagnostics && window.VaadinDesktopIpcDiagnostics.flowClientEngineResourceLoaded),
+          flowClientEngineResourcePath: window.VaadinDesktopIpcDiagnostics ? window.VaadinDesktopIpcDiagnostics.flowClientEngineResourcePath : "",
+          flowClientEngineResourceBytes: window.VaadinDesktopIpcDiagnostics ? window.VaadinDesktopIpcDiagnostics.flowClientEngineResourceBytes : 0,
+          flowClientEngineResourceVerified: !!(window.VaadinDesktopIpcDiagnostics && window.VaadinDesktopIpcDiagnostics.flowClientEngineResourceVerified),
+          flowClientEngineModuleLoaded: !!(window.VaadinDesktopIpcDiagnostics && window.VaadinDesktopIpcDiagnostics.flowClientEngineModuleLoaded),
+          flowClientEngineInitExported: !!(window.VaadinDesktopIpcDiagnostics && window.VaadinDesktopIpcDiagnostics.flowClientEngineInitExported),
+          flowClientEngineInitialized: !!(window.VaadinDesktopIpcDiagnostics && window.VaadinDesktopIpcDiagnostics.flowClientEngineInitialized),
+          flowClientEngineClientRegistered: !!(window.VaadinDesktopIpcDiagnostics && window.VaadinDesktopIpcDiagnostics.flowClientEngineClientRegistered),
+          flowClientEngineClientKey: window.VaadinDesktopIpcDiagnostics ? window.VaadinDesktopIpcDiagnostics.flowClientEngineClientKey : "",
+          flowClientEngineClientKeys: window.VaadinDesktopIpcDiagnostics ? window.VaadinDesktopIpcDiagnostics.flowClientEngineClientKeys : "",
+          flowClientEngineInitError: window.VaadinDesktopIpcDiagnostics ? window.VaadinDesktopIpcDiagnostics.flowClientEngineInitError : "",
+          flowClientEngineResourceExecutionError: window.VaadinDesktopIpcDiagnostics ? window.VaadinDesktopIpcDiagnostics.flowClientEngineResourceExecutionError : ""
         })
         """
         webView.evaluateJavaScript(script) { result, error in
@@ -758,9 +780,13 @@ let flowIpcShell = #"""
       let sequence = 0;
       let autoClickDone = false;
       let autoResyncDone = false;
-      let flowResourceProbeDone = false;
-      const flowBootstrapAppId = 'flow-ipc-app';
+      const flowBootstrapAppId = 'ROOT-2521314';
+      const flowBootstrapClientId = flowBootstrapAppId.replace(/-\d+$/, '');
+      let flowClientResources = [];
       let flowClientBootstrapInitResponse = null;
+      let flowClientEngineResourceBaseVerified = false;
+      const flowClientResourceRequests = new Set();
+      const flowClientResourceExpectedSha256ByPath = new Map();
       const flowClientState = {
         csrfToken: '',
         securityKey: '',
@@ -784,7 +810,21 @@ let flowIpcShell = #"""
         flowClientBootstrapAppId: '',
         flowClientBootstrapInitError: '',
         flowClientResourceExecuted: false,
-        flowClientResourceExecutionError: ''
+        flowClientResourceExecutionError: '',
+        flowClientEngineResourceLoaded: false,
+        flowClientEngineResourcePath: '',
+        flowClientEngineResourceBytes: 0,
+        flowClientEngineResourceSha256: '',
+        flowClientEngineResourceExpectedSha256: '',
+        flowClientEngineResourceVerified: false,
+        flowClientEngineModuleLoaded: false,
+        flowClientEngineInitExported: false,
+        flowClientEngineInitialized: false,
+        flowClientEngineClientRegistered: false,
+        flowClientEngineClientKey: '',
+        flowClientEngineClientKeys: '',
+        flowClientEngineInitError: '',
+        flowClientEngineResourceExecutionError: ''
       };
 
       function envelope(type, payload) {
@@ -891,22 +931,35 @@ let flowIpcShell = #"""
       }
 
       function requestFlowClientResourceProbe(payload) {
-        if (flowResourceProbeDone) {
-          return;
-        }
-        const resources = payload && payload.flowClientResources && Array.isArray(payload.flowClientResources.resources)
+        flowClientResources = payload && payload.flowClientResources && Array.isArray(payload.flowClientResources.resources)
           ? payload.flowClientResources.resources
           : [];
-        const resource = resources.find((entry) => entry.path === 'META-INF/frontend/FlowBootstrap.js')
-          || resources.find((entry) => entry.kind === 'flow-bootstrap-module');
+        requestFlowClientResource('META-INF/frontend/FlowBootstrap.js', 'flow-bootstrap-module', 'flow-client-resource-probe');
+      }
+
+      function requestFlowClientEngineResourceProbe() {
+        requestFlowClientResource('META-INF/frontend/FlowClient.js', 'flow-client-module', 'flow-client-engine-probe');
+      }
+
+      function requestFlowClientResource(path, kind, purpose) {
+        if (flowClientResourceRequests.has(path)) {
+          return;
+        }
+        const resource = flowClientResources.find((entry) => entry.path === path)
+          || flowClientResources.find((entry) => entry.kind === kind);
         if (!resource || typeof resource.path !== 'string') {
           return;
         }
-        flowResourceProbeDone = true;
+        flowClientResourceRequests.add(path);
+        flowClientResourceExpectedSha256ByPath.set(resource.path, resource.sha256 || '');
         const securityKey = flowClientState.securityKey || flowClientState.csrfToken;
-        window.VaadinDesktopIpcDiagnostics.flowClientResourceExpectedSha256 = resource.sha256 || '';
+        if (kind === 'flow-bootstrap-module') {
+          window.VaadinDesktopIpcDiagnostics.flowClientResourceExpectedSha256 = resource.sha256 || '';
+        } else if (kind === 'flow-client-module') {
+          window.VaadinDesktopIpcDiagnostics.flowClientEngineResourceExpectedSha256 = resource.sha256 || '';
+        }
         send('resourceRequest', {
-          purpose: 'flow-client-resource-probe',
+          purpose,
           path: resource.path,
           expectedSha256: resource.sha256 || '',
           securityKey
@@ -922,9 +975,10 @@ let flowIpcShell = #"""
           appConfig: {
             appId: flowBootstrapAppId,
             uidl,
-            productionMode: true,
-            serviceUrl: 'flow-ipc://local',
-            contextRootUrl: '',
+            productionMode: false,
+            debug: true,
+            serviceUrl: 'flow-ipc://local/flow/',
+            contextRootUrl: '../',
             heartbeatInterval: 300,
             maxMessageSuspendTimeout: 5000,
             sendUrlsAsParameters: false,
@@ -934,6 +988,31 @@ let flowIpcShell = #"""
           },
           errors: []
         };
+      }
+
+      function ensureFlowClientContainer() {
+        const tag = 'flow-container-' + flowBootstrapAppId.toLowerCase();
+        let probeRoot = document.getElementById('flow-client-engine-probe-root');
+        if (!probeRoot) {
+          probeRoot = document.createElement('div');
+          probeRoot.id = 'flow-client-engine-probe-root';
+          probeRoot.hidden = true;
+          probeRoot.style.cssText = 'display: none !important;';
+          document.body.appendChild(probeRoot);
+        }
+        let container = document.querySelector(tag);
+        if (!container) {
+          container = document.createElement(tag);
+          container.id = flowBootstrapAppId;
+          container.hidden = true;
+          container.style.display = 'none';
+          probeRoot.appendChild(container);
+        } else if (container.parentElement !== probeRoot) {
+          probeRoot.appendChild(container);
+        }
+        document.body.$ = document.body.$ || {};
+        document.body.$[flowBootstrapAppId] = container;
+        return container;
       }
 
       function rememberFlowClientBootstrapPayload(payload) {
@@ -1125,16 +1204,58 @@ let flowIpcShell = #"""
           return;
         }
         try {
+          ensureFlowClientContainer();
           module.init(flowClientBootstrapInitResponse);
           const flow = window.Vaadin && window.Vaadin.Flow ? window.Vaadin.Flow : null;
           const appIds = flow && typeof flow.getAppIds === 'function' ? flow.getAppIds() : [];
           window.VaadinDesktopIpcDiagnostics.flowClientBootstrapInitialized = appIds.includes(flowBootstrapAppId);
           if (!window.VaadinDesktopIpcDiagnostics.flowClientBootstrapInitialized) {
             window.VaadinDesktopIpcDiagnostics.flowClientBootstrapInitError = 'FlowBootstrap.init did not register ' + flowBootstrapAppId;
+          } else {
+            requestFlowClientEngineResourceProbe();
           }
         } catch (error) {
           window.VaadinDesktopIpcDiagnostics.flowClientBootstrapInitialized = false;
           window.VaadinDesktopIpcDiagnostics.flowClientBootstrapInitError = error && error.message ? error.message : String(error);
+        }
+      }
+
+      function refreshFlowClientEngineDiagnostics() {
+        const clients = window.Vaadin && window.Vaadin.Flow && window.Vaadin.Flow.clients ? window.Vaadin.Flow.clients : {};
+        const clientKeys = Object.keys(clients);
+        const client = clients[flowBootstrapClientId] || clients[flowBootstrapAppId];
+        window.VaadinDesktopIpcDiagnostics.flowClientEngineClientKey = clients[flowBootstrapClientId] ? flowBootstrapClientId : (clients[flowBootstrapAppId] ? flowBootstrapAppId : '');
+        window.VaadinDesktopIpcDiagnostics.flowClientEngineClientKeys = clientKeys.join(',');
+        window.VaadinDesktopIpcDiagnostics.flowClientEngineInitialized = !!client && client.initializing === false;
+        window.VaadinDesktopIpcDiagnostics.flowClientEngineClientRegistered = !!client && typeof client.sendEventMessage === 'function';
+        if (window.VaadinDesktopIpcDiagnostics.flowClientEngineClientRegistered) {
+          window.VaadinDesktopIpcDiagnostics.flowClientEngineInitError = '';
+        } else if (clientKeys.length > 0) {
+          window.VaadinDesktopIpcDiagnostics.flowClientEngineInitError = 'FlowClient.init has not registered sendEventMessage client yet';
+        }
+        window.VaadinDesktopIpcDiagnostics.flowClientEngineResourceVerified =
+          flowClientEngineResourceBaseVerified
+          && window.VaadinDesktopIpcDiagnostics.flowClientEngineInitExported
+          && window.VaadinDesktopIpcDiagnostics.flowClientEngineInitialized
+          && window.VaadinDesktopIpcDiagnostics.flowClientEngineClientRegistered;
+      }
+
+      function initializeFlowClientEngineModule(module) {
+        try {
+          window.VaadinDesktopIpcDiagnostics.flowClientEngineInitExported = typeof module.init === 'function';
+          if (!window.VaadinDesktopIpcDiagnostics.flowClientEngineInitExported) {
+            window.VaadinDesktopIpcDiagnostics.flowClientEngineInitError = 'FlowClient.js did not export init';
+            return;
+          }
+          ensureFlowClientContainer();
+          module.init();
+          refreshFlowClientEngineDiagnostics();
+          setTimeout(refreshFlowClientEngineDiagnostics, 250);
+          setTimeout(refreshFlowClientEngineDiagnostics, 1000);
+        } catch (error) {
+          window.VaadinDesktopIpcDiagnostics.flowClientEngineInitialized = false;
+          window.VaadinDesktopIpcDiagnostics.flowClientEngineClientRegistered = false;
+          window.VaadinDesktopIpcDiagnostics.flowClientEngineInitError = error && error.message ? error.message : String(error);
         }
       }
 
@@ -1143,8 +1264,17 @@ let flowIpcShell = #"""
           return;
         }
         const body = typeof payload.body === 'string' ? payload.body : '';
-        const expectedSha256 = window.VaadinDesktopIpcDiagnostics.flowClientResourceExpectedSha256 || '';
+        const resourcePath = payload.path || '';
+        const expectedSha256 = flowClientResourceExpectedSha256ByPath.get(resourcePath) || '';
         const metadataMatches = !expectedSha256 || expectedSha256 === (payload.sha256 || '');
+        if (resourcePath === 'META-INF/frontend/FlowClient.js' || payload.kind === 'flow-client-module') {
+          await handleFlowClientEngineResourceResponse(payload, body, metadataMatches);
+          return;
+        }
+        await handleFlowBootstrapResourceResponse(payload, body, metadataMatches);
+      }
+
+      async function handleFlowBootstrapResourceResponse(payload, body, metadataMatches) {
         const bodyLooksLikeFlowBootstrap = body.includes('window.Vaadin.Flow.initApplication') && body.includes('export { init }');
         window.VaadinDesktopIpcDiagnostics.flowClientResourceLoaded = true;
         window.VaadinDesktopIpcDiagnostics.flowClientResourcePath = payload.path || '';
@@ -1174,6 +1304,34 @@ let flowIpcShell = #"""
         } catch (error) {
           window.VaadinDesktopIpcDiagnostics.flowClientResourceExecutionError = error && error.message ? error.message : String(error);
           trace.textContent = 'flow resource module failed';
+        }
+      }
+
+      async function handleFlowClientEngineResourceResponse(payload, body, metadataMatches) {
+        const bodyLooksLikeFlowClient = body.includes('export function init') && body.includes('Vaadin.Flow.registerWidgetset');
+        flowClientEngineResourceBaseVerified = metadataMatches && bodyLooksLikeFlowClient;
+        window.VaadinDesktopIpcDiagnostics.flowClientEngineResourceLoaded = true;
+        window.VaadinDesktopIpcDiagnostics.flowClientEngineResourcePath = payload.path || '';
+        window.VaadinDesktopIpcDiagnostics.flowClientEngineResourceBytes = Number(payload.bytes || body.length);
+        window.VaadinDesktopIpcDiagnostics.flowClientEngineResourceSha256 = payload.sha256 || '';
+        window.VaadinDesktopIpcDiagnostics.flowClientEngineResourceVerified = flowClientEngineResourceBaseVerified;
+        if (!body) {
+          trace.textContent = 'flow client engine resource empty';
+          return;
+        }
+        try {
+          const blobUrl = URL.createObjectURL(new Blob([body], { type: 'text/javascript' }));
+          try {
+            const module = await import(blobUrl);
+            window.VaadinDesktopIpcDiagnostics.flowClientEngineModuleLoaded = true;
+            initializeFlowClientEngineModule(module);
+            trace.textContent = 'flow client engine ' + (window.VaadinDesktopIpcDiagnostics.flowClientEngineResourceVerified ? 'verified' : 'loaded');
+          } finally {
+            URL.revokeObjectURL(blobUrl);
+          }
+        } catch (error) {
+          window.VaadinDesktopIpcDiagnostics.flowClientEngineResourceExecutionError = error && error.message ? error.message : String(error);
+          trace.textContent = 'flow client engine failed';
         }
       }
 

@@ -82,7 +82,7 @@ bash bin/uidl-rpc-smoke
 bash bin/flow-client-resource-smoke
 ```
 
-Current limitation: this path uses a minimum repository-local UIDL applier in the WebView. It now generates Vaadin UIDL, sends click events through the server-side Flow RPC path, consumes bootstrap/push/event UIDL `changes`, and can initialize `FlowBootstrap.js` / `FlowClient.js` over IPC; verification resync consumes Vaadin's `resynchronize=true` signal and rebuilds from the local tree fallback. Visible UIDL patches are not routed through the Flow client engine yet.
+Current limitation: this path is still a constrained smoke-app runtime. It now generates Vaadin UIDL, initializes `FlowBootstrap.js` / `FlowClient.js` over IPC, promotes the Flow client container to the visible WebView surface, and sends click events through the server-side Flow RPC path with UIDL patches consumed by the visible Flow client engine. Push and verification resync still use the hidden repository-local fallback until full Flow push/resync semantics are implemented.
 
 ## Run the Independent Smoke App
 
@@ -137,4 +137,4 @@ Framework v0 still starts an embedded Spring Boot web server on `127.0.0.1`. The
 
 The Swift native compatibility path narrows the long-term host/runtime boundary, but Flow bootstrap, UIDL event handling and push are still compatibility HTTP there. Use `dev-ipc` for the no-localhost bootstrap/push/event/patch/resync runtime slice.
 
-`dev-ipc` is the exception: it is the first no-HTTP runtime slice, now with server-side UIDL generation and a Flow client resource/init probe, but only for `test-apps/flow-over-ipc-smoke-app` and the constrained component/event set documented in `docs/flow-over-ipc-runtime.md`.
+`dev-ipc` is the exception: it is the first no-HTTP runtime slice, now with server-side UIDL generation and visible Flow client engine ownership for bootstrap and click-event patches, but only for `test-apps/flow-over-ipc-smoke-app` and the constrained component/event set documented in `docs/flow-over-ipc-runtime.md`.

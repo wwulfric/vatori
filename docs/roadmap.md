@@ -31,11 +31,11 @@ Status: first minimum runtime slice implemented, server-side UIDL writer integra
 - `dev-ipc` now runs `test-apps/flow-over-ipc-smoke-app` without localhost HTTP in the core event/patch path.
 - `bash bin/uidl-adapter-smoke` now verifies that a desktop-shaped session/UI can drive Vaadin's real `UidlWriter` and produce UIDL `changes`/`syncId`.
 - `bash bin/uidl-rpc-smoke` now verifies that a real Flow event RPC can pass through `UidlRequestHandler`/`ServerRpcHandler` and produce a listener UIDL patch without a real HTTP socket.
-- `dev-ipc` bootstrap/patch envelopes now include `payload.uidl` from real `UidlWriter`, while WebView consumption remains on the repository-local tree patch.
+- `dev-ipc` bootstrap/patch envelopes now include `payload.uidl`; bootstrap comes from `UidlWriter`, and click event patches come from `UidlRequestHandler`/`ServerRpcHandler`. WebView consumption remains on the repository-local tree patch.
 
 First issue candidates:
 
-- Feed real Flow-client UIDL RPC payloads from WebView into `UidlFlowTransportAdapter`.
+- Make the WebView bridge send Flow-client-shaped UIDL RPC payloads directly instead of Java translating `{action, componentId}`.
 - Replace the repository-local WebView tree renderer with Flow client engine UIDL consumption.
 - Extend `DesktopVaadinRequest` to carry session id, UI id, CSRF token and sync ids from Host Protocol.
 - Keep push out of scope until request/response UIDL works without HTTP sockets.

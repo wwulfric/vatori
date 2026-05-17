@@ -58,7 +58,7 @@ Expected trace characteristics:
 - Java sidecar emits `VFIPC1` envelopes.
 - The WebView loads a local HTML shell through `loadHTMLString`, not `http://127.0.0.1`.
 - Button click travels WebView -> Swift host -> Java sidecar -> Vaadin Button listener -> patch -> WebView.
-- Bootstrap and event patches include real server-side UIDL under `payload.uidl`.
+- Bootstrap and event patches include real server-side UIDL under `payload.uidl`; click events are dispatched through `UidlRequestHandler`/`ServerRpcHandler`.
 - Desktop API calls travel Java sidecar -> Swift host as `VFIPC1 command`, and host responses appear as `capabilityResult`.
 
 For repeatable real-window smoke verification without global mouse coordinates:
@@ -80,7 +80,7 @@ bash bin/uidl-adapter-smoke
 bash bin/uidl-rpc-smoke
 ```
 
-Current limitation: this path uses a minimum repository-local renderer and replace-root patches in the WebView. It now generates Vaadin UIDL, but the full Flow client engine does not consume that UIDL yet.
+Current limitation: this path uses a minimum repository-local renderer and replace-root patches in the WebView. It now generates Vaadin UIDL and uses the server-side Flow RPC path for click dispatch, but the full Flow client engine does not consume that UIDL yet.
 
 ## Run the Independent Smoke App
 

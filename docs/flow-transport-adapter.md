@@ -20,8 +20,8 @@ The current adapter:
 2. Instantiates a `@Route` Vaadin Flow component class directly.
 3. Renders a small component-tree payload from real Flow components.
 4. Maps component ids to server-side component instances.
-5. Dispatches `event/action=click` to `Button.click()`.
-6. Returns a replace-root patch after Java listener execution.
+5. Maps `event/action=click` to the Flow node id and dispatches a real Flow event RPC through `UidlRequestHandler`.
+6. Returns a replace-root patch after Java listener execution, with the server-side UIDL response attached.
 
 This proves the immediate boundary:
 
@@ -37,7 +37,7 @@ WebView event
 
 ## Relationship To Vaadin Internals
 
-The current `FlowIpcRuntime` adapter intentionally does not claim to be the final Vaadin UIDL adapter. It now creates a desktop-shaped Flow session/UI and includes real `UidlWriter` output in `bootstrapResponse` and `patch` payloads, but the WebView still consumes the repository-local tree patch. The repository also contains the compiled transport adapter around the real Flow server path:
+The current `FlowIpcRuntime` adapter intentionally does not claim to be the final Vaadin UIDL adapter. It now creates a desktop-shaped Flow session/UI, includes real `UidlWriter` output in `bootstrapResponse`, maps simplified WebView click events to Flow RPC bodies and uses `UidlRequestHandler`/`ServerRpcHandler` for event patches. The WebView still consumes the repository-local tree patch. The repository also contains the compiled transport adapter around the real Flow server path:
 
 - `dev.vatori.desktop.flow.transport.FlowTransportAdapter`
 - `dev.vatori.desktop.flow.transport.UidlFlowTransportAdapter`
@@ -69,9 +69,9 @@ bash bin/uidl-adapter-smoke
 bash bin/uidl-rpc-smoke
 ```
 
-This command does not open a WebView and does not run a servlet container. It is a server-side adapter verification that proves the repository can drive Vaadin's real UIDL writer from a desktop-shaped session/request boundary. The same session helper is now used by `dev-ipc` to emit UIDL markers in real runtime traces.
+These commands do not open a WebView and do not run a servlet container. They are server-side adapter verification steps that prove the repository can drive Vaadin's real UIDL writer and event RPC path from a desktop-shaped session/request boundary. The same session helper is now used by `dev-ipc` to emit UIDL markers in real runtime traces.
 
-`uidl-rpc-smoke` goes one step deeper: it sends a real Flow client event RPC body shaped like Vaadin's own `ServerRpcHandlerTest` examples, lets `UidlRequestHandler` locate the desktop `UI`, runs `ServerRpcHandler`/`EventRpcHandler`, triggers a Button click listener and verifies that the UIDL response contains `Clicks: 1` plus `syncId`.
+`uidl-rpc-smoke` goes one step deeper: it sends a real Flow client event RPC body shaped like Vaadin's own `ServerRpcHandlerTest` examples, lets `UidlRequestHandler` locate the desktop `UI`, runs `ServerRpcHandler`/`EventRpcHandler`, triggers a Button click listener and verifies that the UIDL response contains `Clicks: 1` plus `syncId`. `dev-ipc` now uses this same server-side RPC path for click dispatch.
 
 The `jakarta.servlet-api` dependency is present on the runtime classpath because Vaadin server classes such as `VaadinSession` and the `VaadinRequest`/`VaadinResponse` signatures still reference servlet API types. This does not start a servlet container and is not used as the `dev-ipc` transport.
 
@@ -85,4 +85,4 @@ It also keeps the developer-facing shape intact: the smoke app still uses ordina
 
 ## Next Adapter Step
 
-The next concrete step is to feed WebView client events as real Flow UIDL RPC payloads into `UidlFlowTransportAdapter` inside `dev-ipc`, then replace the repository-local tree renderer with Flow client engine UIDL consumption.
+The next concrete step is to make the WebView bridge send Flow-client-shaped UIDL RPC payloads directly, then replace the repository-local tree renderer with Flow client engine UIDL consumption.

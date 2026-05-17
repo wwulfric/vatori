@@ -8,6 +8,7 @@ struct HostConfig {
     var mavenExecutable: String = "mvn"
     var transport: String = "compatibility-http"
     var flowIpcAutoClick: Bool = false
+    var flowIpcAutoResync: Bool = false
     var title: String = "Vaadin Desktop"
     var width: Double = 1100
     var height: Double = 780
@@ -45,6 +46,7 @@ struct HostConfig {
             config.module = "\(config.repoRoot)/\(config.module)"
         }
         config.flowIpcAutoClick = ProcessInfo.processInfo.environment["VAADIN_DESKTOP_FLOW_IPC_AUTO_CLICK"] == "1"
+        config.flowIpcAutoResync = ProcessInfo.processInfo.environment["VAADIN_DESKTOP_FLOW_IPC_AUTO_RESYNC"] == "1"
         return config
     }
 }
@@ -381,6 +383,10 @@ final class WebViewHost: NSObject, NSApplicationDelegate, NSWindowDelegate, WKNa
             let source = "window.__VAADIN_DESKTOP_FLOW_IPC_AUTO_CLICK__ = true;"
             userContentController.addUserScript(WKUserScript(source: source, injectionTime: .atDocumentStart, forMainFrameOnly: true))
         }
+        if config.flowIpcAutoResync {
+            let source = "window.__VAADIN_DESKTOP_FLOW_IPC_AUTO_RESYNC__ = true;"
+            userContentController.addUserScript(WKUserScript(source: source, injectionTime: .atDocumentStart, forMainFrameOnly: true))
+        }
         userContentController.add(self, name: "flowIpc")
 
         let configuration = WKWebViewConfiguration()
@@ -710,6 +716,7 @@ let flowIpcShell = #"""
       const trace = document.getElementById('trace');
       let sequence = 0;
       let autoClickDone = false;
+      let autoResyncDone = false;
       const flowClientState = {
         csrfToken: '',
         syncId: -1,
@@ -797,6 +804,14 @@ let flowIpcShell = #"""
         flowTextNodes.clear();
         flowUidlNodes.clear();
         app.replaceChildren(renderNode(node));
+      }
+
+      function requestResync(reason) {
+        send('resync', {
+          reason,
+          syncId: flowClientState.syncId,
+          clientId: flowClientState.clientId
+        });
       }
 
       function parseUidl(payload) {
@@ -987,8 +1002,16 @@ let flowIpcShell = #"""
               if (!applyUidlBootstrap(message.payload)) {
                 render(message.payload && message.payload.tree);
               }
+            } else if (message.payload && message.payload.uidl && message.payload.uidl.resync === true) {
+              if (!applyUidlBootstrap(message.payload)) {
+                render(message.payload && message.payload.tree);
+              }
             } else if (!applyUidlPatch(message.payload)) {
               render(message.payload && message.payload.tree);
+            }
+            if (message.type === 'patch' && message.payload && message.payload.reason === 'event' && window.__VAADIN_DESKTOP_FLOW_IPC_AUTO_RESYNC__ && !autoResyncDone) {
+              autoResyncDone = true;
+              setTimeout(() => requestResync('verification-resync-after-event'), 80);
             }
             if (message.type === 'bootstrapResponse' && window.__VAADIN_DESKTOP_FLOW_IPC_AUTO_CLICK__ && !autoClickDone) {
               autoClickDone = true;

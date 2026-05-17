@@ -629,6 +629,10 @@ final class WebViewHost: NSObject, NSApplicationDelegate, NSWindowDelegate, WKNa
           flowClientEngineClientRegistered: !!(window.VaadinDesktopIpcDiagnostics && window.VaadinDesktopIpcDiagnostics.flowClientEngineClientRegistered),
           flowClientEngineClientKey: window.VaadinDesktopIpcDiagnostics ? window.VaadinDesktopIpcDiagnostics.flowClientEngineClientKey : "",
           flowClientEngineClientKeys: window.VaadinDesktopIpcDiagnostics ? window.VaadinDesktopIpcDiagnostics.flowClientEngineClientKeys : "",
+          flowClientEngineBootstrapDomBound: !!(window.VaadinDesktopIpcDiagnostics && window.VaadinDesktopIpcDiagnostics.flowClientEngineBootstrapDomBound),
+          flowClientEngineBoundNodeIds: window.VaadinDesktopIpcDiagnostics ? window.VaadinDesktopIpcDiagnostics.flowClientEngineBoundNodeIds : "",
+          flowClientEngineBootstrapStatusText: window.VaadinDesktopIpcDiagnostics ? window.VaadinDesktopIpcDiagnostics.flowClientEngineBootstrapStatusText : "",
+          flowClientEngineBootstrapButtonText: window.VaadinDesktopIpcDiagnostics ? window.VaadinDesktopIpcDiagnostics.flowClientEngineBootstrapButtonText : "",
           flowClientEngineInitError: window.VaadinDesktopIpcDiagnostics ? window.VaadinDesktopIpcDiagnostics.flowClientEngineInitError : "",
           flowClientEngineResourceExecutionError: window.VaadinDesktopIpcDiagnostics ? window.VaadinDesktopIpcDiagnostics.flowClientEngineResourceExecutionError : ""
         })
@@ -823,6 +827,10 @@ let flowIpcShell = #"""
         flowClientEngineClientRegistered: false,
         flowClientEngineClientKey: '',
         flowClientEngineClientKeys: '',
+        flowClientEngineBootstrapDomBound: false,
+        flowClientEngineBoundNodeIds: '',
+        flowClientEngineBootstrapStatusText: '',
+        flowClientEngineBootstrapButtonText: '',
         flowClientEngineInitError: '',
         flowClientEngineResourceExecutionError: ''
       };
@@ -1228,6 +1236,33 @@ let flowIpcShell = #"""
         window.VaadinDesktopIpcDiagnostics.flowClientEngineClientKeys = clientKeys.join(',');
         window.VaadinDesktopIpcDiagnostics.flowClientEngineInitialized = !!client && client.initializing === false;
         window.VaadinDesktopIpcDiagnostics.flowClientEngineClientRegistered = !!client && typeof client.sendEventMessage === 'function';
+        if (client && typeof client.getByNodeId === 'function') {
+          const boundNodeIds = [];
+          for (const nodeId of [19, 16, 14, 12]) {
+            try {
+              if (client.getByNodeId(nodeId)) {
+                boundNodeIds.push(nodeId);
+              }
+            } catch (_) {
+              // Keep diagnostics best-effort; the client bridge itself has already initialized.
+            }
+          }
+          window.VaadinDesktopIpcDiagnostics.flowClientEngineBoundNodeIds = boundNodeIds.join(',');
+          window.VaadinDesktopIpcDiagnostics.flowClientEngineBootstrapDomBound =
+            boundNodeIds.includes(19) && boundNodeIds.includes(16) && boundNodeIds.includes(14);
+          try {
+            const status = client.getByNodeId(14);
+            window.VaadinDesktopIpcDiagnostics.flowClientEngineBootstrapStatusText = status ? (status.textContent || '') : '';
+          } catch (_) {
+            window.VaadinDesktopIpcDiagnostics.flowClientEngineBootstrapStatusText = '';
+          }
+          try {
+            const button = client.getByNodeId(16);
+            window.VaadinDesktopIpcDiagnostics.flowClientEngineBootstrapButtonText = button ? (button.textContent || '') : '';
+          } catch (_) {
+            window.VaadinDesktopIpcDiagnostics.flowClientEngineBootstrapButtonText = '';
+          }
+        }
         if (window.VaadinDesktopIpcDiagnostics.flowClientEngineClientRegistered) {
           window.VaadinDesktopIpcDiagnostics.flowClientEngineInitError = '';
         } else if (clientKeys.length > 0) {

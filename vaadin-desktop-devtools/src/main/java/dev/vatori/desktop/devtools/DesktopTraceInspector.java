@@ -184,6 +184,16 @@ public final class DesktopTraceInspector {
                     && line.contains("META-INF/frontend/FlowClient.js")) {
                 summary.flowClientEngineDomObserved = true;
             }
+            if (line.contains("\"type\":\"webview.dom\"")
+                    && line.contains("flowClientEngineBootstrapDomBound")
+                    && line.contains("flowClientEngineBoundNodeIds")
+                    && line.contains("19,16,14,12")
+                    && line.contains("flowClientEngineBootstrapStatusText")
+                    && line.contains("Clicks: 0")
+                    && line.contains("flowClientEngineBootstrapButtonText")
+                    && line.contains("Increment over IPC")) {
+                summary.flowClientEngineBootstrapDomObserved = true;
+            }
             if (line.contains("\"type\":\"event\"")
                     && line.contains("\"sessionId\":\"flow-ipc-session\"")
                     && line.contains("\"uiId\":\"main\"")) {
@@ -256,6 +266,7 @@ public final class DesktopTraceInspector {
         private boolean flowClientEngineResourceRequestObserved;
         private boolean flowClientEngineResourceResponseObserved;
         private boolean flowClientEngineDomObserved;
+        private boolean flowClientEngineBootstrapDomObserved;
         private boolean uidlRpcDispatchObserved;
         private boolean webViewUidlRpcObserved;
         private boolean uidlPatchObserved;
@@ -282,6 +293,7 @@ public final class DesktopTraceInspector {
                     && flowClientEngineResourceRequestObserved
                     && flowClientEngineResourceResponseObserved
                     && flowClientEngineDomObserved
+                    && flowClientEngineBootstrapDomObserved
                     && uidlRpcDispatchObserved
                     && webViewUidlRpcObserved
                     && uidlPatchObserved
@@ -312,6 +324,7 @@ public final class DesktopTraceInspector {
             System.out.println("Flow client engine resource request observed: " + flowClientEngineResourceRequestObserved);
             System.out.println("Flow client engine resource response observed: " + flowClientEngineResourceResponseObserved);
             System.out.println("Flow client engine DOM observed: " + flowClientEngineDomObserved);
+            System.out.println("Flow client engine bootstrap DOM observed: " + flowClientEngineBootstrapDomObserved);
             System.out.println("UIDL RPC dispatch observed: " + uidlRpcDispatchObserved);
             System.out.println("WebView UIDL RPC observed: " + webViewUidlRpcObserved);
             System.out.println("UIDL request handler patch observed: " + uidlPatchObserved);

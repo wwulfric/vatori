@@ -99,6 +99,12 @@ public final class DesktopTraceInspector {
             if (line.contains("\"uidlRpcDispatch\":true")) {
                 summary.uidlRpcDispatchObserved = true;
             }
+            if (line.contains("\"type\":\"event\"")
+                    && line.contains("\"dispatch\":\"flow-client-rpc\"")
+                    && line.contains("\"uidlRpc\"")
+                    && line.contains("\"csrfToken\"")) {
+                summary.webViewUidlRpcObserved = true;
+            }
             if (line.contains("\"type\":\"patch\"")
                     && line.contains("\"source\":\"UidlRequestHandler\"")
                     && line.contains("\"consumedByWebView\":false")) {
@@ -132,6 +138,7 @@ public final class DesktopTraceInspector {
         private boolean nativeClipboardObserved;
         private boolean uidlWriterObserved;
         private boolean uidlRpcDispatchObserved;
+        private boolean webViewUidlRpcObserved;
         private boolean uidlPatchObserved;
 
         public boolean hasRequiredFlowIpcTypes() {
@@ -142,6 +149,7 @@ public final class DesktopTraceInspector {
                     && nativeClipboardObserved
                     && uidlWriterObserved
                     && uidlRpcDispatchObserved
+                    && webViewUidlRpcObserved
                     && uidlPatchObserved;
         }
 
@@ -156,6 +164,7 @@ public final class DesktopTraceInspector {
             System.out.println("native clipboard observed: " + nativeClipboardObserved);
             System.out.println("UIDL writer observed: " + uidlWriterObserved);
             System.out.println("UIDL RPC dispatch observed: " + uidlRpcDispatchObserved);
+            System.out.println("WebView UIDL RPC observed: " + webViewUidlRpcObserved);
             System.out.println("UIDL request handler patch observed: " + uidlPatchObserved);
             List<String> missing = FLOW_IPC_REQUIRED_TYPES.stream()
                     .filter(type -> !types.containsKey(type))

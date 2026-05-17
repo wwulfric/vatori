@@ -2,7 +2,7 @@
 
 Flow IPC Protocol v1 is the first runtime protocol for moving Vaadin Desktop beyond localhost HTTP compatibility mode.
 
-Current implementation status: **minimum runtime slice implemented with UIDL writer and UIDL RPC dispatch trace**. It supports a local WebView shell, Java sidecar stdin/stdout transport, bootstrap, event, replace-root patch, desktop command/capabilityResult, push trace and shutdown. The runtime generates bootstrap UIDL with `UidlWriter` and dispatches click events through `UidlRequestHandler`/`ServerRpcHandler` to produce event UIDL patches. The WebView still consumes the repository-local tree patch, so this is not full Flow client engine parity yet.
+Current implementation status: **minimum runtime slice implemented with UIDL writer and WebView-produced UIDL RPC dispatch trace**. It supports a local WebView shell, Java sidecar stdin/stdout transport, bootstrap, event, replace-root patch, desktop command/capabilityResult, push trace and shutdown. The runtime generates bootstrap UIDL with `UidlWriter`; the WebView bridge sends click events as UIDL RPC bodies with CSRF, `syncId`, `clientId` and Flow node id; Java dispatches them through `UidlRequestHandler`/`ServerRpcHandler` to produce event UIDL patches. The WebView still consumes the repository-local tree patch, so this is not full Flow client engine parity yet.
 
 ## Prefixes
 
@@ -42,8 +42,23 @@ VFIPC1 {"version":"flow-ipc-v1","type":"command","id":"desktop-command-1",...}
   "uiId": "main",
   "route": "",
   "payload": {
-    "action": "click",
-    "componentId": "ipc-button"
+    "dispatch": "flow-client-rpc",
+    "componentId": "ipc-button",
+    "nodeId": 16,
+    "event": "click",
+    "uidlRpc": {
+      "csrfToken": "trace-csrf",
+      "rpc": [
+        {
+          "type": "event",
+          "node": 16,
+          "event": "click",
+          "data": {}
+        }
+      ],
+      "syncId": -1,
+      "clientId": 0
+    }
   },
   "error": null,
   "timestamp": 1778997000000
@@ -114,6 +129,37 @@ The current patch payload has two parts:
 
 The UIDL is real server-side Flow output, but the WebView bridge does not yet feed it into Vaadin's Flow client engine. `consumedByWebView=false` is intentional until the client engine bridge is implemented.
 
+## Current Event Payload
+
+`dev-ipc` no longer sends only `{action, componentId}`. The WebView bridge now sends a Flow-client-shaped UIDL RPC object:
+
+```json
+{
+  "type": "event",
+  "payload": {
+    "dispatch": "flow-client-rpc",
+    "componentId": "ipc-button",
+    "nodeId": 16,
+    "event": "click",
+    "uidlRpc": {
+      "csrfToken": "trace-csrf",
+      "rpc": [
+        {
+          "type": "event",
+          "node": 16,
+          "event": "click",
+          "data": {}
+        }
+      ],
+      "syncId": -1,
+      "clientId": 0
+    }
+  }
+}
+```
+
+The Java side still retains a legacy translator for the old simplified event payload as a fallback, but the verified path is `dispatch=flow-client-rpc`.
+
 ## Current Command Payload
 
 Desktop API calls in `dev-ipc` use the same envelope with `type=command`:
@@ -181,4 +227,4 @@ Run:
 bash bin/flow-ipc-trace-inspect --require-flow-ipc-v1 docs/traces/flow-ipc-v1.ndjson
 ```
 
-The inspector summarizes directions, message types and key markers. With `--require-flow-ipc-v1`, it requires `launch`, `ready`, `window.create`, `bootstrapRequest`, `bootstrapResponse`, `push`, `event`, `command`, `capabilityResult`, `patch`, `webview.dom`, `webview.snapshot` and `shutdown`, plus `transport=flow-ipc`, `compatibilityMode=false`, a clicked-state patch, native clipboard evidence, `uidlRpcDispatch=true`, bootstrap UIDL writer markers and an event patch from `UidlRequestHandler`.
+The inspector summarizes directions, message types and key markers. With `--require-flow-ipc-v1`, it requires `launch`, `ready`, `window.create`, `bootstrapRequest`, `bootstrapResponse`, `push`, `event`, `command`, `capabilityResult`, `patch`, `webview.dom`, `webview.snapshot` and `shutdown`, plus `transport=flow-ipc`, `compatibilityMode=false`, a clicked-state patch, native clipboard evidence, `uidlRpcDispatch=true`, a WebView event containing `uidlRpc`, bootstrap UIDL writer markers and an event patch from `UidlRequestHandler`.

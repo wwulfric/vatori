@@ -567,7 +567,11 @@ final class WebViewHost: NSObject, NSApplicationDelegate, NSWindowDelegate, WKNa
           location: window.location.href,
           bodyText: document.body ? document.body.innerText.slice(0, 500) : "",
           hasVaadinRoot: !!document.querySelector("vaadin-app-layout, vaadin-vertical-layout, flow-container-root"),
-          elementCount: document.body ? document.body.querySelectorAll("*").length : 0
+          elementCount: document.body ? document.body.querySelectorAll("*").length : 0,
+          flowClientResourceLoaded: !!(window.VaadinDesktopIpcDiagnostics && window.VaadinDesktopIpcDiagnostics.flowClientResourceLoaded),
+          flowClientResourcePath: window.VaadinDesktopIpcDiagnostics ? window.VaadinDesktopIpcDiagnostics.flowClientResourcePath : "",
+          flowClientResourceBytes: window.VaadinDesktopIpcDiagnostics ? window.VaadinDesktopIpcDiagnostics.flowClientResourceBytes : 0,
+          flowClientResourceVerified: !!(window.VaadinDesktopIpcDiagnostics && window.VaadinDesktopIpcDiagnostics.flowClientResourceVerified)
         })
         """
         webView.evaluateJavaScript(script) { result, error in
@@ -717,6 +721,7 @@ let flowIpcShell = #"""
       let sequence = 0;
       let autoClickDone = false;
       let autoResyncDone = false;
+      let flowResourceProbeDone = false;
       const flowClientState = {
         csrfToken: '',
         securityKey: '',
@@ -727,6 +732,13 @@ let flowIpcShell = #"""
       const flowNodeElements = new Map();
       const flowTextNodes = new Map();
       const flowUidlNodes = new Map();
+      window.VaadinDesktopIpcDiagnostics = {
+        flowClientResourceLoaded: false,
+        flowClientResourcePath: '',
+        flowClientResourceBytes: 0,
+        flowClientResourceSha256: '',
+        flowClientResourceVerified: false
+      };
 
       function envelope(type, payload) {
         sequence += 1;
@@ -828,6 +840,28 @@ let flowIpcShell = #"""
           securityKey,
           syncId: flowClientState.syncId,
           clientId: flowClientState.clientId
+        });
+      }
+
+      function requestFlowClientResourceProbe(payload) {
+        if (flowResourceProbeDone) {
+          return;
+        }
+        const resources = payload && payload.flowClientResources && Array.isArray(payload.flowClientResources.resources)
+          ? payload.flowClientResources.resources
+          : [];
+        const resource = resources.find((entry) => entry.path === 'META-INF/frontend/FlowBootstrap.js')
+          || resources.find((entry) => entry.kind === 'flow-bootstrap-module');
+        if (!resource || typeof resource.path !== 'string') {
+          return;
+        }
+        flowResourceProbeDone = true;
+        const securityKey = flowClientState.securityKey || flowClientState.csrfToken;
+        send('resourceRequest', {
+          purpose: 'flow-client-resource-probe',
+          path: resource.path,
+          expectedSha256: resource.sha256 || '',
+          securityKey
         });
       }
 
@@ -1010,6 +1044,20 @@ let flowIpcShell = #"""
         return element;
       }
 
+      function handleResourceResponse(payload) {
+        if (!payload || payload.flowClientResource !== true) {
+          return;
+        }
+        const body = typeof payload.body === 'string' ? payload.body : '';
+        const verified = body.includes('window.Vaadin.Flow.initApplication') && body.includes('export { init }');
+        window.VaadinDesktopIpcDiagnostics.flowClientResourceLoaded = true;
+        window.VaadinDesktopIpcDiagnostics.flowClientResourcePath = payload.path || '';
+        window.VaadinDesktopIpcDiagnostics.flowClientResourceBytes = Number(payload.bytes || body.length);
+        window.VaadinDesktopIpcDiagnostics.flowClientResourceSha256 = payload.sha256 || '';
+        window.VaadinDesktopIpcDiagnostics.flowClientResourceVerified = verified;
+        trace.textContent = 'flow resource ' + (payload.path || 'unknown') + ' ' + (verified ? 'verified' : 'loaded');
+      }
+
       window.VaadinDesktopIpc = {
         receive(message) {
           trace.textContent = 'recv ' + message.type + ' #' + message.id;
@@ -1019,6 +1067,7 @@ let flowIpcShell = #"""
               if (!applyUidlBootstrap(message.payload)) {
                 render(message.payload && message.payload.tree);
               }
+              requestFlowClientResourceProbe(message.payload);
             } else if (message.payload && message.payload.uidl && message.payload.uidl.resync === true) {
               if (!applyUidlBootstrap(message.payload)) {
                 render(message.payload && message.payload.tree);
@@ -1039,6 +1088,8 @@ let flowIpcShell = #"""
                 }
               }, 80);
             }
+          } else if (message.type === 'resourceResponse') {
+            handleResourceResponse(message.payload);
           } else if (message.type === 'error') {
             app.textContent = 'Flow IPC error: ' + JSON.stringify(message.error || message.payload);
           }

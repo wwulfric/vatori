@@ -31,6 +31,7 @@ final class FlowIpcRuntime {
     private final Class<? extends Component> routeClass;
     private final String route;
     private final FlowIpcRenderer renderer = new FlowIpcRenderer();
+    private final FlowClientResources flowClientResources = new FlowClientResources();
     private final AtomicLong sequence = new AtomicLong();
     private final AtomicLong clientToServerSequence = new AtomicLong();
     private Component root;
@@ -50,6 +51,7 @@ final class FlowIpcRuntime {
                 "runtime", "repository-local-flow-ipc-adapter",
                 "uidlWriter", true,
                 "uidlRpcDispatch", true,
+                "flowClientResourceLoading", "ipc-resource-request",
                 "uidlRpcProducer", "webview-bridge",
                 "uidlConsumer", "minimum-webview-uidl-applier"));
 
@@ -73,6 +75,7 @@ final class FlowIpcRuntime {
         try {
             switch (type == null ? "" : type) {
                 case "bootstrapRequest" -> bootstrap(json, id, correlationId);
+                case "resourceRequest" -> handleResourceRequest(json, id, correlationId);
                 case "event" -> handleEvent(json, id, correlationId);
                 case "resync" -> handleResync(json, id, correlationId);
                 case "shutdown" -> System.exit(0);
@@ -96,6 +99,7 @@ final class FlowIpcRuntime {
         payload.put("compatibilityMode", false);
         payload.put("route", route);
         payload.put("uidl", uidlPayload("bootstrap", false));
+        payload.put("flowClientResources", flowClientResources.manifest());
         payload.put("clientState", Map.of(
                 "sessionId", flowSession.sessionId(),
                 "uiId", flowSession.uiId(),
@@ -108,6 +112,19 @@ final class FlowIpcRuntime {
         payload.put("tree", renderer.render(root));
         send("bootstrapResponse", nextId("bootstrap"), correlationIdOr(id, correlationId), payload);
         sendServerInitiatedPush(id, correlationId);
+    }
+
+    private void handleResourceRequest(String json, String id, String correlationId) {
+        ensureBootstrapped();
+        validateEnvelopeScope(json);
+        validateSecurityKey(json);
+        String path = JsonFields.string(json, "path");
+        if (path == null || path.isBlank() || !flowClientResources.contains(path)) {
+            sendError("resourceNotFound", "Unknown Flow client resource: " + path, id, correlationId);
+            return;
+        }
+        send("resourceResponse", nextId("resource"), correlationIdOr(id, correlationId),
+                flowClientResources.response(path));
     }
 
     private void sendServerInitiatedPush(String id, String correlationId) {
@@ -384,6 +401,7 @@ final class FlowIpcRuntime {
 
         private static String unescape(String value) {
             return value.replace("\\\"", "\"")
+                    .replace("\\/", "/")
                     .replace("\\\\", "\\")
                     .replace("\\n", "\n")
                     .replace("\\r", "\r")

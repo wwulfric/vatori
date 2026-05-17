@@ -37,7 +37,7 @@ WebView event
 
 ## Relationship To Vaadin Internals
 
-The current `FlowIpcRuntime` adapter intentionally does not claim to be the final Vaadin UIDL adapter. It now creates a desktop-shaped Flow session/UI, includes real `UidlWriter` output in `bootstrapResponse`, lets the WebView bridge send Flow-client-shaped UIDL RPC bodies for click events and uses `UidlRequestHandler`/`ServerRpcHandler` for event patches. The WebView applies bootstrap/event UIDL `changes` through a minimum applier, while the repository-local tree remains as fallback. The repository also contains the compiled transport adapter around the real Flow server path:
+The current `FlowIpcRuntime` adapter intentionally does not claim to be the final Vaadin UIDL adapter. It now creates a desktop-shaped Flow session/UI, includes real `UidlWriter` output in `bootstrapResponse` and one server-initiated `push`, lets the WebView bridge send Flow-client-shaped UIDL RPC bodies for click events and uses `UidlRequestHandler`/`ServerRpcHandler` for event patches. The WebView applies bootstrap/push/event UIDL `changes` through a minimum applier, while the repository-local tree remains as fallback. The repository also contains the compiled transport adapter around the real Flow server path:
 
 - `dev.vatori.desktop.flow.transport.FlowTransportAdapter`
 - `dev.vatori.desktop.flow.transport.UidlFlowTransportAdapter`

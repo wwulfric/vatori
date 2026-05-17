@@ -58,7 +58,7 @@ Expected trace characteristics:
 - Java sidecar emits `VFIPC1` envelopes.
 - The WebView loads a local HTML shell through `loadHTMLString`, not `http://127.0.0.1`.
 - Button click travels WebView -> Swift host -> Java sidecar -> Vaadin Button listener -> patch -> WebView.
-- Bootstrap and event patches include real server-side UIDL under `payload.uidl`; click events are dispatched through `UidlRequestHandler`/`ServerRpcHandler`.
+- Bootstrap, server push and event patches include real server-side UIDL under `payload.uidl`; click events are dispatched through `UidlRequestHandler`/`ServerRpcHandler`.
 - Desktop API calls travel Java sidecar -> Swift host as `VFIPC1 command`, and host responses appear as `capabilityResult`.
 
 For repeatable real-window smoke verification without global mouse coordinates:
@@ -80,7 +80,7 @@ bash bin/uidl-adapter-smoke
 bash bin/uidl-rpc-smoke
 ```
 
-Current limitation: this path uses a minimum repository-local UIDL applier in the WebView. It now generates Vaadin UIDL, sends click events through the server-side Flow RPC path and consumes bootstrap/event UIDL `changes`, but the full Flow client engine is not wired yet.
+Current limitation: this path uses a minimum repository-local UIDL applier in the WebView. It now generates Vaadin UIDL, sends click events through the server-side Flow RPC path and consumes bootstrap/push/event UIDL `changes`, but the full Flow client engine is not wired yet.
 
 ## Run the Independent Smoke App
 
@@ -133,6 +133,6 @@ public class MainView extends VerticalLayout {
 
 Framework v0 still starts an embedded Spring Boot web server on `127.0.0.1`. The macOS desktop window embeds that app in WKWebView, but the transport is still a transition layer, not the final Flow over IPC architecture.
 
-The Swift native path narrows the long-term host/runtime boundary, but Flow bootstrap, UIDL event handling and push are still compatibility HTTP unless a trace or document explicitly says otherwise.
+The Swift native compatibility path narrows the long-term host/runtime boundary, but Flow bootstrap, UIDL event handling and push are still compatibility HTTP there. Use `dev-ipc` for the no-localhost bootstrap/push/event/patch runtime slice.
 
 `dev-ipc` is the exception: it is the first no-HTTP runtime slice, now with server-side UIDL generation, but only for `test-apps/flow-over-ipc-smoke-app` and the constrained component/event set documented in `docs/flow-over-ipc-runtime.md`.

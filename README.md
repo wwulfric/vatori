@@ -4,7 +4,7 @@ This repository explores a Vaadin Flow desktop runtime inspired by Tauri/Raycast
 
 Framework v0 runs in **compatibility mode** by default: real Vaadin Flow views are served by embedded Spring Boot on `127.0.0.1`, while the desktop runtime API, host boundary, IPC envelope and trace logs are already separated so they can evolve toward Flow over IPC.
 
-The repository now also contains the first `dev-ipc` runtime slice. It runs a constrained Flow-over-IPC smoke app without a localhost HTTP server in the core event/patch path, sends WebView click events as Flow-client-shaped UIDL RPC payloads, emits real server-side Vaadin UIDL and dispatches those events through `UidlRequestHandler`/`ServerRpcHandler`. Bootstrap and event patches are applied through a minimum WebView UIDL changes applier; this is still not full Flow client-engine parity because the applier is repository-local and only covers the smoke subset.
+The repository now also contains the first `dev-ipc` runtime slice. It runs a constrained Flow-over-IPC smoke app without a localhost HTTP server in the core UI path, sends WebView click events as Flow-client-shaped UIDL RPC payloads, emits real server-side Vaadin UIDL and dispatches those events through `UidlRequestHandler`/`ServerRpcHandler`. Bootstrap, one server-initiated push and event patches are applied through a minimum WebView UIDL changes applier; this is still not full Flow client-engine parity because the applier is repository-local and only covers the smoke subset.
 
 ## Quick Start
 
@@ -42,7 +42,7 @@ Run the first Flow IPC runtime slice:
 bash bin/vaadin-desktop dev-ipc test-apps/flow-over-ipc-smoke-app
 ```
 
-`dev-ipc` starts the same Swift/AppKit host with `transport=flow-ipc`, loads a local WKWebView shell, sends WebView events to the Java sidecar over `VFIPC1` stdin/stdout envelopes, and applies Java patches without loading `http://127.0.0.1`. Bootstrap payloads include real Vaadin server-side UIDL from `UidlWriter`; the WebView bridge sends click events as UIDL RPC bodies with CSRF, `syncId`, `clientId` and Flow node id, then Java handles them through `UidlRequestHandler`/`ServerRpcHandler`. Bootstrap and event DOM updates are consumed from UIDL `changes`; the repository-local component tree remains only as a fallback until the Flow client engine bridge is implemented.
+`dev-ipc` starts the same Swift/AppKit host with `transport=flow-ipc`, loads a local WKWebView shell, sends WebView events to the Java sidecar over `VFIPC1` stdin/stdout envelopes, and applies Java patches without loading `http://127.0.0.1`. Bootstrap payloads include real Vaadin server-side UIDL from `UidlWriter`; the runtime also emits one server-initiated push UIDL update. The WebView bridge sends click events as UIDL RPC bodies with CSRF, `syncId`, `clientId` and Flow node id, then Java handles them through `UidlRequestHandler`/`ServerRpcHandler`. Bootstrap, push and event DOM updates are consumed from UIDL `changes`; the repository-local component tree remains only as a fallback until the Flow client engine bridge is implemented.
 
 Inspect the Flow IPC trace sample:
 

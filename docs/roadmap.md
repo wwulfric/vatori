@@ -23,7 +23,7 @@ Status: in progress in this repository.
 
 ## v0.2: Flow Transport Adapter Spike
 
-Status: first minimum runtime slice implemented, server-side UIDL writer integrated into `dev-ipc` payloads, WebView-produced UIDL RPC click dispatch wired, full Flow client UIDL consumption still pending.
+Status: first minimum runtime slice implemented, server-side UIDL writer integrated into `dev-ipc` bootstrap/push payloads, WebView-produced UIDL RPC click dispatch wired, full Flow client UIDL consumption still pending.
 
 - Audit Vaadin Flow event and patch internals.
 - Extract a minimal adapter around bootstrap, event dispatch and UIDL/patch response.
@@ -31,13 +31,13 @@ Status: first minimum runtime slice implemented, server-side UIDL writer integra
 - `dev-ipc` now runs `test-apps/flow-over-ipc-smoke-app` without localhost HTTP in the core event/patch path.
 - `bash bin/uidl-adapter-smoke` now verifies that a desktop-shaped session/UI can drive Vaadin's real `UidlWriter` and produce UIDL `changes`/`syncId`.
 - `bash bin/uidl-rpc-smoke` now verifies that a real Flow event RPC can pass through `UidlRequestHandler`/`ServerRpcHandler` and produce a listener UIDL patch without a real HTTP socket.
-- `dev-ipc` bootstrap/patch envelopes now include `payload.uidl`; bootstrap comes from `UidlWriter`, and WebView-produced click RPC patches come from `UidlRequestHandler`/`ServerRpcHandler`. Bootstrap/event UIDL `changes` are consumed by a minimum WebView applier.
+- `dev-ipc` bootstrap/push/patch envelopes now include `payload.uidl`; bootstrap and one server-initiated push come from `UidlWriter`, and WebView-produced click RPC patches come from `UidlRequestHandler`/`ServerRpcHandler`. Bootstrap/push/event UIDL `changes` are consumed by a minimum WebView applier.
 
 First issue candidates:
 
 - Replace the minimum repository-local UIDL applier with Flow client engine UIDL consumption.
 - Extend `DesktopVaadinRequest` to enforce session id, UI id, CSRF token and sync ids from Host Protocol.
-- Keep push out of scope until request/response UIDL works without HTTP sockets.
+- Replace the one-shot server-initiated push with a real Flow push queue, ordering model and reconnect/resync path.
 
 ## v0.3: Capability Gateway
 

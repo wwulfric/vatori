@@ -35,6 +35,7 @@ The Java sidecar is still launched by Maven `spring-boot:run`, but the applicati
 - Java listener mutates server-side Flow component state.
 - Java returns `bootstrapResponse` and `patch` envelopes.
 - Java includes real Vaadin UIDL JSON under `payload.uidl`; bootstrap uses `UidlWriter`, and click events use `UidlRequestHandler`/`ServerRpcHandler`.
+- Java emits a minimum server-initiated `push` envelope after bootstrap by mutating the server-side Flow component tree and serializing the resulting UIDL with `UidlWriter`.
 - WebView applies replace-root patches.
 - Desktop API calls in `dev-ipc` emit `VFIPC1` `command` envelopes.
 - Swift host handles `window.setTitle` through AppKit and `clipboard.writeText` through `NSPasteboard`.
@@ -62,6 +63,7 @@ Verified trace evidence:
 
 - `HOST_PROTOCOL bootstrapRequest` from WebView to Java.
 - `HOST_PROTOCOL bootstrapResponse` with `uidl.source=UidlWriter` and `uidl.containsSyncId=true`.
+- `HOST_PROTOCOL push` with `uidl.source=UidlWriter`, `uidl.reason=push` and `5 Server push over IPC READY`.
 - `HOST_PROTOCOL event` with `dispatch=flow-client-rpc`, `uidlRpc.csrfToken`, `uidlRpc.syncId`, `uidlRpc.clientId` and Flow `nodeId`.
 - Java `VFIPC1 command` for `window.setTitle`, `notification.show` and `clipboard.writeText`.
 - `HOST_PROTOCOL capabilityResult` for `window.setTitle`, `notification.show` and `clipboard.writeText`.
@@ -80,12 +82,12 @@ The inspector fails with exit code `2` if the required Flow IPC message types or
 
 This is not the final complete Vaadin Flow transport yet:
 
-- Bootstrap and event patch payloads include real Vaadin UIDL, and the WebView applies UIDL `changes` for the smoke app subset.
+- Bootstrap, push and event patch payloads include real Vaadin UIDL, and the WebView applies UIDL `changes` for the smoke app subset.
 - The WebView shell is a minimum UIDL applier, not the full Flow client engine.
 - Only click events are implemented.
 - The WebView bridge now sends Flow-client-shaped UIDL RPC for click events, but full Flow client event collection is not implemented.
 - `VaadinSession` and `UI` are desktop-shaped; CSRF and sync-id values are carried, but security enforcement and resync semantics are not complete.
-- Push is represented by a server-initiated trace message, not a full Flow push implementation.
+- Push covers one server-initiated UIDL update in the smoke app, but it is not a full Flow push implementation with background scheduling, ordering guarantees or reconnect semantics.
 - Notification handling is trace-only; clipboard write is backed by native `NSPasteboard`.
 - Upload/download, frontend resources, production bundle and dev mode are not implemented for `dev-ipc`.
 

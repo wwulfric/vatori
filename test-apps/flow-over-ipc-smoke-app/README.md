@@ -19,6 +19,7 @@ Current scope:
 - Real Vaadin Flow Java components are instantiated in the Java sidecar.
 - The Swift/AppKit host loads a local WebView shell instead of a localhost URL.
 - Button events travel WebView -> Swift host -> Java stdin as `VFIPC1` envelopes carrying Flow UIDL RPC payloads.
+- Java emits one server-initiated push UIDL update after bootstrap, and the WebView applies it without localhost HTTP.
 - Java listener execution updates Flow component state and returns a full replace-root patch.
 - Desktop API calls travel Java -> Swift host as `VFIPC1 command`.
 - The smoke view calls `window.setTitle`, `notification.show` and `clipboard.writeText`; Swift host returns `capabilityResult`, with clipboard backed by native `NSPasteboard`.

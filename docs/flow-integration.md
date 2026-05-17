@@ -62,7 +62,7 @@ Next work should replace the compatibility adapter with a real Flow transport ad
 4. Feed transport messages through `vaadin-desktop-ipc`.
 5. Load Flow client engine from a local asset protocol in the native host.
 
-The current concrete issue is to keep tightening this repository-local adapter: it accepts `(VaadinSession, UI, requestBody, metadata)` and returns UIDL JSON while using a compatibility `VaadinRequest` only at the edge. The WebView bridge now provides Flow-client-shaped click RPC request bodies directly, and the adapter rejects mismatched Flow IPC `csrfToken`, stale `syncId` and out-of-order `clientId` values before dispatch. The remaining work is broader Flow-client event coverage, UIDL consumption and stricter security-key/resync semantics.
+The current concrete issue is to keep tightening this repository-local adapter: it accepts `(VaadinSession, UI, requestBody, metadata)` and returns UIDL JSON while using a compatibility `VaadinRequest` only at the edge. The WebView bridge now provides Flow-client-shaped click RPC request bodies directly, bootstrap mirrors Flow's `Vaadin-Security-Key`, event/resync envelopes carry that key back to Java, and the adapter rejects mismatched Flow IPC `csrfToken`/security key, stale `syncId` and out-of-order `clientId` values before dispatch. The remaining work is broader Flow-client event coverage, UIDL consumption and full resync semantics.
 
 That issue has now started in compiled framework code:
 
@@ -81,8 +81,8 @@ bash bin/uidl-adapter-smoke
 bash bin/uidl-rpc-smoke
 ```
 
-The smoke constructs an in-process desktop-shaped `VaadinSession`/`UI` and verifies that real `UidlWriter` output includes UIDL `changes` and `syncId`. `dev-ipc` now reuses that session shape to include real UIDL in bootstrap and patch payloads without a servlet container for that narrow path.
+The smoke constructs an in-process desktop-shaped `VaadinSession`/`UI` and verifies that real `UidlWriter` output includes UIDL `changes`, `syncId` and the bootstrap `Vaadin-Security-Key`. `dev-ipc` now reuses that session shape to include real UIDL in bootstrap and patch payloads without a servlet container for that narrow path.
 
 The RPC smoke verifies the next boundary: `UidlRequestHandler` can find the desktop `UI`, run `ServerRpcHandler` for a real `type=event` click RPC and return listener-produced UIDL without a real HTTP socket. `dev-ipc` now uses the same server-side path with a WebView-provided UIDL RPC body.
 
-The exact remaining runtime inputs are still: broader WebView-side Flow-client event coverage, security-key hardening and full resync semantics.
+The exact remaining runtime inputs are still: broader WebView-side Flow-client event coverage and full resync semantics.

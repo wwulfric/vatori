@@ -195,4 +195,4 @@ Most valuable next steps:
 2. Turn Host Protocol v0 traces into a bidirectional command/result transport.
 3. Replace the repository-local WebView tree renderer with Flow client engine UIDL consumption.
 4. Add smoke tests for Swift host window launch, sidecar cleanup and desktop capability calls.
-5. Tighten full security-key and resync semantics in `DesktopVaadinRequest`; minimum Flow IPC `csrfToken`, `syncId` and `clientId` preflight is already in place.
+5. Tighten full resync semantics in `DesktopVaadinRequest`; minimum Flow IPC `csrfToken`/security key, `syncId` and `clientId` preflight is already in place.

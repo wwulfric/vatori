@@ -121,6 +121,21 @@ public final class DesktopTraceInspector {
                     && line.contains("\"clientId\"")) {
                 summary.resyncSecurityKeyObserved = true;
             }
+            if (line.contains("\"type\":\"bootstrapRequest\"")
+                    && line.contains("\"sessionId\":\"flow-ipc-session\"")
+                    && line.contains("\"uiId\":\"main\"")) {
+                summary.bootstrapScopeObserved = true;
+            }
+            if (line.contains("\"type\":\"event\"")
+                    && line.contains("\"sessionId\":\"flow-ipc-session\"")
+                    && line.contains("\"uiId\":\"main\"")) {
+                summary.eventScopeObserved = true;
+            }
+            if (line.contains("\"type\":\"resync\"")
+                    && line.contains("\"sessionId\":\"flow-ipc-session\"")
+                    && line.contains("\"uiId\":\"main\"")) {
+                summary.resyncScopeObserved = true;
+            }
             if (line.contains("\"type\":\"patch\"")
                     && line.contains("\"source\":\"UidlRequestHandler\"")
                     && line.contains("\"consumedByWebView\":true")
@@ -172,6 +187,9 @@ public final class DesktopTraceInspector {
         private boolean uidlWriterObserved;
         private boolean securityKeyObserved;
         private boolean resyncSecurityKeyObserved;
+        private boolean bootstrapScopeObserved;
+        private boolean eventScopeObserved;
+        private boolean resyncScopeObserved;
         private boolean uidlRpcDispatchObserved;
         private boolean webViewUidlRpcObserved;
         private boolean uidlPatchObserved;
@@ -187,6 +205,9 @@ public final class DesktopTraceInspector {
                     && uidlWriterObserved
                     && securityKeyObserved
                     && resyncSecurityKeyObserved
+                    && bootstrapScopeObserved
+                    && eventScopeObserved
+                    && resyncScopeObserved
                     && uidlRpcDispatchObserved
                     && webViewUidlRpcObserved
                     && uidlPatchObserved
@@ -206,6 +227,9 @@ public final class DesktopTraceInspector {
             System.out.println("UIDL writer observed: " + uidlWriterObserved);
             System.out.println("Flow security key observed: " + securityKeyObserved);
             System.out.println("resync security key observed: " + resyncSecurityKeyObserved);
+            System.out.println("bootstrap scope observed: " + bootstrapScopeObserved);
+            System.out.println("event scope observed: " + eventScopeObserved);
+            System.out.println("resync scope observed: " + resyncScopeObserved);
             System.out.println("UIDL RPC dispatch observed: " + uidlRpcDispatchObserved);
             System.out.println("WebView UIDL RPC observed: " + webViewUidlRpcObserved);
             System.out.println("UIDL request handler patch observed: " + uidlPatchObserved);

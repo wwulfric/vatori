@@ -2,7 +2,7 @@
 
 Flow IPC Protocol v1 is the first runtime protocol for moving Vaadin Desktop beyond localhost HTTP compatibility mode.
 
-Current implementation status: **minimum runtime slice implemented with UIDL writer and WebView-produced UIDL RPC dispatch trace**. It supports a local WebView shell, Java sidecar stdin/stdout transport, bootstrap, event, replace-root patch, desktop command/capabilityResult, push trace and shutdown. The runtime generates bootstrap UIDL with `UidlWriter`; the WebView bridge sends click events as UIDL RPC bodies with CSRF, `syncId`, `clientId` and Flow node id; Java dispatches them through `UidlRequestHandler`/`ServerRpcHandler` to produce event UIDL patches. The WebView still consumes the repository-local tree patch, so this is not full Flow client engine parity yet.
+Current implementation status: **minimum runtime slice implemented with UIDL writer, WebView-produced UIDL RPC dispatch and minimum UIDL patch consumption trace**. It supports a local WebView shell, Java sidecar stdin/stdout transport, bootstrap, event, replace-root patch, desktop command/capabilityResult, push trace and shutdown. The runtime generates bootstrap UIDL with `UidlWriter`; the WebView bridge sends click events as UIDL RPC bodies with CSRF, `syncId`, `clientId` and Flow node id; Java dispatches them through `UidlRequestHandler`/`ServerRpcHandler` to produce event UIDL patches. The WebView applies event UIDL `changes` through a minimum applier, while bootstrap/layout rendering still uses the repository-local scaffold, so this is not full Flow client engine parity yet.
 
 ## Prefixes
 
@@ -113,7 +113,8 @@ The current patch payload has two parts:
     "format": "vaadin-uidl-json",
     "containsChanges": true,
     "containsSyncId": true,
-    "consumedByWebView": false,
+    "consumedByWebView": true,
+    "consumer": "minimum-webview-uidl-applier",
     "body": "{\"clientId\":0,\"changes\":[{\"node\":13,\"type\":\"put\",\"key\":\"text\",\"feat\":7,\"value\":\"Clicks: 1\"}],\"syncId\":-1}"
   },
   "tree": {
@@ -127,7 +128,7 @@ The current patch payload has two parts:
 }
 ```
 
-The UIDL is real server-side Flow output, but the WebView bridge does not yet feed it into Vaadin's Flow client engine. `consumedByWebView=false` is intentional until the client engine bridge is implemented.
+The UIDL is real server-side Flow output. Event patches are consumed by the minimum WebView UIDL changes applier, so `consumedByWebView=true` is expected for `UidlRequestHandler` event patches. Bootstrap UIDL is still trace-only until the full Flow client engine bridge replaces the repository-local scaffold.
 
 ## Current Event Payload
 

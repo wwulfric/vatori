@@ -107,7 +107,8 @@ public final class DesktopTraceInspector {
             }
             if (line.contains("\"type\":\"patch\"")
                     && line.contains("\"source\":\"UidlRequestHandler\"")
-                    && line.contains("\"consumedByWebView\":false")) {
+                    && line.contains("\"consumedByWebView\":true")
+                    && line.contains("\"minimum-webview-uidl-applier\"")) {
                 summary.uidlPatchObserved = true;
             }
         }

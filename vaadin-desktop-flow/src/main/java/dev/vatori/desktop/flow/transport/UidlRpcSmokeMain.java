@@ -29,23 +29,7 @@ public final class UidlRpcSmokeMain {
         }
 
         int buttonNodeId = button.getElement().getNode().getId();
-        String requestBody = """
-                {
-                  "csrfToken": "%s",
-                  "rpc": [
-                    {
-                      "type": "event",
-                      "node": %d,
-                      "event": "click",
-                      "data": {}
-                    }
-                  ],
-                  "syncId": -1,
-                  "clientId": 0
-                }
-                """.formatted(session.ui().getCsrfToken(), buttonNodeId);
-
-        FlowPatchResponse response = session.handleClientMessage(requestBody, 0, false);
+        FlowPatchResponse response = session.handleDomEvent(buttonNodeId, "click", 0);
         System.out.println(response.uidlJson());
         if (!response.desktopVaadinRequestUsed()
                 || !response.uidlJson().contains("Clicks: 1")

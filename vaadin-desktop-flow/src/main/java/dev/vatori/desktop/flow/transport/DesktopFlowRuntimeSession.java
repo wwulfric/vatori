@@ -111,6 +111,26 @@ public final class DesktopFlowRuntimeSession {
         return uidlAdapter.handleClientMessage(ui, message);
     }
 
+    public FlowPatchResponse handleDomEvent(int nodeId, String eventType, int clientToServerMessageId)
+            throws IOException {
+        String requestBody = """
+                {
+                  "csrfToken": "%s",
+                  "rpc": [
+                    {
+                      "type": "event",
+                      "node": %d,
+                      "event": "%s",
+                      "data": {}
+                    }
+                  ],
+                  "syncId": -1,
+                  "clientId": %d
+                }
+                """.formatted(ui.getCsrfToken(), nodeId, eventType, clientToServerMessageId);
+        return handleClientMessage(requestBody, clientToServerMessageId, false);
+    }
+
     private static final class DesktopFlowVaadinService extends VaadinService {
         private final String appId;
 

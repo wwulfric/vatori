@@ -4,6 +4,7 @@ import com.vaadin.flow.component.Component;
 import com.vaadin.flow.component.button.Button;
 import com.vaadin.flow.router.Route;
 import dev.vatori.desktop.flow.transport.DesktopFlowRuntimeSession;
+import dev.vatori.desktop.flow.transport.FlowPatchResponse;
 import dev.vatori.desktop.ipc.FlowIpcEnvelope;
 import dev.vatori.desktop.ipc.IpcJson;
 
@@ -26,6 +27,7 @@ final class FlowIpcRuntime {
     private final String route;
     private final FlowIpcRenderer renderer = new FlowIpcRenderer();
     private final AtomicLong sequence = new AtomicLong();
+    private final AtomicLong clientToServerSequence = new AtomicLong();
     private Component root;
     private DesktopFlowRuntimeSession flowSession;
 
@@ -42,6 +44,7 @@ final class FlowIpcRuntime {
                 "route", route,
                 "runtime", "repository-local-flow-ipc-adapter",
                 "uidlWriter", true,
+                "uidlRpcDispatch", true,
                 "uidlConsumer", "trace-only"));
 
         try (BufferedReader reader = new BufferedReader(new InputStreamReader(System.in, StandardCharsets.UTF_8))) {
@@ -110,22 +113,37 @@ final class FlowIpcRuntime {
         }
         Component target = renderer.component(componentId);
         if (target instanceof Button button) {
-            flowSession.runLocked(button::click);
-            sendPatch("event", id, correlationId);
+            int nodeId = button.getElement().getNode().getId();
+            FlowPatchResponse response = handleDomEvent(nodeId, "click");
+            sendPatch("event", id, correlationId, response);
         } else {
             sendError("unsupportedTarget", "No clickable Vaadin Button registered for componentId=" + componentId,
                     id, correlationId);
         }
     }
 
+    private FlowPatchResponse handleDomEvent(int nodeId, String eventType) {
+        try {
+            return flowSession.handleDomEvent(nodeId, eventType, (int) clientToServerSequence.getAndIncrement());
+        } catch (IOException error) {
+            throw new IllegalStateException("Unable to dispatch Flow UIDL RPC event: " + error.getMessage(), error);
+        }
+    }
+
     private void sendPatch(String reason, String id, String correlationId) {
+        sendPatch(reason, id, correlationId, null);
+    }
+
+    private void sendPatch(String reason, String id, String correlationId, FlowPatchResponse uidlResponse) {
         ensureBootstrapped();
         Map<String, Object> payload = new LinkedHashMap<>();
         payload.put("patchType", "replaceRoot");
         payload.put("reason", reason);
         payload.put("transport", "flow-ipc");
         payload.put("compatibilityMode", false);
-        payload.put("uidl", uidlPayload(reason, "resync".equals(reason)));
+        payload.put("uidl", uidlResponse == null
+                ? uidlPayload(reason, "resync".equals(reason))
+                : uidlPayload(reason, uidlResponse));
         payload.put("tree", renderer.render(root));
         send("patch", nextId("patch"), correlationIdOr(id, correlationId), payload);
     }
@@ -157,6 +175,23 @@ final class FlowIpcRuntime {
         uidl.put("resync", resync);
         uidl.put("desktopSession", true);
         uidl.put("consumedByWebView", false);
+        uidl.put("containsChanges", uidlJson.contains("\"changes\""));
+        uidl.put("containsSyncId", uidlJson.contains("\"syncId\""));
+        uidl.put("body", uidlJson);
+        return uidl;
+    }
+
+    private Map<String, Object> uidlPayload(String reason, FlowPatchResponse response) {
+        String uidlJson = response.uidlJson();
+        Map<String, Object> uidl = new LinkedHashMap<>();
+        uidl.put("source", "UidlRequestHandler");
+        uidl.put("format", "vaadin-uidl-json");
+        uidl.put("reason", reason);
+        uidl.put("resync", response.resync());
+        uidl.put("desktopSession", response.desktopVaadinRequestUsed());
+        uidl.put("consumedByWebView", false);
+        uidl.put("statusCode", response.statusCode());
+        uidl.put("contentType", response.contentType());
         uidl.put("containsChanges", uidlJson.contains("\"changes\""));
         uidl.put("containsSyncId", uidlJson.contains("\"syncId\""));
         uidl.put("body", uidlJson);

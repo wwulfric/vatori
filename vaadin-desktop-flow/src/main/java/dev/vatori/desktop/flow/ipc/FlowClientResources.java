@@ -6,6 +6,7 @@ import java.nio.charset.StandardCharsets;
 import java.security.MessageDigest;
 import java.security.NoSuchAlgorithmException;
 import java.util.ArrayList;
+import java.util.Collections;
 import java.util.HexFormat;
 import java.util.LinkedHashMap;
 import java.util.List;
@@ -30,7 +31,7 @@ final class FlowClientResources {
         if (gwtClient != null) {
             add(discovered, gwtClient, "flow-client-gwt-bundle", true);
         }
-        resources = Map.copyOf(discovered);
+        resources = Collections.unmodifiableMap(new LinkedHashMap<>(discovered));
     }
 
     Map<String, Object> manifest() {

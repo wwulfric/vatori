@@ -93,7 +93,9 @@ public final class DesktopTraceInspector {
             }
             if (line.contains("\"source\":\"UidlWriter\"")
                     && line.contains("\"containsChanges\":true")
-                    && line.contains("\"containsSyncId\":true")) {
+                    && line.contains("\"containsSyncId\":true")
+                    && line.contains("\"consumedByWebView\":true")
+                    && line.contains("\"minimum-webview-uidl-applier\"")) {
                 summary.uidlWriterObserved = true;
             }
             if (line.contains("\"uidlRpcDispatch\":true")) {

@@ -25,6 +25,8 @@ import java.util.regex.Pattern;
 
 final class FlowIpcRuntime {
     static final String PREFIX = "VFIPC1 ";
+    private static final String IPC_SESSION_ID = "flow-ipc-session";
+    private static final String IPC_UI_ID = "main";
 
     private final Class<? extends Component> routeClass;
     private final String route;
@@ -70,7 +72,7 @@ final class FlowIpcRuntime {
         String correlationId = JsonFields.string(json, "correlationId");
         try {
             switch (type == null ? "" : type) {
-                case "bootstrapRequest" -> bootstrap(id, correlationId);
+                case "bootstrapRequest" -> bootstrap(json, id, correlationId);
                 case "event" -> handleEvent(json, id, correlationId);
                 case "resync" -> handleResync(json, id, correlationId);
                 case "shutdown" -> System.exit(0);
@@ -86,8 +88,9 @@ final class FlowIpcRuntime {
         }
     }
 
-    private void bootstrap(String id, String correlationId) {
+    private void bootstrap(String json, String id, String correlationId) {
         ensureBootstrapped();
+        validateEnvelopeScope(json);
         Map<String, Object> payload = new LinkedHashMap<>();
         payload.put("transport", "flow-ipc");
         payload.put("compatibilityMode", false);
@@ -138,6 +141,7 @@ final class FlowIpcRuntime {
 
     private void handleEvent(String json, String id, String correlationId) {
         ensureBootstrapped();
+        validateEnvelopeScope(json);
         validateSecurityKey(json);
         String uidlRpc = JsonFields.object(json, "uidlRpc");
         if (uidlRpc != null && !uidlRpc.isBlank()) {
@@ -165,8 +169,23 @@ final class FlowIpcRuntime {
 
     private void handleResync(String json, String id, String correlationId) {
         ensureBootstrapped();
+        validateEnvelopeScope(json);
         validateSecurityKey(json);
         sendPatch("resync", id, correlationId);
+    }
+
+    private void validateEnvelopeScope(String json) {
+        String sessionId = JsonFields.string(json, "sessionId");
+        if (!Objects.equals(flowSession.sessionId(), sessionId)) {
+            throw new IllegalArgumentException("Flow IPC sessionId mismatch: expected "
+                    + flowSession.sessionId() + " but got " + sessionId);
+        }
+
+        String uiId = JsonFields.string(json, "uiId");
+        if (!Objects.equals(IPC_UI_ID, uiId)) {
+            throw new IllegalArgumentException("Flow IPC uiId mismatch: expected "
+                    + IPC_UI_ID + " but got " + uiId);
+        }
     }
 
     private void validateSecurityKey(String json) {
@@ -223,14 +242,14 @@ final class FlowIpcRuntime {
         if (root == null) {
             root = instantiateRoute();
             flowSession = DesktopFlowRuntimeSession.create(
-                    "flow-ipc-session",
+                    IPC_SESSION_ID,
                     1,
                     "flow-ipc",
                     root);
         }
         if (flowSession == null) {
             flowSession = DesktopFlowRuntimeSession.create(
-                    "flow-ipc-session",
+                    IPC_SESSION_ID,
                     1,
                     "flow-ipc",
                     root);
@@ -274,7 +293,7 @@ final class FlowIpcRuntime {
 
     private void send(String type, String id, String correlationId, Map<String, Object> payload) {
         FlowIpcEnvelope envelope = FlowIpcEnvelope.message(type, id, correlationId,
-                "flow-ipc-session", "main", route, payload);
+                IPC_SESSION_ID, IPC_UI_ID, route, payload);
         System.out.println(PREFIX + IpcJson.stringify(envelope));
         System.out.flush();
     }
@@ -283,8 +302,8 @@ final class FlowIpcRuntime {
         FlowIpcEnvelope envelope = FlowIpcEnvelope.error(
                 id == null ? nextId("error") : id,
                 correlationId,
-                "flow-ipc-session",
-                "main",
+                IPC_SESSION_ID,
+                IPC_UI_ID,
                 route,
                 code,
                 message);

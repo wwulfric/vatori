@@ -1,0 +1,131 @@
+#!/usr/bin/env bash
+set -euo pipefail
+
+ROOT="$(cd "$(dirname "${BASH_SOURCE[0]}")/.." && pwd)"
+
+if ! command -v mvn >/dev/null 2>&1 && [[ -f "$HOME/.sdkman/bin/sdkman-init.sh" ]]; then
+  # shellcheck source=/dev/null
+  set +u
+  source "$HOME/.sdkman/bin/sdkman-init.sh"
+  set -u
+fi
+
+if ! command -v mvn >/dev/null 2>&1; then
+  echo "mvn not found. Install Maven or initialize SDKMAN before running this command." >&2
+  exit 1
+fi
+
+COMMAND="${1:-help}"
+MODULE="${2:-examples/counter-app}"
+MAVEN_REPO="${MAVEN_REPO:-$ROOT/.m2/repository}"
+MODULE_POM="$ROOT/$MODULE/pom.xml"
+
+ensure_module() {
+  if [[ ! -f "$MODULE_POM" ]]; then
+    echo "Module not found: $MODULE" >&2
+    exit 1
+  fi
+}
+
+install_module_with_dependencies() {
+  mvn -U -Dmaven.repo.local="$MAVEN_REPO" -f "$ROOT/pom.xml" -pl "$MODULE" -am -DskipTests install
+}
+
+case "$COMMAND" in
+  dev|run)
+    ensure_module
+    install_module_with_dependencies
+    exec mvn -U -Dmaven.repo.local="$MAVEN_REPO" -f "$MODULE_POM" spring-boot:run
+    ;;
+  dev-swift|run-swift|dev-native|run-native)
+    ensure_module
+    install_module_with_dependencies
+    if [[ ! -x /usr/bin/swiftc ]]; then
+      echo "swiftc not found at /usr/bin/swiftc. Install Xcode command line tools before running the Swift host." >&2
+      exit 1
+    fi
+    SWIFT_HOST_BUILD="$ROOT/.build/vaadin-desktop-host-swift"
+    SWIFT_HOST_APP="$SWIFT_HOST_BUILD/VaadinDesktopHost.app"
+    SWIFT_HOST_CONTENTS="$SWIFT_HOST_APP/Contents"
+    SWIFT_HOST_MACOS="$SWIFT_HOST_CONTENTS/MacOS"
+    SWIFT_HOST_EXE="$SWIFT_HOST_MACOS/VaadinDesktopHost"
+    SWIFT_MODULE_CACHE="$ROOT/.build/clang-module-cache"
+    MVN_EXE="$(command -v mvn)"
+    mkdir -p "$SWIFT_HOST_MACOS"
+    mkdir -p "$SWIFT_MODULE_CACHE"
+    cat > "$SWIFT_HOST_CONTENTS/Info.plist" <<'PLIST'
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE plist PUBLIC "-//Apple//DTD PLIST 1.0//EN" "http://www.apple.com/DTDs/PropertyList-1.0.dtd">
+<plist version="1.0">
+<dict>
+    <key>CFBundleExecutable</key>
+    <string>VaadinDesktopHost</string>
+    <key>CFBundleIdentifier</key>
+    <string>dev.vatori.desktop.host.swift</string>
+    <key>CFBundleName</key>
+    <string>Vaadin Desktop Host</string>
+    <key>CFBundlePackageType</key>
+    <string>APPL</string>
+    <key>LSMinimumSystemVersion</key>
+    <string>12.0</string>
+    <key>NSHighResolutionCapable</key>
+    <true/>
+    <key>NSAppTransportSecurity</key>
+    <dict>
+        <key>NSAllowsLocalNetworking</key>
+        <true/>
+    </dict>
+</dict>
+</plist>
+PLIST
+    CLANG_MODULE_CACHE_PATH="$SWIFT_MODULE_CACHE" /usr/bin/swiftc \
+      "$ROOT/vaadin-desktop-host-swift/Sources/VaadinDesktopHost/main.swift" \
+      -o "$SWIFT_HOST_EXE"
+    OPEN_ENV_ARGS=(--env "PATH=$PATH")
+    if [[ -n "${JAVA_HOME:-}" ]]; then
+      OPEN_ENV_ARGS+=(--env "JAVA_HOME=$JAVA_HOME")
+    fi
+    SWIFT_HOST_STDOUT="$SWIFT_HOST_BUILD/host.out.log"
+    SWIFT_HOST_STDERR="$SWIFT_HOST_BUILD/host.err.log"
+    : > "$SWIFT_HOST_STDOUT"
+    : > "$SWIFT_HOST_STDERR"
+    echo "Vaadin Desktop Host logs:"
+    echo "  stdout: $SWIFT_HOST_STDOUT"
+    echo "  stderr: $SWIFT_HOST_STDERR"
+    tail -n +1 -f "$SWIFT_HOST_STDOUT" "$SWIFT_HOST_STDERR" &
+    TAIL_PID=$!
+    trap 'kill "$TAIL_PID" 2>/dev/null || true' EXIT
+    open -n -W -o "$SWIFT_HOST_STDOUT" --stderr "$SWIFT_HOST_STDERR" "${OPEN_ENV_ARGS[@]}" "$SWIFT_HOST_APP" --args \
+      --module "$MODULE" \
+      --repo-root "$ROOT" \
+      --maven-repo "$MAVEN_REPO" \
+      --maven-executable "$MVN_EXE"
+    STATUS=$?
+    kill "$TAIL_PID" 2>/dev/null || true
+    wait "$TAIL_PID" 2>/dev/null || true
+    exit "$STATUS"
+    ;;
+  package)
+    ensure_module
+    install_module_with_dependencies
+    exec mvn -U -Dmaven.repo.local="$MAVEN_REPO" -f "$MODULE_POM" -Pproduction package
+    ;;
+  help|--help|-h)
+    cat <<USAGE
+Usage:
+  bin/vaadin-desktop dev <module>
+  bin/vaadin-desktop dev-swift <module>
+  bin/vaadin-desktop run <module>
+  bin/vaadin-desktop package <module>
+
+Examples:
+  bin/vaadin-desktop dev examples/counter-app
+  bin/vaadin-desktop dev-swift test-apps/vaadin-desktop-smoke-app
+  bin/vaadin-desktop dev test-apps/vaadin-desktop-smoke-app
+USAGE
+    ;;
+  *)
+    echo "Unknown command: $COMMAND" >&2
+    exit 1
+    ;;
+esac

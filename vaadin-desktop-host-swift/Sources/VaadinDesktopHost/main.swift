@@ -673,6 +673,9 @@ final class WebViewHost: NSObject, NSApplicationDelegate, NSWindowDelegate, WKNa
           flowClientEngineBoundNodeIds: window.VaadinDesktopIpcDiagnostics ? window.VaadinDesktopIpcDiagnostics.flowClientEngineBoundNodeIds : "",
           flowClientEngineBootstrapStatusText: window.VaadinDesktopIpcDiagnostics ? window.VaadinDesktopIpcDiagnostics.flowClientEngineBootstrapStatusText : "",
           flowClientEngineBootstrapButtonText: window.VaadinDesktopIpcDiagnostics ? window.VaadinDesktopIpcDiagnostics.flowClientEngineBootstrapButtonText : "",
+          flowClientEngineListBound: !!(window.VaadinDesktopIpcDiagnostics && window.VaadinDesktopIpcDiagnostics.flowClientEngineListBound),
+          flowClientEngineListItemCount: window.VaadinDesktopIpcDiagnostics ? window.VaadinDesktopIpcDiagnostics.flowClientEngineListItemCount : 0,
+          flowClientEngineListText: window.VaadinDesktopIpcDiagnostics ? window.VaadinDesktopIpcDiagnostics.flowClientEngineListText : "",
           flowClientEngineXhrBridgeInstalled: !!(window.VaadinDesktopIpcDiagnostics && window.VaadinDesktopIpcDiagnostics.flowClientEngineXhrBridgeInstalled),
           flowClientEngineXhrRequestObserved: !!(window.VaadinDesktopIpcDiagnostics && window.VaadinDesktopIpcDiagnostics.flowClientEngineXhrRequestObserved),
           flowClientEngineXhrResponseObserved: !!(window.VaadinDesktopIpcDiagnostics && window.VaadinDesktopIpcDiagnostics.flowClientEngineXhrResponseObserved),
@@ -912,6 +915,9 @@ let flowIpcShell = #"""
         flowClientEngineBoundNodeIds: '',
         flowClientEngineBootstrapStatusText: '',
         flowClientEngineBootstrapButtonText: '',
+        flowClientEngineListBound: false,
+        flowClientEngineListItemCount: 0,
+        flowClientEngineListText: '',
         flowClientEngineXhrBridgeInstalled: false,
         flowClientEngineXhrRequestObserved: false,
         flowClientEngineXhrResponseObserved: false,
@@ -1742,6 +1748,20 @@ let flowIpcShell = #"""
             window.VaadinDesktopIpcDiagnostics.flowClientEngineBootstrapButtonText = button ? (button.textContent || '') : '';
           } catch (_) {
             window.VaadinDesktopIpcDiagnostics.flowClientEngineBootstrapButtonText = '';
+          }
+          try {
+            const list = client.getByNodeId(12) || document.querySelector('#flow-client-engine-root #ipc-list');
+            const listText = list ? (list.textContent || '') : '';
+            window.VaadinDesktopIpcDiagnostics.flowClientEngineListBound =
+              !!list && listText.includes('1 Bootstrap over IPC READY')
+              && listText.includes('4 Desktop command/capabilityResult over IPC READY');
+            window.VaadinDesktopIpcDiagnostics.flowClientEngineListItemCount =
+              list ? list.querySelectorAll('span').length : 0;
+            window.VaadinDesktopIpcDiagnostics.flowClientEngineListText = listText;
+          } catch (_) {
+            window.VaadinDesktopIpcDiagnostics.flowClientEngineListBound = false;
+            window.VaadinDesktopIpcDiagnostics.flowClientEngineListItemCount = 0;
+            window.VaadinDesktopIpcDiagnostics.flowClientEngineListText = '';
           }
           try {
             const pushStatus = client.getByNodeId(21) || document.querySelector('#flow-client-engine-root #ipc-push-status');

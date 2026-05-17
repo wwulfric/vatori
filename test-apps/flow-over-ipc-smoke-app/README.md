@@ -19,6 +19,7 @@ Current scope:
 - Real Vaadin Flow Java components are instantiated in the Java sidecar.
 - The Swift/AppKit host loads a local WebView shell instead of a localhost URL.
 - `FlowBootstrap.js` / `FlowClient.js` are loaded over IPC, and the Flow client container becomes the visible WebView renderer for bootstrap, click-event patches, push and verification resync.
+- The smoke view's `ipc-list` contains four Flow `Span` rows; `webview.dom` diagnostics verify that the visible Flow client bound and rendered all four list items.
 - Button events travel visible Flow client -> IPC-backed XHR shim -> Swift host -> Java stdin as `VFIPC1` envelopes carrying Flow UIDL RPC payloads.
 - Java emits one server-initiated push UIDL update after bootstrap, and the visible Flow client engine consumes it without localhost HTTP.
 - Java listener execution updates Flow component state and returns a full replace-root patch.

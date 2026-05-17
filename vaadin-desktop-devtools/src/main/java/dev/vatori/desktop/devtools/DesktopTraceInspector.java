@@ -220,6 +220,13 @@ public final class DesktopTraceInspector {
                 summary.flowClientEngineBootstrapDomObserved = true;
             }
             if (line.contains("\"type\":\"webview.dom\"")
+                    && containsLiteralField(line, "flowClientEngineListBound", "true")
+                    && containsLiteralField(line, "flowClientEngineListItemCount", "4")
+                    && line.contains("1 Bootstrap over IPC READY")
+                    && line.contains("4 Desktop command/capabilityResult over IPC READY")) {
+                summary.flowClientEngineListDomObserved = true;
+            }
+            if (line.contains("\"type\":\"webview.dom\"")
                     && containsLiteralField(line, "flowClientEngineXhrBridgeInstalled", "true")
                     && containsLiteralField(line, "flowClientEngineXhrRequestObserved", "true")
                     && containsLiteralField(line, "flowClientEngineXhrResponseObserved", "true")
@@ -345,6 +352,7 @@ public final class DesktopTraceInspector {
         private boolean flowClientEngineResourceResponseObserved;
         private boolean flowClientEngineDomObserved;
         private boolean flowClientEngineBootstrapDomObserved;
+        private boolean flowClientEngineListDomObserved;
         private boolean flowClientEngineXhrDomObserved;
         private boolean flowClientEngineVisibleDomObserved;
         private boolean flowClientEnginePushDomObserved;
@@ -381,6 +389,7 @@ public final class DesktopTraceInspector {
                     && flowClientEngineResourceResponseObserved
                     && flowClientEngineDomObserved
                     && flowClientEngineBootstrapDomObserved
+                    && flowClientEngineListDomObserved
                     && flowClientEngineXhrDomObserved
                     && flowClientEngineVisibleDomObserved
                     && flowClientEnginePushDomObserved
@@ -421,6 +430,7 @@ public final class DesktopTraceInspector {
             System.out.println("Flow client engine resource response observed: " + flowClientEngineResourceResponseObserved);
             System.out.println("Flow client engine DOM observed: " + flowClientEngineDomObserved);
             System.out.println("Flow client engine bootstrap DOM observed: " + flowClientEngineBootstrapDomObserved);
+            System.out.println("Flow client engine list DOM observed: " + flowClientEngineListDomObserved);
             System.out.println("Flow client engine XHR DOM observed: " + flowClientEngineXhrDomObserved);
             System.out.println("Flow client engine visible DOM observed: " + flowClientEngineVisibleDomObserved);
             System.out.println("Flow client engine push DOM observed: " + flowClientEnginePushDomObserved);

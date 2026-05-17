@@ -3,6 +3,7 @@ package dev.vatori.desktop.flow.transport;
 import com.vaadin.flow.component.Component;
 import com.vaadin.flow.component.UI;
 import com.vaadin.flow.function.DeploymentConfiguration;
+import com.vaadin.flow.internal.MessageDigestUtil;
 import com.vaadin.flow.server.PwaRegistry;
 import com.vaadin.flow.server.RouteRegistry;
 import com.vaadin.flow.server.SessionLockCheckStrategy;
@@ -151,6 +152,34 @@ public final class DesktopFlowRuntimeSession {
         observeSyncId(response.uidlJson());
         expectedClientToServerMessageId = clientToServerMessageId + 1;
         return response;
+    }
+
+    public FlowPatchResponse acknowledgeClientMessage(String requestBody, int clientToServerMessageId) {
+        session.lock();
+        try {
+            validateClientMessage(requestBody, clientToServerMessageId);
+            String hashMessage = requestBody.length() > 64 * 1024
+                    ? requestBody.substring(0, 64 * 1024)
+                    : requestBody;
+            ui.getInternals().setLastProcessedClientToServerId(
+                    clientToServerMessageId, MessageDigestUtil.sha256(hashMessage));
+            expectedClientToServerMessageId = clientToServerMessageId + 1;
+            String uidlJson = """
+                    {"clientId":%d,"syncId":%d}
+                    """.formatted(expectedClientToServerMessageId, lastSyncId);
+            ui.getInternals().setLastRequestResponse(uidlJson);
+            return new FlowPatchResponse(
+                    sessionId,
+                    uiId,
+                    uidlJson,
+                    "application/json; charset=UTF-8",
+                    200,
+                    Collections.emptyMap(),
+                    true,
+                    false);
+        } finally {
+            session.unlock();
+        }
     }
 
     public FlowPatchResponse handleDomEvent(int nodeId, String eventType, int clientToServerMessageId)

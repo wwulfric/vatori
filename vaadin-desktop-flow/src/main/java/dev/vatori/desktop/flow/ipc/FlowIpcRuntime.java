@@ -69,9 +69,9 @@ final class FlowIpcRuntime {
     }
 
     private void handle(String json) {
-        String type = JsonFields.string(json, "type");
-        String id = JsonFields.string(json, "id");
-        String correlationId = JsonFields.string(json, "correlationId");
+        String type = JsonFields.topLevelString(json, "type");
+        String id = JsonFields.topLevelString(json, "id");
+        String correlationId = JsonFields.topLevelString(json, "correlationId");
         try {
             switch (type == null ? "" : type) {
                 case "bootstrapRequest" -> bootstrap(json, id, correlationId);
@@ -108,7 +108,7 @@ final class FlowIpcRuntime {
                 "securityTokenId", ApplicationConstants.UIDL_SECURITY_TOKEN_ID,
                 "syncId", -1,
                 "clientId", 0,
-                "eventDispatch", "flow-client-rpc"));
+                "eventDispatch", "flow-client-xhr"));
         payload.put("tree", renderer.render(root));
         send("bootstrapResponse", nextId("bootstrap"), correlationIdOr(id, correlationId), payload);
         sendServerInitiatedPush(id, correlationId);
@@ -162,8 +162,16 @@ final class FlowIpcRuntime {
         validateSecurityKey(json);
         String uidlRpc = JsonFields.object(json, "uidlRpc");
         if (uidlRpc != null && !uidlRpc.isBlank()) {
-            FlowPatchResponse response = handleClientMessage(uidlRpc, JsonFields.integer(uidlRpc, "clientId", -1));
-            sendPatch("event", id, correlationId, response, "flow-client-rpc");
+            String dispatch = JsonFields.string(json, "dispatch");
+            int clientId = JsonFields.integer(uidlRpc, "clientId", -1);
+            if (clientId >= 0) {
+                clientToServerSequence.accumulateAndGet(clientId + 1L, Math::max);
+            }
+            FlowPatchResponse response = isAttachExistingElementRequest(uidlRpc)
+                    ? flowSession.acknowledgeClientMessage(uidlRpc, clientId)
+                    : handleClientMessage(uidlRpc, clientId);
+            sendPatch("event", id, correlationId, response,
+                    dispatch == null || dispatch.isBlank() ? "flow-client-rpc" : dispatch);
             return;
         }
 
@@ -221,6 +229,12 @@ final class FlowIpcRuntime {
         } catch (IOException error) {
             throw new IllegalStateException("Unable to dispatch Flow UIDL RPC event: " + error.getMessage(), error);
         }
+    }
+
+    private static boolean isAttachExistingElementRequest(String requestBody) {
+        return requestBody != null
+                && requestBody.contains("\"attachExistingElementById\"")
+                && !requestBody.contains("\"event\"");
     }
 
     private FlowPatchResponse handleDomEvent(int nodeId, String eventType) {
@@ -406,6 +420,76 @@ final class FlowIpcRuntime {
                     .replace("\\n", "\n")
                     .replace("\\r", "\r")
                     .replace("\\t", "\t");
+        }
+
+        static String topLevelString(String json, String field) {
+            if (json == null || json.isBlank()) {
+                return null;
+            }
+
+            int depth = 0;
+            for (int index = 0; index < json.length(); ) {
+                char character = json.charAt(index);
+                if (character == '"') {
+                    JsonString parsed = parseJsonString(json, index);
+                    if (depth == 1 && field.equals(parsed.value())) {
+                        int cursor = skipWhitespace(json, parsed.end() + 1);
+                        if (cursor < json.length() && json.charAt(cursor) == ':') {
+                            cursor = skipWhitespace(json, cursor + 1);
+                            if (cursor < json.length() && json.charAt(cursor) == '"') {
+                                return parseJsonString(json, cursor).value();
+                            }
+                        }
+                    }
+                    index = parsed.end() + 1;
+                    continue;
+                }
+                if (character == '{' || character == '[') {
+                    depth++;
+                } else if (character == '}' || character == ']') {
+                    depth--;
+                }
+                index++;
+            }
+            return null;
+        }
+
+        private static int skipWhitespace(String json, int index) {
+            int cursor = index;
+            while (cursor < json.length() && Character.isWhitespace(json.charAt(cursor))) {
+                cursor++;
+            }
+            return cursor;
+        }
+
+        private static JsonString parseJsonString(String json, int quoteIndex) {
+            StringBuilder value = new StringBuilder();
+            boolean escaped = false;
+            for (int index = quoteIndex + 1; index < json.length(); index++) {
+                char character = json.charAt(index);
+                if (escaped) {
+                    value.append(switch (character) {
+                        case '"' -> '"';
+                        case '\\' -> '\\';
+                        case '/' -> '/';
+                        case 'n' -> '\n';
+                        case 'r' -> '\r';
+                        case 't' -> '\t';
+                        default -> character;
+                    });
+                    escaped = false;
+                } else if (character == '\\') {
+                    escaped = true;
+                } else if (character == '"') {
+                    return new JsonString(value.toString(), index);
+                } else {
+                    value.append(character);
+                }
+            }
+            return new JsonString(value.toString(), json.length() - 1);
+        }
+
+        private record JsonString(String value, int end) {
         }
     }
 }

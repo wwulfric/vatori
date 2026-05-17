@@ -633,6 +633,13 @@ final class WebViewHost: NSObject, NSApplicationDelegate, NSWindowDelegate, WKNa
           flowClientEngineBoundNodeIds: window.VaadinDesktopIpcDiagnostics ? window.VaadinDesktopIpcDiagnostics.flowClientEngineBoundNodeIds : "",
           flowClientEngineBootstrapStatusText: window.VaadinDesktopIpcDiagnostics ? window.VaadinDesktopIpcDiagnostics.flowClientEngineBootstrapStatusText : "",
           flowClientEngineBootstrapButtonText: window.VaadinDesktopIpcDiagnostics ? window.VaadinDesktopIpcDiagnostics.flowClientEngineBootstrapButtonText : "",
+          flowClientEngineXhrBridgeInstalled: !!(window.VaadinDesktopIpcDiagnostics && window.VaadinDesktopIpcDiagnostics.flowClientEngineXhrBridgeInstalled),
+          flowClientEngineXhrRequestObserved: !!(window.VaadinDesktopIpcDiagnostics && window.VaadinDesktopIpcDiagnostics.flowClientEngineXhrRequestObserved),
+          flowClientEngineXhrResponseObserved: !!(window.VaadinDesktopIpcDiagnostics && window.VaadinDesktopIpcDiagnostics.flowClientEngineXhrResponseObserved),
+          flowClientEngineXhrLastClientId: window.VaadinDesktopIpcDiagnostics ? window.VaadinDesktopIpcDiagnostics.flowClientEngineXhrLastClientId : -1,
+          flowClientEngineEventPatchConsumed: !!(window.VaadinDesktopIpcDiagnostics && window.VaadinDesktopIpcDiagnostics.flowClientEngineEventPatchConsumed),
+          flowClientEngineEventStatusText: window.VaadinDesktopIpcDiagnostics ? window.VaadinDesktopIpcDiagnostics.flowClientEngineEventStatusText : "",
+          flowClientEngineXhrError: window.VaadinDesktopIpcDiagnostics ? window.VaadinDesktopIpcDiagnostics.flowClientEngineXhrError : "",
           flowClientEngineInitError: window.VaadinDesktopIpcDiagnostics ? window.VaadinDesktopIpcDiagnostics.flowClientEngineInitError : "",
           flowClientEngineResourceExecutionError: window.VaadinDesktopIpcDiagnostics ? window.VaadinDesktopIpcDiagnostics.flowClientEngineResourceExecutionError : ""
         })
@@ -783,14 +790,19 @@ let flowIpcShell = #"""
       const trace = document.getElementById('trace');
       let sequence = 0;
       let autoClickDone = false;
+      let autoClickAttempts = 0;
+      let autoClickReadinessAttempts = 0;
+      let autoClickInFlight = false;
       let autoResyncDone = false;
       const flowBootstrapAppId = 'ROOT-2521314';
       const flowBootstrapClientId = flowBootstrapAppId.replace(/-\d+$/, '');
       let flowClientResources = [];
       let flowClientBootstrapInitResponse = null;
       let flowClientEngineResourceBaseVerified = false;
+      let originalXMLHttpRequest = null;
       const flowClientResourceRequests = new Set();
       const flowClientResourceExpectedSha256ByPath = new Map();
+      const pendingFlowClientXhrRequests = new Map();
       const flowClientState = {
         csrfToken: '',
         securityKey: '',
@@ -831,6 +843,13 @@ let flowIpcShell = #"""
         flowClientEngineBoundNodeIds: '',
         flowClientEngineBootstrapStatusText: '',
         flowClientEngineBootstrapButtonText: '',
+        flowClientEngineXhrBridgeInstalled: false,
+        flowClientEngineXhrRequestObserved: false,
+        flowClientEngineXhrResponseObserved: false,
+        flowClientEngineXhrLastClientId: -1,
+        flowClientEngineEventPatchConsumed: false,
+        flowClientEngineEventStatusText: '',
+        flowClientEngineXhrError: '',
         flowClientEngineInitError: '',
         flowClientEngineResourceExecutionError: ''
       };
@@ -855,6 +874,7 @@ let flowIpcShell = #"""
         const message = envelope(type, payload);
         trace.textContent = 'send ' + type + ' #' + message.id;
         window.webkit.messageHandlers.flowIpc.postMessage(message);
+        return message;
       }
 
       function updateClientState(payload) {
@@ -893,6 +913,9 @@ let flowIpcShell = #"""
       }
 
       function sendFlowEvent(node, eventType) {
+        if (sendFlowClientEngineEvent(node, eventType)) {
+          return;
+        }
         const clientId = flowClientState.clientId++;
         const securityKey = flowClientState.securityKey || flowClientState.csrfToken;
         const uidlRpc = {
@@ -915,6 +938,231 @@ let flowIpcShell = #"""
           event: eventType,
           uidlRpc
         });
+      }
+
+      function flowClientEngineClient() {
+        const clients = window.Vaadin && window.Vaadin.Flow && window.Vaadin.Flow.clients ? window.Vaadin.Flow.clients : {};
+        return clients[flowBootstrapClientId] || clients[flowBootstrapAppId] || null;
+      }
+
+      function sendFlowClientEngineEvent(node, eventType) {
+        const client = flowClientEngineClient();
+        if (!client || typeof client.sendEventMessage !== 'function' || !window.VaadinDesktopIpcDiagnostics.flowClientEngineXhrBridgeInstalled) {
+          return false;
+        }
+        try {
+          client.sendEventMessage(node.nodeId, eventType, {});
+          return true;
+        } catch (error) {
+          window.VaadinDesktopIpcDiagnostics.flowClientEngineXhrError = error && error.message ? error.message : String(error);
+          return false;
+        }
+      }
+
+      function installFlowIpcXhrBridge() {
+        if (window.VaadinDesktopIpcDiagnostics.flowClientEngineXhrBridgeInstalled) {
+          return;
+        }
+        originalXMLHttpRequest = originalXMLHttpRequest || window.XMLHttpRequest;
+        class FlowIpcXMLHttpRequest {
+          constructor() {
+            this.readyState = 0;
+            this.status = 0;
+            this.statusText = '';
+            this.responseText = '';
+            this.response = '';
+            this.onreadystatechange = null;
+            this.onload = null;
+            this.onerror = null;
+            this.onloadend = null;
+            this.withCredentials = false;
+            this._headers = {};
+            this._method = '';
+            this._url = '';
+            this._delegate = new originalXMLHttpRequest();
+            this._flowIpc = false;
+          }
+
+          open(method, url, async) {
+            this._method = method || '';
+            this._url = String(url || '');
+            this._flowIpc = this._url.startsWith('flow-ipc://local/flow/');
+            if (!this._flowIpc) {
+              this._delegate.onreadystatechange = () => {
+                this.readyState = this._delegate.readyState;
+                this.status = this._delegate.status;
+                this.statusText = this._delegate.statusText;
+                this.responseText = this._delegate.responseText;
+                this.response = this._delegate.response;
+                this._emitReadyStateChange();
+              };
+              this._delegate.open(method, url, async !== false);
+              return;
+            }
+            this.readyState = 1;
+            this._emitReadyStateChange();
+          }
+
+          setRequestHeader(name, value) {
+            if (this._flowIpc) {
+              this._headers[name] = value;
+            } else {
+              this._delegate.setRequestHeader(name, value);
+            }
+          }
+
+          getResponseHeader(name) {
+            if (this._flowIpc) {
+              return name && name.toLowerCase() === 'content-type' ? 'application/json; charset=UTF-8' : null;
+            }
+            return this._delegate.getResponseHeader(name);
+          }
+
+          getAllResponseHeaders() {
+            if (this._flowIpc) {
+              return 'content-type: application/json; charset=UTF-8\r\n';
+            }
+            return this._delegate.getAllResponseHeaders();
+          }
+
+          send(body) {
+            if (!this._flowIpc) {
+              this._delegate.withCredentials = this.withCredentials;
+              this._delegate.send(body);
+              return;
+            }
+            try {
+              const requestPayload = typeof body === 'string' && body.length > 0 ? JSON.parse(body) : {};
+              const securityKey = requestPayload[flowClientState.securityTokenId]
+                || requestPayload.csrfToken
+                || flowClientState.securityKey
+                || flowClientState.csrfToken;
+              window.VaadinDesktopIpcDiagnostics.flowClientEngineXhrRequestObserved = true;
+              window.VaadinDesktopIpcDiagnostics.flowClientEngineXhrLastClientId = Number.isInteger(requestPayload.clientId) ? requestPayload.clientId : -1;
+              const type = requestPayload.resynchronize === true ? 'resync' : 'event';
+              const ipcPayload = {
+                dispatch: 'flow-client-xhr',
+                componentId: 'ipc-button',
+                nodeId: 16,
+                securityKey,
+                event: type === 'event' ? 'uidl-rpc' : 'resync',
+                uidlRpc: requestPayload,
+                syncId: Number.isInteger(requestPayload.syncId) ? requestPayload.syncId : flowClientState.syncId,
+                clientId: Number.isInteger(requestPayload.clientId) ? requestPayload.clientId : flowClientState.clientId
+              };
+              if (type === 'resync') {
+                ipcPayload.reason = 'flow-client-xhr-resync';
+              }
+              const message = send(type, ipcPayload);
+              pendingFlowClientXhrRequests.set(message.correlationId, this);
+            } catch (error) {
+              this._fail(error);
+            }
+          }
+
+          abort() {
+            if (!this._flowIpc) {
+              this._delegate.abort();
+              return;
+            }
+            this.readyState = 0;
+          }
+
+          _complete(status, responseText) {
+            this.status = status;
+            this.statusText = status === 200 ? 'OK' : 'Flow IPC error';
+            this.responseText = responseText || '';
+            this.response = this.responseText;
+            this.readyState = 4;
+            this._emitReadyStateChange();
+            if (status === 200 && typeof this.onload === 'function') {
+              this.onload();
+            } else if (status !== 200 && typeof this.onerror === 'function') {
+              this.onerror();
+            }
+            if (typeof this.onloadend === 'function') {
+              this.onloadend();
+            }
+          }
+
+          _fail(error) {
+            window.VaadinDesktopIpcDiagnostics.flowClientEngineXhrError = error && error.message ? error.message : String(error);
+            this._complete(500, '');
+          }
+
+          _emitReadyStateChange() {
+            if (typeof this.onreadystatechange === 'function') {
+              this.onreadystatechange();
+            }
+          }
+        }
+        window.XMLHttpRequest = FlowIpcXMLHttpRequest;
+        window.VaadinDesktopIpcDiagnostics.flowClientEngineXhrBridgeInstalled = true;
+      }
+
+      function completeFlowClientXhrIfPending(message) {
+        const xhr = pendingFlowClientXhrRequests.get(message.correlationId || '');
+        if (!xhr) {
+          return false;
+        }
+        pendingFlowClientXhrRequests.delete(message.correlationId || '');
+        const body = message.payload && message.payload.uidl && typeof message.payload.uidl.body === 'string'
+          ? message.payload.uidl.body
+          : '';
+        if (body) {
+          window.VaadinDesktopIpcDiagnostics.flowClientEngineXhrResponseObserved = true;
+          autoClickInFlight = false;
+          setTimeout(scheduleAutoClick, 160);
+          try {
+            xhr._complete(200, body);
+          } catch (error) {
+            window.VaadinDesktopIpcDiagnostics.flowClientEngineXhrError = error && error.message ? error.message : String(error);
+          }
+          setTimeout(refreshFlowClientEngineDiagnostics, 0);
+          setTimeout(refreshFlowClientEngineDiagnostics, 100);
+        } else {
+          autoClickInFlight = false;
+          xhr._complete(500, '');
+        }
+        return true;
+      }
+
+      function scheduleAutoClick() {
+        if (!window.__VAADIN_DESKTOP_FLOW_IPC_AUTO_CLICK__ || autoClickDone) {
+          return;
+        }
+        if (window.VaadinDesktopIpcDiagnostics.flowClientEngineEventPatchConsumed) {
+          autoClickDone = true;
+          autoClickInFlight = false;
+          return;
+        }
+        if (autoClickInFlight) {
+          return;
+        }
+        const client = flowClientEngineClient();
+        const button = document.querySelector('[data-flow-id="ipc-button"]');
+        if (button && client && typeof client.sendEventMessage === 'function' && window.VaadinDesktopIpcDiagnostics.flowClientEngineXhrBridgeInstalled) {
+          if (autoClickAttempts >= 5) {
+            autoClickDone = true;
+            return;
+          }
+          autoClickAttempts += 1;
+          autoClickInFlight = true;
+          button.click();
+          setTimeout(() => {
+            autoClickInFlight = false;
+            refreshFlowClientEngineDiagnostics();
+            scheduleAutoClick();
+          }, 350);
+          return;
+        }
+        autoClickReadinessAttempts += 1;
+        if (autoClickReadinessAttempts >= 30 && button) {
+          autoClickDone = true;
+          button.click();
+          return;
+        }
+        setTimeout(scheduleAutoClick, 50);
       }
 
       function render(node) {
@@ -1268,6 +1516,14 @@ let flowIpcShell = #"""
         } else if (clientKeys.length > 0) {
           window.VaadinDesktopIpcDiagnostics.flowClientEngineInitError = 'FlowClient.init has not registered sendEventMessage client yet';
         }
+        window.VaadinDesktopIpcDiagnostics.flowClientEngineEventStatusText =
+          window.VaadinDesktopIpcDiagnostics.flowClientEngineBootstrapStatusText;
+        window.VaadinDesktopIpcDiagnostics.flowClientEngineEventPatchConsumed =
+          /^Clicks:\s*[1-9]\d*/.test(window.VaadinDesktopIpcDiagnostics.flowClientEngineEventStatusText);
+        if (window.VaadinDesktopIpcDiagnostics.flowClientEngineEventPatchConsumed) {
+          autoClickDone = true;
+          autoClickInFlight = false;
+        }
         window.VaadinDesktopIpcDiagnostics.flowClientEngineResourceVerified =
           flowClientEngineResourceBaseVerified
           && window.VaadinDesktopIpcDiagnostics.flowClientEngineInitExported
@@ -1283,10 +1539,12 @@ let flowIpcShell = #"""
             return;
           }
           ensureFlowClientContainer();
+          installFlowIpcXhrBridge();
           module.init();
           refreshFlowClientEngineDiagnostics();
           setTimeout(refreshFlowClientEngineDiagnostics, 250);
           setTimeout(refreshFlowClientEngineDiagnostics, 1000);
+          scheduleAutoClick();
         } catch (error) {
           window.VaadinDesktopIpcDiagnostics.flowClientEngineInitialized = false;
           window.VaadinDesktopIpcDiagnostics.flowClientEngineClientRegistered = false;
@@ -1374,6 +1632,7 @@ let flowIpcShell = #"""
         receive(message) {
           trace.textContent = 'recv ' + message.type + ' #' + message.id;
           if (message.type === 'bootstrapResponse' || message.type === 'patch' || message.type === 'push' || message.type === 'resync') {
+            completeFlowClientXhrIfPending(message);
             updateClientState(message.payload);
             if (message.type === 'bootstrapResponse') {
               if (!applyUidlBootstrap(message.payload)) {
@@ -1392,14 +1651,8 @@ let flowIpcShell = #"""
               autoResyncDone = true;
               setTimeout(() => requestResync('verification-resync-after-event'), 80);
             }
-            if (message.type === 'bootstrapResponse' && window.__VAADIN_DESKTOP_FLOW_IPC_AUTO_CLICK__ && !autoClickDone) {
-              autoClickDone = true;
-              setTimeout(() => {
-                const button = document.querySelector('[data-flow-id="ipc-button"]');
-                if (button) {
-                  button.click();
-                }
-              }, 80);
+            if (message.type === 'bootstrapResponse') {
+              scheduleAutoClick();
             }
           } else if (message.type === 'resourceResponse') {
             handleResourceResponse(message.payload);

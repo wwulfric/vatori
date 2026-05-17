@@ -63,3 +63,11 @@ Next work should replace the compatibility adapter with a real Flow transport ad
 5. Load Flow client engine from a local asset protocol in the native host.
 
 The next concrete issue should wrap the UIDL path behind a repository-local adapter that accepts `(VaadinSession, UI, requestBody, metadata)` and returns UIDL JSON, while using a compatibility `VaadinRequest` only at the edge.
+
+That issue has now started in compiled framework code:
+
+- `dev.vatori.desktop.flow.transport.UidlFlowTransportAdapter`
+- `dev.vatori.desktop.flow.transport.DesktopVaadinRequest`
+- `dev.vatori.desktop.flow.transport.DesktopVaadinResponse`
+
+This adapter is not wired into `dev-ipc` yet. It proves the repository can compile against the real `UidlRequestHandler`/`UidlWriter` boundary and records the exact remaining runtime inputs: initialized `UI`, `VaadinSession`, CSRF token, sync ids and real Flow-client UIDL event JSON.

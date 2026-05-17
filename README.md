@@ -66,7 +66,7 @@ VAADIN_DESKTOP_HOST=browser bash bin/vaadin-desktop dev examples/counter-app
 - `vaadin-desktop-ipc`: IPC envelope and trace logging primitives.
 - `vaadin-desktop-host`: macOS system WebView fallback, compatibility host and Java native bridge implementations.
 - `vaadin-desktop-host-swift`: Swift/AppKit/WKWebView host for the macOS native runtime path.
-- `vaadin-desktop-flow`: real Vaadin Flow/Spring Boot integration layer.
+- `vaadin-desktop-flow`: real Vaadin Flow/Spring Boot integration layer plus the first compiled UIDL transport adapter slice.
 - `vaadin-desktop-devtools`: trace inspector for Flow IPC review traces.
 - `vaadin-desktop-cli`: CLI scaffold; shell entry is `bin/vaadin-desktop`.
 - `examples/counter-app`: real Vaadin Flow counter app.

@@ -29,6 +29,7 @@ The current implementation is a real framework skeleton plus a compatibility tra
 - `test-apps/flow-over-ipc-smoke-app`: independent no-HTTP Flow IPC smoke app for the constrained `dev-ipc` runtime slice.
 - `prototypes/phase0-phase1-spike`: earlier non-HTTP mock Flow transport/IPC validation.
 - `flow-transport-adapter-spike`: current code-level Vaadin Flow UIDL/event/patch boundary analysis.
+- `vaadin-desktop-flow/src/main/java/dev/vatori/desktop/flow/transport`: compiled UIDL adapter slice around `UidlRequestHandler`, `DesktopVaadinRequest` and `DesktopVaadinResponse`.
 
 Default `dev` behavior on macOS:
 

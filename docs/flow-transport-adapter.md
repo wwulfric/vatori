@@ -1,9 +1,10 @@
 # Flow Transport Adapter
 
-`vaadin-desktop-flow` now contains two integration paths:
+`vaadin-desktop-flow` now contains three integration paths:
 
 - `DesktopLauncher`: compatibility HTTP/Spring Boot launcher.
 - `FlowIpcLauncher`: minimum Flow-over-IPC launcher.
+- `transport.UidlFlowTransportAdapter`: first compiled wrapper around Vaadin's real UIDL request path.
 
 ## Current Minimum Adapter
 
@@ -36,15 +37,26 @@ WebView event
 
 ## Relationship To Vaadin Internals
 
-The current adapter intentionally does not claim to be the final Vaadin UIDL adapter. The next implementation step must move from the repository-local renderer toward the real Flow server path:
+The current `FlowIpcRuntime` adapter intentionally does not claim to be the final Vaadin UIDL adapter. The repository now also contains the first compiled transport adapter around the real Flow server path:
+
+- `dev.vatori.desktop.flow.transport.FlowTransportAdapter`
+- `dev.vatori.desktop.flow.transport.UidlFlowTransportAdapter`
+- `dev.vatori.desktop.flow.transport.DesktopVaadinRequest`
+- `dev.vatori.desktop.flow.transport.DesktopVaadinResponse`
+
+`UidlFlowTransportAdapter` wraps:
 
 - `UidlRequestHandler`
 - `ServerRpcHandler`
 - `UidlWriter`
 - `VaadinSession`
 - `UI`
-- CSRF/security key
-- sync id / resync
+
+The adapter accepts `(UI, FlowClientMessage)` and returns `FlowPatchResponse`. Internally it creates a desktop `VaadinRequest` with UIDL request parameters, captures a desktop `VaadinResponse`, sets Flow current instances, runs `UidlRequestHandler.synchronizedHandleRequest(...)`, then exposes the UIDL JSON body.
+
+This is still an adapter slice, not the runtime default. It depends on Vaadin's current internal API shape and still needs a real initialized `UI`, `VaadinSession`, CSRF/security key, sync id and client UIDL JSON from the real Flow client engine.
+
+The newly added `jakarta.servlet-api` dependency is `provided` only because Vaadin's `VaadinRequest` and `VaadinResponse` method signatures expose `jakarta.servlet.http.Cookie`. It is not used as a transport in `dev-ipc`.
 
 The existing spike in `flow-transport-adapter-spike/README.md` remains the code-level map for that work.
 
@@ -53,3 +65,7 @@ The existing spike in `flow-transport-adapter-spike/README.md` remains the code-
 The minimum adapter removes localhost HTTP from the demo event/patch loop. That lets the project validate the native host and IPC responsibilities before solving every Flow internal dependency.
 
 It also keeps the developer-facing shape intact: the smoke app still uses ordinary Vaadin Flow Java components and `@Route`.
+
+## Next Adapter Step
+
+The next concrete step is to create a real initialized Flow `UI` without localhost HTTP bootstrap, then feed the WebView's Flow-client UIDL payload into `UidlFlowTransportAdapter` instead of the repository-local `FlowIpcRenderer`.

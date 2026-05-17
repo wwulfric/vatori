@@ -33,8 +33,8 @@ Status: first minimum runtime slice implemented, full UIDL adapter still pending
 First issue candidates:
 
 - Implement a repository-local adapter around `UidlRequestHandler` that returns UIDL JSON instead of writing `VaadinResponse`.
-- Replace the repository-local renderer in `FlowIpcRuntime` with a UIDL-producing adapter.
-- Prototype a desktop `VaadinRequest` adapter carrying session id, UI id, CSRF token and sync ids from Host Protocol.
+- Wire the compiled `UidlFlowTransportAdapter` into `FlowIpcRuntime`.
+- Extend `DesktopVaadinRequest` to carry session id, UI id, CSRF token and sync ids from Host Protocol.
 - Keep push out of scope until request/response UIDL works without HTTP sockets.
 
 ## v0.3: Capability Gateway

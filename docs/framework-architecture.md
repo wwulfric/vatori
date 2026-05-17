@@ -34,7 +34,7 @@ This path is started with:
 bash bin/vaadin-desktop dev-ipc test-apps/flow-over-ipc-smoke-app
 ```
 
-It does not use localhost HTTP for bootstrap/push/event/patch/resync in the smoke app. The current WebView consumes real Vaadin UIDL through a minimum repository-local applier for the smoke subset, while the repository-local rendered tree remains as fallback.
+It does not use localhost HTTP for bootstrap/push/event/patch/resync in the smoke app. The current WebView consumes real Vaadin UIDL through a minimum repository-local applier for the smoke subset, while the repository-local rendered tree remains as fallback. Bootstrap also advertises real Vaadin `flow-client` classpath resources, and the WebView loads `FlowBootstrap.js` through IPC as the first local-resource bridge.
 
 The Java side emits real server-side Vaadin UIDL under `payload.uidl`: bootstrap, one server-initiated push and verification resync come from `UidlWriter`, and click event patches come from `UidlRequestHandler`/`ServerRpcHandler`. The current WebView shell applies a minimum subset of UIDL `changes`; replacing that applier with the real Flow client engine is the next transport milestone.
 
@@ -70,4 +70,4 @@ Like Tauri, the intended shape is a small native host plus system WebView plus b
 
 Framework v0 uses real Vaadin Flow through `vaadin-spring-boot-starter`. Developers write standard Flow views with `@Route`, `Button`, `Grid`, `Span`, layouts and listeners.
 
-The current gap is transport completeness: `dev-ipc` removes HTTP for one constrained smoke app, has the WebView bridge emit Flow-client-shaped click RPC payloads, and routes those events through the server-side Flow UIDL RPC path. Full Flow still needs a real Flow client engine bridge that consumes UIDL and broader event/resource coverage.
+The current gap is transport completeness: `dev-ipc` removes HTTP for one constrained smoke app, has the WebView bridge emit Flow-client-shaped click RPC payloads, routes those events through the server-side Flow UIDL RPC path, and can fetch a real Flow bootstrap resource over IPC. Full Flow still needs a real Flow client engine bridge that executes those resources, consumes UIDL and covers broader events/resources.

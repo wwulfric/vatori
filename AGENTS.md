@@ -56,7 +56,7 @@ No-HTTP IPC slice:
 bash bin/vaadin-desktop dev-ipc test-apps/flow-over-ipc-smoke-app
 ```
 
-This runs the Swift host with `--transport flow-ipc`, loads a local WKWebView HTML shell and communicates with Java through `VFIPC1` stdin/stdout envelopes. It proves WebView event -> Java Button listener -> desktop command/capabilityResult -> patch -> WebView without localhost HTTP for the smoke app. The WebView bridge sends click events as Flow-client-shaped UIDL RPC payloads; Java emits real UIDL under `payload.uidl`, with bootstrap, one server-initiated push and verification resync using `UidlWriter`, and events using `UidlRequestHandler`/`ServerRpcHandler`. Bootstrap, push and event patches are applied by a minimum WebView UIDL changes applier; resync currently consumes Vaadin's `resynchronize=true` signal and rebuilds from the local tree fallback. The full Flow client engine is still not wired.
+This runs the Swift host with `--transport flow-ipc`, loads a local WKWebView HTML shell and communicates with Java through `VFIPC1` stdin/stdout envelopes. It proves WebView event -> Java Button listener -> desktop command/capabilityResult -> patch -> WebView without localhost HTTP for the smoke app. The WebView bridge sends click events as Flow-client-shaped UIDL RPC payloads; Java emits real UIDL under `payload.uidl`, with bootstrap, one server-initiated push and verification resync using `UidlWriter`, and events using `UidlRequestHandler`/`ServerRpcHandler`. Bootstrap, push and event patches are applied by a minimum WebView UIDL changes applier; resync currently consumes Vaadin's `resynchronize=true` signal and rebuilds from the local tree fallback. Bootstrap also advertises real Vaadin `flow-client` classpath resources, and the WebView requests `FlowBootstrap.js` through IPC as a resource-loading probe. The full Flow client engine is still not wired.
 
 Repeatable real-window smoke verification can use:
 
@@ -107,6 +107,8 @@ Verify the server-side UIDL writer adapter:
 ```bash
 bash bin/uidl-adapter-smoke
 bash bin/uidl-rpc-smoke
+bash bin/flow-ipc-scope-smoke
+bash bin/flow-client-resource-smoke
 ```
 
 Host selection:
@@ -193,6 +195,6 @@ Most valuable next steps:
 
 1. Make `vaadin-desktop-host-swift` the default host once it is stable across local machines.
 2. Turn Host Protocol v0 traces into a bidirectional command/result transport.
-3. Replace the repository-local WebView tree renderer with Flow client engine UIDL consumption.
+3. Execute the loaded Flow client resources in WKWebView and replace the repository-local WebView tree renderer with Flow client engine UIDL consumption.
 4. Add smoke tests for Swift host window launch, sidecar cleanup and desktop capability calls.
 5. Tighten full resync semantics in `DesktopVaadinRequest`; minimum Flow IPC `sessionId`/`uiId`, `csrfToken`/security key, `syncId` and `clientId` preflight is already in place.

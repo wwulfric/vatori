@@ -59,6 +59,7 @@ Expected trace characteristics:
 - The WebView loads a local HTML shell through `loadHTMLString`, not `http://127.0.0.1`.
 - Button click travels WebView -> Swift host -> Java sidecar -> Vaadin Button listener -> patch -> WebView.
 - Bootstrap, server push, event patches and verification resync include real server-side UIDL under `payload.uidl`; click events are dispatched through `UidlRequestHandler`/`ServerRpcHandler`.
+- Bootstrap advertises Vaadin `flow-client` classpath resources; the WebView requests `FlowBootstrap.js` through IPC and verifies the returned Flow bootstrap entry.
 - Desktop API calls travel Java sidecar -> Swift host as `VFIPC1 command`, and host responses appear as `capabilityResult`.
 
 For repeatable real-window smoke verification without global mouse coordinates:
@@ -78,9 +79,10 @@ Run server-side UIDL adapter checks:
 ```bash
 bash bin/uidl-adapter-smoke
 bash bin/uidl-rpc-smoke
+bash bin/flow-client-resource-smoke
 ```
 
-Current limitation: this path uses a minimum repository-local UIDL applier in the WebView. It now generates Vaadin UIDL, sends click events through the server-side Flow RPC path and consumes bootstrap/push/event UIDL `changes`; verification resync consumes Vaadin's `resynchronize=true` signal and rebuilds from the local tree fallback. The full Flow client engine is not wired yet.
+Current limitation: this path uses a minimum repository-local UIDL applier in the WebView. It now generates Vaadin UIDL, sends click events through the server-side Flow RPC path, consumes bootstrap/push/event UIDL `changes`, and can load `FlowBootstrap.js` over IPC; verification resync consumes Vaadin's `resynchronize=true` signal and rebuilds from the local tree fallback. The full Flow client engine is not wired yet.
 
 ## Run the Independent Smoke App
 
@@ -135,4 +137,4 @@ Framework v0 still starts an embedded Spring Boot web server on `127.0.0.1`. The
 
 The Swift native compatibility path narrows the long-term host/runtime boundary, but Flow bootstrap, UIDL event handling and push are still compatibility HTTP there. Use `dev-ipc` for the no-localhost bootstrap/push/event/patch/resync runtime slice.
 
-`dev-ipc` is the exception: it is the first no-HTTP runtime slice, now with server-side UIDL generation, but only for `test-apps/flow-over-ipc-smoke-app` and the constrained component/event set documented in `docs/flow-over-ipc-runtime.md`.
+`dev-ipc` is the exception: it is the first no-HTTP runtime slice, now with server-side UIDL generation and a Flow client resource loading probe, but only for `test-apps/flow-over-ipc-smoke-app` and the constrained component/event set documented in `docs/flow-over-ipc-runtime.md`.

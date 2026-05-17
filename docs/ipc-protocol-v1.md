@@ -2,7 +2,7 @@
 
 Flow IPC Protocol v1 is the first runtime protocol for moving Vaadin Desktop beyond localhost HTTP compatibility mode.
 
-Current implementation status: **minimum runtime slice implemented with UIDL writer, WebView-produced UIDL RPC dispatch, minimum UIDL patch consumption, one server-initiated UIDL push and one verification resync**. It supports a local WebView shell, Java sidecar stdin/stdout transport, bootstrap, event, replace-root patch, desktop command/capabilityResult, push, resync and shutdown. The runtime generates bootstrap and push UIDL with `UidlWriter`; bootstrap UIDL now carries Flow's `Vaadin-Security-Key`; verification resync receives Vaadin's `resynchronize=true` signal from `UidlWriter`; the WebView bridge sends click events as UIDL RPC bodies with CSRF/security key, `syncId`, `clientId` and Flow node id; Java dispatches them through `UidlRequestHandler`/`ServerRpcHandler` to produce event UIDL patches. The WebView applies bootstrap/push/event UIDL `changes` through a minimum applier and treats resync as a rebuild boundary, so this is closer to Flow client behavior but still not full Flow client engine parity.
+Current implementation status: **minimum runtime slice implemented with UIDL writer, WebView-produced UIDL RPC dispatch, minimum UIDL patch consumption, one server-initiated UIDL push, one verification resync and one Flow client resource loading probe**. It supports a local WebView shell, Java sidecar stdin/stdout transport, bootstrap, event, replace-root patch, desktop command/capabilityResult, push, resync, resource request/response and shutdown. The runtime generates bootstrap and push UIDL with `UidlWriter`; bootstrap UIDL now carries Flow's `Vaadin-Security-Key`; verification resync receives Vaadin's `resynchronize=true` signal from `UidlWriter`; the WebView bridge sends click events as UIDL RPC bodies with CSRF/security key, `syncId`, `clientId` and Flow node id; Java dispatches them through `UidlRequestHandler`/`ServerRpcHandler` to produce event UIDL patches. Bootstrap advertises real Vaadin `flow-client` classpath resources and the WebView loads `FlowBootstrap.js` through IPC. The WebView applies bootstrap/push/event UIDL `changes` through a minimum applier and treats resync as a rebuild boundary, so this is closer to Flow client behavior but still not full Flow client engine parity.
 
 ## Prefixes
 
@@ -88,6 +88,8 @@ Implemented in the minimum runtime:
 - `ready`
 - `bootstrapRequest`
 - `bootstrapResponse`
+- `resourceRequest`
+- `resourceResponse`
 - `event`
 - `patch`
 - `command`
@@ -137,6 +139,60 @@ The UIDL is real server-side Flow output. Bootstrap, push and event patches are 
 Vaadin Flow's browser bootstrap normally adds `ApplicationConstants.UIDL_SECURITY_TOKEN_ID`, serialized as `Vaadin-Security-Key`, after `UidlWriter.createUidl(...)`. The IPC runtime now mirrors that bootstrap step in `DesktopFlowRuntimeSession.createBootstrapUidl()`.
 
 The WebView bridge reads the key from `clientState.securityKey` and from the bootstrap UIDL body, then sends it back on event and resync envelopes. The UIDL RPC body still uses Flow's regular `csrfToken` field because that is what `ServerRpcHandler` validates. In the current bridge, `securityKey` and `csrfToken` are the same UI token.
+
+## Current Resource Payload
+
+`dev-ipc` now exposes a minimum Flow client resource channel. `bootstrapResponse` includes a `flowClientResources` manifest built from the Java sidecar classpath:
+
+```json
+{
+  "flowClientResources": {
+    "source": "flow-client-classpath",
+    "transport": "flow-ipc",
+    "resourceLoading": "ipc-resource-request",
+    "resources": [
+      {
+        "path": "META-INF/frontend/FlowBootstrap.js",
+        "kind": "flow-bootstrap-module",
+        "bytes": 7623,
+        "sha256": "..."
+      }
+    ]
+  }
+}
+```
+
+The WebView bridge currently requests `FlowBootstrap.js` as a resource probe:
+
+```json
+{
+  "type": "resourceRequest",
+  "payload": {
+    "purpose": "flow-client-resource-probe",
+    "path": "META-INF/frontend/FlowBootstrap.js",
+    "expectedSha256": "...",
+    "securityKey": "trace-csrf"
+  }
+}
+```
+
+Java checks the envelope `sessionId`/`uiId` and `securityKey`, then returns:
+
+```json
+{
+  "type": "resourceResponse",
+  "payload": {
+    "flowClientResource": true,
+    "available": true,
+    "path": "META-INF/frontend/FlowBootstrap.js",
+    "kind": "flow-bootstrap-module",
+    "encoding": "utf-8",
+    "body": "..."
+  }
+}
+```
+
+This proves no-HTTP resource delivery for the first real Flow client asset. The WebView verifies that the body contains `window.Vaadin.Flow.initApplication` and `export { init }`, but it does not yet execute the module as the real Flow client engine.
 
 ## Current Push Payload
 
@@ -270,7 +326,7 @@ Errors use the same envelope with `type=error` and an `error` object:
 
 - `dev` and `dev-swift` remain compatibility HTTP modes.
 - `dev-ipc` uses Flow IPC Protocol v1 and must log `transport=flow-ipc` and `compatibilityMode=false`.
-- Flow client engine resource loading, client-side UIDL consumption, upload/download and full push/WebSocket replacement remain future work.
+- Full Flow client engine execution, client-side UIDL consumption, upload/download and full push/WebSocket replacement remain future work. The current resource loading slice only serves and verifies `FlowBootstrap.js` over IPC.
 
 ## Trace Inspector
 
@@ -280,10 +336,16 @@ Run:
 bash bin/flow-ipc-trace-inspect --require-flow-ipc-v1 docs/traces/flow-ipc-v1.ndjson
 ```
 
-The inspector summarizes directions, message types and key markers. With `--require-flow-ipc-v1`, it requires `launch`, `ready`, `window.create`, `bootstrapRequest`, `bootstrapResponse`, `push`, `event`, `resync`, `command`, `capabilityResult`, `patch`, `webview.dom`, `webview.snapshot` and `shutdown`, plus `transport=flow-ipc`, `compatibilityMode=false`, a clicked-state patch, native clipboard evidence, `uidlRpcDispatch=true`, bootstrap/event/resync `sessionId` + `uiId` evidence, bootstrap `Vaadin-Security-Key` evidence, a WebView event containing `uidlRpc` and `securityKey`, a resync request carrying `securityKey`, bootstrap UIDL writer markers, a server-initiated push UIDL consumed by the WebView, a resync `resynchronize=true` signal consumed by the WebView, and an event patch from `UidlRequestHandler`.
+The inspector summarizes directions, message types and key markers. With `--require-flow-ipc-v1`, it requires `launch`, `ready`, `window.create`, `bootstrapRequest`, `bootstrapResponse`, `resourceRequest`, `resourceResponse`, `push`, `event`, `resync`, `command`, `capabilityResult`, `patch`, `webview.dom`, `webview.snapshot` and `shutdown`, plus `transport=flow-ipc`, `compatibilityMode=false`, a clicked-state patch, native clipboard evidence, `uidlRpcDispatch=true`, bootstrap/event/resync `sessionId` + `uiId` evidence, bootstrap `Vaadin-Security-Key` evidence, Flow client resource manifest/request/response/DOM evidence, a WebView event containing `uidlRpc` and `securityKey`, a resync request carrying `securityKey`, bootstrap UIDL writer markers, a server-initiated push UIDL consumed by the WebView, a resync `resynchronize=true` signal consumed by the WebView, and an event patch from `UidlRequestHandler`.
 
 Run the envelope scope rejection smoke with:
 
 ```bash
 bash bin/flow-ipc-scope-smoke
+```
+
+Run the Flow client classpath resource smoke with:
+
+```bash
+bash bin/flow-client-resource-smoke
 ```

@@ -95,10 +95,11 @@ public final class DesktopTraceInspector {
                 summary.nativeClipboardObserved = true;
             }
             if (line.contains("\"source\":\"UidlWriter\"")
+                    && line.contains("\"reason\":\"bootstrap\"")
                     && line.contains("\"containsChanges\":true")
                     && line.contains("\"containsSyncId\":true")
                     && line.contains("\"consumedByWebView\":true")
-                    && line.contains("\"minimum-webview-uidl-applier\"")) {
+                    && line.contains("\"flow-client-engine-visible\"")) {
                 summary.uidlWriterObserved = true;
             }
             if (line.contains("\"uidlRpcDispatch\":true")) {
@@ -213,6 +214,14 @@ public final class DesktopTraceInspector {
                     && containsStringField(line, "flowClientEngineXhrError", "")) {
                 summary.flowClientEngineXhrDomObserved = true;
             }
+            if (line.contains("\"type\":\"webview.dom\"")
+                    && containsLiteralField(line, "flowClientEngineVisibleOwner", "true")
+                    && containsStringField(line, "flowClientEngineVisibleRootId", "flow-client-engine-root")
+                    && containsStringField(line, "flowClientEngineVisibleStatusText", "Clicks: 1")
+                    && containsStringField(line, "flowClientEngineVisibleButtonText", "Increment over IPC")
+                    && containsLiteralField(line, "flowClientEngineLocalFallbackHidden", "true")) {
+                summary.flowClientEngineVisibleDomObserved = true;
+            }
             if (line.contains("\"type\":\"event\"")
                     && line.contains("\"sessionId\":\"flow-ipc-session\"")
                     && line.contains("\"uiId\":\"main\"")) {
@@ -228,20 +237,20 @@ public final class DesktopTraceInspector {
                     && line.contains("\"eventDispatch\":\"flow-client-xhr\"")
                     && line.contains("Clicks: 1")
                     && line.contains("\"consumedByWebView\":true")
-                    && line.contains("\"minimum-webview-uidl-applier\"")) {
+                    && line.contains("\"flow-client-engine-visible\"")) {
                 summary.flowClientXhrPatchObserved = true;
             }
             if (line.contains("\"type\":\"patch\"")
                     && line.contains("\"source\":\"UidlRequestHandler\"")
                     && line.contains("\"consumedByWebView\":true")
-                    && line.contains("\"minimum-webview-uidl-applier\"")) {
+                    && line.contains("\"flow-client-engine-visible\"")) {
                 summary.uidlPatchObserved = true;
             }
             if (line.contains("\"type\":\"push\"")
                     && line.contains("\"source\":\"UidlWriter\"")
                     && line.contains("\"reason\":\"push\"")
                     && line.contains("\"consumedByWebView\":true")
-                    && line.contains("\"minimum-webview-uidl-applier\"")) {
+                    && line.contains("\"minimum-webview-uidl-applier-fallback\"")) {
                 summary.pushUidlObserved = true;
             }
             if (line.contains("\"type\":\"patch\"")
@@ -250,7 +259,7 @@ public final class DesktopTraceInspector {
                     && line.contains("\"resync\":true")
                     && line.contains("resynchronize")
                     && line.contains("\"consumedByWebView\":true")
-                    && line.contains("\"minimum-webview-uidl-applier\"")) {
+                    && line.contains("\"minimum-webview-uidl-applier-fallback\"")) {
                 summary.resyncUidlObserved = true;
             }
         }
@@ -259,7 +268,8 @@ public final class DesktopTraceInspector {
 
     private static String normalize(String line) {
         String trimmed = line.trim();
-        return trimmed.startsWith("HOST_PROTOCOL ") ? trimmed.substring("HOST_PROTOCOL ".length()) : trimmed;
+        String payload = trimmed.startsWith("HOST_PROTOCOL ") ? trimmed.substring("HOST_PROTOCOL ".length()) : trimmed;
+        return payload.replace("\\/", "/");
     }
 
     private static String first(Pattern pattern, String line, String fallback) {
@@ -305,6 +315,7 @@ public final class DesktopTraceInspector {
         private boolean flowClientEngineDomObserved;
         private boolean flowClientEngineBootstrapDomObserved;
         private boolean flowClientEngineXhrDomObserved;
+        private boolean flowClientEngineVisibleDomObserved;
         private boolean uidlRpcDispatchObserved;
         private boolean webViewUidlRpcObserved;
         private boolean flowClientXhrAttachObserved;
@@ -336,6 +347,7 @@ public final class DesktopTraceInspector {
                     && flowClientEngineDomObserved
                     && flowClientEngineBootstrapDomObserved
                     && flowClientEngineXhrDomObserved
+                    && flowClientEngineVisibleDomObserved
                     && uidlRpcDispatchObserved
                     && webViewUidlRpcObserved
                     && flowClientXhrAttachObserved
@@ -371,6 +383,7 @@ public final class DesktopTraceInspector {
             System.out.println("Flow client engine DOM observed: " + flowClientEngineDomObserved);
             System.out.println("Flow client engine bootstrap DOM observed: " + flowClientEngineBootstrapDomObserved);
             System.out.println("Flow client engine XHR DOM observed: " + flowClientEngineXhrDomObserved);
+            System.out.println("Flow client engine visible DOM observed: " + flowClientEngineVisibleDomObserved);
             System.out.println("UIDL RPC dispatch observed: " + uidlRpcDispatchObserved);
             System.out.println("WebView UIDL RPC observed: " + webViewUidlRpcObserved);
             System.out.println("Flow client XHR attach observed: " + flowClientXhrAttachObserved);

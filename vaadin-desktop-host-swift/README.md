@@ -27,7 +27,7 @@ Run the first no-HTTP IPC slice:
 bash bin/vaadin-desktop dev-ipc test-apps/flow-over-ipc-smoke-app
 ```
 
-`dev-swift` still uses localhost HTTP compatibility mode. `dev-ipc` does not load a localhost URL for the smoke app, but it currently uses a minimum local renderer instead of Vaadin UIDL and the full Flow client engine.
+`dev-swift` still uses localhost HTTP compatibility mode. `dev-ipc` does not load a localhost URL for the smoke app and sends click events as UIDL RPC over `VFIPC1`, but it currently uses a minimum local renderer instead of the full Flow client engine.
 
 For repeatable real-window verification:
 

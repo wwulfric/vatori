@@ -70,4 +70,4 @@ Like Tauri, the intended shape is a small native host plus system WebView plus b
 
 Framework v0 uses real Vaadin Flow through `vaadin-spring-boot-starter`. Developers write standard Flow views with `@Route`, `Button`, `Grid`, `Span`, layouts and listeners.
 
-The current gap is transport completeness: `dev-ipc` removes HTTP for one constrained smoke app and routes click events through the server-side Flow UIDL RPC path, but full Flow still needs the WebView bridge to emit real Flow-client UIDL payloads and a real Flow client engine bridge that consumes UIDL.
+The current gap is transport completeness: `dev-ipc` removes HTTP for one constrained smoke app, has the WebView bridge emit Flow-client-shaped click RPC payloads, and routes those events through the server-side Flow UIDL RPC path. Full Flow still needs a real Flow client engine bridge that consumes UIDL and broader event/resource coverage.

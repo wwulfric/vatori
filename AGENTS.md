@@ -56,7 +56,7 @@ No-HTTP IPC slice:
 bash bin/vaadin-desktop dev-ipc test-apps/flow-over-ipc-smoke-app
 ```
 
-This runs the Swift host with `--transport flow-ipc`, loads a local WKWebView HTML shell and communicates with Java through `VFIPC1` stdin/stdout envelopes. It proves WebView event -> Java Button listener -> desktop command/capabilityResult -> patch -> WebView without localhost HTTP for the smoke app. The Java side emits real UIDL under `payload.uidl`: bootstrap uses `UidlWriter`, and click events are dispatched through `UidlRequestHandler`/`ServerRpcHandler`. The WebView still consumes the repository-local tree patch, so this is not full Flow client engine parity yet.
+This runs the Swift host with `--transport flow-ipc`, loads a local WKWebView HTML shell and communicates with Java through `VFIPC1` stdin/stdout envelopes. It proves WebView event -> Java Button listener -> desktop command/capabilityResult -> patch -> WebView without localhost HTTP for the smoke app. The WebView bridge sends click events as Flow-client-shaped UIDL RPC payloads; Java emits real UIDL under `payload.uidl`, with bootstrap using `UidlWriter` and events using `UidlRequestHandler`/`ServerRpcHandler`. The WebView still consumes the repository-local tree patch, so this is not full Flow client engine parity yet.
 
 Repeatable real-window smoke verification can use:
 
@@ -193,6 +193,6 @@ Most valuable next steps:
 
 1. Make `vaadin-desktop-host-swift` the default host once it is stable across local machines.
 2. Turn Host Protocol v0 traces into a bidirectional command/result transport.
-3. Make the WebView bridge send Flow-client-shaped UIDL RPC payloads directly instead of Java translating `{action, componentId}`.
-4. Replace the repository-local WebView tree renderer with Flow client engine UIDL consumption.
-5. Add smoke tests for Swift host window launch, sidecar cleanup and desktop capability calls.
+3. Replace the repository-local WebView tree renderer with Flow client engine UIDL consumption.
+4. Add smoke tests for Swift host window launch, sidecar cleanup and desktop capability calls.
+5. Tighten CSRF/security key, sync id and resync semantics in `DesktopVaadinRequest`.

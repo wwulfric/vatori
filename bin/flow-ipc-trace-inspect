@@ -1,0 +1,14 @@
+#!/usr/bin/env bash
+set -euo pipefail
+
+ROOT="$(cd "$(dirname "$0")/.." && pwd)"
+if [[ -f /Users/bytedance/.sdkman/bin/sdkman-init.sh ]]; then
+  # shellcheck source=/dev/null
+  set +u
+  source /Users/bytedance/.sdkman/bin/sdkman-init.sh
+  set -u
+fi
+
+mvn -q -o -Dmaven.repo.local="$ROOT/.m2/repository" -pl vaadin-desktop-devtools -am -DskipTests compile
+exec java -cp "$ROOT/vaadin-desktop-devtools/target/classes" \
+  dev.vatori.desktop.devtools.DesktopTraceInspector "$@"

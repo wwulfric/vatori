@@ -56,7 +56,7 @@ The target stack removes local HTTP from the UI event/patch path. Framework v0 k
 - `vaadin-desktop-ipc`: Host Protocol v0 envelope plus Flow IPC Protocol v1 envelope.
 - `vaadin-desktop-host`: Java host abstractions, macOS WKWebView fallback and native bridge implementations.
 - `vaadin-desktop-host-swift`: Swift/AppKit/WKWebView host spike that owns sidecar process lifecycle and system WebView.
-- `vaadin-desktop-devtools`: inspector and diagnostics.
+- `vaadin-desktop-devtools`: Flow IPC trace inspector and diagnostics.
 - `vaadin-desktop-cli`: developer command entry.
 - `flow-transport-adapter-spike`: code-level analysis and draft adapter shape for real Flow UIDL/event boundaries.
 

@@ -66,6 +66,12 @@ For repeatable real-window smoke verification without global mouse coordinates:
 VAADIN_DESKTOP_FLOW_IPC_AUTO_CLICK=1 bash bin/vaadin-desktop dev-ipc test-apps/flow-over-ipc-smoke-app
 ```
 
+Inspect the bundled review trace:
+
+```bash
+bash bin/flow-ipc-trace-inspect --require-flow-ipc-v1 docs/traces/flow-ipc-v1.ndjson
+```
+
 Current limitation: this path uses a minimum repository-local renderer and replace-root patches. It does not yet use Vaadin UIDL or the full Flow client engine.
 
 ## Run the Independent Smoke App

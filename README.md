@@ -44,6 +44,12 @@ bash bin/vaadin-desktop dev-ipc test-apps/flow-over-ipc-smoke-app
 
 `dev-ipc` starts the same Swift/AppKit host with `transport=flow-ipc`, loads a local WKWebView shell, sends WebView events to the Java sidecar over `VFIPC1` stdin/stdout envelopes, and applies Java patches without loading `http://127.0.0.1`. The current patch payload is a repository-local component tree, not Vaadin UIDL yet.
 
+Inspect the Flow IPC trace sample:
+
+```bash
+bash bin/flow-ipc-trace-inspect --require-flow-ipc-v1 docs/traces/flow-ipc-v1.ndjson
+```
+
 On macOS the original `dev` command still opens a native WKWebView desktop window by default. That path is now the macOS fallback/compatibility host.
 
 Host selection:
@@ -61,7 +67,7 @@ VAADIN_DESKTOP_HOST=browser bash bin/vaadin-desktop dev examples/counter-app
 - `vaadin-desktop-host`: macOS system WebView fallback, compatibility host and Java native bridge implementations.
 - `vaadin-desktop-host-swift`: Swift/AppKit/WKWebView host for the macOS native runtime path.
 - `vaadin-desktop-flow`: real Vaadin Flow/Spring Boot integration layer.
-- `vaadin-desktop-devtools`: trace inspector scaffold.
+- `vaadin-desktop-devtools`: trace inspector for Flow IPC review traces.
 - `vaadin-desktop-cli`: CLI scaffold; shell entry is `bin/vaadin-desktop`.
 - `examples/counter-app`: real Vaadin Flow counter app.
 - `examples/grid-app`: real Vaadin Flow Grid app.

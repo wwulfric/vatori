@@ -66,6 +66,14 @@ Verified trace evidence:
 - `HOST_PROTOCOL patch` with `Clicks: 1`.
 - `HOST_PROTOCOL webview.snapshot` writes `.build/vaadin-desktop-host-swift/window-snapshot.png`, whose rendered state shows `Clicks: 1`.
 
+Inspect the sample trace:
+
+```bash
+bash bin/flow-ipc-trace-inspect --require-flow-ipc-v1 docs/traces/flow-ipc-v1.ndjson
+```
+
+The inspector fails with exit code `2` if the required Flow IPC message types or key markers are missing.
+
 ## Current Limitations
 
 This is not the final complete Vaadin Flow transport yet:

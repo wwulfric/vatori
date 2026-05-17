@@ -161,3 +161,13 @@ Errors use the same envelope with `type=error` and an `error` object:
 - `dev` and `dev-swift` remain compatibility HTTP modes.
 - `dev-ipc` uses Flow IPC Protocol v1 and must log `transport=flow-ipc` and `compatibilityMode=false`.
 - Full Vaadin UIDL, Flow client engine resource loading, upload/download and push/WebSocket replacement remain future work.
+
+## Trace Inspector
+
+Run:
+
+```bash
+bash bin/flow-ipc-trace-inspect --require-flow-ipc-v1 docs/traces/flow-ipc-v1.ndjson
+```
+
+The inspector summarizes directions, message types and key markers. With `--require-flow-ipc-v1`, it requires `launch`, `ready`, `window.create`, `bootstrapRequest`, `bootstrapResponse`, `push`, `event`, `command`, `capabilityResult`, `patch`, `webview.dom`, `webview.snapshot` and `shutdown`, plus `transport=flow-ipc`, `compatibilityMode=false`, a clicked-state patch and native clipboard evidence.

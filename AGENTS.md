@@ -95,6 +95,12 @@ Run the Flow IPC smoke app:
 bash bin/vaadin-desktop dev-ipc test-apps/flow-over-ipc-smoke-app
 ```
 
+Inspect the Flow IPC trace sample:
+
+```bash
+bash bin/flow-ipc-trace-inspect --require-flow-ipc-v1 docs/traces/flow-ipc-v1.ndjson
+```
+
 Host selection:
 
 ```bash

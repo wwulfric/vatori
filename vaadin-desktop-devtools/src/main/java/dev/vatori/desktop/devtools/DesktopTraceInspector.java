@@ -94,6 +94,7 @@ public final class DesktopTraceInspector {
                     && line.contains("\"permissionMode\":\"allow-all-dev\"")
                     && line.contains("window.setTitle")
                     && line.contains("clipboard.writeText")
+                    && line.contains("fileDialog.openFile")
                     && line.contains("notification.show")) {
                 summary.capabilityManifestObserved = true;
             }
@@ -128,8 +129,18 @@ public final class DesktopTraceInspector {
                     && line.contains("desktop-capabilities.json")
                     && line.contains("window.setTitle")
                     && line.contains("clipboard.writeText")
+                    && line.contains("fileDialog.openFile")
                     && line.contains("notification.show")) {
                 summary.capabilityManifestResultObserved = true;
+            }
+            if (line.contains("\"type\":\"capabilityResult\"")
+                    && line.contains("\"command\":\"fileDialog.openFile\"")
+                    && line.contains("\"mode\":\"scaffold-cancelled\"")
+                    && line.contains("\"canceled\":true")
+                    && line.contains("\"permissionManifestLoaded\":true")
+                    && line.contains("\"permissionDecision\":\"allowed\"")
+                    && line.contains("\"permissionReason\":\"manifest-allow\"")) {
+                summary.fileDialogScaffoldObserved = true;
             }
             if (line.contains("\"type\":\"error\"")
                     && line.contains("webviewVerificationProbe")
@@ -376,6 +387,7 @@ public final class DesktopTraceInspector {
         private boolean compatibilityFalse;
         private boolean capabilityManifestObserved;
         private boolean capabilityManifestResultObserved;
+        private boolean fileDialogScaffoldObserved;
         private boolean serverSequenceObserved;
         private boolean flowIpcServerSequenceDomObserved;
         private boolean clickPatchObserved;
@@ -417,6 +429,7 @@ public final class DesktopTraceInspector {
                     && compatibilityFalse
                     && capabilityManifestObserved
                     && capabilityManifestResultObserved
+                    && fileDialogScaffoldObserved
                     && serverSequenceObserved
                     && flowIpcServerSequenceDomObserved
                     && clickPatchObserved
@@ -462,6 +475,7 @@ public final class DesktopTraceInspector {
             System.out.println("compatibilityMode=false: " + compatibilityFalse);
             System.out.println("capability manifest observed: " + capabilityManifestObserved);
             System.out.println("capability manifest result observed: " + capabilityManifestResultObserved);
+            System.out.println("file dialog scaffold observed: " + fileDialogScaffoldObserved);
             System.out.println("server sequence observed: " + serverSequenceObserved);
             System.out.println("Flow IPC server sequence DOM observed: " + flowIpcServerSequenceDomObserved);
             System.out.println("click patch observed: " + clickPatchObserved);

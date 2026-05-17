@@ -26,7 +26,7 @@ Current scope:
 - Java listener execution updates Flow component state and returns a full replace-root patch.
 - With `VAADIN_DESKTOP_FLOW_IPC_AUTO_RESYNC=1`, the visible Flow client requests one resync after the event patch and consumes the returned `UidlRequestHandler` response.
 - Desktop API calls travel Java -> Swift host as `VFIPC1 command`.
-- `desktop-capabilities.json` declares `window.setTitle`, `notification.show` and `clipboard.writeText` for the `main` window. The smoke view calls those APIs; Swift host returns `capabilityResult` with `permissionMode=allow-all-dev`, `permissionReason=manifest-allow` and manifest metadata, with clipboard backed by native `NSPasteboard`.
+- `desktop-capabilities.json` declares `window.setTitle`, `notification.show`, `clipboard.writeText` and `fileDialog.openFile` for the `main` window. The smoke view calls those APIs; Swift host returns `capabilityResult` with `permissionMode=allow-all-dev`, `permissionReason=manifest-allow` and manifest metadata, with clipboard backed by native `NSPasteboard` and file dialog currently returning a cancelled scaffold result.
 - This is not the full Vaadin Flow transport yet; the hidden local UIDL applier remains as a diagnostic fallback while real push queue/reconnect/resync semantics are still being built.
 
 For automated real-window verification:

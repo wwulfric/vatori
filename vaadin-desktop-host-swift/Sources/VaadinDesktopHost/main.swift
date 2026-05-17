@@ -633,6 +633,14 @@ final class WebViewHost: NSObject, NSApplicationDelegate, NSWindowDelegate, WKNa
                 "title": args["title"] as? String ?? "",
                 "body": args["body"] as? String ?? ""
             ])
+        case "fileDialog.openFile":
+            return capabilityPermission([
+                "success": true,
+                "command": command,
+                "mode": "scaffold-cancelled",
+                "title": args["title"] as? String ?? "",
+                "canceled": true
+            ])
         default:
             return capabilityPermission([
                 "success": false,

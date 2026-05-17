@@ -28,6 +28,7 @@ public class FlowOverIpcSmokeView extends VerticalLayout {
             Desktop.current().setWindowTitle("Vaadin Flow over IPC - " + count);
             Desktop.current().notifications().show("Flow IPC", "Button clicked " + count + " time(s)");
             Desktop.current().clipboard().writeText("Vaadin Flow over IPC clicks: " + count);
+            Desktop.current().fileDialog().openFile("Flow IPC File Dialog");
         });
         button.setId("ipc-button");
 

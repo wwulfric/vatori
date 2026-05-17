@@ -43,7 +43,7 @@ The Java sidecar is still launched by Maven `spring-boot:run`, but the applicati
 - With the verification hook enabled, the Flow client engine requests resync through its IPC bridge, Java dispatches the Flow-client-shaped resync body through `UidlRequestHandler`, and the resulting UIDL patch is returned to the same Flow client XHR path.
 - WebView applies replace-root patches.
 - Desktop API calls in `dev-ipc` emit `VFIPC1` `command` envelopes.
-- Swift host handles `window.setTitle` through AppKit and `clipboard.writeText` through `NSPasteboard`.
+- Swift host handles `window.setTitle` through AppKit, `clipboard.writeText` through `NSPasteboard`, trace-only `notification.show` and a `fileDialog.openFile` scaffold that returns `mode=scaffold-cancelled`.
 - Swift host emits `capabilityResult` envelopes for command handling, including the current `permissionMode=allow-all-dev` decision metadata.
 
 ## Verification
@@ -73,8 +73,8 @@ Verified trace evidence:
 - `HOST_PROTOCOL push` with `uidl.source=UidlWriter`, `uidl.reason=push`, `uidl.async=true`, `uidl.consumer=flow-client-engine-visible` and `5 Server push over IPC READY`.
 - `HOST_PROTOCOL event` with `dispatch=flow-client-xhr`, first for Flow client's `attachExistingElementById` bootstrap binding and then for a real `uidlRpc` click with `clientId=1`, `uidlRpc.csrfToken`, `uidlRpc.syncId` and Flow `nodeId`.
 - `HOST_PROTOCOL resync` from the Flow client XHR bridge to Java and a follow-up `HOST_PROTOCOL patch` with `eventDispatch=flow-client-xhr`, `uidl.source=UidlRequestHandler`, `uidl.reason=resync`, `uidl.resync=true`, `uidl.consumer=flow-client-engine-visible` and `resynchronize=true`.
-- Java `VFIPC1 command` for `window.setTitle`, `notification.show` and `clipboard.writeText`.
-- `HOST_PROTOCOL capabilityResult` for `window.setTitle`, `notification.show` and `clipboard.writeText`.
+- Java `VFIPC1 command` for `window.setTitle`, `notification.show`, `clipboard.writeText` and `fileDialog.openFile`.
+- `HOST_PROTOCOL capabilityResult` for `window.setTitle`, `notification.show`, `clipboard.writeText` and `fileDialog.openFile`; file dialog is currently `mode=scaffold-cancelled` with `canceled=true`.
 - `HOST_PROTOCOL capabilityManifest` loaded from the app module's `desktop-capabilities.json`.
 - `HOST_PROTOCOL capabilityResult` payloads with `permissionMode=allow-all-dev`, `permissionDecision=allowed`, `permissionReason=manifest-allow`, `permissionScope=window:main` and manifest metadata.
 - `HOST_PROTOCOL error` with `error.code=webviewVerificationProbe` for the verification-only WebView error-reporting path.
@@ -101,7 +101,7 @@ This is not the final complete Vaadin Flow transport yet:
 - Only click events are implemented.
 - The WebView bridge now sends Flow-client-shaped UIDL RPC for click events, but full Flow client event collection is not implemented.
 - `VaadinSession` and `UI` are desktop-shaped; Flow IPC bootstrap now carries `Vaadin-Security-Key`; event and resync envelopes carry the key back to Java; and envelope `sessionId`/`uiId`, `csrfToken`/security key, `syncId` and `clientId` are checked before UIDL RPC dispatch. Full resync semantics are not complete.
-- Notification handling is trace-only; clipboard write is backed by native `NSPasteboard`.
+- Notification handling is trace-only; clipboard write is backed by native `NSPasteboard`; file dialog is a cancelled scaffold, not a real `NSOpenPanel` yet.
 - Upload/download, full frontend resource graph execution, production bundle and dev mode are not implemented for `dev-ipc`.
 
 The value of this slice is that the core demo path can run without a localhost HTTP server and exposes the real host/WebView/Java IPC contract that the later UIDL adapter must satisfy.

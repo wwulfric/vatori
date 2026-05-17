@@ -20,7 +20,7 @@ Responsibilities implemented now:
 - closes the Java process when the desktop window closes,
 - in `dev-ipc`, loads a local WebView shell, receives WebView messages through `WKScriptMessageHandler`, forwards them to Java stdin and delivers Java `VFIPC1` responses back to WebView JavaScript,
 - in `dev-ipc`, has the WebView request `FlowBootstrap.js` and `FlowClient.js` through `VFIPC1 resourceRequest`, imports them as Blob-backed ES modules, calls `FlowBootstrap.init` with an IPC bootstrap config, then calls `FlowClient.init` and records DOM diagnostics,
-- in `dev-ipc`, handles `VFIPC1 command` for `window.setTitle`, `clipboard.writeText` and trace-only `notification.show`, then emits `capabilityResult`.
+- in `dev-ipc`, handles `VFIPC1 command` for `window.setTitle`, `clipboard.writeText`, trace-only `notification.show` and a `fileDialog.openFile` scaffold that returns a cancelled result, then emits `capabilityResult`.
 
 Current compatibility boundary:
 
@@ -73,6 +73,7 @@ The current host allows the known v1 commands for the single main window:
 
 - `window.setTitle`
 - `clipboard.writeText`
+- `fileDialog.openFile`
 - `notification.show`
 
 Every `capabilityResult` includes `permissionMode`, `permissionDecision`, `permissionReason` and `permissionScope`. When a manifest is loaded, known commands must be listed for the `main` window and successful calls are marked `permissionDecision=allowed` with `permissionReason=manifest-allow`; unsupported or unlisted commands are rejected with `permissionDecision=denied`. Results also include `permissionManifestLoaded`, `permissionManifestPath` and `permissionManifestCommands`. This is intentionally still a development permission system. The production direction is a stricter manifest-gated model with per-window, per-origin, user-gesture and per-capability grants.

@@ -27,13 +27,20 @@ import java.util.Objects;
 import java.util.concurrent.locks.Lock;
 import java.util.concurrent.locks.ReentrantLock;
 import java.util.function.Supplier;
+import java.util.regex.Matcher;
+import java.util.regex.Pattern;
 
 public final class DesktopFlowRuntimeSession {
+    private static final Pattern JSON_STRING_FIELD = Pattern.compile("\"%s\"\\s*:\\s*\"((?:\\\\.|[^\"])*)\"");
+    private static final Pattern JSON_INT_FIELD = Pattern.compile("\"%s\"\\s*:\\s*(-?\\d+)");
+
     private final VaadinSession session;
     private final UI ui;
     private final UidlFlowTransportAdapter uidlAdapter;
     private final String sessionId;
     private final int uiId;
+    private int expectedClientToServerMessageId;
+    private int lastSyncId = -1;
 
     private DesktopFlowRuntimeSession(VaadinSession session, UI ui, UidlFlowTransportAdapter uidlAdapter,
                                       String sessionId, int uiId) {
@@ -104,7 +111,9 @@ public final class DesktopFlowRuntimeSession {
     public String createUidl(boolean resync) {
         session.lock();
         try {
-            return uidlAdapter.createUidl(ui, resync);
+            String uidl = uidlAdapter.createUidl(ui, resync);
+            observeSyncId(uidl);
+            return uidl;
         } finally {
             session.unlock();
         }
@@ -112,6 +121,7 @@ public final class DesktopFlowRuntimeSession {
 
     public FlowPatchResponse handleClientMessage(String requestBody, int clientToServerMessageId,
                                                  boolean resync) throws IOException {
+        validateClientMessage(requestBody, clientToServerMessageId);
         FlowClientMessage message = new FlowClientMessage(
                 sessionId,
                 uiId,
@@ -120,7 +130,10 @@ public final class DesktopFlowRuntimeSession {
                 ui.getCsrfToken(),
                 clientToServerMessageId,
                 resync);
-        return uidlAdapter.handleClientMessage(ui, message);
+        FlowPatchResponse response = uidlAdapter.handleClientMessage(ui, message);
+        observeSyncId(response.uidlJson());
+        expectedClientToServerMessageId = clientToServerMessageId + 1;
+        return response;
     }
 
     public FlowPatchResponse handleDomEvent(int nodeId, String eventType, int clientToServerMessageId)
@@ -136,11 +149,67 @@ public final class DesktopFlowRuntimeSession {
                       "data": {}
                     }
                   ],
-                  "syncId": -1,
+                  "syncId": %d,
                   "clientId": %d
                 }
-                """.formatted(ui.getCsrfToken(), nodeId, eventType, clientToServerMessageId);
+                """.formatted(ui.getCsrfToken(), nodeId, eventType, lastSyncId, clientToServerMessageId);
         return handleClientMessage(requestBody, clientToServerMessageId, false);
+    }
+
+    private void validateClientMessage(String requestBody, int clientToServerMessageId) {
+        String token = jsonString(requestBody, "csrfToken");
+        if (!Objects.equals(ui.getCsrfToken(), token)) {
+            throw new SecurityException("Invalid Flow IPC csrfToken");
+        }
+
+        Integer requestSyncId = jsonInt(requestBody, "syncId");
+        if (requestSyncId == null) {
+            throw new IllegalArgumentException("Missing Flow IPC syncId");
+        }
+        if (requestSyncId != lastSyncId) {
+            throw new IllegalStateException("Flow IPC syncId mismatch: expected "
+                    + lastSyncId + " but got " + requestSyncId);
+        }
+
+        Integer bodyClientId = jsonInt(requestBody, "clientId");
+        if (bodyClientId == null) {
+            throw new IllegalArgumentException("Missing Flow IPC clientId");
+        }
+        if (bodyClientId != clientToServerMessageId) {
+            throw new IllegalArgumentException("Flow IPC clientId mismatch between envelope and UIDL body");
+        }
+        if (clientToServerMessageId != expectedClientToServerMessageId) {
+            throw new IllegalStateException("Flow IPC clientId out of order: expected "
+                    + expectedClientToServerMessageId + " but got " + clientToServerMessageId);
+        }
+    }
+
+    private void observeSyncId(String uidlJson) {
+        Integer syncId = jsonInt(uidlJson, "syncId");
+        if (syncId != null) {
+            lastSyncId = syncId;
+        }
+    }
+
+    private static String jsonString(String json, String field) {
+        if (json == null || json.isBlank()) {
+            return null;
+        }
+        Matcher matcher = Pattern.compile(String.format(JSON_STRING_FIELD.pattern(), Pattern.quote(field))).matcher(json);
+        if (!matcher.find()) {
+            return null;
+        }
+        return matcher.group(1)
+                .replace("\\\"", "\"")
+                .replace("\\\\", "\\");
+    }
+
+    private static Integer jsonInt(String json, String field) {
+        if (json == null || json.isBlank()) {
+            return null;
+        }
+        Matcher matcher = Pattern.compile(String.format(JSON_INT_FIELD.pattern(), Pattern.quote(field))).matcher(json);
+        return matcher.find() ? Integer.parseInt(matcher.group(1)) : null;
     }
 
     private static final class DesktopFlowVaadinService extends VaadinService {

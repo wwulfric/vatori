@@ -75,6 +75,10 @@ final class FlowIpcRuntime {
                 case "shutdown" -> System.exit(0);
                 default -> sendError("unknownMessage", "Unsupported Flow IPC message type: " + type, id, correlationId);
             }
+        } catch (SecurityException error) {
+            sendError("invalidCsrfToken", error.getMessage(), id, correlationId);
+        } catch (IllegalArgumentException | IllegalStateException error) {
+            sendError("invalidClientState", error.getMessage(), id, correlationId);
         } catch (RuntimeException error) {
             error.printStackTrace(System.err);
             sendError("runtime", error.getMessage() == null ? error.toString() : error.getMessage(), id, correlationId);

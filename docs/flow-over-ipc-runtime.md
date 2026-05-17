@@ -87,7 +87,7 @@ This is not the final complete Vaadin Flow transport yet:
 - The WebView shell is a minimum UIDL applier, not the full Flow client engine.
 - Only click events are implemented.
 - The WebView bridge now sends Flow-client-shaped UIDL RPC for click events, but full Flow client event collection is not implemented.
-- `VaadinSession` and `UI` are desktop-shaped; Flow IPC bootstrap now carries `Vaadin-Security-Key`; event and resync envelopes carry the key back to Java; and `csrfToken`/security key, `syncId` and `clientId` are checked before UIDL RPC dispatch. Full resync semantics are not complete.
+- `VaadinSession` and `UI` are desktop-shaped; Flow IPC bootstrap now carries `Vaadin-Security-Key`; event and resync envelopes carry the key back to Java; and envelope `sessionId`/`uiId`, `csrfToken`/security key, `syncId` and `clientId` are checked before UIDL RPC dispatch. Full resync semantics are not complete.
 - Push covers one server-initiated UIDL update in the smoke app, but it is not a full Flow push implementation with background scheduling, ordering guarantees or reconnect semantics.
 - Notification handling is trace-only; clipboard write is backed by native `NSPasteboard`.
 - Upload/download, frontend resources, production bundle and dev mode are not implemented for `dev-ipc`.

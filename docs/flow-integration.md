@@ -62,7 +62,7 @@ Next work should replace the compatibility adapter with a real Flow transport ad
 4. Feed transport messages through `vaadin-desktop-ipc`.
 5. Load Flow client engine from a local asset protocol in the native host.
 
-The current concrete issue is to keep tightening this repository-local adapter: it accepts `(VaadinSession, UI, requestBody, metadata)` and returns UIDL JSON while using a compatibility `VaadinRequest` only at the edge. The WebView bridge now provides Flow-client-shaped click RPC request bodies directly, bootstrap mirrors Flow's `Vaadin-Security-Key`, event/resync envelopes carry that key back to Java, and the adapter rejects mismatched Flow IPC `csrfToken`/security key, stale `syncId` and out-of-order `clientId` values before dispatch. The remaining work is broader Flow-client event coverage, UIDL consumption and full resync semantics.
+The current concrete issue is to keep tightening this repository-local adapter: it accepts `(VaadinSession, UI, requestBody, metadata)` and returns UIDL JSON while using a compatibility `VaadinRequest` only at the edge. The WebView bridge now provides Flow-client-shaped click RPC request bodies directly, bootstrap mirrors Flow's `Vaadin-Security-Key`, event/resync envelopes carry that key back to Java, and the runtime rejects mismatched Flow IPC `sessionId`/`uiId`, `csrfToken`/security key, stale `syncId` and out-of-order `clientId` values before dispatch. The remaining work is broader Flow-client event coverage, UIDL consumption and full resync semantics.
 
 That issue has now started in compiled framework code:
 

@@ -73,6 +73,13 @@ Inspect the bundled review trace:
 bash bin/flow-ipc-trace-inspect --require-flow-ipc-v1 docs/traces/flow-ipc-v1.ndjson
 ```
 
+Run server-side UIDL adapter checks:
+
+```bash
+bash bin/uidl-adapter-smoke
+bash bin/uidl-rpc-smoke
+```
+
 Current limitation: this path uses a minimum repository-local renderer and replace-root patches in the WebView. It now generates Vaadin UIDL, but the full Flow client engine does not consume that UIDL yet.
 
 ## Run the Independent Smoke App

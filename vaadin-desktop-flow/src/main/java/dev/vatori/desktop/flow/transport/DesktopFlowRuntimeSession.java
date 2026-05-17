@@ -14,6 +14,7 @@ import com.vaadin.flow.server.WrappedSession;
 import com.vaadin.flow.shared.communication.PushMode;
 
 import java.io.File;
+import java.io.IOException;
 import java.io.InputStream;
 import java.lang.reflect.Proxy;
 import java.net.URL;
@@ -31,11 +32,16 @@ public final class DesktopFlowRuntimeSession {
     private final VaadinSession session;
     private final UI ui;
     private final UidlFlowTransportAdapter uidlAdapter;
+    private final String sessionId;
+    private final int uiId;
 
-    private DesktopFlowRuntimeSession(VaadinSession session, UI ui, UidlFlowTransportAdapter uidlAdapter) {
+    private DesktopFlowRuntimeSession(VaadinSession session, UI ui, UidlFlowTransportAdapter uidlAdapter,
+                                      String sessionId, int uiId) {
         this.session = Objects.requireNonNull(session, "session");
         this.ui = Objects.requireNonNull(ui, "ui");
         this.uidlAdapter = Objects.requireNonNull(uidlAdapter, "uidlAdapter");
+        this.sessionId = Objects.requireNonNull(sessionId, "sessionId");
+        this.uiId = uiId;
     }
 
     public static DesktopFlowRuntimeSession create(String sessionId, int uiId, String appId, Component root) {
@@ -45,6 +51,7 @@ public final class DesktopFlowRuntimeSession {
         WrappedSession wrappedSession = new DesktopWrappedSession(sessionId);
         VaadinSession session = new VaadinSession(service);
         session.refreshTransients(wrappedSession, service);
+        service.storeSession(wrappedSession, session);
 
         session.lock();
         try {
@@ -62,7 +69,8 @@ public final class DesktopFlowRuntimeSession {
             ui.doInit(request, uiId, appId);
             ui.add(root);
             session.addUI(ui);
-            return new DesktopFlowRuntimeSession(session, ui, new UidlFlowTransportAdapter());
+            return new DesktopFlowRuntimeSession(session, ui, new UidlFlowTransportAdapter(),
+                    wrappedSession.getId(), uiId);
         } finally {
             session.unlock();
         }
@@ -88,6 +96,19 @@ public final class DesktopFlowRuntimeSession {
         } finally {
             session.unlock();
         }
+    }
+
+    public FlowPatchResponse handleClientMessage(String requestBody, int clientToServerMessageId,
+                                                 boolean resync) throws IOException {
+        FlowClientMessage message = new FlowClientMessage(
+                sessionId,
+                uiId,
+                "",
+                requestBody,
+                ui.getCsrfToken(),
+                clientToServerMessageId,
+                resync);
+        return uidlAdapter.handleClientMessage(ui, message);
     }
 
     private static final class DesktopFlowVaadinService extends VaadinService {
@@ -172,6 +193,10 @@ public final class DesktopFlowRuntimeSession {
         @Override
         public Iterable<com.vaadin.flow.server.DependencyFilter> getDependencyFilters() {
             return List.of();
+        }
+
+        private void storeSession(WrappedSession wrappedSession, VaadinSession session) {
+            writeToHttpSession(wrappedSession, session);
         }
     }
 

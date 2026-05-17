@@ -54,9 +54,10 @@ Verify the first real Flow UIDL writer adapter slice:
 
 ```bash
 bash bin/uidl-adapter-smoke
+bash bin/uidl-rpc-smoke
 ```
 
-This command constructs a minimal desktop-shaped `VaadinSession`/`UI` in process and verifies that Vaadin's real `UidlWriter` emits UIDL `changes` and `syncId`.
+These commands construct a minimal desktop-shaped `VaadinSession`/`UI` in process. The first verifies that Vaadin's real `UidlWriter` emits UIDL `changes` and `syncId`; the second sends a real Flow event RPC body through `UidlRequestHandler`/`ServerRpcHandler` and verifies a click listener UIDL patch.
 
 On macOS the original `dev` command still opens a native WKWebView desktop window by default. That path is now the macOS fallback/compatibility host.
 
@@ -108,6 +109,7 @@ Implemented:
 - Swift/AppKit host: starts Java sidecar, opens WKWebView, traces Host Protocol v0 and cleans up the sidecar on window shutdown.
 - Flow IPC runtime slice: starts a no-HTTP smoke app, dispatches Button click over IPC, generates real server-side UIDL, sends desktop API calls as `VFIPC1 command`, receives `capabilityResult`, and applies a replace-root patch in the WebView shell.
 - UIDL adapter smoke: drives Vaadin's real server-side `UidlWriter` from an in-process desktop-shaped session/UI boundary.
+- UIDL RPC smoke: drives a real Flow event RPC through `UidlRequestHandler`/`ServerRpcHandler` and verifies a listener-produced UIDL patch.
 - Host Protocol v0 stdout envelope for Java desktop commands.
 - Flow transport adapter spike with concrete Vaadin source references for UIDL/event/patch boundaries.
 - Compatibility host fallback for headless/browser modes.

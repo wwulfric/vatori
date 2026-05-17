@@ -106,6 +106,7 @@ Verify the server-side UIDL writer adapter:
 
 ```bash
 bash bin/uidl-adapter-smoke
+bash bin/uidl-rpc-smoke
 ```
 
 Host selection:
@@ -192,6 +193,6 @@ Most valuable next steps:
 
 1. Make `vaadin-desktop-host-swift` the default host once it is stable across local machines.
 2. Turn Host Protocol v0 traces into a bidirectional command/result transport.
-3. Feed real Flow-client UIDL RPC payloads from the WebView bridge into `UidlFlowTransportAdapter`.
+3. Feed the proven real Flow event RPC path from `uidl-rpc-smoke` into `dev-ipc` WebView events.
 4. Replace the repository-local WebView tree renderer with Flow client engine UIDL consumption.
 5. Add smoke tests for Swift host window launch, sidecar cleanup and desktop capability calls.

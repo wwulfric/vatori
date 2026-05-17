@@ -72,13 +72,17 @@ That issue has now started in compiled framework code:
 - `dev.vatori.desktop.flow.transport.DesktopWrappedSession`
 - `dev.vatori.desktop.flow.transport.DesktopFlowRuntimeSession`
 - `dev.vatori.desktop.flow.transport.UidlAdapterSmokeMain`
+- `dev.vatori.desktop.flow.transport.UidlRpcSmokeMain`
 
 This adapter now has a runnable smoke command:
 
 ```bash
 bash bin/uidl-adapter-smoke
+bash bin/uidl-rpc-smoke
 ```
 
 The smoke constructs an in-process desktop-shaped `VaadinSession`/`UI` and verifies that real `UidlWriter` output includes UIDL `changes` and `syncId`. `dev-ipc` now reuses that session shape to include real UIDL in bootstrap and patch payloads without a servlet container for that narrow path.
+
+The RPC smoke verifies the next boundary: `UidlRequestHandler` can find the desktop `UI`, run `ServerRpcHandler` for a real `type=event` click RPC and return listener-produced UIDL without a real HTTP socket.
 
 The exact remaining runtime inputs are still: CSRF token handling, sync id enforcement and real Flow-client UIDL event JSON.

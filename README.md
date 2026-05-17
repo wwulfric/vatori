@@ -110,7 +110,7 @@ Implemented:
 - macOS system WebView launcher: Spring Boot starts Vaadin on random localhost port; a generated WKWebView `.app` opens the desktop window.
 - Swift/AppKit host: starts Java sidecar, opens WKWebView, traces Host Protocol v0 and cleans up the sidecar on window shutdown.
 - Flow IPC runtime slice: starts a no-HTTP smoke app, dispatches Button click over IPC through `UidlRequestHandler`/`ServerRpcHandler`, generates real server-side UIDL, sends desktop API calls as `VFIPC1 command`, receives `capabilityResult`, and applies a replace-root patch in the WebView shell.
-- Flow client resource loading probe: `dev-ipc` advertises Vaadin `flow-client` classpath resources, the WebView requests `FlowBootstrap.js` and `FlowClient.js` through `resourceRequest`, Java responds with redacted `resourceResponse` traces, and diagnostics verify the real Flow bootstrap module plus GWT client module are imported and initialized.
+- Flow client resource loading probe: `dev-ipc` advertises Vaadin `flow-client` classpath resources, the WebView requests `FlowBootstrap.js` and `FlowClient.js` through `resourceRequest`, Java responds with redacted `resourceResponse` traces, and diagnostics verify the real Flow bootstrap module plus GWT client module are imported, initialized and able to bind bootstrap UIDL node ids.
 - UIDL adapter smoke: drives Vaadin's real server-side `UidlWriter` from an in-process desktop-shaped session/UI boundary.
 - UIDL RPC smoke: drives a real Flow event RPC through `UidlRequestHandler`/`ServerRpcHandler` and verifies a listener-produced UIDL patch.
 - Host Protocol v0 stdout envelope for Java desktop commands.

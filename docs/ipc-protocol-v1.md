@@ -192,7 +192,7 @@ Java checks the envelope `sessionId`/`uiId` and `securityKey`, then returns:
 }
 ```
 
-This proves no-HTTP resource delivery for the first real Flow client assets. The WebView verifies that the bootstrap body contains `window.Vaadin.Flow.initApplication` and `export { init }`, imports it as a Blob-backed ES module, checks that the module exports `init`, and calls `FlowBootstrap.init` with an IPC bootstrap config. It then imports `FlowClient.js`, calls `FlowClient.init` and verifies that the GWT client registers a Flow client object. UIDL patches are still applied by the repository-local applier rather than being routed through that registered client.
+This proves no-HTTP resource delivery for the first real Flow client assets. The WebView verifies that the bootstrap body contains `window.Vaadin.Flow.initApplication` and `export { init }`, imports it as a Blob-backed ES module, checks that the module exports `init`, and calls `FlowBootstrap.init` with an IPC bootstrap config. It then imports `FlowClient.js`, calls `FlowClient.init`, verifies that the GWT client registers a Flow client object, and checks bootstrap UIDL node bindings through `client.getByNodeId(...)`. Follow-up UIDL patches are still applied by the repository-local applier rather than being routed through that registered client.
 
 ## Current Push Payload
 
@@ -326,7 +326,7 @@ Errors use the same envelope with `type=error` and an `error` object:
 
 - `dev` and `dev-swift` remain compatibility HTTP modes.
 - `dev-ipc` uses Flow IPC Protocol v1 and must log `transport=flow-ipc` and `compatibilityMode=false`.
-- Full Flow client UIDL consumption, upload/download and full push/WebSocket replacement remain future work. The current resource loading slice serves, imports and initializes `FlowBootstrap.js` / `FlowClient.js` over IPC but does not yet make the registered GWT client the visible UIDL renderer.
+- Full Flow client UIDL consumption, upload/download and full push/WebSocket replacement remain future work. The current resource loading slice serves, imports and initializes `FlowBootstrap.js` / `FlowClient.js` over IPC and verifies bootstrap UIDL binding, but does not yet make the registered GWT client the visible UIDL renderer.
 
 ## Trace Inspector
 
@@ -336,7 +336,7 @@ Run:
 bash bin/flow-ipc-trace-inspect --require-flow-ipc-v1 docs/traces/flow-ipc-v1.ndjson
 ```
 
-The inspector summarizes directions, message types and key markers. With `--require-flow-ipc-v1`, it requires `launch`, `ready`, `window.create`, `bootstrapRequest`, `bootstrapResponse`, `resourceRequest`, `resourceResponse`, `push`, `event`, `resync`, `command`, `capabilityResult`, `patch`, `webview.dom`, `webview.snapshot` and `shutdown`, plus `transport=flow-ipc`, `compatibilityMode=false`, a clicked-state patch, native clipboard evidence, `uidlRpcDispatch=true`, bootstrap/event/resync `sessionId` + `uiId` evidence, bootstrap `Vaadin-Security-Key` evidence, Flow client resource manifest/request/response/DOM evidence including FlowBootstrap and FlowClient module import/export/init markers, a WebView event containing `uidlRpc` and `securityKey`, a resync request carrying `securityKey`, bootstrap UIDL writer markers, a server-initiated push UIDL consumed by the WebView, a resync `resynchronize=true` signal consumed by the WebView, and an event patch from `UidlRequestHandler`.
+The inspector summarizes directions, message types and key markers. With `--require-flow-ipc-v1`, it requires `launch`, `ready`, `window.create`, `bootstrapRequest`, `bootstrapResponse`, `resourceRequest`, `resourceResponse`, `push`, `event`, `resync`, `command`, `capabilityResult`, `patch`, `webview.dom`, `webview.snapshot` and `shutdown`, plus `transport=flow-ipc`, `compatibilityMode=false`, a clicked-state patch, native clipboard evidence, `uidlRpcDispatch=true`, bootstrap/event/resync `sessionId` + `uiId` evidence, bootstrap `Vaadin-Security-Key` evidence, Flow client resource manifest/request/response/DOM evidence including FlowBootstrap and FlowClient module import/export/init markers and bootstrap DOM node bindings, a WebView event containing `uidlRpc` and `securityKey`, a resync request carrying `securityKey`, bootstrap UIDL writer markers, a server-initiated push UIDL consumed by the WebView, a resync `resynchronize=true` signal consumed by the WebView, and an event patch from `UidlRequestHandler`.
 
 Run the envelope scope rejection smoke with:
 

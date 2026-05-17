@@ -141,12 +141,16 @@ public final class DesktopTraceInspector {
             }
             if (line.contains("\"type\":\"resourceResponse\"")
                     && line.contains("\"flowClientResource\":true")
-                    && line.contains("META-INF/frontend/FlowBootstrap.js")) {
+                    && line.contains("META-INF/frontend/FlowBootstrap.js")
+                    && line.contains("\"bodyRedacted\":true")) {
                 summary.flowClientResourceResponseObserved = true;
             }
             if (line.contains("\"type\":\"webview.dom\"")
                     && line.contains("flowClientResourceLoaded")
                     && line.contains("flowClientResourceVerified")
+                    && line.contains("flowClientResourceModuleLoaded")
+                    && line.contains("flowClientBootstrapExported")
+                    && line.contains("flowClientResourceExecuted")
                     && line.contains("META-INF/frontend/FlowBootstrap.js")) {
                 summary.flowClientResourceDomObserved = true;
             }

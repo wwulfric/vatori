@@ -71,6 +71,36 @@ func trace(_ direction: String, _ type: String, _ payload: [String: Any]) {
     fflush(stdout)
 }
 
+func redactedFlowIpcEnvelope(_ object: [String: Any]) -> [String: Any] {
+    guard object["type"] as? String == "resourceResponse",
+          var payload = object["payload"] as? [String: Any],
+          let body = payload["body"] as? String else {
+        return object
+    }
+
+    var copy = object
+    payload["bodyPreview"] = String(body.prefix(96))
+    payload["bodyBytes"] = body.utf8.count
+    payload["bodyRedacted"] = true
+    payload.removeValue(forKey: "body")
+    copy["payload"] = payload
+    return copy
+}
+
+func redactedJavaStdoutLine(_ line: String) -> String {
+    guard line.hasPrefix("VFIPC1 ") else {
+        return line
+    }
+    let raw = String(line.dropFirst(7))
+    guard let data = raw.data(using: .utf8),
+          let object = try? JSONSerialization.jsonObject(with: data) as? [String: Any],
+          let redacted = try? JSONSerialization.data(withJSONObject: redactedFlowIpcEnvelope(object)),
+          let text = String(data: redacted, encoding: .utf8) else {
+        return line
+    }
+    return "VFIPC1 \(text)"
+}
+
 final class LineReader {
     private var buffer = Data()
     private let onLine: (String) -> Void
@@ -215,7 +245,7 @@ final class JavaSidecar {
     }
 
     private func handleStdout(_ line: String) {
-        print("[java] \(line)")
+        print("[java] \(redactedJavaStdoutLine(line))")
         fflush(stdout)
 
         if line.hasPrefix("VDP1 ") {
@@ -420,7 +450,7 @@ final class WebViewHost: NSObject, NSApplicationDelegate, NSWindowDelegate, WKNa
         trace("recv", type, [
             "source": "java-sidecar",
             "transport": "flow-ipc",
-            "envelope": object
+            "envelope": redactedFlowIpcEnvelope(object)
         ])
         if type == "ready" {
             openFlowIpcWindow()
@@ -571,7 +601,11 @@ final class WebViewHost: NSObject, NSApplicationDelegate, NSWindowDelegate, WKNa
           flowClientResourceLoaded: !!(window.VaadinDesktopIpcDiagnostics && window.VaadinDesktopIpcDiagnostics.flowClientResourceLoaded),
           flowClientResourcePath: window.VaadinDesktopIpcDiagnostics ? window.VaadinDesktopIpcDiagnostics.flowClientResourcePath : "",
           flowClientResourceBytes: window.VaadinDesktopIpcDiagnostics ? window.VaadinDesktopIpcDiagnostics.flowClientResourceBytes : 0,
-          flowClientResourceVerified: !!(window.VaadinDesktopIpcDiagnostics && window.VaadinDesktopIpcDiagnostics.flowClientResourceVerified)
+          flowClientResourceVerified: !!(window.VaadinDesktopIpcDiagnostics && window.VaadinDesktopIpcDiagnostics.flowClientResourceVerified),
+          flowClientResourceModuleLoaded: !!(window.VaadinDesktopIpcDiagnostics && window.VaadinDesktopIpcDiagnostics.flowClientResourceModuleLoaded),
+          flowClientBootstrapExported: !!(window.VaadinDesktopIpcDiagnostics && window.VaadinDesktopIpcDiagnostics.flowClientBootstrapExported),
+          flowClientResourceExecuted: !!(window.VaadinDesktopIpcDiagnostics && window.VaadinDesktopIpcDiagnostics.flowClientResourceExecuted),
+          flowClientResourceExecutionError: window.VaadinDesktopIpcDiagnostics ? window.VaadinDesktopIpcDiagnostics.flowClientResourceExecutionError : ""
         })
         """
         webView.evaluateJavaScript(script) { result, error in
@@ -737,7 +771,12 @@ let flowIpcShell = #"""
         flowClientResourcePath: '',
         flowClientResourceBytes: 0,
         flowClientResourceSha256: '',
-        flowClientResourceVerified: false
+        flowClientResourceExpectedSha256: '',
+        flowClientResourceVerified: false,
+        flowClientResourceModuleLoaded: false,
+        flowClientBootstrapExported: false,
+        flowClientResourceExecuted: false,
+        flowClientResourceExecutionError: ''
       };
 
       function envelope(type, payload) {
@@ -857,6 +896,7 @@ let flowIpcShell = #"""
         }
         flowResourceProbeDone = true;
         const securityKey = flowClientState.securityKey || flowClientState.csrfToken;
+        window.VaadinDesktopIpcDiagnostics.flowClientResourceExpectedSha256 = resource.sha256 || '';
         send('resourceRequest', {
           purpose: 'flow-client-resource-probe',
           path: resource.path,
@@ -1044,18 +1084,41 @@ let flowIpcShell = #"""
         return element;
       }
 
-      function handleResourceResponse(payload) {
+      async function handleResourceResponse(payload) {
         if (!payload || payload.flowClientResource !== true) {
           return;
         }
         const body = typeof payload.body === 'string' ? payload.body : '';
-        const verified = body.includes('window.Vaadin.Flow.initApplication') && body.includes('export { init }');
+        const expectedSha256 = window.VaadinDesktopIpcDiagnostics.flowClientResourceExpectedSha256 || '';
+        const metadataMatches = !expectedSha256 || expectedSha256 === (payload.sha256 || '');
+        const bodyLooksLikeFlowBootstrap = body.includes('window.Vaadin.Flow.initApplication') && body.includes('export { init }');
         window.VaadinDesktopIpcDiagnostics.flowClientResourceLoaded = true;
         window.VaadinDesktopIpcDiagnostics.flowClientResourcePath = payload.path || '';
         window.VaadinDesktopIpcDiagnostics.flowClientResourceBytes = Number(payload.bytes || body.length);
         window.VaadinDesktopIpcDiagnostics.flowClientResourceSha256 = payload.sha256 || '';
-        window.VaadinDesktopIpcDiagnostics.flowClientResourceVerified = verified;
-        trace.textContent = 'flow resource ' + (payload.path || 'unknown') + ' ' + (verified ? 'verified' : 'loaded');
+        window.VaadinDesktopIpcDiagnostics.flowClientResourceVerified = metadataMatches && bodyLooksLikeFlowBootstrap;
+        if (!body) {
+          trace.textContent = 'flow resource ' + (payload.path || 'unknown') + ' empty';
+          return;
+        }
+        try {
+          const blobUrl = URL.createObjectURL(new Blob([body], { type: 'text/javascript' }));
+          try {
+            const module = await import(blobUrl);
+            window.VaadinDesktopIpcDiagnostics.flowClientResourceModuleLoaded = true;
+            window.VaadinDesktopIpcDiagnostics.flowClientBootstrapExported = typeof module.init === 'function';
+            window.VaadinDesktopIpcDiagnostics.flowClientResourceExecuted = true;
+            window.VaadinDesktopIpcDiagnostics.flowClientResourceVerified =
+              window.VaadinDesktopIpcDiagnostics.flowClientResourceVerified
+              && window.VaadinDesktopIpcDiagnostics.flowClientBootstrapExported;
+            trace.textContent = 'flow resource module ' + (window.VaadinDesktopIpcDiagnostics.flowClientResourceVerified ? 'verified' : 'loaded');
+          } finally {
+            URL.revokeObjectURL(blobUrl);
+          }
+        } catch (error) {
+          window.VaadinDesktopIpcDiagnostics.flowClientResourceExecutionError = error && error.message ? error.message : String(error);
+          trace.textContent = 'flow resource module failed';
+        }
       }
 
       window.VaadinDesktopIpc = {

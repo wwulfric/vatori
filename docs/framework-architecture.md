@@ -34,9 +34,9 @@ This path is started with:
 bash bin/vaadin-desktop dev-ipc test-apps/flow-over-ipc-smoke-app
 ```
 
-It does not use localhost HTTP for bootstrap/event/patch in the smoke app. The current WebView-consumed payload is still a repository-local rendered tree, while real Vaadin UIDL is emitted alongside it for bootstrap and event patches.
+It does not use localhost HTTP for bootstrap/event/patch in the smoke app. The current WebView consumes real Vaadin UIDL through a minimum repository-local applier for the smoke subset, while the repository-local rendered tree remains as fallback.
 
-The Java side now also emits real server-side Vaadin UIDL under `payload.uidl`: bootstrap output comes from `UidlWriter`, and click event patches come from `UidlRequestHandler`/`ServerRpcHandler`. The current WebView shell still applies `payload.tree`; replacing that with Flow client engine UIDL consumption is the next transport milestone.
+The Java side emits real server-side Vaadin UIDL under `payload.uidl`: bootstrap output comes from `UidlWriter`, and click event patches come from `UidlRequestHandler`/`ServerRpcHandler`. The current WebView shell applies a minimum subset of UIDL `changes`; replacing that applier with the real Flow client engine is the next transport milestone.
 
 ## Target Stack
 

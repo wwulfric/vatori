@@ -80,8 +80,8 @@ The inspector fails with exit code `2` if the required Flow IPC message types or
 
 This is not the final complete Vaadin Flow transport yet:
 
-- Event patch payload includes real Vaadin UIDL and the WebView applies UIDL `changes` for the smoke click update, but bootstrap/layout rendering still uses a repository-local component tree.
-- The WebView shell is a minimal renderer, not the full Flow client engine.
+- Bootstrap and event patch payloads include real Vaadin UIDL, and the WebView applies UIDL `changes` for the smoke app subset.
+- The WebView shell is a minimum UIDL applier, not the full Flow client engine.
 - Only click events are implemented.
 - The WebView bridge now sends Flow-client-shaped UIDL RPC for click events, but full Flow client event collection is not implemented.
 - `VaadinSession` and `UI` are desktop-shaped; CSRF and sync-id values are carried, but security enforcement and resync semantics are not complete.

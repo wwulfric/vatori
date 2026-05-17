@@ -2,7 +2,7 @@
 
 Flow IPC Protocol v1 is the first runtime protocol for moving Vaadin Desktop beyond localhost HTTP compatibility mode.
 
-Current implementation status: **minimum runtime slice implemented with UIDL writer, WebView-produced UIDL RPC dispatch and minimum UIDL patch consumption trace**. It supports a local WebView shell, Java sidecar stdin/stdout transport, bootstrap, event, replace-root patch, desktop command/capabilityResult, push trace and shutdown. The runtime generates bootstrap UIDL with `UidlWriter`; the WebView bridge sends click events as UIDL RPC bodies with CSRF, `syncId`, `clientId` and Flow node id; Java dispatches them through `UidlRequestHandler`/`ServerRpcHandler` to produce event UIDL patches. The WebView applies event UIDL `changes` through a minimum applier, while bootstrap/layout rendering still uses the repository-local scaffold, so this is not full Flow client engine parity yet.
+Current implementation status: **minimum runtime slice implemented with UIDL writer, WebView-produced UIDL RPC dispatch and minimum UIDL patch consumption trace**. It supports a local WebView shell, Java sidecar stdin/stdout transport, bootstrap, event, replace-root patch, desktop command/capabilityResult, push trace and shutdown. The runtime generates bootstrap UIDL with `UidlWriter`; the WebView bridge sends click events as UIDL RPC bodies with CSRF, `syncId`, `clientId` and Flow node id; Java dispatches them through `UidlRequestHandler`/`ServerRpcHandler` to produce event UIDL patches. The WebView applies bootstrap/event UIDL `changes` through a minimum applier, so this is closer to Flow client behavior but still not full Flow client engine parity.
 
 ## Prefixes
 
@@ -128,7 +128,7 @@ The current patch payload has two parts:
 }
 ```
 
-The UIDL is real server-side Flow output. Event patches are consumed by the minimum WebView UIDL changes applier, so `consumedByWebView=true` is expected for `UidlRequestHandler` event patches. Bootstrap UIDL is still trace-only until the full Flow client engine bridge replaces the repository-local scaffold.
+The UIDL is real server-side Flow output. Bootstrap and event patches are consumed by the minimum WebView UIDL changes applier, so `consumedByWebView=true` is expected for `UidlWriter` bootstrap and `UidlRequestHandler` event patches. The applier is still a repository-local subset until the full Flow client engine bridge replaces it.
 
 ## Current Event Payload
 

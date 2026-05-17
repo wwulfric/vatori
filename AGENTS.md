@@ -56,7 +56,7 @@ No-HTTP IPC slice:
 bash bin/vaadin-desktop dev-ipc test-apps/flow-over-ipc-smoke-app
 ```
 
-This runs the Swift host with `--transport flow-ipc`, loads a local WKWebView HTML shell and communicates with Java through `VFIPC1` stdin/stdout envelopes. It proves WebView event -> Java Button listener -> desktop command/capabilityResult -> patch -> WebView without localhost HTTP for the smoke app. The WebView bridge sends click events as Flow-client-shaped UIDL RPC payloads; Java emits real UIDL under `payload.uidl`, with bootstrap using `UidlWriter` and events using `UidlRequestHandler`/`ServerRpcHandler`. Event patches are applied by a minimum WebView UIDL changes applier; bootstrap/layout rendering still uses the repository-local scaffold, so this is not full Flow client engine parity yet.
+This runs the Swift host with `--transport flow-ipc`, loads a local WKWebView HTML shell and communicates with Java through `VFIPC1` stdin/stdout envelopes. It proves WebView event -> Java Button listener -> desktop command/capabilityResult -> patch -> WebView without localhost HTTP for the smoke app. The WebView bridge sends click events as Flow-client-shaped UIDL RPC payloads; Java emits real UIDL under `payload.uidl`, with bootstrap using `UidlWriter` and events using `UidlRequestHandler`/`ServerRpcHandler`. Bootstrap and event patches are applied by a minimum WebView UIDL changes applier; the full Flow client engine is still not wired.
 
 Repeatable real-window smoke verification can use:
 

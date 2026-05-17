@@ -36,7 +36,7 @@ Status: first minimum runtime slice implemented, server-side UIDL writer integra
 First issue candidates:
 
 - Replace the minimum repository-local UIDL applier with Flow client engine UIDL consumption.
-- Extend `DesktopVaadinRequest` to enforce session id, UI id and full resync state from Host Protocol; minimum Flow IPC `csrfToken`/security key, `syncId` and `clientId` preflight is already in place.
+- Extend `DesktopVaadinRequest` to enforce full resync state from Host Protocol; minimum Flow IPC `sessionId`/`uiId`, `csrfToken`/security key, `syncId` and `clientId` preflight is already in place.
 - Replace the one-shot server-initiated push and verification-only resync with a real Flow push queue, ordering model and reconnect/resync path.
 
 ## v0.3: Capability Gateway

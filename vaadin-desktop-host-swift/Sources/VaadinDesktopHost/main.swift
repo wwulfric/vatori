@@ -314,6 +314,7 @@ final class JavaSidecar {
 }
 
 final class WebViewHost: NSObject, NSApplicationDelegate, NSWindowDelegate, WKNavigationDelegate, WKScriptMessageHandler {
+    private let flowIpcCapabilityPermissionMode = "allow-all-dev"
     private let config: HostConfig
     private var sidecar: JavaSidecar?
     private var window: NSWindow?
@@ -499,29 +500,61 @@ final class WebViewHost: NSObject, NSApplicationDelegate, NSWindowDelegate, WKNa
         switch command {
         case "window.setTitle":
             guard let title = args["title"] as? String else {
-                return ["success": false, "command": command, "error": "Missing title"]
+                return capabilityPermission([
+                    "success": false,
+                    "command": command,
+                    "error": "Missing title"
+                ])
             }
             window?.title = title
-            return ["success": true, "command": command, "title": title, "mode": "native-appkit"]
+            return capabilityPermission([
+                "success": true,
+                "command": command,
+                "title": title,
+                "mode": "native-appkit"
+            ])
         case "clipboard.writeText":
             guard let text = args["text"] as? String else {
-                return ["success": false, "command": command, "error": "Missing text"]
+                return capabilityPermission([
+                    "success": false,
+                    "command": command,
+                    "error": "Missing text"
+                ])
             }
             let pasteboard = NSPasteboard.general
             pasteboard.clearContents()
             let written = pasteboard.setString(text, forType: .string)
-            return ["success": written, "command": command, "mode": "native-nspasteboard"]
+            return capabilityPermission([
+                "success": written,
+                "command": command,
+                "mode": "native-nspasteboard"
+            ])
         case "notification.show":
-            return [
+            return capabilityPermission([
                 "success": true,
                 "command": command,
                 "mode": "trace-only",
                 "title": args["title"] as? String ?? "",
                 "body": args["body"] as? String ?? ""
-            ]
+            ])
         default:
-            return ["success": false, "command": command, "error": "Unsupported desktop command"]
+            return capabilityPermission([
+                "success": false,
+                "command": command,
+                "error": "Unsupported desktop command"
+            ], decision: "denied", reason: "unsupported-command")
         }
+    }
+
+    private func capabilityPermission(_ result: [String: Any],
+                                      decision: String = "allowed",
+                                      reason: String = "development-default") -> [String: Any] {
+        var payload = result
+        payload["permissionMode"] = flowIpcCapabilityPermissionMode
+        payload["permissionDecision"] = decision
+        payload["permissionReason"] = reason
+        payload["permissionScope"] = "window:main"
+        return payload
     }
 
     private func deliverFlowIpcEnvelope(_ object: [String: Any], type: String) {

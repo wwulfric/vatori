@@ -303,7 +303,11 @@ The Swift host responds with `type=capabilityResult`:
   "payload": {
     "success": true,
     "command": "clipboard.writeText",
-    "mode": "native-nspasteboard"
+    "mode": "native-nspasteboard",
+    "permissionMode": "allow-all-dev",
+    "permissionDecision": "allowed",
+    "permissionReason": "development-default",
+    "permissionScope": "window:main"
   }
 }
 ```
@@ -313,6 +317,8 @@ Implemented host commands in `dev-ipc`:
 - `window.setTitle`: updates the AppKit `NSWindow` title.
 - `clipboard.writeText`: writes to macOS `NSPasteboard`.
 - `notification.show`: accepted as trace-only scaffold.
+
+The v1 capability permission model is deliberately minimal. `dev-ipc` is `permissionMode=allow-all-dev`: known commands are allowed for the main window and every result carries a permission decision for trace review. Unknown commands are denied as `unsupported-command`. The next production model should replace this with a manifest-gated policy keyed by window, origin and capability.
 
 ## Error Model
 
@@ -344,7 +350,7 @@ Run:
 bash bin/flow-ipc-trace-inspect --require-flow-ipc-v1 docs/traces/flow-ipc-v1.ndjson
 ```
 
-The inspector summarizes directions, message types and key markers. With `--require-flow-ipc-v1`, it requires `launch`, `ready`, `window.create`, `bootstrapRequest`, `bootstrapResponse`, `resourceRequest`, `resourceResponse`, `push`, `event`, `resync`, `command`, `capabilityResult`, `patch`, `webview.dom`, `webview.snapshot` and `shutdown`, plus `transport=flow-ipc`, `compatibilityMode=false`, a clicked-state patch, native clipboard evidence, `uidlRpcDispatch=true`, bootstrap/event/resync `sessionId` + `uiId` evidence, bootstrap `Vaadin-Security-Key` evidence, Flow client resource manifest/request/response/DOM evidence including FlowBootstrap and augmented FlowClient module import/export/init markers, bootstrap DOM node bindings, an IPC-backed Flow client XHR bridge, a Flow client `attachExistingElementById` XHR request, a Flow client `click` UIDL RPC XHR request, a `flow-client-xhr` event patch consumed by the visible Flow client engine, `webview.dom` evidence that `flowClientEngineVisibleOwner=true` and the local fallback is hidden, a resync request carrying `securityKey`, bootstrap UIDL writer markers, a server-initiated async push UIDL consumed by the visible Flow client engine, and a resync `resynchronize=true` signal consumed by the visible Flow client engine.
+The inspector summarizes directions, message types and key markers. With `--require-flow-ipc-v1`, it requires `launch`, `ready`, `window.create`, `bootstrapRequest`, `bootstrapResponse`, `resourceRequest`, `resourceResponse`, `push`, `event`, `resync`, `command`, `capabilityResult`, `patch`, `webview.dom`, `webview.snapshot` and `shutdown`, plus `transport=flow-ipc`, `compatibilityMode=false`, a clicked-state patch, native clipboard evidence, capability permission metadata with `permissionMode=allow-all-dev`, `uidlRpcDispatch=true`, bootstrap/event/resync `sessionId` + `uiId` evidence, bootstrap `Vaadin-Security-Key` evidence, Flow client resource manifest/request/response/DOM evidence including FlowBootstrap and augmented FlowClient module import/export/init markers, bootstrap DOM node bindings, an IPC-backed Flow client XHR bridge, a Flow client `attachExistingElementById` XHR request, a Flow client `click` UIDL RPC XHR request, a `flow-client-xhr` event patch consumed by the visible Flow client engine, `webview.dom` evidence that `flowClientEngineVisibleOwner=true` and the local fallback is hidden, a resync request carrying `securityKey`, bootstrap UIDL writer markers, a server-initiated async push UIDL consumed by the visible Flow client engine, and a resync `resynchronize=true` signal consumed by the visible Flow client engine.
 
 Run the envelope scope rejection smoke with:
 

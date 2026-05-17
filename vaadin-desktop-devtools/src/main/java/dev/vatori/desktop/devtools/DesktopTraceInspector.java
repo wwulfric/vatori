@@ -94,6 +94,12 @@ public final class DesktopTraceInspector {
             if (line.contains("native-nspasteboard")) {
                 summary.nativeClipboardObserved = true;
             }
+            if (line.contains("\"type\":\"capabilityResult\"")
+                    && line.contains("\"permissionMode\":\"allow-all-dev\"")
+                    && line.contains("\"permissionDecision\":\"allowed\"")
+                    && line.contains("\"permissionScope\":\"window:main\"")) {
+                summary.capabilityPermissionObserved = true;
+            }
             if (line.contains("\"source\":\"UidlWriter\"")
                     && line.contains("\"reason\":\"bootstrap\"")
                     && line.contains("\"containsChanges\":true")
@@ -316,6 +322,7 @@ public final class DesktopTraceInspector {
         private boolean compatibilityFalse;
         private boolean clickPatchObserved;
         private boolean nativeClipboardObserved;
+        private boolean capabilityPermissionObserved;
         private boolean uidlWriterObserved;
         private boolean securityKeyObserved;
         private boolean resyncSecurityKeyObserved;
@@ -350,6 +357,7 @@ public final class DesktopTraceInspector {
                     && compatibilityFalse
                     && clickPatchObserved
                     && nativeClipboardObserved
+                    && capabilityPermissionObserved
                     && uidlWriterObserved
                     && securityKeyObserved
                     && resyncSecurityKeyObserved
@@ -388,6 +396,7 @@ public final class DesktopTraceInspector {
             System.out.println("compatibilityMode=false: " + compatibilityFalse);
             System.out.println("click patch observed: " + clickPatchObserved);
             System.out.println("native clipboard observed: " + nativeClipboardObserved);
+            System.out.println("capability permission observed: " + capabilityPermissionObserved);
             System.out.println("UIDL writer observed: " + uidlWriterObserved);
             System.out.println("Flow security key observed: " + securityKeyObserved);
             System.out.println("resync security key observed: " + resyncSecurityKeyObserved);

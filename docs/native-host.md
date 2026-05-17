@@ -63,12 +63,24 @@ VAADIN_DESKTOP_HOST=browser bash bin/vaadin-desktop dev examples/counter-app
 
 `SystemWebViewDesktopHost` remains useful as a small macOS fallback, but it is no longer the long-term mainline.
 
+## Capability Permission Model
+
+`dev-ipc` uses an explicit development permission mode: `permissionMode=allow-all-dev`.
+
+The current host allows the known v1 commands for the single main window:
+
+- `window.setTitle`
+- `clipboard.writeText`
+- `notification.show`
+
+Every `capabilityResult` includes `permissionMode`, `permissionDecision`, `permissionReason` and `permissionScope`. Known commands are marked `permissionDecision=allowed` with `permissionReason=development-default`; unknown commands are rejected with `permissionDecision=denied` and `permissionReason=unsupported-command`. This is intentionally not the final permission system. The production direction is a manifest-gated model with per-window, per-origin and per-capability grants.
+
 ## Next Native Host Work
 
 The real host still needs to:
 
 - replace the one-shot push/resync verification hooks with a real queue, ordering and reconnect model,
-- enforce capability permissions.
+- replace `allow-all-dev` with manifest-driven capability permissions.
 
 ## Why Not Call This Final
 

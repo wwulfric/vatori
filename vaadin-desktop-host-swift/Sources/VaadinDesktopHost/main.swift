@@ -604,7 +604,10 @@ final class WebViewHost: NSObject, NSApplicationDelegate, NSWindowDelegate, WKNa
           flowClientResourceVerified: !!(window.VaadinDesktopIpcDiagnostics && window.VaadinDesktopIpcDiagnostics.flowClientResourceVerified),
           flowClientResourceModuleLoaded: !!(window.VaadinDesktopIpcDiagnostics && window.VaadinDesktopIpcDiagnostics.flowClientResourceModuleLoaded),
           flowClientBootstrapExported: !!(window.VaadinDesktopIpcDiagnostics && window.VaadinDesktopIpcDiagnostics.flowClientBootstrapExported),
+          flowClientBootstrapInitialized: !!(window.VaadinDesktopIpcDiagnostics && window.VaadinDesktopIpcDiagnostics.flowClientBootstrapInitialized),
+          flowClientBootstrapAppId: window.VaadinDesktopIpcDiagnostics ? window.VaadinDesktopIpcDiagnostics.flowClientBootstrapAppId : "",
           flowClientResourceExecuted: !!(window.VaadinDesktopIpcDiagnostics && window.VaadinDesktopIpcDiagnostics.flowClientResourceExecuted),
+          flowClientBootstrapInitError: window.VaadinDesktopIpcDiagnostics ? window.VaadinDesktopIpcDiagnostics.flowClientBootstrapInitError : "",
           flowClientResourceExecutionError: window.VaadinDesktopIpcDiagnostics ? window.VaadinDesktopIpcDiagnostics.flowClientResourceExecutionError : ""
         })
         """
@@ -756,6 +759,8 @@ let flowIpcShell = #"""
       let autoClickDone = false;
       let autoResyncDone = false;
       let flowResourceProbeDone = false;
+      const flowBootstrapAppId = 'flow-ipc-app';
+      let flowClientBootstrapInitResponse = null;
       const flowClientState = {
         csrfToken: '',
         securityKey: '',
@@ -775,6 +780,9 @@ let flowIpcShell = #"""
         flowClientResourceVerified: false,
         flowClientResourceModuleLoaded: false,
         flowClientBootstrapExported: false,
+        flowClientBootstrapInitialized: false,
+        flowClientBootstrapAppId: '',
+        flowClientBootstrapInitError: '',
         flowClientResourceExecuted: false,
         flowClientResourceExecutionError: ''
       };
@@ -903,6 +911,34 @@ let flowIpcShell = #"""
           expectedSha256: resource.sha256 || '',
           securityKey
         });
+      }
+
+      function createFlowClientBootstrapInitResponse(payload) {
+        const uidl = parseUidl(payload) || {};
+        const clientState = payload && payload.clientState ? payload.clientState : {};
+        const uiId = Number.isInteger(clientState.uiId) ? clientState.uiId : 1;
+        const securityKey = clientState.securityKey || clientState.csrfToken || uidl[flowClientState.securityTokenId] || '';
+        return {
+          appConfig: {
+            appId: flowBootstrapAppId,
+            uidl,
+            productionMode: true,
+            serviceUrl: 'flow-ipc://local',
+            contextRootUrl: '',
+            heartbeatInterval: 300,
+            maxMessageSuspendTimeout: 5000,
+            sendUrlsAsParameters: false,
+            'v-uiId': uiId,
+            'Vaadin-Security-Key': securityKey,
+            webcomponents: []
+          },
+          errors: []
+        };
+      }
+
+      function rememberFlowClientBootstrapPayload(payload) {
+        flowClientBootstrapInitResponse = createFlowClientBootstrapInitResponse(payload);
+        window.VaadinDesktopIpcDiagnostics.flowClientBootstrapAppId = flowBootstrapAppId;
       }
 
       function parseUidl(payload) {
@@ -1084,6 +1120,24 @@ let flowIpcShell = #"""
         return element;
       }
 
+      function initializeFlowBootstrapModule(module) {
+        if (!flowClientBootstrapInitResponse || typeof module.init !== 'function') {
+          return;
+        }
+        try {
+          module.init(flowClientBootstrapInitResponse);
+          const flow = window.Vaadin && window.Vaadin.Flow ? window.Vaadin.Flow : null;
+          const appIds = flow && typeof flow.getAppIds === 'function' ? flow.getAppIds() : [];
+          window.VaadinDesktopIpcDiagnostics.flowClientBootstrapInitialized = appIds.includes(flowBootstrapAppId);
+          if (!window.VaadinDesktopIpcDiagnostics.flowClientBootstrapInitialized) {
+            window.VaadinDesktopIpcDiagnostics.flowClientBootstrapInitError = 'FlowBootstrap.init did not register ' + flowBootstrapAppId;
+          }
+        } catch (error) {
+          window.VaadinDesktopIpcDiagnostics.flowClientBootstrapInitialized = false;
+          window.VaadinDesktopIpcDiagnostics.flowClientBootstrapInitError = error && error.message ? error.message : String(error);
+        }
+      }
+
       async function handleResourceResponse(payload) {
         if (!payload || payload.flowClientResource !== true) {
           return;
@@ -1107,10 +1161,12 @@ let flowIpcShell = #"""
             const module = await import(blobUrl);
             window.VaadinDesktopIpcDiagnostics.flowClientResourceModuleLoaded = true;
             window.VaadinDesktopIpcDiagnostics.flowClientBootstrapExported = typeof module.init === 'function';
+            initializeFlowBootstrapModule(module);
             window.VaadinDesktopIpcDiagnostics.flowClientResourceExecuted = true;
             window.VaadinDesktopIpcDiagnostics.flowClientResourceVerified =
               window.VaadinDesktopIpcDiagnostics.flowClientResourceVerified
-              && window.VaadinDesktopIpcDiagnostics.flowClientBootstrapExported;
+              && window.VaadinDesktopIpcDiagnostics.flowClientBootstrapExported
+              && window.VaadinDesktopIpcDiagnostics.flowClientBootstrapInitialized;
             trace.textContent = 'flow resource module ' + (window.VaadinDesktopIpcDiagnostics.flowClientResourceVerified ? 'verified' : 'loaded');
           } finally {
             URL.revokeObjectURL(blobUrl);
@@ -1130,6 +1186,7 @@ let flowIpcShell = #"""
               if (!applyUidlBootstrap(message.payload)) {
                 render(message.payload && message.payload.tree);
               }
+              rememberFlowClientBootstrapPayload(message.payload);
               requestFlowClientResourceProbe(message.payload);
             } else if (message.payload && message.payload.uidl && message.payload.uidl.resync === true) {
               if (!applyUidlBootstrap(message.payload)) {

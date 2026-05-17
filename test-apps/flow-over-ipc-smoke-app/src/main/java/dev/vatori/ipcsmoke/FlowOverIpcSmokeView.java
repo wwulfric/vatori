@@ -27,6 +27,7 @@ public class FlowOverIpcSmokeView extends VerticalLayout {
             status.setText("Clicks: " + count);
             Desktop.current().setWindowTitle("Vaadin Flow over IPC - " + count);
             Desktop.current().notifications().show("Flow IPC", "Button clicked " + count + " time(s)");
+            Desktop.current().clipboard().writeText("Vaadin Flow over IPC clicks: " + count);
         });
         button.setId("ipc-button");
 
@@ -37,7 +38,7 @@ public class FlowOverIpcSmokeView extends VerticalLayout {
         list.add(new Span("1 Bootstrap over IPC READY"));
         list.add(new Span("2 Event dispatch over IPC READY"));
         list.add(new Span("3 Replace-root patch over IPC READY"));
-        list.add(new Span("4 Desktop command over IPC TRACEABLE"));
+        list.add(new Span("4 Desktop command/capabilityResult over IPC READY"));
 
         add(title, button, status, list);
     }

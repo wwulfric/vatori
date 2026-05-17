@@ -4,7 +4,6 @@ import com.vaadin.flow.component.Component;
 import dev.vatori.desktop.DesktopApplication;
 import dev.vatori.desktop.DesktopContext;
 import dev.vatori.desktop.DesktopContextHolder;
-import dev.vatori.desktop.host.HostProtocolNativeBridge;
 
 import java.net.URI;
 import java.util.LinkedHashMap;
@@ -20,10 +19,15 @@ public final class FlowIpcLauncher {
         DesktopContext context = new DesktopContext(
                 application,
                 URI.create("flow-ipc://local/"),
-                new HostProtocolNativeBridge(),
+                new FlowIpcNativeBridge(route(routeClass)),
                 parseLaunchArguments(args));
         DesktopContextHolder.set(context);
         new FlowIpcRuntime(routeClass).run();
+    }
+
+    private static String route(Class<? extends Component> routeClass) {
+        com.vaadin.flow.router.Route route = routeClass.getAnnotation(com.vaadin.flow.router.Route.class);
+        return route == null ? "" : route.value();
     }
 
     private static Map<String, String> parseLaunchArguments(String[] args) {

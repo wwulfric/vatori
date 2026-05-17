@@ -7,6 +7,7 @@ struct HostConfig {
     var mavenRepo: String = ""
     var mavenExecutable: String = "mvn"
     var transport: String = "compatibility-http"
+    var flowIpcAutoClick: Bool = false
     var title: String = "Vaadin Desktop"
     var width: Double = 1100
     var height: Double = 780
@@ -43,6 +44,7 @@ struct HostConfig {
         if !config.module.hasPrefix("/") {
             config.module = "\(config.repoRoot)/\(config.module)"
         }
+        config.flowIpcAutoClick = ProcessInfo.processInfo.environment["VAADIN_DESKTOP_FLOW_IPC_AUTO_CLICK"] == "1"
         return config
     }
 }
@@ -375,6 +377,10 @@ final class WebViewHost: NSObject, NSApplicationDelegate, NSWindowDelegate, WKNa
             defer: false)
 
         let userContentController = WKUserContentController()
+        if config.flowIpcAutoClick {
+            let source = "window.__VAADIN_DESKTOP_FLOW_IPC_AUTO_CLICK__ = true;"
+            userContentController.addUserScript(WKUserScript(source: source, injectionTime: .atDocumentStart, forMainFrameOnly: true))
+        }
         userContentController.add(self, name: "flowIpc")
 
         let configuration = WKWebViewConfiguration()
@@ -414,6 +420,82 @@ final class WebViewHost: NSObject, NSApplicationDelegate, NSWindowDelegate, WKNa
             openFlowIpcWindow()
             return
         }
+        if type == "command" {
+            handleFlowIpcCommand(object)
+            return
+        }
+        deliverFlowIpcEnvelope(raw, type: type)
+    }
+
+    private func handleFlowIpcCommand(_ object: [String: Any]) {
+        let payload = object["payload"] as? [String: Any] ?? [:]
+        let command = payload["command"] as? String ?? "unknown"
+        let args = payload["args"] as? [String: Any] ?? [:]
+        let result = executeDesktopCommand(command, args: args)
+        let correlationId = (object["correlationId"] as? String) ?? (object["id"] as? String) ?? ""
+        let resultEnvelope: [String: Any] = [
+            "version": "flow-ipc-v1",
+            "type": "capabilityResult",
+            "id": "capability-\(correlationId)",
+            "correlationId": correlationId,
+            "sessionId": object["sessionId"] as? String ?? "flow-ipc-session",
+            "uiId": object["uiId"] as? String ?? "main",
+            "route": object["route"] as? String ?? "",
+            "payload": result,
+            "error": NSNull(),
+            "timestamp": nowMillis()
+        ]
+        trace("send", "capabilityResult", [
+            "target": "webview",
+            "transport": "flow-ipc",
+            "command": command,
+            "envelope": resultEnvelope
+        ])
+        deliverFlowIpcEnvelope(resultEnvelope, type: "capabilityResult")
+    }
+
+    private func executeDesktopCommand(_ command: String, args: [String: Any]) -> [String: Any] {
+        switch command {
+        case "window.setTitle":
+            guard let title = args["title"] as? String else {
+                return ["success": false, "command": command, "error": "Missing title"]
+            }
+            window?.title = title
+            return ["success": true, "command": command, "title": title, "mode": "native-appkit"]
+        case "clipboard.writeText":
+            guard let text = args["text"] as? String else {
+                return ["success": false, "command": command, "error": "Missing text"]
+            }
+            let pasteboard = NSPasteboard.general
+            pasteboard.clearContents()
+            let written = pasteboard.setString(text, forType: .string)
+            return ["success": written, "command": command, "mode": "native-nspasteboard"]
+        case "notification.show":
+            return [
+                "success": true,
+                "command": command,
+                "mode": "trace-only",
+                "title": args["title"] as? String ?? "",
+                "body": args["body"] as? String ?? ""
+            ]
+        default:
+            return ["success": false, "command": command, "error": "Unsupported desktop command"]
+        }
+    }
+
+    private func deliverFlowIpcEnvelope(_ object: [String: Any], type: String) {
+        guard let data = try? JSONSerialization.data(withJSONObject: object),
+              let json = String(data: data, encoding: .utf8) else {
+            trace("send", "error", [
+                "code": "flowIpcSerializeFailed",
+                "type": type
+            ])
+            return
+        }
+        deliverFlowIpcEnvelope(json, type: type)
+    }
+
+    private func deliverFlowIpcEnvelope(_ raw: String, type: String) {
         if let webView {
             let script = "window.VaadinDesktopIpc && window.VaadinDesktopIpc.receive(\(raw));"
             webView.evaluateJavaScript(script) { _, error in
@@ -627,6 +709,7 @@ let flowIpcShell = #"""
       const app = document.getElementById('app');
       const trace = document.getElementById('trace');
       let sequence = 0;
+      let autoClickDone = false;
 
       function envelope(type, payload) {
         sequence += 1;
@@ -694,6 +777,15 @@ let flowIpcShell = #"""
           trace.textContent = 'recv ' + message.type + ' #' + message.id;
           if (message.type === 'bootstrapResponse' || message.type === 'patch') {
             render(message.payload && message.payload.tree);
+            if (message.type === 'bootstrapResponse' && window.__VAADIN_DESKTOP_FLOW_IPC_AUTO_CLICK__ && !autoClickDone) {
+              autoClickDone = true;
+              setTimeout(() => {
+                const button = document.querySelector('[data-flow-id="ipc-button"]');
+                if (button) {
+                  button.click();
+                }
+              }, 80);
+            }
           } else if (message.type === 'error') {
             app.textContent = 'Flow IPC error: ' + JSON.stringify(message.error || message.payload);
           }

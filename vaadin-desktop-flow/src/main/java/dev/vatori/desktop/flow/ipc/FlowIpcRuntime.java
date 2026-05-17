@@ -221,7 +221,8 @@ final class FlowIpcRuntime {
         uidl.put("reason", reason);
         uidl.put("resync", response.resync());
         uidl.put("desktopSession", response.desktopVaadinRequestUsed());
-        uidl.put("consumedByWebView", false);
+        uidl.put("consumedByWebView", true);
+        uidl.put("consumer", "minimum-webview-uidl-applier");
         uidl.put("statusCode", response.statusCode());
         uidl.put("contentType", response.contentType());
         uidl.put("containsChanges", uidlJson.contains("\"changes\""));

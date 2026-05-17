@@ -715,6 +715,8 @@ let flowIpcShell = #"""
         syncId: -1,
         clientId: 0
       };
+      const flowNodeElements = new Map();
+      const flowTextNodes = new Map();
 
       function envelope(type, payload) {
         sequence += 1;
@@ -790,7 +792,60 @@ let flowIpcShell = #"""
           app.textContent = 'No Flow IPC tree received.';
           return;
         }
+        flowNodeElements.clear();
+        flowTextNodes.clear();
         app.replaceChildren(renderNode(node));
+      }
+
+      function applyUidlPatch(payload) {
+        const body = payload && payload.uidl && payload.uidl.body;
+        if (typeof body !== 'string' || body.length === 0) {
+          return false;
+        }
+        let uidl;
+        try {
+          uidl = JSON.parse(body);
+        } catch (_) {
+          return false;
+        }
+        if (!Array.isArray(uidl.changes)) {
+          return false;
+        }
+
+        let applied = false;
+        for (const change of uidl.changes) {
+          if (change.type === 'put' && change.key === 'text') {
+            const value = String(change.value || '');
+            flowTextNodes.set(change.node, value);
+            const element = flowNodeElements.get(change.node);
+            if (element) {
+              element.textContent = value;
+              applied = true;
+            }
+          } else if (change.type === 'clear') {
+            const element = flowNodeElements.get(change.node);
+            if (element) {
+              element.replaceChildren();
+              applied = true;
+            }
+          } else if (change.type === 'splice' && Array.isArray(change.addNodes)) {
+            const element = flowNodeElements.get(change.node);
+            if (element) {
+              let offset = 0;
+              for (const nodeId of change.addNodes) {
+                const text = document.createElement('span');
+                text.textContent = flowTextNodes.get(nodeId) || '';
+                text.dataset.flowNodeId = String(nodeId);
+                flowNodeElements.set(nodeId, text);
+                const reference = element.childNodes[(change.index || 0) + offset] || null;
+                element.insertBefore(text, reference);
+                offset += 1;
+              }
+              applied = true;
+            }
+          }
+        }
+        return applied;
       }
 
       function renderNode(node) {
@@ -816,6 +871,10 @@ let flowIpcShell = #"""
           }
         }
         element.dataset.flowId = node.id || '';
+        if (Number.isInteger(node.nodeId)) {
+          element.dataset.flowNodeId = String(node.nodeId);
+          flowNodeElements.set(node.nodeId, element);
+        }
         if (node.kind !== 'button') {
           for (const child of node.children || []) {
             element.appendChild(renderNode(child));
@@ -829,7 +888,9 @@ let flowIpcShell = #"""
           trace.textContent = 'recv ' + message.type + ' #' + message.id;
           if (message.type === 'bootstrapResponse' || message.type === 'patch') {
             updateClientState(message.payload);
-            render(message.payload && message.payload.tree);
+            if (message.type === 'bootstrapResponse' || !applyUidlPatch(message.payload)) {
+              render(message.payload && message.payload.tree);
+            }
             if (message.type === 'bootstrapResponse' && window.__VAADIN_DESKTOP_FLOW_IPC_AUTO_CLICK__ && !autoClickDone) {
               autoClickDone = true;
               setTimeout(() => {

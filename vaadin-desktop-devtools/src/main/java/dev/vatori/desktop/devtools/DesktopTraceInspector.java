@@ -22,6 +22,7 @@ public final class DesktopTraceInspector {
             "bootstrapResponse",
             "push",
             "event",
+            "resync",
             "command",
             "capabilityResult",
             "patch",
@@ -120,6 +121,15 @@ public final class DesktopTraceInspector {
                     && line.contains("\"minimum-webview-uidl-applier\"")) {
                 summary.pushUidlObserved = true;
             }
+            if (line.contains("\"type\":\"patch\"")
+                    && line.contains("\"source\":\"UidlWriter\"")
+                    && line.contains("\"reason\":\"resync\"")
+                    && line.contains("\"resync\":true")
+                    && line.contains("resynchronize")
+                    && line.contains("\"consumedByWebView\":true")
+                    && line.contains("\"minimum-webview-uidl-applier\"")) {
+                summary.resyncUidlObserved = true;
+            }
         }
         return summary;
     }
@@ -151,6 +161,7 @@ public final class DesktopTraceInspector {
         private boolean webViewUidlRpcObserved;
         private boolean uidlPatchObserved;
         private boolean pushUidlObserved;
+        private boolean resyncUidlObserved;
 
         public boolean hasRequiredFlowIpcTypes() {
             return types.keySet().containsAll(FLOW_IPC_REQUIRED_TYPES)
@@ -162,7 +173,8 @@ public final class DesktopTraceInspector {
                     && uidlRpcDispatchObserved
                     && webViewUidlRpcObserved
                     && uidlPatchObserved
-                    && pushUidlObserved;
+                    && pushUidlObserved
+                    && resyncUidlObserved;
         }
 
         private void print(Path path) {
@@ -179,6 +191,7 @@ public final class DesktopTraceInspector {
             System.out.println("WebView UIDL RPC observed: " + webViewUidlRpcObserved);
             System.out.println("UIDL request handler patch observed: " + uidlPatchObserved);
             System.out.println("server push UIDL observed: " + pushUidlObserved);
+            System.out.println("resync UIDL observed: " + resyncUidlObserved);
             List<String> missing = FLOW_IPC_REQUIRED_TYPES.stream()
                     .filter(type -> !types.containsKey(type))
                     .toList();

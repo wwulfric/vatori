@@ -62,7 +62,7 @@ Next work should replace the compatibility adapter with a real Flow transport ad
 4. Feed transport messages through `vaadin-desktop-ipc`.
 5. Load Flow client engine from a local asset protocol in the native host.
 
-The current concrete issue is to keep tightening this repository-local adapter: it accepts `(VaadinSession, UI, requestBody, metadata)` and returns UIDL JSON while using a compatibility `VaadinRequest` only at the edge. The WebView bridge now provides Flow-client-shaped click RPC request bodies directly; the remaining work is broader Flow-client event coverage, UIDL consumption and stricter security/sync semantics.
+The current concrete issue is to keep tightening this repository-local adapter: it accepts `(VaadinSession, UI, requestBody, metadata)` and returns UIDL JSON while using a compatibility `VaadinRequest` only at the edge. The WebView bridge now provides Flow-client-shaped click RPC request bodies directly, and the adapter rejects mismatched Flow IPC `csrfToken`, stale `syncId` and out-of-order `clientId` values before dispatch. The remaining work is broader Flow-client event coverage, UIDL consumption and stricter security-key/resync semantics.
 
 That issue has now started in compiled framework code:
 
@@ -85,4 +85,4 @@ The smoke constructs an in-process desktop-shaped `VaadinSession`/`UI` and verif
 
 The RPC smoke verifies the next boundary: `UidlRequestHandler` can find the desktop `UI`, run `ServerRpcHandler` for a real `type=event` click RPC and return listener-produced UIDL without a real HTTP socket. `dev-ipc` now uses the same server-side path with a WebView-provided UIDL RPC body.
 
-The exact remaining runtime inputs are still: broader WebView-side Flow-client event coverage, CSRF token enforcement and sync id enforcement.
+The exact remaining runtime inputs are still: broader WebView-side Flow-client event coverage, security-key hardening and full resync semantics.

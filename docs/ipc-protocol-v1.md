@@ -251,6 +251,8 @@ Errors use the same envelope with `type=error` and an `error` object:
 }
 ```
 
+`invalidCsrfToken` is emitted when a WebView `event` envelope carries a UIDL RPC body whose `csrfToken` does not match the desktop `UI` token. `invalidClientState` is emitted for malformed or stale UIDL RPC metadata such as missing/mismatched `syncId` or out-of-order `clientId`. The runtime rejects those messages before they reach `UidlRequestHandler`.
+
 ## Compatibility Strategy
 
 - `dev` and `dev-swift` remain compatibility HTTP modes.

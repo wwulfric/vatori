@@ -58,7 +58,7 @@ The current `FlowIpcRuntime` adapter intentionally does not claim to be the fina
 
 The adapter accepts `(UI, FlowClientMessage)` and returns `FlowPatchResponse`. Internally it creates a desktop `VaadinRequest` with UIDL request parameters, captures a desktop `VaadinResponse`, sets Flow current instances, runs `UidlRequestHandler.synchronizedHandleRequest(...)`, then exposes the UIDL JSON body.
 
-This is still an adapter slice. It depends on Vaadin's current internal API shape and still needs broader Flow-client event coverage, CSRF/security key enforcement, sync-id enforcement and client-engine consumption.
+This is still an adapter slice. It depends on Vaadin's current internal API shape and still needs broader Flow-client event coverage, security-key hardening, full resync semantics and client-engine consumption. The current adapter now performs a minimum Flow IPC `csrfToken`, `syncId` and `clientId` preflight before `UidlRequestHandler` dispatch.
 
 `UidlAdapterSmokeMain` now constructs a minimal in-process `VaadinService`, `VaadinSession`, `WrappedSession` and `UI`, attaches a real Flow component tree, calls `UidlWriter` through `UidlFlowTransportAdapter`, and asserts that the output contains Flow UIDL `changes` and `syncId`.
 
@@ -71,7 +71,7 @@ bash bin/uidl-rpc-smoke
 
 These commands do not open a WebView and do not run a servlet container. They are server-side adapter verification steps that prove the repository can drive Vaadin's real UIDL writer and event RPC path from a desktop-shaped session/request boundary. The same session helper is now used by `dev-ipc` to emit UIDL markers in real runtime traces.
 
-`uidl-rpc-smoke` goes one step deeper: it sends a real Flow client event RPC body shaped like Vaadin's own `ServerRpcHandlerTest` examples, lets `UidlRequestHandler` locate the desktop `UI`, runs `ServerRpcHandler`/`EventRpcHandler`, triggers a Button click listener and verifies that the UIDL response contains `Clicks: 1` plus `syncId`. `dev-ipc` now uses this same server-side RPC path for WebView-provided UIDL RPC click dispatch.
+`uidl-rpc-smoke` goes one step deeper: it sends a real Flow client event RPC body shaped like Vaadin's own `ServerRpcHandlerTest` examples, lets `UidlRequestHandler` locate the desktop `UI`, runs `ServerRpcHandler`/`EventRpcHandler`, triggers a Button click listener and verifies that the UIDL response contains `Clicks: 1` plus `syncId`. It also verifies that invalid Flow IPC `csrfToken`, stale `syncId` and out-of-order `clientId` values are rejected before dispatch. `dev-ipc` now uses this same server-side RPC path for WebView-provided UIDL RPC click dispatch.
 
 The `jakarta.servlet-api` dependency is present on the runtime classpath because Vaadin server classes such as `VaadinSession` and the `VaadinRequest`/`VaadinResponse` signatures still reference servlet API types. This does not start a servlet container and is not used as the `dev-ipc` transport.
 
@@ -85,4 +85,4 @@ It also keeps the developer-facing shape intact: the smoke app still uses ordina
 
 ## Next Adapter Step
 
-The next concrete step is to replace the minimum repository-local UIDL applier with the real Flow client engine, while tightening CSRF/security key, sync id and resync semantics.
+The next concrete step is to replace the minimum repository-local UIDL applier with the real Flow client engine, while tightening security-key hardening and resync semantics.

@@ -50,6 +50,14 @@ Inspect the Flow IPC trace sample:
 bash bin/flow-ipc-trace-inspect --require-flow-ipc-v1 docs/traces/flow-ipc-v1.ndjson
 ```
 
+Verify the first real Flow UIDL writer adapter slice:
+
+```bash
+bash bin/uidl-adapter-smoke
+```
+
+This command constructs a minimal desktop-shaped `VaadinSession`/`UI` in process and verifies that Vaadin's real `UidlWriter` emits UIDL `changes` and `syncId`. It is not wired into `dev-ipc` yet.
+
 On macOS the original `dev` command still opens a native WKWebView desktop window by default. That path is now the macOS fallback/compatibility host.
 
 Host selection:
@@ -99,6 +107,7 @@ Implemented:
 - macOS system WebView launcher: Spring Boot starts Vaadin on random localhost port; a generated WKWebView `.app` opens the desktop window.
 - Swift/AppKit host: starts Java sidecar, opens WKWebView, traces Host Protocol v0 and cleans up the sidecar on window shutdown.
 - Flow IPC runtime slice: starts a no-HTTP smoke app, dispatches Button click over IPC, sends desktop API calls as `VFIPC1 command`, receives `capabilityResult`, and applies a replace-root patch in the WebView shell.
+- UIDL adapter smoke: drives Vaadin's real server-side `UidlWriter` from an in-process desktop-shaped session/UI boundary.
 - Host Protocol v0 stdout envelope for Java desktop commands.
 - Flow transport adapter spike with concrete Vaadin source references for UIDL/event/patch boundaries.
 - Compatibility host fallback for headless/browser modes.

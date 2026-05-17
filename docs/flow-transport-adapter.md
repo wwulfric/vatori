@@ -43,6 +43,8 @@ The current `FlowIpcRuntime` adapter intentionally does not claim to be the fina
 - `dev.vatori.desktop.flow.transport.UidlFlowTransportAdapter`
 - `dev.vatori.desktop.flow.transport.DesktopVaadinRequest`
 - `dev.vatori.desktop.flow.transport.DesktopVaadinResponse`
+- `dev.vatori.desktop.flow.transport.DesktopWrappedSession`
+- `dev.vatori.desktop.flow.transport.UidlAdapterSmokeMain`
 
 `UidlFlowTransportAdapter` wraps:
 
@@ -56,6 +58,16 @@ The adapter accepts `(UI, FlowClientMessage)` and returns `FlowPatchResponse`. I
 
 This is still an adapter slice, not the runtime default. It depends on Vaadin's current internal API shape and still needs a real initialized `UI`, `VaadinSession`, CSRF/security key, sync id and client UIDL JSON from the real Flow client engine.
 
+`UidlAdapterSmokeMain` now constructs a minimal in-process `VaadinService`, `VaadinSession`, `WrappedSession` and `UI`, attaches a real Flow component tree, calls `UidlWriter` through `UidlFlowTransportAdapter`, and asserts that the output contains Flow UIDL `changes` and `syncId`.
+
+Run it with:
+
+```bash
+bash bin/uidl-adapter-smoke
+```
+
+This command does not open a WebView and does not run a servlet container. It is a server-side adapter verification that proves the repository can drive Vaadin's real UIDL writer from a desktop-shaped session/request boundary.
+
 The newly added `jakarta.servlet-api` dependency is `provided` only because Vaadin's `VaadinRequest` and `VaadinResponse` method signatures expose `jakarta.servlet.http.Cookie`. It is not used as a transport in `dev-ipc`.
 
 The existing spike in `flow-transport-adapter-spike/README.md` remains the code-level map for that work.
@@ -68,4 +80,4 @@ It also keeps the developer-facing shape intact: the smoke app still uses ordina
 
 ## Next Adapter Step
 
-The next concrete step is to create a real initialized Flow `UI` without localhost HTTP bootstrap, then feed the WebView's Flow-client UIDL payload into `UidlFlowTransportAdapter` instead of the repository-local `FlowIpcRenderer`.
+The next concrete step is to replace the manually initialized smoke `UI` with the runtime `dev-ipc` session/UI lifecycle, then feed the WebView's Flow-client UIDL payload into `UidlFlowTransportAdapter` instead of the repository-local `FlowIpcRenderer`.

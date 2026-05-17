@@ -69,5 +69,15 @@ That issue has now started in compiled framework code:
 - `dev.vatori.desktop.flow.transport.UidlFlowTransportAdapter`
 - `dev.vatori.desktop.flow.transport.DesktopVaadinRequest`
 - `dev.vatori.desktop.flow.transport.DesktopVaadinResponse`
+- `dev.vatori.desktop.flow.transport.DesktopWrappedSession`
+- `dev.vatori.desktop.flow.transport.UidlAdapterSmokeMain`
 
-This adapter is not wired into `dev-ipc` yet. It proves the repository can compile against the real `UidlRequestHandler`/`UidlWriter` boundary and records the exact remaining runtime inputs: initialized `UI`, `VaadinSession`, CSRF token, sync ids and real Flow-client UIDL event JSON.
+This adapter is not wired into `dev-ipc` yet. It now has a runnable smoke command:
+
+```bash
+bash bin/uidl-adapter-smoke
+```
+
+The smoke constructs an in-process desktop-shaped `VaadinSession`/`UI` and verifies that real `UidlWriter` output includes UIDL `changes` and `syncId`. It proves the repository can execute the real server-side UIDL writer without a servlet container for that narrow path.
+
+The exact remaining runtime inputs are still: initialized `UI`, `VaadinSession`, CSRF token, sync ids and real Flow-client UIDL event JSON.

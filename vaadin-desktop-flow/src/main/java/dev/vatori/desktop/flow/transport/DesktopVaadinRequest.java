@@ -46,7 +46,7 @@ final class DesktopVaadinRequest implements VaadinRequest {
                 new String[]{String.valueOf(message.uiId())});
         return new DesktopVaadinRequest(
                 session.getService(),
-                session.getSession(),
+                session.getSession() == null ? new DesktopWrappedSession(message.sessionId()) : session.getSession(),
                 message.requestBody(),
                 parameters,
                 Locale.getDefault());
@@ -170,7 +170,7 @@ final class DesktopVaadinRequest implements VaadinRequest {
 
     @Override
     public Enumeration<Locale> getLocales() {
-        return Collections.enumeration(Lists.of(locale));
+        return Collections.enumeration(java.util.List.of(locale));
     }
 
     @Override
@@ -212,14 +212,5 @@ final class DesktopVaadinRequest implements VaadinRequest {
     public Enumeration<String> getHeaders(String name) {
         String value = headers.get(name);
         return Collections.enumeration(value == null ? java.util.List.of() : java.util.List.of(value));
-    }
-
-    private static final class Lists {
-        private Lists() {
-        }
-
-        static <T> java.util.List<T> of(T value) {
-            return java.util.List.of(value);
-        }
     }
 }

@@ -37,7 +37,7 @@ WebView event
 
 ## Relationship To Vaadin Internals
 
-The current `FlowIpcRuntime` adapter intentionally does not claim to be the final Vaadin UIDL adapter. It now creates a desktop-shaped Flow session/UI, includes real `UidlWriter` output in `bootstrapResponse`, lets the WebView bridge send Flow-client-shaped UIDL RPC bodies for click events and uses `UidlRequestHandler`/`ServerRpcHandler` for event patches. The WebView still consumes the repository-local tree patch. The repository also contains the compiled transport adapter around the real Flow server path:
+The current `FlowIpcRuntime` adapter intentionally does not claim to be the final Vaadin UIDL adapter. It now creates a desktop-shaped Flow session/UI, includes real `UidlWriter` output in `bootstrapResponse`, lets the WebView bridge send Flow-client-shaped UIDL RPC bodies for click events and uses `UidlRequestHandler`/`ServerRpcHandler` for event patches. The WebView applies event UIDL `changes` through a minimum applier, while bootstrap/layout rendering still uses the repository-local tree scaffold. The repository also contains the compiled transport adapter around the real Flow server path:
 
 - `dev.vatori.desktop.flow.transport.FlowTransportAdapter`
 - `dev.vatori.desktop.flow.transport.UidlFlowTransportAdapter`
@@ -85,4 +85,4 @@ It also keeps the developer-facing shape intact: the smoke app still uses ordina
 
 ## Next Adapter Step
 
-The next concrete step is to replace the repository-local tree renderer with Flow client engine UIDL consumption, while tightening CSRF/security key, sync id and resync semantics.
+The next concrete step is to replace the repository-local bootstrap/layout renderer with Flow client engine UIDL consumption, while tightening CSRF/security key, sync id and resync semantics.

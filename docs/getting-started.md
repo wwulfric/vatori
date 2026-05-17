@@ -80,7 +80,7 @@ bash bin/uidl-adapter-smoke
 bash bin/uidl-rpc-smoke
 ```
 
-Current limitation: this path uses a minimum repository-local renderer and replace-root patches in the WebView. It now generates Vaadin UIDL and uses the server-side Flow RPC path for click dispatch, but the full Flow client engine does not consume that UIDL yet.
+Current limitation: this path uses a minimum repository-local bootstrap/layout renderer in the WebView. It now generates Vaadin UIDL, sends click events through the server-side Flow RPC path and consumes event UIDL `changes`, but the full Flow client engine does not consume bootstrap/layout UIDL yet.
 
 ## Run the Independent Smoke App
 

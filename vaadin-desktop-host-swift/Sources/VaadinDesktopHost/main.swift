@@ -719,6 +719,8 @@ let flowIpcShell = #"""
       let autoResyncDone = false;
       const flowClientState = {
         csrfToken: '',
+        securityKey: '',
+        securityTokenId: 'Vaadin-Security-Key',
         syncId: -1,
         clientId: 0
       };
@@ -753,6 +755,12 @@ let flowIpcShell = #"""
           if (typeof payload.clientState.csrfToken === 'string') {
             flowClientState.csrfToken = payload.clientState.csrfToken;
           }
+          if (typeof payload.clientState.securityKey === 'string') {
+            flowClientState.securityKey = payload.clientState.securityKey;
+          }
+          if (typeof payload.clientState.securityTokenId === 'string') {
+            flowClientState.securityTokenId = payload.clientState.securityTokenId;
+          }
           if (Number.isInteger(payload.clientState.syncId)) {
             flowClientState.syncId = payload.clientState.syncId;
           }
@@ -767,6 +775,10 @@ let flowIpcShell = #"""
             if (Number.isInteger(uidl.syncId)) {
               flowClientState.syncId = uidl.syncId;
             }
+            if (typeof uidl[flowClientState.securityTokenId] === 'string') {
+              flowClientState.securityKey = uidl[flowClientState.securityTokenId];
+              flowClientState.csrfToken = uidl[flowClientState.securityTokenId];
+            }
           } catch (_) {
             // The bridge still treats UIDL as an opaque payload until the Flow client engine consumes it.
           }
@@ -775,8 +787,10 @@ let flowIpcShell = #"""
 
       function sendFlowEvent(node, eventType) {
         const clientId = flowClientState.clientId++;
+        const securityKey = flowClientState.securityKey || flowClientState.csrfToken;
         const uidlRpc = {
-          csrfToken: flowClientState.csrfToken,
+          csrfToken: securityKey,
+          securityKey,
           rpc: [{
             type: 'event',
             node: node.nodeId,
@@ -790,6 +804,7 @@ let flowIpcShell = #"""
           dispatch: 'flow-client-rpc',
           componentId: node.id,
           nodeId: node.nodeId,
+          securityKey,
           event: eventType,
           uidlRpc
         });
@@ -807,8 +822,10 @@ let flowIpcShell = #"""
       }
 
       function requestResync(reason) {
+        const securityKey = flowClientState.securityKey || flowClientState.csrfToken;
         send('resync', {
           reason,
+          securityKey,
           syncId: flowClientState.syncId,
           clientId: flowClientState.clientId
         });

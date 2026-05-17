@@ -5,6 +5,7 @@ import com.vaadin.flow.component.HasComponents;
 import com.vaadin.flow.component.button.Button;
 import com.vaadin.flow.component.html.Span;
 import com.vaadin.flow.router.Route;
+import com.vaadin.flow.shared.ApplicationConstants;
 import dev.vatori.desktop.flow.transport.DesktopFlowRuntimeSession;
 import dev.vatori.desktop.flow.transport.FlowPatchResponse;
 import dev.vatori.desktop.ipc.FlowIpcEnvelope;
@@ -71,7 +72,7 @@ final class FlowIpcRuntime {
             switch (type == null ? "" : type) {
                 case "bootstrapRequest" -> bootstrap(id, correlationId);
                 case "event" -> handleEvent(json, id, correlationId);
-                case "resync" -> sendPatch("resync", id, correlationId);
+                case "resync" -> handleResync(json, id, correlationId);
                 case "shutdown" -> System.exit(0);
                 default -> sendError("unknownMessage", "Unsupported Flow IPC message type: " + type, id, correlationId);
             }
@@ -96,6 +97,8 @@ final class FlowIpcRuntime {
                 "sessionId", flowSession.sessionId(),
                 "uiId", flowSession.uiId(),
                 "csrfToken", flowSession.csrfToken(),
+                "securityKey", flowSession.securityKey(),
+                "securityTokenId", ApplicationConstants.UIDL_SECURITY_TOKEN_ID,
                 "syncId", -1,
                 "clientId", 0,
                 "eventDispatch", "flow-client-rpc"));
@@ -135,6 +138,7 @@ final class FlowIpcRuntime {
 
     private void handleEvent(String json, String id, String correlationId) {
         ensureBootstrapped();
+        validateSecurityKey(json);
         String uidlRpc = JsonFields.object(json, "uidlRpc");
         if (uidlRpc != null && !uidlRpc.isBlank()) {
             FlowPatchResponse response = handleClientMessage(uidlRpc, JsonFields.integer(uidlRpc, "clientId", -1));
@@ -156,6 +160,19 @@ final class FlowIpcRuntime {
         } else {
             sendError("unsupportedTarget", "No clickable Vaadin Button registered for componentId=" + componentId,
                     id, correlationId);
+        }
+    }
+
+    private void handleResync(String json, String id, String correlationId) {
+        ensureBootstrapped();
+        validateSecurityKey(json);
+        sendPatch("resync", id, correlationId);
+    }
+
+    private void validateSecurityKey(String json) {
+        String securityKey = JsonFields.string(json, "securityKey");
+        if (!Objects.equals(flowSession.securityKey(), securityKey)) {
+            throw new SecurityException("Invalid Flow IPC securityKey");
         }
     }
 
@@ -221,7 +238,7 @@ final class FlowIpcRuntime {
     }
 
     private Map<String, Object> uidlPayload(String reason, boolean resync) {
-        String uidlJson = flowSession.createUidl(resync);
+        String uidlJson = "bootstrap".equals(reason) ? flowSession.createBootstrapUidl() : flowSession.createUidl(resync);
         Map<String, Object> uidl = new LinkedHashMap<>();
         uidl.put("source", "UidlWriter");
         uidl.put("format", "vaadin-uidl-json");
@@ -232,6 +249,7 @@ final class FlowIpcRuntime {
         uidl.put("consumer", "minimum-webview-uidl-applier");
         uidl.put("containsChanges", uidlJson.contains("\"changes\""));
         uidl.put("containsSyncId", uidlJson.contains("\"syncId\""));
+        uidl.put("containsSecurityKey", uidlJson.contains("\"" + ApplicationConstants.UIDL_SECURITY_TOKEN_ID + "\""));
         uidl.put("body", uidlJson);
         return uidl;
     }

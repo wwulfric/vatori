@@ -11,7 +11,9 @@ import com.vaadin.flow.server.VaadinRequest;
 import com.vaadin.flow.server.VaadinService;
 import com.vaadin.flow.server.VaadinSession;
 import com.vaadin.flow.server.WrappedSession;
+import com.vaadin.flow.shared.ApplicationConstants;
 import com.vaadin.flow.shared.communication.PushMode;
+import dev.vatori.desktop.ipc.IpcJson;
 
 import java.io.File;
 import java.io.IOException;
@@ -91,6 +93,10 @@ public final class DesktopFlowRuntimeSession {
         return ui.getCsrfToken();
     }
 
+    public String securityKey() {
+        return ui.getCsrfToken();
+    }
+
     public String sessionId() {
         return sessionId;
     }
@@ -112,6 +118,17 @@ public final class DesktopFlowRuntimeSession {
         session.lock();
         try {
             String uidl = uidlAdapter.createUidl(ui, resync);
+            observeSyncId(uidl);
+            return uidl;
+        } finally {
+            session.unlock();
+        }
+    }
+
+    public String createBootstrapUidl() {
+        session.lock();
+        try {
+            String uidl = addBootstrapSecurityKey(uidlAdapter.createUidl(ui, false));
             observeSyncId(uidl);
             return uidl;
         } finally {
@@ -141,6 +158,7 @@ public final class DesktopFlowRuntimeSession {
         String requestBody = """
                 {
                   "csrfToken": "%s",
+                  "securityKey": "%s",
                   "rpc": [
                     {
                       "type": "event",
@@ -152,7 +170,8 @@ public final class DesktopFlowRuntimeSession {
                   "syncId": %d,
                   "clientId": %d
                 }
-                """.formatted(ui.getCsrfToken(), nodeId, eventType, lastSyncId, clientToServerMessageId);
+                """.formatted(ui.getCsrfToken(), securityKey(), nodeId, eventType, lastSyncId,
+                clientToServerMessageId);
         return handleClientMessage(requestBody, clientToServerMessageId, false);
     }
 
@@ -160,6 +179,11 @@ public final class DesktopFlowRuntimeSession {
         String token = jsonString(requestBody, "csrfToken");
         if (!Objects.equals(ui.getCsrfToken(), token)) {
             throw new SecurityException("Invalid Flow IPC csrfToken");
+        }
+
+        String securityKey = jsonString(requestBody, "securityKey");
+        if (securityKey != null && !Objects.equals(securityKey(), securityKey)) {
+            throw new SecurityException("Invalid Flow IPC securityKey");
         }
 
         Integer requestSyncId = jsonInt(requestBody, "syncId");
@@ -182,6 +206,21 @@ public final class DesktopFlowRuntimeSession {
             throw new IllegalStateException("Flow IPC clientId out of order: expected "
                     + expectedClientToServerMessageId + " but got " + clientToServerMessageId);
         }
+    }
+
+    private String addBootstrapSecurityKey(String uidlJson) {
+        String fieldName = ApplicationConstants.UIDL_SECURITY_TOKEN_ID;
+        if (uidlJson.contains("\"" + fieldName + "\"")) {
+            return uidlJson;
+        }
+        int insertAt = uidlJson.lastIndexOf('}');
+        if (insertAt < 0) {
+            throw new IllegalStateException("Unable to add Flow UIDL security key to malformed UIDL JSON");
+        }
+        String prefix = uidlJson.substring(0, insertAt);
+        String suffix = uidlJson.substring(insertAt);
+        String separator = prefix.endsWith("{") ? "" : ",";
+        return prefix + separator + IpcJson.stringify(fieldName) + ":" + IpcJson.stringify(securityKey()) + suffix;
     }
 
     private void observeSyncId(String uidlJson) {

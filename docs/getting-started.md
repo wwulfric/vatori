@@ -58,6 +58,7 @@ Expected trace characteristics:
 - Java sidecar emits `VFIPC1` envelopes.
 - The WebView loads a local HTML shell through `loadHTMLString`, not `http://127.0.0.1`.
 - Button click travels WebView -> Swift host -> Java sidecar -> Vaadin Button listener -> patch -> WebView.
+- Bootstrap and event patches include real server-side UIDL under `payload.uidl`.
 - Desktop API calls travel Java sidecar -> Swift host as `VFIPC1 command`, and host responses appear as `capabilityResult`.
 
 For repeatable real-window smoke verification without global mouse coordinates:
@@ -72,7 +73,7 @@ Inspect the bundled review trace:
 bash bin/flow-ipc-trace-inspect --require-flow-ipc-v1 docs/traces/flow-ipc-v1.ndjson
 ```
 
-Current limitation: this path uses a minimum repository-local renderer and replace-root patches. It does not yet use Vaadin UIDL or the full Flow client engine.
+Current limitation: this path uses a minimum repository-local renderer and replace-root patches in the WebView. It now generates Vaadin UIDL, but the full Flow client engine does not consume that UIDL yet.
 
 ## Run the Independent Smoke App
 
@@ -127,4 +128,4 @@ Framework v0 still starts an embedded Spring Boot web server on `127.0.0.1`. The
 
 The Swift native path narrows the long-term host/runtime boundary, but Flow bootstrap, UIDL event handling and push are still compatibility HTTP unless a trace or document explicitly says otherwise.
 
-`dev-ipc` is the exception: it is the first no-HTTP runtime slice, but only for `test-apps/flow-over-ipc-smoke-app` and the constrained component/event set documented in `docs/flow-over-ipc-runtime.md`.
+`dev-ipc` is the exception: it is the first no-HTTP runtime slice, now with server-side UIDL generation, but only for `test-apps/flow-over-ipc-smoke-app` and the constrained component/event set documented in `docs/flow-over-ipc-runtime.md`.

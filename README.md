@@ -4,7 +4,7 @@ This repository explores a Vaadin Flow desktop runtime inspired by Tauri/Raycast
 
 Framework v0 runs in **compatibility mode** by default: real Vaadin Flow views are served by embedded Spring Boot on `127.0.0.1`, while the desktop runtime API, host boundary, IPC envelope and trace logs are already separated so they can evolve toward Flow over IPC.
 
-The repository now also contains the first `dev-ipc` runtime slice. It runs a constrained Flow-over-IPC smoke app without a localhost HTTP server in the core event/patch path. This is a minimum adapter, not full Vaadin UIDL/client-engine parity yet.
+The repository now also contains the first `dev-ipc` runtime slice. It runs a constrained Flow-over-IPC smoke app without a localhost HTTP server in the core event/patch path and now emits real server-side Vaadin UIDL in the IPC payload. This is still not full Flow client-engine parity because the WebView consumes a repository-local tree patch.
 
 ## Quick Start
 
@@ -42,7 +42,7 @@ Run the first Flow IPC runtime slice:
 bash bin/vaadin-desktop dev-ipc test-apps/flow-over-ipc-smoke-app
 ```
 
-`dev-ipc` starts the same Swift/AppKit host with `transport=flow-ipc`, loads a local WKWebView shell, sends WebView events to the Java sidecar over `VFIPC1` stdin/stdout envelopes, and applies Java patches without loading `http://127.0.0.1`. The current patch payload is a repository-local component tree, not Vaadin UIDL yet.
+`dev-ipc` starts the same Swift/AppKit host with `transport=flow-ipc`, loads a local WKWebView shell, sends WebView events to the Java sidecar over `VFIPC1` stdin/stdout envelopes, and applies Java patches without loading `http://127.0.0.1`. The payload now includes real Vaadin server-side UIDL from `UidlWriter`, but the WebView still applies a repository-local component tree until the Flow client engine bridge is implemented.
 
 Inspect the Flow IPC trace sample:
 
@@ -56,7 +56,7 @@ Verify the first real Flow UIDL writer adapter slice:
 bash bin/uidl-adapter-smoke
 ```
 
-This command constructs a minimal desktop-shaped `VaadinSession`/`UI` in process and verifies that Vaadin's real `UidlWriter` emits UIDL `changes` and `syncId`. It is not wired into `dev-ipc` yet.
+This command constructs a minimal desktop-shaped `VaadinSession`/`UI` in process and verifies that Vaadin's real `UidlWriter` emits UIDL `changes` and `syncId`.
 
 On macOS the original `dev` command still opens a native WKWebView desktop window by default. That path is now the macOS fallback/compatibility host.
 
@@ -106,7 +106,7 @@ Implemented:
 - Framework-level Java desktop API: window title, notification, clipboard, file dialog, menu facade.
 - macOS system WebView launcher: Spring Boot starts Vaadin on random localhost port; a generated WKWebView `.app` opens the desktop window.
 - Swift/AppKit host: starts Java sidecar, opens WKWebView, traces Host Protocol v0 and cleans up the sidecar on window shutdown.
-- Flow IPC runtime slice: starts a no-HTTP smoke app, dispatches Button click over IPC, sends desktop API calls as `VFIPC1 command`, receives `capabilityResult`, and applies a replace-root patch in the WebView shell.
+- Flow IPC runtime slice: starts a no-HTTP smoke app, dispatches Button click over IPC, generates real server-side UIDL, sends desktop API calls as `VFIPC1 command`, receives `capabilityResult`, and applies a replace-root patch in the WebView shell.
 - UIDL adapter smoke: drives Vaadin's real server-side `UidlWriter` from an in-process desktop-shaped session/UI boundary.
 - Host Protocol v0 stdout envelope for Java desktop commands.
 - Flow transport adapter spike with concrete Vaadin source references for UIDL/event/patch boundaries.
@@ -116,6 +116,6 @@ Implemented:
 
 Not implemented yet:
 
-- Full Vaadin UIDL/Flow-client-engine transport over IPC.
+- Flow-client-engine consumption of the generated UIDL over IPC.
 - Native capability permission manifest.
 - Production packaging, signing, auto-update.

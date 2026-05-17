@@ -3,6 +3,7 @@ package dev.vatori.desktop.flow.ipc;
 import com.vaadin.flow.component.Component;
 import com.vaadin.flow.component.button.Button;
 import com.vaadin.flow.router.Route;
+import dev.vatori.desktop.flow.transport.DesktopFlowRuntimeSession;
 import dev.vatori.desktop.ipc.FlowIpcEnvelope;
 import dev.vatori.desktop.ipc.IpcJson;
 
@@ -26,6 +27,7 @@ final class FlowIpcRuntime {
     private final FlowIpcRenderer renderer = new FlowIpcRenderer();
     private final AtomicLong sequence = new AtomicLong();
     private Component root;
+    private DesktopFlowRuntimeSession flowSession;
 
     FlowIpcRuntime(Class<? extends Component> routeClass) {
         this.routeClass = Objects.requireNonNull(routeClass, "routeClass");
@@ -38,7 +40,9 @@ final class FlowIpcRuntime {
                 "transport", "flow-ipc",
                 "compatibilityMode", false,
                 "route", route,
-                "runtime", "repository-local-flow-ipc-adapter"));
+                "runtime", "repository-local-flow-ipc-adapter",
+                "uidlWriter", true,
+                "uidlConsumer", "trace-only"));
 
         try (BufferedReader reader = new BufferedReader(new InputStreamReader(System.in, StandardCharsets.UTF_8))) {
             String line;
@@ -72,16 +76,18 @@ final class FlowIpcRuntime {
     }
 
     private void bootstrap(String id, String correlationId) {
-        root = instantiateRoute();
+        ensureBootstrapped();
         Map<String, Object> payload = new LinkedHashMap<>();
         payload.put("transport", "flow-ipc");
         payload.put("compatibilityMode", false);
         payload.put("route", route);
+        payload.put("uidl", uidlPayload("bootstrap", false));
         payload.put("tree", renderer.render(root));
         send("bootstrapResponse", nextId("bootstrap"), correlationIdOr(id, correlationId), payload);
         send("push", nextId("push"), correlationIdOr(id, correlationId), Map.of(
                 "reason", "server-initiated-ready",
-                "transport", "flow-ipc"));
+                "transport", "flow-ipc",
+                "uidlWriter", true));
     }
 
     private Component instantiateRoute() {
@@ -104,7 +110,7 @@ final class FlowIpcRuntime {
         }
         Component target = renderer.component(componentId);
         if (target instanceof Button button) {
-            button.click();
+            flowSession.runLocked(button::click);
             sendPatch("event", id, correlationId);
         } else {
             sendError("unsupportedTarget", "No clickable Vaadin Button registered for componentId=" + componentId,
@@ -119,6 +125,7 @@ final class FlowIpcRuntime {
         payload.put("reason", reason);
         payload.put("transport", "flow-ipc");
         payload.put("compatibilityMode", false);
+        payload.put("uidl", uidlPayload(reason, "resync".equals(reason)));
         payload.put("tree", renderer.render(root));
         send("patch", nextId("patch"), correlationIdOr(id, correlationId), payload);
     }
@@ -126,7 +133,34 @@ final class FlowIpcRuntime {
     private void ensureBootstrapped() {
         if (root == null) {
             root = instantiateRoute();
+            flowSession = DesktopFlowRuntimeSession.create(
+                    "flow-ipc-session",
+                    1,
+                    "flow-ipc",
+                    root);
         }
+        if (flowSession == null) {
+            flowSession = DesktopFlowRuntimeSession.create(
+                    "flow-ipc-session",
+                    1,
+                    "flow-ipc",
+                    root);
+        }
+    }
+
+    private Map<String, Object> uidlPayload(String reason, boolean resync) {
+        String uidlJson = flowSession.createUidl(resync);
+        Map<String, Object> uidl = new LinkedHashMap<>();
+        uidl.put("source", "UidlWriter");
+        uidl.put("format", "vaadin-uidl-json");
+        uidl.put("reason", reason);
+        uidl.put("resync", resync);
+        uidl.put("desktopSession", true);
+        uidl.put("consumedByWebView", false);
+        uidl.put("containsChanges", uidlJson.contains("\"changes\""));
+        uidl.put("containsSyncId", uidlJson.contains("\"syncId\""));
+        uidl.put("body", uidlJson);
+        return uidl;
     }
 
     private void send(String type, String id, String correlationId, Map<String, Object> payload) {

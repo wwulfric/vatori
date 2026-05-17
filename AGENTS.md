@@ -21,15 +21,15 @@ The current implementation is a real framework skeleton plus a compatibility tra
 - `vaadin-desktop-ipc`: IPC envelope and trace primitives.
 - `vaadin-desktop-host`: macOS WKWebView fallback, compatibility host and Java native bridge implementations.
 - `vaadin-desktop-host-swift`: Swift/AppKit/WKWebView host spike for the macOS native runtime mainline.
-- `vaadin-desktop-flow`: real Vaadin Flow/Spring Boot launcher.
-- `vaadin-desktop-devtools`: trace inspector scaffold.
+- `vaadin-desktop-flow`: real Vaadin Flow/Spring Boot launcher plus Flow IPC runtime and UIDL adapter slices.
+- `vaadin-desktop-devtools`: trace inspector scaffold with Flow IPC v1 checks.
 - `vaadin-desktop-cli`: CLI scaffold.
 - `examples/*`: real Vaadin Flow example apps.
 - `test-apps/vaadin-desktop-smoke-app`: independent developer-style smoke app.
 - `test-apps/flow-over-ipc-smoke-app`: independent no-HTTP Flow IPC smoke app for the constrained `dev-ipc` runtime slice.
 - `prototypes/phase0-phase1-spike`: earlier non-HTTP mock Flow transport/IPC validation.
 - `flow-transport-adapter-spike`: current code-level Vaadin Flow UIDL/event/patch boundary analysis.
-- `vaadin-desktop-flow/src/main/java/dev/vatori/desktop/flow/transport`: compiled UIDL adapter slice around `UidlRequestHandler`, `DesktopVaadinRequest` and `DesktopVaadinResponse`.
+- `vaadin-desktop-flow/src/main/java/dev/vatori/desktop/flow/transport`: compiled UIDL adapter slice around `UidlRequestHandler`, `UidlWriter`, `DesktopVaadinRequest`, `DesktopVaadinResponse` and `DesktopFlowRuntimeSession`.
 
 Default `dev` behavior on macOS:
 
@@ -56,7 +56,7 @@ No-HTTP IPC slice:
 bash bin/vaadin-desktop dev-ipc test-apps/flow-over-ipc-smoke-app
 ```
 
-This runs the Swift host with `--transport flow-ipc`, loads a local WKWebView HTML shell and communicates with Java through `VFIPC1` stdin/stdout envelopes. It proves WebView event -> Java Button listener -> desktop command/capabilityResult -> patch -> WebView without localhost HTTP for the smoke app. It is not full Vaadin UIDL or the real Flow client engine yet.
+This runs the Swift host with `--transport flow-ipc`, loads a local WKWebView HTML shell and communicates with Java through `VFIPC1` stdin/stdout envelopes. It proves WebView event -> Java Button listener -> desktop command/capabilityResult -> patch -> WebView without localhost HTTP for the smoke app. The Java side now also emits real `UidlWriter` JSON under `payload.uidl`, but the WebView still consumes the repository-local tree patch. It is not full Flow client engine parity yet.
 
 Repeatable real-window smoke verification can use:
 
@@ -100,6 +100,12 @@ Inspect the Flow IPC trace sample:
 
 ```bash
 bash bin/flow-ipc-trace-inspect --require-flow-ipc-v1 docs/traces/flow-ipc-v1.ndjson
+```
+
+Verify the server-side UIDL writer adapter:
+
+```bash
+bash bin/uidl-adapter-smoke
 ```
 
 Host selection:
@@ -186,6 +192,6 @@ Most valuable next steps:
 
 1. Make `vaadin-desktop-host-swift` the default host once it is stable across local machines.
 2. Turn Host Protocol v0 traces into a bidirectional command/result transport.
-3. Implement the first repository-local Flow UIDL adapter around `UidlRequestHandler`/`ServerRpcHandler`/`UidlWriter`.
-4. Prototype a desktop `VaadinRequest` adapter carrying session/UI/security metadata from Host Protocol.
+3. Feed real Flow-client UIDL RPC payloads from the WebView bridge into `UidlFlowTransportAdapter`.
+4. Replace the repository-local WebView tree renderer with Flow client engine UIDL consumption.
 5. Add smoke tests for Swift host window launch, sidecar cleanup and desktop capability calls.

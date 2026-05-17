@@ -91,6 +91,16 @@ public final class DesktopTraceInspector {
             if (line.contains("native-nspasteboard")) {
                 summary.nativeClipboardObserved = true;
             }
+            if (line.contains("\"source\":\"UidlWriter\"")
+                    && line.contains("\"containsChanges\":true")
+                    && line.contains("\"containsSyncId\":true")) {
+                summary.uidlWriterObserved = true;
+            }
+            if (line.contains("\"type\":\"patch\"")
+                    && line.contains("\"source\":\"UidlWriter\"")
+                    && line.contains("\"consumedByWebView\":false")) {
+                summary.uidlPatchObserved = true;
+            }
         }
         return summary;
     }
@@ -117,13 +127,17 @@ public final class DesktopTraceInspector {
         private boolean compatibilityFalse;
         private boolean clickPatchObserved;
         private boolean nativeClipboardObserved;
+        private boolean uidlWriterObserved;
+        private boolean uidlPatchObserved;
 
         public boolean hasRequiredFlowIpcTypes() {
             return types.keySet().containsAll(FLOW_IPC_REQUIRED_TYPES)
                     && flowIpcTransport
                     && compatibilityFalse
                     && clickPatchObserved
-                    && nativeClipboardObserved;
+                    && nativeClipboardObserved
+                    && uidlWriterObserved
+                    && uidlPatchObserved;
         }
 
         private void print(Path path) {
@@ -135,6 +149,8 @@ public final class DesktopTraceInspector {
             System.out.println("compatibilityMode=false: " + compatibilityFalse);
             System.out.println("click patch observed: " + clickPatchObserved);
             System.out.println("native clipboard observed: " + nativeClipboardObserved);
+            System.out.println("UIDL writer observed: " + uidlWriterObserved);
+            System.out.println("UIDL patch observed: " + uidlPatchObserved);
             List<String> missing = FLOW_IPC_REQUIRED_TYPES.stream()
                     .filter(type -> !types.containsKey(type))
                     .toList();

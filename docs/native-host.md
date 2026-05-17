@@ -26,7 +26,7 @@ Current compatibility boundary:
 - Flow bootstrap, client events, UIDL/patch responses and push still run through the embedded Spring Boot localhost server.
 - Desktop runtime commands can cross Java -> native host as Host Protocol v0 trace envelopes, but synchronous native return values are still scaffolded.
 - The WebView loads a local HTTP URL today. This is explicitly not the final Flow over IPC transport.
-- `dev-ipc` does not load a local HTTP URL for the smoke app and uses `VFIPC1` for desktop commands, but it is still a minimum renderer rather than the complete Vaadin Flow client engine.
+- `dev-ipc` does not load a local HTTP URL for the smoke app and uses `VFIPC1` for desktop commands. Java now includes real `UidlWriter` output in IPC payloads, but the WebView still uses a minimum renderer rather than the complete Vaadin Flow client engine.
 
 Verification note: on some managed macOS desktops, global `screencapture` or coordinate clicking can hit a `loginwindow`/MDM overlay instead of normal app windows. In that case, use the WindowServer entry for `Vaadin Desktop Host`, `HOST_PROTOCOL webview.dom`, the `VAADIN_DESKTOP_FLOW_IPC_AUTO_CLICK=1` WebView smoke hook and `window-snapshot.png` as the reliable verification artifacts.
 
@@ -68,11 +68,11 @@ The real host still needs to:
 
 - load local Vaadin frontend resources,
 - replace the current local HTML shell with the real Flow client engine bridge,
-- apply Vaadin UIDL patches,
+- feed Vaadin UIDL patches into the real Flow client engine,
 - enforce capability permissions.
 
 ## Why Not Call This Final
 
 Embedding a localhost URL in WKWebView is compatibility mode. It is useful for proving framework ergonomics, real Flow app structure and desktop host lifecycle, but it is not Flow over IPC.
 
-The `dev-ipc` path is the first real no-HTTP IPC slice, but it is not final either: it proves host/WebView/Java message flow and listener-driven patches before the project swaps in Vaadin UIDL and the real Flow client engine.
+The `dev-ipc` path is the first real no-HTTP IPC slice, but it is not final either: it proves host/WebView/Java message flow, listener-driven patches and server-side UIDL generation before the project swaps in Flow client engine UIDL consumption.

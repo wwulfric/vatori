@@ -717,6 +717,7 @@ let flowIpcShell = #"""
       };
       const flowNodeElements = new Map();
       const flowTextNodes = new Map();
+      const flowUidlNodes = new Map();
 
       function envelope(type, payload) {
         sequence += 1;
@@ -794,23 +795,120 @@ let flowIpcShell = #"""
         }
         flowNodeElements.clear();
         flowTextNodes.clear();
+        flowUidlNodes.clear();
         app.replaceChildren(renderNode(node));
       }
 
-      function applyUidlPatch(payload) {
+      function parseUidl(payload) {
         const body = payload && payload.uidl && payload.uidl.body;
         if (typeof body !== 'string' || body.length === 0) {
-          return false;
+          return null;
         }
-        let uidl;
         try {
-          uidl = JSON.parse(body);
+          return JSON.parse(body);
         } catch (_) {
+          return null;
+        }
+      }
+
+      function uidlState(nodeId) {
+        if (!flowUidlNodes.has(nodeId)) {
+          flowUidlNodes.set(nodeId, { nodeId, children: [] });
+        }
+        return flowUidlNodes.get(nodeId);
+      }
+
+      function ingestUidlChanges(changes) {
+        for (const change of changes) {
+          const state = uidlState(change.node);
+          if (change.type === 'attach') {
+            continue;
+          }
+          if (change.type === 'put') {
+            state[change.key] = change.value;
+            if (change.key === 'text') {
+              flowTextNodes.set(change.node, String(change.value || ''));
+            }
+          } else if (change.type === 'clear') {
+            state.children = [];
+          } else if (change.type === 'splice' && Array.isArray(change.addNodes)) {
+            const children = Array.isArray(state.children) ? state.children.slice() : [];
+            children.splice(change.index || 0, 0, ...change.addNodes);
+            state.children = children;
+          }
+        }
+      }
+
+      function renderUidlNode(nodeId) {
+        const state = flowUidlNodes.get(nodeId);
+        if (!state) {
+          const text = document.createElement('span');
+          text.textContent = flowTextNodes.get(nodeId) || '';
+          text.dataset.flowNodeId = String(nodeId);
+          flowNodeElements.set(nodeId, text);
+          return text;
+        }
+
+        const tag = state.tag || 'span';
+        let element;
+        if (tag === 'vaadin-button') {
+          element = document.createElement('button');
+          element.addEventListener('click', () => {
+            sendFlowEvent({ id: state.id || '', nodeId }, 'click');
+          });
+        } else if (tag === 'h1') {
+          element = document.createElement('h1');
+        } else if (tag === 'span') {
+          element = document.createElement('span');
+        } else {
+          element = document.createElement('div');
+          if (tag.includes('vertical-layout') || tag.includes('horizontal-layout')) {
+            element.className = 'flow-layout';
+          }
+        }
+
+        if (state.id) {
+          element.dataset.flowId = state.id;
+        }
+        element.dataset.flowNodeId = String(nodeId);
+        flowNodeElements.set(nodeId, element);
+
+        const children = Array.isArray(state.children) ? state.children : [];
+        if (children.length > 0) {
+          for (const childId of children) {
+            element.appendChild(renderUidlNode(childId));
+          }
+        } else if (typeof state.text === 'string') {
+          element.textContent = state.text;
+        }
+        return element;
+      }
+
+      function applyUidlBootstrap(payload) {
+        const uidl = parseUidl(payload);
+        if (!uidl || !Array.isArray(uidl.changes)) {
           return false;
         }
-        if (!Array.isArray(uidl.changes)) {
+        flowNodeElements.clear();
+        flowTextNodes.clear();
+        flowUidlNodes.clear();
+        ingestUidlChanges(uidl.changes);
+
+        const body = flowUidlNodes.get(1);
+        const roots = body && Array.isArray(body.children) ? body.children : [];
+        if (roots.length === 0) {
           return false;
         }
+        app.replaceChildren(...roots.map(renderUidlNode));
+        return true;
+      }
+
+      function applyUidlPatch(payload) {
+        const uidl = parseUidl(payload);
+        if (!uidl || !Array.isArray(uidl.changes)) {
+          return false;
+        }
+        ingestUidlChanges(uidl.changes);
 
         let applied = false;
         for (const change of uidl.changes) {
@@ -833,10 +931,7 @@ let flowIpcShell = #"""
             if (element) {
               let offset = 0;
               for (const nodeId of change.addNodes) {
-                const text = document.createElement('span');
-                text.textContent = flowTextNodes.get(nodeId) || '';
-                text.dataset.flowNodeId = String(nodeId);
-                flowNodeElements.set(nodeId, text);
+                const text = renderUidlNode(nodeId);
                 const reference = element.childNodes[(change.index || 0) + offset] || null;
                 element.insertBefore(text, reference);
                 offset += 1;
@@ -888,7 +983,11 @@ let flowIpcShell = #"""
           trace.textContent = 'recv ' + message.type + ' #' + message.id;
           if (message.type === 'bootstrapResponse' || message.type === 'patch') {
             updateClientState(message.payload);
-            if (message.type === 'bootstrapResponse' || !applyUidlPatch(message.payload)) {
+            if (message.type === 'bootstrapResponse') {
+              if (!applyUidlBootstrap(message.payload)) {
+                render(message.payload && message.payload.tree);
+              }
+            } else if (!applyUidlPatch(message.payload)) {
               render(message.payload && message.payload.tree);
             }
             if (message.type === 'bootstrapResponse' && window.__VAADIN_DESKTOP_FLOW_IPC_AUTO_CLICK__ && !autoClickDone) {

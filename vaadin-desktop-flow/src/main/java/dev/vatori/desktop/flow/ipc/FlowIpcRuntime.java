@@ -46,7 +46,7 @@ final class FlowIpcRuntime {
                 "uidlWriter", true,
                 "uidlRpcDispatch", true,
                 "uidlRpcProducer", "webview-bridge",
-                "uidlConsumer", "trace-only"));
+                "uidlConsumer", "minimum-webview-uidl-applier"));
 
         try (BufferedReader reader = new BufferedReader(new InputStreamReader(System.in, StandardCharsets.UTF_8))) {
             String line;
@@ -206,7 +206,8 @@ final class FlowIpcRuntime {
         uidl.put("reason", reason);
         uidl.put("resync", resync);
         uidl.put("desktopSession", true);
-        uidl.put("consumedByWebView", false);
+        uidl.put("consumedByWebView", true);
+        uidl.put("consumer", "minimum-webview-uidl-applier");
         uidl.put("containsChanges", uidlJson.contains("\"changes\""));
         uidl.put("containsSyncId", uidlJson.contains("\"syncId\""));
         uidl.put("body", uidlJson);

@@ -4,7 +4,7 @@ This repository explores a Vaadin Flow desktop runtime inspired by Tauri/Raycast
 
 Framework v0 runs in **compatibility mode** by default: real Vaadin Flow views are served by embedded Spring Boot on `127.0.0.1`, while the desktop runtime API, host boundary, IPC envelope and trace logs are already separated so they can evolve toward Flow over IPC.
 
-The repository now also contains the first `dev-ipc` runtime slice. It runs a constrained Flow-over-IPC smoke app without a localhost HTTP server in the core UI path, sends WebView click events as Flow-client-shaped UIDL RPC payloads, emits real server-side Vaadin UIDL and dispatches those events through `UidlRequestHandler`/`ServerRpcHandler`. Bootstrap, one server-initiated push and event patches are applied through a minimum WebView UIDL changes applier; verification resync consumes Vaadin's `resynchronize` signal and rebuilds from the local tree fallback. Bootstrap also advertises real Vaadin `flow-client` classpath resources and the WebView requests, imports and initializes `FlowBootstrap.js` through IPC as a resource-loading probe. This is still not full Flow client-engine parity because the applier is repository-local and only covers the smoke subset.
+The repository now also contains the first `dev-ipc` runtime slice. It runs a constrained Flow-over-IPC smoke app without a localhost HTTP server in the core UI path, sends WebView click events as Flow-client-shaped UIDL RPC payloads, emits real server-side Vaadin UIDL and dispatches those events through `UidlRequestHandler`/`ServerRpcHandler`. Bootstrap, one server-initiated push and event patches are applied through a minimum WebView UIDL changes applier; verification resync consumes Vaadin's `resynchronize` signal and rebuilds from the local tree fallback. Bootstrap also advertises real Vaadin `flow-client` classpath resources and the WebView requests, imports and initializes `FlowBootstrap.js` and `FlowClient.js` through IPC as a resource-loading probe. This is still not full Flow client-engine parity because UIDL consumption remains repository-local and only covers the smoke subset.
 
 ## Quick Start
 
@@ -59,7 +59,7 @@ bash bin/flow-ipc-scope-smoke
 bash bin/flow-client-resource-smoke
 ```
 
-These commands construct a minimal desktop-shaped `VaadinSession`/`UI` in process. The first verifies that Vaadin's real `UidlWriter` emits UIDL `changes`, `syncId` and bootstrap `Vaadin-Security-Key`; the second sends a real Flow event RPC body through `UidlRequestHandler`/`ServerRpcHandler`, verifies a click listener UIDL patch, and confirms invalid Flow IPC `csrfToken`/security key, stale `syncId` and out-of-order `clientId` values are rejected before dispatch. The third verifies that invalid Flow IPC envelope `sessionId` / `uiId` values are rejected before event handling. The fourth verifies that the runtime can read real Vaadin `flow-client` resources, including `FlowBootstrap.js`, from the Java sidecar classpath.
+These commands construct a minimal desktop-shaped `VaadinSession`/`UI` in process. The first verifies that Vaadin's real `UidlWriter` emits UIDL `changes`, `syncId` and bootstrap `Vaadin-Security-Key`; the second sends a real Flow event RPC body through `UidlRequestHandler`/`ServerRpcHandler`, verifies a click listener UIDL patch, and confirms invalid Flow IPC `csrfToken`/security key, stale `syncId` and out-of-order `clientId` values are rejected before dispatch. The third verifies that invalid Flow IPC envelope `sessionId` / `uiId` values are rejected before event handling. The fourth verifies that the runtime can read real Vaadin `flow-client` resources, including `FlowBootstrap.js` and `FlowClient.js`, from the Java sidecar classpath.
 
 On macOS the original `dev` command still opens a native WKWebView desktop window by default. That path is now the macOS fallback/compatibility host.
 
@@ -110,7 +110,7 @@ Implemented:
 - macOS system WebView launcher: Spring Boot starts Vaadin on random localhost port; a generated WKWebView `.app` opens the desktop window.
 - Swift/AppKit host: starts Java sidecar, opens WKWebView, traces Host Protocol v0 and cleans up the sidecar on window shutdown.
 - Flow IPC runtime slice: starts a no-HTTP smoke app, dispatches Button click over IPC through `UidlRequestHandler`/`ServerRpcHandler`, generates real server-side UIDL, sends desktop API calls as `VFIPC1 command`, receives `capabilityResult`, and applies a replace-root patch in the WebView shell.
-- Flow client resource loading probe: `dev-ipc` advertises Vaadin `flow-client` classpath resources, the WebView requests `FlowBootstrap.js` through `resourceRequest`, Java responds with `resourceResponse`, and diagnostics verify the real Flow bootstrap module can be imported, exports `init` and registers an IPC app through `FlowBootstrap.init`.
+- Flow client resource loading probe: `dev-ipc` advertises Vaadin `flow-client` classpath resources, the WebView requests `FlowBootstrap.js` and `FlowClient.js` through `resourceRequest`, Java responds with redacted `resourceResponse` traces, and diagnostics verify the real Flow bootstrap module plus GWT client module are imported and initialized.
 - UIDL adapter smoke: drives Vaadin's real server-side `UidlWriter` from an in-process desktop-shaped session/UI boundary.
 - UIDL RPC smoke: drives a real Flow event RPC through `UidlRequestHandler`/`ServerRpcHandler` and verifies a listener-produced UIDL patch.
 - Host Protocol v0 stdout envelope for Java desktop commands.
@@ -122,6 +122,6 @@ Implemented:
 Not implemented yet:
 
 - Flow-client-engine consumption of the generated UIDL over IPC.
-- Full Flow client resource graph execution, dev mode replacement and production frontend bundle loading.
+- Full Flow client UIDL consumption, dev mode replacement and production frontend bundle loading.
 - Native capability permission manifest.
 - Production packaging, signing, auto-update.

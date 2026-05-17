@@ -981,7 +981,7 @@ let flowIpcShell = #"""
       window.VaadinDesktopIpc = {
         receive(message) {
           trace.textContent = 'recv ' + message.type + ' #' + message.id;
-          if (message.type === 'bootstrapResponse' || message.type === 'patch') {
+          if (message.type === 'bootstrapResponse' || message.type === 'patch' || message.type === 'push' || message.type === 'resync') {
             updateClientState(message.payload);
             if (message.type === 'bootstrapResponse') {
               if (!applyUidlBootstrap(message.payload)) {

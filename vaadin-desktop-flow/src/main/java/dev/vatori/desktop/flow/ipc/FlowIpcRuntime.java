@@ -1,7 +1,9 @@
 package dev.vatori.desktop.flow.ipc;
 
 import com.vaadin.flow.component.Component;
+import com.vaadin.flow.component.HasComponents;
 import com.vaadin.flow.component.button.Button;
+import com.vaadin.flow.component.html.Span;
 import com.vaadin.flow.router.Route;
 import dev.vatori.desktop.flow.transport.DesktopFlowRuntimeSession;
 import dev.vatori.desktop.flow.transport.FlowPatchResponse;
@@ -95,10 +97,26 @@ final class FlowIpcRuntime {
                 "eventDispatch", "flow-client-rpc"));
         payload.put("tree", renderer.render(root));
         send("bootstrapResponse", nextId("bootstrap"), correlationIdOr(id, correlationId), payload);
-        send("push", nextId("push"), correlationIdOr(id, correlationId), Map.of(
-                "reason", "server-initiated-ready",
-                "transport", "flow-ipc",
-                "uidlWriter", true));
+        sendServerInitiatedPush(id, correlationId);
+    }
+
+    private void sendServerInitiatedPush(String id, String correlationId) {
+        if (root instanceof HasComponents container) {
+            flowSession.runLocked(() -> {
+                Span pushed = new Span("5 Server push over IPC READY");
+                pushed.setId("ipc-push-status");
+                container.add(pushed);
+            });
+        }
+
+        Map<String, Object> payload = new LinkedHashMap<>();
+        payload.put("reason", "server-initiated-update");
+        payload.put("transport", "flow-ipc");
+        payload.put("compatibilityMode", false);
+        payload.put("uidlWriter", true);
+        payload.put("uidl", uidlPayload("push", false));
+        payload.put("tree", renderer.render(root));
+        send("push", nextId("push"), correlationIdOr(id, correlationId), payload);
     }
 
     private Component instantiateRoute() {

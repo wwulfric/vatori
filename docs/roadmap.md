@@ -42,9 +42,9 @@ First issue candidates:
 
 ## v0.3: Capability Gateway
 
-- Add capability manifest. The first `dev-ipc` scaffold now reads module-root `desktop-capabilities.json` and traces manifest-backed allow-all-dev decisions for the smoke app, including a cancelled `fileDialog.openFile` scaffold.
+- Add capability manifest. The first `dev-ipc` scaffold now reads module-root `desktop-capabilities.json`, supports `allow-all-dev`, `manifest-enforced` and `trace-only-dry-run`, and the Flow IPC smoke app runs in `manifest-enforced` mode with an explicit unlisted-command deny-path. `fileDialog.openFile` now uses AppKit `NSOpenPanel` and exposes an automated cancellation path for repeatable smoke verification.
 - Enforce window/source/user-gesture checks.
-- Implement notifications, clipboard and file dialog through real native APIs.
+- Implement notifications and production-grade file permission grants through real native APIs.
 
 ## v0.4: Packaging
 

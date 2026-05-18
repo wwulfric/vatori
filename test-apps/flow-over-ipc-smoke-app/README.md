@@ -24,13 +24,13 @@ Current scope:
 - Java emits one server-initiated push UIDL update after bootstrap; the WebView bridge queues it until the visible Flow client engine is ready, then flushes and consumes it without localhost HTTP.
 - Java-to-WebView payloads include monotonic `serverSequence` diagnostics for the smoke path.
 - Java listener execution updates Flow component state and returns a full replace-root patch.
-- With `VAADIN_DESKTOP_FLOW_IPC_AUTO_RESYNC=1`, the visible Flow client requests one resync after the event patch and consumes the returned `UidlRequestHandler` response.
+- With `VAADIN_DESKTOP_FLOW_IPC_AUTO_RESYNC=1`, the verification hook requests one resync after the event patch through the Flow client path, falling back to an IPC-backed Flow XHR body if the current engine method does not emit XHR, and consumes the returned `UidlRequestHandler` response.
 - Desktop API calls travel Java -> Swift host as `VFIPC1 command`.
-- `desktop-capabilities.json` declares `window.setTitle`, `notification.show`, `clipboard.writeText` and `fileDialog.openFile` for the `main` window. The smoke view calls those APIs; Swift host returns `capabilityResult` with `permissionMode=allow-all-dev`, `permissionReason=manifest-allow` and manifest metadata, with clipboard backed by native `NSPasteboard` and file dialog currently returning a cancelled scaffold result.
+- `desktop-capabilities.json` declares `permissionMode=manifest-enforced` and allows `window.setTitle`, `notification.show`, `clipboard.writeText` and `fileDialog.openFile` for the `main` window. The smoke view calls those APIs; Swift host returns `capabilityResult` with `permissionReason=manifest-allow` and manifest metadata, with clipboard backed by native `NSPasteboard` and file dialog backed by AppKit `NSOpenPanel`. The same click also sends `diagnostics.deniedCapability`, which is intentionally absent from the manifest and must return `permissionDecision=denied` with `permissionReason=manifest-denied`.
 - This is not the full Vaadin Flow transport yet; the hidden local UIDL applier remains as a diagnostic fallback while real push queue/reconnect/resync semantics are still being built.
 
 For automated real-window verification:
 
 ```bash
-VAADIN_DESKTOP_FLOW_IPC_AUTO_CLICK=1 VAADIN_DESKTOP_FLOW_IPC_AUTO_RESYNC=1 VAADIN_DESKTOP_FLOW_IPC_AUTO_ERROR=1 bash bin/vaadin-desktop dev-ipc test-apps/flow-over-ipc-smoke-app
+VAADIN_DESKTOP_FLOW_IPC_AUTO_CLICK=1 VAADIN_DESKTOP_FLOW_IPC_AUTO_RESYNC=1 VAADIN_DESKTOP_FLOW_IPC_AUTO_ERROR=1 VAADIN_DESKTOP_FLOW_IPC_AUTO_FILE_DIALOG_CANCEL=1 bash bin/vaadin-desktop dev-ipc test-apps/flow-over-ipc-smoke-app
 ```

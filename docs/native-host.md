@@ -20,7 +20,7 @@ Responsibilities implemented now:
 - closes the Java process when the desktop window closes,
 - in `dev-ipc`, loads a local WebView shell, receives WebView messages through `WKScriptMessageHandler`, forwards them to Java stdin and delivers Java `VFIPC1` responses back to WebView JavaScript,
 - in `dev-ipc`, has the WebView request all advertised Flow client classpath resources through `VFIPC1 resourceRequest`, imports `FlowBootstrap.js` and `FlowClient.js` as Blob-backed ES modules, calls `FlowBootstrap.init` with an IPC bootstrap config, then calls `FlowClient.init` and records DOM diagnostics,
-- in `dev-ipc`, handles `VFIPC1 command` for `window.setTitle`, `clipboard.writeText`, trace-only `notification.show` and a `fileDialog.openFile` scaffold that returns a cancelled result, then emits `capabilityResult`.
+- in `dev-ipc`, handles `VFIPC1 command` for `window.setTitle`, `clipboard.writeText`, trace-only `notification.show` and `fileDialog.openFile` through AppKit `NSOpenPanel`, then emits `capabilityResult`.
 
 Current compatibility boundary:
 
@@ -29,7 +29,7 @@ Current compatibility boundary:
 - The WebView loads a local HTTP URL today. This is explicitly not the final Flow over IPC transport.
 - `dev-ipc` does not load a local HTTP URL for the smoke app and uses `VFIPC1` for desktop commands. The WebView bridge sends click events and one verification resync from the visible Flow client, Java includes real `UidlWriter`/`UidlRequestHandler` output in IPC payloads, one server-initiated push UIDL update is queued until the Flow client engine is ready and then delivered into it, and the advertised Flow client resources are loaded from the Java sidecar classpath through IPC. `FlowBootstrap.js` / `FlowClient.js` are imported as modules and initialized with an IPC app config. The registered Flow client now owns the visible bootstrap, click-event patch, push and verification resync path through IPC-backed bridge methods.
 
-Verification note: on some managed macOS desktops, global `screencapture` or coordinate clicking can hit a `loginwindow`/MDM overlay instead of normal app windows. In that case, use the WindowServer entry for `Vaadin Desktop Host`, `HOST_PROTOCOL webview.dom`, the `VAADIN_DESKTOP_FLOW_IPC_AUTO_CLICK=1` / `VAADIN_DESKTOP_FLOW_IPC_AUTO_RESYNC=1` / `VAADIN_DESKTOP_FLOW_IPC_AUTO_ERROR=1` WebView smoke hooks and `window-snapshot.png` as the reliable verification artifacts.
+Verification note: on some managed macOS desktops, global `screencapture` or coordinate clicking can hit a `loginwindow`/MDM overlay instead of normal app windows. In that case, use the WindowServer entry for `Vaadin Desktop Host`, `HOST_PROTOCOL webview.dom`, the `VAADIN_DESKTOP_FLOW_IPC_AUTO_CLICK=1` / `VAADIN_DESKTOP_FLOW_IPC_AUTO_RESYNC=1` / `VAADIN_DESKTOP_FLOW_IPC_AUTO_ERROR=1` WebView smoke hooks, `VAADIN_DESKTOP_FLOW_IPC_AUTO_FILE_DIALOG_CANCEL=1` for unattended native file dialog cancellation and `window-snapshot.png` as the reliable verification artifacts.
 
 ## macOS Fallback Host
 
@@ -65,9 +65,15 @@ VAADIN_DESKTOP_HOST=browser bash bin/vaadin-desktop dev examples/counter-app
 
 ## Capability Permission Model
 
-`dev-ipc` uses an explicit development permission mode: `permissionMode=allow-all-dev`.
-For app-shaped verification projects, the Swift host looks for `desktop-capabilities.json`
-in the module root and records a `capabilityManifest` trace event when it is present.
+`dev-ipc` now reads the permission mode from `desktop-capabilities.json` when a manifest
+is present and records a `capabilityManifest` trace event. Supported modes are:
+
+- `allow-all-dev`: development default; commands are allowed when no manifest is present,
+  or when a loaded manifest lists the command.
+- `manifest-enforced`: a loaded manifest is required, and commands must be listed for
+  the window.
+- `trace-only-dry-run`: commands execute, but permission metadata records whether a
+  loaded manifest would have allowed or denied the command.
 
 The current host allows the known v1 commands for the single main window:
 
@@ -76,14 +82,14 @@ The current host allows the known v1 commands for the single main window:
 - `fileDialog.openFile`
 - `notification.show`
 
-Every `capabilityResult` includes `permissionMode`, `permissionDecision`, `permissionReason` and `permissionScope`. When a manifest is loaded, known commands must be listed for the `main` window and successful calls are marked `permissionDecision=allowed` with `permissionReason=manifest-allow`; unsupported or unlisted commands are rejected with `permissionDecision=denied`. Results also include `permissionManifestLoaded`, `permissionManifestPath` and `permissionManifestCommands`. This is intentionally still a development permission system. The production direction is a stricter manifest-gated model with per-window, per-origin, user-gesture and per-capability grants.
+Every `capabilityResult` includes `permissionMode`, `permissionDecision`, `permissionReason` and `permissionScope`. The Flow IPC smoke app uses `permissionMode=manifest-enforced`; known commands must be listed for the `main` window and successful calls are marked `permissionDecision=allowed` with `permissionReason=manifest-allow`. The smoke view also sends an intentionally undeclared `diagnostics.deniedCapability` command, which is rejected with `permissionDecision=denied` and `permissionReason=manifest-denied`. Results include `permissionManifestLoaded`, `permissionManifestPath` and `permissionManifestCommands`. `fileDialog.openFile` now returns AppKit panel result metadata (`canceled`, `paths`, `allowsMultipleSelection`, `securityScoped=false`, `autoCanceled`) but does not yet create security-scoped bookmarks. This is intentionally still a development permission system. The production direction is a stricter manifest-gated model with per-window, per-origin, user-gesture and per-capability grants.
 
 ## Next Native Host Work
 
 The real host still needs to:
 
 - replace the one-shot push/resync verification hooks with a real queue, ordering and reconnect model,
-- replace `allow-all-dev` with production manifest-driven capability permissions.
+- replace the development manifest modes with production capability grants, user-gesture checks and security-scoped file permissions.
 
 ## Why Not Call This Final
 

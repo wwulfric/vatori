@@ -1,6 +1,6 @@
 {
   "schemaVersion": 1,
-  "permissionMode": "allow-all-dev",
+  "permissionMode": "manifest-enforced",
   "windows": [
     {
       "label": "main",

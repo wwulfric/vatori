@@ -6,6 +6,9 @@ import com.vaadin.flow.component.html.Span;
 import com.vaadin.flow.component.orderedlayout.VerticalLayout;
 import com.vaadin.flow.router.Route;
 import dev.vatori.desktop.Desktop;
+import dev.vatori.desktop.DesktopCommand;
+
+import java.util.Map;
 
 @Route("")
 public class FlowOverIpcSmokeView extends VerticalLayout {
@@ -29,6 +32,8 @@ public class FlowOverIpcSmokeView extends VerticalLayout {
             Desktop.current().notifications().show("Flow IPC", "Button clicked " + count + " time(s)");
             Desktop.current().clipboard().writeText("Vaadin Flow over IPC clicks: " + count);
             Desktop.current().fileDialog().openFile("Flow IPC File Dialog");
+            Desktop.current().nativeBridge().invoke(new DesktopCommand("diagnostics.deniedCapability",
+                    Map.of("reason", "manifest-deny-smoke")));
         });
         button.setId("ipc-button");
 

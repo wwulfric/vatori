@@ -43,10 +43,14 @@ public final class DesktopTraceInspector {
         }
 
         boolean requireFlowIpc = false;
+        boolean requireFlowIpcV1_1 = false;
         List<Path> paths = new ArrayList<>();
         for (String arg : args) {
             if ("--require-flow-ipc-v1".equals(arg)) {
                 requireFlowIpc = true;
+            } else if ("--require-flow-ipc-v1_1".equals(arg)) {
+                requireFlowIpc = true;
+                requireFlowIpcV1_1 = true;
             } else {
                 paths.add(Path.of(arg));
             }
@@ -62,6 +66,9 @@ public final class DesktopTraceInspector {
             TraceSummary summary = inspect(path);
             summary.print(path);
             if (requireFlowIpc && !summary.hasRequiredFlowIpcTypes()) {
+                failures++;
+            }
+            if (requireFlowIpcV1_1 && !summary.hasRequiredFlowIpcV1_1Types()) {
                 failures++;
             }
         }
@@ -91,12 +98,21 @@ public final class DesktopTraceInspector {
             }
             if (line.contains("\"type\":\"capabilityManifest\"")
                     && line.contains("\"loaded\":true")
-                    && line.contains("\"permissionMode\":\"allow-all-dev\"")
+                    && containsSupportedPermissionMode(line)
                     && line.contains("window.setTitle")
                     && line.contains("clipboard.writeText")
                     && line.contains("fileDialog.openFile")
                     && line.contains("notification.show")) {
                 summary.capabilityManifestObserved = true;
+            }
+            if (line.contains("\"type\":\"capabilityManifest\"")
+                    && line.contains("\"loaded\":true")
+                    && line.contains("\"permissionMode\":\"manifest-enforced\"")
+                    && line.contains("window.setTitle")
+                    && line.contains("clipboard.writeText")
+                    && line.contains("fileDialog.openFile")
+                    && line.contains("notification.show")) {
+                summary.manifestEnforcedObserved = true;
             }
             if (line.contains("\"serverSequenceScope\":\"java-sidecar-to-webview\"")
                     && line.contains("\"serverSequence\"")) {
@@ -118,10 +134,17 @@ public final class DesktopTraceInspector {
                 summary.nativeClipboardObserved = true;
             }
             if (line.contains("\"type\":\"capabilityResult\"")
-                    && line.contains("\"permissionMode\":\"allow-all-dev\"")
+                    && containsSupportedPermissionMode(line)
                     && line.contains("\"permissionDecision\":\"allowed\"")
                     && line.contains("\"permissionScope\":\"window:main\"")) {
                 summary.capabilityPermissionObserved = true;
+            }
+            if (line.contains("\"type\":\"capabilityResult\"")
+                    && line.contains("\"permissionDecision\":\"denied\"")
+                    && line.contains("\"permissionReason\":\"manifest-denied\"")
+                    && line.contains("\"success\":false")
+                    && line.contains("diagnostics.deniedCapability")) {
+                summary.capabilityDeniedObserved = true;
             }
             if (line.contains("\"type\":\"capabilityResult\"")
                     && line.contains("\"permissionManifestLoaded\":true")
@@ -135,12 +158,19 @@ public final class DesktopTraceInspector {
             }
             if (line.contains("\"type\":\"capabilityResult\"")
                     && line.contains("\"command\":\"fileDialog.openFile\"")
-                    && line.contains("\"mode\":\"scaffold-cancelled\"")
-                    && line.contains("\"canceled\":true")
+                    && fileDialogResultObserved(line)
                     && line.contains("\"permissionManifestLoaded\":true")
                     && line.contains("\"permissionDecision\":\"allowed\"")
                     && line.contains("\"permissionReason\":\"manifest-allow\"")) {
-                summary.fileDialogScaffoldObserved = true;
+                summary.fileDialogResultObserved = true;
+            }
+            if (line.contains("\"type\":\"capabilityResult\"")
+                    && line.contains("\"command\":\"fileDialog.openFile\"")
+                    && line.contains("\"mode\":\"native-appkit-open-panel\"")
+                    && line.contains("\"paths\":")
+                    && line.contains("\"securityScoped\":false")
+                    && line.contains("\"permissionDecision\":\"allowed\"")) {
+                summary.nativeFileDialogResultObserved = true;
             }
             if (line.contains("\"type\":\"error\"")
                     && line.contains("webviewVerificationProbe")
@@ -408,8 +438,24 @@ public final class DesktopTraceInspector {
         return false;
     }
 
+    private static boolean fileDialogResultObserved(String line) {
+        boolean v1Scaffold = line.contains("\"mode\":\"scaffold-cancelled\"")
+                && line.contains("\"canceled\":true");
+        boolean appKitPanel = line.contains("\"mode\":\"native-appkit-open-panel\"")
+                && line.contains("\"canceled\":")
+                && line.contains("\"paths\":")
+                && line.contains("\"securityScoped\":false");
+        return v1Scaffold || appKitPanel;
+    }
+
+    private static boolean containsSupportedPermissionMode(String line) {
+        return line.contains("\"permissionMode\":\"allow-all-dev\"")
+                || line.contains("\"permissionMode\":\"manifest-enforced\"")
+                || line.contains("\"permissionMode\":\"trace-only-dry-run\"");
+    }
+
     private static void usage() {
-        System.out.println("Usage: bin/flow-ipc-trace-inspect [--require-flow-ipc-v1] <trace.ndjson>...");
+        System.out.println("Usage: bin/flow-ipc-trace-inspect [--require-flow-ipc-v1|--require-flow-ipc-v1_1] <trace.ndjson>...");
     }
 
     public static final class TraceSummary {
@@ -420,7 +466,10 @@ public final class DesktopTraceInspector {
         private boolean compatibilityFalse;
         private boolean capabilityManifestObserved;
         private boolean capabilityManifestResultObserved;
-        private boolean fileDialogScaffoldObserved;
+        private boolean fileDialogResultObserved;
+        private boolean nativeFileDialogResultObserved;
+        private boolean manifestEnforcedObserved;
+        private boolean capabilityDeniedObserved;
         private boolean serverSequenceObserved;
         private boolean flowIpcServerSequenceDomObserved;
         private boolean clickPatchObserved;
@@ -464,7 +513,7 @@ public final class DesktopTraceInspector {
                     && compatibilityFalse
                     && capabilityManifestObserved
                     && capabilityManifestResultObserved
-                    && fileDialogScaffoldObserved
+                    && fileDialogResultObserved
                     && serverSequenceObserved
                     && flowIpcServerSequenceDomObserved
                     && clickPatchObserved
@@ -503,6 +552,13 @@ public final class DesktopTraceInspector {
                     && resyncUidlObserved;
         }
 
+        public boolean hasRequiredFlowIpcV1_1Types() {
+            return hasRequiredFlowIpcTypes()
+                    && nativeFileDialogResultObserved
+                    && manifestEnforcedObserved
+                    && capabilityDeniedObserved;
+        }
+
         private void print(Path path) {
             System.out.println("Trace: " + path);
             System.out.println("Messages: " + total);
@@ -512,7 +568,10 @@ public final class DesktopTraceInspector {
             System.out.println("compatibilityMode=false: " + compatibilityFalse);
             System.out.println("capability manifest observed: " + capabilityManifestObserved);
             System.out.println("capability manifest result observed: " + capabilityManifestResultObserved);
-            System.out.println("file dialog scaffold observed: " + fileDialogScaffoldObserved);
+            System.out.println("file dialog result observed: " + fileDialogResultObserved);
+            System.out.println("native file dialog result observed: " + nativeFileDialogResultObserved);
+            System.out.println("manifest-enforced permission observed: " + manifestEnforcedObserved);
+            System.out.println("capability denied observed: " + capabilityDeniedObserved);
             System.out.println("server sequence observed: " + serverSequenceObserved);
             System.out.println("Flow IPC server sequence DOM observed: " + flowIpcServerSequenceDomObserved);
             System.out.println("click patch observed: " + clickPatchObserved);

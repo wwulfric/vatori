@@ -10,6 +10,7 @@ struct HostConfig {
     var flowIpcAutoClick: Bool = false
     var flowIpcAutoResync: Bool = false
     var flowIpcAutoError: Bool = false
+    var flowIpcAutoFileDialogCancel: Bool = false
     var title: String = "Vaadin Desktop"
     var width: Double = 1100
     var height: Double = 780
@@ -49,6 +50,8 @@ struct HostConfig {
         config.flowIpcAutoClick = ProcessInfo.processInfo.environment["VAADIN_DESKTOP_FLOW_IPC_AUTO_CLICK"] == "1"
         config.flowIpcAutoResync = ProcessInfo.processInfo.environment["VAADIN_DESKTOP_FLOW_IPC_AUTO_RESYNC"] == "1"
         config.flowIpcAutoError = ProcessInfo.processInfo.environment["VAADIN_DESKTOP_FLOW_IPC_AUTO_ERROR"] == "1"
+        config.flowIpcAutoFileDialogCancel = ProcessInfo.processInfo.environment["VAADIN_DESKTOP_FLOW_IPC_AUTO_FILE_DIALOG_CANCEL"] == "1"
+            || config.flowIpcAutoClick
         return config
     }
 }
@@ -111,10 +114,42 @@ struct CapabilityManifest {
     }
 
     func allows(_ command: String) -> Bool {
+        if permissionMode == "trace-only-dry-run" {
+            return true
+        }
+        if !parseError.isEmpty {
+            return false
+        }
+        if permissionMode == "manifest-enforced" {
+            return loaded && allowedCommands.contains(command)
+        }
         if !loaded {
             return true
         }
-        return parseError.isEmpty && allowedCommands.contains(command)
+        return allowedCommands.contains(command)
+    }
+
+    func denialReason(_ command: String) -> String {
+        if !parseError.isEmpty {
+            return "manifest-invalid"
+        }
+        if permissionMode == "manifest-enforced" && !loaded {
+            return "manifest-missing"
+        }
+        if loaded && !allowedCommands.contains(command) {
+            return "manifest-denied"
+        }
+        return "unsupported-command"
+    }
+
+    func allowedReason(_ command: String) -> String {
+        if permissionMode == "trace-only-dry-run" {
+            if loaded && !allowedCommands.contains(command) {
+                return "dry-run-would-deny"
+            }
+            return loaded ? "dry-run-manifest-allow" : "dry-run-development-default"
+        }
+        return loaded ? "manifest-allow" : "development-default"
     }
 
     func tracePayload() -> [String: Any] {
@@ -397,6 +432,7 @@ final class WebViewHost: NSObject, NSApplicationDelegate, NSWindowDelegate, WKNa
     private var window: NSWindow?
     private var webView: WKWebView?
     private var didOpenWindow = false
+    private var fileDialogInFlight = false
 
     init(config: HostConfig) {
         self.config = config
@@ -558,95 +594,167 @@ final class WebViewHost: NSObject, NSApplicationDelegate, NSWindowDelegate, WKNa
         let payload = object["payload"] as? [String: Any] ?? [:]
         let command = payload["command"] as? String ?? "unknown"
         let args = payload["args"] as? [String: Any] ?? [:]
-        let result = executeDesktopCommand(command, args: args)
         let correlationId = (object["correlationId"] as? String) ?? (object["id"] as? String) ?? ""
-        let resultEnvelope: [String: Any] = [
-            "version": "flow-ipc-v1",
-            "type": "capabilityResult",
-            "id": "capability-\(correlationId)",
-            "correlationId": correlationId,
-            "sessionId": object["sessionId"] as? String ?? "flow-ipc-session",
-            "uiId": object["uiId"] as? String ?? "main",
-            "route": object["route"] as? String ?? "",
-            "payload": result,
-            "error": NSNull(),
-            "timestamp": nowMillis()
-        ]
-        trace("send", "capabilityResult", [
-            "target": "webview",
-            "transport": "flow-ipc",
-            "command": command,
-            "envelope": resultEnvelope
-        ])
-        deliverFlowIpcEnvelope(resultEnvelope, type: "capabilityResult")
+        executeDesktopCommand(command, args: args) { result in
+            let resultEnvelope: [String: Any] = [
+                "version": "flow-ipc-v1",
+                "type": "capabilityResult",
+                "id": "capability-\(correlationId)",
+                "correlationId": correlationId,
+                "sessionId": object["sessionId"] as? String ?? "flow-ipc-session",
+                "uiId": object["uiId"] as? String ?? "main",
+                "route": object["route"] as? String ?? "",
+                "payload": result,
+                "error": NSNull(),
+                "timestamp": nowMillis()
+            ]
+            trace("send", "capabilityResult", [
+                "target": "webview",
+                "transport": "flow-ipc",
+                "command": command,
+                "envelope": resultEnvelope
+            ])
+            self.deliverFlowIpcEnvelope(resultEnvelope, type: "capabilityResult")
+        }
     }
 
-    private func executeDesktopCommand(_ command: String, args: [String: Any]) -> [String: Any] {
+    private func executeDesktopCommand(_ command: String,
+                                       args: [String: Any],
+                                       completion: @escaping ([String: Any]) -> Void) {
         if !capabilityManifest.allows(command) {
-            return capabilityPermission([
+            completion(capabilityPermission([
                 "success": false,
                 "command": command,
-                "error": capabilityManifest.parseError.isEmpty
-                    ? "Command not allowed by desktop-capabilities.json"
-                    : "Invalid desktop-capabilities.json: \(capabilityManifest.parseError)"
-            ], decision: "denied", reason: capabilityManifest.parseError.isEmpty
-                ? "manifest-denied"
-                : "manifest-invalid")
+                "error": capabilityErrorMessage(reason: capabilityManifest.denialReason(command))
+            ], decision: "denied", reason: capabilityManifest.denialReason(command)))
+            return
         }
         switch command {
         case "window.setTitle":
             guard let title = args["title"] as? String else {
-                return capabilityPermission([
+                completion(capabilityPermission([
                     "success": false,
                     "command": command,
                     "error": "Missing title"
-                ])
+                ]))
+                return
             }
             window?.title = title
-            return capabilityPermission([
+            completion(capabilityPermission([
                 "success": true,
                 "command": command,
                 "title": title,
                 "mode": "native-appkit"
-            ])
+            ]))
         case "clipboard.writeText":
             guard let text = args["text"] as? String else {
-                return capabilityPermission([
+                completion(capabilityPermission([
                     "success": false,
                     "command": command,
                     "error": "Missing text"
-                ])
+                ]))
+                return
             }
             let pasteboard = NSPasteboard.general
             pasteboard.clearContents()
             let written = pasteboard.setString(text, forType: .string)
-            return capabilityPermission([
+            completion(capabilityPermission([
                 "success": written,
                 "command": command,
                 "mode": "native-nspasteboard"
-            ])
+            ]))
         case "notification.show":
-            return capabilityPermission([
+            completion(capabilityPermission([
                 "success": true,
                 "command": command,
                 "mode": "trace-only",
                 "title": args["title"] as? String ?? "",
                 "body": args["body"] as? String ?? ""
-            ])
+            ]))
         case "fileDialog.openFile":
-            return capabilityPermission([
-                "success": true,
-                "command": command,
-                "mode": "scaffold-cancelled",
-                "title": args["title"] as? String ?? "",
-                "canceled": true
-            ])
+            openFileDialog(args: args, command: command) { result in
+                completion(self.capabilityPermission(result))
+            }
         default:
-            return capabilityPermission([
+            completion(capabilityPermission([
                 "success": false,
                 "command": command,
                 "error": "Unsupported desktop command"
-            ], decision: "denied", reason: "unsupported-command")
+            ], decision: "denied", reason: "unsupported-command"))
+        }
+    }
+
+    private func capabilityErrorMessage(reason: String) -> String {
+        switch reason {
+        case "manifest-invalid":
+            return "Invalid desktop-capabilities.json: \(capabilityManifest.parseError)"
+        case "manifest-missing":
+            return "desktop-capabilities.json is required by manifest-enforced mode"
+        case "manifest-denied":
+            return "Command not allowed by desktop-capabilities.json"
+        default:
+            return "Unsupported desktop command"
+        }
+    }
+
+    private func openFileDialog(args: [String: Any],
+                                command: String,
+                                completion: @escaping ([String: Any]) -> Void) {
+        let title = args["title"] as? String ?? "Open File"
+        let allowsMultipleSelection = args["allowsMultipleSelection"] as? Bool ?? false
+        if fileDialogInFlight {
+            completion([
+                "success": false,
+                "command": command,
+                "mode": "native-appkit-open-panel",
+                "title": title,
+                "canceled": true,
+                "paths": [],
+                "allowsMultipleSelection": allowsMultipleSelection,
+                "securityScoped": false,
+                "autoCanceled": false,
+                "error": "File dialog already in progress"
+            ])
+            return
+        }
+
+        fileDialogInFlight = true
+        let panel = NSOpenPanel()
+        panel.title = title
+        panel.canChooseFiles = true
+        panel.canChooseDirectories = false
+        panel.allowsMultipleSelection = allowsMultipleSelection
+        panel.canCreateDirectories = false
+
+        if config.flowIpcAutoFileDialogCancel {
+            DispatchQueue.main.asyncAfter(deadline: .now() + 0.2) {
+                panel.cancel(nil)
+            }
+        }
+
+        let finish: (NSApplication.ModalResponse) -> Void = { response in
+            self.fileDialogInFlight = false
+            let paths = response == .OK ? panel.urls.map(\.path) : []
+            var result: [String: Any] = [
+                "success": true,
+                "command": command,
+                "mode": "native-appkit-open-panel",
+                "title": title,
+                "canceled": response != .OK,
+                "paths": paths,
+                "allowsMultipleSelection": allowsMultipleSelection,
+                "securityScoped": false,
+                "autoCanceled": response != .OK && self.config.flowIpcAutoFileDialogCancel
+            ]
+            if paths.count == 1 {
+                result["path"] = paths[0]
+            }
+            completion(result)
+        }
+        if let window {
+            panel.beginSheetModal(for: window, completionHandler: finish)
+        } else {
+            panel.begin(completionHandler: finish)
         }
     }
 
@@ -656,7 +764,7 @@ final class WebViewHost: NSObject, NSApplicationDelegate, NSWindowDelegate, WKNa
         var payload = result
         payload["permissionMode"] = capabilityManifest.permissionMode
         payload["permissionDecision"] = decision
-        payload["permissionReason"] = reason ?? (capabilityManifest.loaded ? "manifest-allow" : "development-default")
+        payload["permissionReason"] = reason ?? capabilityManifest.allowedReason(result["command"] as? String ?? "")
         payload["permissionScope"] = "window:main"
         payload["permissionManifestLoaded"] = capabilityManifest.loaded
         payload["permissionManifestPath"] = capabilityManifest.path
@@ -997,6 +1105,7 @@ let flowIpcShell = #"""
       const queuedFlowClientEngineMessageOrder = [];
       const deliveredQueuedFlowClientEngineMessageOrder = [];
       const flowIpcServerSequences = [];
+      let flowClientEngineResyncXhrSent = false;
       let lastFlowIpcServerSequence = 0;
       const flowClientState = {
         csrfToken: '',
@@ -1430,6 +1539,7 @@ let flowIpcShell = #"""
               };
               if (type === 'resync') {
                 ipcPayload.reason = 'flow-client-xhr-resync';
+                flowClientEngineResyncXhrSent = true;
               }
               const message = send(type, ipcPayload);
               pendingFlowClientXhrRequests.set(message.correlationId, this);
@@ -1489,10 +1599,14 @@ let flowIpcShell = #"""
           : '';
         if (body) {
           window.VaadinDesktopIpcDiagnostics.flowClientEngineXhrResponseObserved = true;
+          if (message.type === 'patch' && message.payload && message.payload.reason === 'event') {
+            autoClickDone = true;
+            autoClickInFlight = false;
+            window.VaadinDesktopIpcDiagnostics.flowClientEngineEventPatchConsumed = true;
+          }
           if (message.payload && message.payload.reason === 'resync') {
             window.VaadinDesktopIpcDiagnostics.flowClientEngineResyncPatchConsumed = true;
           }
-          autoClickInFlight = false;
           setTimeout(scheduleAutoClick, 160);
           try {
             xhr._complete(200, body);
@@ -1563,12 +1677,44 @@ let flowIpcShell = #"""
           window.VaadinDesktopIpcDiagnostics.flowClientEngineResyncRequested = true;
           try {
             client.requestIpcResync();
+            setTimeout(() => {
+              if (!flowClientEngineResyncXhrSent
+                  && !window.VaadinDesktopIpcDiagnostics.flowClientEngineResyncPatchConsumed) {
+                sendResyncFallback(reason);
+              }
+            }, 180);
             return;
           } catch (error) {
             window.VaadinDesktopIpcDiagnostics.flowClientEngineXhrError = error && error.message ? error.message : String(error);
           }
         }
+        sendResyncFallback(reason);
+      }
+
+      function sendResyncFallback(reason) {
         const securityKey = flowClientState.securityKey || flowClientState.csrfToken;
+        flowClientEngineResyncXhrSent = true;
+        if (window.VaadinDesktopIpcDiagnostics.flowClientEngineXhrBridgeInstalled) {
+          const clientId = Math.max(
+            flowClientState.clientId,
+            window.VaadinDesktopIpcDiagnostics.flowClientEngineXhrLastClientId + 1,
+            1);
+          const xhr = new XMLHttpRequest();
+          xhr.open('POST', 'flow-ipc://local/flow/?v-r=uidl&v-uiId=1', true);
+          xhr.setRequestHeader('Content-Type', 'application/json; charset=UTF-8');
+          xhr.onerror = () => {
+            window.VaadinDesktopIpcDiagnostics.flowClientEngineXhrError = 'verification resync XHR fallback failed';
+          };
+          xhr.send(JSON.stringify({
+            [flowClientState.securityTokenId]: securityKey,
+            csrfToken: securityKey,
+            resynchronize: true,
+            clientId,
+            syncId: flowClientState.syncId,
+            rpc: []
+          }));
+          return;
+        }
         send('resync', {
           reason,
           securityKey,

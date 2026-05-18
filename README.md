@@ -42,12 +42,15 @@ Run the first Flow IPC runtime slice:
 bash bin/vaadin-desktop dev-ipc test-apps/flow-over-ipc-smoke-app
 ```
 
-`dev-ipc` starts the same Swift/AppKit host with `transport=flow-ipc`, loads a local WKWebView shell, sends Flow client messages to the Java sidecar over `VFIPC1` stdin/stdout envelopes, and returns Java patches without loading `http://127.0.0.1`. Bootstrap payloads include real Vaadin server-side UIDL from `UidlWriter`; the runtime also emits one server-initiated push UIDL update. The WebView bridge sends click and verification resync as UIDL RPC bodies with CSRF, `syncId`, `clientId` and Flow node id, then Java handles them through `UidlRequestHandler`/`ServerRpcHandler`. Bootstrap advertises the Flow client classpath resources; the WebView requests and verifies the full advertised resource graph, imports `FlowBootstrap.js` and `FlowClient.js`, and consumes bootstrap, push, event and verification resync DOM updates through the visible Flow client engine. Desktop capability results include `permissionMode=allow-all-dev`; the verification hook can emit a WebView-originated `error` envelope; the repository-local UIDL applier remains only as a diagnostic fallback.
+`dev-ipc` starts the same Swift/AppKit host with `transport=flow-ipc`, loads a local WKWebView shell, sends Flow client messages to the Java sidecar over `VFIPC1` stdin/stdout envelopes, and returns Java patches without loading `http://127.0.0.1`. Bootstrap payloads include real Vaadin server-side UIDL from `UidlWriter`; the runtime also emits one server-initiated push UIDL update. The WebView bridge sends click and verification resync as UIDL RPC bodies with CSRF, `syncId`, `clientId` and Flow node id, then Java handles them through `UidlRequestHandler`/`ServerRpcHandler`. Bootstrap advertises the Flow client classpath resources; the WebView requests and verifies the full advertised resource graph, imports `FlowBootstrap.js` and `FlowClient.js`, and consumes bootstrap, push, event and verification resync DOM updates through the visible Flow client engine. Desktop capability results now support `allow-all-dev`, `manifest-enforced` and `trace-only-dry-run` permission modes; the smoke app uses `manifest-enforced`, exercises AppKit `NSOpenPanel` cancellation and emits a manifest deny-path. The verification hook can emit a WebView-originated `error` envelope; the repository-local UIDL applier remains only as a diagnostic fallback.
+
+For unattended real-window verification, add `VAADIN_DESKTOP_FLOW_IPC_AUTO_CLICK=1 VAADIN_DESKTOP_FLOW_IPC_AUTO_RESYNC=1 VAADIN_DESKTOP_FLOW_IPC_AUTO_ERROR=1 VAADIN_DESKTOP_FLOW_IPC_AUTO_FILE_DIALOG_CANCEL=1` before the `dev-ipc` command. The file dialog hook exercises the AppKit `NSOpenPanel` path and cancels it automatically.
 
 Inspect the Flow IPC trace sample:
 
 ```bash
 bash bin/flow-ipc-trace-inspect --require-flow-ipc-v1 docs/traces/flow-ipc-v1.ndjson
+bash bin/flow-ipc-trace-inspect --require-flow-ipc-v1_1 docs/traces/flow-ipc-v1_1.ndjson
 ```
 
 Verify the first real Flow UIDL writer adapter slice:

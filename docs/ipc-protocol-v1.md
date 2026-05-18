@@ -304,9 +304,9 @@ The Swift host responds with `type=capabilityResult`:
     "success": true,
     "command": "clipboard.writeText",
     "mode": "native-nspasteboard",
-    "permissionMode": "allow-all-dev",
+    "permissionMode": "manifest-enforced",
     "permissionDecision": "allowed",
-    "permissionReason": "development-default",
+    "permissionReason": "manifest-allow",
     "permissionScope": "window:main"
   }
 }
@@ -316,10 +316,10 @@ Implemented host commands in `dev-ipc`:
 
 - `window.setTitle`: updates the AppKit `NSWindow` title.
 - `clipboard.writeText`: writes to macOS `NSPasteboard`.
-- `fileDialog.openFile`: returns `mode=scaffold-cancelled` with `canceled=true` in the current v1 scaffold.
+- `fileDialog.openFile`: opens AppKit `NSOpenPanel` and returns `mode=native-appkit-open-panel` with `canceled`, `paths`, `allowsMultipleSelection`, `securityScoped=false` and `autoCanceled` metadata. The v1 sample fixture still contains the older `mode=scaffold-cancelled` cancellation result and remains accepted by the inspector for backward compatibility.
 - `notification.show`: accepted as trace-only scaffold.
 
-The v1 capability permission model is deliberately minimal. `dev-ipc` is `permissionMode=allow-all-dev`: known commands are allowed for the main window and every result carries a permission decision for trace review. Unknown commands are denied as `unsupported-command`. The next production model should replace this with a manifest-gated policy keyed by window, origin and capability.
+The v1.1 capability permission model is still deliberately small, but it is no longer hard-coded to one mode. `desktop-capabilities.json` can select `permissionMode=allow-all-dev`, `permissionMode=manifest-enforced` or `permissionMode=trace-only-dry-run`. The Flow IPC smoke app uses `manifest-enforced`: declared commands for the `main` window return `permissionDecision=allowed` with `permissionReason=manifest-allow`, while its intentionally undeclared `diagnostics.deniedCapability` smoke command returns `permissionDecision=denied` with `permissionReason=manifest-denied`. Unsupported commands that are explicitly listed in a manifest are still rejected as `unsupported-command`. The next production model should replace these development modes with a manifest-gated policy keyed by window, origin, user gesture and capability.
 
 ## Error Model
 
@@ -355,9 +355,10 @@ Run:
 
 ```bash
 bash bin/flow-ipc-trace-inspect --require-flow-ipc-v1 docs/traces/flow-ipc-v1.ndjson
+bash bin/flow-ipc-trace-inspect --require-flow-ipc-v1_1 docs/traces/flow-ipc-v1_1.ndjson
 ```
 
-The inspector summarizes directions, message types and key markers. With `--require-flow-ipc-v1`, it requires `launch`, `ready`, `window.create`, `bootstrapRequest`, `bootstrapResponse`, `resourceRequest`, `resourceResponse`, `push`, `event`, `resync`, `command`, `capabilityResult`, `patch`, `error`, `webview.dom`, `webview.snapshot` and `shutdown`, plus `transport=flow-ipc`, `compatibilityMode=false`, Java-to-WebView `serverSequence` metadata and DOM evidence that received server sequences were monotonic, a clicked-state patch, native clipboard evidence, a loaded `desktop-capabilities.json` manifest, capability permission metadata with `permissionMode=allow-all-dev`, manifest result metadata and file dialog scaffold evidence, WebView-originated error evidence, `uidlRpcDispatch=true`, bootstrap/event/resync `sessionId` + `uiId` evidence, bootstrap `Vaadin-Security-Key` evidence, Flow client resource manifest/request/response/DOM evidence including full advertised resource graph request/response coverage, FlowBootstrap and augmented FlowClient module import/export/init markers, bootstrap DOM node bindings, visible Flow client list binding evidence (`flowClientEngineListBound=true` and four list items), an IPC-backed Flow client XHR bridge, a Flow client `attachExistingElementById` XHR request, a Flow client `click` UIDL RPC XHR request, a `flow-client-xhr` event patch consumed by the visible Flow client engine, `webview.dom` evidence that `flowClientEngineVisibleOwner=true` and the local fallback is hidden, a resync request carrying `securityKey`, bootstrap UIDL writer markers, a server-initiated async push UIDL queued as `push:3`, flushed and consumed by the visible Flow client engine, and a resync `resynchronize=true` signal consumed by the visible Flow client engine.
+The inspector summarizes directions, message types and key markers. With `--require-flow-ipc-v1`, it requires `launch`, `ready`, `window.create`, `bootstrapRequest`, `bootstrapResponse`, `resourceRequest`, `resourceResponse`, `push`, `event`, `resync`, `command`, `capabilityResult`, `patch`, `error`, `webview.dom`, `webview.snapshot` and `shutdown`, plus `transport=flow-ipc`, `compatibilityMode=false`, Java-to-WebView `serverSequence` metadata and DOM evidence that received server sequences were monotonic, a clicked-state patch, native clipboard evidence, a loaded `desktop-capabilities.json` manifest, supported capability permission metadata, manifest result metadata and file dialog result evidence, WebView-originated error evidence, `uidlRpcDispatch=true`, bootstrap/event/resync `sessionId` + `uiId` evidence, bootstrap `Vaadin-Security-Key` evidence, Flow client resource manifest/request/response/DOM evidence including full advertised resource graph request/response coverage, FlowBootstrap and augmented FlowClient module import/export/init markers, bootstrap DOM node bindings, visible Flow client list binding evidence (`flowClientEngineListBound=true` and four list items), an IPC-backed Flow client XHR bridge, a Flow client `attachExistingElementById` XHR request, a Flow client `click` UIDL RPC XHR request, a `flow-client-xhr` event patch consumed by the visible Flow client engine, `webview.dom` evidence that `flowClientEngineVisibleOwner=true` and the local fallback is hidden, a resync request carrying `securityKey`, bootstrap UIDL writer markers, a server-initiated async push UIDL queued as `push:3`, flushed and consumed by the visible Flow client engine, and a resync `resynchronize=true` signal consumed by the visible Flow client engine. With `--require-flow-ipc-v1_1`, it also requires native AppKit file dialog result metadata, `permissionMode=manifest-enforced` evidence and a manifest-denied capability result.
 
 Run the envelope scope rejection smoke with:
 

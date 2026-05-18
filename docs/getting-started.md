@@ -60,18 +60,19 @@ Expected trace characteristics:
 - Button click travels WebView -> Swift host -> Java sidecar -> Vaadin Button listener -> patch -> WebView.
 - Bootstrap, server push, event patches and verification resync include real server-side UIDL under `payload.uidl`; click events and verification resync are dispatched through `UidlRequestHandler`/`ServerRpcHandler`.
 - Bootstrap advertises Vaadin `flow-client` classpath resources; the WebView requests and verifies the full advertised resource graph through IPC, imports `FlowBootstrap.js` and `FlowClient.js` as ES modules, and initializes the Flow bootstrap plus GWT client modules.
-- Desktop API calls travel Java sidecar -> Swift host as `VFIPC1 command`, and host responses appear as `capabilityResult`.
+- Desktop API calls travel Java sidecar -> Swift host as `VFIPC1 command`, and host responses appear as `capabilityResult`; the Flow IPC smoke app uses `manifest-enforced` permission metadata and includes an intentional manifest deny-path.
 
 For repeatable real-window smoke verification without global mouse coordinates:
 
 ```bash
-VAADIN_DESKTOP_FLOW_IPC_AUTO_CLICK=1 VAADIN_DESKTOP_FLOW_IPC_AUTO_RESYNC=1 VAADIN_DESKTOP_FLOW_IPC_AUTO_ERROR=1 bash bin/vaadin-desktop dev-ipc test-apps/flow-over-ipc-smoke-app
+VAADIN_DESKTOP_FLOW_IPC_AUTO_CLICK=1 VAADIN_DESKTOP_FLOW_IPC_AUTO_RESYNC=1 VAADIN_DESKTOP_FLOW_IPC_AUTO_ERROR=1 VAADIN_DESKTOP_FLOW_IPC_AUTO_FILE_DIALOG_CANCEL=1 bash bin/vaadin-desktop dev-ipc test-apps/flow-over-ipc-smoke-app
 ```
 
 Inspect the bundled review trace:
 
 ```bash
 bash bin/flow-ipc-trace-inspect --require-flow-ipc-v1 docs/traces/flow-ipc-v1.ndjson
+bash bin/flow-ipc-trace-inspect --require-flow-ipc-v1_1 docs/traces/flow-ipc-v1_1.ndjson
 ```
 
 Run server-side UIDL adapter checks:

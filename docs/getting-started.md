@@ -59,7 +59,7 @@ Expected trace characteristics:
 - The WebView loads a local HTML shell through `loadHTMLString`, not `http://127.0.0.1`.
 - Button click travels WebView -> Swift host -> Java sidecar -> Vaadin Button listener -> patch -> WebView.
 - Bootstrap, server push, event patches and verification resync include real server-side UIDL under `payload.uidl`; click events and verification resync are dispatched through `UidlRequestHandler`/`ServerRpcHandler`.
-- Bootstrap advertises Vaadin `flow-client` classpath resources; the WebView requests `FlowBootstrap.js` and `FlowClient.js` through IPC, imports them as ES modules and initializes the Flow bootstrap plus GWT client modules.
+- Bootstrap advertises Vaadin `flow-client` classpath resources; the WebView requests and verifies the full advertised resource graph through IPC, imports `FlowBootstrap.js` and `FlowClient.js` as ES modules, and initializes the Flow bootstrap plus GWT client modules.
 - Desktop API calls travel Java sidecar -> Swift host as `VFIPC1 command`, and host responses appear as `capabilityResult`.
 
 For repeatable real-window smoke verification without global mouse coordinates:
@@ -79,10 +79,11 @@ Run server-side UIDL adapter checks:
 ```bash
 bash bin/uidl-adapter-smoke
 bash bin/uidl-rpc-smoke
+bash bin/flow-ipc-scope-smoke
 bash bin/flow-client-resource-smoke
 ```
 
-Current limitation: this path is still a constrained smoke-app runtime. It now generates Vaadin UIDL, initializes `FlowBootstrap.js` / `FlowClient.js` over IPC, promotes the Flow client container to the visible WebView surface, and sends click events plus one verification resync through the server-side Flow RPC path with UIDL patches consumed by the visible Flow client engine. One server push is also delivered into that engine. The hidden repository-local UIDL applier remains only as a diagnostic fallback until full Flow push/reconnect/resync semantics are implemented.
+Current limitation: this path is still a constrained smoke-app runtime. It now generates Vaadin UIDL, requests and verifies the advertised Flow client resource graph, initializes `FlowBootstrap.js` / `FlowClient.js` over IPC, promotes the Flow client container to the visible WebView surface, and sends click events plus one verification resync through the server-side Flow RPC path with UIDL patches consumed by the visible Flow client engine. One server push is also delivered into that engine. The hidden repository-local UIDL applier remains only as a diagnostic fallback until broader Flow event coverage, production/dev frontend execution and full push/reconnect/resync semantics are implemented.
 
 ## Run the Independent Smoke App
 

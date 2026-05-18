@@ -126,8 +126,17 @@ final class FlowIpcRuntime {
             sendError("resourceNotFound", "Unknown Flow client resource: " + path, id, correlationId);
             return;
         }
+        Map<String, Object> response = new LinkedHashMap<>(flowClientResources.response(path));
+        String purpose = JsonFields.string(json, "purpose");
+        if (purpose != null && !purpose.isBlank()) {
+            response.put("requestPurpose", purpose);
+        }
+        String lookupKind = JsonFields.string(json, "lookupKind");
+        if (lookupKind != null && !lookupKind.isBlank()) {
+            response.put("lookupKind", lookupKind);
+        }
         send("resourceResponse", nextId("resource"), correlationIdOr(id, correlationId),
-                flowClientResources.response(path));
+                response);
     }
 
     private void handleClientError(String json, String id) {

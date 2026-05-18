@@ -27,10 +27,10 @@ Run the first no-HTTP IPC slice:
 bash bin/vaadin-desktop dev-ipc test-apps/flow-over-ipc-smoke-app
 ```
 
-`dev-swift` still uses localhost HTTP compatibility mode. `dev-ipc` does not load a localhost URL for the smoke app. It imports FlowBootstrap/FlowClient over `VFIPC1`, promotes the registered Flow client container to the visible WebView surface, bridges the Flow client engine's XHR transport over `VFIPC1`, sends real Flow client click/input/checkbox/resync RPCs through Java's `UidlRequestHandler`, delivers the one-shot server push into the visible Flow client and records bounded file-transfer capability results. The repository-local UIDL applier remains as a hidden diagnostic fallback while full Flow push/reconnect/resync semantics and production file streaming are still being built.
+`dev-swift` still uses localhost HTTP compatibility mode. `dev-ipc` does not load a localhost URL for the smoke app. It imports FlowBootstrap/FlowClient over `VFIPC1`, promotes the registered Flow client container to the visible WebView surface, bridges the Flow client engine's XHR transport over `VFIPC1`, sends real Flow client click/input/checkbox/resync RPCs through Java's `UidlRequestHandler`, delivers two ordered server pushes into the visible Flow client, ignores a duplicate/late ordering probe with recovery resync diagnostics, classifies Flow client resources as executed or verified-only, records one dynamic `Flow.js` lazy lookup and records bounded file-transfer capability results. The repository-local UIDL applier remains as a hidden diagnostic fallback while full Flow push/reconnect/resync semantics, production bundle/dev-mode resource execution and production file streaming are still being built.
 
 For repeatable real-window verification:
 
 ```bash
-VAADIN_DESKTOP_FLOW_IPC_AUTO_CLICK=1 VAADIN_DESKTOP_FLOW_IPC_AUTO_RESYNC=1 VAADIN_DESKTOP_FLOW_IPC_AUTO_ERROR=1 VAADIN_DESKTOP_FLOW_IPC_AUTO_FILE_DIALOG_CANCEL=1 bash bin/vaadin-desktop dev-ipc test-apps/flow-over-ipc-smoke-app
+VAADIN_DESKTOP_FLOW_IPC_AUTO_CLICK=1 VAADIN_DESKTOP_FLOW_IPC_AUTO_RESYNC=1 VAADIN_DESKTOP_FLOW_IPC_AUTO_ERROR=1 VAADIN_DESKTOP_FLOW_IPC_AUTO_FILE_DIALOG_CANCEL=1 VAADIN_DESKTOP_FLOW_IPC_AUTO_SHUTDOWN=1 bash bin/vaadin-desktop dev-ipc test-apps/flow-over-ipc-smoke-app
 ```

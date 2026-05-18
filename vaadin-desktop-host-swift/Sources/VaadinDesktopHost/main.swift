@@ -1218,6 +1218,29 @@ final class WebViewHost: NSObject, NSApplicationDelegate, NSWindowDelegate, WKNa
           flowClientResourceGraphComplete: !!(window.VaadinDesktopIpcDiagnostics && window.VaadinDesktopIpcDiagnostics.flowClientResourceGraphComplete),
           flowClientResourceGraphVerified: !!(window.VaadinDesktopIpcDiagnostics && window.VaadinDesktopIpcDiagnostics.flowClientResourceGraphVerified),
           flowClientResourceExecuted: !!(window.VaadinDesktopIpcDiagnostics && window.VaadinDesktopIpcDiagnostics.flowClientResourceExecuted),
+          flowClientResourceVerifiedCount: window.VaadinDesktopIpcDiagnostics ? window.VaadinDesktopIpcDiagnostics.flowClientResourceVerifiedCount : 0,
+          flowClientResourceVerifiedPaths: window.VaadinDesktopIpcDiagnostics ? window.VaadinDesktopIpcDiagnostics.flowClientResourceVerifiedPaths : "",
+          flowClientResourceExecutedCount: window.VaadinDesktopIpcDiagnostics ? window.VaadinDesktopIpcDiagnostics.flowClientResourceExecutedCount : 0,
+          flowClientResourceExecutedPaths: window.VaadinDesktopIpcDiagnostics ? window.VaadinDesktopIpcDiagnostics.flowClientResourceExecutedPaths : "",
+          flowClientResourceVerifiedOnlyCount: window.VaadinDesktopIpcDiagnostics ? window.VaadinDesktopIpcDiagnostics.flowClientResourceVerifiedOnlyCount : 0,
+          flowClientResourceVerifiedOnlyPaths: window.VaadinDesktopIpcDiagnostics ? window.VaadinDesktopIpcDiagnostics.flowClientResourceVerifiedOnlyPaths : "",
+          flowClientResourceIntentionallyNotExecutedCount: window.VaadinDesktopIpcDiagnostics ? window.VaadinDesktopIpcDiagnostics.flowClientResourceIntentionallyNotExecutedCount : 0,
+          flowClientResourceIntentionallyNotExecutedPaths: window.VaadinDesktopIpcDiagnostics ? window.VaadinDesktopIpcDiagnostics.flowClientResourceIntentionallyNotExecutedPaths : "",
+          flowClientResourceExecutionFailedCount: window.VaadinDesktopIpcDiagnostics ? window.VaadinDesktopIpcDiagnostics.flowClientResourceExecutionFailedCount : 0,
+          flowClientResourceExecutionFailedPaths: window.VaadinDesktopIpcDiagnostics ? window.VaadinDesktopIpcDiagnostics.flowClientResourceExecutionFailedPaths : "",
+          flowClientResourceExecutionClassificationComplete: !!(window.VaadinDesktopIpcDiagnostics && window.VaadinDesktopIpcDiagnostics.flowClientResourceExecutionClassificationComplete),
+          flowClientResourceLazyLookupRequested: !!(window.VaadinDesktopIpcDiagnostics && window.VaadinDesktopIpcDiagnostics.flowClientResourceLazyLookupRequested),
+          flowClientResourceLazyLookupResponse: !!(window.VaadinDesktopIpcDiagnostics && window.VaadinDesktopIpcDiagnostics.flowClientResourceLazyLookupResponse),
+          flowClientResourceLazyLookupVerified: !!(window.VaadinDesktopIpcDiagnostics && window.VaadinDesktopIpcDiagnostics.flowClientResourceLazyLookupVerified),
+          flowClientResourceLazyLookupPurpose: window.VaadinDesktopIpcDiagnostics ? window.VaadinDesktopIpcDiagnostics.flowClientResourceLazyLookupPurpose : "",
+          flowClientResourceLazyLookupKind: window.VaadinDesktopIpcDiagnostics ? window.VaadinDesktopIpcDiagnostics.flowClientResourceLazyLookupKind : "",
+          flowClientResourceLazyLookupPath: window.VaadinDesktopIpcDiagnostics ? window.VaadinDesktopIpcDiagnostics.flowClientResourceLazyLookupPath : "",
+          flowClientResourceLazyLookupResult: window.VaadinDesktopIpcDiagnostics ? window.VaadinDesktopIpcDiagnostics.flowClientResourceLazyLookupResult : "",
+          flowClientResourceLoadOnDemandProbeResult: window.VaadinDesktopIpcDiagnostics ? window.VaadinDesktopIpcDiagnostics.flowClientResourceLoadOnDemandProbeResult : "",
+          flowClientResourceBootstrapLazyEntriesResult: window.VaadinDesktopIpcDiagnostics ? window.VaadinDesktopIpcDiagnostics.flowClientResourceBootstrapLazyEntriesResult : "",
+          flowClientResourceStaticLookupVerified: !!(window.VaadinDesktopIpcDiagnostics && window.VaadinDesktopIpcDiagnostics.flowClientResourceStaticLookupVerified),
+          flowClientResourceStaticLookupPath: window.VaadinDesktopIpcDiagnostics ? window.VaadinDesktopIpcDiagnostics.flowClientResourceStaticLookupPath : "",
+          flowClientResourceThemeLookupResult: window.VaadinDesktopIpcDiagnostics ? window.VaadinDesktopIpcDiagnostics.flowClientResourceThemeLookupResult : "",
           flowClientBootstrapInitError: window.VaadinDesktopIpcDiagnostics ? window.VaadinDesktopIpcDiagnostics.flowClientBootstrapInitError : "",
           flowClientResourceExecutionError: window.VaadinDesktopIpcDiagnostics ? window.VaadinDesktopIpcDiagnostics.flowClientResourceExecutionError : "",
           flowClientEngineResourceLoaded: !!(window.VaadinDesktopIpcDiagnostics && window.VaadinDesktopIpcDiagnostics.flowClientEngineResourceLoaded),
@@ -1509,6 +1532,11 @@ let flowIpcShell = #"""
       const flowClientResourceRequests = new Set();
       const flowClientResourceResponsePaths = new Set();
       const flowClientResourceExpectedSha256ByPath = new Map();
+      const flowClientResourceVerifiedPaths = new Set();
+      const flowClientResourceExecutedPaths = new Set();
+      const flowClientResourceVerifiedOnlyPaths = new Set();
+      const flowClientResourceIntentionallyNotExecutedPaths = new Set();
+      const flowClientResourceExecutionFailedPaths = new Set();
       const pendingFlowClientXhrRequests = new Map();
       const queuedFlowClientEngineMessages = [];
       const queuedFlowClientEngineMessageOrder = [];
@@ -1517,6 +1545,7 @@ let flowIpcShell = #"""
       const ignoredFlowClientEngineMessageOrder = [];
       const flowIpcServerSequences = [];
       let flowClientEngineResyncXhrSent = false;
+      let flowClientLazyLookupRequested = false;
       let lastFlowIpcServerSequence = 0;
       let flowClientEngineLastDeliveredServerSequence = 0;
       let pendingFlowClientEngineRecoveryResyncReason = '';
@@ -1552,6 +1581,29 @@ let flowIpcShell = #"""
         flowClientResourceGraphVerified: false,
         flowClientBootstrapInitError: '',
         flowClientResourceExecuted: false,
+        flowClientResourceVerifiedCount: 0,
+        flowClientResourceVerifiedPaths: '',
+        flowClientResourceExecutedCount: 0,
+        flowClientResourceExecutedPaths: '',
+        flowClientResourceVerifiedOnlyCount: 0,
+        flowClientResourceVerifiedOnlyPaths: '',
+        flowClientResourceIntentionallyNotExecutedCount: 0,
+        flowClientResourceIntentionallyNotExecutedPaths: '',
+        flowClientResourceExecutionFailedCount: 0,
+        flowClientResourceExecutionFailedPaths: '',
+        flowClientResourceExecutionClassificationComplete: false,
+        flowClientResourceLazyLookupRequested: false,
+        flowClientResourceLazyLookupResponse: false,
+        flowClientResourceLazyLookupVerified: false,
+        flowClientResourceLazyLookupPurpose: '',
+        flowClientResourceLazyLookupKind: '',
+        flowClientResourceLazyLookupPath: '',
+        flowClientResourceLazyLookupResult: '',
+        flowClientResourceLoadOnDemandProbeResult: '',
+        flowClientResourceBootstrapLazyEntriesResult: '',
+        flowClientResourceStaticLookupVerified: false,
+        flowClientResourceStaticLookupPath: '',
+        flowClientResourceThemeLookupResult: '',
         flowClientResourceExecutionError: '',
         flowClientEngineResourceLoaded: false,
         flowClientEngineResourcePath: '',
@@ -2449,6 +2501,10 @@ let flowIpcShell = #"""
         }
       }
 
+      function flowClientResourceByPath(path) {
+        return flowClientResources.find((entry) => entry && entry.path === path) || null;
+      }
+
       function requestFlowClientResource(path, kind, purpose) {
         const resource = flowClientResources.find((entry) => entry.path === path)
           || flowClientResources.find((entry) => entry.kind === kind);
@@ -2475,6 +2531,119 @@ let flowIpcShell = #"""
           expectedSha256: resource.sha256 || '',
           securityKey
         });
+      }
+
+      function requestFlowClientLazyResourceLookup() {
+        if (flowClientLazyLookupRequested) {
+          return;
+        }
+        if (!window.VaadinDesktopIpcDiagnostics.flowClientResourceGraphComplete) {
+          return;
+        }
+        const resource = flowClientResourceByPath('META-INF/frontend/Flow.js')
+          || flowClientResources.find((entry) => entry && entry.kind === 'flow-module');
+        if (!resource || typeof resource.path !== 'string') {
+          window.VaadinDesktopIpcDiagnostics.flowClientResourceLazyLookupResult = 'no-flow-module-resource';
+          return;
+        }
+        flowClientLazyLookupRequested = true;
+        const loadOnDemand = window.Vaadin && window.Vaadin.Flow
+          && typeof window.Vaadin.Flow.loadOnDemand === 'function';
+        window.VaadinDesktopIpcDiagnostics.flowClientResourceLoadOnDemandProbeResult =
+          loadOnDemand ? 'api-present-not-invoked-in-smoke' : 'api-not-exposed-on-current-bootstrap';
+        window.VaadinDesktopIpcDiagnostics.flowClientResourceBootstrapLazyEntriesResult =
+          'no-bootstrap-LAZY-entry-in-smoke';
+        window.VaadinDesktopIpcDiagnostics.flowClientResourceThemeLookupResult =
+          'no-theme-resource-declared-by-smoke-app';
+        window.VaadinDesktopIpcDiagnostics.flowClientResourceLazyLookupRequested = true;
+        window.VaadinDesktopIpcDiagnostics.flowClientResourceLazyLookupPurpose = 'flow-client-lazy-lookup';
+        window.VaadinDesktopIpcDiagnostics.flowClientResourceLazyLookupKind = 'Flow.loadOnDemand-minimum-probe';
+        window.VaadinDesktopIpcDiagnostics.flowClientResourceLazyLookupPath = resource.path;
+        window.VaadinDesktopIpcDiagnostics.flowClientResourceLazyLookupResult = 'requested';
+        flowClientResourceExpectedSha256ByPath.set(resource.path, resource.sha256 || '');
+        const securityKey = flowClientState.securityKey || flowClientState.csrfToken;
+        send('resourceRequest', {
+          purpose: 'flow-client-lazy-lookup',
+          lookupKind: 'Flow.loadOnDemand-minimum-probe',
+          path: resource.path,
+          expectedSha256: resource.sha256 || '',
+          securityKey
+        });
+      }
+
+      function refreshFlowClientResourceExecutionDiagnostics() {
+        window.VaadinDesktopIpcDiagnostics.flowClientResourceVerifiedCount = flowClientResourceVerifiedPaths.size;
+        window.VaadinDesktopIpcDiagnostics.flowClientResourceVerifiedPaths =
+          Array.from(flowClientResourceVerifiedPaths).join(',');
+        window.VaadinDesktopIpcDiagnostics.flowClientResourceExecutedCount = flowClientResourceExecutedPaths.size;
+        window.VaadinDesktopIpcDiagnostics.flowClientResourceExecutedPaths =
+          Array.from(flowClientResourceExecutedPaths).join(',');
+        window.VaadinDesktopIpcDiagnostics.flowClientResourceVerifiedOnlyCount = flowClientResourceVerifiedOnlyPaths.size;
+        window.VaadinDesktopIpcDiagnostics.flowClientResourceVerifiedOnlyPaths =
+          Array.from(flowClientResourceVerifiedOnlyPaths).join(',');
+        window.VaadinDesktopIpcDiagnostics.flowClientResourceIntentionallyNotExecutedCount =
+          flowClientResourceIntentionallyNotExecutedPaths.size;
+        window.VaadinDesktopIpcDiagnostics.flowClientResourceIntentionallyNotExecutedPaths =
+          Array.from(flowClientResourceIntentionallyNotExecutedPaths).join(',');
+        window.VaadinDesktopIpcDiagnostics.flowClientResourceExecutionFailedCount =
+          flowClientResourceExecutionFailedPaths.size;
+        window.VaadinDesktopIpcDiagnostics.flowClientResourceExecutionFailedPaths =
+          Array.from(flowClientResourceExecutionFailedPaths).join(',');
+        window.VaadinDesktopIpcDiagnostics.flowClientResourceExecuted =
+          flowClientResourceExecutedPaths.has('META-INF/frontend/FlowBootstrap.js')
+          && flowClientResourceExecutedPaths.has('META-INF/frontend/FlowClient.js');
+        const manifestCount = window.VaadinDesktopIpcDiagnostics.flowClientResourceManifestCount || flowClientResources.length;
+        window.VaadinDesktopIpcDiagnostics.flowClientResourceExecutionClassificationComplete =
+          manifestCount > 0
+          && window.VaadinDesktopIpcDiagnostics.flowClientResourceVerifiedCount >= manifestCount
+          && window.VaadinDesktopIpcDiagnostics.flowClientResourceExecutedCount >= 2
+          && window.VaadinDesktopIpcDiagnostics.flowClientResourceVerifiedOnlyCount >= Math.max(0, manifestCount - 2)
+          && window.VaadinDesktopIpcDiagnostics.flowClientResourceExecutionFailedCount === 0
+          && window.VaadinDesktopIpcDiagnostics.flowClientResourceLazyLookupVerified === true;
+      }
+
+      function classifyFlowClientResourceResponse(payload, body, metadataMatches) {
+        const path = payload && typeof payload.path === 'string' ? payload.path : '';
+        if (!path) {
+          return;
+        }
+        if (metadataMatches && !!body) {
+          flowClientResourceVerifiedPaths.add(path);
+        }
+        if (path === 'META-INF/resources/VAADIN/static/client/compile.properties') {
+          window.VaadinDesktopIpcDiagnostics.flowClientResourceStaticLookupVerified = metadataMatches && !!body;
+          window.VaadinDesktopIpcDiagnostics.flowClientResourceStaticLookupPath = path;
+        }
+        if (payload.requestPurpose === 'flow-client-lazy-lookup') {
+          window.VaadinDesktopIpcDiagnostics.flowClientResourceLazyLookupResponse = true;
+          window.VaadinDesktopIpcDiagnostics.flowClientResourceLazyLookupVerified = metadataMatches && !!body;
+          window.VaadinDesktopIpcDiagnostics.flowClientResourceLazyLookupPurpose = payload.requestPurpose || '';
+          window.VaadinDesktopIpcDiagnostics.flowClientResourceLazyLookupKind = payload.lookupKind || '';
+          window.VaadinDesktopIpcDiagnostics.flowClientResourceLazyLookupPath = path;
+          window.VaadinDesktopIpcDiagnostics.flowClientResourceLazyLookupResult =
+            window.VaadinDesktopIpcDiagnostics.flowClientResourceLazyLookupVerified
+              ? 'verified-only:intentionally-not-executed'
+              : 'execution-failed:lookup-unverified';
+        }
+        const executable = path === 'META-INF/frontend/FlowBootstrap.js'
+          || path === 'META-INF/frontend/FlowClient.js';
+        if (!executable && metadataMatches && !!body) {
+          flowClientResourceVerifiedOnlyPaths.add(path);
+          flowClientResourceIntentionallyNotExecutedPaths.add(path);
+        } else if (!metadataMatches || !body) {
+          flowClientResourceExecutionFailedPaths.add(path);
+        }
+        refreshFlowClientResourceExecutionDiagnostics();
+      }
+
+      function markFlowClientResourceExecuted(path) {
+        if (!path) {
+          return;
+        }
+        flowClientResourceExecutedPaths.add(path);
+        flowClientResourceVerifiedOnlyPaths.delete(path);
+        flowClientResourceIntentionallyNotExecutedPaths.delete(path);
+        refreshFlowClientResourceExecutionDiagnostics();
       }
 
       function createFlowClientBootstrapInitResponse(payload) {
@@ -2936,6 +3105,7 @@ let flowIpcShell = #"""
         const expectedSha256 = flowClientResourceExpectedSha256ByPath.get(resourcePath) || '';
         const metadataMatches = !expectedSha256 || expectedSha256 === (payload.sha256 || '');
         recordFlowClientResourceGraphResponse(resourcePath, body, metadataMatches);
+        classifyFlowClientResourceResponse(payload, body, metadataMatches);
         if (resourcePath === 'META-INF/frontend/FlowClient.js' || payload.kind === 'flow-client-module') {
           await handleFlowClientEngineResourceResponse(payload, body, metadataMatches);
           return;
@@ -2961,6 +3131,9 @@ let flowIpcShell = #"""
           manifestCount > 0 && flowClientResourceResponsePaths.size >= manifestCount;
         window.VaadinDesktopIpcDiagnostics.flowClientResourceGraphVerified =
           flowClientResourceGraphMetadataVerified && window.VaadinDesktopIpcDiagnostics.flowClientResourceGraphComplete;
+        if (window.VaadinDesktopIpcDiagnostics.flowClientResourceGraphComplete) {
+          setTimeout(requestFlowClientLazyResourceLookup, 0);
+        }
       }
 
       function handleAdditionalFlowClientResourceResponse(payload) {
@@ -2988,7 +3161,7 @@ let flowIpcShell = #"""
             window.VaadinDesktopIpcDiagnostics.flowClientResourceModuleLoaded = true;
             window.VaadinDesktopIpcDiagnostics.flowClientBootstrapExported = typeof module.init === 'function';
             initializeFlowBootstrapModule(module);
-            window.VaadinDesktopIpcDiagnostics.flowClientResourceExecuted = true;
+            markFlowClientResourceExecuted(payload.path || 'META-INF/frontend/FlowBootstrap.js');
             window.VaadinDesktopIpcDiagnostics.flowClientResourceVerified =
               window.VaadinDesktopIpcDiagnostics.flowClientResourceVerified
               && window.VaadinDesktopIpcDiagnostics.flowClientBootstrapExported
@@ -2998,6 +3171,8 @@ let flowIpcShell = #"""
             URL.revokeObjectURL(blobUrl);
           }
         } catch (error) {
+          flowClientResourceExecutionFailedPaths.add(payload.path || 'META-INF/frontend/FlowBootstrap.js');
+          refreshFlowClientResourceExecutionDiagnostics();
           window.VaadinDesktopIpcDiagnostics.flowClientResourceExecutionError = error && error.message ? error.message : String(error);
           trace.textContent = 'flow resource module failed';
         }
@@ -3023,6 +3198,7 @@ let flowIpcShell = #"""
           try {
             const module = await import(blobUrl);
             window.VaadinDesktopIpcDiagnostics.flowClientEngineModuleLoaded = true;
+            markFlowClientResourceExecuted(payload.path || 'META-INF/frontend/FlowClient.js');
             initializeFlowClientEngineModule(module);
             requestRemainingFlowClientResourceGraph();
             trace.textContent = 'flow client engine ' + (window.VaadinDesktopIpcDiagnostics.flowClientEngineResourceVerified ? 'verified' : 'loaded');
@@ -3030,6 +3206,8 @@ let flowIpcShell = #"""
             URL.revokeObjectURL(blobUrl);
           }
         } catch (error) {
+          flowClientResourceExecutionFailedPaths.add(payload.path || 'META-INF/frontend/FlowClient.js');
+          refreshFlowClientResourceExecutionDiagnostics();
           window.VaadinDesktopIpcDiagnostics.flowClientEngineResourceExecutionError = error && error.message ? error.message : String(error);
           trace.textContent = 'flow client engine failed';
         }

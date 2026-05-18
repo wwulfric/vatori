@@ -18,7 +18,7 @@ Current scope:
 
 - Real Vaadin Flow Java components are instantiated in the Java sidecar.
 - The Swift/AppKit host loads a local WebView shell instead of a localhost URL.
-- The full advertised Flow client classpath resource graph is requested over IPC. `FlowBootstrap.js` / `FlowClient.js` are imported, and the Flow client container becomes the visible WebView renderer for bootstrap, click-event patches, ordered push and recovery resync.
+- The full advertised Flow client classpath resource graph is requested over IPC. `FlowBootstrap.js` / `FlowClient.js` are imported, the remaining resources are classified as verified-only / intentionally-not-executed, a dynamic `flow-client-lazy-lookup` probe verifies `Flow.js`, and the Flow client container becomes the visible WebView renderer for bootstrap, click-event patches, ordered push and recovery resync.
 - The smoke view's `ipc-list` contains four Flow `Span` rows; `webview.dom` diagnostics verify that the visible Flow client bound and rendered all four list items.
 - Button events travel visible Flow client -> IPC-backed XHR shim -> Swift host -> Java stdin as `VFIPC1` envelopes carrying Flow UIDL RPC payloads.
 - The v1.1 component matrix adds a native Flow `Input` text field and checkbox. Their `change` events travel through the same visible Flow client -> IPC-backed XHR -> Java listener -> UIDL patch path, carrying `element.value` and `element.checked` event data.
@@ -30,7 +30,7 @@ Current scope:
 - Desktop API calls travel Java -> Swift host as `VFIPC1 command`.
 - `desktop-capabilities.json` declares `permissionMode=manifest-enforced` and allows `window.setTitle`, `notification.show`, `clipboard.writeText`, `fileDialog.openFile`, `fileTransfer.download` and `fileTransfer.selectUploadFile` for the `main` window. The smoke view calls those APIs; Swift host returns `capabilityResult` with `permissionReason=manifest-allow` and manifest metadata, with clipboard backed by native `NSPasteboard`, file dialog backed by AppKit `NSOpenPanel`, bounded download writing to a controlled test path and upload/select-file reading metadata plus sampled bytes from a controlled test file. The same click also sends `diagnostics.deniedCapability`, which is intentionally absent from the manifest and must return `permissionDecision=denied` with `permissionReason=manifest-denied`.
 - The file-transfer smoke is deliberately narrow: traces redact the body and record byte count, filename, path, operation and permission metadata. It does not claim full Vaadin Upload/Download parity.
-- This is not the full Vaadin Flow transport yet; the hidden local UIDL applier remains as a diagnostic fallback. The current push/recovery path is a controlled ordering smoke, not durable reconnect or full Flow Push/WebSocket parity.
+- This is not the full Vaadin Flow transport yet; the hidden local UIDL applier remains as a diagnostic fallback. The current push/recovery path is a controlled ordering smoke, and the current resource execution path is a classification/lazy-lookup diagnostic smoke, not durable reconnect, full Flow Push/WebSocket parity or production bundle/dev-mode replacement.
 
 For automated real-window verification:
 

@@ -295,6 +295,13 @@ public final class DesktopTraceInspector {
                     && line.contains("\"securityKey\"")) {
                 summary.flowClientEngineResourceRequestObserved = true;
             }
+            if (line.contains("\"type\":\"resourceRequest\"")
+                    && line.contains("\"purpose\":\"flow-client-lazy-lookup\"")
+                    && line.contains("\"lookupKind\":\"Flow.loadOnDemand-minimum-probe\"")
+                    && line.contains("META-INF/frontend/Flow.js")
+                    && line.contains("\"securityKey\"")) {
+                summary.flowClientResourceLazyLookupRequestObserved = true;
+            }
             if (line.contains("\"type\":\"resourceResponse\"")
                     && line.contains("\"flowClientResource\":true")
                     && line.contains("META-INF/frontend/FlowBootstrap.js")
@@ -306,6 +313,14 @@ public final class DesktopTraceInspector {
                     && line.contains("META-INF/frontend/FlowClient.js")
                     && line.contains("\"bodyRedacted\":true")) {
                 summary.flowClientEngineResourceResponseObserved = true;
+            }
+            if (line.contains("\"type\":\"resourceResponse\"")
+                    && line.contains("\"flowClientResource\":true")
+                    && line.contains("\"requestPurpose\":\"flow-client-lazy-lookup\"")
+                    && line.contains("\"lookupKind\":\"Flow.loadOnDemand-minimum-probe\"")
+                    && line.contains("META-INF/frontend/Flow.js")
+                    && line.contains("\"bodyRedacted\":true")) {
+                summary.flowClientResourceLazyLookupResponseObserved = true;
             }
             if (line.contains("\"type\":\"webview.dom\"")
                     && line.contains("flowClientResourceLoaded")
@@ -331,6 +346,42 @@ public final class DesktopTraceInspector {
                     && line.contains("META-INF/resources/VAADIN/static/client/compile.properties")
                     && line.contains(".cache.js")) {
                 summary.flowClientResourceGraphDomObserved = true;
+            }
+            if (line.contains("\"type\":\"webview.dom\"")
+                    && containsLiteralField(line, "flowClientResourceExecutionClassificationComplete", "true")
+                    && containsLiteralField(line, "flowClientResourceVerifiedCount", "6")
+                    && containsLiteralField(line, "flowClientResourceExecutedCount", "2")
+                    && containsLiteralField(line, "flowClientResourceVerifiedOnlyCount", "4")
+                    && containsLiteralField(line, "flowClientResourceIntentionallyNotExecutedCount", "4")
+                    && containsLiteralField(line, "flowClientResourceExecutionFailedCount", "0")
+                    && line.contains("flowClientResourceExecutedPaths")
+                    && line.contains("META-INF/frontend/FlowBootstrap.js")
+                    && line.contains("META-INF/frontend/FlowClient.js")
+                    && line.contains("flowClientResourceVerifiedOnlyPaths")
+                    && line.contains("META-INF/frontend/Flow.js")
+                    && line.contains("META-INF/frontend/index.js")
+                    && line.contains("META-INF/resources/VAADIN/static/client/compile.properties")
+                    && line.contains(".cache.js")) {
+                summary.flowClientResourceExecutionClassificationDomObserved = true;
+            }
+            if (line.contains("\"type\":\"webview.dom\"")
+                    && containsLiteralField(line, "flowClientResourceLazyLookupRequested", "true")
+                    && containsLiteralField(line, "flowClientResourceLazyLookupResponse", "true")
+                    && containsLiteralField(line, "flowClientResourceLazyLookupVerified", "true")
+                    && containsStringField(line, "flowClientResourceLazyLookupPurpose", "flow-client-lazy-lookup")
+                    && containsStringField(line, "flowClientResourceLazyLookupKind", "Flow.loadOnDemand-minimum-probe")
+                    && containsStringField(line, "flowClientResourceLazyLookupPath", "META-INF/frontend/Flow.js")
+                    && containsStringField(line, "flowClientResourceLazyLookupResult",
+                            "verified-only:intentionally-not-executed")
+                    && line.contains("flowClientResourceLoadOnDemandProbeResult")
+                    && containsStringField(line, "flowClientResourceBootstrapLazyEntriesResult",
+                            "no-bootstrap-LAZY-entry-in-smoke")
+                    && containsLiteralField(line, "flowClientResourceStaticLookupVerified", "true")
+                    && containsStringField(line, "flowClientResourceStaticLookupPath",
+                            "META-INF/resources/VAADIN/static/client/compile.properties")
+                    && containsStringField(line, "flowClientResourceThemeLookupResult",
+                            "no-theme-resource-declared-by-smoke-app")) {
+                summary.flowClientResourceLazyLookupDomObserved = true;
             }
             if (line.contains("\"type\":\"webview.dom\"")
                     && line.contains("flowClientEngineResourceLoaded")
@@ -616,6 +667,10 @@ public final class DesktopTraceInspector {
         private boolean flowClientResourceResponseObserved;
         private boolean flowClientResourceDomObserved;
         private boolean flowClientResourceGraphDomObserved;
+        private boolean flowClientResourceExecutionClassificationDomObserved;
+        private boolean flowClientResourceLazyLookupRequestObserved;
+        private boolean flowClientResourceLazyLookupResponseObserved;
+        private boolean flowClientResourceLazyLookupDomObserved;
         private boolean flowClientEngineResourceManifestObserved;
         private boolean flowClientEngineResourceRequestObserved;
         private boolean flowClientEngineResourceResponseObserved;
@@ -704,6 +759,10 @@ public final class DesktopTraceInspector {
                     && duplicateLatePushProbeObserved
                     && flowClientEnginePushOrderingDomObserved
                     && recoveryResyncRequestObserved
+                    && flowClientResourceExecutionClassificationDomObserved
+                    && flowClientResourceLazyLookupRequestObserved
+                    && flowClientResourceLazyLookupResponseObserved
+                    && flowClientResourceLazyLookupDomObserved
                     && flowClientXhrTextInputObserved
                     && flowClientXhrCheckboxObserved
                     && textInputPatchObserved
@@ -747,6 +806,14 @@ public final class DesktopTraceInspector {
             System.out.println("Flow client resource response observed: " + flowClientResourceResponseObserved);
             System.out.println("Flow client resource DOM observed: " + flowClientResourceDomObserved);
             System.out.println("Flow client resource graph DOM observed: " + flowClientResourceGraphDomObserved);
+            System.out.println("Flow client resource execution classification DOM observed: "
+                    + flowClientResourceExecutionClassificationDomObserved);
+            System.out.println("Flow client resource lazy lookup request observed: "
+                    + flowClientResourceLazyLookupRequestObserved);
+            System.out.println("Flow client resource lazy lookup response observed: "
+                    + flowClientResourceLazyLookupResponseObserved);
+            System.out.println("Flow client resource lazy lookup DOM observed: "
+                    + flowClientResourceLazyLookupDomObserved);
             System.out.println("Flow client engine resource manifest observed: " + flowClientEngineResourceManifestObserved);
             System.out.println("Flow client engine resource request observed: " + flowClientEngineResourceRequestObserved);
             System.out.println("Flow client engine resource response observed: " + flowClientEngineResourceResponseObserved);

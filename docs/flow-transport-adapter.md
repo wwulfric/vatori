@@ -89,4 +89,4 @@ It also keeps the developer-facing shape intact: the smoke app still uses ordina
 
 ## Next Adapter Step
 
-The next concrete step is to replace the one-shot push/resync verification path with a real Flow push queue, ordering model, reconnect/resync behavior and broader component/resource coverage.
+The next concrete step is to replace the one-shot push/resync verification path with a real Flow push queue, ordering model, reconnect/resync behavior and broader component/resource coverage beyond the current button plus native input/checkbox smoke matrix.

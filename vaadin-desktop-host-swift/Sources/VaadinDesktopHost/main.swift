@@ -837,6 +837,9 @@ final class WebViewHost: NSObject, NSApplicationDelegate, NSWindowDelegate, WKNa
         DispatchQueue.main.asyncAfter(deadline: .now() + 2.0) {
             self.inspectWebView(webView)
         }
+        DispatchQueue.main.asyncAfter(deadline: .now() + 4.5) {
+            self.inspectWebView(webView)
+        }
         DispatchQueue.main.asyncAfter(deadline: .now() + 5.0) {
             self.writeSnapshot(webView)
         }
@@ -904,6 +907,12 @@ final class WebViewHost: NSObject, NSApplicationDelegate, NSWindowDelegate, WKNa
           flowClientEngineIpcResyncBridgeInstalled: !!(window.VaadinDesktopIpcDiagnostics && window.VaadinDesktopIpcDiagnostics.flowClientEngineIpcResyncBridgeInstalled),
           flowClientEngineEventPatchConsumed: !!(window.VaadinDesktopIpcDiagnostics && window.VaadinDesktopIpcDiagnostics.flowClientEngineEventPatchConsumed),
           flowClientEngineEventStatusText: window.VaadinDesktopIpcDiagnostics ? window.VaadinDesktopIpcDiagnostics.flowClientEngineEventStatusText : "",
+          flowClientEngineTextInputEventObserved: !!(window.VaadinDesktopIpcDiagnostics && window.VaadinDesktopIpcDiagnostics.flowClientEngineTextInputEventObserved),
+          flowClientEngineTextInputStatusText: window.VaadinDesktopIpcDiagnostics ? window.VaadinDesktopIpcDiagnostics.flowClientEngineTextInputStatusText : "",
+          flowClientEngineCheckboxEventObserved: !!(window.VaadinDesktopIpcDiagnostics && window.VaadinDesktopIpcDiagnostics.flowClientEngineCheckboxEventObserved),
+          flowClientEngineCheckboxStatusText: window.VaadinDesktopIpcDiagnostics ? window.VaadinDesktopIpcDiagnostics.flowClientEngineCheckboxStatusText : "",
+          flowClientEngineComponentEventPatchCount: window.VaadinDesktopIpcDiagnostics ? window.VaadinDesktopIpcDiagnostics.flowClientEngineComponentEventPatchCount : 0,
+          flowClientEngineComponentEventOrder: window.VaadinDesktopIpcDiagnostics ? window.VaadinDesktopIpcDiagnostics.flowClientEngineComponentEventOrder : "",
           flowClientEnginePushPatchConsumed: !!(window.VaadinDesktopIpcDiagnostics && window.VaadinDesktopIpcDiagnostics.flowClientEnginePushPatchConsumed),
           flowClientEnginePushStatusText: window.VaadinDesktopIpcDiagnostics ? window.VaadinDesktopIpcDiagnostics.flowClientEnginePushStatusText : "",
           flowClientEngineQueuedMessageCount: window.VaadinDesktopIpcDiagnostics ? window.VaadinDesktopIpcDiagnostics.flowClientEngineQueuedMessageCount : -1,
@@ -1054,6 +1063,14 @@ let flowIpcShell = #"""
       min-height: 32px;
       padding: 4px 14px;
     }
+    input {
+      font: inherit;
+      min-height: 28px;
+    }
+    input[type="text"] {
+      min-width: 240px;
+      padding: 3px 8px;
+    }
     .flow-list {
       display: grid;
       grid-template-columns: 120px 160px 1fr;
@@ -1088,6 +1105,34 @@ let flowIpcShell = #"""
       let autoClickAttempts = 0;
       let autoClickReadinessAttempts = 0;
       let autoClickInFlight = false;
+      let autoComponentEventValue = 'Flow IPC typed';
+      let autoComponentEventRetryLimit = 30;
+      let autoComponentEventDelayMs = 140;
+      let autoComponentEventRetryMs = 80;
+      let autoComponentEventTimeoutMs = 500;
+      let autoComponentEventEnabled = !!window.__VAADIN_DESKTOP_FLOW_IPC_AUTO_CLICK__;
+      let autoComponentEvents = [
+        {
+          key: 'text',
+          id: 'ipc-text-input',
+          eventType: 'change',
+          value: autoComponentEventValue,
+          data: () => ({ 'element.value': autoComponentEventValue }),
+          prepare: (element) => { element.value = autoComponentEventValue; }
+        },
+        {
+          key: 'checkbox',
+          id: 'ipc-checkbox',
+          eventType: 'change',
+          value: true,
+          data: () => ({ 'element.checked': true }),
+          prepare: (element) => { element.checked = true; }
+        }
+      ];
+      let autoComponentEventIndex = 0;
+      let autoComponentEventAttempts = 0;
+      let autoComponentEventInFlight = false;
+      let autoComponentEventsDone = false;
       let autoResyncDone = false;
       let autoErrorProbeDone = false;
       const flowBootstrapAppId = 'ROOT-2521314';
@@ -1117,6 +1162,8 @@ let flowIpcShell = #"""
       const flowNodeElements = new Map();
       const flowTextNodes = new Map();
       const flowUidlNodes = new Map();
+      const flowClientNodeIdsById = new Map();
+      const flowClientIdsByNodeId = new Map();
       window.VaadinDesktopIpcDiagnostics = {
         flowClientResourceLoaded: false,
         flowClientResourcePath: '',
@@ -1169,6 +1216,12 @@ let flowIpcShell = #"""
         flowClientEngineIpcResyncBridgeInstalled: false,
         flowClientEngineEventPatchConsumed: false,
         flowClientEngineEventStatusText: '',
+        flowClientEngineTextInputEventObserved: false,
+        flowClientEngineTextInputStatusText: '',
+        flowClientEngineCheckboxEventObserved: false,
+        flowClientEngineCheckboxStatusText: '',
+        flowClientEngineComponentEventPatchCount: 0,
+        flowClientEngineComponentEventOrder: '',
         flowClientEnginePushPatchConsumed: false,
         flowClientEnginePushStatusText: '',
         flowClientEngineQueuedMessageCount: 0,
@@ -1278,8 +1331,9 @@ let flowIpcShell = #"""
         }
       }
 
-      function sendFlowEvent(node, eventType) {
-        if (sendFlowClientEngineEvent(node, eventType)) {
+      function sendFlowEvent(node, eventType, eventData) {
+        const data = eventData || {};
+        if (sendFlowClientEngineEvent(node, eventType, data)) {
           return;
         }
         const clientId = flowClientState.clientId++;
@@ -1291,7 +1345,7 @@ let flowIpcShell = #"""
             type: 'event',
             node: node.nodeId,
             event: eventType,
-            data: {}
+            data
           }],
           syncId: flowClientState.syncId,
           clientId
@@ -1331,7 +1385,50 @@ let flowIpcShell = #"""
         return null;
       }
 
+      function flowClientEngineElementById(id) {
+        const root = flowClientEngineRoot() || document;
+        const selector = '#' + id + ', [data-flow-id="' + id + '"]';
+        const domElement = root.querySelector ? root.querySelector(selector) : null;
+        if (domElement) {
+          const rawNodeId = Number(domElement.dataset ? domElement.dataset.flowNodeId : NaN);
+          if (Number.isInteger(rawNodeId) && rawNodeId > 0) {
+            return { element: domElement, nodeId: rawNodeId, id };
+          }
+        }
+        const mappedNodeId = flowClientNodeIdsById.get(id);
+        if (Number.isInteger(mappedNodeId) && mappedNodeId > 0) {
+          const mappedElement = flowClientEngineElement(mappedNodeId);
+          if (mappedElement) {
+            return { element: mappedElement, nodeId: mappedNodeId, id };
+          }
+        }
+        for (let nodeId = 1; nodeId < 240; nodeId += 1) {
+          const element = flowClientEngineElement(nodeId);
+          if (element && (element.id === id || element.getAttribute('id') === id
+              || element.dataset && element.dataset.flowId === id)) {
+            return { element, nodeId, id };
+          }
+        }
+        return null;
+      }
+
+      function flowClientElementIdByNodeId(nodeId) {
+        const mappedId = flowClientIdsByNodeId.get(nodeId);
+        if (mappedId) {
+          return mappedId;
+        }
+        const found = flowClientEngineElement(nodeId);
+        if (!found) {
+          return '';
+        }
+        return found.id || (found.dataset ? found.dataset.flowId || '' : '') || '';
+      }
+
       function flowClientEngineButton() {
+        const byId = flowClientEngineElementById('ipc-button');
+        if (byId) {
+          return byId.element;
+        }
         return flowClientEngineElement(16)
           || document.querySelector('#flow-client-engine-root #ipc-button')
           || document.querySelector('#flow-client-engine-root [data-flow-id="ipc-button"]')
@@ -1360,20 +1457,22 @@ let flowIpcShell = #"""
       }
 
       function refreshFlowClientEngineVisibleDiagnostics() {
-        const status = flowClientEngineElement(14);
-        const button = flowClientEngineElement(16);
+        const statusById = flowClientEngineElementById('ipc-status');
+        const buttonById = flowClientEngineElementById('ipc-button');
+        const status = statusById ? statusById.element : flowClientEngineElement(14);
+        const button = buttonById ? buttonById.element : flowClientEngineElement(16);
         window.VaadinDesktopIpcDiagnostics.flowClientEngineVisibleStatusText = status ? (status.textContent || '') : '';
         window.VaadinDesktopIpcDiagnostics.flowClientEngineVisibleButtonText = button ? (button.textContent || '') : '';
         window.VaadinDesktopIpcDiagnostics.flowClientEngineLocalFallbackHidden = app.hidden;
       }
 
-      function sendFlowClientEngineEvent(node, eventType) {
+      function sendFlowClientEngineEvent(node, eventType, eventData) {
         const client = flowClientEngineClient();
         if (!client || typeof client.sendEventMessage !== 'function' || !window.VaadinDesktopIpcDiagnostics.flowClientEngineXhrBridgeInstalled) {
           return false;
         }
         try {
-          client.sendEventMessage(node.nodeId, eventType, {});
+          client.sendEventMessage(node.nodeId, eventType, eventData || {});
           return true;
         } catch (error) {
           window.VaadinDesktopIpcDiagnostics.flowClientEngineXhrError = error && error.message ? error.message : String(error);
@@ -1527,12 +1626,18 @@ let flowIpcShell = #"""
               window.VaadinDesktopIpcDiagnostics.flowClientEngineXhrRequestObserved = true;
               window.VaadinDesktopIpcDiagnostics.flowClientEngineXhrLastClientId = Number.isInteger(requestPayload.clientId) ? requestPayload.clientId : -1;
               const type = requestPayload.resynchronize === true ? 'resync' : 'event';
+              const rpc = Array.isArray(requestPayload.rpc)
+                ? requestPayload.rpc.find((entry) => entry && entry.type === 'event')
+                : null;
+              const rpcNodeId = rpc && Number.isInteger(rpc.node) ? rpc.node : 16;
+              const rpcEventType = rpc && typeof rpc.event === 'string' ? rpc.event : (type === 'event' ? 'uidl-rpc' : 'resync');
+              const rpcComponentId = flowClientElementIdByNodeId(rpcNodeId) || (rpcNodeId === 16 ? 'ipc-button' : '');
               const ipcPayload = {
                 dispatch: 'flow-client-xhr',
-                componentId: 'ipc-button',
-                nodeId: 16,
+                componentId: rpcComponentId,
+                nodeId: rpcNodeId,
                 securityKey,
-                event: type === 'event' ? 'uidl-rpc' : 'resync',
+                event: type === 'event' ? rpcEventType : 'resync',
                 uidlRpc: requestPayload,
                 syncId: Number.isInteger(requestPayload.syncId) ? requestPayload.syncId : flowClientState.syncId,
                 clientId: Number.isInteger(requestPayload.clientId) ? requestPayload.clientId : flowClientState.clientId
@@ -1542,7 +1647,12 @@ let flowIpcShell = #"""
                 flowClientEngineResyncXhrSent = true;
               }
               const message = send(type, ipcPayload);
-              pendingFlowClientXhrRequests.set(message.correlationId, this);
+              pendingFlowClientXhrRequests.set(message.correlationId, {
+                xhr: this,
+                eventType: rpcEventType,
+                componentId: rpcComponentId,
+                nodeId: rpcNodeId
+              });
             } catch (error) {
               this._fail(error);
             }
@@ -1589,20 +1699,26 @@ let flowIpcShell = #"""
       }
 
       function completeFlowClientXhrIfPending(message) {
-        const xhr = pendingFlowClientXhrRequests.get(message.correlationId || '');
-        if (!xhr) {
+        const pending = pendingFlowClientXhrRequests.get(message.correlationId || '');
+        if (!pending) {
           return false;
         }
         pendingFlowClientXhrRequests.delete(message.correlationId || '');
+        const xhr = pending.xhr || pending;
         const body = message.payload && message.payload.uidl && typeof message.payload.uidl.body === 'string'
           ? message.payload.uidl.body
           : '';
         if (body) {
           window.VaadinDesktopIpcDiagnostics.flowClientEngineXhrResponseObserved = true;
           if (message.type === 'patch' && message.payload && message.payload.reason === 'event') {
-            autoClickDone = true;
-            autoClickInFlight = false;
-            window.VaadinDesktopIpcDiagnostics.flowClientEngineEventPatchConsumed = true;
+            if (pending.eventType === 'click') {
+              autoClickInFlight = false;
+            } else if (pending.eventType === 'change') {
+              window.VaadinDesktopIpcDiagnostics.flowClientEngineComponentEventPatchCount += 1;
+              const currentOrder = window.VaadinDesktopIpcDiagnostics.flowClientEngineComponentEventOrder;
+              window.VaadinDesktopIpcDiagnostics.flowClientEngineComponentEventOrder =
+                currentOrder ? currentOrder + ',' + pending.componentId : pending.componentId;
+            }
           }
           if (message.payload && message.payload.reason === 'resync') {
             window.VaadinDesktopIpcDiagnostics.flowClientEngineResyncPatchConsumed = true;
@@ -1615,8 +1731,12 @@ let flowIpcShell = #"""
           }
           setTimeout(refreshFlowClientEngineDiagnostics, 0);
           setTimeout(refreshFlowClientEngineDiagnostics, 100);
+          setTimeout(refreshFlowClientEngineDiagnostics, 400);
+          setTimeout(refreshFlowClientEngineDiagnostics, 800);
+          setTimeout(scheduleAutoComponentEvents, 900);
         } else {
           autoClickInFlight = false;
+          autoComponentEventInFlight = false;
           xhr._complete(500, '');
         }
         return true;
@@ -1635,20 +1755,21 @@ let flowIpcShell = #"""
           return;
         }
         const client = flowClientEngineClient();
-        const button = flowClientEngineButton();
-        if (button && client && typeof client.sendEventMessage === 'function' && window.VaadinDesktopIpcDiagnostics.flowClientEngineXhrBridgeInstalled) {
+        const buttonTarget = flowClientEngineElementById('ipc-button');
+        const button = buttonTarget ? buttonTarget.element : flowClientEngineButton();
+        if (buttonTarget && client && typeof client.sendEventMessage === 'function' && window.VaadinDesktopIpcDiagnostics.flowClientEngineXhrBridgeInstalled) {
           if (autoClickAttempts >= 5) {
             autoClickDone = true;
             return;
           }
           autoClickAttempts += 1;
           autoClickInFlight = true;
-          button.click();
+          client.sendEventMessage(buttonTarget.nodeId, 'click', {});
           setTimeout(() => {
             autoClickInFlight = false;
             refreshFlowClientEngineDiagnostics();
             scheduleAutoClick();
-          }, 350);
+          }, 1200);
           return;
         }
         autoClickReadinessAttempts += 1;
@@ -1658,6 +1779,83 @@ let flowIpcShell = #"""
           return;
         }
         setTimeout(scheduleAutoClick, 50);
+      }
+
+      function rememberFlowClientNodeIdsFromTree(node) {
+        if (!node || !Number.isInteger(node.nodeId)) {
+          return;
+        }
+        if (node.id) {
+          flowClientNodeIdsById.set(node.id, node.nodeId);
+          flowClientIdsByNodeId.set(node.nodeId, node.id);
+        }
+        for (const child of node.children || []) {
+          rememberFlowClientNodeIdsFromTree(child);
+        }
+      }
+
+      function rememberFlowClientNodeIds(payload) {
+        if (!payload) {
+          return;
+        }
+        rememberFlowClientNodeIdsFromTree(payload.tree);
+      }
+
+      function scheduleAutoComponentEvents() {
+        if (!autoComponentEventEnabled || autoComponentEventsDone) {
+          return;
+        }
+        if (!window.VaadinDesktopIpcDiagnostics.flowClientEngineEventPatchConsumed
+            || !window.VaadinDesktopIpcDiagnostics.flowClientEngineXhrBridgeInstalled) {
+          setTimeout(scheduleAutoComponentEvents, autoComponentEventRetryMs);
+          return;
+        }
+        if (autoComponentEventInFlight) {
+          return;
+        }
+        if (autoComponentEventIndex >= autoComponentEvents.length) {
+          autoComponentEventsDone = true;
+          requestAutoResyncIfReady();
+          return;
+        }
+
+        const descriptor = autoComponentEvents[autoComponentEventIndex];
+        const target = flowClientEngineElementById(descriptor.id);
+        const client = flowClientEngineClient();
+        if (!target || !client || typeof client.sendEventMessage !== 'function') {
+          autoComponentEventAttempts += 1;
+          if (autoComponentEventAttempts < autoComponentEventRetryLimit) {
+            setTimeout(scheduleAutoComponentEvents, autoComponentEventRetryMs);
+          }
+          return;
+        }
+
+        autoComponentEventAttempts = 0;
+        autoComponentEventInFlight = true;
+        try {
+          descriptor.prepare(target.element);
+          client.sendEventMessage(target.nodeId, descriptor.eventType, descriptor.data());
+        } catch (error) {
+          window.VaadinDesktopIpcDiagnostics.flowClientEngineXhrError = error && error.message ? error.message : String(error);
+          autoComponentEventInFlight = false;
+          return;
+        }
+
+        setTimeout(() => {
+          autoComponentEventInFlight = false;
+          refreshFlowClientEngineDiagnostics();
+          const textDone = window.VaadinDesktopIpcDiagnostics.flowClientEngineTextInputEventObserved;
+          const checkboxDone = window.VaadinDesktopIpcDiagnostics.flowClientEngineCheckboxEventObserved;
+          if ((descriptor.key === 'text' && textDone) || (descriptor.key === 'checkbox' && checkboxDone)) {
+            autoComponentEventIndex += 1;
+          }
+          if (autoComponentEventIndex >= autoComponentEvents.length) {
+            autoComponentEventsDone = true;
+            requestAutoResyncIfReady();
+          } else {
+            setTimeout(scheduleAutoComponentEvents, autoComponentEventDelayMs);
+          }
+        }, autoComponentEventTimeoutMs);
       }
 
       function render(node) {
@@ -1689,6 +1887,17 @@ let flowIpcShell = #"""
           }
         }
         sendResyncFallback(reason);
+      }
+
+      function requestAutoResyncIfReady() {
+        if (!window.__VAADIN_DESKTOP_FLOW_IPC_AUTO_RESYNC__ || autoResyncDone) {
+          return;
+        }
+        if (autoComponentEventEnabled && !autoComponentEventsDone) {
+          return;
+        }
+        autoResyncDone = true;
+        setTimeout(() => requestResync('verification-resync-after-event'), 80);
       }
 
       function sendResyncFallback(reason) {
@@ -1902,6 +2111,23 @@ let flowIpcShell = #"""
           element.addEventListener('click', () => {
             sendFlowEvent({ id: state.id || '', nodeId }, 'click');
           });
+        } else if (tag === 'input') {
+          element = document.createElement('input');
+          if (state.type) {
+            element.type = String(state.type);
+          }
+          if (state.placeholder) {
+            element.placeholder = String(state.placeholder);
+          }
+          if (state.value) {
+            element.value = String(state.value);
+          }
+          element.addEventListener('change', () => {
+            const data = element.type === 'checkbox'
+              ? { 'element.checked': !!element.checked }
+              : { 'element.value': element.value || '' };
+            sendFlowEvent({ id: state.id || '', nodeId }, 'change', data);
+          });
         } else if (tag === 'h1') {
           element = document.createElement('h1');
         } else if (tag === 'span') {
@@ -1915,6 +2141,7 @@ let flowIpcShell = #"""
 
         if (state.id) {
           element.dataset.flowId = state.id;
+          element.id = state.id;
         }
         element.dataset.flowNodeId = String(nodeId);
         flowNodeElements.set(nodeId, element);
@@ -1997,6 +2224,17 @@ let flowIpcShell = #"""
           element.addEventListener('click', () => {
             sendFlowEvent(node, 'click');
           });
+        } else if (node.tag === 'input') {
+          element = document.createElement('input');
+          if (node.id === 'ipc-checkbox') {
+            element.type = 'checkbox';
+          }
+          element.addEventListener('change', () => {
+            const data = element.type === 'checkbox'
+              ? { 'element.checked': !!element.checked }
+              : { 'element.value': element.value || '' };
+            sendFlowEvent(node, 'change', data);
+          });
         } else if (node.tag === 'h1') {
           element = document.createElement('h1');
           element.textContent = node.text || '';
@@ -2012,6 +2250,9 @@ let flowIpcShell = #"""
           }
         }
         element.dataset.flowId = node.id || '';
+        if (node.id) {
+          element.id = node.id;
+        }
         if (Number.isInteger(node.nodeId)) {
           element.dataset.flowNodeId = String(node.nodeId);
           flowNodeElements.set(node.nodeId, element);
@@ -2057,7 +2298,23 @@ let flowIpcShell = #"""
         window.VaadinDesktopIpcDiagnostics.flowClientEngineIpcResyncBridgeInstalled = !!client && typeof client.requestIpcResync === 'function';
         if (client && typeof client.getByNodeId === 'function') {
           const boundNodeIds = [];
-          for (const nodeId of [19, 16, 14, 12, 21]) {
+          const expectedIds = [
+            'ipc-root',
+            'ipc-button',
+            'ipc-status',
+            'ipc-list',
+            'ipc-event-matrix',
+            'ipc-text-input',
+            'ipc-text-status',
+            'ipc-checkbox',
+            'ipc-checkbox-status',
+            'ipc-push-status'
+          ];
+          for (const id of expectedIds) {
+            const nodeId = flowClientNodeIdsById.get(id);
+            if (!Number.isInteger(nodeId)) {
+              continue;
+            }
             try {
               if (client.getByNodeId(nodeId)) {
                 boundNodeIds.push(nodeId);
@@ -2067,22 +2324,26 @@ let flowIpcShell = #"""
             }
           }
           window.VaadinDesktopIpcDiagnostics.flowClientEngineBoundNodeIds = boundNodeIds.join(',');
+          const buttonById = flowClientEngineElementById('ipc-button');
+          const statusById = flowClientEngineElementById('ipc-status');
+          const listById = flowClientEngineElementById('ipc-list');
+          const matrixById = flowClientEngineElementById('ipc-event-matrix');
           window.VaadinDesktopIpcDiagnostics.flowClientEngineBootstrapDomBound =
-            boundNodeIds.includes(19) && boundNodeIds.includes(16) && boundNodeIds.includes(14);
+            !!buttonById && !!statusById && !!listById && !!matrixById;
           try {
-            const status = client.getByNodeId(14);
+            const status = statusById ? statusById.element : client.getByNodeId(14);
             window.VaadinDesktopIpcDiagnostics.flowClientEngineBootstrapStatusText = status ? (status.textContent || '') : '';
           } catch (_) {
             window.VaadinDesktopIpcDiagnostics.flowClientEngineBootstrapStatusText = '';
           }
           try {
-            const button = client.getByNodeId(16);
+            const button = buttonById ? buttonById.element : client.getByNodeId(16);
             window.VaadinDesktopIpcDiagnostics.flowClientEngineBootstrapButtonText = button ? (button.textContent || '') : '';
           } catch (_) {
             window.VaadinDesktopIpcDiagnostics.flowClientEngineBootstrapButtonText = '';
           }
           try {
-            const list = client.getByNodeId(12) || document.querySelector('#flow-client-engine-root #ipc-list');
+            const list = listById ? listById.element : (client.getByNodeId(12) || document.querySelector('#flow-client-engine-root #ipc-list'));
             const listText = list ? (list.textContent || '') : '';
             window.VaadinDesktopIpcDiagnostics.flowClientEngineListBound =
               !!list && listText.includes('1 Bootstrap over IPC READY')
@@ -2096,10 +2357,29 @@ let flowIpcShell = #"""
             window.VaadinDesktopIpcDiagnostics.flowClientEngineListText = '';
           }
           try {
-            const pushStatus = client.getByNodeId(21) || document.querySelector('#flow-client-engine-root #ipc-push-status');
+            const pushStatusById = flowClientEngineElementById('ipc-push-status');
+            const pushStatus = pushStatusById ? pushStatusById.element : (client.getByNodeId(21) || document.querySelector('#flow-client-engine-root #ipc-push-status'));
             window.VaadinDesktopIpcDiagnostics.flowClientEnginePushStatusText = pushStatus ? (pushStatus.textContent || '') : '';
           } catch (_) {
             window.VaadinDesktopIpcDiagnostics.flowClientEnginePushStatusText = '';
+          }
+          try {
+            const textStatus = flowClientEngineElementById('ipc-text-status');
+            const textStatusText = textStatus ? (textStatus.element.textContent || '') : '';
+            window.VaadinDesktopIpcDiagnostics.flowClientEngineTextInputStatusText = textStatusText;
+            window.VaadinDesktopIpcDiagnostics.flowClientEngineTextInputEventObserved =
+              textStatusText.includes('Text input: ' + autoComponentEventValue);
+          } catch (_) {
+            window.VaadinDesktopIpcDiagnostics.flowClientEngineTextInputStatusText = '';
+          }
+          try {
+            const checkboxStatus = flowClientEngineElementById('ipc-checkbox-status');
+            const checkboxStatusText = checkboxStatus ? (checkboxStatus.element.textContent || '') : '';
+            window.VaadinDesktopIpcDiagnostics.flowClientEngineCheckboxStatusText = checkboxStatusText;
+            window.VaadinDesktopIpcDiagnostics.flowClientEngineCheckboxEventObserved =
+              checkboxStatusText.includes('Checkbox: checked');
+          } catch (_) {
+            window.VaadinDesktopIpcDiagnostics.flowClientEngineCheckboxStatusText = '';
           }
         }
         if (window.VaadinDesktopIpcDiagnostics.flowClientEngineClientRegistered) {
@@ -2123,6 +2403,12 @@ let flowIpcShell = #"""
           autoClickDone = true;
           autoClickInFlight = false;
         }
+        if (autoComponentEventEnabled
+            && window.VaadinDesktopIpcDiagnostics.flowClientEngineTextInputEventObserved
+            && window.VaadinDesktopIpcDiagnostics.flowClientEngineCheckboxEventObserved) {
+          autoComponentEventsDone = true;
+          autoComponentEventInFlight = false;
+        }
         window.VaadinDesktopIpcDiagnostics.flowClientEngineResourceVerified =
           flowClientEngineResourceBaseVerified
           && window.VaadinDesktopIpcDiagnostics.flowClientEngineInitExported
@@ -2131,6 +2417,8 @@ let flowIpcShell = #"""
           && window.VaadinDesktopIpcDiagnostics.flowClientEngineIpcMessageBridgeInstalled
           && window.VaadinDesktopIpcDiagnostics.flowClientEngineIpcResyncBridgeInstalled;
         flushQueuedFlowClientEngineMessages();
+        scheduleAutoComponentEvents();
+        requestAutoResyncIfReady();
         scheduleAutoErrorProbe();
       }
 
@@ -2265,41 +2553,54 @@ let flowIpcShell = #"""
 
       window.VaadinDesktopIpc = {
         receive(message) {
-          trace.textContent = 'recv ' + message.type + ' #' + message.id;
-          observeFlowIpcServerSequence(message);
-          if (message.type === 'bootstrapResponse' || message.type === 'patch' || message.type === 'push' || message.type === 'resync') {
-            const flowClientCompleted = completeFlowClientXhrIfPending(message);
-            updateClientState(message.payload);
-            let flowClientOwnsMessage = flowClientCompleted;
-            if (message.type === 'push') {
-              flowClientOwnsMessage = deliverFlowClientEngineMessage(message, 'push') || queueFlowClientEngineMessage(message, 'push');
-            } else if (!flowClientCompleted && message.payload && message.payload.uidl && message.payload.uidl.resync === true) {
-              flowClientOwnsMessage = deliverFlowClientEngineMessage(message, 'resync') || queueFlowClientEngineMessage(message, 'resync');
-            }
-            if (message.type === 'bootstrapResponse') {
-              if (!applyUidlBootstrap(message.payload)) {
+          try {
+            trace.textContent = 'recv ' + message.type + ' #' + message.id;
+            observeFlowIpcServerSequence(message);
+            if (message.type === 'bootstrapResponse' || message.type === 'patch' || message.type === 'push' || message.type === 'resync') {
+              rememberFlowClientNodeIds(message.payload);
+              const flowClientCompleted = completeFlowClientXhrIfPending(message);
+              updateClientState(message.payload);
+              let flowClientOwnsMessage = flowClientCompleted;
+              if (message.type === 'push') {
+                flowClientOwnsMessage = deliverFlowClientEngineMessage(message, 'push') || queueFlowClientEngineMessage(message, 'push');
+              } else if (!flowClientCompleted && message.payload && message.payload.uidl && message.payload.uidl.resync === true) {
+                flowClientOwnsMessage = deliverFlowClientEngineMessage(message, 'resync') || queueFlowClientEngineMessage(message, 'resync');
+              }
+              if (message.type === 'bootstrapResponse') {
+                if (!applyUidlBootstrap(message.payload)) {
+                  render(message.payload && message.payload.tree);
+                }
+                rememberFlowClientBootstrapPayload(message.payload);
+                requestFlowClientResourceProbe(message.payload);
+              } else if (!flowClientOwnsMessage && message.payload && message.payload.uidl && message.payload.uidl.resync === true) {
+                if (!applyUidlBootstrap(message.payload)) {
+                  render(message.payload && message.payload.tree);
+                }
+              } else if (!flowClientOwnsMessage && !applyUidlPatch(message.payload)) {
                 render(message.payload && message.payload.tree);
               }
-              rememberFlowClientBootstrapPayload(message.payload);
-              requestFlowClientResourceProbe(message.payload);
-            } else if (!flowClientOwnsMessage && message.payload && message.payload.uidl && message.payload.uidl.resync === true) {
-              if (!applyUidlBootstrap(message.payload)) {
-                render(message.payload && message.payload.tree);
+              if (message.type === 'patch' && message.payload && message.payload.reason === 'event') {
+                scheduleAutoComponentEvents();
               }
-            } else if (!flowClientOwnsMessage && !applyUidlPatch(message.payload)) {
-              render(message.payload && message.payload.tree);
+              if (message.type === 'patch' && message.payload && message.payload.reason === 'event'
+                  && window.__VAADIN_DESKTOP_FLOW_IPC_AUTO_RESYNC__ && !autoResyncDone) {
+                requestAutoResyncIfReady();
+              }
+              if (message.type === 'bootstrapResponse') {
+                scheduleAutoClick();
+              }
+            } else if (message.type === 'resourceResponse') {
+              handleResourceResponse(message.payload);
+            } else if (message.type === 'error') {
+              app.textContent = 'Flow IPC error: ' + JSON.stringify(message.error || message.payload);
             }
-            if (message.type === 'patch' && message.payload && message.payload.reason === 'event' && window.__VAADIN_DESKTOP_FLOW_IPC_AUTO_RESYNC__ && !autoResyncDone) {
-              autoResyncDone = true;
-              setTimeout(() => requestResync('verification-resync-after-event'), 80);
-            }
-            if (message.type === 'bootstrapResponse') {
-              scheduleAutoClick();
-            }
-          } else if (message.type === 'resourceResponse') {
-            handleResourceResponse(message.payload);
-          } else if (message.type === 'error') {
-            app.textContent = 'Flow IPC error: ' + JSON.stringify(message.error || message.payload);
+          } catch (error) {
+            const errorMessage = error && error.message ? error.message : String(error);
+            window.VaadinDesktopIpcDiagnostics.flowClientEngineXhrError = errorMessage;
+            sendWebViewError('flowIpcReceiveFailed', errorMessage, {
+              receivedType: message && message.type ? message.type : '',
+              receivedId: message && message.id ? message.id : ''
+            });
           }
         }
       };

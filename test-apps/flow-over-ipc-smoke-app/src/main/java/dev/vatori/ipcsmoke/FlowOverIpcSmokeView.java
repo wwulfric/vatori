@@ -2,11 +2,13 @@ package dev.vatori.ipcsmoke;
 
 import com.vaadin.flow.component.button.Button;
 import com.vaadin.flow.component.html.H1;
+import com.vaadin.flow.component.html.Input;
 import com.vaadin.flow.component.html.Span;
 import com.vaadin.flow.component.orderedlayout.VerticalLayout;
 import com.vaadin.flow.router.Route;
 import dev.vatori.desktop.Desktop;
 import dev.vatori.desktop.DesktopCommand;
+import tools.jackson.databind.JsonNode;
 
 import java.util.Map;
 
@@ -47,5 +49,35 @@ public class FlowOverIpcSmokeView extends VerticalLayout {
         list.add(new Span("4 Desktop command/capabilityResult over IPC READY"));
 
         add(title, button, status, list);
+
+        Input textInput = new Input();
+        textInput.setId("ipc-text-input");
+        textInput.setPlaceholder("Text event over IPC");
+        Span textStatus = new Span("Text input: pending");
+        textStatus.setId("ipc-text-status");
+        textInput.getElement().addEventListener("change", event -> {
+            JsonNode valueNode = event.getEventData().get("element.value");
+            String value = valueNode == null ? "" : valueNode.asString();
+            textStatus.setText("Text input: " + value);
+        }).addEventData("element.value");
+
+        Input checkbox = new Input();
+        checkbox.setId("ipc-checkbox");
+        checkbox.setType("checkbox");
+        Span checkboxStatus = new Span("Checkbox: pending");
+        checkboxStatus.setId("ipc-checkbox-status");
+        checkbox.getElement().addEventListener("change", event -> {
+            JsonNode checkedNode = event.getEventData().get("element.checked");
+            boolean checked = checkedNode != null && checkedNode.asBoolean();
+            checkboxStatus.setText("Checkbox: " + (checked ? "checked" : "unchecked"));
+        }).addEventData("element.checked");
+
+        VerticalLayout eventMatrix = new VerticalLayout();
+        eventMatrix.setId("ipc-event-matrix");
+        eventMatrix.setPadding(false);
+        eventMatrix.setSpacing(false);
+        eventMatrix.add(new Span("6 Component event matrix over IPC READY"),
+                textInput, textStatus, checkbox, checkboxStatus);
+        add(eventMatrix);
     }
 }

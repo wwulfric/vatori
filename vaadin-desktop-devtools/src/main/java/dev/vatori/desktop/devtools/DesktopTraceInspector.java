@@ -205,6 +205,21 @@ public final class DesktopTraceInspector {
                 summary.webViewUidlRpcObserved = true;
                 summary.flowClientXhrClickObserved = true;
             }
+            if (line.contains("\"type\":\"event\"")
+                    && line.contains("\"dispatch\":\"flow-client-xhr\"")
+                    && line.contains("\"componentId\":\"ipc-text-input\"")
+                    && line.contains("\"event\":\"change\"")
+                    && line.contains("element.value")
+                    && line.contains("Flow IPC typed")) {
+                summary.flowClientXhrTextInputObserved = true;
+            }
+            if (line.contains("\"type\":\"event\"")
+                    && line.contains("\"dispatch\":\"flow-client-xhr\"")
+                    && line.contains("\"componentId\":\"ipc-checkbox\"")
+                    && line.contains("\"event\":\"change\"")
+                    && line.contains("element.checked")) {
+                summary.flowClientXhrCheckboxObserved = true;
+            }
             if (line.contains("\"type\":\"bootstrapResponse\"")
                     && line.contains("\"securityKey\"")
                     && line.contains("Vaadin-Security-Key")
@@ -296,9 +311,8 @@ public final class DesktopTraceInspector {
                 summary.flowClientEngineDomObserved = true;
             }
             if (line.contains("\"type\":\"webview.dom\"")
-                    && line.contains("flowClientEngineBootstrapDomBound")
+                    && containsLiteralField(line, "flowClientEngineBootstrapDomBound", "true")
                     && line.contains("flowClientEngineBoundNodeIds")
-                    && line.contains("19,16,14,12")
                     && line.contains("flowClientEngineBootstrapStatusText")
                     && line.contains("flowClientEngineBootstrapButtonText")
                     && line.contains("Increment over IPC")) {
@@ -319,6 +333,16 @@ public final class DesktopTraceInspector {
                     && containsClickedStatusField(line, "flowClientEngineEventStatusText")
                     && containsStringField(line, "flowClientEngineXhrError", "")) {
                 summary.flowClientEngineXhrDomObserved = true;
+            }
+            if (line.contains("\"type\":\"webview.dom\"")
+                    && containsLiteralField(line, "flowClientEngineTextInputEventObserved", "true")
+                    && containsStringField(line, "flowClientEngineTextInputStatusText", "Text input: Flow IPC typed")
+                    && containsLiteralField(line, "flowClientEngineCheckboxEventObserved", "true")
+                    && containsStringField(line, "flowClientEngineCheckboxStatusText", "Checkbox: checked")
+                    && containsPositiveIntegerField(line, "flowClientEngineComponentEventPatchCount")
+                    && line.contains("ipc-text-input")
+                    && line.contains("ipc-checkbox")) {
+                summary.flowClientEngineComponentEventsDomObserved = true;
             }
             if (line.contains("\"type\":\"webview.dom\"")
                     && containsLiteralField(line, "flowClientEngineIpcMessageBridgeInstalled", "true")
@@ -367,6 +391,22 @@ public final class DesktopTraceInspector {
                     && line.contains("\"consumedByWebView\":true")
                     && line.contains("\"flow-client-engine-visible\"")) {
                 summary.flowClientXhrPatchObserved = true;
+            }
+            if (line.contains("\"type\":\"patch\"")
+                    && line.contains("\"source\":\"UidlRequestHandler\"")
+                    && line.contains("\"eventDispatch\":\"flow-client-xhr\"")
+                    && line.contains("Text input: Flow IPC typed")
+                    && line.contains("\"consumedByWebView\":true")
+                    && line.contains("\"flow-client-engine-visible\"")) {
+                summary.textInputPatchObserved = true;
+            }
+            if (line.contains("\"type\":\"patch\"")
+                    && line.contains("\"source\":\"UidlRequestHandler\"")
+                    && line.contains("\"eventDispatch\":\"flow-client-xhr\"")
+                    && line.contains("Checkbox: checked")
+                    && line.contains("\"consumedByWebView\":true")
+                    && line.contains("\"flow-client-engine-visible\"")) {
+                summary.checkboxPatchObserved = true;
             }
             if (line.contains("\"type\":\"patch\"")
                     && line.contains("\"source\":\"UidlRequestHandler\"")
@@ -502,7 +542,12 @@ public final class DesktopTraceInspector {
         private boolean webViewUidlRpcObserved;
         private boolean flowClientXhrAttachObserved;
         private boolean flowClientXhrClickObserved;
+        private boolean flowClientXhrTextInputObserved;
+        private boolean flowClientXhrCheckboxObserved;
         private boolean flowClientXhrPatchObserved;
+        private boolean textInputPatchObserved;
+        private boolean checkboxPatchObserved;
+        private boolean flowClientEngineComponentEventsDomObserved;
         private boolean uidlPatchObserved;
         private boolean pushUidlObserved;
         private boolean resyncUidlObserved;
@@ -556,7 +601,12 @@ public final class DesktopTraceInspector {
             return hasRequiredFlowIpcTypes()
                     && nativeFileDialogResultObserved
                     && manifestEnforcedObserved
-                    && capabilityDeniedObserved;
+                    && capabilityDeniedObserved
+                    && flowClientXhrTextInputObserved
+                    && flowClientXhrCheckboxObserved
+                    && textInputPatchObserved
+                    && checkboxPatchObserved
+                    && flowClientEngineComponentEventsDomObserved;
         }
 
         private void print(Path path) {
@@ -604,7 +654,12 @@ public final class DesktopTraceInspector {
             System.out.println("WebView UIDL RPC observed: " + webViewUidlRpcObserved);
             System.out.println("Flow client XHR attach observed: " + flowClientXhrAttachObserved);
             System.out.println("Flow client XHR click observed: " + flowClientXhrClickObserved);
+            System.out.println("Flow client XHR text input observed: " + flowClientXhrTextInputObserved);
+            System.out.println("Flow client XHR checkbox observed: " + flowClientXhrCheckboxObserved);
             System.out.println("Flow client XHR patch observed: " + flowClientXhrPatchObserved);
+            System.out.println("Text input patch observed: " + textInputPatchObserved);
+            System.out.println("Checkbox patch observed: " + checkboxPatchObserved);
+            System.out.println("Flow client component events DOM observed: " + flowClientEngineComponentEventsDomObserved);
             System.out.println("UIDL request handler patch observed: " + uidlPatchObserved);
             System.out.println("server push UIDL observed: " + pushUidlObserved);
             System.out.println("resync UIDL observed: " + resyncUidlObserved);

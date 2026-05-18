@@ -57,8 +57,8 @@ Expected trace characteristics:
 - `compatibilityMode=false`
 - Java sidecar emits `VFIPC1` envelopes.
 - The WebView loads a local HTML shell through `loadHTMLString`, not `http://127.0.0.1`.
-- Button click travels WebView -> Swift host -> Java sidecar -> Vaadin Button listener -> patch -> WebView.
-- Bootstrap, server push, event patches and verification resync include real server-side UIDL under `payload.uidl`; click events and verification resync are dispatched through `UidlRequestHandler`/`ServerRpcHandler`.
+- Button click and the smoke app's text-input / checkbox `change` events travel WebView -> Swift host -> Java sidecar -> Vaadin listener -> patch -> WebView.
+- Bootstrap, server push, event patches and verification resync include real server-side UIDL under `payload.uidl`; click, input/checkbox `change` events and verification resync are dispatched through `UidlRequestHandler`/`ServerRpcHandler`.
 - Bootstrap advertises Vaadin `flow-client` classpath resources; the WebView requests and verifies the full advertised resource graph through IPC, imports `FlowBootstrap.js` and `FlowClient.js` as ES modules, and initializes the Flow bootstrap plus GWT client modules.
 - Desktop API calls travel Java sidecar -> Swift host as `VFIPC1 command`, and host responses appear as `capabilityResult`; the Flow IPC smoke app uses `manifest-enforced` permission metadata and includes an intentional manifest deny-path.
 
@@ -139,4 +139,4 @@ Framework v0 still starts an embedded Spring Boot web server on `127.0.0.1`. The
 
 The Swift native compatibility path narrows the long-term host/runtime boundary, but Flow bootstrap, UIDL event handling and push are still compatibility HTTP there. Use `dev-ipc` for the no-localhost bootstrap/push/event/patch/resync runtime slice.
 
-`dev-ipc` is the exception: it is the first no-HTTP runtime slice, now with server-side UIDL generation and visible Flow client engine ownership for bootstrap, click-event patches, one push and one verification resync, but only for `test-apps/flow-over-ipc-smoke-app` and the constrained component/event set documented in `docs/flow-over-ipc-runtime.md`.
+`dev-ipc` is the exception: it is the first no-HTTP runtime slice, now with server-side UIDL generation and visible Flow client engine ownership for bootstrap, click-event patches, native input/checkbox change-event patches, one push and one verification resync, but only for `test-apps/flow-over-ipc-smoke-app` and the constrained component/event set documented in `docs/flow-over-ipc-runtime.md`.

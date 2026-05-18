@@ -154,7 +154,10 @@ public final class DesktopFlowRuntimeSession {
                 resync);
         FlowPatchResponse response = uidlAdapter.handleClientMessage(ui, message);
         observeSyncId(response.uidlJson());
-        expectedClientToServerMessageId = clientToServerMessageId + 1;
+        // Recovery resync is a side-channel in this IPC slice; it must not consume the next event id.
+        if (!resync) {
+            expectedClientToServerMessageId = clientToServerMessageId + 1;
+        }
         return response;
     }
 

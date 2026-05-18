@@ -58,14 +58,15 @@ Expected trace characteristics:
 - Java sidecar emits `VFIPC1` envelopes.
 - The WebView loads a local HTML shell through `loadHTMLString`, not `http://127.0.0.1`.
 - Button click and the smoke app's text-input / checkbox `change` events travel WebView -> Swift host -> Java sidecar -> Vaadin listener -> patch -> WebView.
-- Bootstrap, server push, event patches and verification resync include real server-side UIDL under `payload.uidl`; click, input/checkbox `change` events and verification resync are dispatched through `UidlRequestHandler`/`ServerRpcHandler`.
+- Bootstrap, ordered server push, event patches and recovery resync include real server-side UIDL under `payload.uidl`; click, input/checkbox `change` events and recovery resync are dispatched through `UidlRequestHandler`/`ServerRpcHandler`.
+- The v1.1 push-ordering smoke emits two ordered server push updates plus a controlled duplicate/late probe; the WebView records delivered/ignored order and triggers explicit `ordering-recovery-duplicate-late` resync.
 - Bootstrap advertises Vaadin `flow-client` classpath resources; the WebView requests and verifies the full advertised resource graph through IPC, imports `FlowBootstrap.js` and `FlowClient.js` as ES modules, and initializes the Flow bootstrap plus GWT client modules.
 - Desktop API calls travel Java sidecar -> Swift host as `VFIPC1 command`, and host responses appear as `capabilityResult`; the Flow IPC smoke app uses `manifest-enforced` permission metadata, includes an intentional manifest deny-path, exercises AppKit file-dialog cancellation and verifies bounded file-transfer download/upload metadata through controlled test paths.
 
 For repeatable real-window smoke verification without global mouse coordinates:
 
 ```bash
-VAADIN_DESKTOP_FLOW_IPC_AUTO_CLICK=1 VAADIN_DESKTOP_FLOW_IPC_AUTO_RESYNC=1 VAADIN_DESKTOP_FLOW_IPC_AUTO_ERROR=1 VAADIN_DESKTOP_FLOW_IPC_AUTO_FILE_DIALOG_CANCEL=1 bash bin/vaadin-desktop dev-ipc test-apps/flow-over-ipc-smoke-app
+VAADIN_DESKTOP_FLOW_IPC_AUTO_CLICK=1 VAADIN_DESKTOP_FLOW_IPC_AUTO_RESYNC=1 VAADIN_DESKTOP_FLOW_IPC_AUTO_ERROR=1 VAADIN_DESKTOP_FLOW_IPC_AUTO_FILE_DIALOG_CANCEL=1 VAADIN_DESKTOP_FLOW_IPC_AUTO_SHUTDOWN=1 bash bin/vaadin-desktop dev-ipc test-apps/flow-over-ipc-smoke-app
 ```
 
 Inspect the bundled review trace:
@@ -84,7 +85,7 @@ bash bin/flow-ipc-scope-smoke
 bash bin/flow-client-resource-smoke
 ```
 
-Current limitation: this path is still a constrained smoke-app runtime. It now generates Vaadin UIDL, requests and verifies the advertised Flow client resource graph, initializes `FlowBootstrap.js` / `FlowClient.js` over IPC, promotes the Flow client container to the visible WebView surface, and sends click events plus one verification resync through the server-side Flow RPC path with UIDL patches consumed by the visible Flow client engine. One server push is also delivered into that engine. The hidden repository-local UIDL applier remains only as a diagnostic fallback until broader Flow event coverage, production/dev frontend execution and full push/reconnect/resync semantics are implemented.
+Current limitation: this path is still a constrained smoke-app runtime. It now generates Vaadin UIDL, requests and verifies the advertised Flow client resource graph, initializes `FlowBootstrap.js` / `FlowClient.js` over IPC, promotes the Flow client container to the visible WebView surface, and sends click events plus one ordering-recovery resync through the server-side Flow RPC path with UIDL patches consumed by the visible Flow client engine. Two ordered server pushes are also delivered into that engine, and one duplicate/late probe is ignored before resync. The hidden repository-local UIDL applier remains only as a diagnostic fallback until broader Flow event coverage, production/dev frontend execution and durable push/reconnect/resync semantics are implemented.
 
 ## Run the Independent Smoke App
 
@@ -139,4 +140,4 @@ Framework v0 still starts an embedded Spring Boot web server on `127.0.0.1`. The
 
 The Swift native compatibility path narrows the long-term host/runtime boundary, but Flow bootstrap, UIDL event handling and push are still compatibility HTTP there. Use `dev-ipc` for the no-localhost bootstrap/push/event/patch/resync runtime slice.
 
-`dev-ipc` is the exception: it is the first no-HTTP runtime slice, now with server-side UIDL generation and visible Flow client engine ownership for bootstrap, click-event patches, native input/checkbox change-event patches, one push and one verification resync, but only for `test-apps/flow-over-ipc-smoke-app` and the constrained component/event set documented in `docs/flow-over-ipc-runtime.md`.
+`dev-ipc` is the exception: it is the first no-HTTP runtime slice, now with server-side UIDL generation and visible Flow client engine ownership for bootstrap, click-event patches, native input/checkbox change-event patches, ordered pushes and recovery resync, but only for `test-apps/flow-over-ipc-smoke-app` and the constrained component/event set documented in `docs/flow-over-ipc-runtime.md`.

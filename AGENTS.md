@@ -56,12 +56,12 @@ No-HTTP IPC slice:
 bash bin/vaadin-desktop dev-ipc test-apps/flow-over-ipc-smoke-app
 ```
 
-This runs the Swift host with `--transport flow-ipc`, loads a local WKWebView HTML shell and communicates with Java through `VFIPC1` stdin/stdout envelopes. It proves WebView event -> Java Button listener -> desktop command/capabilityResult -> patch -> WebView without localhost HTTP for the smoke app. The WebView bridge sends click and verification resync as Flow-client-shaped UIDL RPC payloads; Java emits real UIDL under `payload.uidl`, with bootstrap and one server-initiated push using `UidlWriter`, and events/resync using `UidlRequestHandler`/`ServerRpcHandler`. Bootstrap, push, event patches and verification resync are consumed by the visible Flow client engine. Bootstrap also advertises real Vaadin `flow-client` classpath resources; the WebView requests and verifies the full advertised resource graph over IPC while importing and initializing `FlowBootstrap.js` and an augmented `FlowClient.js`. The repository-local UIDL applier remains only as a diagnostic fallback for non-engine or failed-delivery paths.
+This runs the Swift host with `--transport flow-ipc`, loads a local WKWebView HTML shell and communicates with Java through `VFIPC1` stdin/stdout envelopes. It proves WebView event -> Java Button listener -> desktop command/capabilityResult -> patch -> WebView without localhost HTTP for the smoke app. The WebView bridge sends click/change events and ordering-recovery resync as Flow-client-shaped UIDL RPC payloads; Java emits real UIDL under `payload.uidl`, with bootstrap and ordered server-initiated pushes using `UidlWriter`, and events/resync using `UidlRequestHandler`/`ServerRpcHandler`. Bootstrap, ordered push, event patches and recovery resync are consumed by the visible Flow client engine. A controlled duplicate/late push probe is ignored with delivered/ignored order diagnostics and triggers explicit resync. Bootstrap also advertises real Vaadin `flow-client` classpath resources; the WebView requests and verifies the full advertised resource graph over IPC while importing and initializing `FlowBootstrap.js` and an augmented `FlowClient.js`. The repository-local UIDL applier remains only as a diagnostic fallback for non-engine or failed-delivery paths.
 
 Repeatable real-window smoke verification can use:
 
 ```bash
-VAADIN_DESKTOP_FLOW_IPC_AUTO_CLICK=1 VAADIN_DESKTOP_FLOW_IPC_AUTO_RESYNC=1 VAADIN_DESKTOP_FLOW_IPC_AUTO_ERROR=1 VAADIN_DESKTOP_FLOW_IPC_AUTO_FILE_DIALOG_CANCEL=1 bash bin/vaadin-desktop dev-ipc test-apps/flow-over-ipc-smoke-app
+VAADIN_DESKTOP_FLOW_IPC_AUTO_CLICK=1 VAADIN_DESKTOP_FLOW_IPC_AUTO_RESYNC=1 VAADIN_DESKTOP_FLOW_IPC_AUTO_ERROR=1 VAADIN_DESKTOP_FLOW_IPC_AUTO_FILE_DIALOG_CANCEL=1 VAADIN_DESKTOP_FLOW_IPC_AUTO_SHUTDOWN=1 bash bin/vaadin-desktop dev-ipc test-apps/flow-over-ipc-smoke-app
 ```
 
 ## Build And Run

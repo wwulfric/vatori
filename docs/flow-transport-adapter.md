@@ -21,9 +21,10 @@ The current adapter:
 2. Instantiates a `@Route` Vaadin Flow component class directly.
 3. Renders a small component-tree payload from real Flow components.
 4. Maps component ids to server-side component instances.
-5. Accepts a WebView-provided Flow UIDL RPC body for click events and dispatches it through `UidlRequestHandler`.
+5. Accepts WebView-provided Flow UIDL RPC bodies for click/change events and recovery resync, then dispatches them through `UidlRequestHandler`.
 6. Returns a replace-root patch after Java listener execution, with the server-side UIDL response attached.
 7. Publishes a manifest of real Vaadin `flow-client` classpath resources, serves the full advertised resource graph through `resourceRequest` / `resourceResponse`, and initializes `FlowBootstrap.js` / `FlowClient.js`.
+8. Emits ordered server push UIDL updates with `UidlWriter`, records duplicate/late probe handling and drives a controlled recovery resync through the same Flow RPC path.
 
 This proves the immediate boundary:
 
@@ -39,7 +40,7 @@ WebView event
 
 ## Relationship To Vaadin Internals
 
-The current `FlowIpcRuntime` adapter intentionally does not claim to be the final Vaadin UIDL adapter. It now creates a desktop-shaped Flow session/UI, includes real `UidlWriter` output in `bootstrapResponse` and one server-initiated `push`, lets the visible Flow client engine send UIDL RPC bodies for click events and verification resync over an IPC-backed bridge, and uses `UidlRequestHandler`/`ServerRpcHandler` for event/resync patches. The WebView promotes the initialized Flow client container to the visible surface and feeds bootstrap, event, push and verification resync UIDL into that client. The repository-local UIDL applier remains as a diagnostic fallback for non-engine or failed-delivery paths. `FlowClientResources` reads the real `flow-client` jar resources from the Java sidecar classpath, augments `FlowClient.js` with the narrow IPC bridge methods used by this slice, serves the full advertised resource graph over IPC, and imports `FlowBootstrap.js` / `FlowClient.js` so the host can initialize the Flow bootstrap and GWT client path without localhost HTTP. The repository also contains the compiled transport adapter around the real Flow server path:
+The current `FlowIpcRuntime` adapter intentionally does not claim to be the final Vaadin UIDL adapter. It now creates a desktop-shaped Flow session/UI, includes real `UidlWriter` output in `bootstrapResponse` and ordered server-initiated `push` envelopes, lets the visible Flow client engine send UIDL RPC bodies for click/change events and ordering-recovery resync over an IPC-backed bridge, and uses `UidlRequestHandler`/`ServerRpcHandler` for event/resync patches. The WebView promotes the initialized Flow client container to the visible surface, feeds bootstrap/event/push/recovery resync UIDL into that client, ignores a controlled duplicate/late push probe and records delivered/ignored order diagnostics. The repository-local UIDL applier remains as a diagnostic fallback for non-engine or failed-delivery paths. `FlowClientResources` reads the real `flow-client` jar resources from the Java sidecar classpath, augments `FlowClient.js` with the narrow IPC bridge methods used by this slice, serves the full advertised resource graph over IPC, and imports `FlowBootstrap.js` / `FlowClient.js` so the host can initialize the Flow bootstrap and GWT client path without localhost HTTP. The repository also contains the compiled transport adapter around the real Flow server path:
 
 - `dev.vatori.desktop.flow.transport.FlowTransportAdapter`
 - `dev.vatori.desktop.flow.transport.UidlFlowTransportAdapter`
@@ -60,7 +61,7 @@ The current `FlowIpcRuntime` adapter intentionally does not claim to be the fina
 
 The adapter accepts `(UI, FlowClientMessage)` and returns `FlowPatchResponse`. Internally it creates a desktop `VaadinRequest` with UIDL request parameters, captures a desktop `VaadinResponse`, sets Flow current instances, runs `UidlRequestHandler.synchronizedHandleRequest(...)`, then exposes the UIDL JSON body.
 
-This is still an adapter slice. It depends on Vaadin's current internal API shape and still needs broader Flow-client event coverage plus full push queue, ordering, reconnect and resync semantics. The current adapter now performs a minimum Flow IPC `csrfToken`/security key, `syncId` and `clientId` preflight before `UidlRequestHandler` dispatch.
+This is still an adapter slice. It depends on Vaadin's current internal API shape and still needs broader Flow-client event coverage plus durable push queue, ack, reconnect and resync semantics. The current adapter now performs a minimum Flow IPC `csrfToken`/security key, `syncId` and `clientId` preflight before `UidlRequestHandler` dispatch.
 
 `UidlAdapterSmokeMain` now constructs a minimal in-process `VaadinService`, `VaadinSession`, `WrappedSession` and `UI`, attaches a real Flow component tree, calls `UidlWriter` through `UidlFlowTransportAdapter`, mirrors Flow bootstrap's `Vaadin-Security-Key`, and asserts that the output contains Flow UIDL `changes`, `syncId` and the security key.
 
@@ -75,7 +76,7 @@ bash bin/flow-client-resource-smoke
 
 These commands do not open a WebView and do not run a servlet container. They are server-side adapter verification steps that prove the repository can drive Vaadin's real UIDL writer and event RPC path from a desktop-shaped session/request boundary. The same session helper is now used by `dev-ipc` to emit UIDL markers in real runtime traces.
 
-`uidl-rpc-smoke` goes one step deeper: it sends a real Flow client event RPC body shaped like Vaadin's own `ServerRpcHandlerTest` examples, lets `UidlRequestHandler` locate the desktop `UI`, runs `ServerRpcHandler`/`EventRpcHandler`, triggers a Button click listener and verifies that the UIDL response contains `Clicks: 1` plus `syncId`. It also verifies that invalid Flow IPC `csrfToken`, invalid security key, stale `syncId` and out-of-order `clientId` values are rejected before dispatch. `flow-ipc-scope-smoke` verifies that event envelopes with mismatched `sessionId` or `uiId` are rejected before event handling. `flow-client-resource-smoke` verifies that `FlowBootstrap.js` and `FlowClient.js` are present on the runtime classpath and that `FlowClient.js` carries the IPC message/resync bridge methods. `dev-ipc` now imports the real Flow client engine, promotes it to the visible renderer, bridges its `XMLHttpRequest` transport over IPC and uses the same server-side RPC path for Flow client generated click and verification resync dispatch.
+`uidl-rpc-smoke` goes one step deeper: it sends a real Flow client event RPC body shaped like Vaadin's own `ServerRpcHandlerTest` examples, lets `UidlRequestHandler` locate the desktop `UI`, runs `ServerRpcHandler`/`EventRpcHandler`, triggers a Button click listener and verifies that the UIDL response contains `Clicks: 1` plus `syncId`. It also verifies that invalid Flow IPC `csrfToken`, invalid security key, stale `syncId` and out-of-order `clientId` values are rejected before dispatch. `flow-ipc-scope-smoke` verifies that event envelopes with mismatched `sessionId` or `uiId` are rejected before event handling. `flow-client-resource-smoke` verifies that `FlowBootstrap.js` and `FlowClient.js` are present on the runtime classpath and that `FlowClient.js` carries the IPC message/resync bridge methods. `dev-ipc` now imports the real Flow client engine, promotes it to the visible renderer, bridges its `XMLHttpRequest` transport over IPC and uses the same server-side RPC path for Flow client generated click, change and recovery resync dispatch.
 
 The `jakarta.servlet-api` dependency is present on the runtime classpath because Vaadin server classes such as `VaadinSession` and the `VaadinRequest`/`VaadinResponse` signatures still reference servlet API types. This does not start a servlet container and is not used as the `dev-ipc` transport.
 
@@ -89,4 +90,4 @@ It also keeps the developer-facing shape intact: the smoke app still uses ordina
 
 ## Next Adapter Step
 
-The next concrete step is to replace the one-shot push/resync verification path with a real Flow push queue, ordering model, reconnect/resync behavior and broader component/resource coverage beyond the current button plus native input/checkbox smoke matrix.
+The next concrete step is to replace the controlled duplicate/late push-ordering recovery smoke with a real Flow push queue, ack model, reconnect/resync behavior and broader component/resource coverage beyond the current button plus native input/checkbox smoke matrix.

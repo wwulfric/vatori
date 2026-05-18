@@ -409,6 +409,19 @@ public final class DesktopTraceInspector {
                 summary.flowClientEnginePushQueueDomObserved = true;
             }
             if (line.contains("\"type\":\"webview.dom\"")
+                    && containsStringField(line, "flowClientEnginePushOrderStatusText", "6 Ordered push over IPC READY")
+                    && containsLiteralField(line, "flowClientEngineDeliveredPushCount", "2")
+                    && containsStringField(line, "flowClientEngineDeliveredMessageOrder", "push:3,push:4")
+                    && containsLiteralField(line, "flowClientEngineIgnoredMessageCount", "1")
+                    && containsStringField(line, "flowClientEngineIgnoredMessageOrder", "push:4:duplicate-late")
+                    && containsLiteralField(line, "flowClientEngineDuplicateLateIgnored", "true")
+                    && containsLiteralField(line, "flowClientEngineOrderingLastDeliveredServerSequence", "4")
+                    && containsLiteralField(line, "flowClientEngineRecoveryResyncRequested", "true")
+                    && containsStringField(line, "flowClientEngineRecoveryResyncReason",
+                            "ordering-recovery-duplicate-late")) {
+                summary.flowClientEnginePushOrderingDomObserved = true;
+            }
+            if (line.contains("\"type\":\"webview.dom\"")
                     && containsLiteralField(line, "flowClientEngineIpcResyncBridgeInstalled", "true")
                     && containsLiteralField(line, "flowClientEngineResyncRequested", "true")
                     && containsLiteralField(line, "flowClientEngineResyncPatchConsumed", "true")) {
@@ -469,6 +482,29 @@ public final class DesktopTraceInspector {
                     && line.contains("\"consumedByWebView\":true")
                     && line.contains("\"flow-client-engine-visible\"")) {
                 summary.pushUidlObserved = true;
+            }
+            if (line.contains("\"type\":\"push\"")
+                    && line.contains("\"pushIndex\":2")
+                    && line.contains("6 Ordered push over IPC READY")
+                    && line.contains("\"source\":\"UidlWriter\"")
+                    && line.contains("\"reason\":\"push\"")
+                    && line.contains("\"async\":true")
+                    && line.contains("\"flow-client-engine-visible\"")) {
+                summary.multiPushUidlObserved = true;
+            }
+            if (line.contains("\"type\":\"push\"")
+                    && line.contains("\"orderingProbe\"")
+                    && line.contains("\"kind\":\"duplicate-late\"")
+                    && line.contains("\"effectiveServerSequence\":4")
+                    && line.contains("\"expectedAction\":\"ignore-and-request-resync\"")) {
+                summary.duplicateLatePushProbeObserved = true;
+            }
+            if (line.contains("\"type\":\"resync\"")
+                    && line.contains("\"reason\":\"ordering-recovery-duplicate-late\"")
+                    && line.contains("\"securityKey\"")
+                    && line.contains("\"syncId\"")
+                    && line.contains("\"clientId\"")) {
+                summary.recoveryResyncRequestObserved = true;
             }
             if (line.contains("\"type\":\"patch\"")
                     && line.contains("\"source\":\"UidlRequestHandler\"")
@@ -590,6 +626,7 @@ public final class DesktopTraceInspector {
         private boolean flowClientEngineVisibleDomObserved;
         private boolean flowClientEnginePushDomObserved;
         private boolean flowClientEnginePushQueueDomObserved;
+        private boolean flowClientEnginePushOrderingDomObserved;
         private boolean flowClientEngineResyncDomObserved;
         private boolean uidlRpcDispatchObserved;
         private boolean webViewUidlRpcObserved;
@@ -603,6 +640,9 @@ public final class DesktopTraceInspector {
         private boolean flowClientEngineComponentEventsDomObserved;
         private boolean uidlPatchObserved;
         private boolean pushUidlObserved;
+        private boolean multiPushUidlObserved;
+        private boolean duplicateLatePushProbeObserved;
+        private boolean recoveryResyncRequestObserved;
         private boolean resyncUidlObserved;
 
         public boolean hasRequiredFlowIpcTypes() {
@@ -660,6 +700,10 @@ public final class DesktopTraceInspector {
                     && fileTransferDownloadResultObserved
                     && fileTransferUploadResultObserved
                     && fileTransferDomObserved
+                    && multiPushUidlObserved
+                    && duplicateLatePushProbeObserved
+                    && flowClientEnginePushOrderingDomObserved
+                    && recoveryResyncRequestObserved
                     && flowClientXhrTextInputObserved
                     && flowClientXhrCheckboxObserved
                     && textInputPatchObserved
@@ -713,6 +757,7 @@ public final class DesktopTraceInspector {
             System.out.println("Flow client engine visible DOM observed: " + flowClientEngineVisibleDomObserved);
             System.out.println("Flow client engine push DOM observed: " + flowClientEnginePushDomObserved);
             System.out.println("Flow client engine push queue DOM observed: " + flowClientEnginePushQueueDomObserved);
+            System.out.println("Flow client engine push ordering DOM observed: " + flowClientEnginePushOrderingDomObserved);
             System.out.println("Flow client engine resync DOM observed: " + flowClientEngineResyncDomObserved);
             System.out.println("UIDL RPC dispatch observed: " + uidlRpcDispatchObserved);
             System.out.println("WebView UIDL RPC observed: " + webViewUidlRpcObserved);
@@ -726,6 +771,9 @@ public final class DesktopTraceInspector {
             System.out.println("Flow client component events DOM observed: " + flowClientEngineComponentEventsDomObserved);
             System.out.println("UIDL request handler patch observed: " + uidlPatchObserved);
             System.out.println("server push UIDL observed: " + pushUidlObserved);
+            System.out.println("multi-push UIDL observed: " + multiPushUidlObserved);
+            System.out.println("duplicate/late push probe observed: " + duplicateLatePushProbeObserved);
+            System.out.println("recovery resync request observed: " + recoveryResyncRequestObserved);
             System.out.println("resync UIDL observed: " + resyncUidlObserved);
             List<String> missing = FLOW_IPC_REQUIRED_TYPES.stream()
                     .filter(type -> !types.containsKey(type))

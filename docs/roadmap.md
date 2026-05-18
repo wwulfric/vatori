@@ -23,7 +23,7 @@ Status: in progress in this repository.
 
 ## v0.2: Flow Transport Adapter Spike
 
-Status: first minimum runtime slice implemented, server-side UIDL writer integrated into `dev-ipc` bootstrap/push payloads, Flow client XHR click and verification resync dispatch wired over IPC, FlowBootstrap and FlowClient resource loading/import/init over IPC, and visible Flow client ownership verified for bootstrap, click-event patches, one server push and one verification resync.
+Status: first minimum runtime slice implemented, server-side UIDL writer integrated into `dev-ipc` bootstrap/push payloads, Flow client XHR click and ordering-recovery resync dispatch wired over IPC, FlowBootstrap and FlowClient resource loading/import/init over IPC, and visible Flow client ownership verified for bootstrap, click-event patches, ordered server pushes and recovery resync.
 
 - Audit Vaadin Flow event and patch internals.
 - Extract a minimal adapter around bootstrap, event dispatch and UIDL/patch response.
@@ -31,13 +31,13 @@ Status: first minimum runtime slice implemented, server-side UIDL writer integra
 - `dev-ipc` now runs `test-apps/flow-over-ipc-smoke-app` without localhost HTTP in the core event/patch path.
 - `bash bin/uidl-adapter-smoke` now verifies that a desktop-shaped session/UI can drive Vaadin's real `UidlWriter` and produce UIDL `changes`/`syncId`.
 - `bash bin/uidl-rpc-smoke` now verifies that a real Flow event RPC can pass through `UidlRequestHandler`/`ServerRpcHandler` and produce a listener UIDL patch without a real HTTP socket.
-- `dev-ipc` bootstrap/push/patch/resync envelopes now include `payload.uidl`; bootstrap and one server-initiated push come from `UidlWriter`, and WebView-produced click plus verification resync RPC patches come from `UidlRequestHandler`/`ServerRpcHandler`. Bootstrap, click-event UIDL, push UIDL and verification resync UIDL are consumed by the visible Flow client engine, with Java-to-WebView `serverSequence` diagnostics proving monotonic receive order for the smoke path.
+- `dev-ipc` bootstrap/push/patch/resync envelopes now include `payload.uidl`; bootstrap and ordered server-initiated pushes come from `UidlWriter`, and WebView-produced click plus ordering-recovery resync RPC patches come from `UidlRequestHandler`/`ServerRpcHandler`. Bootstrap, click-event UIDL, push UIDL and recovery resync UIDL are consumed by the visible Flow client engine, with Java-to-WebView `serverSequence` diagnostics proving monotonic receive order for the smoke path.
 - `dev-ipc` bootstrap now advertises Vaadin `flow-client` classpath resources, and the WebView requests the full advertised classpath resource graph over IPC while importing/initializing `FlowBootstrap.js` and `FlowClient.js` as the first no-HTTP frontend resource loading slice.
 
 First issue candidates:
 
 - Extend `DesktopVaadinRequest` to enforce full resync state from Host Protocol; minimum Flow IPC `sessionId`/`uiId`, `csrfToken`/security key, `syncId` and `clientId` preflight is already in place.
-- Replace the one-shot server-initiated push and verification-only resync with a real Flow push queue, reconnect/resync path and durable ordering model; the current smoke path proves monotonic Java-to-WebView delivery with `serverSequence` and records WebView queue/flush order for the one early push.
+- Replace the controlled server-initiated push ordering and duplicate/late recovery smoke with a real Flow push queue, ack, reconnect/resync path and durable ordering model; the current smoke path proves monotonic Java-to-WebView delivery with `serverSequence`, records WebView queue/flush/deliver/ignore order, and triggers explicit recovery resync for a duplicate/late probe.
 - Continue broadening Flow client event/resource coverage beyond the current smoke-app button plus native input/checkbox component set.
 
 ## v0.3: Capability Gateway

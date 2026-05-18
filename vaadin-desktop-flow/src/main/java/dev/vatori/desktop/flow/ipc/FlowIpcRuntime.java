@@ -114,7 +114,7 @@ final class FlowIpcRuntime {
                 "eventDispatch", "flow-client-xhr"));
         payload.put("tree", renderer.render(root));
         send("bootstrapResponse", nextId("bootstrap"), correlationIdOr(id, correlationId), payload);
-        sendServerInitiatedPush(id, correlationId);
+        sendServerInitiatedPushes(id, correlationId);
     }
 
     private void handleResourceRequest(String json, String id, String correlationId) {
@@ -143,23 +143,61 @@ final class FlowIpcRuntime {
         System.err.flush();
     }
 
-    private void sendServerInitiatedPush(String id, String correlationId) {
+    private void sendServerInitiatedPushes(String id, String correlationId) {
+        sendServerInitiatedPush(
+                id,
+                correlationId,
+                1,
+                "ipc-push-status",
+                "5 Server push over IPC READY");
+        String secondMessageId = nextId("push");
+        Map<String, Object> secondPayload = serverInitiatedPushPayload(
+                2,
+                "ipc-push-order-status",
+                "6 Ordered push over IPC READY");
+        long secondServerSequence = send(
+                "push",
+                secondMessageId,
+                correlationIdOr(id, correlationId),
+                secondPayload);
+
+        Map<String, Object> duplicateLateProbe = new LinkedHashMap<>(secondPayload);
+        duplicateLateProbe.put("reason", "server-initiated-duplicate-late-probe");
+        duplicateLateProbe.put("orderingProbe", Map.of(
+                "kind", "duplicate-late",
+                "effectiveServerSequence", secondServerSequence,
+                "replayOfMessageId", secondMessageId,
+                "expectedAction", "ignore-and-request-resync"));
+        send("push", nextId("push-probe"), correlationIdOr(id, correlationId), duplicateLateProbe);
+    }
+
+    private void sendServerInitiatedPush(String id, String correlationId, int pushIndex, String componentId,
+                                         String text) {
+        send("push", nextId("push"), correlationIdOr(id, correlationId),
+                serverInitiatedPushPayload(pushIndex, componentId, text));
+    }
+
+    private Map<String, Object> serverInitiatedPushPayload(int pushIndex, String componentId, String text) {
         if (root instanceof HasComponents container) {
             flowSession.runLocked(() -> {
-                Span pushed = new Span("5 Server push over IPC READY");
-                pushed.setId("ipc-push-status");
+                Span pushed = new Span(text);
+                pushed.setId(componentId);
                 container.add(pushed);
             });
         }
 
         Map<String, Object> payload = new LinkedHashMap<>();
         payload.put("reason", "server-initiated-update");
+        payload.put("pushIndex", pushIndex);
+        payload.put("ordering", Map.of(
+                "mode", "monotonic-server-sequence",
+                "expectedAction", "deliver-in-order"));
         payload.put("transport", "flow-ipc");
         payload.put("compatibilityMode", false);
         payload.put("uidlWriter", true);
         payload.put("uidl", uidlPayload("push", false));
         payload.put("tree", renderer.render(root));
-        send("push", nextId("push"), correlationIdOr(id, correlationId), payload);
+        return payload;
     }
 
     private Component instantiateRoute() {
@@ -216,9 +254,6 @@ final class FlowIpcRuntime {
         if (uidlRpc != null && !uidlRpc.isBlank()) {
             String dispatch = JsonFields.string(json, "dispatch");
             int clientId = JsonFields.integer(uidlRpc, "clientId", -1);
-            if (clientId >= 0) {
-                clientToServerSequence.accumulateAndGet(clientId + 1L, Math::max);
-            }
             try {
                 FlowPatchResponse response = flowSession.handleClientMessage(uidlRpc, clientId, true);
                 sendPatch("resync", id, correlationId, response,
@@ -362,14 +397,16 @@ final class FlowIpcRuntime {
         return uidl;
     }
 
-    private void send(String type, String id, String correlationId, Map<String, Object> payload) {
+    private long send(String type, String id, String correlationId, Map<String, Object> payload) {
         Map<String, Object> sequencedPayload = new LinkedHashMap<>(payload);
-        sequencedPayload.put("serverSequence", serverSequence.incrementAndGet());
+        long nextServerSequence = serverSequence.incrementAndGet();
+        sequencedPayload.put("serverSequence", nextServerSequence);
         sequencedPayload.put("serverSequenceScope", "java-sidecar-to-webview");
         FlowIpcEnvelope envelope = FlowIpcEnvelope.message(type, id, correlationId,
                 IPC_SESSION_ID, IPC_UI_ID, route, sequencedPayload);
         System.out.println(PREFIX + IpcJson.stringify(envelope));
         System.out.flush();
+        return nextServerSequence;
     }
 
     private void sendError(String code, String message, String id, String correlationId) {

@@ -114,6 +114,13 @@ public final class DesktopTraceInspector {
                     && line.contains("notification.show")) {
                 summary.manifestEnforcedObserved = true;
             }
+            if (line.contains("\"type\":\"capabilityManifest\"")
+                    && line.contains("\"loaded\":true")
+                    && line.contains("\"permissionMode\":\"manifest-enforced\"")
+                    && line.contains("fileTransfer.download")
+                    && line.contains("fileTransfer.selectUploadFile")) {
+                summary.fileTransferManifestObserved = true;
+            }
             if (line.contains("\"serverSequenceScope\":\"java-sidecar-to-webview\"")
                     && line.contains("\"serverSequence\"")) {
                 summary.serverSequenceObserved = true;
@@ -171,6 +178,34 @@ public final class DesktopTraceInspector {
                     && line.contains("\"securityScoped\":false")
                     && line.contains("\"permissionDecision\":\"allowed\"")) {
                 summary.nativeFileDialogResultObserved = true;
+            }
+            if (line.contains("\"type\":\"command\"")
+                    && line.contains("\"command\":\"fileTransfer.download\"")
+                    && line.contains("\"bodyRedacted\":true")
+                    && containsPositiveIntegerField(line, "bodyBytes")) {
+                summary.fileTransferDownloadCommandRedactedObserved = true;
+            }
+            if (line.contains("\"type\":\"capabilityResult\"")
+                    && line.contains("\"command\":\"fileTransfer.download\"")
+                    && line.contains("\"operation\":\"download\"")
+                    && line.contains("\"success\":true")
+                    && line.contains("\"bodyRedacted\":true")
+                    && line.contains("\"permissionDecision\":\"allowed\"")
+                    && containsPositiveIntegerField(line, "byteCount")
+                    && line.contains("flow-ipc-download-smoke.txt")) {
+                summary.fileTransferDownloadResultObserved = true;
+            }
+            if (line.contains("\"type\":\"capabilityResult\"")
+                    && line.contains("\"command\":\"fileTransfer.selectUploadFile\"")
+                    && line.contains("\"operation\":\"upload\"")
+                    && line.contains("\"success\":true")
+                    && line.contains("\"bodyRedacted\":true")
+                    && line.contains("\"securityScoped\":false")
+                    && line.contains("\"permissionDecision\":\"allowed\"")
+                    && containsPositiveIntegerField(line, "byteCount")
+                    && containsPositiveIntegerField(line, "sampledBytes")
+                    && line.contains("flow-ipc-upload-smoke.txt")) {
+                summary.fileTransferUploadResultObserved = true;
             }
             if (line.contains("\"type\":\"error\"")
                     && line.contains("webviewVerificationProbe")
@@ -345,6 +380,19 @@ public final class DesktopTraceInspector {
                 summary.flowClientEngineComponentEventsDomObserved = true;
             }
             if (line.contains("\"type\":\"webview.dom\"")
+                    && containsLiteralField(line, "fileTransferDownloadResultObserved", "true")
+                    && containsLiteralField(line, "fileTransferUploadResultObserved", "true")
+                    && containsLiteralField(line, "fileTransferDownloadBodyRedacted", "true")
+                    && containsLiteralField(line, "fileTransferUploadBodyRedacted", "true")
+                    && containsPositiveIntegerField(line, "fileTransferDownloadByteCount")
+                    && containsPositiveIntegerField(line, "fileTransferUploadByteCount")
+                    && containsPositiveIntegerField(line, "fileTransferUploadSampledBytes")
+                    && containsStringField(line, "fileTransferResultOrder", "download,upload")
+                    && line.contains("flow-ipc-download-smoke.txt")
+                    && line.contains("flow-ipc-upload-smoke.txt")) {
+                summary.fileTransferDomObserved = true;
+            }
+            if (line.contains("\"type\":\"webview.dom\"")
                     && containsLiteralField(line, "flowClientEngineIpcMessageBridgeInstalled", "true")
                     && containsLiteralField(line, "flowClientEnginePushPatchConsumed", "true")
                     && containsStringField(line, "flowClientEnginePushStatusText", "5 Server push over IPC READY")
@@ -510,6 +558,11 @@ public final class DesktopTraceInspector {
         private boolean nativeFileDialogResultObserved;
         private boolean manifestEnforcedObserved;
         private boolean capabilityDeniedObserved;
+        private boolean fileTransferManifestObserved;
+        private boolean fileTransferDownloadCommandRedactedObserved;
+        private boolean fileTransferDownloadResultObserved;
+        private boolean fileTransferUploadResultObserved;
+        private boolean fileTransferDomObserved;
         private boolean serverSequenceObserved;
         private boolean flowIpcServerSequenceDomObserved;
         private boolean clickPatchObserved;
@@ -602,6 +655,11 @@ public final class DesktopTraceInspector {
                     && nativeFileDialogResultObserved
                     && manifestEnforcedObserved
                     && capabilityDeniedObserved
+                    && fileTransferManifestObserved
+                    && fileTransferDownloadCommandRedactedObserved
+                    && fileTransferDownloadResultObserved
+                    && fileTransferUploadResultObserved
+                    && fileTransferDomObserved
                     && flowClientXhrTextInputObserved
                     && flowClientXhrCheckboxObserved
                     && textInputPatchObserved
@@ -622,6 +680,12 @@ public final class DesktopTraceInspector {
             System.out.println("native file dialog result observed: " + nativeFileDialogResultObserved);
             System.out.println("manifest-enforced permission observed: " + manifestEnforcedObserved);
             System.out.println("capability denied observed: " + capabilityDeniedObserved);
+            System.out.println("file transfer manifest observed: " + fileTransferManifestObserved);
+            System.out.println("file transfer download command redacted observed: "
+                    + fileTransferDownloadCommandRedactedObserved);
+            System.out.println("file transfer download result observed: " + fileTransferDownloadResultObserved);
+            System.out.println("file transfer upload result observed: " + fileTransferUploadResultObserved);
+            System.out.println("file transfer DOM observed: " + fileTransferDomObserved);
             System.out.println("server sequence observed: " + serverSequenceObserved);
             System.out.println("Flow IPC server sequence DOM observed: " + flowIpcServerSequenceDomObserved);
             System.out.println("click patch observed: " + clickPatchObserved);

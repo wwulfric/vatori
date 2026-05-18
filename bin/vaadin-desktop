@@ -84,6 +84,9 @@ PLIST
     CLANG_MODULE_CACHE_PATH="$SWIFT_MODULE_CACHE" /usr/bin/swiftc \
       "$ROOT/vaadin-desktop-host-swift/Sources/VaadinDesktopHost/main.swift" \
       -o "$SWIFT_HOST_EXE"
+    if command -v codesign >/dev/null 2>&1; then
+      codesign --force --sign - "$SWIFT_HOST_APP" >/dev/null 2>&1 || true
+    fi
     OPEN_ENV_ARGS=(--env "PATH=$PATH")
     if [[ -n "${JAVA_HOME:-}" ]]; then
       OPEN_ENV_ARGS+=(--env "JAVA_HOME=$JAVA_HOME")

@@ -20,7 +20,7 @@ Responsibilities implemented now:
 - closes the Java process when the desktop window closes,
 - in `dev-ipc`, loads a local WebView shell, receives WebView messages through `WKScriptMessageHandler`, forwards them to Java stdin and delivers Java `VFIPC1` responses back to WebView JavaScript,
 - in `dev-ipc`, has the WebView request all advertised Flow client classpath resources through `VFIPC1 resourceRequest`, imports `FlowBootstrap.js` and `FlowClient.js` as Blob-backed ES modules, calls `FlowBootstrap.init` with an IPC bootstrap config, then calls `FlowClient.init` and records DOM diagnostics,
-- in `dev-ipc`, handles `VFIPC1 command` for `window.setTitle`, `clipboard.writeText`, trace-only `notification.show` and `fileDialog.openFile` through AppKit `NSOpenPanel`, then emits `capabilityResult`.
+- in `dev-ipc`, handles `VFIPC1 command` for `window.setTitle`, `clipboard.writeText`, trace-only `notification.show`, `fileDialog.openFile` through AppKit `NSOpenPanel` and bounded `fileTransfer.download` / `fileTransfer.selectUploadFile` smoke paths, then emits `capabilityResult`.
 
 Current compatibility boundary:
 
@@ -80,19 +80,22 @@ The current host allows the known v1 commands for the single main window:
 - `window.setTitle`
 - `clipboard.writeText`
 - `fileDialog.openFile`
+- `fileTransfer.download`
+- `fileTransfer.selectUploadFile`
 - `notification.show`
 
-Every `capabilityResult` includes `permissionMode`, `permissionDecision`, `permissionReason` and `permissionScope`. The Flow IPC smoke app uses `permissionMode=manifest-enforced`; known commands must be listed for the `main` window and successful calls are marked `permissionDecision=allowed` with `permissionReason=manifest-allow`. The smoke view also sends an intentionally undeclared `diagnostics.deniedCapability` command, which is rejected with `permissionDecision=denied` and `permissionReason=manifest-denied`. Results include `permissionManifestLoaded`, `permissionManifestPath` and `permissionManifestCommands`. `fileDialog.openFile` now returns AppKit panel result metadata (`canceled`, `paths`, `allowsMultipleSelection`, `securityScoped=false`, `autoCanceled`) but does not yet create security-scoped bookmarks. This is intentionally still a development permission system. The production direction is a stricter manifest-gated model with per-window, per-origin, user-gesture and per-capability grants.
+Every `capabilityResult` includes `permissionMode`, `permissionDecision`, `permissionReason` and `permissionScope`. The Flow IPC smoke app uses `permissionMode=manifest-enforced`; known commands must be listed for the `main` window and successful calls are marked `permissionDecision=allowed` with `permissionReason=manifest-allow`. The smoke view also sends an intentionally undeclared `diagnostics.deniedCapability` command, which is rejected with `permissionDecision=denied` and `permissionReason=manifest-denied`. Results include `permissionManifestLoaded`, `permissionManifestPath` and `permissionManifestCommands`. `fileDialog.openFile` now returns AppKit panel result metadata (`canceled`, `paths`, `allowsMultipleSelection`, `securityScoped=false`, `autoCanceled`) but does not yet create security-scoped bookmarks. `fileTransfer.download` and `fileTransfer.selectUploadFile` are v1.1 smoke boundaries: they support controlled test paths, byte-count metadata and redacted trace bodies, but they are not production file streaming or Vaadin Upload/Download parity. This is intentionally still a development permission system. The production direction is a stricter manifest-gated model with per-window, per-origin, user-gesture and per-capability grants.
 
 ## Next Native Host Work
 
 The real host still needs to:
 
 - replace the one-shot push/resync verification hooks with a real queue, ordering and reconnect model,
+- replace the bounded controlled-path file-transfer smoke with streaming upload/download, native progress/cancel semantics and sandbox-safe file grants,
 - replace the development manifest modes with production capability grants, user-gesture checks and security-scoped file permissions.
 
 ## Why Not Call This Final
 
 Embedding a localhost URL in WKWebView is compatibility mode. It is useful for proving framework ergonomics, real Flow app structure and desktop host lifecycle, but it is not Flow over IPC.
 
-The `dev-ipc` path is the first real no-HTTP IPC slice, but it is not final either: it proves host/WebView/Java message flow, visible Flow client ownership for bootstrap, click-event patches, native input/checkbox change-event patches, one server push and one verification resync, IPC-backed Flow client XHR/event/resync dispatch, listener-driven patches, server-side UIDL generation, Flow client module initialization and bootstrap UIDL binding. The repository-local UIDL applier remains as a diagnostic fallback, while broader component coverage, full resource loading, production bundles and real push/reconnect semantics remain future work.
+The `dev-ipc` path is the first real no-HTTP IPC slice, but it is not final either: it proves host/WebView/Java message flow, visible Flow client ownership for bootstrap, click-event patches, native input/checkbox change-event patches, one server push and one verification resync, IPC-backed Flow client XHR/event/resync dispatch, listener-driven patches, server-side UIDL generation, Flow client module initialization, bootstrap UIDL binding and a bounded controlled-path file-transfer capability boundary. The repository-local UIDL applier remains as a diagnostic fallback, while broader component coverage, full resource loading, production bundles, full upload/download streaming and real push/reconnect semantics remain future work.

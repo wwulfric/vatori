@@ -167,6 +167,12 @@ func nowMillis() -> Int64 {
     Int64(Date().timeIntervalSince1970 * 1000)
 }
 
+extension String {
+    var isBlank: Bool {
+        trimmingCharacters(in: .whitespacesAndNewlines).isEmpty
+    }
+}
+
 func trace(_ direction: String, _ type: String, _ payload: [String: Any]) {
     let object: [String: Any] = [
         "direction": direction,
@@ -184,19 +190,34 @@ func trace(_ direction: String, _ type: String, _ payload: [String: Any]) {
 }
 
 func redactedFlowIpcEnvelope(_ object: [String: Any]) -> [String: Any] {
-    guard object["type"] as? String == "resourceResponse",
-          var payload = object["payload"] as? [String: Any],
-          let body = payload["body"] as? String else {
-        return object
+    if object["type"] as? String == "resourceResponse",
+       var payload = object["payload"] as? [String: Any],
+       let body = payload["body"] as? String {
+        var copy = object
+        payload["bodyPreview"] = String(body.prefix(96))
+        payload["bodyBytes"] = body.utf8.count
+        payload["bodyRedacted"] = true
+        payload.removeValue(forKey: "body")
+        copy["payload"] = payload
+        return copy
     }
 
-    var copy = object
-    payload["bodyPreview"] = String(body.prefix(96))
-    payload["bodyBytes"] = body.utf8.count
-    payload["bodyRedacted"] = true
-    payload.removeValue(forKey: "body")
-    copy["payload"] = payload
-    return copy
+    if object["type"] as? String == "command",
+       var payload = object["payload"] as? [String: Any],
+       payload["command"] as? String == "fileTransfer.download",
+       var args = payload["args"] as? [String: Any],
+       let body = args["body"] as? String {
+        var copy = object
+        args["bodyPreview"] = String(body.prefix(32))
+        args["bodyBytes"] = body.utf8.count
+        args["bodyRedacted"] = true
+        args.removeValue(forKey: "body")
+        payload["args"] = args
+        copy["payload"] = payload
+        return copy
+    }
+
+    return object
 }
 
 func redactedJavaStdoutLine(_ line: String) -> String {
@@ -433,6 +454,7 @@ final class WebViewHost: NSObject, NSApplicationDelegate, NSWindowDelegate, WKNa
     private var webView: WKWebView?
     private var didOpenWindow = false
     private var fileDialogInFlight = false
+    private var fileTransferPanelInFlight = false
 
     init(config: HostConfig) {
         self.config = config
@@ -675,6 +697,14 @@ final class WebViewHost: NSObject, NSApplicationDelegate, NSWindowDelegate, WKNa
             openFileDialog(args: args, command: command) { result in
                 completion(self.capabilityPermission(result))
             }
+        case "fileTransfer.download":
+            saveDownloadedFile(args: args, command: command) { result in
+                completion(self.capabilityPermission(result))
+            }
+        case "fileTransfer.selectUploadFile":
+            selectUploadFile(args: args, command: command) { result in
+                completion(self.capabilityPermission(result))
+            }
         default:
             completion(capabilityPermission([
                 "success": false,
@@ -756,6 +786,307 @@ final class WebViewHost: NSObject, NSApplicationDelegate, NSWindowDelegate, WKNa
         } else {
             panel.begin(completionHandler: finish)
         }
+    }
+
+    private func saveDownloadedFile(args: [String: Any],
+                                    command: String,
+                                    completion: @escaping ([String: Any]) -> Void) {
+        let suggestedName = args["suggestedName"] as? String ?? "download.txt"
+        let mimeType = args["mimeType"] as? String ?? "application/octet-stream"
+        let bodyEncoding = args["bodyEncoding"] as? String ?? "utf-8"
+        let body = args["body"] as? String ?? ""
+        let bodyData = body.data(using: .utf8) ?? Data()
+        let declaredByteCount = integerArg(args, "byteCount", fallback: bodyData.count)
+
+        if let targetPath = args["targetPath"] as? String, !targetPath.isBlank {
+            let targetURL = resolvedTransferURL(targetPath)
+            completion(downloadWriteResult(command: command,
+                                           mode: "controlled-test-path",
+                                           targetURL: targetURL,
+                                           suggestedName: suggestedName,
+                                           mimeType: mimeType,
+                                           bodyEncoding: bodyEncoding,
+                                           bodyData: bodyData,
+                                           declaredByteCount: declaredByteCount,
+                                           usedSavePanel: false))
+            return
+        }
+
+        if fileTransferPanelInFlight {
+            completion([
+                "success": false,
+                "command": command,
+                "mode": "native-appkit-save-panel",
+                "operation": "download",
+                "suggestedName": suggestedName,
+                "canceled": true,
+                "bodyRedacted": true,
+                "byteCount": bodyData.count,
+                "declaredByteCount": declaredByteCount,
+                "error": "File transfer panel already in progress"
+            ])
+            return
+        }
+
+        fileTransferPanelInFlight = true
+        let panel = NSSavePanel()
+        panel.title = args["title"] as? String ?? "Save File"
+        panel.nameFieldStringValue = suggestedName
+        panel.canCreateDirectories = true
+
+        let finish: (NSApplication.ModalResponse) -> Void = { response in
+            self.fileTransferPanelInFlight = false
+            guard response == .OK, let targetURL = panel.url else {
+                completion([
+                    "success": true,
+                    "command": command,
+                    "mode": "native-appkit-save-panel",
+                    "operation": "download",
+                    "suggestedName": suggestedName,
+                    "canceled": true,
+                    "bodyRedacted": true,
+                    "byteCount": bodyData.count,
+                    "declaredByteCount": declaredByteCount,
+                    "usedSavePanel": true
+                ])
+                return
+            }
+            completion(self.downloadWriteResult(command: command,
+                                                mode: "native-appkit-save-panel",
+                                                targetURL: targetURL,
+                                                suggestedName: suggestedName,
+                                                mimeType: mimeType,
+                                                bodyEncoding: bodyEncoding,
+                                                bodyData: bodyData,
+                                                declaredByteCount: declaredByteCount,
+                                                usedSavePanel: true))
+        }
+        if let window {
+            panel.beginSheetModal(for: window, completionHandler: finish)
+        } else {
+            panel.begin(completionHandler: finish)
+        }
+    }
+
+    private func downloadWriteResult(command: String,
+                                     mode: String,
+                                     targetURL: URL,
+                                     suggestedName: String,
+                                     mimeType: String,
+                                     bodyEncoding: String,
+                                     bodyData: Data,
+                                     declaredByteCount: Int,
+                                     usedSavePanel: Bool) -> [String: Any] {
+        do {
+            try FileManager.default.createDirectory(at: targetURL.deletingLastPathComponent(),
+                                                    withIntermediateDirectories: true)
+            try bodyData.write(to: targetURL)
+            return [
+                "success": true,
+                "command": command,
+                "mode": mode,
+                "operation": "download",
+                "suggestedName": suggestedName,
+                "mimeType": mimeType,
+                "bodyEncoding": bodyEncoding,
+                "bodyRedacted": true,
+                "byteCount": bodyData.count,
+                "declaredByteCount": declaredByteCount,
+                "path": targetURL.path,
+                "filename": targetURL.lastPathComponent,
+                "usedSavePanel": usedSavePanel,
+                "canceled": false
+            ]
+        } catch {
+            return [
+                "success": false,
+                "command": command,
+                "mode": mode,
+                "operation": "download",
+                "suggestedName": suggestedName,
+                "bodyRedacted": true,
+                "byteCount": bodyData.count,
+                "declaredByteCount": declaredByteCount,
+                "path": targetURL.path,
+                "filename": targetURL.lastPathComponent,
+                "usedSavePanel": usedSavePanel,
+                "canceled": false,
+                "error": error.localizedDescription
+            ]
+        }
+    }
+
+    private func selectUploadFile(args: [String: Any],
+                                  command: String,
+                                  completion: @escaping ([String: Any]) -> Void) {
+        let title = args["title"] as? String ?? "Select File"
+        let readBytesLimit = integerArg(args, "readBytesLimit", fallback: 64 * 1024)
+
+        if let testPath = args["testPath"] as? String, !testPath.isBlank {
+            completion(uploadSelectionResult(command: command,
+                                             mode: "controlled-test-path",
+                                             title: title,
+                                             selectedURL: resolvedTransferURL(testPath),
+                                             readBytesLimit: readBytesLimit,
+                                             usedOpenPanel: false))
+            return
+        }
+
+        if fileTransferPanelInFlight {
+            completion([
+                "success": false,
+                "command": command,
+                "mode": "native-appkit-open-panel",
+                "operation": "upload",
+                "title": title,
+                "canceled": true,
+                "paths": [],
+                "securityScoped": false,
+                "bodyRedacted": true,
+                "readBytesLimit": readBytesLimit,
+                "error": "File transfer panel already in progress"
+            ])
+            return
+        }
+
+        fileTransferPanelInFlight = true
+        let panel = NSOpenPanel()
+        panel.title = title
+        panel.canChooseFiles = true
+        panel.canChooseDirectories = false
+        panel.allowsMultipleSelection = false
+        panel.canCreateDirectories = false
+
+        let finish: (NSApplication.ModalResponse) -> Void = { response in
+            self.fileTransferPanelInFlight = false
+            guard response == .OK, let selectedURL = panel.url else {
+                completion([
+                    "success": true,
+                    "command": command,
+                    "mode": "native-appkit-open-panel",
+                    "operation": "upload",
+                    "title": title,
+                    "canceled": true,
+                    "paths": [],
+                    "securityScoped": false,
+                    "bodyRedacted": true,
+                    "readBytesLimit": readBytesLimit,
+                    "usedOpenPanel": true
+                ])
+                return
+            }
+            completion(self.uploadSelectionResult(command: command,
+                                                  mode: "native-appkit-open-panel",
+                                                  title: title,
+                                                  selectedURL: selectedURL,
+                                                  readBytesLimit: readBytesLimit,
+                                                  usedOpenPanel: true))
+        }
+        if let window {
+            panel.beginSheetModal(for: window, completionHandler: finish)
+        } else {
+            panel.begin(completionHandler: finish)
+        }
+    }
+
+    private func uploadSelectionResult(command: String,
+                                       mode: String,
+                                       title: String,
+                                       selectedURL: URL,
+                                       readBytesLimit: Int,
+                                       usedOpenPanel: Bool) -> [String: Any] {
+        guard FileManager.default.fileExists(atPath: selectedURL.path) else {
+            return [
+                "success": false,
+                "command": command,
+                "mode": mode,
+                "operation": "upload",
+                "title": title,
+                "canceled": false,
+                "paths": [selectedURL.path],
+                "path": selectedURL.path,
+                "filename": selectedURL.lastPathComponent,
+                "securityScoped": false,
+                "bodyRedacted": true,
+                "readBytesLimit": readBytesLimit,
+                "usedOpenPanel": usedOpenPanel,
+                "error": "Selected file does not exist"
+            ]
+        }
+
+        let byteCount = fileByteCount(selectedURL)
+        var sampledBytes = 0
+        do {
+            let handle = try FileHandle(forReadingFrom: selectedURL)
+            defer {
+                try? handle.close()
+            }
+            let sampleLimit = max(0, min(readBytesLimit, 64 * 1024))
+            let sample = try handle.read(upToCount: sampleLimit)
+            sampledBytes = sample?.count ?? 0
+        } catch {
+            return [
+                "success": false,
+                "command": command,
+                "mode": mode,
+                "operation": "upload",
+                "title": title,
+                "canceled": false,
+                "paths": [selectedURL.path],
+                "path": selectedURL.path,
+                "filename": selectedURL.lastPathComponent,
+                "byteCount": byteCount,
+                "securityScoped": false,
+                "bodyRedacted": true,
+                "readBytesLimit": readBytesLimit,
+                "usedOpenPanel": usedOpenPanel,
+                "error": error.localizedDescription
+            ]
+        }
+
+        return [
+            "success": true,
+            "command": command,
+            "mode": mode,
+            "operation": "upload",
+            "title": title,
+            "canceled": false,
+            "paths": [selectedURL.path],
+            "path": selectedURL.path,
+            "filename": selectedURL.lastPathComponent,
+            "byteCount": byteCount,
+            "sampledBytes": sampledBytes,
+            "securityScoped": false,
+            "bodyRedacted": true,
+            "readBytesLimit": readBytesLimit,
+            "usedOpenPanel": usedOpenPanel
+        ]
+    }
+
+    private func resolvedTransferURL(_ rawPath: String) -> URL {
+        let expanded = NSString(string: rawPath).expandingTildeInPath
+        if expanded.hasPrefix("/") {
+            return URL(fileURLWithPath: expanded)
+        }
+        return URL(fileURLWithPath: config.repoRoot).appendingPathComponent(expanded)
+    }
+
+    private func fileByteCount(_ url: URL) -> Int64 {
+        guard let attributes = try? FileManager.default.attributesOfItem(atPath: url.path),
+              let size = attributes[.size] as? NSNumber else {
+            return 0
+        }
+        return size.int64Value
+    }
+
+    private func integerArg(_ args: [String: Any], _ key: String, fallback: Int) -> Int {
+        if let value = args[key] as? Int {
+            return value
+        }
+        if let value = args[key] as? NSNumber {
+            return value.intValue
+        }
+        return fallback
     }
 
     private func capabilityPermission(_ result: [String: Any],
@@ -913,6 +1244,18 @@ final class WebViewHost: NSObject, NSApplicationDelegate, NSWindowDelegate, WKNa
           flowClientEngineCheckboxStatusText: window.VaadinDesktopIpcDiagnostics ? window.VaadinDesktopIpcDiagnostics.flowClientEngineCheckboxStatusText : "",
           flowClientEngineComponentEventPatchCount: window.VaadinDesktopIpcDiagnostics ? window.VaadinDesktopIpcDiagnostics.flowClientEngineComponentEventPatchCount : 0,
           flowClientEngineComponentEventOrder: window.VaadinDesktopIpcDiagnostics ? window.VaadinDesktopIpcDiagnostics.flowClientEngineComponentEventOrder : "",
+          fileTransferDownloadResultObserved: !!(window.VaadinDesktopIpcDiagnostics && window.VaadinDesktopIpcDiagnostics.fileTransferDownloadResultObserved),
+          fileTransferDownloadMode: window.VaadinDesktopIpcDiagnostics ? window.VaadinDesktopIpcDiagnostics.fileTransferDownloadMode : "",
+          fileTransferDownloadPath: window.VaadinDesktopIpcDiagnostics ? window.VaadinDesktopIpcDiagnostics.fileTransferDownloadPath : "",
+          fileTransferDownloadByteCount: window.VaadinDesktopIpcDiagnostics ? window.VaadinDesktopIpcDiagnostics.fileTransferDownloadByteCount : 0,
+          fileTransferDownloadBodyRedacted: !!(window.VaadinDesktopIpcDiagnostics && window.VaadinDesktopIpcDiagnostics.fileTransferDownloadBodyRedacted),
+          fileTransferUploadResultObserved: !!(window.VaadinDesktopIpcDiagnostics && window.VaadinDesktopIpcDiagnostics.fileTransferUploadResultObserved),
+          fileTransferUploadMode: window.VaadinDesktopIpcDiagnostics ? window.VaadinDesktopIpcDiagnostics.fileTransferUploadMode : "",
+          fileTransferUploadPath: window.VaadinDesktopIpcDiagnostics ? window.VaadinDesktopIpcDiagnostics.fileTransferUploadPath : "",
+          fileTransferUploadByteCount: window.VaadinDesktopIpcDiagnostics ? window.VaadinDesktopIpcDiagnostics.fileTransferUploadByteCount : 0,
+          fileTransferUploadSampledBytes: window.VaadinDesktopIpcDiagnostics ? window.VaadinDesktopIpcDiagnostics.fileTransferUploadSampledBytes : 0,
+          fileTransferUploadBodyRedacted: !!(window.VaadinDesktopIpcDiagnostics && window.VaadinDesktopIpcDiagnostics.fileTransferUploadBodyRedacted),
+          fileTransferResultOrder: window.VaadinDesktopIpcDiagnostics ? window.VaadinDesktopIpcDiagnostics.fileTransferResultOrder : "",
           flowClientEnginePushPatchConsumed: !!(window.VaadinDesktopIpcDiagnostics && window.VaadinDesktopIpcDiagnostics.flowClientEnginePushPatchConsumed),
           flowClientEnginePushStatusText: window.VaadinDesktopIpcDiagnostics ? window.VaadinDesktopIpcDiagnostics.flowClientEnginePushStatusText : "",
           flowClientEngineQueuedMessageCount: window.VaadinDesktopIpcDiagnostics ? window.VaadinDesktopIpcDiagnostics.flowClientEngineQueuedMessageCount : -1,
@@ -1222,6 +1565,18 @@ let flowIpcShell = #"""
         flowClientEngineCheckboxStatusText: '',
         flowClientEngineComponentEventPatchCount: 0,
         flowClientEngineComponentEventOrder: '',
+        fileTransferDownloadResultObserved: false,
+        fileTransferDownloadMode: '',
+        fileTransferDownloadPath: '',
+        fileTransferDownloadByteCount: 0,
+        fileTransferDownloadBodyRedacted: false,
+        fileTransferUploadResultObserved: false,
+        fileTransferUploadMode: '',
+        fileTransferUploadPath: '',
+        fileTransferUploadByteCount: 0,
+        fileTransferUploadSampledBytes: 0,
+        fileTransferUploadBodyRedacted: false,
+        fileTransferResultOrder: '',
         flowClientEnginePushPatchConsumed: false,
         flowClientEnginePushStatusText: '',
         flowClientEngineQueuedMessageCount: 0,
@@ -2551,6 +2906,45 @@ let flowIpcShell = #"""
         }
       }
 
+      function appendFileTransferResultOrder(value) {
+        const current = window.VaadinDesktopIpcDiagnostics.fileTransferResultOrder || '';
+        window.VaadinDesktopIpcDiagnostics.fileTransferResultOrder = current ? current + ',' + value : value;
+      }
+
+      function handleCapabilityResult(message) {
+        const payload = message && message.payload ? message.payload : {};
+        const command = payload.command || '';
+        if (command === 'fileTransfer.download') {
+          window.VaadinDesktopIpcDiagnostics.fileTransferDownloadMode = payload.mode || '';
+          window.VaadinDesktopIpcDiagnostics.fileTransferDownloadPath = payload.path || '';
+          window.VaadinDesktopIpcDiagnostics.fileTransferDownloadByteCount = Number(payload.byteCount || 0);
+          window.VaadinDesktopIpcDiagnostics.fileTransferDownloadBodyRedacted = payload.bodyRedacted === true;
+          window.VaadinDesktopIpcDiagnostics.fileTransferDownloadResultObserved =
+            payload.success === true
+            && payload.operation === 'download'
+            && payload.canceled !== true
+            && window.VaadinDesktopIpcDiagnostics.fileTransferDownloadByteCount > 0
+            && payload.bodyRedacted === true
+            && !!payload.path;
+          appendFileTransferResultOrder('download');
+        } else if (command === 'fileTransfer.selectUploadFile') {
+          window.VaadinDesktopIpcDiagnostics.fileTransferUploadMode = payload.mode || '';
+          window.VaadinDesktopIpcDiagnostics.fileTransferUploadPath = payload.path || '';
+          window.VaadinDesktopIpcDiagnostics.fileTransferUploadByteCount = Number(payload.byteCount || 0);
+          window.VaadinDesktopIpcDiagnostics.fileTransferUploadSampledBytes = Number(payload.sampledBytes || 0);
+          window.VaadinDesktopIpcDiagnostics.fileTransferUploadBodyRedacted = payload.bodyRedacted === true;
+          window.VaadinDesktopIpcDiagnostics.fileTransferUploadResultObserved =
+            payload.success === true
+            && payload.operation === 'upload'
+            && payload.canceled !== true
+            && window.VaadinDesktopIpcDiagnostics.fileTransferUploadByteCount > 0
+            && window.VaadinDesktopIpcDiagnostics.fileTransferUploadSampledBytes > 0
+            && payload.bodyRedacted === true
+            && !!payload.path;
+          appendFileTransferResultOrder('upload');
+        }
+      }
+
       window.VaadinDesktopIpc = {
         receive(message) {
           try {
@@ -2591,6 +2985,8 @@ let flowIpcShell = #"""
               }
             } else if (message.type === 'resourceResponse') {
               handleResourceResponse(message.payload);
+            } else if (message.type === 'capabilityResult') {
+              handleCapabilityResult(message);
             } else if (message.type === 'error') {
               app.textContent = 'Flow IPC error: ' + JSON.stringify(message.error || message.payload);
             }

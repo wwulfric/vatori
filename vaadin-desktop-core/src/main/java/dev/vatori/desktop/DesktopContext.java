@@ -11,6 +11,7 @@ public final class DesktopContext {
     private final DesktopNotification notifications;
     private final DesktopClipboard clipboard;
     private final DesktopFileDialog fileDialog;
+    private final DesktopFileTransfer fileTransfer;
     private final DesktopMenu menu;
 
     public DesktopContext(DesktopApplication application, URI appUri, NativeBridge nativeBridge,
@@ -22,6 +23,7 @@ public final class DesktopContext {
         this.notifications = new DesktopNotification(nativeBridge);
         this.clipboard = new DesktopClipboard(nativeBridge);
         this.fileDialog = new DesktopFileDialog(nativeBridge);
+        this.fileTransfer = new DesktopFileTransfer(nativeBridge);
         this.menu = new DesktopMenu(nativeBridge);
     }
 
@@ -53,6 +55,10 @@ public final class DesktopContext {
         return fileDialog;
     }
 
+    public DesktopFileTransfer fileTransfer() {
+        return fileTransfer;
+    }
+
     public DesktopMenu menu() {
         return menu;
     }
@@ -61,4 +67,3 @@ public final class DesktopContext {
         return nativeBridge.invoke(new DesktopCommand("window.setTitle", Map.of("title", title)));
     }
 }
-

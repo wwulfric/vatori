@@ -43,6 +43,7 @@ First issue candidates:
 ## v0.3: Capability Gateway
 
 - Add capability manifest. The first `dev-ipc` scaffold now reads module-root `desktop-capabilities.json`, supports `allow-all-dev`, `manifest-enforced` and `trace-only-dry-run`, and the Flow IPC smoke app runs in `manifest-enforced` mode with an explicit unlisted-command deny-path. `fileDialog.openFile` now uses AppKit `NSOpenPanel` and exposes an automated cancellation path for repeatable smoke verification.
+- Add a bounded file-transfer gateway. The v1.1 smoke app now sends `fileTransfer.download` and `fileTransfer.selectUploadFile` through the same manifest-gated capability path; the Swift host writes a controlled download file, reads selected-file metadata plus sampled bytes and redacts file contents from trace output. Full streaming, progress/cancel and sandbox-safe production grants remain future work.
 - Enforce window/source/user-gesture checks.
 - Implement notifications and production-grade file permission grants through real native APIs.
 

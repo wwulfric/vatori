@@ -60,7 +60,7 @@ Expected trace characteristics:
 - Button click and the smoke app's text-input / checkbox `change` events travel WebView -> Swift host -> Java sidecar -> Vaadin listener -> patch -> WebView.
 - Bootstrap, server push, event patches and verification resync include real server-side UIDL under `payload.uidl`; click, input/checkbox `change` events and verification resync are dispatched through `UidlRequestHandler`/`ServerRpcHandler`.
 - Bootstrap advertises Vaadin `flow-client` classpath resources; the WebView requests and verifies the full advertised resource graph through IPC, imports `FlowBootstrap.js` and `FlowClient.js` as ES modules, and initializes the Flow bootstrap plus GWT client modules.
-- Desktop API calls travel Java sidecar -> Swift host as `VFIPC1 command`, and host responses appear as `capabilityResult`; the Flow IPC smoke app uses `manifest-enforced` permission metadata and includes an intentional manifest deny-path.
+- Desktop API calls travel Java sidecar -> Swift host as `VFIPC1 command`, and host responses appear as `capabilityResult`; the Flow IPC smoke app uses `manifest-enforced` permission metadata, includes an intentional manifest deny-path, exercises AppKit file-dialog cancellation and verifies bounded file-transfer download/upload metadata through controlled test paths.
 
 For repeatable real-window smoke verification without global mouse coordinates:
 

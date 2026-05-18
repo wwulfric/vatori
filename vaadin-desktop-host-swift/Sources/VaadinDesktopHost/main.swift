@@ -792,6 +792,11 @@ final class WebViewHost: NSObject, NSApplicationDelegate, NSWindowDelegate, WKNa
           flowClientEnginePushPatchConsumed: !!(window.VaadinDesktopIpcDiagnostics && window.VaadinDesktopIpcDiagnostics.flowClientEnginePushPatchConsumed),
           flowClientEnginePushStatusText: window.VaadinDesktopIpcDiagnostics ? window.VaadinDesktopIpcDiagnostics.flowClientEnginePushStatusText : "",
           flowClientEngineQueuedMessageCount: window.VaadinDesktopIpcDiagnostics ? window.VaadinDesktopIpcDiagnostics.flowClientEngineQueuedMessageCount : -1,
+          flowClientEngineQueuedMessageHighWater: window.VaadinDesktopIpcDiagnostics ? window.VaadinDesktopIpcDiagnostics.flowClientEngineQueuedMessageHighWater : 0,
+          flowClientEngineQueuedPushCount: window.VaadinDesktopIpcDiagnostics ? window.VaadinDesktopIpcDiagnostics.flowClientEngineQueuedPushCount : 0,
+          flowClientEngineQueuedMessageOrder: window.VaadinDesktopIpcDiagnostics ? window.VaadinDesktopIpcDiagnostics.flowClientEngineQueuedMessageOrder : "",
+          flowClientEngineDeliveredQueuedMessageCount: window.VaadinDesktopIpcDiagnostics ? window.VaadinDesktopIpcDiagnostics.flowClientEngineDeliveredQueuedMessageCount : 0,
+          flowClientEngineDeliveredQueuedMessageOrder: window.VaadinDesktopIpcDiagnostics ? window.VaadinDesktopIpcDiagnostics.flowClientEngineDeliveredQueuedMessageOrder : "",
           flowClientEngineResyncRequested: !!(window.VaadinDesktopIpcDiagnostics && window.VaadinDesktopIpcDiagnostics.flowClientEngineResyncRequested),
           flowClientEngineResyncPatchConsumed: !!(window.VaadinDesktopIpcDiagnostics && window.VaadinDesktopIpcDiagnostics.flowClientEngineResyncPatchConsumed),
           flowClientEngineErrorReported: !!(window.VaadinDesktopIpcDiagnostics && window.VaadinDesktopIpcDiagnostics.flowClientEngineErrorReported),
@@ -980,6 +985,8 @@ let flowIpcShell = #"""
       const flowClientResourceExpectedSha256ByPath = new Map();
       const pendingFlowClientXhrRequests = new Map();
       const queuedFlowClientEngineMessages = [];
+      const queuedFlowClientEngineMessageOrder = [];
+      const deliveredQueuedFlowClientEngineMessageOrder = [];
       const flowIpcServerSequences = [];
       let lastFlowIpcServerSequence = 0;
       const flowClientState = {
@@ -1040,6 +1047,11 @@ let flowIpcShell = #"""
         flowClientEnginePushPatchConsumed: false,
         flowClientEnginePushStatusText: '',
         flowClientEngineQueuedMessageCount: 0,
+        flowClientEngineQueuedMessageHighWater: 0,
+        flowClientEngineQueuedPushCount: 0,
+        flowClientEngineQueuedMessageOrder: '',
+        flowClientEngineDeliveredQueuedMessageCount: 0,
+        flowClientEngineDeliveredQueuedMessageOrder: '',
         flowClientEngineResyncRequested: false,
         flowClientEngineResyncPatchConsumed: false,
         flowClientEngineErrorReported: false,
@@ -1273,8 +1285,18 @@ let flowIpcShell = #"""
         if (!message || !(message.payload && message.payload.uidl && typeof message.payload.uidl.body === 'string')) {
           return false;
         }
-        queuedFlowClientEngineMessages.push({ message, kind });
+        const rawSequence = message.payload ? Number(message.payload.serverSequence) : NaN;
+        const tag = kind + ':' + (Number.isFinite(rawSequence) && rawSequence > 0 ? rawSequence : 'unknown');
+        queuedFlowClientEngineMessages.push({ message, kind, tag });
+        queuedFlowClientEngineMessageOrder.push(tag);
         window.VaadinDesktopIpcDiagnostics.flowClientEngineQueuedMessageCount = queuedFlowClientEngineMessages.length;
+        window.VaadinDesktopIpcDiagnostics.flowClientEngineQueuedMessageHighWater =
+          Math.max(window.VaadinDesktopIpcDiagnostics.flowClientEngineQueuedMessageHighWater, queuedFlowClientEngineMessages.length);
+        if (kind === 'push') {
+          window.VaadinDesktopIpcDiagnostics.flowClientEngineQueuedPushCount += 1;
+        }
+        window.VaadinDesktopIpcDiagnostics.flowClientEngineQueuedMessageOrder =
+          queuedFlowClientEngineMessageOrder.join(',');
         return true;
       }
 
@@ -1286,6 +1308,11 @@ let flowIpcShell = #"""
         for (let index = 0; index < queuedFlowClientEngineMessages.length;) {
           const item = queuedFlowClientEngineMessages[index];
           if (deliverFlowClientEngineMessage(item.message, item.kind)) {
+            deliveredQueuedFlowClientEngineMessageOrder.push(item.tag || item.kind);
+            window.VaadinDesktopIpcDiagnostics.flowClientEngineDeliveredQueuedMessageCount =
+              deliveredQueuedFlowClientEngineMessageOrder.length;
+            window.VaadinDesktopIpcDiagnostics.flowClientEngineDeliveredQueuedMessageOrder =
+              deliveredQueuedFlowClientEngineMessageOrder.join(',');
             queuedFlowClientEngineMessages.splice(index, 1);
           } else {
             index += 1;

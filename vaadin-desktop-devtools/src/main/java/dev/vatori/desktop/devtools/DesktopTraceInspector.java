@@ -284,6 +284,15 @@ public final class DesktopTraceInspector {
                 summary.flowClientEnginePushDomObserved = true;
             }
             if (line.contains("\"type\":\"webview.dom\"")
+                    && containsPositiveIntegerField(line, "flowClientEngineQueuedMessageHighWater")
+                    && containsPositiveIntegerField(line, "flowClientEngineQueuedPushCount")
+                    && containsPositiveIntegerField(line, "flowClientEngineDeliveredQueuedMessageCount")
+                    && line.contains("flowClientEngineQueuedMessageOrder")
+                    && line.contains("flowClientEngineDeliveredQueuedMessageOrder")
+                    && line.contains("push:3")) {
+                summary.flowClientEnginePushQueueDomObserved = true;
+            }
+            if (line.contains("\"type\":\"webview.dom\"")
                     && containsLiteralField(line, "flowClientEngineIpcResyncBridgeInstalled", "true")
                     && containsLiteralField(line, "flowClientEngineResyncRequested", "true")
                     && containsLiteralField(line, "flowClientEngineResyncPatchConsumed", "true")) {
@@ -364,6 +373,16 @@ public final class DesktopTraceInspector {
                 || line.contains("\\\"" + field + "\\\":\\\"" + value + "\\\"");
     }
 
+    private static boolean containsPositiveIntegerField(String line, String field) {
+        for (int digit = 1; digit <= 9; digit++) {
+            if (line.contains("\"" + field + "\":" + digit)
+                    || line.contains("\\\"" + field + "\\\":" + digit)) {
+                return true;
+            }
+        }
+        return false;
+    }
+
     private static boolean containsClickedStatusField(String line, String field) {
         for (int digit = 1; digit <= 9; digit++) {
             String prefix = "Clicks: " + digit;
@@ -413,6 +432,7 @@ public final class DesktopTraceInspector {
         private boolean flowClientEngineXhrDomObserved;
         private boolean flowClientEngineVisibleDomObserved;
         private boolean flowClientEnginePushDomObserved;
+        private boolean flowClientEnginePushQueueDomObserved;
         private boolean flowClientEngineResyncDomObserved;
         private boolean uidlRpcDispatchObserved;
         private boolean webViewUidlRpcObserved;
@@ -455,6 +475,7 @@ public final class DesktopTraceInspector {
                     && flowClientEngineXhrDomObserved
                     && flowClientEngineVisibleDomObserved
                     && flowClientEnginePushDomObserved
+                    && flowClientEnginePushQueueDomObserved
                     && flowClientEngineResyncDomObserved
                     && uidlRpcDispatchObserved
                     && webViewUidlRpcObserved
@@ -501,6 +522,7 @@ public final class DesktopTraceInspector {
             System.out.println("Flow client engine XHR DOM observed: " + flowClientEngineXhrDomObserved);
             System.out.println("Flow client engine visible DOM observed: " + flowClientEngineVisibleDomObserved);
             System.out.println("Flow client engine push DOM observed: " + flowClientEnginePushDomObserved);
+            System.out.println("Flow client engine push queue DOM observed: " + flowClientEnginePushQueueDomObserved);
             System.out.println("Flow client engine resync DOM observed: " + flowClientEngineResyncDomObserved);
             System.out.println("UIDL RPC dispatch observed: " + uidlRpcDispatchObserved);
             System.out.println("WebView UIDL RPC observed: " + webViewUidlRpcObserved);

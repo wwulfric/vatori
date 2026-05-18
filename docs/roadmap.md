@@ -37,7 +37,7 @@ Status: first minimum runtime slice implemented, server-side UIDL writer integra
 First issue candidates:
 
 - Extend `DesktopVaadinRequest` to enforce full resync state from Host Protocol; minimum Flow IPC `sessionId`/`uiId`, `csrfToken`/security key, `syncId` and `clientId` preflight is already in place.
-- Replace the one-shot server-initiated push and verification-only resync with a real Flow push queue, reconnect/resync path and durable ordering model; the current smoke path only proves monotonic Java-to-WebView delivery with `serverSequence`.
+- Replace the one-shot server-initiated push and verification-only resync with a real Flow push queue, reconnect/resync path and durable ordering model; the current smoke path proves monotonic Java-to-WebView delivery with `serverSequence` and records WebView queue/flush order for the one early push.
 - Broaden Flow client event/resource coverage beyond the constrained smoke-app component set.
 
 ## v0.3: Capability Gateway

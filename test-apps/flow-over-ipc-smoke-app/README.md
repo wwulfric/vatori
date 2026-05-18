@@ -21,7 +21,7 @@ Current scope:
 - `FlowBootstrap.js` / `FlowClient.js` are loaded over IPC, and the Flow client container becomes the visible WebView renderer for bootstrap, click-event patches, push and verification resync.
 - The smoke view's `ipc-list` contains four Flow `Span` rows; `webview.dom` diagnostics verify that the visible Flow client bound and rendered all four list items.
 - Button events travel visible Flow client -> IPC-backed XHR shim -> Swift host -> Java stdin as `VFIPC1` envelopes carrying Flow UIDL RPC payloads.
-- Java emits one server-initiated push UIDL update after bootstrap, and the visible Flow client engine consumes it without localhost HTTP.
+- Java emits one server-initiated push UIDL update after bootstrap; the WebView bridge queues it until the visible Flow client engine is ready, then flushes and consumes it without localhost HTTP.
 - Java-to-WebView payloads include monotonic `serverSequence` diagnostics for the smoke path.
 - Java listener execution updates Flow component state and returns a full replace-root patch.
 - With `VAADIN_DESKTOP_FLOW_IPC_AUTO_RESYNC=1`, the visible Flow client requests one resync after the event patch and consumes the returned `UidlRequestHandler` response.

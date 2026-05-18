@@ -161,7 +161,7 @@ The WebView bridge reads the key from `clientState.securityKey` and from the boo
 }
 ```
 
-The WebView bridge currently requests `FlowBootstrap.js` and then `FlowClient.js` as a resource probe:
+The WebView bridge requests every resource advertised by `flowClientResources`. It imports `FlowBootstrap.js` and then `FlowClient.js`; the remaining resources are requested and verified as resource graph coverage:
 
 ```json
 {
@@ -191,7 +191,7 @@ Java checks the envelope `sessionId`/`uiId` and `securityKey`, then returns:
 }
 ```
 
-This proves no-HTTP resource delivery for the first real Flow client assets. The WebView verifies that the bootstrap body contains `window.Vaadin.Flow.initApplication` and `export { init }`, imports it as a Blob-backed ES module, checks that the module exports `init`, and calls `FlowBootstrap.init` with an IPC bootstrap config. It then imports the augmented `FlowClient.js`, calls `FlowClient.init`, verifies that the GWT client registers a Flow client object, checks bootstrap UIDL node bindings through `client.getByNodeId(...)`, verifies the IPC message/resync bridge methods, installs an IPC-backed XHR bridge and promotes the registered Flow client container to the visible renderer.
+This proves no-HTTP resource delivery for the first real Flow client assets. The WebView verifies that the bootstrap body contains `window.Vaadin.Flow.initApplication` and `export { init }`, imports it as a Blob-backed ES module, checks that the module exports `init`, and calls `FlowBootstrap.init` with an IPC bootstrap config. It then imports the augmented `FlowClient.js`, calls `FlowClient.init`, verifies that the GWT client registers a Flow client object, checks bootstrap UIDL node bindings through `client.getByNodeId(...)`, verifies the IPC message/resync bridge methods, installs an IPC-backed XHR bridge and promotes the registered Flow client container to the visible renderer. The current slice also records DOM evidence that all six advertised classpath resources were requested, returned and SHA-verified; it does not yet execute a full production bundle or dev mode graph.
 
 ## Current Push Payload
 
@@ -347,7 +347,7 @@ Errors use the same envelope with `type=error` and an `error` object:
 
 - `dev` and `dev-swift` remain compatibility HTTP modes.
 - `dev-ipc` uses Flow IPC Protocol v1 and must log `transport=flow-ipc` and `compatibilityMode=false`.
-- Full push queue/reconnect semantics, upload/download and full push/WebSocket replacement remain future work. The current resource loading slice serves, imports and initializes `FlowBootstrap.js` / augmented `FlowClient.js` over IPC, verifies bootstrap UIDL binding and makes the registered GWT client the visible UIDL renderer for bootstrap, click-event, push and verification resync patches.
+- Full push queue/reconnect semantics, upload/download and full push/WebSocket replacement remain future work. The current resource loading slice serves and verifies the advertised Flow client classpath resource graph over IPC, imports and initializes `FlowBootstrap.js` / augmented `FlowClient.js`, verifies bootstrap UIDL binding and makes the registered GWT client the visible UIDL renderer for bootstrap, click-event, push and verification resync patches.
 
 ## Trace Inspector
 
@@ -357,7 +357,7 @@ Run:
 bash bin/flow-ipc-trace-inspect --require-flow-ipc-v1 docs/traces/flow-ipc-v1.ndjson
 ```
 
-The inspector summarizes directions, message types and key markers. With `--require-flow-ipc-v1`, it requires `launch`, `ready`, `window.create`, `bootstrapRequest`, `bootstrapResponse`, `resourceRequest`, `resourceResponse`, `push`, `event`, `resync`, `command`, `capabilityResult`, `patch`, `error`, `webview.dom`, `webview.snapshot` and `shutdown`, plus `transport=flow-ipc`, `compatibilityMode=false`, Java-to-WebView `serverSequence` metadata and DOM evidence that received server sequences were monotonic, a clicked-state patch, native clipboard evidence, a loaded `desktop-capabilities.json` manifest, capability permission metadata with `permissionMode=allow-all-dev`, manifest result metadata and file dialog scaffold evidence, WebView-originated error evidence, `uidlRpcDispatch=true`, bootstrap/event/resync `sessionId` + `uiId` evidence, bootstrap `Vaadin-Security-Key` evidence, Flow client resource manifest/request/response/DOM evidence including FlowBootstrap and augmented FlowClient module import/export/init markers, bootstrap DOM node bindings, visible Flow client list binding evidence (`flowClientEngineListBound=true` and four list items), an IPC-backed Flow client XHR bridge, a Flow client `attachExistingElementById` XHR request, a Flow client `click` UIDL RPC XHR request, a `flow-client-xhr` event patch consumed by the visible Flow client engine, `webview.dom` evidence that `flowClientEngineVisibleOwner=true` and the local fallback is hidden, a resync request carrying `securityKey`, bootstrap UIDL writer markers, a server-initiated async push UIDL queued as `push:3`, flushed and consumed by the visible Flow client engine, and a resync `resynchronize=true` signal consumed by the visible Flow client engine.
+The inspector summarizes directions, message types and key markers. With `--require-flow-ipc-v1`, it requires `launch`, `ready`, `window.create`, `bootstrapRequest`, `bootstrapResponse`, `resourceRequest`, `resourceResponse`, `push`, `event`, `resync`, `command`, `capabilityResult`, `patch`, `error`, `webview.dom`, `webview.snapshot` and `shutdown`, plus `transport=flow-ipc`, `compatibilityMode=false`, Java-to-WebView `serverSequence` metadata and DOM evidence that received server sequences were monotonic, a clicked-state patch, native clipboard evidence, a loaded `desktop-capabilities.json` manifest, capability permission metadata with `permissionMode=allow-all-dev`, manifest result metadata and file dialog scaffold evidence, WebView-originated error evidence, `uidlRpcDispatch=true`, bootstrap/event/resync `sessionId` + `uiId` evidence, bootstrap `Vaadin-Security-Key` evidence, Flow client resource manifest/request/response/DOM evidence including full advertised resource graph request/response coverage, FlowBootstrap and augmented FlowClient module import/export/init markers, bootstrap DOM node bindings, visible Flow client list binding evidence (`flowClientEngineListBound=true` and four list items), an IPC-backed Flow client XHR bridge, a Flow client `attachExistingElementById` XHR request, a Flow client `click` UIDL RPC XHR request, a `flow-client-xhr` event patch consumed by the visible Flow client engine, `webview.dom` evidence that `flowClientEngineVisibleOwner=true` and the local fallback is hidden, a resync request carrying `securityKey`, bootstrap UIDL writer markers, a server-initiated async push UIDL queued as `push:3`, flushed and consumed by the visible Flow client engine, and a resync `resynchronize=true` signal consumed by the visible Flow client engine.
 
 Run the envelope scope rejection smoke with:
 

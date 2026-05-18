@@ -239,6 +239,20 @@ public final class DesktopTraceInspector {
                 summary.flowClientResourceDomObserved = true;
             }
             if (line.contains("\"type\":\"webview.dom\"")
+                    && containsLiteralField(line, "flowClientResourceManifestCount", "6")
+                    && containsLiteralField(line, "flowClientResourceGraphRequestedCount", "6")
+                    && containsLiteralField(line, "flowClientResourceGraphResponseCount", "6")
+                    && containsLiteralField(line, "flowClientResourceGraphComplete", "true")
+                    && containsLiteralField(line, "flowClientResourceGraphVerified", "true")
+                    && line.contains("META-INF/frontend/FlowBootstrap.js")
+                    && line.contains("META-INF/frontend/FlowClient.js")
+                    && line.contains("META-INF/frontend/Flow.js")
+                    && line.contains("META-INF/frontend/index.js")
+                    && line.contains("META-INF/resources/VAADIN/static/client/compile.properties")
+                    && line.contains(".cache.js")) {
+                summary.flowClientResourceGraphDomObserved = true;
+            }
+            if (line.contains("\"type\":\"webview.dom\"")
                     && line.contains("flowClientEngineResourceLoaded")
                     && line.contains("flowClientEngineResourceVerified")
                     && line.contains("flowClientEngineModuleLoaded")
@@ -423,6 +437,7 @@ public final class DesktopTraceInspector {
         private boolean flowClientResourceRequestObserved;
         private boolean flowClientResourceResponseObserved;
         private boolean flowClientResourceDomObserved;
+        private boolean flowClientResourceGraphDomObserved;
         private boolean flowClientEngineResourceManifestObserved;
         private boolean flowClientEngineResourceRequestObserved;
         private boolean flowClientEngineResourceResponseObserved;
@@ -466,6 +481,7 @@ public final class DesktopTraceInspector {
                     && flowClientResourceRequestObserved
                     && flowClientResourceResponseObserved
                     && flowClientResourceDomObserved
+                    && flowClientResourceGraphDomObserved
                     && flowClientEngineResourceManifestObserved
                     && flowClientEngineResourceRequestObserved
                     && flowClientEngineResourceResponseObserved
@@ -513,6 +529,7 @@ public final class DesktopTraceInspector {
             System.out.println("Flow client resource request observed: " + flowClientResourceRequestObserved);
             System.out.println("Flow client resource response observed: " + flowClientResourceResponseObserved);
             System.out.println("Flow client resource DOM observed: " + flowClientResourceDomObserved);
+            System.out.println("Flow client resource graph DOM observed: " + flowClientResourceGraphDomObserved);
             System.out.println("Flow client engine resource manifest observed: " + flowClientEngineResourceManifestObserved);
             System.out.println("Flow client engine resource request observed: " + flowClientEngineResourceRequestObserved);
             System.out.println("Flow client engine resource response observed: " + flowClientEngineResourceResponseObserved);

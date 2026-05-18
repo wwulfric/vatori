@@ -32,7 +32,7 @@ Status: first minimum runtime slice implemented, server-side UIDL writer integra
 - `bash bin/uidl-adapter-smoke` now verifies that a desktop-shaped session/UI can drive Vaadin's real `UidlWriter` and produce UIDL `changes`/`syncId`.
 - `bash bin/uidl-rpc-smoke` now verifies that a real Flow event RPC can pass through `UidlRequestHandler`/`ServerRpcHandler` and produce a listener UIDL patch without a real HTTP socket.
 - `dev-ipc` bootstrap/push/patch/resync envelopes now include `payload.uidl`; bootstrap and one server-initiated push come from `UidlWriter`, and WebView-produced click plus verification resync RPC patches come from `UidlRequestHandler`/`ServerRpcHandler`. Bootstrap, click-event UIDL, push UIDL and verification resync UIDL are consumed by the visible Flow client engine, with Java-to-WebView `serverSequence` diagnostics proving monotonic receive order for the smoke path.
-- `dev-ipc` bootstrap now advertises Vaadin `flow-client` classpath resources, and the WebView requests/imports/initializes `FlowBootstrap.js` and `FlowClient.js` over IPC as the first no-HTTP frontend resource loading slice.
+- `dev-ipc` bootstrap now advertises Vaadin `flow-client` classpath resources, and the WebView requests the full advertised classpath resource graph over IPC while importing/initializing `FlowBootstrap.js` and `FlowClient.js` as the first no-HTTP frontend resource loading slice.
 
 First issue candidates:
 

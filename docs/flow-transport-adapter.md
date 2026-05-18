@@ -23,7 +23,7 @@ The current adapter:
 4. Maps component ids to server-side component instances.
 5. Accepts a WebView-provided Flow UIDL RPC body for click events and dispatches it through `UidlRequestHandler`.
 6. Returns a replace-root patch after Java listener execution, with the server-side UIDL response attached.
-7. Publishes a manifest of real Vaadin `flow-client` classpath resources and serves/initializes `FlowBootstrap.js` / `FlowClient.js` through `resourceRequest` / `resourceResponse`.
+7. Publishes a manifest of real Vaadin `flow-client` classpath resources, serves the full advertised resource graph through `resourceRequest` / `resourceResponse`, and initializes `FlowBootstrap.js` / `FlowClient.js`.
 
 This proves the immediate boundary:
 
@@ -39,7 +39,7 @@ WebView event
 
 ## Relationship To Vaadin Internals
 
-The current `FlowIpcRuntime` adapter intentionally does not claim to be the final Vaadin UIDL adapter. It now creates a desktop-shaped Flow session/UI, includes real `UidlWriter` output in `bootstrapResponse` and one server-initiated `push`, lets the visible Flow client engine send UIDL RPC bodies for click events and verification resync over an IPC-backed bridge, and uses `UidlRequestHandler`/`ServerRpcHandler` for event/resync patches. The WebView promotes the initialized Flow client container to the visible surface and feeds bootstrap, event, push and verification resync UIDL into that client. The repository-local UIDL applier remains as a diagnostic fallback for non-engine or failed-delivery paths. `FlowClientResources` reads the real `flow-client` jar resources from the Java sidecar classpath, augments `FlowClient.js` with the narrow IPC bridge methods used by this slice, and serves `FlowBootstrap.js` / `FlowClient.js` over IPC so the host can initialize the Flow bootstrap and GWT client path without localhost HTTP. The repository also contains the compiled transport adapter around the real Flow server path:
+The current `FlowIpcRuntime` adapter intentionally does not claim to be the final Vaadin UIDL adapter. It now creates a desktop-shaped Flow session/UI, includes real `UidlWriter` output in `bootstrapResponse` and one server-initiated `push`, lets the visible Flow client engine send UIDL RPC bodies for click events and verification resync over an IPC-backed bridge, and uses `UidlRequestHandler`/`ServerRpcHandler` for event/resync patches. The WebView promotes the initialized Flow client container to the visible surface and feeds bootstrap, event, push and verification resync UIDL into that client. The repository-local UIDL applier remains as a diagnostic fallback for non-engine or failed-delivery paths. `FlowClientResources` reads the real `flow-client` jar resources from the Java sidecar classpath, augments `FlowClient.js` with the narrow IPC bridge methods used by this slice, serves the full advertised resource graph over IPC, and imports `FlowBootstrap.js` / `FlowClient.js` so the host can initialize the Flow bootstrap and GWT client path without localhost HTTP. The repository also contains the compiled transport adapter around the real Flow server path:
 
 - `dev.vatori.desktop.flow.transport.FlowTransportAdapter`
 - `dev.vatori.desktop.flow.transport.UidlFlowTransportAdapter`

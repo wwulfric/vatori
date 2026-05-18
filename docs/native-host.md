@@ -19,7 +19,7 @@ Responsibilities implemented now:
 - reads Java desktop command envelopes prefixed with `VDP1 `,
 - closes the Java process when the desktop window closes,
 - in `dev-ipc`, loads a local WebView shell, receives WebView messages through `WKScriptMessageHandler`, forwards them to Java stdin and delivers Java `VFIPC1` responses back to WebView JavaScript,
-- in `dev-ipc`, has the WebView request `FlowBootstrap.js` and `FlowClient.js` through `VFIPC1 resourceRequest`, imports them as Blob-backed ES modules, calls `FlowBootstrap.init` with an IPC bootstrap config, then calls `FlowClient.init` and records DOM diagnostics,
+- in `dev-ipc`, has the WebView request all advertised Flow client classpath resources through `VFIPC1 resourceRequest`, imports `FlowBootstrap.js` and `FlowClient.js` as Blob-backed ES modules, calls `FlowBootstrap.init` with an IPC bootstrap config, then calls `FlowClient.init` and records DOM diagnostics,
 - in `dev-ipc`, handles `VFIPC1 command` for `window.setTitle`, `clipboard.writeText`, trace-only `notification.show` and a `fileDialog.openFile` scaffold that returns a cancelled result, then emits `capabilityResult`.
 
 Current compatibility boundary:
@@ -27,7 +27,7 @@ Current compatibility boundary:
 - In `dev` and `dev-swift`, Flow bootstrap, client events, UIDL/patch responses and push still run through the embedded Spring Boot localhost server.
 - Desktop runtime commands can cross Java -> native host as Host Protocol v0 trace envelopes, but synchronous native return values are still scaffolded.
 - The WebView loads a local HTTP URL today. This is explicitly not the final Flow over IPC transport.
-- `dev-ipc` does not load a local HTTP URL for the smoke app and uses `VFIPC1` for desktop commands. The WebView bridge sends click events and one verification resync from the visible Flow client, Java includes real `UidlWriter`/`UidlRequestHandler` output in IPC payloads, one server-initiated push UIDL update is queued until the Flow client engine is ready and then delivered into it, and `FlowBootstrap.js` / `FlowClient.js` are loaded from the Java sidecar classpath through IPC, imported as modules and initialized with an IPC app config. The registered Flow client now owns the visible bootstrap, click-event patch, push and verification resync path through IPC-backed bridge methods.
+- `dev-ipc` does not load a local HTTP URL for the smoke app and uses `VFIPC1` for desktop commands. The WebView bridge sends click events and one verification resync from the visible Flow client, Java includes real `UidlWriter`/`UidlRequestHandler` output in IPC payloads, one server-initiated push UIDL update is queued until the Flow client engine is ready and then delivered into it, and the advertised Flow client resources are loaded from the Java sidecar classpath through IPC. `FlowBootstrap.js` / `FlowClient.js` are imported as modules and initialized with an IPC app config. The registered Flow client now owns the visible bootstrap, click-event patch, push and verification resync path through IPC-backed bridge methods.
 
 Verification note: on some managed macOS desktops, global `screencapture` or coordinate clicking can hit a `loginwindow`/MDM overlay instead of normal app windows. In that case, use the WindowServer entry for `Vaadin Desktop Host`, `HOST_PROTOCOL webview.dom`, the `VAADIN_DESKTOP_FLOW_IPC_AUTO_CLICK=1` / `VAADIN_DESKTOP_FLOW_IPC_AUTO_RESYNC=1` / `VAADIN_DESKTOP_FLOW_IPC_AUTO_ERROR=1` WebView smoke hooks and `window-snapshot.png` as the reliable verification artifacts.
 

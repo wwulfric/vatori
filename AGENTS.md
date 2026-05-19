@@ -1,108 +1,108 @@
-# Agent Instructions
+# Agent 指令
 
-Scope: this file applies to the whole repository.
+适用范围：本文件适用于整个仓库。
 
-## Project Goal
+## 项目目标
 
-This repository is building `Vaadin Desktop Framework v0`: a real framework skeleton for creating desktop-grade Vaadin Flow applications, shaped like Tauri + Vaadin Flow.
+本仓库正在构建 `Vaadin Desktop Framework v0`：一个用于创建桌面级 Vaadin Flow 应用的真实框架骨架，形态类似 Tauri + Vaadin Flow。
 
-The target is not a simple browser wrapper. The long-term direction is Flow over IPC:
+目标不是做一个简单的浏览器壳。长期方向是 Flow over IPC：
 
-- Vaadin Flow Java UI programming model stays intact.
-- Servlet/HTTP/WebSocket assumptions are isolated behind adapters.
-- A desktop host owns system WebView, native capabilities, lifecycle, packaging and update paths.
-- IPC becomes the eventual transport for bootstrap, events, patches, commands and capability results.
+- 保留 Vaadin Flow 的 Java UI 编程模型。
+- 将 Servlet/HTTP/WebSocket 假设隔离在 adapter 后面。
+- 桌面 host 拥有系统 WebView、原生能力、生命周期、打包和更新路径。
+- IPC 最终成为 bootstrap、event、patch、command 和 capability result 的传输层。
 
-## Current State
+## 当前状态
 
-The current implementation is a real framework skeleton plus a compatibility transport:
+当前实现是一个真实框架骨架，加上一条 compatibility transport：
 
-- `vaadin-desktop-core`: public Java desktop API.
-- `vaadin-desktop-ipc`: IPC envelope and trace primitives.
-- `vaadin-desktop-host`: macOS WKWebView fallback, compatibility host and Java native bridge implementations.
-- `vaadin-desktop-host-swift`: Swift/AppKit/WKWebView host spike for the macOS native runtime mainline.
-- `vaadin-desktop-flow`: real Vaadin Flow/Spring Boot launcher plus Flow IPC runtime and UIDL adapter slices.
-- `vaadin-desktop-devtools`: trace inspector scaffold with Flow IPC v1 checks.
-- `vaadin-desktop-cli`: CLI scaffold.
-- `examples/*`: real Vaadin Flow example apps.
-- `test-apps/vaadin-desktop-smoke-app`: independent developer-style smoke app.
-- `test-apps/flow-over-ipc-smoke-app`: independent no-HTTP Flow IPC smoke app for the constrained `dev-ipc` runtime slice.
-- `prototypes/phase0-phase1-spike`: earlier non-HTTP mock Flow transport/IPC validation.
-- `flow-transport-adapter-spike`: current code-level Vaadin Flow UIDL/event/patch boundary analysis.
-- `vaadin-desktop-flow/src/main/java/dev/vatori/desktop/flow/transport`: compiled UIDL adapter slice around `UidlRequestHandler`, `UidlWriter`, `DesktopVaadinRequest`, `DesktopVaadinResponse` and `DesktopFlowRuntimeSession`.
+- `vaadin-desktop-core`：公开的 Java desktop API。
+- `vaadin-desktop-ipc`：IPC envelope 和 trace 基础结构。
+- `vaadin-desktop-host`：macOS WKWebView fallback、compatibility host 和 Java native bridge 实现。
+- `vaadin-desktop-host-swift`：面向 macOS native runtime 主线的 Swift/AppKit/WKWebView host spike。
+- `vaadin-desktop-flow`：真实 Vaadin Flow/Spring Boot launcher，加上 Flow IPC runtime 和 UIDL adapter 切片。
+- `vaadin-desktop-devtools`：带 Flow IPC v1 检查的 trace inspector scaffold。
+- `vaadin-desktop-cli`：CLI scaffold。
+- `examples/*`：真实 Vaadin Flow 示例应用。
+- `test-apps/vaadin-desktop-smoke-app`：独立的开发者形态 smoke app。
+- `test-apps/flow-over-ipc-smoke-app`：面向受限 `dev-ipc` runtime 切片的独立 no-HTTP Flow IPC smoke app。
+- `prototypes/phase0-phase1-spike`：更早的非 HTTP mock Flow transport / IPC 验证。
+- `flow-transport-adapter-spike`：当前代码级 Vaadin Flow UIDL/event/patch 边界分析。
+- `vaadin-desktop-flow/src/main/java/dev/vatori/desktop/flow/transport`：围绕 `UidlRequestHandler`、`UidlWriter`、`DesktopVaadinRequest`、`DesktopVaadinResponse` 和 `DesktopFlowRuntimeSession` 的已编译 UIDL adapter 切片。
 
-Default `dev` behavior on macOS:
+macOS 上默认 `dev` 行为：
 
-1. Start a real Vaadin Flow/Spring Boot app on `127.0.0.1` with a random port.
-2. Start `SystemWebViewDesktopHost`.
-3. Compile a temporary Swift/WKWebView `.app` bundle with `/usr/bin/swiftc`.
-4. Open a native desktop window that loads the local Vaadin URL.
+1. 在 `127.0.0.1` 随机端口启动真实 Vaadin Flow/Spring Boot 应用。
+2. 启动 `SystemWebViewDesktopHost`。
+3. 使用 `/usr/bin/swiftc` 编译临时 Swift/WKWebView `.app` bundle。
+4. 打开加载本地 Vaadin URL 的原生桌面窗口。
 
-Important boundary: this is a real desktop WebView host, but the UI transport is still local HTTP/Servlet/WebSocket compatibility mode. Do not describe it as final Flow over IPC.
+重要边界：这是真实 desktop WebView host，但 UI transport 仍然是 local HTTP/Servlet/WebSocket compatibility mode。不要把它描述为最终 Flow over IPC。
 
-Long-term host path:
+长期 host 路径：
 
 ```bash
 bash bin/vaadin-desktop dev-swift test-apps/vaadin-desktop-smoke-app
 ```
 
-This runs `vaadin-desktop-host-swift`, which starts the Java app as a sidecar, opens a native AppKit/WKWebView window after the sidecar prints `Application URL: ...`, traces Host Protocol v0 as `HOST_PROTOCOL ...`, reads Java command envelopes prefixed with `VDP1 `, and kills the Java process on window shutdown. It still loads the Flow UI through localhost HTTP compatibility mode.
+这会运行 `vaadin-desktop-host-swift`：它把 Java app 作为 sidecar 启动，在 sidecar 打印 `Application URL: ...` 后打开原生 AppKit/WKWebView 窗口，以 `HOST_PROTOCOL ...` 形式记录 Host Protocol v0 trace，读取以 `VDP1 ` 为前缀的 Java command envelope，并在窗口关闭时杀掉 Java 进程。它仍然通过 localhost HTTP compatibility mode 加载 Flow UI。
 
-`dev-swift` launches the generated `.build/vaadin-desktop-host-swift/VaadinDesktopHost.app` via macOS LaunchServices. Logs are tailed from `.build/vaadin-desktop-host-swift/host.out.log` and `.build/vaadin-desktop-host-swift/host.err.log`. For real-window verification, check `HOST_PROTOCOL webview.dom` and `.build/vaadin-desktop-host-swift/window-snapshot.png`; on managed macOS desktops, global screenshots may be masked by a `loginwindow`/MDM overlay.
+`dev-swift` 通过 macOS LaunchServices 启动生成的 `.build/vaadin-desktop-host-swift/VaadinDesktopHost.app`。日志会从 `.build/vaadin-desktop-host-swift/host.out.log` 和 `.build/vaadin-desktop-host-swift/host.err.log` tail 出来。真实窗口验证时，检查 `HOST_PROTOCOL webview.dom` 和 `.build/vaadin-desktop-host-swift/window-snapshot.png`；在受管 macOS 桌面上，全局截图可能会被 `loginwindow` / MDM overlay 遮挡。
 
-No-HTTP IPC slice:
+No-HTTP IPC 切片：
 
 ```bash
 bash bin/vaadin-desktop dev-ipc test-apps/flow-over-ipc-smoke-app
 ```
 
-This runs the Swift host with `--transport flow-ipc`, loads a local WKWebView HTML shell and communicates with Java through `VFIPC1` stdin/stdout envelopes. It proves WebView event -> Java Button listener -> desktop command/capabilityResult -> patch -> WebView without localhost HTTP for the smoke app. The WebView bridge sends click/change events and ordering-recovery resync as Flow-client-shaped UIDL RPC payloads; Java emits real UIDL under `payload.uidl`, with bootstrap and ordered server-initiated pushes using `UidlWriter`, and events/resync using `UidlRequestHandler`/`ServerRpcHandler`. Bootstrap, ordered push, event patches and recovery resync are consumed by the visible Flow client engine. A controlled duplicate/late push probe is ignored with delivered/ignored order diagnostics and triggers explicit resync. Bootstrap also advertises real Vaadin `flow-client` classpath resources; the WebView requests, verifies and classifies the advertised resource graph over IPC while importing and initializing `FlowBootstrap.js` and an augmented `FlowClient.js`. It also performs a dynamic no-HTTP `flow-client-lazy-lookup` probe for `Flow.js` and records static/theme/LAZY lookup diagnostics. The repository-local UIDL applier remains only as a diagnostic fallback for non-engine or failed-delivery paths.
+这会用 `--transport flow-ipc` 运行 Swift host，加载本地 WKWebView HTML shell，并通过 `VFIPC1` stdin/stdout envelope 与 Java 通信。它证明了 smoke app 在没有 localhost HTTP 的情况下完成 WebView event -> Java Button listener -> desktop command/capabilityResult -> patch -> WebView。WebView bridge 会把 click/change event 和 ordering-recovery resync 作为 Flow-client-shaped UIDL RPC payload 发送；Java 在 `payload.uidl` 下发出真实 UIDL，其中 bootstrap 和 ordered server-initiated push 使用 `UidlWriter`，event/resync 使用 `UidlRequestHandler` / `ServerRpcHandler`。Bootstrap、ordered push、event patch 和 recovery resync 都由可见 Flow client engine 消费。一个受控 duplicate/late push probe 会被忽略，并记录 delivered/ignored order diagnostics，然后触发显式 resync。Bootstrap 还会声明真实 Vaadin `flow-client` classpath resources；WebView 通过 IPC 请求、验证并分类 advertised resource graph，同时导入并初始化 `FlowBootstrap.js` 和增强版 `FlowClient.js`。它还会对 `Flow.js` 执行动态 no-HTTP `flow-client-lazy-lookup` probe，并记录 static/theme/LAZY lookup diagnostics。仓库内的本地 UIDL applier 只保留为 non-engine 或 failed-delivery 路径的诊断 fallback。
 
-Repeatable real-window smoke verification can use:
+可重复的真实窗口 smoke 验证可以使用：
 
 ```bash
 VAADIN_DESKTOP_FLOW_IPC_AUTO_CLICK=1 VAADIN_DESKTOP_FLOW_IPC_AUTO_RESYNC=1 VAADIN_DESKTOP_FLOW_IPC_AUTO_ERROR=1 VAADIN_DESKTOP_FLOW_IPC_AUTO_FILE_DIALOG_CANCEL=1 VAADIN_DESKTOP_FLOW_IPC_AUTO_SHUTDOWN=1 bash bin/vaadin-desktop dev-ipc test-apps/flow-over-ipc-smoke-app
 ```
 
-## Build And Run
+## 构建和运行
 
-Maven is available through SDKMAN on this machine. Source SDKMAN before calling Maven directly:
+本机 Maven 通过 SDKMAN 可用。直接调用 Maven 前先 source SDKMAN：
 
 ```bash
 source /Users/bytedance/.sdkman/bin/sdkman-init.sh
 ```
 
-Use the project-local Maven repository to avoid writing to the user's global Maven cache:
+使用项目本地 Maven repository，避免写入用户全局 Maven cache：
 
 ```bash
 mvn -o -Dmaven.repo.local=/Users/bytedance/IdeaProjects/vatori/.m2/repository -DskipTests compile
 ```
 
-Run the smoke desktop app:
+运行 smoke desktop app：
 
 ```bash
 bash bin/vaadin-desktop dev test-apps/vaadin-desktop-smoke-app
 ```
 
-Run the Swift native host spike:
+运行 Swift native host spike：
 
 ```bash
 bash bin/vaadin-desktop dev-swift test-apps/vaadin-desktop-smoke-app
 ```
 
-Run the Flow IPC smoke app:
+运行 Flow IPC smoke app：
 
 ```bash
 bash bin/vaadin-desktop dev-ipc test-apps/flow-over-ipc-smoke-app
 ```
 
-Inspect the Flow IPC trace sample:
+检查 Flow IPC trace 示例：
 
 ```bash
 bash bin/flow-ipc-trace-inspect --require-flow-ipc-v1 docs/traces/flow-ipc-v1.ndjson
 ```
 
-Verify the server-side UIDL writer adapter:
+验证 server-side UIDL writer adapter：
 
 ```bash
 bash bin/uidl-adapter-smoke
@@ -111,7 +111,7 @@ bash bin/flow-ipc-scope-smoke
 bash bin/flow-client-resource-smoke
 ```
 
-Host selection:
+Host 选择：
 
 ```bash
 VAADIN_DESKTOP_HOST=system-webview bash bin/vaadin-desktop dev examples/counter-app
@@ -119,19 +119,19 @@ VAADIN_DESKTOP_HOST=headless bash bin/vaadin-desktop dev examples/counter-app
 VAADIN_DESKTOP_HOST=browser bash bin/vaadin-desktop dev examples/counter-app
 ```
 
-Starting the system WebView host opens a macOS UI process and may require sandbox escalation. Stop long-running dev sessions before finishing a turn.
+启动 system WebView host 会打开 macOS UI 进程，可能需要 sandbox escalation。结束一个 turn 前，应停止长时间运行的 dev session。
 
-## Local Reference Source Trees
+## 本地参考源码树
 
-The user has local upstream source checkouts available for study. Treat them as read-only references unless the user explicitly asks to edit them.
+用户本机有上游源码 checkout 可供研究。除非用户明确要求编辑，否则把它们视为只读参考。
 
-Tauri, historical reference only:
+Tauri，仅作为历史参考：
 
 ```text
 /Users/bytedance/RustroverProjects/study/tauri
 ```
 
-Useful Tauri areas if comparing against its process model:
+如果要对比 Tauri 的进程模型，常用区域：
 
 - `crates/tauri`
 - `crates/tauri-runtime`
@@ -140,13 +140,13 @@ Useful Tauri areas if comparing against its process model:
 - `crates/tauri-bundler`
 - `crates/tauri-utils`
 
-Vaadin:
+Vaadin：
 
 ```text
 /Users/bytedance/IdeaProjects/study/vaadin
 ```
 
-Useful Vaadin areas:
+常用 Vaadin 区域：
 
 - `flow/flow-server`
 - `flow/flow-client`
@@ -156,45 +156,45 @@ Useful Vaadin areas:
 - `platform/vaadin-maven-plugin`
 - `platform/vaadin-dev-bundle`
 
-When making architecture decisions, prefer checking these local source trees before using web search.
+做架构决策时，优先检查这些本地源码树，再考虑 web search。
 
-## Documentation Map
+## 文档地图
 
-- `README.md`: current quick start and status.
-- `docs/framework-architecture.md`: current and target architecture.
-- `docs/getting-started.md`: developer workflow.
-- `docs/flow-integration.md`: how real Vaadin Flow is integrated today.
-- `docs/ipc-protocol.md`: protocol envelope and message taxonomy.
-- `docs/ipc-protocol-v1.md`: Flow IPC v1 envelope and message taxonomy.
-- `docs/flow-over-ipc-runtime.md`: current `dev-ipc` runtime slice and limitations.
-- `docs/flow-transport-adapter.md`: current adapter implementation and next UIDL boundary.
-- `docs/native-host.md`: current WKWebView host and host roadmap.
-- `docs/roadmap.md`: next engineering phases.
-- `docs/flow-over-ipc-design.md`: original Chinese design package.
-- `docs/flow-over-ipc-implementation.md`: Phase 0/1 prototype notes.
+- `README.md`：当前 quick start 和状态。
+- `docs/framework-architecture.md`：当前架构与目标架构。
+- `docs/getting-started.md`：开发者 workflow。
+- `docs/flow-integration.md`：今天如何集成真实 Vaadin Flow。
+- `docs/ipc-protocol.md`：protocol envelope 和 message taxonomy。
+- `docs/ipc-protocol-v1.md`：Flow IPC v1 envelope 和 message taxonomy。
+- `docs/flow-over-ipc-runtime.md`：当前 `dev-ipc` runtime 切片和限制。
+- `docs/flow-transport-adapter.md`：当前 adapter 实现和下一个 UIDL 边界。
+- `docs/native-host.md`：当前 WKWebView host 和 host roadmap。
+- `docs/roadmap.md`：下一阶段工程路线。
+- `docs/flow-over-ipc-design.md`：原始中文设计包。
+- `docs/flow-over-ipc-implementation.md`：Phase 0/1 prototype notes。
 
-## Project Skills
+## 项目技能
 
-- `.agents/skills/vaadin-desktop-native-feel`: project-level skill for making Vaadin Desktop apps feel native. Use it when work touches Swift/AppKit host behavior, WKWebView/WebView2 quirks, Vaadin Flow desktop UI conventions, desktop capability APIs, compatibility-mode boundaries or native-readiness reviews.
+- `.agents/skills/vaadin-desktop-native-feel`：用于让 Vaadin Desktop app 具备原生桌面体验的项目级 skill。当工作触及 Swift/AppKit host 行为、WKWebView/WebView2 quirk、Vaadin Flow desktop UI 约定、desktop capability API、compatibility-mode 边界或 native-readiness review 时使用它。
 
-## Engineering Rules
+## 工程规则
 
-- Keep compatibility mode explicitly named and documented.
-- Do not remove or hide the fact that current Flow still depends on Servlet/HTTP/WebSocket.
-- Do not collapse the framework into a one-off example app.
-- Keep example apps developer-shaped: they should depend on framework modules like external users would.
-- Do not edit the local Tauri or Vaadin upstream source checkouts unless explicitly requested.
-- Prefer small, reviewable modules and clear adapter boundaries.
-- Use `rg` / `rg --files` for source searches.
-- Use `apply_patch` for file edits.
-- Do not delete generated or user files unless explicitly requested.
+- 保持 compatibility mode 被明确命名和记录。
+- 不要移除或隐藏当前 Flow 仍然依赖 Servlet/HTTP/WebSocket 的事实。
+- 不要把框架收缩成一次性的示例应用。
+- 保持 example app 是开发者形态：它们应该像外部用户一样依赖 framework modules。
+- 除非明确要求，不要编辑本地 Tauri 或 Vaadin upstream source checkout。
+- 优先使用小而可 review 的模块和清晰 adapter 边界。
+- 搜索源码时使用 `rg` / `rg --files`。
+- 文件编辑使用 `apply_patch`。
+- 除非明确要求，不要删除生成文件或用户文件。
 
-## Near-Term Work
+## 近期工作
 
-Most valuable next steps:
+最有价值的下一步：
 
-1. Make `vaadin-desktop-host-swift` the default host once it is stable across local machines.
-2. Turn Host Protocol v0 traces into a bidirectional command/result transport.
-3. Route UIDL patch consumption through the initialized Flow client engine instead of the repository-local WebView tree renderer.
-4. Add smoke tests for Swift host window launch, sidecar cleanup and desktop capability calls.
-5. Tighten full resync semantics in `DesktopVaadinRequest`; minimum Flow IPC `sessionId`/`uiId`, `csrfToken`/security key, `syncId` and `clientId` preflight is already in place.
+1. 在 `vaadin-desktop-host-swift` 跨本地机器稳定后，把它作为默认 host。
+2. 将 Host Protocol v0 trace 推进为 bidirectional command/result transport。
+3. 让 UIDL patch consumption 通过已初始化的 Flow client engine，而不是仓库本地 WebView tree renderer。
+4. 为 Swift host window launch、sidecar cleanup 和 desktop capability call 增加 smoke tests。
+5. 收紧 `DesktopVaadinRequest` 的 full resync semantics；最小 Flow IPC `sessionId`/`uiId`、`csrfToken`/security key、`syncId` 和 `clientId` preflight 已经就位。

@@ -46,6 +46,7 @@ public final class DesktopTraceInspector {
         boolean requireFlowIpcV1_1 = false;
         boolean requireFlowIpcV1_2 = false;
         boolean requireFlowIpcV1_3 = false;
+        boolean requireFlowIpcV1_3Framework = false;
         List<Path> paths = new ArrayList<>();
         for (String arg : args) {
             if ("--require-flow-ipc-v1".equals(arg)) {
@@ -62,6 +63,8 @@ public final class DesktopTraceInspector {
                 requireFlowIpcV1_1 = true;
                 requireFlowIpcV1_2 = true;
                 requireFlowIpcV1_3 = true;
+            } else if ("--require-flow-ipc-v1_3-framework".equals(arg)) {
+                requireFlowIpcV1_3Framework = true;
             } else {
                 paths.add(Path.of(arg));
             }
@@ -88,6 +91,9 @@ public final class DesktopTraceInspector {
             if (requireFlowIpcV1_3 && !summary.hasRequiredFlowIpcV1_3Types()) {
                 failures++;
             }
+            if (requireFlowIpcV1_3Framework && !summary.hasRequiredFlowIpcV1_3FrameworkTypes()) {
+                failures++;
+            }
         }
 
         if (failures > 0) {
@@ -112,6 +118,21 @@ public final class DesktopTraceInspector {
             }
             if (line.contains("\"compatibilityMode\":false")) {
                 summary.compatibilityFalse = true;
+            }
+            if (line.contains("\"type\":\"launch\"")
+                    && line.contains("flow-over-ipc-framework-app")
+                    && line.contains("\"transport\":\"flow-ipc\"")
+                    && line.contains("\"compatibilityMode\":false")) {
+                summary.frameworkAppLaunchObserved = true;
+            }
+            if (line.contains("\"type\":\"capabilityManifest\"")
+                    && line.contains("flow-over-ipc-framework-app/desktop-capabilities.json")
+                    && line.contains("\"loaded\":true")
+                    && line.contains("\"permissionMode\":\"manifest-enforced\"")
+                    && line.contains("window.setTitle")
+                    && line.contains("clipboard.writeText")
+                    && line.contains("notification.show")) {
+                summary.frameworkAppCapabilityManifestObserved = true;
             }
             if (line.contains("\"type\":\"capabilityManifest\"")
                     && line.contains("\"loaded\":true")
@@ -240,6 +261,16 @@ public final class DesktopTraceInspector {
             if (line.contains("\"uidlRpcDispatch\":true")) {
                 summary.uidlRpcDispatchObserved = true;
             }
+            if (line.contains("dev.vatori.ipcframework.FlowOverIpcFrameworkView")
+                    && line.contains("framework-root")
+                    && line.contains("framework-budget")
+                    && line.contains("framework-expedite")
+                    && line.contains("framework-apply")
+                    && line.contains("framework-updates")
+                    && line.contains("com.vaadin.flow.component.textfield.BigDecimalField")
+                    && line.contains("com.vaadin.flow.component.checkbox.Checkbox")) {
+                summary.frameworkAppBootstrapObserved = true;
+            }
             if (line.contains("\"type\":\"event\"")
                     && line.contains("\"dispatch\":\"flow-client-xhr\"")
                     && line.contains("\"attachExistingElementById\"")
@@ -256,6 +287,78 @@ public final class DesktopTraceInspector {
                     && line.contains("\"clientId\":1")) {
                 summary.webViewUidlRpcObserved = true;
                 summary.flowClientXhrClickObserved = true;
+            }
+            if (line.contains("\"type\":\"event\"")
+                    && line.contains("\"dispatch\":\"flow-client-xhr\"")
+                    && line.contains("\"componentId\":\"framework-budget\"")
+                    && line.contains("\"event\":\"change\"")
+                    && line.contains("\"element.value\":\"73.25\"")) {
+                summary.frameworkAppBudgetEventRpcObserved = true;
+            }
+            if (line.contains("\"type\":\"event\"")
+                    && line.contains("\"dispatch\":\"flow-client-xhr\"")
+                    && line.contains("\"componentId\":\"framework-expedite\"")
+                    && line.contains("\"event\":\"change\"")
+                    && line.contains("\"element.checked\":true")) {
+                summary.frameworkAppCheckboxEventRpcObserved = true;
+            }
+            if (line.contains("\"type\":\"event\"")
+                    && line.contains("\"dispatch\":\"flow-client-xhr\"")
+                    && line.contains("\"componentId\":\"framework-apply\"")
+                    && line.contains("\"event\":\"click\"")) {
+                summary.frameworkAppApplyEventRpcObserved = true;
+            }
+            if (line.contains("\"type\":\"patch\"")
+                    && line.contains("\"source\":\"UidlRequestHandler\"")
+                    && line.contains("\"reason\":\"event\"")
+                    && line.contains("Budget changed: 73.25")) {
+                summary.frameworkAppBudgetPatchObserved = true;
+            }
+            if (line.contains("\"type\":\"patch\"")
+                    && line.contains("\"source\":\"UidlRequestHandler\"")
+                    && line.contains("\"reason\":\"event\"")
+                    && line.contains("Expedite changed: yes")) {
+                summary.frameworkAppCheckboxPatchObserved = true;
+            }
+            if (line.contains("\"type\":\"patch\"")
+                    && line.contains("\"source\":\"UidlRequestHandler\"")
+                    && line.contains("\"reason\":\"event\"")
+                    && line.contains("Revision 1:")
+                    && line.contains("Renderer owned by Flow client engine")) {
+                summary.frameworkAppApplyPatchObserved = true;
+            }
+            if (line.contains("\"type\":\"command\"")
+                    && line.contains("\"command\":\"window.setTitle\"")
+                    && line.contains("Flow IPC Framework App - 1")) {
+                summary.frameworkAppWindowTitleCommandObserved = true;
+            }
+            if (line.contains("\"type\":\"command\"")
+                    && line.contains("\"command\":\"clipboard.writeText\"")
+                    && line.contains("Revision 1:")) {
+                summary.frameworkAppClipboardCommandObserved = true;
+            }
+            if (line.contains("\"type\":\"command\"")
+                    && line.contains("\"command\":\"notification.show\"")
+                    && line.contains("Framework update 1 applied")) {
+                summary.frameworkAppNotificationCommandObserved = true;
+            }
+            if (line.contains("\"type\":\"capabilityResult\"")
+                    && line.contains("\"command\":\"window.setTitle\"")
+                    && line.contains("\"permissionDecision\":\"allowed\"")
+                    && line.contains("\"success\":true")) {
+                summary.frameworkAppWindowTitleResultObserved = true;
+            }
+            if (line.contains("\"type\":\"capabilityResult\"")
+                    && line.contains("\"command\":\"clipboard.writeText\"")
+                    && line.contains("\"permissionDecision\":\"allowed\"")
+                    && line.contains("\"success\":true")) {
+                summary.frameworkAppClipboardResultObserved = true;
+            }
+            if (line.contains("\"type\":\"capabilityResult\"")
+                    && line.contains("\"command\":\"notification.show\"")
+                    && line.contains("\"permissionDecision\":\"allowed\"")
+                    && line.contains("\"success\":true")) {
+                summary.frameworkAppNotificationResultObserved = true;
             }
             if (line.contains("\"type\":\"event\"")
                     && line.contains("\"dispatch\":\"flow-client-xhr\"")
@@ -639,6 +742,41 @@ public final class DesktopTraceInspector {
                     && containsLiteralField(line, "flowClientEngineLocalFallbackHidden", "true")) {
                 summary.flowClientEngineGenericViewportDomObserved = true;
             }
+            if (line.contains("\"type\":\"webview.firstMeaningfulPaint\"")
+                    && containsStringField(line, "transport", "flow-ipc")
+                    && containsStringField(line, "promotionGate", "generic-flow-viewport")
+                    && containsLiteralField(line, "flowClientEngineVisibleOwner", "true")
+                    && containsLiteralField(line, "flowClientEngineLocalFallbackHidden", "true")) {
+                summary.firstMeaningfulPaintObserved = true;
+            }
+            if (line.contains("\"type\":\"webview.dom\"")
+                    && line.contains("Flow IPC Framework Desk")
+                    && containsLiteralField(line, "frameworkAppRendered", "true")
+                    && containsStringField(line, "frameworkAppRootId", "framework-root")
+                    && containsLiteralField(line, "frameworkAppBudgetRendered", "true")
+                    && containsLiteralField(line, "frameworkAppCheckboxRendered", "true")
+                    && containsLiteralField(line, "frameworkAppApplyRendered", "true")
+                    && containsStringField(line, "flowClientEngineViewportRootId", "framework-root")
+                    && containsStringField(line, "flowClientEnginePromotionGate", "generic-flow-viewport")
+                    && containsLiteralField(line, "flowClientEngineBootstrapDomBound", "false")
+                    && containsLiteralField(line, "flowClientEngineVisibleOwner", "true")
+                    && containsLiteralField(line, "flowClientEngineLocalFallbackHidden", "true")) {
+                summary.frameworkAppDomObserved = true;
+            }
+            if (line.contains("\"type\":\"webview.dom\"")
+                    && containsLiteralField(line, "frameworkAppBudgetEventRpcObserved", "true")
+                    && containsLiteralField(line, "frameworkAppBudgetEventObserved", "true")
+                    && containsLiteralField(line, "frameworkAppCheckboxEventRpcObserved", "true")
+                    && containsLiteralField(line, "frameworkAppCheckboxEventObserved", "true")
+                    && containsLiteralField(line, "frameworkAppApplyEventRpcObserved", "true")
+                    && containsLiteralField(line, "frameworkAppApplyEventObserved", "true")
+                    && containsLiteralField(line, "frameworkAppInteractionComplete", "true")
+                    && containsPositiveIntegerField(line, "frameworkAppEventPatchCount")
+                    && line.contains("framework-budget,framework-expedite,framework-apply")
+                    && line.contains("Revision 1:")
+                    && line.contains("Renderer owned by Flow client engine")) {
+                summary.frameworkAppInteractionDomObserved = true;
+            }
             if (line.contains("\"type\":\"event\"")
                     && line.contains("\"sessionId\":\"flow-ipc-session\"")
                     && line.contains("\"uiId\":\"main\"")) {
@@ -807,7 +945,7 @@ public final class DesktopTraceInspector {
     }
 
     private static void usage() {
-        System.out.println("Usage: bin/flow-ipc-trace-inspect [--require-flow-ipc-v1|--require-flow-ipc-v1_1|--require-flow-ipc-v1_2|--require-flow-ipc-v1_3] <trace.ndjson>...");
+        System.out.println("Usage: bin/flow-ipc-trace-inspect [--require-flow-ipc-v1|--require-flow-ipc-v1_1|--require-flow-ipc-v1_2|--require-flow-ipc-v1_3|--require-flow-ipc-v1_3-framework] <trace.ndjson>...");
     }
 
     public static final class TraceSummary {
@@ -893,6 +1031,24 @@ public final class DesktopTraceInspector {
         private boolean duplicateLatePushProbeObserved;
         private boolean recoveryResyncRequestObserved;
         private boolean resyncUidlObserved;
+        private boolean frameworkAppLaunchObserved;
+        private boolean frameworkAppCapabilityManifestObserved;
+        private boolean frameworkAppBootstrapObserved;
+        private boolean frameworkAppBudgetEventRpcObserved;
+        private boolean frameworkAppCheckboxEventRpcObserved;
+        private boolean frameworkAppApplyEventRpcObserved;
+        private boolean frameworkAppBudgetPatchObserved;
+        private boolean frameworkAppCheckboxPatchObserved;
+        private boolean frameworkAppApplyPatchObserved;
+        private boolean frameworkAppWindowTitleCommandObserved;
+        private boolean frameworkAppClipboardCommandObserved;
+        private boolean frameworkAppNotificationCommandObserved;
+        private boolean frameworkAppWindowTitleResultObserved;
+        private boolean frameworkAppClipboardResultObserved;
+        private boolean frameworkAppNotificationResultObserved;
+        private boolean frameworkAppDomObserved;
+        private boolean frameworkAppInteractionDomObserved;
+        private boolean firstMeaningfulPaintObserved;
 
         public boolean hasRequiredFlowIpcTypes() {
             return types.keySet().containsAll(FLOW_IPC_REQUIRED_TYPES)
@@ -987,6 +1143,69 @@ public final class DesktopTraceInspector {
                     && vaadinSecondWebComponentEventRpcObserved
                     && vaadinSecondWebComponentPatchObserved
                     && vaadinSecondWebComponentDomObserved;
+        }
+
+        public boolean hasRequiredFlowIpcV1_3FrameworkTypes() {
+            return types.keySet().containsAll(List.of(
+                    "launch",
+                    "ready",
+                    "capabilityManifest",
+                    "window.create",
+                    "bootstrapRequest",
+                    "bootstrapResponse",
+                    "resourceRequest",
+                    "resourceResponse",
+                    "event",
+                    "patch",
+                    "command",
+                    "capabilityResult",
+                    "webview.firstMeaningfulPaint",
+                    "webview.dom",
+                    "webview.snapshot",
+                    "shutdown"))
+                    && flowIpcTransport
+                    && compatibilityFalse
+                    && frameworkAppLaunchObserved
+                    && frameworkAppCapabilityManifestObserved
+                    && frameworkAppBootstrapObserved
+                    && serverSequenceObserved
+                    && uidlWriterObserved
+                    && uidlRpcDispatchObserved
+                    && flowClientResourceManifestObserved
+                    && flowClientResourceRequestObserved
+                    && flowClientResourceResponseObserved
+                    && flowClientResourceDomObserved
+                    && flowClientResourceGraphDomObserved
+                    && flowClientResourceExecutionClassificationDomObserved
+                    && flowClientResourceLazyLookupRequestObserved
+                    && flowClientResourceLazyLookupResponseObserved
+                    && flowClientResourceLazyLookupDomObserved
+                    && flowClientEngineResourceManifestObserved
+                    && flowClientEngineResourceRequestObserved
+                    && flowClientEngineResourceResponseObserved
+                    && flowClientEngineDomObserved
+                    && flowClientEngineGenericViewportDomObserved
+                    && firstMeaningfulPaintObserved
+                    && componentResolverV13ManifestObserved
+                    && componentResolverV13DomObserved
+                    && vaadinWebComponentResourceRequestObserved
+                    && vaadinWebComponentResourceResponseObserved
+                    && vaadinSecondWebComponentResourceRequestObserved
+                    && vaadinSecondWebComponentResourceResponseObserved
+                    && frameworkAppDomObserved
+                    && frameworkAppBudgetEventRpcObserved
+                    && frameworkAppCheckboxEventRpcObserved
+                    && frameworkAppApplyEventRpcObserved
+                    && frameworkAppBudgetPatchObserved
+                    && frameworkAppCheckboxPatchObserved
+                    && frameworkAppApplyPatchObserved
+                    && frameworkAppWindowTitleCommandObserved
+                    && frameworkAppClipboardCommandObserved
+                    && frameworkAppNotificationCommandObserved
+                    && frameworkAppWindowTitleResultObserved
+                    && frameworkAppClipboardResultObserved
+                    && frameworkAppNotificationResultObserved
+                    && frameworkAppInteractionDomObserved;
         }
 
         private void print(Path path) {
@@ -1095,6 +1314,28 @@ public final class DesktopTraceInspector {
             System.out.println("duplicate/late push probe observed: " + duplicateLatePushProbeObserved);
             System.out.println("recovery resync request observed: " + recoveryResyncRequestObserved);
             System.out.println("resync UIDL observed: " + resyncUidlObserved);
+            System.out.println("framework app launch observed: " + frameworkAppLaunchObserved);
+            System.out.println("framework app capability manifest observed: "
+                    + frameworkAppCapabilityManifestObserved);
+            System.out.println("framework app bootstrap observed: " + frameworkAppBootstrapObserved);
+            System.out.println("framework app budget event RPC observed: "
+                    + frameworkAppBudgetEventRpcObserved);
+            System.out.println("framework app checkbox event RPC observed: "
+                    + frameworkAppCheckboxEventRpcObserved);
+            System.out.println("framework app apply event RPC observed: "
+                    + frameworkAppApplyEventRpcObserved);
+            System.out.println("framework app budget patch observed: " + frameworkAppBudgetPatchObserved);
+            System.out.println("framework app checkbox patch observed: " + frameworkAppCheckboxPatchObserved);
+            System.out.println("framework app apply patch observed: " + frameworkAppApplyPatchObserved);
+            System.out.println("framework app window title command/result observed: "
+                    + frameworkAppWindowTitleCommandObserved + "/" + frameworkAppWindowTitleResultObserved);
+            System.out.println("framework app clipboard command/result observed: "
+                    + frameworkAppClipboardCommandObserved + "/" + frameworkAppClipboardResultObserved);
+            System.out.println("framework app notification command/result observed: "
+                    + frameworkAppNotificationCommandObserved + "/" + frameworkAppNotificationResultObserved);
+            System.out.println("first meaningful paint observed: " + firstMeaningfulPaintObserved);
+            System.out.println("framework app DOM observed: " + frameworkAppDomObserved);
+            System.out.println("framework app interaction DOM observed: " + frameworkAppInteractionDomObserved);
             List<String> missing = FLOW_IPC_REQUIRED_TYPES.stream()
                     .filter(type -> !types.containsKey(type))
                     .toList();

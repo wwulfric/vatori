@@ -77,6 +77,13 @@ bash bin/vaadin-desktop dev-ipc test-apps/flow-over-ipc-framework-app
 
 `flow-over-ipc-framework-app` uses ordinary Flow Java APIs for a Button, `BigDecimalField`, `Checkbox`, repeated list updates and manifest-gated desktop capability calls. It is a framework validation target; the strict trace gates still use `flow-over-ipc-smoke-app`.
 
+For an unattended framework interaction check:
+
+```bash
+VAADIN_DESKTOP_FLOW_IPC_AUTO_FRAMEWORK_UPDATE=1 VAADIN_DESKTOP_FLOW_IPC_AUTO_SHUTDOWN=1 bash bin/vaadin-desktop dev-ipc test-apps/flow-over-ipc-framework-app
+bash bin/flow-ipc-trace-inspect --require-flow-ipc-v1_3-framework .build/vaadin-desktop-host-swift/host.out.log
+```
+
 Inspect the bundled review trace:
 
 ```bash
@@ -150,4 +157,4 @@ Framework v0 still starts an embedded Spring Boot web server on `127.0.0.1`. The
 
 The Swift native compatibility path narrows the long-term host/runtime boundary, but Flow bootstrap, UIDL event handling and push are still compatibility HTTP there. Use `dev-ipc` for the no-localhost bootstrap/push/event/patch/resync runtime slice.
 
-`dev-ipc` is the exception: it is the first no-HTTP runtime slice, now with server-side UIDL generation and visible Flow client engine ownership for bootstrap, click-event patches, native input/checkbox change-event patches, ordered pushes and recovery resync. Strict gates are still centered on `test-apps/flow-over-ipc-smoke-app`; `test-apps/flow-over-ipc-framework-app` exists to validate the same shell/runtime against a more ordinary Flow project shape.
+`dev-ipc` is the exception: it is the first no-HTTP runtime slice, now with server-side UIDL generation and visible Flow client engine ownership for bootstrap, click-event patches, native input/checkbox change-event patches, ordered pushes and recovery resync. Strict v1/v1.1/v1.2/v1.3 gates are centered on `test-apps/flow-over-ipc-smoke-app`; `test-apps/flow-over-ipc-framework-app` has a separate framework-shape gate for generic viewport promotion, first meaningful paint and ordinary Flow project interaction.

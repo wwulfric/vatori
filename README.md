@@ -54,6 +54,15 @@ bash bin/vaadin-desktop dev-ipc test-apps/flow-over-ipc-framework-app
 
 This app keeps the strict fixture separate from a more ordinary developer project. It uses normal Flow Java APIs for a Button, `BigDecimalField`, `Checkbox`, repeated list updates and manifest-gated desktop capability calls. Its semantic ids are only for optional diagnostics; the runtime's renderer promotion, layout, bridge installation and push/resync delivery must continue to use the generic Flow viewport and Flow metadata rather than app-specific ids.
 
+For unattended framework-shape verification, use:
+
+```bash
+VAADIN_DESKTOP_FLOW_IPC_AUTO_FRAMEWORK_UPDATE=1 VAADIN_DESKTOP_FLOW_IPC_AUTO_SHUTDOWN=1 bash bin/vaadin-desktop dev-ipc test-apps/flow-over-ipc-framework-app
+bash bin/flow-ipc-trace-inspect --require-flow-ipc-v1_3-framework .build/vaadin-desktop-host-swift/host.out.log
+```
+
+That gate verifies generic viewport promotion, first meaningful paint, two Web Component events, the Button apply event, UIDL patches, a list item text update and `window.setTitle` / `clipboard.writeText` / `notification.show` command-result traces in a less smoke-specific app.
+
 Inspect the Flow IPC trace sample:
 
 ```bash

@@ -11,12 +11,9 @@ import dev.vatori.desktop.Desktop;
 import tools.jackson.databind.JsonNode;
 
 import java.math.BigDecimal;
-import java.util.ArrayList;
-import java.util.List;
 
 @Route("")
 public class FlowOverIpcFrameworkView extends VerticalLayout {
-    private final List<String> updates = new ArrayList<>();
     private final VerticalLayout updateList = new VerticalLayout();
     private int revision;
 
@@ -40,6 +37,8 @@ public class FlowOverIpcFrameworkView extends VerticalLayout {
 
         Span componentStatus = new Span("Components: pending");
         componentStatus.setId("framework-component-status");
+        Span latestUpdate = new Span("Revision pending");
+        latestUpdate.setId("framework-latest-update");
 
         budget.getElement().addEventListener("change", event -> {
             JsonNode valueNode = event.getEventData().get("element.value");
@@ -59,7 +58,7 @@ public class FlowOverIpcFrameworkView extends VerticalLayout {
             String mode = expedited.getValue() ? "expedited" : "standard";
             String update = "Revision " + revision + ": budget " + budgetText + ", mode " + mode;
             status.setText(update);
-            appendUpdate(update);
+            latestUpdate.setText(update);
             Desktop.current().setWindowTitle("Flow IPC Framework App - " + revision);
             Desktop.current().clipboard().writeText(update);
             Desktop.current().notifications().show("Flow IPC", "Framework update " + revision + " applied");
@@ -71,15 +70,12 @@ public class FlowOverIpcFrameworkView extends VerticalLayout {
         updateList.setSpacing(false);
         appendUpdate("Catalog loaded");
         appendUpdate("Renderer owned by Flow client engine");
+        updateList.add(latestUpdate);
 
         add(title, budget, expedited, apply, status, componentStatus, updateList);
     }
 
     private void appendUpdate(String text) {
-        updates.add(text);
-        updateList.removeAll();
-        for (String update : updates) {
-            updateList.add(new Span(update));
-        }
+        updateList.add(new Span(text));
     }
 }

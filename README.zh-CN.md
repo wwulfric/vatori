@@ -54,6 +54,15 @@ bash bin/vaadin-desktop dev-ipc test-apps/flow-over-ipc-framework-app
 
 这个 app 把 strict fixture 和更普通的开发者项目分开。它用普通 Flow Java API 组合 Button、`BigDecimalField`、`Checkbox`、重复列表更新和 manifest-gated desktop capability call。它的语义化 id 只用于可选 diagnostics；runtime 的 renderer promotion、layout、bridge 安装和 push/resync delivery 必须继续使用 generic Flow viewport 与 Flow metadata，而不是依赖 app-specific id。
 
+无人值守的 framework-shape 验证可以使用：
+
+```bash
+VAADIN_DESKTOP_FLOW_IPC_AUTO_FRAMEWORK_UPDATE=1 VAADIN_DESKTOP_FLOW_IPC_AUTO_SHUTDOWN=1 bash bin/vaadin-desktop dev-ipc test-apps/flow-over-ipc-framework-app
+bash bin/flow-ipc-trace-inspect --require-flow-ipc-v1_3-framework .build/vaadin-desktop-host-swift/host.out.log
+```
+
+这个 gate 会验证 generic viewport promotion、first meaningful paint、两个 Web Component event、Button apply event、UIDL patch、列表项文本更新，以及 `window.setTitle` / `clipboard.writeText` / `notification.show` 的 command-result trace。
+
 检查 Flow IPC trace 示例：
 
 ```bash

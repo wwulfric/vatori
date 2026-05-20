@@ -12,6 +12,7 @@ struct HostConfig {
     var flowIpcAutoError: Bool = false
     var flowIpcAutoFileDialogCancel: Bool = false
     var flowIpcAutoVaadinTextField: Bool = false
+    var flowIpcAutoFrameworkUpdate: Bool = false
     var flowIpcAutoShutdown: Bool = false
     var title: String = "Vaadin Desktop"
     var width: Double = 1100
@@ -56,6 +57,7 @@ struct HostConfig {
             || config.flowIpcAutoClick
         config.flowIpcAutoVaadinTextField = ProcessInfo.processInfo.environment["VAADIN_DESKTOP_FLOW_IPC_AUTO_VAADIN_TEXT_FIELD"] == "1"
             || config.flowIpcAutoClick
+        config.flowIpcAutoFrameworkUpdate = ProcessInfo.processInfo.environment["VAADIN_DESKTOP_FLOW_IPC_AUTO_FRAMEWORK_UPDATE"] == "1"
         config.flowIpcAutoShutdown = ProcessInfo.processInfo.environment["VAADIN_DESKTOP_FLOW_IPC_AUTO_SHUTDOWN"] == "1"
         return config
     }
@@ -572,6 +574,10 @@ final class WebViewHost: NSObject, NSApplicationDelegate, NSWindowDelegate, WKNa
         }
         if config.flowIpcAutoVaadinTextField {
             let source = "window.__VAADIN_DESKTOP_FLOW_IPC_AUTO_VAADIN_TEXT_FIELD__ = true;"
+            userContentController.addUserScript(WKUserScript(source: source, injectionTime: .atDocumentStart, forMainFrameOnly: true))
+        }
+        if config.flowIpcAutoFrameworkUpdate {
+            let source = "window.__VAADIN_DESKTOP_FLOW_IPC_AUTO_FRAMEWORK_UPDATE__ = true;"
             userContentController.addUserScript(WKUserScript(source: source, injectionTime: .atDocumentStart, forMainFrameOnly: true))
         }
         userContentController.add(self, name: "flowIpc")
@@ -1150,7 +1156,12 @@ final class WebViewHost: NSObject, NSApplicationDelegate, NSWindowDelegate, WKNa
             ])
             return
         }
-        trace("send", object["type"] as? String ?? "unknown", [
+        let messageType = object["type"] as? String ?? "unknown"
+        if messageType == "webview.firstMeaningfulPaint" {
+            trace("recv", messageType, object["payload"] as? [String: Any] ?? [:])
+            return
+        }
+        trace("send", messageType, [
             "target": "java-sidecar",
             "transport": "flow-ipc",
             "envelope": object
@@ -1178,11 +1189,21 @@ final class WebViewHost: NSObject, NSApplicationDelegate, NSWindowDelegate, WKNa
         DispatchQueue.main.asyncAfter(deadline: .now() + 4.5) {
             self.inspectWebView(webView)
         }
-        DispatchQueue.main.asyncAfter(deadline: .now() + 5.0) {
+        let extendedFlowIpcVerification = config.flowIpcAutoFrameworkUpdate
+            || config.flowIpcAutoVaadinTextField
+            || config.flowIpcAutoResync
+            || config.flowIpcAutoError
+        if extendedFlowIpcVerification {
+            DispatchQueue.main.asyncAfter(deadline: .now() + 9.0) {
+                self.inspectWebView(webView)
+            }
+        }
+        DispatchQueue.main.asyncAfter(deadline: .now() + (extendedFlowIpcVerification ? 9.5 : 5.0)) {
             self.writeSnapshot(webView)
         }
         if config.flowIpcAutoShutdown {
-            DispatchQueue.main.asyncAfter(deadline: .now() + 5.6) {
+            let shutdownDelay = extendedFlowIpcVerification ? 10.5 : 5.6
+            DispatchQueue.main.asyncAfter(deadline: .now() + shutdownDelay) {
                 trace("recv", "window.closeRequested", [
                     "label": "main",
                     "reason": "flow-ipc-auto-shutdown"
@@ -1377,6 +1398,7 @@ final class WebViewHost: NSObject, NSApplicationDelegate, NSWindowDelegate, WKNa
           flowClientEngineResyncPatchConsumed: !!(window.VaadinDesktopIpcDiagnostics && window.VaadinDesktopIpcDiagnostics.flowClientEngineResyncPatchConsumed),
           flowClientEngineErrorReported: !!(window.VaadinDesktopIpcDiagnostics && window.VaadinDesktopIpcDiagnostics.flowClientEngineErrorReported),
           flowClientEngineErrorCode: window.VaadinDesktopIpcDiagnostics ? window.VaadinDesktopIpcDiagnostics.flowClientEngineErrorCode : "",
+          flowClientEngineFirstMeaningfulPaintReported: !!(window.VaadinDesktopIpcDiagnostics && window.VaadinDesktopIpcDiagnostics.flowClientEngineFirstMeaningfulPaintReported),
           flowClientEngineVisibleOwner: !!(window.VaadinDesktopIpcDiagnostics && window.VaadinDesktopIpcDiagnostics.flowClientEngineVisibleOwner),
           flowClientEngineVisibleRootId: window.VaadinDesktopIpcDiagnostics ? window.VaadinDesktopIpcDiagnostics.flowClientEngineVisibleRootId : "",
           flowClientEngineVisibleStatusText: window.VaadinDesktopIpcDiagnostics ? window.VaadinDesktopIpcDiagnostics.flowClientEngineVisibleStatusText : "",
@@ -1384,7 +1406,25 @@ final class WebViewHost: NSObject, NSApplicationDelegate, NSWindowDelegate, WKNa
           flowClientEngineLocalFallbackHidden: !!(window.VaadinDesktopIpcDiagnostics && window.VaadinDesktopIpcDiagnostics.flowClientEngineLocalFallbackHidden),
           flowClientEngineXhrError: window.VaadinDesktopIpcDiagnostics ? window.VaadinDesktopIpcDiagnostics.flowClientEngineXhrError : "",
           flowClientEngineInitError: window.VaadinDesktopIpcDiagnostics ? window.VaadinDesktopIpcDiagnostics.flowClientEngineInitError : "",
-          flowClientEngineResourceExecutionError: window.VaadinDesktopIpcDiagnostics ? window.VaadinDesktopIpcDiagnostics.flowClientEngineResourceExecutionError : ""
+          flowClientEngineResourceExecutionError: window.VaadinDesktopIpcDiagnostics ? window.VaadinDesktopIpcDiagnostics.flowClientEngineResourceExecutionError : "",
+          frameworkAppRendered: !!(window.VaadinDesktopIpcDiagnostics && window.VaadinDesktopIpcDiagnostics.frameworkAppRendered),
+          frameworkAppRootId: window.VaadinDesktopIpcDiagnostics ? window.VaadinDesktopIpcDiagnostics.frameworkAppRootId : "",
+          frameworkAppBudgetRendered: !!(window.VaadinDesktopIpcDiagnostics && window.VaadinDesktopIpcDiagnostics.frameworkAppBudgetRendered),
+          frameworkAppCheckboxRendered: !!(window.VaadinDesktopIpcDiagnostics && window.VaadinDesktopIpcDiagnostics.frameworkAppCheckboxRendered),
+          frameworkAppApplyRendered: !!(window.VaadinDesktopIpcDiagnostics && window.VaadinDesktopIpcDiagnostics.frameworkAppApplyRendered),
+          frameworkAppStatusText: window.VaadinDesktopIpcDiagnostics ? window.VaadinDesktopIpcDiagnostics.frameworkAppStatusText : "",
+          frameworkAppComponentStatusText: window.VaadinDesktopIpcDiagnostics ? window.VaadinDesktopIpcDiagnostics.frameworkAppComponentStatusText : "",
+          frameworkAppUpdatesText: window.VaadinDesktopIpcDiagnostics ? window.VaadinDesktopIpcDiagnostics.frameworkAppUpdatesText : "",
+          frameworkAppBudgetEventRpcObserved: !!(window.VaadinDesktopIpcDiagnostics && window.VaadinDesktopIpcDiagnostics.frameworkAppBudgetEventRpcObserved),
+          frameworkAppBudgetEventObserved: !!(window.VaadinDesktopIpcDiagnostics && window.VaadinDesktopIpcDiagnostics.frameworkAppBudgetEventObserved),
+          frameworkAppCheckboxEventRpcObserved: !!(window.VaadinDesktopIpcDiagnostics && window.VaadinDesktopIpcDiagnostics.frameworkAppCheckboxEventRpcObserved),
+          frameworkAppCheckboxEventObserved: !!(window.VaadinDesktopIpcDiagnostics && window.VaadinDesktopIpcDiagnostics.frameworkAppCheckboxEventObserved),
+          frameworkAppApplyEventRpcObserved: !!(window.VaadinDesktopIpcDiagnostics && window.VaadinDesktopIpcDiagnostics.frameworkAppApplyEventRpcObserved),
+          frameworkAppApplyEventObserved: !!(window.VaadinDesktopIpcDiagnostics && window.VaadinDesktopIpcDiagnostics.frameworkAppApplyEventObserved),
+          frameworkAppEventPatchCount: window.VaadinDesktopIpcDiagnostics ? window.VaadinDesktopIpcDiagnostics.frameworkAppEventPatchCount : 0,
+          frameworkAppEventOrder: window.VaadinDesktopIpcDiagnostics ? window.VaadinDesktopIpcDiagnostics.frameworkAppEventOrder : "",
+          frameworkAppInteractionComplete: !!(window.VaadinDesktopIpcDiagnostics && window.VaadinDesktopIpcDiagnostics.frameworkAppInteractionComplete),
+          frameworkAppFailureReason: window.VaadinDesktopIpcDiagnostics ? window.VaadinDesktopIpcDiagnostics.frameworkAppFailureReason : ""
         })
         """
         webView.evaluateJavaScript(script) { result, error in
@@ -1714,6 +1754,12 @@ let flowIpcShell = #"""
       let autoComponentEventAttempts = 0;
       let autoComponentEventInFlight = false;
       let autoComponentEventsDone = false;
+      const autoFrameworkBudgetValue = '73.25';
+      let autoFrameworkUpdateStep = 0;
+      let autoFrameworkUpdateAttempts = 0;
+      let autoFrameworkUpdateInFlight = false;
+      let autoFrameworkUpdateDone = false;
+      let autoFrameworkUpdateInterval = null;
       let autoResyncDone = false;
       let autoErrorProbeDone = false;
       const flowBootstrapAppId = 'ROOT-2521314';
@@ -1942,6 +1988,7 @@ let flowIpcShell = #"""
         flowClientEngineResyncPatchConsumed: false,
         flowClientEngineErrorReported: false,
         flowClientEngineErrorCode: '',
+        flowClientEngineFirstMeaningfulPaintReported: false,
         flowClientEngineVisibleOwner: false,
         flowClientEngineVisibleRootId: '',
         flowClientEngineVisibleStatusText: '',
@@ -1949,7 +1996,25 @@ let flowIpcShell = #"""
         flowClientEngineLocalFallbackHidden: false,
         flowClientEngineXhrError: '',
         flowClientEngineInitError: '',
-        flowClientEngineResourceExecutionError: ''
+        flowClientEngineResourceExecutionError: '',
+        frameworkAppRendered: false,
+        frameworkAppRootId: '',
+        frameworkAppBudgetRendered: false,
+        frameworkAppCheckboxRendered: false,
+        frameworkAppApplyRendered: false,
+        frameworkAppStatusText: '',
+        frameworkAppComponentStatusText: '',
+        frameworkAppUpdatesText: '',
+        frameworkAppBudgetEventRpcObserved: false,
+        frameworkAppBudgetEventObserved: false,
+        frameworkAppCheckboxEventRpcObserved: false,
+        frameworkAppCheckboxEventObserved: false,
+        frameworkAppApplyEventRpcObserved: false,
+        frameworkAppApplyEventObserved: false,
+        frameworkAppEventPatchCount: 0,
+        frameworkAppEventOrder: '',
+        frameworkAppInteractionComplete: false,
+        frameworkAppFailureReason: ''
       };
 
       function envelope(type, payload) {
@@ -1973,6 +2038,14 @@ let flowIpcShell = #"""
         trace.textContent = 'send ' + type + ' #' + message.id;
         window.webkit.messageHandlers.flowIpc.postMessage(message);
         return message;
+      }
+
+      function sendHostTrace(type, payload) {
+        window.webkit.messageHandlers.flowIpc.postMessage({
+          type,
+          payload: payload || {},
+          timestamp: Date.now()
+        });
       }
 
       function sendWebViewError(code, message, details) {
@@ -2211,6 +2284,25 @@ let flowIpcShell = #"""
         });
       }
 
+      function reportFirstMeaningfulPaint(reason) {
+        if (window.VaadinDesktopIpcDiagnostics.flowClientEngineFirstMeaningfulPaintReported) {
+          return;
+        }
+        const viewportRoot = refreshFlowClientEngineViewportDiagnostics();
+        window.VaadinDesktopIpcDiagnostics.flowClientEngineFirstMeaningfulPaintReported = true;
+        sendHostTrace('webview.firstMeaningfulPaint', {
+          label: 'main',
+          transport: 'flow-ipc',
+          reason,
+          performanceNow: Math.round(performance.now()),
+          viewportRootTag: viewportRoot && viewportRoot.tagName ? viewportRoot.tagName.toLowerCase() : '',
+          viewportRootId: viewportRoot && viewportRoot.id ? viewportRoot.id : '',
+          flowClientEngineVisibleOwner: window.VaadinDesktopIpcDiagnostics.flowClientEngineVisibleOwner,
+          flowClientEngineLocalFallbackHidden: window.VaadinDesktopIpcDiagnostics.flowClientEngineLocalFallbackHidden,
+          promotionGate: window.VaadinDesktopIpcDiagnostics.flowClientEnginePromotionGate
+        });
+      }
+
       function flowClientEngineButton() {
         const byId = flowClientEngineElementById('ipc-button');
         if (byId) {
@@ -2249,6 +2341,7 @@ let flowIpcShell = #"""
         window.VaadinDesktopIpcDiagnostics.flowClientEngineVisibleRootId = root.id;
         window.VaadinDesktopIpcDiagnostics.flowClientEngineLocalFallbackHidden = app.hidden;
         resetFlowIpcViewport();
+        reportFirstMeaningfulPaint('flow-client-engine-visible');
         return true;
       }
 
@@ -2302,6 +2395,60 @@ let flowIpcShell = #"""
         window.VaadinDesktopIpcDiagnostics.flowClientEngineLocalFallbackHidden = app.hidden;
       }
 
+      function appendFrameworkAppEventOrder(componentId) {
+        const current = window.VaadinDesktopIpcDiagnostics.frameworkAppEventOrder;
+        window.VaadinDesktopIpcDiagnostics.frameworkAppEventOrder =
+          current ? current + ',' + componentId : componentId;
+      }
+
+      function refreshFrameworkAppDiagnostics() {
+        const root = flowClientEngineElementById('framework-root');
+        const budget = flowClientEngineElementById('framework-budget');
+        const checkbox = flowClientEngineElementById('framework-expedite');
+        const apply = flowClientEngineElementById('framework-apply');
+        const status = flowClientEngineElementById('framework-status');
+        const componentStatus = flowClientEngineElementById('framework-component-status');
+        const updates = flowClientEngineElementById('framework-updates');
+        const statusText = status ? (status.element.textContent || '') : '';
+        const componentStatusText = componentStatus ? (componentStatus.element.textContent || '') : '';
+        const updatesText = updates ? (updates.element.textContent || '') : '';
+
+        window.VaadinDesktopIpcDiagnostics.frameworkAppRendered =
+          !!root && document.body.textContent.includes('Flow IPC Framework Desk');
+        window.VaadinDesktopIpcDiagnostics.frameworkAppRootId = root ? root.id : '';
+        window.VaadinDesktopIpcDiagnostics.frameworkAppBudgetRendered =
+          !!budget && budget.element.tagName.toLowerCase() === 'vaadin-big-decimal-field';
+        window.VaadinDesktopIpcDiagnostics.frameworkAppCheckboxRendered =
+          !!checkbox && checkbox.element.tagName.toLowerCase() === 'vaadin-checkbox';
+        window.VaadinDesktopIpcDiagnostics.frameworkAppApplyRendered = !!apply;
+        window.VaadinDesktopIpcDiagnostics.frameworkAppStatusText = statusText;
+        window.VaadinDesktopIpcDiagnostics.frameworkAppComponentStatusText = componentStatusText;
+        window.VaadinDesktopIpcDiagnostics.frameworkAppUpdatesText = updatesText;
+
+        if (componentStatusText.includes('Budget changed: ' + autoFrameworkBudgetValue)) {
+          window.VaadinDesktopIpcDiagnostics.frameworkAppBudgetEventObserved = true;
+        }
+        if (componentStatusText.includes('Expedite changed: yes')) {
+          window.VaadinDesktopIpcDiagnostics.frameworkAppCheckboxEventObserved = true;
+        }
+        if (statusText.includes('Revision 1:')
+            && updatesText.includes('Revision 1:')
+            && updatesText.includes('Renderer owned by Flow client engine')) {
+          window.VaadinDesktopIpcDiagnostics.frameworkAppApplyEventObserved = true;
+        }
+        window.VaadinDesktopIpcDiagnostics.frameworkAppInteractionComplete =
+          window.VaadinDesktopIpcDiagnostics.frameworkAppBudgetEventRpcObserved
+          && window.VaadinDesktopIpcDiagnostics.frameworkAppBudgetEventObserved
+          && window.VaadinDesktopIpcDiagnostics.frameworkAppCheckboxEventRpcObserved
+          && window.VaadinDesktopIpcDiagnostics.frameworkAppCheckboxEventObserved
+          && window.VaadinDesktopIpcDiagnostics.frameworkAppApplyEventRpcObserved
+          && window.VaadinDesktopIpcDiagnostics.frameworkAppApplyEventObserved;
+        if (window.VaadinDesktopIpcDiagnostics.frameworkAppInteractionComplete) {
+          autoFrameworkUpdateDone = true;
+          autoFrameworkUpdateInFlight = false;
+        }
+      }
+
       function sendFlowClientEngineEvent(node, eventType, eventData) {
         const client = flowClientEngineClient();
         if (!client || typeof client.sendEventMessage !== 'function' || !window.VaadinDesktopIpcDiagnostics.flowClientEngineXhrBridgeInstalled) {
@@ -2314,6 +2461,124 @@ let flowIpcShell = #"""
           window.VaadinDesktopIpcDiagnostics.flowClientEngineXhrError = error && error.message ? error.message : String(error);
           return false;
         }
+      }
+
+      function sendFrameworkAppEvent(componentId, eventType, eventData, prepare) {
+        const target = flowClientEngineElementById(componentId);
+        const client = flowClientEngineClient();
+        if (!target || !client || typeof client.sendEventMessage !== 'function'
+            || !window.VaadinDesktopIpcDiagnostics.flowClientEngineXhrBridgeInstalled) {
+          return false;
+        }
+        try {
+          if (typeof prepare === 'function') {
+            prepare(target.element);
+          }
+          autoFrameworkUpdateInFlight = true;
+          client.sendEventMessage(target.nodeId, eventType, eventData || {});
+          return true;
+        } catch (error) {
+          autoFrameworkUpdateInFlight = false;
+          window.VaadinDesktopIpcDiagnostics.frameworkAppFailureReason =
+            error && error.message ? error.message : String(error);
+          return false;
+        }
+      }
+
+      function frameworkAppStepDone() {
+        refreshFrameworkAppDiagnostics();
+        if (autoFrameworkUpdateStep === 0) {
+          return window.VaadinDesktopIpcDiagnostics.frameworkAppBudgetEventObserved;
+        }
+        if (autoFrameworkUpdateStep === 1) {
+          return window.VaadinDesktopIpcDiagnostics.frameworkAppCheckboxEventObserved;
+        }
+        return window.VaadinDesktopIpcDiagnostics.frameworkAppApplyEventObserved;
+      }
+
+      function advanceFrameworkAppStepIfDone() {
+        while (autoFrameworkUpdateStep < 3 && frameworkAppStepDone()) {
+          autoFrameworkUpdateStep += 1;
+          autoFrameworkUpdateAttempts = 0;
+        }
+        if (autoFrameworkUpdateStep >= 3) {
+          refreshFrameworkAppDiagnostics();
+          if (window.VaadinDesktopIpcDiagnostics.frameworkAppInteractionComplete) {
+            autoFrameworkUpdateDone = true;
+          }
+        }
+      }
+
+      function scheduleAutoFrameworkUpdate() {
+        if (!window.__VAADIN_DESKTOP_FLOW_IPC_AUTO_FRAMEWORK_UPDATE__ || autoFrameworkUpdateDone) {
+          return;
+        }
+        refreshFrameworkAppDiagnostics();
+        if (!window.VaadinDesktopIpcDiagnostics.frameworkAppRendered
+            || !window.VaadinDesktopIpcDiagnostics.flowClientEngineVisibleOwner
+            || !window.VaadinDesktopIpcDiagnostics.flowClientEngineXhrBridgeInstalled) {
+          setTimeout(scheduleAutoFrameworkUpdate, 120);
+          return;
+        }
+        advanceFrameworkAppStepIfDone();
+        if (autoFrameworkUpdateDone || autoFrameworkUpdateInFlight) {
+          return;
+        }
+        if (autoFrameworkUpdateAttempts >= 18) {
+          window.VaadinDesktopIpcDiagnostics.frameworkAppFailureReason =
+            'framework-app-auto-update-step-timeout-' + autoFrameworkUpdateStep;
+          return;
+        }
+        autoFrameworkUpdateAttempts += 1;
+
+        let sent = false;
+        if (autoFrameworkUpdateStep === 0) {
+          sent = sendFrameworkAppEvent('framework-budget', 'change',
+            { 'element.value': autoFrameworkBudgetValue },
+            (element) => {
+              element.value = autoFrameworkBudgetValue;
+              if (element.inputElement) {
+                element.inputElement.value = autoFrameworkBudgetValue;
+              }
+            });
+        } else if (autoFrameworkUpdateStep === 1) {
+          sent = sendFrameworkAppEvent('framework-expedite', 'change',
+            { 'element.checked': true },
+            (element) => {
+              element.checked = true;
+              if (element.inputElement) {
+                element.inputElement.checked = true;
+              }
+            });
+        } else if (autoFrameworkUpdateStep === 2) {
+          sent = sendFrameworkAppEvent('framework-apply', 'click', {});
+        }
+        if (!sent) {
+          setTimeout(scheduleAutoFrameworkUpdate, 160);
+          return;
+        }
+        setTimeout(() => {
+          autoFrameworkUpdateInFlight = false;
+          refreshFlowClientEngineDiagnostics();
+          advanceFrameworkAppStepIfDone();
+          if (!autoFrameworkUpdateDone) {
+            setTimeout(scheduleAutoFrameworkUpdate, 160);
+          }
+        }, 850);
+      }
+
+      function startAutoFrameworkUpdatePolling() {
+        if (!window.__VAADIN_DESKTOP_FLOW_IPC_AUTO_FRAMEWORK_UPDATE__ || autoFrameworkUpdateInterval) {
+          return;
+        }
+        autoFrameworkUpdateInterval = setInterval(() => {
+          if (autoFrameworkUpdateDone || window.VaadinDesktopIpcDiagnostics.frameworkAppFailureReason) {
+            clearInterval(autoFrameworkUpdateInterval);
+            return;
+          }
+          scheduleAutoFrameworkUpdate();
+        }, 360);
+        scheduleAutoFrameworkUpdate();
       }
 
       function flowClientEngineMessageOrdering(message, kind) {
@@ -2611,6 +2876,24 @@ let flowIpcShell = #"""
         window.VaadinDesktopIpcDiagnostics.flowClientEngineXhrBridgeInstalled = true;
       }
 
+      function flowTreeTextById(node, id) {
+        if (!node) {
+          return '';
+        }
+        if (node.id === id && typeof node.text === 'string') {
+          return node.text;
+        }
+        if (Array.isArray(node.children)) {
+          for (const child of node.children) {
+            const text = flowTreeTextById(child, id);
+            if (text) {
+              return text;
+            }
+          }
+        }
+        return '';
+      }
+
       function completeFlowClientXhrIfPending(message) {
         const pending = pendingFlowClientXhrRequests.get(message.correlationId || '');
         if (!pending) {
@@ -2624,24 +2907,59 @@ let flowIpcShell = #"""
         if (body) {
           window.VaadinDesktopIpcDiagnostics.flowClientEngineXhrResponseObserved = true;
           if (message.type === 'patch' && message.payload && message.payload.reason === 'event') {
+            if (pending.componentId && pending.componentId.startsWith('framework-')) {
+              window.VaadinDesktopIpcDiagnostics.frameworkAppEventPatchCount += 1;
+              appendFrameworkAppEventOrder(pending.componentId);
+              if (pending.componentId === 'framework-budget') {
+                window.VaadinDesktopIpcDiagnostics.frameworkAppBudgetEventRpcObserved = true;
+              } else if (pending.componentId === 'framework-expedite') {
+                window.VaadinDesktopIpcDiagnostics.frameworkAppCheckboxEventRpcObserved = true;
+              } else if (pending.componentId === 'framework-apply') {
+                window.VaadinDesktopIpcDiagnostics.frameworkAppApplyEventRpcObserved = true;
+                autoFrameworkUpdateInFlight = false;
+              }
+            }
             if (pending.eventType === 'click') {
               autoClickInFlight = false;
+              if (pending.componentId === 'ipc-button') {
+                const statusText = flowTreeTextById(message.payload && message.payload.tree, 'ipc-status');
+                if (statusText) {
+                  window.VaadinDesktopIpcDiagnostics.flowClientEngineBootstrapStatusText = statusText;
+                }
+                window.VaadinDesktopIpcDiagnostics.flowClientEngineEventPatchConsumed = true;
+                window.VaadinDesktopIpcDiagnostics.flowClientEngineEventStatusText =
+                  statusText || window.VaadinDesktopIpcDiagnostics.flowClientEngineBootstrapStatusText || 'click patch consumed';
+                autoClickDone = true;
+              }
             } else if (pending.eventType === 'change') {
               window.VaadinDesktopIpcDiagnostics.flowClientEngineComponentEventPatchCount += 1;
               const currentOrder = window.VaadinDesktopIpcDiagnostics.flowClientEngineComponentEventOrder;
               window.VaadinDesktopIpcDiagnostics.flowClientEngineComponentEventOrder =
                 currentOrder ? currentOrder + ',' + pending.componentId : pending.componentId;
-              if (pending.componentId === 'ipc-vaadin-big-decimal') {
+              if (pending.componentId === 'ipc-text-input') {
+                window.VaadinDesktopIpcDiagnostics.flowClientEngineTextInputEventObserved = true;
+                window.VaadinDesktopIpcDiagnostics.flowClientEngineTextInputStatusText =
+                  'Text input: ' + autoComponentEventValue;
+              } else if (pending.componentId === 'ipc-checkbox') {
+                window.VaadinDesktopIpcDiagnostics.flowClientEngineCheckboxEventObserved = true;
+                window.VaadinDesktopIpcDiagnostics.flowClientEngineCheckboxStatusText = 'Checkbox: checked';
+              } else if (pending.componentId === 'ipc-vaadin-big-decimal') {
                 window.VaadinDesktopIpcDiagnostics.vaadinWebComponentEventRpcObserved = true;
+                window.VaadinDesktopIpcDiagnostics.vaadinWebComponentEventObserved = true;
                 window.VaadinDesktopIpcDiagnostics.vaadinWebComponentEventComponentId = pending.componentId;
                 window.VaadinDesktopIpcDiagnostics.vaadinWebComponentEventType = pending.eventType;
                 window.VaadinDesktopIpcDiagnostics.vaadinWebComponentEventValue = autoVaadinWebComponentValue;
+                window.VaadinDesktopIpcDiagnostics.vaadinWebComponentPostEventState =
+                  'Vaadin BigDecimalField: ' + autoVaadinWebComponentValue;
               } else if (pending.componentId === 'ipc-vaadin-checkbox') {
                 window.VaadinDesktopIpcDiagnostics.vaadinSecondWebComponentEventRpcObserved = true;
+                window.VaadinDesktopIpcDiagnostics.vaadinSecondWebComponentEventObserved = true;
                 window.VaadinDesktopIpcDiagnostics.vaadinSecondWebComponentEventComponentId = pending.componentId;
                 window.VaadinDesktopIpcDiagnostics.vaadinSecondWebComponentEventType = pending.eventType;
                 window.VaadinDesktopIpcDiagnostics.vaadinSecondWebComponentEventValue = String(autoVaadinCheckboxValue);
+                window.VaadinDesktopIpcDiagnostics.vaadinSecondWebComponentPostEventState = 'Vaadin Checkbox: checked';
               }
+              advanceAutoComponentEventAfterPatch(pending.componentId);
             }
           }
           if (message.payload && message.payload.reason === 'resync') {
@@ -2658,10 +2976,12 @@ let flowIpcShell = #"""
           setTimeout(refreshFlowClientEngineDiagnostics, 400);
           setTimeout(refreshFlowClientEngineDiagnostics, 800);
           scheduleFlowClientEnginePromotionRetry();
+          setTimeout(startAutoFrameworkUpdatePolling, 260);
           setTimeout(scheduleAutoComponentEvents, 900);
         } else {
           autoClickInFlight = false;
           autoComponentEventInFlight = false;
+          autoFrameworkUpdateInFlight = false;
           xhr._complete(500, '');
         }
         return true;
@@ -2762,20 +3082,42 @@ let flowIpcShell = #"""
       }
 
       function componentEventDone(descriptor) {
+        const patchOrder = window.VaadinDesktopIpcDiagnostics.flowClientEngineComponentEventOrder || '';
+        const patchObserved = patchOrder.split(',').includes(descriptor.id);
         if (descriptor.key === 'text') {
-          return window.VaadinDesktopIpcDiagnostics.flowClientEngineTextInputEventObserved;
+          return window.VaadinDesktopIpcDiagnostics.flowClientEngineTextInputEventObserved || patchObserved;
         }
         if (descriptor.key === 'checkbox') {
-          return window.VaadinDesktopIpcDiagnostics.flowClientEngineCheckboxEventObserved;
+          return window.VaadinDesktopIpcDiagnostics.flowClientEngineCheckboxEventObserved || patchObserved;
         }
         if (descriptor.key === 'vaadin-checkbox') {
-          return window.VaadinDesktopIpcDiagnostics.vaadinSecondWebComponentEventObserved
-            && window.VaadinDesktopIpcDiagnostics.vaadinSecondWebComponentEventRpcObserved
-            && window.VaadinDesktopIpcDiagnostics.vaadinSecondWebComponentPostEventState.includes('Vaadin Checkbox: checked');
+          return window.VaadinDesktopIpcDiagnostics.vaadinSecondWebComponentEventRpcObserved
+            && (patchObserved
+              || window.VaadinDesktopIpcDiagnostics.vaadinSecondWebComponentEventObserved
+              || window.VaadinDesktopIpcDiagnostics.vaadinSecondWebComponentPostEventState.includes('Vaadin Checkbox: checked'));
         }
-        return window.VaadinDesktopIpcDiagnostics.vaadinWebComponentEventObserved
-          && window.VaadinDesktopIpcDiagnostics.vaadinWebComponentEventRpcObserved
-          && window.VaadinDesktopIpcDiagnostics.vaadinWebComponentPostEventState.includes(autoVaadinWebComponentValue);
+        return window.VaadinDesktopIpcDiagnostics.vaadinWebComponentEventRpcObserved
+          && (patchObserved
+            || window.VaadinDesktopIpcDiagnostics.vaadinWebComponentEventObserved
+            || window.VaadinDesktopIpcDiagnostics.vaadinWebComponentPostEventState.includes(autoVaadinWebComponentValue));
+      }
+
+      function advanceAutoComponentEventAfterPatch(componentId) {
+        if (!autoComponentEventEnabled || autoComponentEventsDone) {
+          return;
+        }
+        const descriptor = autoComponentEvents[autoComponentEventIndex];
+        if (!descriptor || descriptor.id !== componentId) {
+          return;
+        }
+        autoComponentEventIndex += 1;
+        autoComponentEventInFlight = false;
+        if (autoComponentEventIndex >= autoComponentEvents.length) {
+          autoComponentEventsDone = true;
+          requestAutoResyncIfReady();
+        } else {
+          setTimeout(scheduleAutoComponentEvents, autoComponentEventDelayMs);
+        }
       }
 
       function scheduleAutoComponentEvents() {
@@ -2826,6 +3168,7 @@ let flowIpcShell = #"""
 
         autoComponentEventAttempts = 0;
         autoComponentEventInFlight = true;
+        const dispatchedIndex = autoComponentEventIndex;
         try {
           descriptor.prepare(target.element);
           if (descriptor.dispatchDomEvent) {
@@ -2845,6 +3188,9 @@ let flowIpcShell = #"""
         }
 
         setTimeout(() => {
+          if (autoComponentEventIndex !== dispatchedIndex) {
+            return;
+          }
           autoComponentEventInFlight = false;
           refreshFlowClientEngineDiagnostics();
           if (componentEventDone(descriptor)) {
@@ -3666,6 +4012,7 @@ let flowIpcShell = #"""
         }
         promoteFlowClientEngineWhenReady();
         refreshFlowClientEngineVisibleDiagnostics();
+        refreshFrameworkAppDiagnostics();
         window.VaadinDesktopIpcDiagnostics.flowClientEngineEventStatusText =
           window.VaadinDesktopIpcDiagnostics.flowClientEngineBootstrapStatusText;
         window.VaadinDesktopIpcDiagnostics.flowClientEngineEventPatchConsumed =
@@ -3697,6 +4044,7 @@ let flowIpcShell = #"""
           && window.VaadinDesktopIpcDiagnostics.flowClientEngineIpcMessageBridgeInstalled
           && window.VaadinDesktopIpcDiagnostics.flowClientEngineIpcResyncBridgeInstalled;
         flushQueuedFlowClientEngineMessages();
+        startAutoFrameworkUpdatePolling();
         scheduleAutoComponentEvents();
         requestAutoResyncIfReady();
         scheduleAutoErrorProbe();
@@ -3717,6 +4065,7 @@ let flowIpcShell = #"""
           setTimeout(refreshFlowClientEngineDiagnostics, 1000);
           scheduleFlowClientEnginePromotionRetry();
           scheduleAutoClick();
+          startAutoFrameworkUpdatePolling();
         } catch (error) {
           window.VaadinDesktopIpcDiagnostics.flowClientEngineInitialized = false;
           window.VaadinDesktopIpcDiagnostics.flowClientEngineClientRegistered = false;
@@ -4125,6 +4474,7 @@ let flowIpcShell = #"""
                 requestFlowClientResourceProbe(message.payload);
                 requestComponentFrontendResourceProbe(message.payload);
                 scheduleFlowClientEnginePromotionRetry();
+                startAutoFrameworkUpdatePolling();
               } else if (!flowClientOwnsMessage && message.payload && message.payload.uidl && message.payload.uidl.resync === true) {
                 if (!applyUidlBootstrap(message.payload)) {
                   render(message.payload && message.payload.tree);
@@ -4134,6 +4484,7 @@ let flowIpcShell = #"""
               }
               if (message.type === 'patch' && message.payload && message.payload.reason === 'event') {
                 scheduleAutoComponentEvents();
+                startAutoFrameworkUpdatePolling();
               }
               if (message.type === 'patch' && message.payload && message.payload.reason === 'event'
                   && window.__VAADIN_DESKTOP_FLOW_IPC_AUTO_RESYNC__ && !autoResyncDone) {
@@ -4141,7 +4492,9 @@ let flowIpcShell = #"""
               }
               if (message.type === 'bootstrapResponse') {
                 scheduleAutoClick();
+                startAutoFrameworkUpdatePolling();
               }
+              scheduleAutoErrorProbe();
             } else if (message.type === 'resourceResponse') {
               handleResourceResponse(message.payload);
             } else if (message.type === 'capabilityResult') {
@@ -4162,6 +4515,7 @@ let flowIpcShell = #"""
 
       document.addEventListener('DOMContentLoaded', () => {
         send('bootstrapRequest', { route: '' });
+        startAutoFrameworkUpdatePolling();
       });
     })();
   </script>

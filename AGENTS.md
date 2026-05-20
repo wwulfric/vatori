@@ -103,6 +103,13 @@ bash bin/vaadin-desktop dev-ipc test-apps/flow-over-ipc-smoke-app
 bash bin/vaadin-desktop dev-ipc test-apps/flow-over-ipc-framework-app
 ```
 
+可重复的 framework app 真实窗口验证可以使用：
+
+```bash
+VAADIN_DESKTOP_FLOW_IPC_AUTO_FRAMEWORK_UPDATE=1 VAADIN_DESKTOP_FLOW_IPC_AUTO_SHUTDOWN=1 bash bin/vaadin-desktop dev-ipc test-apps/flow-over-ipc-framework-app
+bash bin/flow-ipc-trace-inspect --require-flow-ipc-v1_3-framework .build/vaadin-desktop-host-swift/host.out.log
+```
+
 检查 Flow IPC trace 示例：
 
 ```bash

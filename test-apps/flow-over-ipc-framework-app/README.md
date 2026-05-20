@@ -12,11 +12,20 @@ Current scope:
 
 - The view is written with ordinary Flow Java APIs: `@Route`, `Button`, `VerticalLayout`, `Span`, `BigDecimalField` and `Checkbox`.
 - It uses semantic component ids only for optional diagnostics; the runtime must not depend on them for renderer promotion, layout, push/resync delivery or bridge installation.
-- It covers a Button command path, two real Vaadin Web Components, repeated list updates and manifest-gated desktop capability calls.
-- It is not a new strict fixture yet. `test-apps/flow-over-ipc-smoke-app` remains the strict trace-gated app for v1/v1.1/v1.2/v1.3.
+- It covers a Button command path, two real Vaadin Web Components, a repeated-list text update and manifest-gated desktop capability calls.
+- It has a dedicated framework-shape gate, while `test-apps/flow-over-ipc-smoke-app` remains the strict trace fixture for v1/v1.1/v1.2/v1.3.
 
 For unattended first-paint verification:
 
 ```bash
 VAADIN_DESKTOP_FLOW_IPC_AUTO_SHUTDOWN=1 bash bin/vaadin-desktop dev-ipc test-apps/flow-over-ipc-framework-app
 ```
+
+For unattended interaction verification:
+
+```bash
+VAADIN_DESKTOP_FLOW_IPC_AUTO_FRAMEWORK_UPDATE=1 VAADIN_DESKTOP_FLOW_IPC_AUTO_SHUTDOWN=1 bash bin/vaadin-desktop dev-ipc test-apps/flow-over-ipc-framework-app
+bash bin/flow-ipc-trace-inspect --require-flow-ipc-v1_3-framework .build/vaadin-desktop-host-swift/host.out.log
+```
+
+The framework gate requires generic viewport promotion, first meaningful paint, component events, a list text update and manifest-allowed desktop capability command/result traces.

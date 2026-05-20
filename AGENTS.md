@@ -27,6 +27,7 @@
 - `examples/*`：真实 Vaadin Flow 示例应用。
 - `test-apps/vaadin-desktop-smoke-app`：独立的开发者形态 smoke app。
 - `test-apps/flow-over-ipc-smoke-app`：面向受限 `dev-ipc` runtime 切片的独立 no-HTTP Flow IPC smoke app。
+- `test-apps/flow-over-ipc-framework-app`：更接近普通开发者项目形态的 no-HTTP Flow IPC validation app；strict trace gate 仍然以 smoke app 为准。
 - `prototypes/phase0-phase1-spike`：更早的非 HTTP mock Flow transport / IPC 验证。
 - `flow-transport-adapter-spike`：当前代码级 Vaadin Flow UIDL/event/patch 边界分析。
 - `vaadin-desktop-flow/src/main/java/dev/vatori/desktop/flow/transport`：围绕 `UidlRequestHandler`、`UidlWriter`、`DesktopVaadinRequest`、`DesktopVaadinResponse` 和 `DesktopFlowRuntimeSession` 的已编译 UIDL adapter 切片。
@@ -94,6 +95,12 @@ bash bin/vaadin-desktop dev-swift test-apps/vaadin-desktop-smoke-app
 
 ```bash
 bash bin/vaadin-desktop dev-ipc test-apps/flow-over-ipc-smoke-app
+```
+
+运行 Flow IPC framework validation app：
+
+```bash
+bash bin/vaadin-desktop dev-ipc test-apps/flow-over-ipc-framework-app
 ```
 
 检查 Flow IPC trace 示例：

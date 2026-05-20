@@ -25,6 +25,14 @@ FlowOverIpcSmokeView (@Route, Button, Span, VerticalLayout)
 
 The Java sidecar is still launched by Maven `spring-boot:run`, but the application main does not start a web server. It calls `FlowIpcLauncher.launch(...)`, instantiates a real Vaadin Flow route class and waits for IPC messages on stdin.
 
+`test-apps/flow-over-ipc-framework-app` is a second `dev-ipc` target for framework-shape validation:
+
+```bash
+bash bin/vaadin-desktop dev-ipc test-apps/flow-over-ipc-framework-app
+```
+
+That app keeps the strict trace fixture separate from a less test-specific Flow view. It uses ordinary Flow Java APIs for a Button, `BigDecimalField`, `Checkbox`, repeated list updates and manifest-gated `window.setTitle`, `clipboard.writeText` and `notification.show` calls. Its semantic ids are optional diagnostics; the host/WebView runtime must continue to promote and lay out the visible renderer through generic Flow viewport readiness.
+
 ## Verified Boundaries In This Slice
 
 - Java sidecar lifecycle is owned by Swift/AppKit host.
@@ -121,5 +129,6 @@ This is not the final complete Vaadin Flow transport yet:
 - Notification handling is trace-only; clipboard write is backed by native `NSPasteboard`; file dialog uses real AppKit `NSOpenPanel`, with automated smoke verification using the cancellation path. Security-scoped bookmarks and production grants are not implemented yet.
 - Upload/download is only a bounded v1.1 smoke boundary: it uses inline UTF-8 download bodies capped by the Java API, controlled test paths, redacted trace metadata and sampled upload reads. It is not Vaadin `Upload`, `Anchor` or `StreamResource` parity; binary streaming, progress, cancellation, sandbox bookmarks and save/open-panel production grants remain future work.
 - Full frontend resource graph execution, production bundle and dev mode are not implemented for `dev-ipc`; only the narrow classification, lazy-lookup and v1.3 BigDecimalField/Checkbox component diagnostics described above are verified.
+- `test-apps/flow-over-ipc-framework-app` is currently a framework-shape validation target, not a replacement for the strict smoke trace. Its first purpose is proving that the generic shell can render a less smoke-specific Flow project; adding a dedicated strict gate for that app remains future work.
 
 The value of this slice is that the core demo path can run without a localhost HTTP server and exposes the real host/WebView/Java IPC contract that the later UIDL adapter must satisfy.

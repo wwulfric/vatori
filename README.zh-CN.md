@@ -46,6 +46,14 @@ bash bin/vaadin-desktop dev-ipc test-apps/flow-over-ipc-smoke-app
 
 无人值守真实窗口验证时，在 `dev-ipc` 命令前加上 `VAADIN_DESKTOP_FLOW_IPC_AUTO_CLICK=1 VAADIN_DESKTOP_FLOW_IPC_AUTO_VAADIN_TEXT_FIELD=1 VAADIN_DESKTOP_FLOW_IPC_AUTO_RESYNC=1 VAADIN_DESKTOP_FLOW_IPC_AUTO_ERROR=1 VAADIN_DESKTOP_FLOW_IPC_AUTO_FILE_DIALOG_CANCEL=1 VAADIN_DESKTOP_FLOW_IPC_AUTO_SHUTDOWN=1`。File dialog hook 会触发 AppKit `NSOpenPanel` 路径并自动取消；Web Component hook 会在组件 frontend resources 导入后触发 `BigDecimalField` 和 `Checkbox` DOM `change` event；shutdown hook 会在 DOM/snapshot capture 后关闭窗口，使 host log 包含 shutdown evidence。
 
+运行框架形态的 Flow IPC validation app：
+
+```bash
+bash bin/vaadin-desktop dev-ipc test-apps/flow-over-ipc-framework-app
+```
+
+这个 app 把 strict fixture 和更普通的开发者项目分开。它用普通 Flow Java API 组合 Button、`BigDecimalField`、`Checkbox`、重复列表更新和 manifest-gated desktop capability call。它的语义化 id 只用于可选 diagnostics；runtime 的 renderer promotion、layout、bridge 安装和 push/resync delivery 必须继续使用 generic Flow viewport 与 Flow metadata，而不是依赖 app-specific id。
+
 检查 Flow IPC trace 示例：
 
 ```bash
@@ -90,6 +98,7 @@ VAADIN_DESKTOP_HOST=browser bash bin/vaadin-desktop dev examples/counter-app
 - `examples/desktop-capabilities-app`：desktop runtime API 示例。
 - `test-apps/vaadin-desktop-smoke-app`：使用 framework 的独立测试项目。
 - `test-apps/flow-over-ipc-smoke-app`：面向 `dev-ipc` runtime 切片的独立测试项目。
+- `test-apps/flow-over-ipc-framework-app`：面向 strict smoke fixture 之外的 developer-shaped Flow IPC validation app，用来检查 generic shell/runtime 行为。
 - `flow-transport-adapter-spike`：代码级 Vaadin Flow transport 边界分析和 adapter 形态。
 - `prototypes/phase0-phase1-spike`：更早的非 HTTP mock transport 和 IPC 验证。
 
@@ -119,6 +128,7 @@ VAADIN_DESKTOP_HOST=browser bash bin/vaadin-desktop dev examples/counter-app
 - Flow client resource loading probe：`dev-ipc` 声明 Vaadin `flow-client` classpath resources，WebView 通过 `resourceRequest` 请求完整 advertised resource graph，Java 用 redacted `resourceResponse` trace 响应，diagnostics 验证所有 response 加上真实 Flow bootstrap 和 GWT client module import/init/binding；v1.1 DOM evidence 将资源分类为 executed、verified-only、intentionally not executed 或 execution-failed。同一 channel 现在还包含面向 `Flow.js` 的动态 `flow-client-lazy-lookup` probe。
 - 真实 Vaadin Web Component 切片：smoke app 使用 `com.vaadin.flow.component.textfield.BigDecimalField` 和 `com.vaadin.flow.component.checkbox.Checkbox`；WebView 通过 IPC 请求真实 `vaadin-big-decimal-field.js` classpath frontend module 以及 v1.3 `vaadin-checkbox` shim，在 no-localhost shell 中导入二者并明确分类缺失 npm imports，触发升级后的 custom elements DOM `change` event，并验证 Java listener -> `UidlRequestHandler` patch -> 可见 Flow client DOM 状态 `Vaadin BigDecimalField: 42.5` 和 `Vaadin Checkbox: checked`。
 - Flow IPC file-transfer smoke：Java 通过 native capability gateway 发送 `fileTransfer.download` 和 `fileTransfer.selectUploadFile` command；Swift 把受限 body 写入 controlled test path，读取 selected-file metadata 和 sampled byte count，在 trace 中 redacts body content，并报告 typed `capabilityResult` metadata。
+- Flow IPC framework validation app：`test-apps/flow-over-ipc-framework-app` 运行一个更少 smoke-specific 的 Flow view，使用普通 Java API、两个真实 Vaadin Web Component、重复列表更新和 manifest-gated desktop capability call。它是 framework-shape validation target；strict v1/v1.1/v1.2/v1.3 gates 仍然由 smoke fixture 承担。
 - UIDL adapter smoke：从进程内 desktop-shaped session/UI 边界驱动 Vaadin 的真实 server-side `UidlWriter`。
 - UIDL RPC smoke：通过 `UidlRequestHandler` / `ServerRpcHandler` 驱动真实 Flow event RPC，并验证 listener-produced UIDL patch。
 - Java desktop command 的 Host Protocol v0 stdout envelope。

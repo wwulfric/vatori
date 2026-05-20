@@ -29,6 +29,7 @@
         <module>examples/desktop-capabilities-app</module>
         <module>test-apps/vaadin-desktop-smoke-app</module>
         <module>test-apps/flow-over-ipc-smoke-app</module>
+        <module>test-apps/flow-over-ipc-framework-app</module>
     </modules>
 
     <properties>

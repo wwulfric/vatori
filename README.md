@@ -46,6 +46,14 @@ bash bin/vaadin-desktop dev-ipc test-apps/flow-over-ipc-smoke-app
 
 For unattended real-window verification, add `VAADIN_DESKTOP_FLOW_IPC_AUTO_CLICK=1 VAADIN_DESKTOP_FLOW_IPC_AUTO_VAADIN_TEXT_FIELD=1 VAADIN_DESKTOP_FLOW_IPC_AUTO_RESYNC=1 VAADIN_DESKTOP_FLOW_IPC_AUTO_ERROR=1 VAADIN_DESKTOP_FLOW_IPC_AUTO_FILE_DIALOG_CANCEL=1 VAADIN_DESKTOP_FLOW_IPC_AUTO_SHUTDOWN=1` before the `dev-ipc` command. The file dialog hook exercises the AppKit `NSOpenPanel` path and cancels it automatically; the Web Component hook dispatches `BigDecimalField` and `Checkbox` DOM `change` events after their frontend resources are imported; the shutdown hook closes the window after DOM/snapshot capture so the host log includes shutdown evidence.
 
+Run the framework-shaped Flow IPC validation app:
+
+```bash
+bash bin/vaadin-desktop dev-ipc test-apps/flow-over-ipc-framework-app
+```
+
+This app keeps the strict fixture separate from a more ordinary developer project. It uses normal Flow Java APIs for a Button, `BigDecimalField`, `Checkbox`, repeated list updates and manifest-gated desktop capability calls. Its semantic ids are only for optional diagnostics; the runtime's renderer promotion, layout, bridge installation and push/resync delivery must continue to use the generic Flow viewport and Flow metadata rather than app-specific ids.
+
 Inspect the Flow IPC trace sample:
 
 ```bash
@@ -90,6 +98,7 @@ VAADIN_DESKTOP_HOST=browser bash bin/vaadin-desktop dev examples/counter-app
 - `examples/desktop-capabilities-app`: desktop runtime API example.
 - `test-apps/vaadin-desktop-smoke-app`: independent test project using the framework.
 - `test-apps/flow-over-ipc-smoke-app`: independent test project for the `dev-ipc` runtime slice.
+- `test-apps/flow-over-ipc-framework-app`: developer-shaped Flow IPC validation app for checking generic shell/runtime behavior beyond the strict smoke fixture.
 - `flow-transport-adapter-spike`: code-level Vaadin Flow transport boundary analysis and adapter shape.
 - `prototypes/phase0-phase1-spike`: earlier non-HTTP mock transport and IPC validation.
 
@@ -119,6 +128,7 @@ Implemented:
 - Flow client resource loading probe: `dev-ipc` advertises Vaadin `flow-client` classpath resources, the WebView requests the full advertised resource graph through `resourceRequest`, Java responds with redacted `resourceResponse` traces, diagnostics verify all responses plus real Flow bootstrap and GWT client module import/init/binding, and v1.1 DOM evidence classifies resources as executed, verified-only, intentionally not executed or execution-failed. The same channel now includes a dynamic `flow-client-lazy-lookup` probe for `Flow.js`.
 - Real Vaadin Web Component slice: the smoke app uses `com.vaadin.flow.component.textfield.BigDecimalField` and `com.vaadin.flow.component.checkbox.Checkbox`; the WebView requests the real `vaadin-big-decimal-field.js` classpath frontend module plus the v1.3 `vaadin-checkbox` shim over IPC, imports both in the no-localhost shell with explicitly classified missing npm imports, dispatches DOM `change` events from the upgraded custom elements, and verifies Java listener -> `UidlRequestHandler` patch -> visible Flow client DOM states `Vaadin BigDecimalField: 42.5` and `Vaadin Checkbox: checked`.
 - Flow IPC file-transfer smoke: Java sends `fileTransfer.download` and `fileTransfer.selectUploadFile` commands through the native capability gateway; Swift writes a bounded body to a controlled test path, reads selected-file metadata and sampled byte count, redacts body content in traces and reports typed `capabilityResult` metadata.
+- Flow IPC framework validation app: `test-apps/flow-over-ipc-framework-app` runs a less smoke-specific Flow view with ordinary Java APIs, two real Vaadin Web Components, repeated list updates and manifest-gated desktop capability calls. It is a framework-shape validation target; the strict v1/v1.1/v1.2/v1.3 gates still live on the smoke fixture.
 - UIDL adapter smoke: drives Vaadin's real server-side `UidlWriter` from an in-process desktop-shaped session/UI boundary.
 - UIDL RPC smoke: drives a real Flow event RPC through `UidlRequestHandler`/`ServerRpcHandler` and verifies a listener-produced UIDL patch.
 - Host Protocol v0 stdout envelope for Java desktop commands.

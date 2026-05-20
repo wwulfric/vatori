@@ -1752,6 +1752,8 @@ let flowIpcShell = #"""
       let flowClientLazyLookupRequested = false;
       let lastFlowIpcServerSequence = 0;
       let flowClientEngineLastDeliveredServerSequence = 0;
+      let flowClientEnginePromotionRetryActive = false;
+      let flowClientEnginePromotionRetryAttempts = 0;
       let pendingFlowClientEngineRecoveryResyncReason = '';
       const flowClientState = {
         csrfToken: '',
@@ -2250,6 +2252,46 @@ let flowIpcShell = #"""
         return true;
       }
 
+      function promoteFlowClientEngineWhenReady() {
+        const clients = window.Vaadin && window.Vaadin.Flow && window.Vaadin.Flow.clients ? window.Vaadin.Flow.clients : {};
+        const client = clients[flowBootstrapClientId] || clients[flowBootstrapAppId];
+        const viewportRoot = refreshFlowClientEngineViewportDiagnostics();
+        if (!client || typeof client.sendEventMessage !== 'function' || !viewportRoot) {
+          return false;
+        }
+        try {
+          const promoted = promoteFlowClientEngineToVisible();
+          if (promoted) {
+            flushQueuedFlowClientEngineMessages();
+          }
+          return promoted;
+        } catch (error) {
+          window.VaadinDesktopIpcDiagnostics.flowClientEngineInitError =
+            'generic viewport promotion failed: ' + (error && error.message ? error.message : String(error));
+          return false;
+        }
+      }
+
+      function scheduleFlowClientEnginePromotionRetry() {
+        if (window.VaadinDesktopIpcDiagnostics.flowClientEngineVisibleOwner
+            || flowClientEnginePromotionRetryActive) {
+          return;
+        }
+        flowClientEnginePromotionRetryActive = true;
+        setTimeout(() => {
+          flowClientEnginePromotionRetryActive = false;
+          if (window.VaadinDesktopIpcDiagnostics.flowClientEngineVisibleOwner) {
+            return;
+          }
+          flowClientEnginePromotionRetryAttempts += 1;
+          refreshFlowClientEngineDiagnostics();
+          if (!window.VaadinDesktopIpcDiagnostics.flowClientEngineVisibleOwner
+              && flowClientEnginePromotionRetryAttempts < 24) {
+            scheduleFlowClientEnginePromotionRetry();
+          }
+        }, 250);
+      }
+
       function refreshFlowClientEngineVisibleDiagnostics() {
         const statusById = flowClientEngineElementById('ipc-status');
         const buttonById = flowClientEngineElementById('ipc-button');
@@ -2615,6 +2657,7 @@ let flowIpcShell = #"""
           setTimeout(refreshFlowClientEngineDiagnostics, 100);
           setTimeout(refreshFlowClientEngineDiagnostics, 400);
           setTimeout(refreshFlowClientEngineDiagnostics, 800);
+          scheduleFlowClientEnginePromotionRetry();
           setTimeout(scheduleAutoComponentEvents, 900);
         } else {
           autoClickInFlight = false;
@@ -3472,7 +3515,9 @@ let flowIpcShell = #"""
         window.VaadinDesktopIpcDiagnostics.flowClientEngineIpcMessageBridgeInstalled = !!client && typeof client.handleIpcMessage === 'function';
         window.VaadinDesktopIpcDiagnostics.flowClientEngineIpcResyncBridgeInstalled = !!client && typeof client.requestIpcResync === 'function';
         refreshFlowClientEngineViewportDiagnostics();
-        if (client && typeof client.getByNodeId === 'function') {
+        promoteFlowClientEngineWhenReady();
+        try {
+          if (client && typeof client.getByNodeId === 'function') {
           const boundNodeIds = [];
           const expectedIds = [
             'ipc-root',
@@ -3609,16 +3654,17 @@ let flowIpcShell = #"""
           } catch (_) {
             window.VaadinDesktopIpcDiagnostics.vaadinSecondWebComponentRendered = false;
           }
+          }
+        } catch (error) {
+          window.VaadinDesktopIpcDiagnostics.flowClientEngineInitError =
+            'smoke diagnostics refresh failed: ' + (error && error.message ? error.message : String(error));
         }
         if (window.VaadinDesktopIpcDiagnostics.flowClientEngineClientRegistered) {
           window.VaadinDesktopIpcDiagnostics.flowClientEngineInitError = '';
         } else if (clientKeys.length > 0) {
           window.VaadinDesktopIpcDiagnostics.flowClientEngineInitError = 'FlowClient.init has not registered sendEventMessage client yet';
         }
-        if (window.VaadinDesktopIpcDiagnostics.flowClientEngineClientRegistered
-            && window.VaadinDesktopIpcDiagnostics.flowClientEngineViewportReady) {
-          promoteFlowClientEngineToVisible();
-        }
+        promoteFlowClientEngineWhenReady();
         refreshFlowClientEngineVisibleDiagnostics();
         window.VaadinDesktopIpcDiagnostics.flowClientEngineEventStatusText =
           window.VaadinDesktopIpcDiagnostics.flowClientEngineBootstrapStatusText;
@@ -3669,6 +3715,7 @@ let flowIpcShell = #"""
           refreshFlowClientEngineDiagnostics();
           setTimeout(refreshFlowClientEngineDiagnostics, 250);
           setTimeout(refreshFlowClientEngineDiagnostics, 1000);
+          scheduleFlowClientEnginePromotionRetry();
           scheduleAutoClick();
         } catch (error) {
           window.VaadinDesktopIpcDiagnostics.flowClientEngineInitialized = false;
@@ -3875,6 +3922,7 @@ let flowIpcShell = #"""
         }
         refreshComponentFrontendResourceDiagnostics();
         refreshFlowClientEngineDiagnostics();
+        scheduleFlowClientEnginePromotionRetry();
         setTimeout(scheduleAutoComponentEvents, 160);
       }
 
@@ -4076,6 +4124,7 @@ let flowIpcShell = #"""
                 rememberFlowClientBootstrapPayload(message.payload);
                 requestFlowClientResourceProbe(message.payload);
                 requestComponentFrontendResourceProbe(message.payload);
+                scheduleFlowClientEnginePromotionRetry();
               } else if (!flowClientOwnsMessage && message.payload && message.payload.uidl && message.payload.uidl.resync === true) {
                 if (!applyUidlBootstrap(message.payload)) {
                   render(message.payload && message.payload.tree);

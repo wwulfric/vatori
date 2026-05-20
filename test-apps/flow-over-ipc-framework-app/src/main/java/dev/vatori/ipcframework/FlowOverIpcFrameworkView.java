@@ -1,0 +1,85 @@
+package dev.vatori.ipcframework;
+
+import com.vaadin.flow.component.button.Button;
+import com.vaadin.flow.component.checkbox.Checkbox;
+import com.vaadin.flow.component.html.H1;
+import com.vaadin.flow.component.html.Span;
+import com.vaadin.flow.component.orderedlayout.VerticalLayout;
+import com.vaadin.flow.component.textfield.BigDecimalField;
+import com.vaadin.flow.router.Route;
+import dev.vatori.desktop.Desktop;
+import tools.jackson.databind.JsonNode;
+
+import java.math.BigDecimal;
+import java.util.ArrayList;
+import java.util.List;
+
+@Route("")
+public class FlowOverIpcFrameworkView extends VerticalLayout {
+    private final List<String> updates = new ArrayList<>();
+    private final VerticalLayout updateList = new VerticalLayout();
+    private int revision;
+
+    public FlowOverIpcFrameworkView() {
+        setId("framework-root");
+        setPadding(true);
+        setSpacing(true);
+        setWidthFull();
+
+        H1 title = new H1("Flow IPC Framework Desk");
+        Span status = new Span("Ready for framework validation");
+        status.setId("framework-status");
+
+        BigDecimalField budget = new BigDecimalField("Budget");
+        budget.setId("framework-budget");
+        budget.setPlaceholder("42.5");
+        budget.setValue(new BigDecimal("42.5"));
+
+        Checkbox expedited = new Checkbox("Expedite processing");
+        expedited.setId("framework-expedite");
+
+        Span componentStatus = new Span("Components: pending");
+        componentStatus.setId("framework-component-status");
+
+        budget.getElement().addEventListener("change", event -> {
+            JsonNode valueNode = event.getEventData().get("element.value");
+            String value = valueNode == null ? "" : valueNode.asString();
+            componentStatus.setText("Budget changed: " + value);
+        }).addEventData("element.value");
+
+        expedited.getElement().addEventListener("change", event -> {
+            JsonNode checkedNode = event.getEventData().get("element.checked");
+            boolean checked = checkedNode != null && checkedNode.asBoolean();
+            componentStatus.setText("Expedite changed: " + (checked ? "yes" : "no"));
+        }).addEventData("element.checked");
+
+        Button apply = new Button("Apply Update", event -> {
+            revision++;
+            String budgetText = budget.getValue() == null ? "unset" : budget.getValue().toPlainString();
+            String mode = expedited.getValue() ? "expedited" : "standard";
+            String update = "Revision " + revision + ": budget " + budgetText + ", mode " + mode;
+            status.setText(update);
+            appendUpdate(update);
+            Desktop.current().setWindowTitle("Flow IPC Framework App - " + revision);
+            Desktop.current().clipboard().writeText(update);
+            Desktop.current().notifications().show("Flow IPC", "Framework update " + revision + " applied");
+        });
+        apply.setId("framework-apply");
+
+        updateList.setId("framework-updates");
+        updateList.setPadding(false);
+        updateList.setSpacing(false);
+        appendUpdate("Catalog loaded");
+        appendUpdate("Renderer owned by Flow client engine");
+
+        add(title, budget, expedited, apply, status, componentStatus, updateList);
+    }
+
+    private void appendUpdate(String text) {
+        updates.add(text);
+        updateList.removeAll();
+        for (String update : updates) {
+            updateList.add(new Span(update));
+        }
+    }
+}

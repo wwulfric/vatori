@@ -1299,6 +1299,10 @@ final class WebViewHost: NSObject, NSApplicationDelegate, NSWindowDelegate, WKNa
           flowClientEngineClientRegistered: !!(window.VaadinDesktopIpcDiagnostics && window.VaadinDesktopIpcDiagnostics.flowClientEngineClientRegistered),
           flowClientEngineClientKey: window.VaadinDesktopIpcDiagnostics ? window.VaadinDesktopIpcDiagnostics.flowClientEngineClientKey : "",
           flowClientEngineClientKeys: window.VaadinDesktopIpcDiagnostics ? window.VaadinDesktopIpcDiagnostics.flowClientEngineClientKeys : "",
+          flowClientEngineViewportReady: !!(window.VaadinDesktopIpcDiagnostics && window.VaadinDesktopIpcDiagnostics.flowClientEngineViewportReady),
+          flowClientEngineViewportRootTag: window.VaadinDesktopIpcDiagnostics ? window.VaadinDesktopIpcDiagnostics.flowClientEngineViewportRootTag : "",
+          flowClientEngineViewportRootId: window.VaadinDesktopIpcDiagnostics ? window.VaadinDesktopIpcDiagnostics.flowClientEngineViewportRootId : "",
+          flowClientEnginePromotionGate: window.VaadinDesktopIpcDiagnostics ? window.VaadinDesktopIpcDiagnostics.flowClientEnginePromotionGate : "",
           flowClientEngineBootstrapDomBound: !!(window.VaadinDesktopIpcDiagnostics && window.VaadinDesktopIpcDiagnostics.flowClientEngineBootstrapDomBound),
           flowClientEngineBoundNodeIds: window.VaadinDesktopIpcDiagnostics ? window.VaadinDesktopIpcDiagnostics.flowClientEngineBoundNodeIds : "",
           flowClientEngineBootstrapStatusText: window.VaadinDesktopIpcDiagnostics ? window.VaadinDesktopIpcDiagnostics.flowClientEngineBootstrapStatusText : "",
@@ -1822,6 +1826,10 @@ let flowIpcShell = #"""
         flowClientEngineClientRegistered: false,
         flowClientEngineClientKey: '',
         flowClientEngineClientKeys: '',
+        flowClientEngineViewportReady: false,
+        flowClientEngineViewportRootTag: '',
+        flowClientEngineViewportRootId: '',
+        flowClientEnginePromotionGate: '',
         flowClientEngineBootstrapDomBound: false,
         flowClientEngineBoundNodeIds: '',
         flowClientEngineBootstrapStatusText: '',
@@ -2016,6 +2024,10 @@ let flowIpcShell = #"""
         return document.getElementById('flow-client-engine-root');
       }
 
+      function flowClientEngineContainer() {
+        return document.querySelector(flowClientContainerTag());
+      }
+
       function flowClientContainerTag() {
         return 'flow-container-' + flowBootstrapAppId.toLowerCase();
       }
@@ -2065,6 +2077,17 @@ let flowIpcShell = #"""
           viewportRoot.hidden = false;
           viewportRoot.classList.add('vatori-flow-viewport-root');
         }
+        return viewportRoot;
+      }
+
+      function refreshFlowClientEngineViewportDiagnostics() {
+        const container = flowClientEngineContainer();
+        const viewportRoot = container ? firstFlowViewportRoot(container) : null;
+        window.VaadinDesktopIpcDiagnostics.flowClientEngineViewportReady = !!viewportRoot;
+        window.VaadinDesktopIpcDiagnostics.flowClientEngineViewportRootTag =
+          viewportRoot && viewportRoot.tagName ? viewportRoot.tagName.toLowerCase() : '';
+        window.VaadinDesktopIpcDiagnostics.flowClientEngineViewportRootId =
+          viewportRoot && viewportRoot.id ? viewportRoot.id : '';
         return viewportRoot;
       }
 
@@ -2148,8 +2171,13 @@ let flowIpcShell = #"""
 
       function promoteFlowClientEngineToVisible() {
         const root = flowClientEngineRoot();
-        const container = document.querySelector(flowClientContainerTag());
-        if (!root || !container || !window.VaadinDesktopIpcDiagnostics.flowClientEngineBootstrapDomBound) {
+        const container = flowClientEngineContainer();
+        const viewportRoot = container ? firstFlowViewportRoot(container) : null;
+        if (!root || !container || !viewportRoot) {
+          window.VaadinDesktopIpcDiagnostics.flowClientEnginePromotionGate = viewportRoot
+            ? 'waiting-for-host-root'
+            : 'waiting-for-generic-flow-viewport';
+          refreshFlowClientEngineViewportDiagnostics();
           return false;
         }
         root.hidden = false;
@@ -2162,6 +2190,8 @@ let flowIpcShell = #"""
         app.hidden = true;
         app.style.display = 'none';
         normalizeFlowClientViewport(container);
+        refreshFlowClientEngineViewportDiagnostics();
+        window.VaadinDesktopIpcDiagnostics.flowClientEnginePromotionGate = 'generic-flow-viewport';
         window.VaadinDesktopIpcDiagnostics.flowClientEngineVisibleOwner = true;
         window.VaadinDesktopIpcDiagnostics.flowClientEngineVisibleRootId = root.id;
         window.VaadinDesktopIpcDiagnostics.flowClientEngineLocalFallbackHidden = app.hidden;
@@ -2271,7 +2301,7 @@ let flowIpcShell = #"""
           ? message.payload.uidl.body
           : '';
         if (!client || typeof client.handleIpcMessage !== 'function' || !body
-            || !window.VaadinDesktopIpcDiagnostics.flowClientEngineBootstrapDomBound) {
+            || !refreshFlowClientEngineViewportDiagnostics()) {
           return false;
         }
         if (shouldIgnoreFlowClientEngineMessage(message, kind)) {
@@ -2417,9 +2447,9 @@ let flowIpcShell = #"""
               const rpc = Array.isArray(requestPayload.rpc)
                 ? requestPayload.rpc.find((entry) => entry && entry.type === 'event')
                 : null;
-              const rpcNodeId = rpc && Number.isInteger(rpc.node) ? rpc.node : 16;
+              const rpcNodeId = rpc && Number.isInteger(rpc.node) ? rpc.node : -1;
               const rpcEventType = rpc && typeof rpc.event === 'string' ? rpc.event : (type === 'event' ? 'uidl-rpc' : 'resync');
-              const rpcComponentId = flowClientElementIdByNodeId(rpcNodeId) || (rpcNodeId === 16 ? 'ipc-button' : '');
+              const rpcComponentId = rpcNodeId >= 0 ? flowClientElementIdByNodeId(rpcNodeId) : '';
               const ipcPayload = {
                 dispatch: 'flow-client-xhr',
                 componentId: rpcComponentId,
@@ -3301,6 +3331,7 @@ let flowIpcShell = #"""
           const flow = window.Vaadin && window.Vaadin.Flow ? window.Vaadin.Flow : null;
           const appIds = flow && typeof flow.getAppIds === 'function' ? flow.getAppIds() : [];
           window.VaadinDesktopIpcDiagnostics.flowClientBootstrapInitialized = appIds.includes(flowBootstrapAppId);
+          refreshFlowClientEngineViewportDiagnostics();
           if (!window.VaadinDesktopIpcDiagnostics.flowClientBootstrapInitialized) {
             window.VaadinDesktopIpcDiagnostics.flowClientBootstrapInitError = 'FlowBootstrap.init did not register ' + flowBootstrapAppId;
           } else {
@@ -3322,6 +3353,7 @@ let flowIpcShell = #"""
         window.VaadinDesktopIpcDiagnostics.flowClientEngineClientRegistered = !!client && typeof client.sendEventMessage === 'function';
         window.VaadinDesktopIpcDiagnostics.flowClientEngineIpcMessageBridgeInstalled = !!client && typeof client.handleIpcMessage === 'function';
         window.VaadinDesktopIpcDiagnostics.flowClientEngineIpcResyncBridgeInstalled = !!client && typeof client.requestIpcResync === 'function';
+        refreshFlowClientEngineViewportDiagnostics();
         if (client && typeof client.getByNodeId === 'function') {
           const boundNodeIds = [];
           const expectedIds = [
@@ -3444,7 +3476,7 @@ let flowIpcShell = #"""
           window.VaadinDesktopIpcDiagnostics.flowClientEngineInitError = 'FlowClient.init has not registered sendEventMessage client yet';
         }
         if (window.VaadinDesktopIpcDiagnostics.flowClientEngineClientRegistered
-            && window.VaadinDesktopIpcDiagnostics.flowClientEngineBootstrapDomBound) {
+            && window.VaadinDesktopIpcDiagnostics.flowClientEngineViewportReady) {
           promoteFlowClientEngineToVisible();
         }
         refreshFlowClientEngineVisibleDiagnostics();

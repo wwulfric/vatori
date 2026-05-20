@@ -45,6 +45,7 @@ public final class DesktopTraceInspector {
         boolean requireFlowIpc = false;
         boolean requireFlowIpcV1_1 = false;
         boolean requireFlowIpcV1_2 = false;
+        boolean requireFlowIpcV1_3 = false;
         List<Path> paths = new ArrayList<>();
         for (String arg : args) {
             if ("--require-flow-ipc-v1".equals(arg)) {
@@ -56,6 +57,11 @@ public final class DesktopTraceInspector {
                 requireFlowIpc = true;
                 requireFlowIpcV1_1 = true;
                 requireFlowIpcV1_2 = true;
+            } else if ("--require-flow-ipc-v1_3".equals(arg)) {
+                requireFlowIpc = true;
+                requireFlowIpcV1_1 = true;
+                requireFlowIpcV1_2 = true;
+                requireFlowIpcV1_3 = true;
             } else {
                 paths.add(Path.of(arg));
             }
@@ -77,6 +83,9 @@ public final class DesktopTraceInspector {
                 failures++;
             }
             if (requireFlowIpcV1_2 && !summary.hasRequiredFlowIpcV1_2Types()) {
+                failures++;
+            }
+            if (requireFlowIpcV1_3 && !summary.hasRequiredFlowIpcV1_3Types()) {
                 failures++;
             }
         }
@@ -570,6 +579,14 @@ public final class DesktopTraceInspector {
                     && containsLiteralField(line, "flowClientEngineLocalFallbackHidden", "true")) {
                 summary.flowClientEngineVisibleDomObserved = true;
             }
+            if (line.contains("\"type\":\"webview.dom\"")
+                    && containsLiteralField(line, "flowClientEngineViewportReady", "true")
+                    && line.contains("flowClientEngineViewportRootTag")
+                    && containsStringField(line, "flowClientEnginePromotionGate", "generic-flow-viewport")
+                    && containsLiteralField(line, "flowClientEngineVisibleOwner", "true")
+                    && containsLiteralField(line, "flowClientEngineLocalFallbackHidden", "true")) {
+                summary.flowClientEngineGenericViewportDomObserved = true;
+            }
             if (line.contains("\"type\":\"event\"")
                     && line.contains("\"sessionId\":\"flow-ipc-session\"")
                     && line.contains("\"uiId\":\"main\"")) {
@@ -722,7 +739,7 @@ public final class DesktopTraceInspector {
     }
 
     private static void usage() {
-        System.out.println("Usage: bin/flow-ipc-trace-inspect [--require-flow-ipc-v1|--require-flow-ipc-v1_1|--require-flow-ipc-v1_2] <trace.ndjson>...");
+        System.out.println("Usage: bin/flow-ipc-trace-inspect [--require-flow-ipc-v1|--require-flow-ipc-v1_1|--require-flow-ipc-v1_2|--require-flow-ipc-v1_3] <trace.ndjson>...");
     }
 
     public static final class TraceSummary {
@@ -775,6 +792,7 @@ public final class DesktopTraceInspector {
         private boolean flowClientEnginePushQueueDomObserved;
         private boolean flowClientEnginePushOrderingDomObserved;
         private boolean flowClientEngineResyncDomObserved;
+        private boolean flowClientEngineGenericViewportDomObserved;
         private boolean uidlRpcDispatchObserved;
         private boolean webViewUidlRpcObserved;
         private boolean flowClientXhrAttachObserved;
@@ -884,6 +902,11 @@ public final class DesktopTraceInspector {
                     && vaadinWebComponentDomObserved;
         }
 
+        public boolean hasRequiredFlowIpcV1_3Types() {
+            return hasRequiredFlowIpcV1_2Types()
+                    && flowClientEngineGenericViewportDomObserved;
+        }
+
         private void print(Path path) {
             System.out.println("Trace: " + path);
             System.out.println("Messages: " + total);
@@ -940,6 +963,8 @@ public final class DesktopTraceInspector {
             System.out.println("Flow client engine push queue DOM observed: " + flowClientEnginePushQueueDomObserved);
             System.out.println("Flow client engine push ordering DOM observed: " + flowClientEnginePushOrderingDomObserved);
             System.out.println("Flow client engine resync DOM observed: " + flowClientEngineResyncDomObserved);
+            System.out.println("Flow client engine generic viewport DOM observed: "
+                    + flowClientEngineGenericViewportDomObserved);
             System.out.println("UIDL RPC dispatch observed: " + uidlRpcDispatchObserved);
             System.out.println("WebView UIDL RPC observed: " + webViewUidlRpcObserved);
             System.out.println("Flow client XHR attach observed: " + flowClientXhrAttachObserved);

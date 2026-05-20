@@ -23,7 +23,7 @@ Status: in progress in this repository.
 
 ## v0.2: Flow Transport Adapter Spike
 
-Status: first minimum runtime slice implemented, server-side UIDL writer integrated into `dev-ipc` bootstrap/push payloads, Flow client XHR click and ordering-recovery resync dispatch wired over IPC, FlowBootstrap and FlowClient resource loading/import/init over IPC, visible Flow client ownership verified for bootstrap, click-event patches, ordered server pushes and recovery resync, and resource execution/lazy lookup diagnostics added for the advertised Flow client resource graph.
+Status: first minimum runtime slice implemented, server-side UIDL writer integrated into `dev-ipc` bootstrap/push payloads, Flow client XHR click/change and ordering-recovery resync dispatch wired over IPC, FlowBootstrap and FlowClient resource loading/import/init over IPC, one real BigDecimalField component frontend module executed with explicit v1.2 shim classification, visible Flow client ownership verified for bootstrap, click/change-event patches, ordered server pushes and recovery resync, and resource execution/lazy lookup diagnostics added for the advertised Flow client resource graph.
 
 - Audit Vaadin Flow event and patch internals.
 - Extract a minimal adapter around bootstrap, event dispatch and UIDL/patch response.
@@ -33,12 +33,13 @@ Status: first minimum runtime slice implemented, server-side UIDL writer integra
 - `bash bin/uidl-rpc-smoke` now verifies that a real Flow event RPC can pass through `UidlRequestHandler`/`ServerRpcHandler` and produce a listener UIDL patch without a real HTTP socket.
 - `dev-ipc` bootstrap/push/patch/resync envelopes now include `payload.uidl`; bootstrap and ordered server-initiated pushes come from `UidlWriter`, and WebView-produced click plus ordering-recovery resync RPC patches come from `UidlRequestHandler`/`ServerRpcHandler`. Bootstrap, click-event UIDL, push UIDL and recovery resync UIDL are consumed by the visible Flow client engine, with Java-to-WebView `serverSequence` diagnostics proving monotonic receive order for the smoke path.
 - `dev-ipc` bootstrap now advertises Vaadin `flow-client` classpath resources, and the WebView requests the full advertised classpath resource graph over IPC while importing/initializing `FlowBootstrap.js` and `FlowClient.js` as the first no-HTTP frontend resource loading slice. The WebView also classifies executed vs verified-only resources and performs a dynamic `flow-client-lazy-lookup` probe for `Flow.js`.
+- `dev-ipc` v1.2 bootstrap now advertises `componentFrontendResources` for `com.vaadin.flow.component.textfield.BigDecimalField`; the WebView requests and imports the real `META-INF/resources/frontend/vaadin-big-decimal-field.js` classpath module, records `blockedReason` / `failureClassification` for the missing npm import graph and verifies `Vaadin BigDecimalField: 42.5` through the real Flow event/patch path.
 
 First issue candidates:
 
 - Extend `DesktopVaadinRequest` to enforce full resync state from Host Protocol; minimum Flow IPC `sessionId`/`uiId`, `csrfToken`/security key, `syncId` and `clientId` preflight is already in place.
 - Replace the controlled server-initiated push ordering and duplicate/late recovery smoke with a real Flow push queue, ack, reconnect/resync path and durable ordering model; the current smoke path proves monotonic Java-to-WebView delivery with `serverSequence`, records WebView queue/flush/deliver/ignore order, and triggers explicit recovery resync for a duplicate/late probe.
-- Continue broadening Flow client event/resource coverage beyond the current smoke-app button plus native input/checkbox component set, replacing resource diagnostics with real production bundle/dev-mode execution.
+- Continue broadening Flow client event/resource coverage beyond the current smoke-app button, native input/checkbox and BigDecimalField component set, replacing resource diagnostics and v1.2 shims with real production bundle/dev-mode execution.
 
 ## v0.3: Capability Gateway
 

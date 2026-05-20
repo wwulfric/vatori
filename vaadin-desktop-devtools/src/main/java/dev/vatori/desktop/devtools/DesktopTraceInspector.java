@@ -44,6 +44,7 @@ public final class DesktopTraceInspector {
 
         boolean requireFlowIpc = false;
         boolean requireFlowIpcV1_1 = false;
+        boolean requireFlowIpcV1_2 = false;
         List<Path> paths = new ArrayList<>();
         for (String arg : args) {
             if ("--require-flow-ipc-v1".equals(arg)) {
@@ -51,6 +52,10 @@ public final class DesktopTraceInspector {
             } else if ("--require-flow-ipc-v1_1".equals(arg)) {
                 requireFlowIpc = true;
                 requireFlowIpcV1_1 = true;
+            } else if ("--require-flow-ipc-v1_2".equals(arg)) {
+                requireFlowIpc = true;
+                requireFlowIpcV1_1 = true;
+                requireFlowIpcV1_2 = true;
             } else {
                 paths.add(Path.of(arg));
             }
@@ -69,6 +74,9 @@ public final class DesktopTraceInspector {
                 failures++;
             }
             if (requireFlowIpcV1_1 && !summary.hasRequiredFlowIpcV1_1Types()) {
+                failures++;
+            }
+            if (requireFlowIpcV1_2 && !summary.hasRequiredFlowIpcV1_2Types()) {
                 failures++;
             }
         }
@@ -255,6 +263,15 @@ public final class DesktopTraceInspector {
                     && line.contains("element.checked")) {
                 summary.flowClientXhrCheckboxObserved = true;
             }
+            if (line.contains("\"type\":\"event\"")
+                    && line.contains("\"dispatch\":\"flow-client-xhr\"")
+                    && line.contains("\"componentId\":\"ipc-vaadin-big-decimal\"")
+                    && line.contains("\"event\":\"change\"")
+                    && line.contains("element.value")
+                    && line.contains("42.5")
+                    && line.contains("\"uidlRpc\"")) {
+                summary.vaadinWebComponentEventRpcObserved = true;
+            }
             if (line.contains("\"type\":\"bootstrapResponse\"")
                     && line.contains("\"securityKey\"")
                     && line.contains("Vaadin-Security-Key")
@@ -322,6 +339,32 @@ public final class DesktopTraceInspector {
                     && line.contains("\"bodyRedacted\":true")) {
                 summary.flowClientResourceLazyLookupResponseObserved = true;
             }
+            if (line.contains("\"type\":\"bootstrapResponse\"")
+                    && line.contains("\"componentFrontendResources\"")
+                    && line.contains("\"vaadin-component-classpath-plus-v1_2-shims\"")
+                    && line.contains("com.vaadin.flow.component.textfield.BigDecimalField")
+                    && line.contains("vaadin-big-decimal-field")
+                    && line.contains("npm-transitive-imports-shimmed")
+                    && line.contains("blockedReason")) {
+                summary.vaadinWebComponentResourceManifestObserved = true;
+                summary.vaadinWebComponentFailureClassificationObserved = true;
+            }
+            if (line.contains("\"type\":\"resourceRequest\"")
+                    && line.contains("\"purpose\":\"vaadin-web-component-resource-probe\"")
+                    && line.contains("\"lookupKind\":\"BigDecimalField-minimum-component-resource\"")
+                    && line.contains("META-INF/resources/frontend/vaadin-big-decimal-field.js")
+                    && line.contains("\"securityKey\"")) {
+                summary.vaadinWebComponentResourceRequestObserved = true;
+            }
+            if (line.contains("\"type\":\"resourceResponse\"")
+                    && line.contains("\"componentFrontendResource\":true")
+                    && line.contains("META-INF/resources/frontend/vaadin-big-decimal-field.js")
+                    && line.contains("\"bodyRedacted\":true")
+                    && line.contains("\"blockedReason\"")
+                    && line.contains("\"failureClassification\":\"npm-transitive-imports-shimmed\"")) {
+                summary.vaadinWebComponentResourceResponseObserved = true;
+                summary.vaadinWebComponentFailureClassificationObserved = true;
+            }
             if (line.contains("\"type\":\"webview.dom\"")
                     && line.contains("flowClientResourceLoaded")
                     && line.contains("flowClientResourceVerified")
@@ -384,6 +427,33 @@ public final class DesktopTraceInspector {
                 summary.flowClientResourceLazyLookupDomObserved = true;
             }
             if (line.contains("\"type\":\"webview.dom\"")
+                    && containsLiteralField(line, "vaadinWebComponentResourceManifestObserved", "true")
+                    && containsPositiveIntegerField(line, "vaadinWebComponentResourceManifestCount")
+                    && containsLiteralField(line, "vaadinWebComponentResourceRequested", "true")
+                    && containsPositiveIntegerField(line, "vaadinWebComponentResourceRequestedCount")
+                    && containsPositiveIntegerField(line, "vaadinWebComponentResourceResponseCount")
+                    && containsLiteralField(line, "vaadinWebComponentResourceResolved", "true")
+                    && containsLiteralField(line, "vaadinWebComponentResourceVerified", "true")
+                    && containsLiteralField(line, "vaadinWebComponentResourceGraphComplete", "true")
+                    && containsLiteralField(line, "vaadinWebComponentResourceGraphVerified", "true")
+                    && line.contains("META-INF/resources/frontend/vaadin-big-decimal-field.js")
+                    && line.contains("META-INF/vatori/frontend-shims/vaadin-text-field.js")
+                    && line.contains("npm-transitive-imports-shimmed")
+                    && line.contains("full @vaadin/text-field npm graph")) {
+                summary.vaadinWebComponentResourceDomObserved = true;
+                summary.vaadinWebComponentFailureClassificationObserved = true;
+            }
+            if (line.contains("\"type\":\"webview.dom\"")
+                    && containsLiteralField(line, "vaadinWebComponentResourceExecuted", "true")
+                    && containsStringField(line, "vaadinWebComponentResourceExecutedPath",
+                            "META-INF/resources/frontend/vaadin-big-decimal-field.js")
+                    && containsStringField(line, "vaadinWebComponentResourceImportMode",
+                            "dynamic-import-blob-with-v1_2-shimmed-transitive-imports")
+                    && containsLiteralField(line, "vaadinWebComponentTagDefined", "true")
+                    && containsLiteralField(line, "vaadinWebComponentResourceExecutionFailed", "false")) {
+                summary.vaadinWebComponentResourceExecutedDomObserved = true;
+            }
+            if (line.contains("\"type\":\"webview.dom\"")
                     && line.contains("flowClientEngineResourceLoaded")
                     && line.contains("flowClientEngineResourceVerified")
                     && line.contains("flowClientEngineModuleLoaded")
@@ -429,6 +499,20 @@ public final class DesktopTraceInspector {
                     && line.contains("ipc-text-input")
                     && line.contains("ipc-checkbox")) {
                 summary.flowClientEngineComponentEventsDomObserved = true;
+            }
+            if (line.contains("\"type\":\"webview.dom\"")
+                    && containsLiteralField(line, "vaadinWebComponentRendered", "true")
+                    && containsStringField(line, "vaadinWebComponentRenderedTag", "vaadin-big-decimal-field")
+                    && containsStringField(line, "vaadinWebComponentEventDispatchMode", "dom-event")
+                    && containsLiteralField(line, "vaadinWebComponentEventObserved", "true")
+                    && containsLiteralField(line, "vaadinWebComponentEventRpcObserved", "true")
+                    && containsStringField(line, "vaadinWebComponentEventComponentId", "ipc-vaadin-big-decimal")
+                    && containsStringField(line, "vaadinWebComponentEventType", "change")
+                    && containsStringField(line, "vaadinWebComponentEventValue", "42.5")
+                    && containsStringField(line, "vaadinWebComponentStatusText", "Vaadin BigDecimalField: 42.5")
+                    && containsStringField(line, "vaadinWebComponentPostEventState", "Vaadin BigDecimalField: 42.5")
+                    && containsStringField(line, "vaadinWebComponentFailureReason", "")) {
+                summary.vaadinWebComponentDomObserved = true;
             }
             if (line.contains("\"type\":\"webview.dom\"")
                     && containsLiteralField(line, "fileTransferDownloadResultObserved", "true")
@@ -519,6 +603,14 @@ public final class DesktopTraceInspector {
                     && line.contains("\"consumedByWebView\":true")
                     && line.contains("\"flow-client-engine-visible\"")) {
                 summary.checkboxPatchObserved = true;
+            }
+            if (line.contains("\"type\":\"patch\"")
+                    && line.contains("\"source\":\"UidlRequestHandler\"")
+                    && line.contains("\"eventDispatch\":\"flow-client-xhr\"")
+                    && line.contains("Vaadin BigDecimalField: 42.5")
+                    && line.contains("\"consumedByWebView\":true")
+                    && line.contains("\"flow-client-engine-visible\"")) {
+                summary.vaadinWebComponentPatchObserved = true;
             }
             if (line.contains("\"type\":\"patch\"")
                     && line.contains("\"source\":\"UidlRequestHandler\"")
@@ -630,7 +722,7 @@ public final class DesktopTraceInspector {
     }
 
     private static void usage() {
-        System.out.println("Usage: bin/flow-ipc-trace-inspect [--require-flow-ipc-v1|--require-flow-ipc-v1_1] <trace.ndjson>...");
+        System.out.println("Usage: bin/flow-ipc-trace-inspect [--require-flow-ipc-v1|--require-flow-ipc-v1_1|--require-flow-ipc-v1_2] <trace.ndjson>...");
     }
 
     public static final class TraceSummary {
@@ -693,6 +785,15 @@ public final class DesktopTraceInspector {
         private boolean textInputPatchObserved;
         private boolean checkboxPatchObserved;
         private boolean flowClientEngineComponentEventsDomObserved;
+        private boolean vaadinWebComponentResourceManifestObserved;
+        private boolean vaadinWebComponentResourceRequestObserved;
+        private boolean vaadinWebComponentResourceResponseObserved;
+        private boolean vaadinWebComponentResourceDomObserved;
+        private boolean vaadinWebComponentResourceExecutedDomObserved;
+        private boolean vaadinWebComponentFailureClassificationObserved;
+        private boolean vaadinWebComponentEventRpcObserved;
+        private boolean vaadinWebComponentPatchObserved;
+        private boolean vaadinWebComponentDomObserved;
         private boolean uidlPatchObserved;
         private boolean pushUidlObserved;
         private boolean multiPushUidlObserved;
@@ -770,6 +871,19 @@ public final class DesktopTraceInspector {
                     && flowClientEngineComponentEventsDomObserved;
         }
 
+        public boolean hasRequiredFlowIpcV1_2Types() {
+            return hasRequiredFlowIpcV1_1Types()
+                    && vaadinWebComponentResourceManifestObserved
+                    && vaadinWebComponentResourceRequestObserved
+                    && vaadinWebComponentResourceResponseObserved
+                    && vaadinWebComponentResourceDomObserved
+                    && vaadinWebComponentResourceExecutedDomObserved
+                    && vaadinWebComponentFailureClassificationObserved
+                    && vaadinWebComponentEventRpcObserved
+                    && vaadinWebComponentPatchObserved
+                    && vaadinWebComponentDomObserved;
+        }
+
         private void print(Path path) {
             System.out.println("Trace: " + path);
             System.out.println("Messages: " + total);
@@ -836,6 +950,24 @@ public final class DesktopTraceInspector {
             System.out.println("Text input patch observed: " + textInputPatchObserved);
             System.out.println("Checkbox patch observed: " + checkboxPatchObserved);
             System.out.println("Flow client component events DOM observed: " + flowClientEngineComponentEventsDomObserved);
+            System.out.println("Vaadin Web Component resource manifest observed: "
+                    + vaadinWebComponentResourceManifestObserved);
+            System.out.println("Vaadin Web Component resource request observed: "
+                    + vaadinWebComponentResourceRequestObserved);
+            System.out.println("Vaadin Web Component resource response observed: "
+                    + vaadinWebComponentResourceResponseObserved);
+            System.out.println("Vaadin Web Component resource DOM observed: "
+                    + vaadinWebComponentResourceDomObserved);
+            System.out.println("Vaadin Web Component resource executed DOM observed: "
+                    + vaadinWebComponentResourceExecutedDomObserved);
+            System.out.println("Vaadin Web Component failure classification observed: "
+                    + vaadinWebComponentFailureClassificationObserved);
+            System.out.println("Vaadin Web Component event RPC observed: "
+                    + vaadinWebComponentEventRpcObserved);
+            System.out.println("Vaadin Web Component patch observed: "
+                    + vaadinWebComponentPatchObserved);
+            System.out.println("Vaadin Web Component DOM observed: "
+                    + vaadinWebComponentDomObserved);
             System.out.println("UIDL request handler patch observed: " + uidlPatchObserved);
             System.out.println("server push UIDL observed: " + pushUidlObserved);
             System.out.println("multi-push UIDL observed: " + multiPushUidlObserved);

@@ -5,6 +5,7 @@ import com.vaadin.flow.component.html.H1;
 import com.vaadin.flow.component.html.Input;
 import com.vaadin.flow.component.html.Span;
 import com.vaadin.flow.component.orderedlayout.VerticalLayout;
+import com.vaadin.flow.component.textfield.BigDecimalField;
 import com.vaadin.flow.router.Route;
 import dev.vatori.desktop.Desktop;
 import dev.vatori.desktop.DesktopCommand;
@@ -84,12 +85,24 @@ public class FlowOverIpcSmokeView extends VerticalLayout {
             checkboxStatus.setText("Checkbox: " + (checked ? "checked" : "unchecked"));
         }).addEventData("element.checked");
 
+        BigDecimalField bigDecimalField = new BigDecimalField("Vaadin BigDecimalField over IPC");
+        bigDecimalField.setId("ipc-vaadin-big-decimal");
+        bigDecimalField.setPlaceholder("42.5");
+        Span bigDecimalStatus = new Span("Vaadin BigDecimalField: pending");
+        bigDecimalStatus.setId("ipc-vaadin-big-decimal-status");
+        bigDecimalField.getElement().addEventListener("change", event -> {
+            JsonNode valueNode = event.getEventData().get("element.value");
+            String value = valueNode == null ? "" : valueNode.asString();
+            bigDecimalStatus.setText("Vaadin BigDecimalField: " + value);
+        }).addEventData("element.value");
+
         VerticalLayout eventMatrix = new VerticalLayout();
         eventMatrix.setId("ipc-event-matrix");
         eventMatrix.setPadding(false);
         eventMatrix.setSpacing(false);
         eventMatrix.add(new Span("6 Component event matrix over IPC READY"),
-                textInput, textStatus, checkbox, checkboxStatus);
+                textInput, textStatus, checkbox, checkboxStatus,
+                bigDecimalField, bigDecimalStatus);
         add(eventMatrix);
     }
 

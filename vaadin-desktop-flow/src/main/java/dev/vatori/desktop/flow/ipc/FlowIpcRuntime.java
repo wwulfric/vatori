@@ -45,17 +45,19 @@ final class FlowIpcRuntime {
     }
 
     void run() {
-        send("ready", "flow-ipc-ready", "flow-ipc-ready", Map.of(
-                "transport", "flow-ipc",
-                "compatibilityMode", false,
-                "route", route,
-                "runtime", "repository-local-flow-ipc-adapter",
-                "uidlWriter", true,
-                "uidlRpcDispatch", true,
-                "flowClientResourceLoading", "ipc-resource-request",
-                "uidlRpcProducer", "webview-bridge",
-                "uidlConsumer", "flow-client-engine-visible",
-                "uidlFallback", "minimum-webview-uidl-applier"));
+        Map<String, Object> readyPayload = new LinkedHashMap<>();
+        readyPayload.put("transport", "flow-ipc");
+        readyPayload.put("compatibilityMode", false);
+        readyPayload.put("route", route);
+        readyPayload.put("runtime", "repository-local-flow-ipc-adapter");
+        readyPayload.put("uidlWriter", true);
+        readyPayload.put("uidlRpcDispatch", true);
+        readyPayload.put("flowClientResourceLoading", "ipc-resource-request");
+        readyPayload.put("componentFrontendResourceLoading", "ipc-resource-request");
+        readyPayload.put("uidlRpcProducer", "webview-bridge");
+        readyPayload.put("uidlConsumer", "flow-client-engine-visible");
+        readyPayload.put("uidlFallback", "minimum-webview-uidl-applier");
+        send("ready", "flow-ipc-ready", "flow-ipc-ready", readyPayload);
 
         try (BufferedReader reader = new BufferedReader(new InputStreamReader(System.in, StandardCharsets.UTF_8))) {
             String line;
@@ -103,6 +105,7 @@ final class FlowIpcRuntime {
         payload.put("route", route);
         payload.put("uidl", uidlPayload("bootstrap", false));
         payload.put("flowClientResources", flowClientResources.manifest());
+        payload.put("componentFrontendResources", flowClientResources.componentManifest());
         payload.put("clientState", Map.of(
                 "sessionId", flowSession.sessionId(),
                 "uiId", flowSession.uiId(),
@@ -123,7 +126,7 @@ final class FlowIpcRuntime {
         validateSecurityKey(json);
         String path = JsonFields.string(json, "path");
         if (path == null || path.isBlank() || !flowClientResources.contains(path)) {
-            sendError("resourceNotFound", "Unknown Flow client resource: " + path, id, correlationId);
+            sendError("resourceNotFound", "Unknown Flow IPC resource: " + path, id, correlationId);
             return;
         }
         Map<String, Object> response = new LinkedHashMap<>(flowClientResources.response(path));

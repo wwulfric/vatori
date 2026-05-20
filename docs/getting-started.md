@@ -57,16 +57,16 @@ Expected trace characteristics:
 - `compatibilityMode=false`
 - Java sidecar emits `VFIPC1` envelopes.
 - The WebView loads a local HTML shell through `loadHTMLString`, not `http://127.0.0.1`.
-- Button click and the smoke app's text-input / checkbox `change` events travel WebView -> Swift host -> Java sidecar -> Vaadin listener -> patch -> WebView.
-- Bootstrap, ordered server push, event patches and recovery resync include real server-side UIDL under `payload.uidl`; click, input/checkbox `change` events and recovery resync are dispatched through `UidlRequestHandler`/`ServerRpcHandler`.
+- Button click, the smoke app's text-input / checkbox `change` events and the v1.2 `BigDecimalField` Web Component `change` event travel WebView -> Swift host -> Java sidecar -> Vaadin listener -> patch -> WebView.
+- Bootstrap, ordered server push, event patches and recovery resync include real server-side UIDL under `payload.uidl`; click, input/checkbox `change`, `BigDecimalField` `change` events and recovery resync are dispatched through `UidlRequestHandler`/`ServerRpcHandler`.
 - The v1.1 push-ordering smoke emits two ordered server push updates plus a controlled duplicate/late probe; the WebView records delivered/ignored order and triggers explicit `ordering-recovery-duplicate-late` resync.
-- Bootstrap advertises Vaadin `flow-client` classpath resources; the WebView requests and verifies the full advertised resource graph through IPC, imports `FlowBootstrap.js` and `FlowClient.js` as ES modules, initializes the Flow bootstrap plus GWT client modules, classifies executed vs verified-only resources, and performs one dynamic `flow-client-lazy-lookup` probe for `Flow.js`.
+- Bootstrap advertises Vaadin `flow-client` classpath resources and the v1.2 component frontend resource graph; the WebView requests and verifies the Flow resources through IPC, imports `FlowBootstrap.js` and `FlowClient.js` as ES modules, initializes the Flow bootstrap plus GWT client modules, classifies executed vs verified-only resources, imports the real `vaadin-big-decimal-field.js` classpath module with explicit v1.2 shims for missing npm imports, and performs one dynamic `flow-client-lazy-lookup` probe for `Flow.js`.
 - Desktop API calls travel Java sidecar -> Swift host as `VFIPC1 command`, and host responses appear as `capabilityResult`; the Flow IPC smoke app uses `manifest-enforced` permission metadata, includes an intentional manifest deny-path, exercises AppKit file-dialog cancellation and verifies bounded file-transfer download/upload metadata through controlled test paths.
 
 For repeatable real-window smoke verification without global mouse coordinates:
 
 ```bash
-VAADIN_DESKTOP_FLOW_IPC_AUTO_CLICK=1 VAADIN_DESKTOP_FLOW_IPC_AUTO_RESYNC=1 VAADIN_DESKTOP_FLOW_IPC_AUTO_ERROR=1 VAADIN_DESKTOP_FLOW_IPC_AUTO_FILE_DIALOG_CANCEL=1 VAADIN_DESKTOP_FLOW_IPC_AUTO_SHUTDOWN=1 bash bin/vaadin-desktop dev-ipc test-apps/flow-over-ipc-smoke-app
+VAADIN_DESKTOP_FLOW_IPC_AUTO_CLICK=1 VAADIN_DESKTOP_FLOW_IPC_AUTO_VAADIN_TEXT_FIELD=1 VAADIN_DESKTOP_FLOW_IPC_AUTO_RESYNC=1 VAADIN_DESKTOP_FLOW_IPC_AUTO_ERROR=1 VAADIN_DESKTOP_FLOW_IPC_AUTO_FILE_DIALOG_CANCEL=1 VAADIN_DESKTOP_FLOW_IPC_AUTO_SHUTDOWN=1 bash bin/vaadin-desktop dev-ipc test-apps/flow-over-ipc-smoke-app
 ```
 
 Inspect the bundled review trace:
@@ -74,6 +74,7 @@ Inspect the bundled review trace:
 ```bash
 bash bin/flow-ipc-trace-inspect --require-flow-ipc-v1 docs/traces/flow-ipc-v1.ndjson
 bash bin/flow-ipc-trace-inspect --require-flow-ipc-v1_1 docs/traces/flow-ipc-v1_1.ndjson
+bash bin/flow-ipc-trace-inspect --require-flow-ipc-v1_2 docs/traces/flow-ipc-v1_2.ndjson
 ```
 
 Run server-side UIDL adapter checks:
@@ -85,7 +86,7 @@ bash bin/flow-ipc-scope-smoke
 bash bin/flow-client-resource-smoke
 ```
 
-Current limitation: this path is still a constrained smoke-app runtime. It now generates Vaadin UIDL, requests and verifies the advertised Flow client resource graph, initializes `FlowBootstrap.js` / `FlowClient.js` over IPC, classifies the remaining resources as verified-only / intentionally-not-executed, promotes the Flow client container to the visible WebView surface, and sends click events plus one ordering-recovery resync through the server-side Flow RPC path with UIDL patches consumed by the visible Flow client engine. Two ordered server pushes are also delivered into that engine, and one duplicate/late probe is ignored before resync. The hidden repository-local UIDL applier remains only as a diagnostic fallback until broader Flow event coverage, production/dev frontend execution and durable push/reconnect/resync semantics are implemented.
+Current limitation: this path is still a constrained smoke-app runtime. It now generates Vaadin UIDL, requests and verifies the advertised Flow client resource graph, initializes `FlowBootstrap.js` / `FlowClient.js` over IPC, classifies the remaining resources as verified-only / intentionally-not-executed, executes one real `BigDecimalField` frontend module with explicitly shimmed npm imports, promotes the Flow client container to the visible WebView surface, and sends click/change events plus one ordering-recovery resync through the server-side Flow RPC path with UIDL patches consumed by the visible Flow client engine. Two ordered server pushes are also delivered into that engine, and one duplicate/late probe is ignored before resync. The hidden repository-local UIDL applier remains only as a diagnostic fallback until broader Flow event coverage, production/dev frontend execution and durable push/reconnect/resync semantics are implemented.
 
 ## Run the Independent Smoke App
 

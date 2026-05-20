@@ -11,6 +11,7 @@ struct HostConfig {
     var flowIpcAutoResync: Bool = false
     var flowIpcAutoError: Bool = false
     var flowIpcAutoFileDialogCancel: Bool = false
+    var flowIpcAutoVaadinTextField: Bool = false
     var flowIpcAutoShutdown: Bool = false
     var title: String = "Vaadin Desktop"
     var width: Double = 1100
@@ -52,6 +53,8 @@ struct HostConfig {
         config.flowIpcAutoResync = ProcessInfo.processInfo.environment["VAADIN_DESKTOP_FLOW_IPC_AUTO_RESYNC"] == "1"
         config.flowIpcAutoError = ProcessInfo.processInfo.environment["VAADIN_DESKTOP_FLOW_IPC_AUTO_ERROR"] == "1"
         config.flowIpcAutoFileDialogCancel = ProcessInfo.processInfo.environment["VAADIN_DESKTOP_FLOW_IPC_AUTO_FILE_DIALOG_CANCEL"] == "1"
+            || config.flowIpcAutoClick
+        config.flowIpcAutoVaadinTextField = ProcessInfo.processInfo.environment["VAADIN_DESKTOP_FLOW_IPC_AUTO_VAADIN_TEXT_FIELD"] == "1"
             || config.flowIpcAutoClick
         config.flowIpcAutoShutdown = ProcessInfo.processInfo.environment["VAADIN_DESKTOP_FLOW_IPC_AUTO_SHUTDOWN"] == "1"
         return config
@@ -566,6 +569,10 @@ final class WebViewHost: NSObject, NSApplicationDelegate, NSWindowDelegate, WKNa
         }
         if config.flowIpcAutoError {
             let source = "window.__VAADIN_DESKTOP_FLOW_IPC_AUTO_ERROR__ = true;"
+            userContentController.addUserScript(WKUserScript(source: source, injectionTime: .atDocumentStart, forMainFrameOnly: true))
+        }
+        if config.flowIpcAutoVaadinTextField {
+            let source = "window.__VAADIN_DESKTOP_FLOW_IPC_AUTO_VAADIN_TEXT_FIELD__ = true;"
             userContentController.addUserScript(WKUserScript(source: source, injectionTime: .atDocumentStart, forMainFrameOnly: true))
         }
         userContentController.add(self, name: "flowIpc")
@@ -1243,6 +1250,47 @@ final class WebViewHost: NSObject, NSApplicationDelegate, NSWindowDelegate, WKNa
           flowClientResourceThemeLookupResult: window.VaadinDesktopIpcDiagnostics ? window.VaadinDesktopIpcDiagnostics.flowClientResourceThemeLookupResult : "",
           flowClientBootstrapInitError: window.VaadinDesktopIpcDiagnostics ? window.VaadinDesktopIpcDiagnostics.flowClientBootstrapInitError : "",
           flowClientResourceExecutionError: window.VaadinDesktopIpcDiagnostics ? window.VaadinDesktopIpcDiagnostics.flowClientResourceExecutionError : "",
+          vaadinWebComponentResourceManifestObserved: !!(window.VaadinDesktopIpcDiagnostics && window.VaadinDesktopIpcDiagnostics.vaadinWebComponentResourceManifestObserved),
+          vaadinWebComponentResourceManifestCount: window.VaadinDesktopIpcDiagnostics ? window.VaadinDesktopIpcDiagnostics.vaadinWebComponentResourceManifestCount : 0,
+          vaadinWebComponentResourceManifestPrimaryPath: window.VaadinDesktopIpcDiagnostics ? window.VaadinDesktopIpcDiagnostics.vaadinWebComponentResourceManifestPrimaryPath : "",
+          vaadinWebComponentResourceManifestBlockedReason: window.VaadinDesktopIpcDiagnostics ? window.VaadinDesktopIpcDiagnostics.vaadinWebComponentResourceManifestBlockedReason : "",
+          vaadinWebComponentResourceManifestFailureClassification: window.VaadinDesktopIpcDiagnostics ? window.VaadinDesktopIpcDiagnostics.vaadinWebComponentResourceManifestFailureClassification : "",
+          vaadinWebComponentResourceRequested: !!(window.VaadinDesktopIpcDiagnostics && window.VaadinDesktopIpcDiagnostics.vaadinWebComponentResourceRequested),
+          vaadinWebComponentResourceRequestedCount: window.VaadinDesktopIpcDiagnostics ? window.VaadinDesktopIpcDiagnostics.vaadinWebComponentResourceRequestedCount : 0,
+          vaadinWebComponentResourceRequestedPaths: window.VaadinDesktopIpcDiagnostics ? window.VaadinDesktopIpcDiagnostics.vaadinWebComponentResourceRequestedPaths : "",
+          vaadinWebComponentResourceResponseCount: window.VaadinDesktopIpcDiagnostics ? window.VaadinDesktopIpcDiagnostics.vaadinWebComponentResourceResponseCount : 0,
+          vaadinWebComponentResourceResponsePaths: window.VaadinDesktopIpcDiagnostics ? window.VaadinDesktopIpcDiagnostics.vaadinWebComponentResourceResponsePaths : "",
+          vaadinWebComponentResourceResolved: !!(window.VaadinDesktopIpcDiagnostics && window.VaadinDesktopIpcDiagnostics.vaadinWebComponentResourceResolved),
+          vaadinWebComponentResourceVerified: !!(window.VaadinDesktopIpcDiagnostics && window.VaadinDesktopIpcDiagnostics.vaadinWebComponentResourceVerified),
+          vaadinWebComponentResourceVerifiedCount: window.VaadinDesktopIpcDiagnostics ? window.VaadinDesktopIpcDiagnostics.vaadinWebComponentResourceVerifiedCount : 0,
+          vaadinWebComponentResourceVerifiedPaths: window.VaadinDesktopIpcDiagnostics ? window.VaadinDesktopIpcDiagnostics.vaadinWebComponentResourceVerifiedPaths : "",
+          vaadinWebComponentResourceExecuted: !!(window.VaadinDesktopIpcDiagnostics && window.VaadinDesktopIpcDiagnostics.vaadinWebComponentResourceExecuted),
+          vaadinWebComponentResourceExecutedPath: window.VaadinDesktopIpcDiagnostics ? window.VaadinDesktopIpcDiagnostics.vaadinWebComponentResourceExecutedPath : "",
+          vaadinWebComponentResourceExecutedCount: window.VaadinDesktopIpcDiagnostics ? window.VaadinDesktopIpcDiagnostics.vaadinWebComponentResourceExecutedCount : 0,
+          vaadinWebComponentResourceExecutedPaths: window.VaadinDesktopIpcDiagnostics ? window.VaadinDesktopIpcDiagnostics.vaadinWebComponentResourceExecutedPaths : "",
+          vaadinWebComponentResourceExecutionFailed: !!(window.VaadinDesktopIpcDiagnostics && window.VaadinDesktopIpcDiagnostics.vaadinWebComponentResourceExecutionFailed),
+          vaadinWebComponentResourceExecutionFailedCount: window.VaadinDesktopIpcDiagnostics ? window.VaadinDesktopIpcDiagnostics.vaadinWebComponentResourceExecutionFailedCount : 0,
+          vaadinWebComponentResourceExecutionFailedPaths: window.VaadinDesktopIpcDiagnostics ? window.VaadinDesktopIpcDiagnostics.vaadinWebComponentResourceExecutionFailedPaths : "",
+          vaadinWebComponentResourceGraphComplete: !!(window.VaadinDesktopIpcDiagnostics && window.VaadinDesktopIpcDiagnostics.vaadinWebComponentResourceGraphComplete),
+          vaadinWebComponentResourceGraphVerified: !!(window.VaadinDesktopIpcDiagnostics && window.VaadinDesktopIpcDiagnostics.vaadinWebComponentResourceGraphVerified),
+          vaadinWebComponentResourceBlockedReason: window.VaadinDesktopIpcDiagnostics ? window.VaadinDesktopIpcDiagnostics.vaadinWebComponentResourceBlockedReason : "",
+          vaadinWebComponentResourceFailureClassification: window.VaadinDesktopIpcDiagnostics ? window.VaadinDesktopIpcDiagnostics.vaadinWebComponentResourceFailureClassification : "",
+          vaadinWebComponentResourceShimmedImports: window.VaadinDesktopIpcDiagnostics ? window.VaadinDesktopIpcDiagnostics.vaadinWebComponentResourceShimmedImports : "",
+          vaadinWebComponentResourceImportMode: window.VaadinDesktopIpcDiagnostics ? window.VaadinDesktopIpcDiagnostics.vaadinWebComponentResourceImportMode : "",
+          vaadinWebComponentResourceExecutionError: window.VaadinDesktopIpcDiagnostics ? window.VaadinDesktopIpcDiagnostics.vaadinWebComponentResourceExecutionError : "",
+          vaadinWebComponentTagDefined: !!(window.VaadinDesktopIpcDiagnostics && window.VaadinDesktopIpcDiagnostics.vaadinWebComponentTagDefined),
+          vaadinWebComponentRendered: !!(window.VaadinDesktopIpcDiagnostics && window.VaadinDesktopIpcDiagnostics.vaadinWebComponentRendered),
+          vaadinWebComponentRenderedTag: window.VaadinDesktopIpcDiagnostics ? window.VaadinDesktopIpcDiagnostics.vaadinWebComponentRenderedTag : "",
+          vaadinWebComponentRenderedValue: window.VaadinDesktopIpcDiagnostics ? window.VaadinDesktopIpcDiagnostics.vaadinWebComponentRenderedValue : "",
+          vaadinWebComponentEventDispatchMode: window.VaadinDesktopIpcDiagnostics ? window.VaadinDesktopIpcDiagnostics.vaadinWebComponentEventDispatchMode : "",
+          vaadinWebComponentEventObserved: !!(window.VaadinDesktopIpcDiagnostics && window.VaadinDesktopIpcDiagnostics.vaadinWebComponentEventObserved),
+          vaadinWebComponentEventRpcObserved: !!(window.VaadinDesktopIpcDiagnostics && window.VaadinDesktopIpcDiagnostics.vaadinWebComponentEventRpcObserved),
+          vaadinWebComponentEventComponentId: window.VaadinDesktopIpcDiagnostics ? window.VaadinDesktopIpcDiagnostics.vaadinWebComponentEventComponentId : "",
+          vaadinWebComponentEventType: window.VaadinDesktopIpcDiagnostics ? window.VaadinDesktopIpcDiagnostics.vaadinWebComponentEventType : "",
+          vaadinWebComponentEventValue: window.VaadinDesktopIpcDiagnostics ? window.VaadinDesktopIpcDiagnostics.vaadinWebComponentEventValue : "",
+          vaadinWebComponentStatusText: window.VaadinDesktopIpcDiagnostics ? window.VaadinDesktopIpcDiagnostics.vaadinWebComponentStatusText : "",
+          vaadinWebComponentPostEventState: window.VaadinDesktopIpcDiagnostics ? window.VaadinDesktopIpcDiagnostics.vaadinWebComponentPostEventState : "",
+          vaadinWebComponentFailureReason: window.VaadinDesktopIpcDiagnostics ? window.VaadinDesktopIpcDiagnostics.vaadinWebComponentFailureReason : "",
           flowClientEngineResourceLoaded: !!(window.VaadinDesktopIpcDiagnostics && window.VaadinDesktopIpcDiagnostics.flowClientEngineResourceLoaded),
           flowClientEngineResourcePath: window.VaadinDesktopIpcDiagnostics ? window.VaadinDesktopIpcDiagnostics.flowClientEngineResourcePath : "",
           flowClientEngineResourceBytes: window.VaadinDesktopIpcDiagnostics ? window.VaadinDesktopIpcDiagnostics.flowClientEngineResourceBytes : 0,
@@ -1493,11 +1541,14 @@ let flowIpcShell = #"""
       let autoClickReadinessAttempts = 0;
       let autoClickInFlight = false;
       let autoComponentEventValue = 'Flow IPC typed';
+      let autoVaadinWebComponentValue = '42.5';
       let autoComponentEventRetryLimit = 30;
       let autoComponentEventDelayMs = 140;
       let autoComponentEventRetryMs = 80;
       let autoComponentEventTimeoutMs = 500;
-      let autoComponentEventEnabled = !!window.__VAADIN_DESKTOP_FLOW_IPC_AUTO_CLICK__;
+      let autoComponentEventEnabled =
+        !!window.__VAADIN_DESKTOP_FLOW_IPC_AUTO_CLICK__
+        || !!window.__VAADIN_DESKTOP_FLOW_IPC_AUTO_VAADIN_TEXT_FIELD__;
       let autoComponentEvents = [
         {
           key: 'text',
@@ -1514,6 +1565,21 @@ let flowIpcShell = #"""
           value: true,
           data: () => ({ 'element.checked': true }),
           prepare: (element) => { element.checked = true; }
+        },
+        {
+          key: 'vaadin-big-decimal',
+          id: 'ipc-vaadin-big-decimal',
+          eventType: 'change',
+          value: autoVaadinWebComponentValue,
+          data: () => ({ 'element.value': autoVaadinWebComponentValue }),
+          requiresComponentResource: true,
+          dispatchDomEvent: true,
+          prepare: (element) => {
+            element.value = autoVaadinWebComponentValue;
+            if (element.inputElement) {
+              element.inputElement.value = autoVaadinWebComponentValue;
+            }
+          }
         }
       ];
       let autoComponentEventIndex = 0;
@@ -1525,10 +1591,12 @@ let flowIpcShell = #"""
       const flowBootstrapAppId = 'ROOT-2521314';
       const flowBootstrapClientId = flowBootstrapAppId.replace(/-\d+$/, '');
       let flowClientResources = [];
+      let componentFrontendResources = [];
       let flowClientBootstrapInitResponse = null;
       let flowClientEngineResourceBaseVerified = false;
       let originalXMLHttpRequest = null;
       let flowClientResourceGraphMetadataVerified = true;
+      let componentFrontendResourceGraphMetadataVerified = true;
       const flowClientResourceRequests = new Set();
       const flowClientResourceResponsePaths = new Set();
       const flowClientResourceExpectedSha256ByPath = new Map();
@@ -1537,6 +1605,13 @@ let flowIpcShell = #"""
       const flowClientResourceVerifiedOnlyPaths = new Set();
       const flowClientResourceIntentionallyNotExecutedPaths = new Set();
       const flowClientResourceExecutionFailedPaths = new Set();
+      const componentFrontendResourceRequests = new Set();
+      const componentFrontendResourceResponsePaths = new Set();
+      const componentFrontendResourceExpectedSha256ByPath = new Map();
+      const componentFrontendResourceBodies = new Map();
+      const componentFrontendResourceVerifiedPaths = new Set();
+      const componentFrontendResourceExecutedPaths = new Set();
+      const componentFrontendResourceExecutionFailedPaths = new Set();
       const pendingFlowClientXhrRequests = new Map();
       const queuedFlowClientEngineMessages = [];
       const queuedFlowClientEngineMessageOrder = [];
@@ -1605,6 +1680,47 @@ let flowIpcShell = #"""
         flowClientResourceStaticLookupPath: '',
         flowClientResourceThemeLookupResult: '',
         flowClientResourceExecutionError: '',
+        vaadinWebComponentResourceManifestObserved: false,
+        vaadinWebComponentResourceManifestCount: 0,
+        vaadinWebComponentResourceManifestPrimaryPath: '',
+        vaadinWebComponentResourceManifestBlockedReason: '',
+        vaadinWebComponentResourceManifestFailureClassification: '',
+        vaadinWebComponentResourceRequested: false,
+        vaadinWebComponentResourceRequestedCount: 0,
+        vaadinWebComponentResourceRequestedPaths: '',
+        vaadinWebComponentResourceResponseCount: 0,
+        vaadinWebComponentResourceResponsePaths: '',
+        vaadinWebComponentResourceResolved: false,
+        vaadinWebComponentResourceVerified: false,
+        vaadinWebComponentResourceVerifiedCount: 0,
+        vaadinWebComponentResourceVerifiedPaths: '',
+        vaadinWebComponentResourceExecuted: false,
+        vaadinWebComponentResourceExecutedPath: '',
+        vaadinWebComponentResourceExecutedCount: 0,
+        vaadinWebComponentResourceExecutedPaths: '',
+        vaadinWebComponentResourceExecutionFailed: false,
+        vaadinWebComponentResourceExecutionFailedCount: 0,
+        vaadinWebComponentResourceExecutionFailedPaths: '',
+        vaadinWebComponentResourceGraphComplete: false,
+        vaadinWebComponentResourceGraphVerified: false,
+        vaadinWebComponentResourceBlockedReason: '',
+        vaadinWebComponentResourceFailureClassification: '',
+        vaadinWebComponentResourceShimmedImports: '',
+        vaadinWebComponentResourceImportMode: '',
+        vaadinWebComponentResourceExecutionError: '',
+        vaadinWebComponentTagDefined: false,
+        vaadinWebComponentRendered: false,
+        vaadinWebComponentRenderedTag: '',
+        vaadinWebComponentRenderedValue: '',
+        vaadinWebComponentEventDispatchMode: '',
+        vaadinWebComponentEventObserved: false,
+        vaadinWebComponentEventRpcObserved: false,
+        vaadinWebComponentEventComponentId: '',
+        vaadinWebComponentEventType: '',
+        vaadinWebComponentEventValue: '',
+        vaadinWebComponentStatusText: '',
+        vaadinWebComponentPostEventState: '',
+        vaadinWebComponentFailureReason: '',
         flowClientEngineResourceLoaded: false,
         flowClientEngineResourcePath: '',
         flowClientEngineResourceBytes: 0,
@@ -2237,6 +2353,12 @@ let flowIpcShell = #"""
               const currentOrder = window.VaadinDesktopIpcDiagnostics.flowClientEngineComponentEventOrder;
               window.VaadinDesktopIpcDiagnostics.flowClientEngineComponentEventOrder =
                 currentOrder ? currentOrder + ',' + pending.componentId : pending.componentId;
+              if (pending.componentId === 'ipc-vaadin-big-decimal') {
+                window.VaadinDesktopIpcDiagnostics.vaadinWebComponentEventRpcObserved = true;
+                window.VaadinDesktopIpcDiagnostics.vaadinWebComponentEventComponentId = pending.componentId;
+                window.VaadinDesktopIpcDiagnostics.vaadinWebComponentEventType = pending.eventType;
+                window.VaadinDesktopIpcDiagnostics.vaadinWebComponentEventValue = autoVaadinWebComponentValue;
+              }
             }
           }
           if (message.payload && message.payload.reason === 'resync') {
@@ -2285,10 +2407,15 @@ let flowIpcShell = #"""
           autoClickInFlight = true;
           client.sendEventMessage(buttonTarget.nodeId, 'click', {});
           setTimeout(() => {
+            if (window.VaadinDesktopIpcDiagnostics.flowClientEngineEventPatchConsumed) {
+              autoClickDone = true;
+              autoClickInFlight = false;
+              return;
+            }
             autoClickInFlight = false;
             refreshFlowClientEngineDiagnostics();
             scheduleAutoClick();
-          }, 1200);
+          }, 6000);
           return;
         }
         autoClickReadinessAttempts += 1;
@@ -2324,7 +2451,9 @@ let flowIpcShell = #"""
         if (!autoComponentEventEnabled || autoComponentEventsDone) {
           return;
         }
-        if (!window.VaadinDesktopIpcDiagnostics.flowClientEngineEventPatchConsumed
+        const baselineEventReady = !window.__VAADIN_DESKTOP_FLOW_IPC_AUTO_CLICK__
+          || window.VaadinDesktopIpcDiagnostics.flowClientEngineEventPatchConsumed;
+        if (!baselineEventReady
             || !window.VaadinDesktopIpcDiagnostics.flowClientEngineXhrBridgeInstalled) {
           setTimeout(scheduleAutoComponentEvents, autoComponentEventRetryMs);
           return;
@@ -2339,6 +2468,17 @@ let flowIpcShell = #"""
         }
 
         const descriptor = autoComponentEvents[autoComponentEventIndex];
+        if (descriptor.requiresComponentResource
+            && !window.VaadinDesktopIpcDiagnostics.vaadinWebComponentTagDefined) {
+          autoComponentEventAttempts += 1;
+          if (autoComponentEventAttempts < autoComponentEventRetryLimit) {
+            setTimeout(scheduleAutoComponentEvents, autoComponentEventRetryMs);
+          } else {
+            window.VaadinDesktopIpcDiagnostics.vaadinWebComponentFailureReason =
+              'component-resource-not-executed-before-event';
+          }
+          return;
+        }
         const target = flowClientEngineElementById(descriptor.id);
         const client = flowClientEngineClient();
         if (!target || !client || typeof client.sendEventMessage !== 'function') {
@@ -2353,7 +2493,19 @@ let flowIpcShell = #"""
         autoComponentEventInFlight = true;
         try {
           descriptor.prepare(target.element);
-          client.sendEventMessage(target.nodeId, descriptor.eventType, descriptor.data());
+          if (descriptor.dispatchDomEvent) {
+            window.VaadinDesktopIpcDiagnostics.vaadinWebComponentEventDispatchMode = 'dom-event';
+            window.VaadinDesktopIpcDiagnostics.vaadinWebComponentEventComponentId = descriptor.id;
+            window.VaadinDesktopIpcDiagnostics.vaadinWebComponentEventType = descriptor.eventType;
+            window.VaadinDesktopIpcDiagnostics.vaadinWebComponentEventValue = String(descriptor.value);
+            target.element.dispatchEvent(new Event(descriptor.eventType, {
+              bubbles: true,
+              composed: true
+            }));
+            window.VaadinDesktopIpcDiagnostics.vaadinWebComponentEventObserved = true;
+          } else {
+            client.sendEventMessage(target.nodeId, descriptor.eventType, descriptor.data());
+          }
         } catch (error) {
           window.VaadinDesktopIpcDiagnostics.flowClientEngineXhrError = error && error.message ? error.message : String(error);
           autoComponentEventInFlight = false;
@@ -2365,7 +2517,13 @@ let flowIpcShell = #"""
           refreshFlowClientEngineDiagnostics();
           const textDone = window.VaadinDesktopIpcDiagnostics.flowClientEngineTextInputEventObserved;
           const checkboxDone = window.VaadinDesktopIpcDiagnostics.flowClientEngineCheckboxEventObserved;
-          if ((descriptor.key === 'text' && textDone) || (descriptor.key === 'checkbox' && checkboxDone)) {
+          const vaadinWebComponentDone =
+            window.VaadinDesktopIpcDiagnostics.vaadinWebComponentEventObserved
+            && window.VaadinDesktopIpcDiagnostics.vaadinWebComponentEventRpcObserved
+            && window.VaadinDesktopIpcDiagnostics.vaadinWebComponentPostEventState.includes(autoVaadinWebComponentValue);
+          if ((descriptor.key === 'text' && textDone)
+              || (descriptor.key === 'checkbox' && checkboxDone)
+              || (descriptor.key === 'vaadin-big-decimal' && vaadinWebComponentDone)) {
             autoComponentEventIndex += 1;
           }
           if (autoComponentEventIndex >= autoComponentEvents.length) {
@@ -2485,6 +2643,30 @@ let flowIpcShell = #"""
         requestFlowClientResource('META-INF/frontend/FlowBootstrap.js', 'flow-bootstrap-module', 'flow-client-resource-probe');
       }
 
+      function requestComponentFrontendResourceProbe(payload) {
+        const manifest = payload && payload.componentFrontendResources ? payload.componentFrontendResources : {};
+        componentFrontendResources = Array.isArray(manifest.resources) ? manifest.resources : [];
+        window.VaadinDesktopIpcDiagnostics.vaadinWebComponentResourceManifestObserved =
+          componentFrontendResources.length > 0;
+        window.VaadinDesktopIpcDiagnostics.vaadinWebComponentResourceManifestCount = componentFrontendResources.length;
+        window.VaadinDesktopIpcDiagnostics.vaadinWebComponentResourceManifestPrimaryPath =
+          typeof manifest.primaryResource === 'string' ? manifest.primaryResource : '';
+        window.VaadinDesktopIpcDiagnostics.vaadinWebComponentResourceManifestBlockedReason =
+          typeof manifest.blockedReason === 'string' ? manifest.blockedReason : '';
+        window.VaadinDesktopIpcDiagnostics.vaadinWebComponentResourceManifestFailureClassification =
+          typeof manifest.failureClassification === 'string' ? manifest.failureClassification : '';
+        window.VaadinDesktopIpcDiagnostics.vaadinWebComponentResourceBlockedReason =
+          window.VaadinDesktopIpcDiagnostics.vaadinWebComponentResourceManifestBlockedReason;
+        window.VaadinDesktopIpcDiagnostics.vaadinWebComponentResourceFailureClassification =
+          window.VaadinDesktopIpcDiagnostics.vaadinWebComponentResourceManifestFailureClassification;
+        for (const resource of componentFrontendResources) {
+          if (!resource || typeof resource.path !== 'string') {
+            continue;
+          }
+          requestComponentFrontendResource(resource.path, resource.kind || '', 'vaadin-web-component-resource-probe');
+        }
+      }
+
       function requestFlowClientEngineResourceProbe() {
         requestFlowClientResource('META-INF/frontend/FlowClient.js', 'flow-client-module', 'flow-client-engine-probe');
       }
@@ -2503,6 +2685,10 @@ let flowIpcShell = #"""
 
       function flowClientResourceByPath(path) {
         return flowClientResources.find((entry) => entry && entry.path === path) || null;
+      }
+
+      function componentFrontendResourceByPath(path) {
+        return componentFrontendResources.find((entry) => entry && entry.path === path) || null;
       }
 
       function requestFlowClientResource(path, kind, purpose) {
@@ -2527,6 +2713,43 @@ let flowIpcShell = #"""
         }
         send('resourceRequest', {
           purpose,
+          path: resource.path,
+          expectedSha256: resource.sha256 || '',
+          securityKey
+        });
+      }
+
+      function requestComponentFrontendResource(path, kind, purpose) {
+        const resource = componentFrontendResources.find((entry) => entry.path === path)
+          || componentFrontendResources.find((entry) => entry.kind === kind);
+        if (!resource || typeof resource.path !== 'string') {
+          return;
+        }
+        if (componentFrontendResourceRequests.has(resource.path)) {
+          return;
+        }
+        componentFrontendResourceRequests.add(resource.path);
+        componentFrontendResourceExpectedSha256ByPath.set(resource.path, resource.sha256 || '');
+        window.VaadinDesktopIpcDiagnostics.vaadinWebComponentResourceRequested = true;
+        window.VaadinDesktopIpcDiagnostics.vaadinWebComponentResourceRequestedCount =
+          componentFrontendResourceRequests.size;
+        window.VaadinDesktopIpcDiagnostics.vaadinWebComponentResourceRequestedPaths =
+          Array.from(componentFrontendResourceRequests).join(',');
+        if (resource.blockedReason) {
+          window.VaadinDesktopIpcDiagnostics.vaadinWebComponentResourceBlockedReason = resource.blockedReason;
+        }
+        if (resource.failureClassification) {
+          window.VaadinDesktopIpcDiagnostics.vaadinWebComponentResourceFailureClassification =
+            resource.failureClassification;
+        }
+        if (Array.isArray(resource.shimmedImports)) {
+          window.VaadinDesktopIpcDiagnostics.vaadinWebComponentResourceShimmedImports =
+            resource.shimmedImports.join(',');
+        }
+        const securityKey = flowClientState.securityKey || flowClientState.csrfToken;
+        send('resourceRequest', {
+          purpose,
+          lookupKind: 'BigDecimalField-minimum-component-resource',
           path: resource.path,
           expectedSha256: resource.sha256 || '',
           securityKey
@@ -2953,6 +3176,8 @@ let flowIpcShell = #"""
             'ipc-text-status',
             'ipc-checkbox',
             'ipc-checkbox-status',
+            'ipc-vaadin-big-decimal',
+            'ipc-vaadin-big-decimal-status',
             'ipc-push-status',
             'ipc-push-order-status'
           ];
@@ -3034,6 +3259,26 @@ let flowIpcShell = #"""
           } catch (_) {
             window.VaadinDesktopIpcDiagnostics.flowClientEngineCheckboxStatusText = '';
           }
+          try {
+            const componentTarget = flowClientEngineElementById('ipc-vaadin-big-decimal');
+            const componentElement = componentTarget ? componentTarget.element : null;
+            const componentStatus = flowClientEngineElementById('ipc-vaadin-big-decimal-status');
+            const componentStatusText = componentStatus ? (componentStatus.element.textContent || '') : '';
+            window.VaadinDesktopIpcDiagnostics.vaadinWebComponentRendered = !!componentElement;
+            window.VaadinDesktopIpcDiagnostics.vaadinWebComponentRenderedTag =
+              componentElement ? componentElement.tagName.toLowerCase() : '';
+            window.VaadinDesktopIpcDiagnostics.vaadinWebComponentRenderedValue =
+              componentElement && typeof componentElement.value !== 'undefined' ? String(componentElement.value || '') : '';
+            window.VaadinDesktopIpcDiagnostics.vaadinWebComponentTagDefined =
+              !!customElements.get('vaadin-big-decimal-field');
+            window.VaadinDesktopIpcDiagnostics.vaadinWebComponentStatusText = componentStatusText;
+            window.VaadinDesktopIpcDiagnostics.vaadinWebComponentPostEventState = componentStatusText;
+            if (componentStatusText.includes('Vaadin BigDecimalField: ' + autoVaadinWebComponentValue)) {
+              window.VaadinDesktopIpcDiagnostics.vaadinWebComponentEventObserved = true;
+            }
+          } catch (_) {
+            window.VaadinDesktopIpcDiagnostics.vaadinWebComponentRendered = false;
+          }
         }
         if (window.VaadinDesktopIpcDiagnostics.flowClientEngineClientRegistered) {
           window.VaadinDesktopIpcDiagnostics.flowClientEngineInitError = '';
@@ -3058,7 +3303,10 @@ let flowIpcShell = #"""
         }
         if (autoComponentEventEnabled
             && window.VaadinDesktopIpcDiagnostics.flowClientEngineTextInputEventObserved
-            && window.VaadinDesktopIpcDiagnostics.flowClientEngineCheckboxEventObserved) {
+            && window.VaadinDesktopIpcDiagnostics.flowClientEngineCheckboxEventObserved
+            && window.VaadinDesktopIpcDiagnostics.vaadinWebComponentEventObserved
+            && window.VaadinDesktopIpcDiagnostics.vaadinWebComponentEventRpcObserved
+            && window.VaadinDesktopIpcDiagnostics.vaadinWebComponentPostEventState.includes(autoVaadinWebComponentValue)) {
           autoComponentEventsDone = true;
           autoComponentEventInFlight = false;
         }
@@ -3097,6 +3345,10 @@ let flowIpcShell = #"""
       }
 
       async function handleResourceResponse(payload) {
+        if (payload && payload.componentFrontendResource === true) {
+          await handleComponentFrontendResourceResponse(payload);
+          return;
+        }
         if (!payload || payload.flowClientResource !== true) {
           return;
         }
@@ -3141,6 +3393,156 @@ let flowIpcShell = #"""
           + window.VaadinDesktopIpcDiagnostics.flowClientResourceGraphResponseCount
           + '/'
           + window.VaadinDesktopIpcDiagnostics.flowClientResourceManifestCount;
+      }
+
+      async function handleComponentFrontendResourceResponse(payload) {
+        const body = typeof payload.body === 'string' ? payload.body : '';
+        const resourcePath = payload.path || '';
+        const expectedSha256 = componentFrontendResourceExpectedSha256ByPath.get(resourcePath) || '';
+        const metadataMatches = !expectedSha256 || expectedSha256 === (payload.sha256 || '');
+        if (resourcePath) {
+          componentFrontendResourceResponsePaths.add(resourcePath);
+          componentFrontendResourceGraphMetadataVerified =
+            componentFrontendResourceGraphMetadataVerified && metadataMatches && !!body;
+          if (metadataMatches && !!body) {
+            componentFrontendResourceVerifiedPaths.add(resourcePath);
+            componentFrontendResourceBodies.set(resourcePath, body);
+          } else {
+            componentFrontendResourceExecutionFailedPaths.add(resourcePath);
+          }
+          window.VaadinDesktopIpcDiagnostics.vaadinWebComponentResourceResponseCount =
+            componentFrontendResourceResponsePaths.size;
+          window.VaadinDesktopIpcDiagnostics.vaadinWebComponentResourceResponsePaths =
+            Array.from(componentFrontendResourceResponsePaths).join(',');
+        }
+        if (payload.blockedReason) {
+          window.VaadinDesktopIpcDiagnostics.vaadinWebComponentResourceBlockedReason = payload.blockedReason;
+        }
+        if (payload.failureClassification) {
+          window.VaadinDesktopIpcDiagnostics.vaadinWebComponentResourceFailureClassification =
+            payload.failureClassification;
+        }
+        if (Array.isArray(payload.shimmedImports)) {
+          window.VaadinDesktopIpcDiagnostics.vaadinWebComponentResourceShimmedImports =
+            payload.shimmedImports.join(',');
+        }
+        refreshComponentFrontendResourceDiagnostics();
+        await maybeExecuteVaadinWebComponentResource();
+      }
+
+      function refreshComponentFrontendResourceDiagnostics() {
+        const manifestCount = window.VaadinDesktopIpcDiagnostics.vaadinWebComponentResourceManifestCount
+          || componentFrontendResources.length;
+        window.VaadinDesktopIpcDiagnostics.vaadinWebComponentResourceVerifiedCount =
+          componentFrontendResourceVerifiedPaths.size;
+        window.VaadinDesktopIpcDiagnostics.vaadinWebComponentResourceVerifiedPaths =
+          Array.from(componentFrontendResourceVerifiedPaths).join(',');
+        window.VaadinDesktopIpcDiagnostics.vaadinWebComponentResourceExecutedCount =
+          componentFrontendResourceExecutedPaths.size;
+        window.VaadinDesktopIpcDiagnostics.vaadinWebComponentResourceExecutedPaths =
+          Array.from(componentFrontendResourceExecutedPaths).join(',');
+        window.VaadinDesktopIpcDiagnostics.vaadinWebComponentResourceExecutionFailedCount =
+          componentFrontendResourceExecutionFailedPaths.size;
+        window.VaadinDesktopIpcDiagnostics.vaadinWebComponentResourceExecutionFailedPaths =
+          Array.from(componentFrontendResourceExecutionFailedPaths).join(',');
+        window.VaadinDesktopIpcDiagnostics.vaadinWebComponentResourceExecutionFailed =
+          componentFrontendResourceExecutionFailedPaths.size > 0;
+        window.VaadinDesktopIpcDiagnostics.vaadinWebComponentResourceGraphComplete =
+          manifestCount > 0 && componentFrontendResourceResponsePaths.size >= manifestCount;
+        window.VaadinDesktopIpcDiagnostics.vaadinWebComponentResourceGraphVerified =
+          componentFrontendResourceGraphMetadataVerified
+          && window.VaadinDesktopIpcDiagnostics.vaadinWebComponentResourceGraphComplete;
+        window.VaadinDesktopIpcDiagnostics.vaadinWebComponentResourceResolved =
+          window.VaadinDesktopIpcDiagnostics.vaadinWebComponentResourceGraphVerified;
+        window.VaadinDesktopIpcDiagnostics.vaadinWebComponentResourceVerified =
+          window.VaadinDesktopIpcDiagnostics.vaadinWebComponentResourceGraphVerified;
+        window.VaadinDesktopIpcDiagnostics.vaadinWebComponentTagDefined =
+          !!customElements.get('vaadin-big-decimal-field');
+      }
+
+      function componentModuleBlobUrl(path, urlsToRevoke) {
+        const body = componentFrontendResourceBodies.get(path) || '';
+        if (!body) {
+          return '';
+        }
+        const url = URL.createObjectURL(new Blob([body], { type: 'text/javascript' }));
+        urlsToRevoke.push(url);
+        return url;
+      }
+
+      function rewriteVaadinBigDecimalFieldModule(source, urlsToRevoke) {
+        const litUrl = componentModuleBlobUrl('META-INF/vatori/frontend-shims/lit.js', urlsToRevoke);
+        const textFieldUrl = componentModuleBlobUrl('META-INF/vatori/frontend-shims/vaadin-text-field.js', urlsToRevoke);
+        const defineUrl = componentModuleBlobUrl('META-INF/vatori/frontend-shims/component-base-define.js', urlsToRevoke);
+        if (!litUrl || !textFieldUrl || !defineUrl) {
+          window.VaadinDesktopIpcDiagnostics.vaadinWebComponentFailureReason =
+            'missing-v1_2-component-import-shim';
+          return '';
+        }
+        return source
+          .replace("from 'lit'", "from '" + litUrl + "'")
+          .replace("from '@vaadin/text-field/src/vaadin-text-field.js'", "from '" + textFieldUrl + "'")
+          .replace("from '@vaadin/component-base/src/define.js'", "from '" + defineUrl + "'");
+      }
+
+      async function maybeExecuteVaadinWebComponentResource() {
+        if (window.VaadinDesktopIpcDiagnostics.vaadinWebComponentResourceExecuted
+            || window.VaadinDesktopIpcDiagnostics.vaadinWebComponentResourceExecutionFailed) {
+          return;
+        }
+        if (!window.VaadinDesktopIpcDiagnostics.vaadinWebComponentResourceGraphVerified) {
+          return;
+        }
+        const primaryPath = window.VaadinDesktopIpcDiagnostics.vaadinWebComponentResourceManifestPrimaryPath
+          || 'META-INF/resources/frontend/vaadin-big-decimal-field.js';
+        const primaryBody = componentFrontendResourceBodies.get(primaryPath) || '';
+        if (!primaryBody) {
+          componentFrontendResourceExecutionFailedPaths.add(primaryPath);
+          window.VaadinDesktopIpcDiagnostics.vaadinWebComponentFailureReason =
+            'missing-primary-component-resource-body';
+          refreshComponentFrontendResourceDiagnostics();
+          return;
+        }
+        const urlsToRevoke = [];
+        try {
+          const rewrittenSource = rewriteVaadinBigDecimalFieldModule(primaryBody, urlsToRevoke);
+          if (!rewrittenSource) {
+            componentFrontendResourceExecutionFailedPaths.add(primaryPath);
+            refreshComponentFrontendResourceDiagnostics();
+            return;
+          }
+          const primaryUrl = URL.createObjectURL(new Blob([rewrittenSource], { type: 'text/javascript' }));
+          urlsToRevoke.push(primaryUrl);
+          window.VaadinDesktopIpcDiagnostics.vaadinWebComponentResourceImportMode =
+            'dynamic-import-blob-with-v1_2-shimmed-transitive-imports';
+          await import(primaryUrl);
+          if (!customElements.get('vaadin-big-decimal-field')) {
+            componentFrontendResourceExecutionFailedPaths.add(primaryPath);
+            window.VaadinDesktopIpcDiagnostics.vaadinWebComponentFailureReason =
+              'custom-element-not-defined-after-import';
+            refreshComponentFrontendResourceDiagnostics();
+            return;
+          }
+          componentFrontendResourceExecutedPaths.add(primaryPath);
+          window.VaadinDesktopIpcDiagnostics.vaadinWebComponentResourceExecuted = true;
+          window.VaadinDesktopIpcDiagnostics.vaadinWebComponentResourceExecutedPath = primaryPath;
+          window.VaadinDesktopIpcDiagnostics.vaadinWebComponentTagDefined = true;
+          window.VaadinDesktopIpcDiagnostics.vaadinWebComponentFailureReason = '';
+          refreshComponentFrontendResourceDiagnostics();
+          refreshFlowClientEngineDiagnostics();
+          setTimeout(scheduleAutoComponentEvents, 160);
+        } catch (error) {
+          componentFrontendResourceExecutionFailedPaths.add(primaryPath);
+          window.VaadinDesktopIpcDiagnostics.vaadinWebComponentResourceExecutionError =
+            error && error.message ? error.message : String(error);
+          window.VaadinDesktopIpcDiagnostics.vaadinWebComponentFailureReason =
+            'browser-execution-error';
+          refreshComponentFrontendResourceDiagnostics();
+        } finally {
+          for (const url of urlsToRevoke) {
+            URL.revokeObjectURL(url);
+          }
+        }
       }
 
       async function handleFlowBootstrapResourceResponse(payload, body, metadataMatches) {
@@ -3273,6 +3675,7 @@ let flowIpcShell = #"""
                 }
                 rememberFlowClientBootstrapPayload(message.payload);
                 requestFlowClientResourceProbe(message.payload);
+                requestComponentFrontendResourceProbe(message.payload);
               } else if (!flowClientOwnsMessage && message.payload && message.payload.uidl && message.payload.uidl.resync === true) {
                 if (!applyUidlBootstrap(message.payload)) {
                   render(message.payload && message.payload.tree);

@@ -84,26 +84,40 @@ public final class FlowClientResourceSmokeMain {
         }
         Map<String, Object> componentManifest = resources.componentManifest();
         Object componentEntries = componentManifest.get("resources");
-        if (!(componentEntries instanceof List<?> componentResources) || componentResources.size() < 4) {
-            throw new IllegalStateException("Component frontend resource manifest does not contain the v1.3 graph");
+        if (!(componentEntries instanceof List<?> componentResources) || componentResources.size() < 7) {
+            throw new IllegalStateException("Component frontend resource manifest does not contain the framework graph");
         }
         if (!Objects.equals(componentManifest.get("resolverStrategy"), "generic-component-frontend-manifest-v1_3")) {
             throw new IllegalStateException("Component frontend manifest is not using the v1.3 resolver strategy");
         }
-        if (!resources.contains("META-INF/vatori/frontend-shims/vaadin-checkbox.js")) {
-            throw new IllegalStateException("Component frontend manifest is missing the v1.3 checkbox shim");
+        String checkboxDevBundlePath = "META-INF/vatori/dev-bundle-entry/vaadin-checkbox.js";
+        String bigDecimalPath = "META-INF/resources/frontend/vaadin-big-decimal-field.js";
+        if (!resources.contains(bigDecimalPath)) {
+            throw new IllegalStateException("Component frontend manifest is missing the BigDecimalField module");
         }
-        Map<String, Object> checkboxResponse = resources.response("META-INF/vatori/frontend-shims/vaadin-checkbox.js");
-        if (!Objects.equals(checkboxResponse.get("lookupKind"), "Checkbox-component-resource-v1_3")
+        Map<String, Object> bigDecimalResponse = resources.response(bigDecimalPath);
+        if (!Objects.equals(bigDecimalResponse.get("lookupKind"), "BigDecimalField-minimum-component-resource")
+                || !Objects.equals(bigDecimalResponse.get("componentTag"), "vaadin-big-decimal-field")
+                || !Boolean.TRUE.equals(bigDecimalResponse.get("componentPrimary"))
+                || !Boolean.FALSE.equals(bigDecimalResponse.get("shim"))) {
+            throw new IllegalStateException("BigDecimalField component frontend module is missing metadata");
+        }
+        if (!resources.contains(checkboxDevBundlePath)) {
+            throw new IllegalStateException("Component frontend manifest is missing the checkbox dev-bundle module");
+        }
+        Map<String, Object> checkboxResponse = resources.response(checkboxDevBundlePath);
+        if (!Objects.equals(checkboxResponse.get("lookupKind"), "Checkbox-dev-bundle-resource-v1_4")
                 || !Objects.equals(checkboxResponse.get("componentTag"), "vaadin-checkbox")
-                || !Boolean.TRUE.equals(checkboxResponse.get("componentPrimary"))) {
-            throw new IllegalStateException("Checkbox component frontend shim is missing v1.3 metadata");
+                || !Boolean.TRUE.equals(checkboxResponse.get("componentPrimary"))
+                || !Boolean.TRUE.equals(checkboxResponse.get("devBundleResource"))
+                || !Boolean.FALSE.equals(checkboxResponse.get("shim"))) {
+            throw new IllegalStateException("Checkbox component frontend dev-bundle module is missing metadata");
         }
         System.out.println("Flow client resources loaded from classpath: " + entries.size());
         System.out.println("Flow client resource graph responses verified: " + entries.size());
         System.out.println("Component frontend resources loaded: " + componentResources.size());
         System.out.println("BigDecimal component classpath resource available: "
-                + resources.contains("META-INF/resources/frontend/vaadin-big-decimal-field.js"));
+                + resources.contains(bigDecimalPath));
         System.out.println("FlowBootstrap.js bytes: " + bootstrapResponse.get("bytes"));
         System.out.println("FlowClient.js bytes: " + clientResponse.get("bytes"));
         System.out.println("FlowClient.js IPC bridge: " + clientResponse.get("ipcAugmented"));

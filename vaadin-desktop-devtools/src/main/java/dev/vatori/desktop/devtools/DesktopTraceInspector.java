@@ -78,7 +78,7 @@ public final class DesktopTraceInspector {
         int failures = 0;
         for (Path path : paths) {
             TraceSummary summary = inspect(path);
-            summary.print(path);
+            summary.print(path, requireFlowIpc);
             if (requireFlowIpc && !summary.hasRequiredFlowIpcTypes()) {
                 failures++;
             }
@@ -453,7 +453,8 @@ public final class DesktopTraceInspector {
             }
             if (line.contains("\"type\":\"bootstrapResponse\"")
                     && line.contains("\"componentFrontendResources\"")
-                    && line.contains("\"vaadin-component-classpath-plus-v1_2-shims\"")
+                    && (line.contains("\"vaadin-component-classpath-plus-v1_2-shims\"")
+                            || line.contains("\"vaadin-component-classpath-plus-dev-bundle-v1_4\""))
                     && line.contains("com.vaadin.flow.component.textfield.BigDecimalField")
                     && line.contains("vaadin-big-decimal-field")
                     && line.contains("npm-transitive-imports-shimmed")
@@ -467,7 +468,10 @@ public final class DesktopTraceInspector {
                     && line.contains("\"componentCount\":2")
                     && line.contains("com.vaadin.flow.component.checkbox.Checkbox")
                     && line.contains("vaadin-checkbox")
-                    && line.contains("META-INF/vatori/frontend-shims/vaadin-checkbox.js")) {
+                    && (line.contains("META-INF/vatori/frontend-shims/vaadin-checkbox.js")
+                            || line.contains(
+                                    "vaadin-dev-bundle/webapp/VAADIN/build/generated-flow-imports-VW7hRaNw.js")
+                            || line.contains("META-INF/vatori/dev-bundle-entry/vaadin-checkbox.js"))) {
                 summary.componentResolverV13ManifestObserved = true;
             }
             if (line.contains("\"type\":\"resourceRequest\"")
@@ -483,6 +487,15 @@ public final class DesktopTraceInspector {
                     && line.contains("META-INF/vatori/frontend-shims/vaadin-checkbox.js")
                     && line.contains("\"securityKey\"")) {
                 summary.vaadinSecondWebComponentResourceRequestObserved = true;
+            }
+            if (line.contains("\"type\":\"resourceRequest\"")
+                    && line.contains("\"purpose\":\"vaadin-web-component-resource-probe\"")
+                    && line.contains("\"lookupKind\":\"Checkbox-dev-bundle-resource-v1_4\"")
+                    && (line.contains("vaadin-dev-bundle/webapp/VAADIN/build/generated-flow-imports-VW7hRaNw.js")
+                            || line.contains("META-INF/vatori/dev-bundle-entry/vaadin-checkbox.js"))
+                    && line.contains("\"securityKey\"")) {
+                summary.vaadinSecondWebComponentResourceRequestObserved = true;
+                summary.vaadinSecondWebComponentDevBundleResourceObserved = true;
             }
             if (line.contains("\"type\":\"resourceResponse\"")
                     && line.contains("\"componentFrontendResource\":true")
@@ -501,6 +514,16 @@ public final class DesktopTraceInspector {
                     && line.contains("\"failureClassification\":\"npm-transitive-imports-shimmed\"")) {
                 summary.vaadinSecondWebComponentResourceResponseObserved = true;
                 summary.vaadinWebComponentFailureClassificationObserved = true;
+            }
+            if (line.contains("\"type\":\"resourceResponse\"")
+                    && line.contains("\"componentFrontendResource\":true")
+                    && (line.contains("vaadin-dev-bundle/webapp/VAADIN/build/generated-flow-imports-VW7hRaNw.js")
+                            || line.contains("META-INF/vatori/dev-bundle-entry/vaadin-checkbox.js"))
+                    && line.contains("\"lookupKind\":\"Checkbox-dev-bundle-resource-v1_4\"")
+                    && line.contains("\"bodyRedacted\":true")
+                    && line.contains("\"devBundleResource\":true")) {
+                summary.vaadinSecondWebComponentResourceResponseObserved = true;
+                summary.vaadinSecondWebComponentDevBundleResourceObserved = true;
             }
             if (line.contains("\"type\":\"webview.dom\"")
                     && line.contains("flowClientResourceLoaded")
@@ -596,7 +619,10 @@ public final class DesktopTraceInspector {
                     && containsLiteralField(line, "vaadinWebComponentResourceExecuted", "true")
                     && containsLiteralField(line, "vaadinWebComponentResourceExecutedCount", "2")
                     && line.contains("META-INF/resources/frontend/vaadin-big-decimal-field.js")
-                    && line.contains("META-INF/vatori/frontend-shims/vaadin-checkbox.js")
+                    && (line.contains("META-INF/vatori/frontend-shims/vaadin-checkbox.js")
+                            || line.contains(
+                                    "vaadin-dev-bundle/webapp/VAADIN/build/generated-flow-imports-VW7hRaNw.js")
+                            || line.contains("META-INF/vatori/dev-bundle-entry/vaadin-checkbox.js"))
                     && containsStringField(line, "vaadinWebComponentResourceExecutedTags",
                             "vaadin-big-decimal-field,vaadin-checkbox")
                     && containsLiteralField(line, "vaadinWebComponentResourceExecutionFailed", "false")) {
@@ -1022,6 +1048,7 @@ public final class DesktopTraceInspector {
         private boolean componentResolverV13DomObserved;
         private boolean vaadinSecondWebComponentResourceRequestObserved;
         private boolean vaadinSecondWebComponentResourceResponseObserved;
+        private boolean vaadinSecondWebComponentDevBundleResourceObserved;
         private boolean vaadinSecondWebComponentEventRpcObserved;
         private boolean vaadinSecondWebComponentPatchObserved;
         private boolean vaadinSecondWebComponentDomObserved;
@@ -1192,6 +1219,7 @@ public final class DesktopTraceInspector {
                     && vaadinWebComponentResourceResponseObserved
                     && vaadinSecondWebComponentResourceRequestObserved
                     && vaadinSecondWebComponentResourceResponseObserved
+                    && vaadinSecondWebComponentDevBundleResourceObserved
                     && frameworkAppDomObserved
                     && frameworkAppBudgetEventRpcObserved
                     && frameworkAppCheckboxEventRpcObserved
@@ -1208,7 +1236,7 @@ public final class DesktopTraceInspector {
                     && frameworkAppInteractionDomObserved;
         }
 
-        private void print(Path path) {
+        private void print(Path path, boolean printBaseMissingTypes) {
             System.out.println("Trace: " + path);
             System.out.println("Messages: " + total);
             System.out.println("Directions: " + directions);
@@ -1302,6 +1330,8 @@ public final class DesktopTraceInspector {
                     + vaadinSecondWebComponentResourceRequestObserved);
             System.out.println("Second Vaadin Web Component resource response observed: "
                     + vaadinSecondWebComponentResourceResponseObserved);
+            System.out.println("Second Vaadin Web Component dev-bundle resource observed: "
+                    + vaadinSecondWebComponentDevBundleResourceObserved);
             System.out.println("Second Vaadin Web Component event RPC observed: "
                     + vaadinSecondWebComponentEventRpcObserved);
             System.out.println("Second Vaadin Web Component patch observed: "
@@ -1339,7 +1369,7 @@ public final class DesktopTraceInspector {
             List<String> missing = FLOW_IPC_REQUIRED_TYPES.stream()
                     .filter(type -> !types.containsKey(type))
                     .toList();
-            if (!missing.isEmpty()) {
+            if (printBaseMissingTypes && !missing.isEmpty()) {
                 System.out.println("Missing required types: " + missing);
             }
         }

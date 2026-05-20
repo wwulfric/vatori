@@ -23,10 +23,14 @@ final class FlowClientResources {
     private static final String LIT_SHIM_JS = "META-INF/vatori/frontend-shims/lit.js";
     private static final String TEXT_FIELD_SHIM_JS =
             "META-INF/vatori/frontend-shims/vaadin-text-field.js";
-    private static final String CHECKBOX_SHIM_JS =
-            "META-INF/vatori/frontend-shims/vaadin-checkbox.js";
     private static final String DEFINE_SHIM_JS =
             "META-INF/vatori/frontend-shims/component-base-define.js";
+    private static final String DEV_BUNDLE_COMMONJS_JS =
+            "vaadin-dev-bundle/webapp/VAADIN/build/commonjsHelpers-CUmg6egw.js";
+    private static final String DEV_BUNDLE_INDEX_HTML_JS =
+            "vaadin-dev-bundle/webapp/VAADIN/build/indexhtml-BfYYZi8S.js";
+    private static final String DEV_BUNDLE_CHECKBOX_ENTRY_JS =
+            "META-INF/vatori/dev-bundle-entry/vaadin-checkbox.js";
     private static final String FLOW_CLIENT_IPC_BRIDGE_NEEDLE = """
             j.sendEventMessage=mI(function(a,b,c){var d=i.a.Z();d.Ab(a,b,c)});j.initializing=false;\
             """;
@@ -35,8 +39,8 @@ final class FlowClientResources {
             """;
     private static final String COMPONENT_TRANSITIVE_BLOCKED_REASON =
             "full @vaadin/text-field npm graph is not bundled in the v1.2 no-localhost smoke runtime";
-    private static final String CHECKBOX_TRANSITIVE_BLOCKED_REASON =
-            "full @vaadin/checkbox npm graph is not bundled in the v1.3 no-localhost smoke runtime";
+    private static final String DEV_BUNDLE_COMPONENT_REASON =
+            "A focused Vaadin dev-bundle entry imports the production Checkbox class and registers the real vaadin-checkbox element; full production bundle routing is still not complete.";
     private static final String LIT_SHIM_SOURCE = """
             export function css(strings, ...values) {
               const raw = strings && strings.raw ? strings.raw : strings;
@@ -138,54 +142,13 @@ final class FlowClientResources {
               customElements.define(TextField.is, TextField);
             }
             """;
-    private static final String CHECKBOX_SHIM_SOURCE = """
-            export class Checkbox extends HTMLElement {
-              static get is() {
-                return 'vaadin-checkbox';
-              }
+    private static final String CHECKBOX_DEV_BUNDLE_ENTRY_SOURCE = """
+            import { aG as defineCustomElement, c5 as Checkbox } from './indexhtml-BfYYZi8S.js';
 
-              constructor() {
-                super();
-                this._checked = false;
-                this.inputElement = document.createElement('input');
-                this.inputElement.type = 'checkbox';
-                this.inputElement.addEventListener('change', () => {
-                  this.checked = this.inputElement.checked;
-                  this.dispatchEvent(new CustomEvent('checked-changed', {
-                    bubbles: true,
-                    composed: true,
-                    detail: { value: this.checked }
-                  }));
-                  this.dispatchEvent(new Event('change', {
-                    bubbles: true,
-                    composed: true
-                  }));
-                });
-              }
+            defineCustomElement(Checkbox);
 
-              connectedCallback() {
-                if (!this.inputElement.isConnected) {
-                  this.appendChild(this.inputElement);
-                }
-              }
-
-              set checked(value) {
-                this._checked = value === true || value === 'true';
-                if (this.inputElement) {
-                  this.inputElement.checked = this._checked;
-                }
-              }
-
-              get checked() {
-                return this.inputElement ? this.inputElement.checked : this._checked;
-              }
-            }
-
-            if (!customElements.get(Checkbox.is)) {
-              customElements.define(Checkbox.is, Checkbox);
-            }
+            export { Checkbox };
             """;
-
     private final Map<String, Resource> flowClientResources;
     private final Map<String, Resource> componentResources;
     private final Map<String, Resource> allResources;
@@ -215,14 +178,17 @@ final class FlowClientResources {
                 TEXT_FIELD_SHIM_SOURCE,
                 componentAttributes(true, "@vaadin/text-field", "vaadin-text-field",
                         "@vaadin/text-field/src/vaadin-text-field.js", "v1_2-inline-shim"));
-        addText(discoveredComponentResources, CHECKBOX_SHIM_JS, "vaadin-web-component-npm-shim",
-                CHECKBOX_SHIM_SOURCE,
-                componentAttributes(true, "com.vaadin.flow.component.checkbox.Checkbox", "vaadin-checkbox",
-                        "@vaadin/checkbox/src/vaadin-checkbox.js", "v1_3-npm-shim"));
         addText(discoveredComponentResources, DEFINE_SHIM_JS, "vaadin-web-component-import-shim",
                 DEFINE_SHIM_SOURCE,
                 componentAttributes(true, "@vaadin/component-base", "",
                         "@vaadin/component-base/src/define.js", "v1_2-inline-shim"));
+        add(discoveredComponentResources, DEV_BUNDLE_COMMONJS_JS, "vaadin-dev-bundle-support-module", true,
+                devBundleAttributes("", DEV_BUNDLE_COMMONJS_JS, false));
+        add(discoveredComponentResources, DEV_BUNDLE_INDEX_HTML_JS, "vaadin-dev-bundle-support-module", true,
+                devBundleAttributes("", DEV_BUNDLE_INDEX_HTML_JS, false));
+        addText(discoveredComponentResources, DEV_BUNDLE_CHECKBOX_ENTRY_JS,
+                "vaadin-dev-bundle-checkbox-entry", CHECKBOX_DEV_BUNDLE_ENTRY_SOURCE,
+                devBundleAttributes("vaadin-checkbox", DEV_BUNDLE_CHECKBOX_ENTRY_JS, true));
 
         flowClientResources = Collections.unmodifiableMap(new LinkedHashMap<>(discoveredFlowClientResources));
         componentResources = Collections.unmodifiableMap(new LinkedHashMap<>(discoveredComponentResources));
@@ -253,7 +219,7 @@ final class FlowClientResources {
             entries.add(resource.metadata());
         }
         Map<String, Object> manifest = new LinkedHashMap<>();
-        manifest.put("source", "vaadin-component-classpath-plus-v1_2-shims");
+        manifest.put("source", "vaadin-component-classpath-plus-dev-bundle-v1_4");
         manifest.put("transport", "flow-ipc");
         manifest.put("resourceLoading", "ipc-resource-request");
         manifest.put("componentClass", "com.vaadin.flow.component.textfield.BigDecimalField");
@@ -262,7 +228,7 @@ final class FlowClientResources {
         manifest.put("resolverStrategy", "generic-component-frontend-manifest-v1_3");
         manifest.put("componentCount", 2);
         manifest.put("componentTags", List.of("vaadin-big-decimal-field", "vaadin-checkbox"));
-        manifest.put("primaryResources", List.of(BIG_DECIMAL_FIELD_JS, CHECKBOX_SHIM_JS));
+        manifest.put("primaryResources", List.of(BIG_DECIMAL_FIELD_JS, DEV_BUNDLE_CHECKBOX_ENTRY_JS));
         manifest.put("components", List.of(
                 Map.of("componentClass", "com.vaadin.flow.component.textfield.BigDecimalField",
                         "componentTag", "vaadin-big-decimal-field",
@@ -271,10 +237,10 @@ final class FlowClientResources {
                         "productionBundleReady", false),
                 Map.of("componentClass", "com.vaadin.flow.component.checkbox.Checkbox",
                         "componentTag", "vaadin-checkbox",
-                        "primaryResource", CHECKBOX_SHIM_JS,
+                        "primaryResource", DEV_BUNDLE_CHECKBOX_ENTRY_JS,
                         "requestedModule", "@vaadin/checkbox/src/vaadin-checkbox.js",
-                        "resourceOrigin", "npm-frontend-shim",
-                        "productionBundleReady", false)));
+                        "resourceOrigin", "vaadin-dev-bundle-checkbox-entry",
+                        "productionBundleReady", true)));
         manifest.put("requestedComponent", "com.vaadin.flow.component.textfield.TextField");
         manifest.put("substituteReason", "TextField class is available but its npm frontend graph is not classpath-resolved in this smoke runtime; BigDecimalField provides a real TextField-family classpath frontend module.");
         manifest.put("classpath", true);
@@ -290,9 +256,6 @@ final class FlowClientResources {
                 Map.of("specifier", "@vaadin/text-field/src/vaadin-text-field.js",
                         "classification", "npm-frontend-artifact-missing",
                         "resolution", TEXT_FIELD_SHIM_JS),
-                Map.of("specifier", "@vaadin/checkbox/src/vaadin-checkbox.js",
-                        "classification", "npm-frontend-artifact-missing",
-                        "resolution", CHECKBOX_SHIM_JS),
                 Map.of("specifier", "@vaadin/component-base/src/define.js",
                         "classification", "npm-frontend-artifact-missing",
                         "resolution", DEFINE_SHIM_JS)));
@@ -395,20 +358,40 @@ final class FlowClientResources {
         attributes.put("resolver", resolver);
         attributes.put("shim", shim);
         attributes.put("failureClassification", "npm-transitive-imports-shimmed");
-        attributes.put("blockedReason", "v1_3-npm-shim".equals(resolver)
-                ? CHECKBOX_TRANSITIVE_BLOCKED_REASON
-                : COMPONENT_TRANSITIVE_BLOCKED_REASON);
+        attributes.put("blockedReason", COMPONENT_TRANSITIVE_BLOCKED_REASON);
         attributes.put("lookupKind", lookupKind(componentClass, resolver));
         if (!shim) {
             attributes.put("shimmedImports", List.of("lit",
                     "@vaadin/text-field/src/vaadin-text-field.js",
                     "@vaadin/component-base/src/define.js"));
         }
-        if ("v1_3-npm-shim".equals(resolver)) {
-            attributes.put("componentPrimary", true);
-        }
         if ("classpath-frontend-resource".equals(resolver)) {
             attributes.put("componentPrimary", true);
+        }
+        return attributes;
+    }
+
+    private static Map<String, Object> devBundleAttributes(String tag, String moduleSpecifier, boolean primary) {
+        Map<String, Object> attributes = new LinkedHashMap<>();
+        attributes.put("componentFrontendResource", true);
+        attributes.put("componentClass", "com.vaadin.flow.component.checkbox.Checkbox");
+        if (!tag.isBlank()) {
+            attributes.put("componentTag", tag);
+        }
+        attributes.put("moduleSpecifier", moduleSpecifier);
+        attributes.put("resolver", "vaadin-dev-bundle-production-build-v1_4");
+        attributes.put("shim", false);
+        attributes.put("resourceOrigin", "vaadin-dev-bundle");
+        attributes.put("productionBundleReady", true);
+        attributes.put("devBundleResource", true);
+        attributes.put("blockedReason", DEV_BUNDLE_COMPONENT_REASON);
+        attributes.put("failureClassification", "dev-bundle-resource-graph-partial");
+        attributes.put("lookupKind", primary ? "Checkbox-dev-bundle-resource-v1_4"
+                : "Checkbox-dev-bundle-support-resource-v1_4");
+        if (primary) {
+            attributes.put("componentPrimary", true);
+        } else {
+            attributes.put("componentBundleDependency", true);
         }
         return attributes;
     }
@@ -417,10 +400,6 @@ final class FlowClientResources {
         if ("classpath-frontend-resource".equals(resolver)
                 && "com.vaadin.flow.component.textfield.BigDecimalField".equals(componentClass)) {
             return "BigDecimalField-minimum-component-resource";
-        }
-        if ("v1_3-npm-shim".equals(resolver)
-                && "com.vaadin.flow.component.checkbox.Checkbox".equals(componentClass)) {
-            return "Checkbox-component-resource-v1_3";
         }
         return "component-transitive-import-shim";
     }

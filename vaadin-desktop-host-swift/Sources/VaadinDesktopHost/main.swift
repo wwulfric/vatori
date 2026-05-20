@@ -1198,11 +1198,17 @@ final class WebViewHost: NSObject, NSApplicationDelegate, NSWindowDelegate, WKNa
                 self.inspectWebView(webView)
             }
         }
-        DispatchQueue.main.asyncAfter(deadline: .now() + (extendedFlowIpcVerification ? 9.5 : 5.0)) {
+        if config.flowIpcAutoFrameworkUpdate {
+            DispatchQueue.main.asyncAfter(deadline: .now() + 14.0) {
+                self.inspectWebView(webView)
+            }
+        }
+        let snapshotDelay = config.flowIpcAutoFrameworkUpdate ? 14.6 : (extendedFlowIpcVerification ? 9.5 : 5.0)
+        DispatchQueue.main.asyncAfter(deadline: .now() + snapshotDelay) {
             self.writeSnapshot(webView)
         }
         if config.flowIpcAutoShutdown {
-            let shutdownDelay = extendedFlowIpcVerification ? 10.5 : 5.6
+            let shutdownDelay = config.flowIpcAutoFrameworkUpdate ? 15.6 : (extendedFlowIpcVerification ? 10.5 : 5.6)
             DispatchQueue.main.asyncAfter(deadline: .now() + shutdownDelay) {
                 trace("recv", "window.closeRequested", [
                     "label": "main",
@@ -4220,16 +4226,23 @@ let flowIpcShell = #"""
         if (resource && resource.path === 'META-INF/resources/frontend/vaadin-big-decimal-field.js') {
           return 'vaadin-big-decimal-field';
         }
-        if (resource && resource.path === 'META-INF/vatori/frontend-shims/vaadin-checkbox.js') {
+        if (resource && resource.path === 'META-INF/vatori/dev-bundle-entry/vaadin-checkbox.js') {
           return 'vaadin-checkbox';
         }
         return '';
       }
 
       function componentModuleBlobUrl(path, urlsToRevoke) {
-        const body = componentFrontendResourceBodies.get(path) || '';
+        const resource = componentFrontendResourceByPath(path);
+        let body = componentFrontendResourceBodies.get(path) || '';
         if (!body) {
           return '';
+        }
+        if (resource && resource.devBundleResource === true && resource.componentBundleDependency === true) {
+          body = rewriteVaadinDevBundleModule(body, path, urlsToRevoke);
+          if (!body) {
+            return '';
+          }
         }
         const url = URL.createObjectURL(new Blob([body], { type: 'text/javascript' }));
         urlsToRevoke.push(url);
@@ -4247,8 +4260,96 @@ let flowIpcShell = #"""
         }
         return source
           .replace("from 'lit'", "from '" + litUrl + "'")
-          .replace("from '@vaadin/text-field/src/vaadin-text-field.js'", "from '" + textFieldUrl + "'")
-          .replace("from '@vaadin/component-base/src/define.js'", "from '" + defineUrl + "'");
+            .replace("from '@vaadin/text-field/src/vaadin-text-field.js'", "from '" + textFieldUrl + "'")
+            .replace("from '@vaadin/component-base/src/define.js'", "from '" + defineUrl + "'");
+      }
+
+      function componentModuleFileName(path) {
+        const index = path.lastIndexOf('/');
+        return index >= 0 ? path.substring(index + 1) : path;
+      }
+
+      function rewriteVaadinDevBundleModule(source, currentPath, urlsToRevoke) {
+        let rewritten = source;
+        for (const resource of componentFrontendResources) {
+          if (!resource
+              || resource.devBundleResource !== true
+              || resource.componentBundleDependency !== true
+              || resource.path === currentPath) {
+            continue;
+          }
+          const specifier = './' + componentModuleFileName(resource.path);
+          if (!rewritten.includes('"' + specifier + '"') && !rewritten.includes("'" + specifier + "'")) {
+            continue;
+          }
+          const url = componentModuleBlobUrl(resource.path, urlsToRevoke);
+          if (!url) {
+            window.VaadinDesktopIpcDiagnostics.vaadinWebComponentFailureReason =
+              'missing-v1_4-dev-bundle-dependency';
+            return '';
+          }
+          rewritten = rewritten
+            .split('"' + specifier + '"').join('"' + url + '"')
+            .split("'" + specifier + "'").join("'" + url + "'");
+        }
+        return rewritten;
+      }
+
+      function memoryStorageForOpaqueOrigin() {
+        const storage = new Map();
+        const memoryStorage = {
+          getItem(key) {
+            const normalizedKey = String(key);
+            return storage.has(normalizedKey) ? storage.get(normalizedKey) : null;
+          },
+          setItem(key, value) {
+            storage.set(String(key), String(value));
+          },
+          removeItem(key) {
+            storage.delete(String(key));
+          },
+          clear() {
+            storage.clear();
+          },
+          key(index) {
+            return Array.from(storage.keys())[Number(index)] || null;
+          }
+        };
+        Object.defineProperty(memoryStorage, 'length', {
+          get() {
+            return storage.size;
+          }
+        });
+        return memoryStorage;
+      }
+
+      function installOpaqueOriginStorageFallback(name) {
+        try {
+          window[name].getItem('__vatori_storage_probe__');
+          return;
+        } catch (error) {
+          // WKWebView loadHTMLString uses an opaque about:blank origin. Vaadin's
+          // dev-bundle chunks may touch Web Storage during module evaluation.
+        }
+        try {
+          Object.defineProperty(window, name, {
+            value: memoryStorageForOpaqueOrigin(),
+            configurable: true
+          });
+        } catch (error) {
+          window.VaadinDesktopIpcDiagnostics.vaadinWebComponentFailureReason =
+            'opaque-origin-' + name + '-unavailable';
+        }
+      }
+
+      function installOpaqueOriginStorageFallbacks() {
+        installOpaqueOriginStorageFallback('localStorage');
+        installOpaqueOriginStorageFallback('sessionStorage');
+      }
+
+      function installVaadinDevBundleGlobals() {
+        window.Vaadin = window.Vaadin || {};
+        window.Vaadin.devToolsPlugins = window.Vaadin.devToolsPlugins || [];
       }
 
       async function maybeExecuteVaadinWebComponentResource() {
@@ -4298,6 +4399,17 @@ let flowIpcShell = #"""
             }
             window.VaadinDesktopIpcDiagnostics.vaadinWebComponentResourceImportMode =
               'dynamic-import-blob-with-v1_2-shimmed-transitive-imports';
+          } else if (resource.devBundleResource === true) {
+            installOpaqueOriginStorageFallbacks();
+            installVaadinDevBundleGlobals();
+            importSource = rewriteVaadinDevBundleModule(primaryBody, primaryPath, urlsToRevoke);
+            if (!importSource) {
+              componentFrontendResourceExecutionFailedPaths.add(primaryPath);
+              refreshComponentFrontendResourceDiagnostics();
+              return;
+            }
+            window.VaadinDesktopIpcDiagnostics.vaadinWebComponentResourceImportMode =
+              'dynamic-import-blob-vaadin-dev-bundle-production-build-v1_4';
           } else if (!window.VaadinDesktopIpcDiagnostics.vaadinWebComponentResourceImportMode) {
             window.VaadinDesktopIpcDiagnostics.vaadinWebComponentResourceImportMode =
               'dynamic-import-blob-generic-component-frontend-v1_3';
@@ -4329,6 +4441,21 @@ let flowIpcShell = #"""
           }
           refreshComponentFrontendResourceDiagnostics();
         } catch (error) {
+          if (resource.devBundleResource === true && componentTag && customElements.get(componentTag)) {
+            componentFrontendResourceExecutedPaths.add(primaryPath);
+            componentFrontendResourceExecutedTags.add(componentTag);
+            if (!window.VaadinDesktopIpcDiagnostics.vaadinWebComponentResourceExecutedPath) {
+              window.VaadinDesktopIpcDiagnostics.vaadinWebComponentResourceExecutedPath = primaryPath;
+            }
+            if (componentTag === 'vaadin-checkbox') {
+              window.VaadinDesktopIpcDiagnostics.vaadinSecondWebComponentTagDefined = true;
+              window.VaadinDesktopIpcDiagnostics.vaadinSecondWebComponentFailureReason = '';
+            }
+            window.VaadinDesktopIpcDiagnostics.vaadinWebComponentResourceExecutionError = '';
+            window.VaadinDesktopIpcDiagnostics.vaadinWebComponentFailureReason = '';
+            refreshComponentFrontendResourceDiagnostics();
+            return;
+          }
           componentFrontendResourceExecutionFailedPaths.add(primaryPath);
           window.VaadinDesktopIpcDiagnostics.vaadinWebComponentResourceExecutionError =
             error && error.message ? error.message : String(error);

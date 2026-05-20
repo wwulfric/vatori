@@ -525,11 +525,10 @@ final class WebViewHost: NSObject, NSApplicationDelegate, NSWindowDelegate, WKNa
         window.delegate = self
         window.isReleasedWhenClosed = false
         window.sharingType = .readOnly
-        window.level = .floating
-        window.collectionBehavior = [.canJoinAllSpaces, .fullScreenAuxiliary]
+        window.level = .normal
+        window.collectionBehavior = [.fullScreenPrimary]
         window.center()
         window.makeKeyAndOrderFront(nil)
-        window.orderFrontRegardless()
 
         self.window = window
         self.webView = webView
@@ -589,11 +588,10 @@ final class WebViewHost: NSObject, NSApplicationDelegate, NSWindowDelegate, WKNa
         window.delegate = self
         window.isReleasedWhenClosed = false
         window.sharingType = .readOnly
-        window.level = .floating
-        window.collectionBehavior = [.canJoinAllSpaces, .fullScreenAuxiliary]
+        window.level = .normal
+        window.collectionBehavior = [.fullScreenPrimary]
         window.center()
         window.makeKeyAndOrderFront(nil)
-        window.orderFrontRegardless()
 
         self.window = window
         self.webView = webView
@@ -1453,20 +1451,36 @@ let flowIpcShell = #"""
   <title>Vaadin Flow over IPC</title>
   <style>
     :root {
-      color-scheme: light dark;
+      color-scheme: light;
       font-family: -apple-system, BlinkMacSystemFont, "SF Pro Text", system-ui, sans-serif;
-      background: Canvas;
-      color: CanvasText;
+      background: #ffffff;
+      color: #111827;
+    }
+    html,
+    body {
+      height: 100%;
     }
     body {
       margin: 0;
-      min-height: 100vh;
-      background: Canvas;
+      min-height: 100%;
+      overflow: hidden;
+      background: #ffffff;
+      color: #111827;
     }
     #app,
     #flow-client-engine-root {
       box-sizing: border-box;
-      min-height: 100vh;
+      position: fixed;
+      inset: 0;
+      width: auto;
+      height: auto;
+      min-height: 0;
+      overflow: auto;
+      overscroll-behavior: contain;
+      background: #ffffff;
+      color: #111827;
+    }
+    #app {
       padding: 28px;
     }
     #app[hidden],
@@ -1475,10 +1489,74 @@ let flowIpcShell = #"""
     }
     #flow-client-engine-root {
       display: block;
+      padding: 0;
+      overflow: hidden;
     }
     flow-container-root-2521314 {
       display: block;
-      min-height: calc(100vh - 56px);
+      position: fixed;
+      inset: 0;
+      box-sizing: border-box;
+      padding: 28px;
+      min-height: 0;
+      max-width: 100%;
+      overflow: auto;
+      background: #ffffff;
+      color: #111827;
+    }
+    #app *,
+    #flow-client-engine-root *,
+    flow-container-root-2521314 * {
+      color: inherit;
+    }
+    #app vaadin-vertical-layout,
+    #flow-client-engine-root vaadin-vertical-layout {
+      display: flex;
+      flex-direction: column;
+      align-items: flex-start;
+      gap: 12px;
+      max-width: 100%;
+    }
+    #ipc-root {
+      position: fixed;
+      inset: 28px;
+      z-index: 10;
+      display: flex !important;
+      flex-direction: column;
+      align-items: flex-start;
+      gap: 12px;
+      overflow: auto;
+      max-width: none;
+      background: #ffffff;
+      color: #111827;
+    }
+    #ipc-list,
+    #ipc-event-matrix {
+      display: flex !important;
+      flex-direction: column;
+      align-items: flex-start;
+      gap: 8px;
+      max-width: 100%;
+    }
+    #app vaadin-button,
+    #flow-client-engine-root vaadin-button {
+      display: inline-flex;
+      align-items: center;
+      justify-content: center;
+      width: fit-content;
+      min-height: 32px;
+      padding: 4px 14px;
+      border: 1px solid #c7ccd3;
+      border-radius: 6px;
+      background: #f3f4f6;
+      color: #111827;
+    }
+    #app input,
+    #flow-client-engine-root input,
+    #app vaadin-big-decimal-field,
+    #flow-client-engine-root vaadin-big-decimal-field {
+      display: inline-block;
+      max-width: 100%;
     }
     .flow-layout {
       display: flex;
@@ -1501,6 +1579,8 @@ let flowIpcShell = #"""
     input {
       font: inherit;
       min-height: 28px;
+      color: #111827;
+      background: #ffffff;
     }
     input[type="text"] {
       min-width: 240px;
@@ -1511,19 +1591,26 @@ let flowIpcShell = #"""
       grid-template-columns: 120px 160px 1fr;
       gap: 1px;
       margin-top: 10px;
-      border: 1px solid color-mix(in srgb, CanvasText 20%, transparent);
+      border: 1px solid #d1d5db;
       min-width: min(640px, 100%);
-      background: color-mix(in srgb, CanvasText 16%, transparent);
+      background: #d1d5db;
     }
     .flow-list span {
       padding: 8px 10px;
-      background: Canvas;
+      background: #ffffff;
     }
     #trace {
-      margin-top: 18px;
+      position: fixed;
+      left: -10000px;
+      bottom: 0;
+      width: 1px;
+      height: 1px;
+      margin: 0;
+      overflow: hidden;
+      pointer-events: none;
       font-family: ui-monospace, SFMono-Regular, Menlo, monospace;
       font-size: 12px;
-      color: color-mix(in srgb, CanvasText 65%, transparent);
+      color: #4b5563;
     }
   </style>
 </head>
@@ -1982,6 +2069,22 @@ let flowIpcShell = #"""
         return found.id || (found.dataset ? found.dataset.flowId || '' : '') || '';
       }
 
+      function resetFlowIpcViewport() {
+        requestAnimationFrame(() => {
+          const root = flowClientEngineRoot();
+          const scroller = root || document.scrollingElement || document.documentElement;
+          if (scroller && typeof scroller.scrollTo === 'function') {
+            scroller.scrollTo(0, 0);
+          } else if (scroller) {
+            scroller.scrollTop = 0;
+          }
+          if (document.scrollingElement && document.scrollingElement !== scroller) {
+            document.scrollingElement.scrollTop = 0;
+          }
+          window.scrollTo(0, 0);
+        });
+      }
+
       function flowClientEngineButton() {
         const byId = flowClientEngineElementById('ipc-button');
         if (byId) {
@@ -2011,6 +2114,7 @@ let flowIpcShell = #"""
         window.VaadinDesktopIpcDiagnostics.flowClientEngineVisibleOwner = true;
         window.VaadinDesktopIpcDiagnostics.flowClientEngineVisibleRootId = root.id;
         window.VaadinDesktopIpcDiagnostics.flowClientEngineLocalFallbackHidden = app.hidden;
+        resetFlowIpcViewport();
         return true;
       }
 
@@ -3041,6 +3145,7 @@ let flowIpcShell = #"""
           return false;
         }
         app.replaceChildren(...roots.map(renderUidlNode));
+        resetFlowIpcViewport();
         return true;
       }
 

@@ -1205,7 +1205,7 @@ final class WebViewHost: NSObject, NSApplicationDelegate, NSWindowDelegate, WKNa
             const clone = document.body.cloneNode(true);
             return clone.innerText.slice(0, 500);
           })(),
-          hasVaadinRoot: !!document.querySelector("vaadin-app-layout, vaadin-vertical-layout, flow-container-root, flow-container-root-2521314, #flow-client-engine-root"),
+          hasVaadinRoot: !!document.querySelector("vaadin-app-layout, vaadin-vertical-layout, flow-container-root, #flow-client-engine-root .vatori-flow-viewport-root"),
           elementCount: document.body ? document.body.querySelectorAll("*").length : 0,
           flowClientResourceLoaded: !!(window.VaadinDesktopIpcDiagnostics && window.VaadinDesktopIpcDiagnostics.flowClientResourceLoaded),
           flowClientResourcePath: window.VaadinDesktopIpcDiagnostics ? window.VaadinDesktopIpcDiagnostics.flowClientResourcePath : "",
@@ -1492,12 +1492,12 @@ let flowIpcShell = #"""
       padding: 0;
       overflow: hidden;
     }
-    flow-container-root-2521314 {
+    .vatori-flow-client-container {
       display: block;
       position: fixed;
       inset: 0;
       box-sizing: border-box;
-      padding: 28px;
+      padding: 0;
       min-height: 0;
       max-width: 100%;
       overflow: auto;
@@ -1506,7 +1506,7 @@ let flowIpcShell = #"""
     }
     #app *,
     #flow-client-engine-root *,
-    flow-container-root-2521314 * {
+    .vatori-flow-client-container * {
       color: inherit;
     }
     #app vaadin-vertical-layout,
@@ -1517,25 +1517,27 @@ let flowIpcShell = #"""
       gap: 12px;
       max-width: 100%;
     }
-    #ipc-root {
+    .vatori-flow-viewport-root {
       position: fixed;
       inset: 28px;
+      box-sizing: border-box;
       z-index: 10;
       display: flex !important;
       flex-direction: column;
       align-items: flex-start;
       gap: 12px;
+      min-height: 0;
+      max-width: 100%;
       overflow: auto;
-      max-width: none;
       background: #ffffff;
       color: #111827;
     }
-    #ipc-list,
-    #ipc-event-matrix {
+    .vatori-flow-viewport-root > vaadin-vertical-layout,
+    .vatori-flow-viewport-root vaadin-vertical-layout {
       display: flex !important;
       flex-direction: column;
       align-items: flex-start;
-      gap: 8px;
+      gap: 12px;
       max-width: 100%;
     }
     #app vaadin-button,
@@ -2018,6 +2020,54 @@ let flowIpcShell = #"""
         return 'flow-container-' + flowBootstrapAppId.toLowerCase();
       }
 
+      function isFlowShellInternalElement(element) {
+        if (!element || !element.tagName) {
+          return true;
+        }
+        const tag = element.tagName.toLowerCase();
+        if (app && app.contains(element)) {
+          return true;
+        }
+        return tag === 'script' || tag === 'style' || tag === 'link'
+          || tag === 'template' || tag === 'meta' || element.id === 'trace'
+          || element.id === 'flow-client-engine-root';
+      }
+
+      function firstFlowViewportRoot(container) {
+        if (!container) {
+          return null;
+        }
+        const selector = 'vaadin-app-layout, vaadin-vertical-layout, main, [data-flow-root], [data-flow-id]';
+        const scopes = [container, flowClientEngineRoot(), document]
+          .filter((scope, index, values) => scope && values.indexOf(scope) === index);
+        for (const scope of scopes) {
+          for (const semanticRoot of Array.from(scope.querySelectorAll(selector))) {
+            if (!isFlowShellInternalElement(semanticRoot)) {
+              return semanticRoot;
+            }
+          }
+        }
+        const directChildren = Array.from(container.children || [])
+          .filter((element) => !isFlowShellInternalElement(element));
+        return directChildren.length > 0 ? directChildren[0] : null;
+      }
+
+      function normalizeFlowClientViewport(container) {
+        if (!container) {
+          return null;
+        }
+        container.classList.add('vatori-flow-client-container');
+        for (const previous of container.querySelectorAll('.vatori-flow-viewport-root')) {
+          previous.classList.remove('vatori-flow-viewport-root');
+        }
+        const viewportRoot = firstFlowViewportRoot(container);
+        if (viewportRoot) {
+          viewportRoot.hidden = false;
+          viewportRoot.classList.add('vatori-flow-viewport-root');
+        }
+        return viewportRoot;
+      }
+
       function flowClientEngineElement(nodeId) {
         const client = flowClientEngineClient();
         if (client && typeof client.getByNodeId === 'function') {
@@ -2111,6 +2161,7 @@ let flowIpcShell = #"""
         }
         app.hidden = true;
         app.style.display = 'none';
+        normalizeFlowClientViewport(container);
         window.VaadinDesktopIpcDiagnostics.flowClientEngineVisibleOwner = true;
         window.VaadinDesktopIpcDiagnostics.flowClientEngineVisibleRootId = root.id;
         window.VaadinDesktopIpcDiagnostics.flowClientEngineLocalFallbackHidden = app.hidden;
@@ -3016,6 +3067,7 @@ let flowIpcShell = #"""
         } else if (container.parentElement !== root) {
           root.appendChild(container);
         }
+        container.classList.add('vatori-flow-client-container');
         document.body.$ = document.body.$ || {};
         document.body.$[flowBootstrapAppId] = container;
         return container;
@@ -3243,8 +3295,9 @@ let flowIpcShell = #"""
           return;
         }
         try {
-          ensureFlowClientContainer();
+          const container = ensureFlowClientContainer();
           module.init(flowClientBootstrapInitResponse);
+          normalizeFlowClientViewport(container);
           const flow = window.Vaadin && window.Vaadin.Flow ? window.Vaadin.Flow : null;
           const appIds = flow && typeof flow.getAppIds === 'function' ? flow.getAppIds() : [];
           window.VaadinDesktopIpcDiagnostics.flowClientBootstrapInitialized = appIds.includes(flowBootstrapAppId);

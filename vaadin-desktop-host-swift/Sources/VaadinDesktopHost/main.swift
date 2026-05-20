@@ -1253,6 +1253,7 @@ final class WebViewHost: NSObject, NSApplicationDelegate, NSWindowDelegate, WKNa
           vaadinWebComponentResourceManifestPrimaryPath: window.VaadinDesktopIpcDiagnostics ? window.VaadinDesktopIpcDiagnostics.vaadinWebComponentResourceManifestPrimaryPath : "",
           vaadinWebComponentResourceManifestBlockedReason: window.VaadinDesktopIpcDiagnostics ? window.VaadinDesktopIpcDiagnostics.vaadinWebComponentResourceManifestBlockedReason : "",
           vaadinWebComponentResourceManifestFailureClassification: window.VaadinDesktopIpcDiagnostics ? window.VaadinDesktopIpcDiagnostics.vaadinWebComponentResourceManifestFailureClassification : "",
+          vaadinWebComponentResourceResolverStrategy: window.VaadinDesktopIpcDiagnostics ? window.VaadinDesktopIpcDiagnostics.vaadinWebComponentResourceResolverStrategy : "",
           vaadinWebComponentResourceRequested: !!(window.VaadinDesktopIpcDiagnostics && window.VaadinDesktopIpcDiagnostics.vaadinWebComponentResourceRequested),
           vaadinWebComponentResourceRequestedCount: window.VaadinDesktopIpcDiagnostics ? window.VaadinDesktopIpcDiagnostics.vaadinWebComponentResourceRequestedCount : 0,
           vaadinWebComponentResourceRequestedPaths: window.VaadinDesktopIpcDiagnostics ? window.VaadinDesktopIpcDiagnostics.vaadinWebComponentResourceRequestedPaths : "",
@@ -1266,6 +1267,7 @@ final class WebViewHost: NSObject, NSApplicationDelegate, NSWindowDelegate, WKNa
           vaadinWebComponentResourceExecutedPath: window.VaadinDesktopIpcDiagnostics ? window.VaadinDesktopIpcDiagnostics.vaadinWebComponentResourceExecutedPath : "",
           vaadinWebComponentResourceExecutedCount: window.VaadinDesktopIpcDiagnostics ? window.VaadinDesktopIpcDiagnostics.vaadinWebComponentResourceExecutedCount : 0,
           vaadinWebComponentResourceExecutedPaths: window.VaadinDesktopIpcDiagnostics ? window.VaadinDesktopIpcDiagnostics.vaadinWebComponentResourceExecutedPaths : "",
+          vaadinWebComponentResourceExecutedTags: window.VaadinDesktopIpcDiagnostics ? window.VaadinDesktopIpcDiagnostics.vaadinWebComponentResourceExecutedTags : "",
           vaadinWebComponentResourceExecutionFailed: !!(window.VaadinDesktopIpcDiagnostics && window.VaadinDesktopIpcDiagnostics.vaadinWebComponentResourceExecutionFailed),
           vaadinWebComponentResourceExecutionFailedCount: window.VaadinDesktopIpcDiagnostics ? window.VaadinDesktopIpcDiagnostics.vaadinWebComponentResourceExecutionFailedCount : 0,
           vaadinWebComponentResourceExecutionFailedPaths: window.VaadinDesktopIpcDiagnostics ? window.VaadinDesktopIpcDiagnostics.vaadinWebComponentResourceExecutionFailedPaths : "",
@@ -1289,6 +1291,19 @@ final class WebViewHost: NSObject, NSApplicationDelegate, NSWindowDelegate, WKNa
           vaadinWebComponentStatusText: window.VaadinDesktopIpcDiagnostics ? window.VaadinDesktopIpcDiagnostics.vaadinWebComponentStatusText : "",
           vaadinWebComponentPostEventState: window.VaadinDesktopIpcDiagnostics ? window.VaadinDesktopIpcDiagnostics.vaadinWebComponentPostEventState : "",
           vaadinWebComponentFailureReason: window.VaadinDesktopIpcDiagnostics ? window.VaadinDesktopIpcDiagnostics.vaadinWebComponentFailureReason : "",
+          vaadinSecondWebComponentTagDefined: !!(window.VaadinDesktopIpcDiagnostics && window.VaadinDesktopIpcDiagnostics.vaadinSecondWebComponentTagDefined),
+          vaadinSecondWebComponentRendered: !!(window.VaadinDesktopIpcDiagnostics && window.VaadinDesktopIpcDiagnostics.vaadinSecondWebComponentRendered),
+          vaadinSecondWebComponentRenderedTag: window.VaadinDesktopIpcDiagnostics ? window.VaadinDesktopIpcDiagnostics.vaadinSecondWebComponentRenderedTag : "",
+          vaadinSecondWebComponentRenderedValue: window.VaadinDesktopIpcDiagnostics ? window.VaadinDesktopIpcDiagnostics.vaadinSecondWebComponentRenderedValue : "",
+          vaadinSecondWebComponentEventDispatchMode: window.VaadinDesktopIpcDiagnostics ? window.VaadinDesktopIpcDiagnostics.vaadinSecondWebComponentEventDispatchMode : "",
+          vaadinSecondWebComponentEventObserved: !!(window.VaadinDesktopIpcDiagnostics && window.VaadinDesktopIpcDiagnostics.vaadinSecondWebComponentEventObserved),
+          vaadinSecondWebComponentEventRpcObserved: !!(window.VaadinDesktopIpcDiagnostics && window.VaadinDesktopIpcDiagnostics.vaadinSecondWebComponentEventRpcObserved),
+          vaadinSecondWebComponentEventComponentId: window.VaadinDesktopIpcDiagnostics ? window.VaadinDesktopIpcDiagnostics.vaadinSecondWebComponentEventComponentId : "",
+          vaadinSecondWebComponentEventType: window.VaadinDesktopIpcDiagnostics ? window.VaadinDesktopIpcDiagnostics.vaadinSecondWebComponentEventType : "",
+          vaadinSecondWebComponentEventValue: window.VaadinDesktopIpcDiagnostics ? window.VaadinDesktopIpcDiagnostics.vaadinSecondWebComponentEventValue : "",
+          vaadinSecondWebComponentStatusText: window.VaadinDesktopIpcDiagnostics ? window.VaadinDesktopIpcDiagnostics.vaadinSecondWebComponentStatusText : "",
+          vaadinSecondWebComponentPostEventState: window.VaadinDesktopIpcDiagnostics ? window.VaadinDesktopIpcDiagnostics.vaadinSecondWebComponentPostEventState : "",
+          vaadinSecondWebComponentFailureReason: window.VaadinDesktopIpcDiagnostics ? window.VaadinDesktopIpcDiagnostics.vaadinSecondWebComponentFailureReason : "",
           flowClientEngineResourceLoaded: !!(window.VaadinDesktopIpcDiagnostics && window.VaadinDesktopIpcDiagnostics.flowClientEngineResourceLoaded),
           flowClientEngineResourcePath: window.VaadinDesktopIpcDiagnostics ? window.VaadinDesktopIpcDiagnostics.flowClientEngineResourcePath : "",
           flowClientEngineResourceBytes: window.VaadinDesktopIpcDiagnostics ? window.VaadinDesktopIpcDiagnostics.flowClientEngineResourceBytes : 0,
@@ -1560,7 +1575,9 @@ let flowIpcShell = #"""
     #app input,
     #flow-client-engine-root input,
     #app vaadin-big-decimal-field,
-    #flow-client-engine-root vaadin-big-decimal-field {
+    #flow-client-engine-root vaadin-big-decimal-field,
+    #app vaadin-checkbox,
+    #flow-client-engine-root vaadin-checkbox {
       display: inline-block;
       max-width: 100%;
     }
@@ -1635,6 +1652,7 @@ let flowIpcShell = #"""
       let autoClickInFlight = false;
       let autoComponentEventValue = 'Flow IPC typed';
       let autoVaadinWebComponentValue = '42.5';
+      let autoVaadinCheckboxValue = true;
       let autoComponentEventRetryLimit = 30;
       let autoComponentEventDelayMs = 140;
       let autoComponentEventRetryMs = 80;
@@ -1666,11 +1684,28 @@ let flowIpcShell = #"""
           value: autoVaadinWebComponentValue,
           data: () => ({ 'element.value': autoVaadinWebComponentValue }),
           requiresComponentResource: true,
+          requiredTag: 'vaadin-big-decimal-field',
           dispatchDomEvent: true,
           prepare: (element) => {
             element.value = autoVaadinWebComponentValue;
             if (element.inputElement) {
               element.inputElement.value = autoVaadinWebComponentValue;
+            }
+          }
+        },
+        {
+          key: 'vaadin-checkbox',
+          id: 'ipc-vaadin-checkbox',
+          eventType: 'change',
+          value: autoVaadinCheckboxValue,
+          data: () => ({ 'element.checked': autoVaadinCheckboxValue }),
+          requiresComponentResource: true,
+          requiredTag: 'vaadin-checkbox',
+          dispatchDomEvent: true,
+          prepare: (element) => {
+            element.checked = autoVaadinCheckboxValue;
+            if (element.inputElement) {
+              element.inputElement.checked = autoVaadinCheckboxValue;
             }
           }
         }
@@ -1704,6 +1739,7 @@ let flowIpcShell = #"""
       const componentFrontendResourceBodies = new Map();
       const componentFrontendResourceVerifiedPaths = new Set();
       const componentFrontendResourceExecutedPaths = new Set();
+      const componentFrontendResourceExecutedTags = new Set();
       const componentFrontendResourceExecutionFailedPaths = new Set();
       const pendingFlowClientXhrRequests = new Map();
       const queuedFlowClientEngineMessages = [];
@@ -1778,6 +1814,7 @@ let flowIpcShell = #"""
         vaadinWebComponentResourceManifestPrimaryPath: '',
         vaadinWebComponentResourceManifestBlockedReason: '',
         vaadinWebComponentResourceManifestFailureClassification: '',
+        vaadinWebComponentResourceResolverStrategy: '',
         vaadinWebComponentResourceRequested: false,
         vaadinWebComponentResourceRequestedCount: 0,
         vaadinWebComponentResourceRequestedPaths: '',
@@ -1791,6 +1828,7 @@ let flowIpcShell = #"""
         vaadinWebComponentResourceExecutedPath: '',
         vaadinWebComponentResourceExecutedCount: 0,
         vaadinWebComponentResourceExecutedPaths: '',
+        vaadinWebComponentResourceExecutedTags: '',
         vaadinWebComponentResourceExecutionFailed: false,
         vaadinWebComponentResourceExecutionFailedCount: 0,
         vaadinWebComponentResourceExecutionFailedPaths: '',
@@ -1814,6 +1852,19 @@ let flowIpcShell = #"""
         vaadinWebComponentStatusText: '',
         vaadinWebComponentPostEventState: '',
         vaadinWebComponentFailureReason: '',
+        vaadinSecondWebComponentTagDefined: false,
+        vaadinSecondWebComponentRendered: false,
+        vaadinSecondWebComponentRenderedTag: '',
+        vaadinSecondWebComponentRenderedValue: '',
+        vaadinSecondWebComponentEventDispatchMode: '',
+        vaadinSecondWebComponentEventObserved: false,
+        vaadinSecondWebComponentEventRpcObserved: false,
+        vaadinSecondWebComponentEventComponentId: '',
+        vaadinSecondWebComponentEventType: '',
+        vaadinSecondWebComponentEventValue: '',
+        vaadinSecondWebComponentStatusText: '',
+        vaadinSecondWebComponentPostEventState: '',
+        vaadinSecondWebComponentFailureReason: '',
         flowClientEngineResourceLoaded: false,
         flowClientEngineResourcePath: '',
         flowClientEngineResourceBytes: 0,
@@ -2543,6 +2594,11 @@ let flowIpcShell = #"""
                 window.VaadinDesktopIpcDiagnostics.vaadinWebComponentEventComponentId = pending.componentId;
                 window.VaadinDesktopIpcDiagnostics.vaadinWebComponentEventType = pending.eventType;
                 window.VaadinDesktopIpcDiagnostics.vaadinWebComponentEventValue = autoVaadinWebComponentValue;
+              } else if (pending.componentId === 'ipc-vaadin-checkbox') {
+                window.VaadinDesktopIpcDiagnostics.vaadinSecondWebComponentEventRpcObserved = true;
+                window.VaadinDesktopIpcDiagnostics.vaadinSecondWebComponentEventComponentId = pending.componentId;
+                window.VaadinDesktopIpcDiagnostics.vaadinSecondWebComponentEventType = pending.eventType;
+                window.VaadinDesktopIpcDiagnostics.vaadinSecondWebComponentEventValue = String(autoVaadinCheckboxValue);
               }
             }
           }
@@ -2632,6 +2688,53 @@ let flowIpcShell = #"""
         rememberFlowClientNodeIdsFromTree(payload.tree);
       }
 
+      function requiredComponentResourceReady(descriptor) {
+        if (!descriptor.requiresComponentResource) {
+          return true;
+        }
+        const requiredTag = descriptor.requiredTag || '';
+        return requiredTag ? !!customElements.get(requiredTag) : window.VaadinDesktopIpcDiagnostics.vaadinWebComponentTagDefined;
+      }
+
+      function recordVaadinComponentDispatch(descriptor) {
+        if (descriptor.key === 'vaadin-checkbox') {
+          window.VaadinDesktopIpcDiagnostics.vaadinSecondWebComponentEventDispatchMode = 'dom-event';
+          window.VaadinDesktopIpcDiagnostics.vaadinSecondWebComponentEventComponentId = descriptor.id;
+          window.VaadinDesktopIpcDiagnostics.vaadinSecondWebComponentEventType = descriptor.eventType;
+          window.VaadinDesktopIpcDiagnostics.vaadinSecondWebComponentEventValue = String(descriptor.value);
+          return;
+        }
+        window.VaadinDesktopIpcDiagnostics.vaadinWebComponentEventDispatchMode = 'dom-event';
+        window.VaadinDesktopIpcDiagnostics.vaadinWebComponentEventComponentId = descriptor.id;
+        window.VaadinDesktopIpcDiagnostics.vaadinWebComponentEventType = descriptor.eventType;
+        window.VaadinDesktopIpcDiagnostics.vaadinWebComponentEventValue = String(descriptor.value);
+      }
+
+      function markVaadinComponentDomEventObserved(descriptor) {
+        if (descriptor.key === 'vaadin-checkbox') {
+          window.VaadinDesktopIpcDiagnostics.vaadinSecondWebComponentEventObserved = true;
+        } else {
+          window.VaadinDesktopIpcDiagnostics.vaadinWebComponentEventObserved = true;
+        }
+      }
+
+      function componentEventDone(descriptor) {
+        if (descriptor.key === 'text') {
+          return window.VaadinDesktopIpcDiagnostics.flowClientEngineTextInputEventObserved;
+        }
+        if (descriptor.key === 'checkbox') {
+          return window.VaadinDesktopIpcDiagnostics.flowClientEngineCheckboxEventObserved;
+        }
+        if (descriptor.key === 'vaadin-checkbox') {
+          return window.VaadinDesktopIpcDiagnostics.vaadinSecondWebComponentEventObserved
+            && window.VaadinDesktopIpcDiagnostics.vaadinSecondWebComponentEventRpcObserved
+            && window.VaadinDesktopIpcDiagnostics.vaadinSecondWebComponentPostEventState.includes('Vaadin Checkbox: checked');
+        }
+        return window.VaadinDesktopIpcDiagnostics.vaadinWebComponentEventObserved
+          && window.VaadinDesktopIpcDiagnostics.vaadinWebComponentEventRpcObserved
+          && window.VaadinDesktopIpcDiagnostics.vaadinWebComponentPostEventState.includes(autoVaadinWebComponentValue);
+      }
+
       function scheduleAutoComponentEvents() {
         if (!autoComponentEventEnabled || autoComponentEventsDone) {
           return;
@@ -2653,14 +2756,18 @@ let flowIpcShell = #"""
         }
 
         const descriptor = autoComponentEvents[autoComponentEventIndex];
-        if (descriptor.requiresComponentResource
-            && !window.VaadinDesktopIpcDiagnostics.vaadinWebComponentTagDefined) {
+        if (!requiredComponentResourceReady(descriptor)) {
           autoComponentEventAttempts += 1;
           if (autoComponentEventAttempts < autoComponentEventRetryLimit) {
             setTimeout(scheduleAutoComponentEvents, autoComponentEventRetryMs);
           } else {
-            window.VaadinDesktopIpcDiagnostics.vaadinWebComponentFailureReason =
-              'component-resource-not-executed-before-event';
+            if (descriptor.key === 'vaadin-checkbox') {
+              window.VaadinDesktopIpcDiagnostics.vaadinSecondWebComponentFailureReason =
+                'component-resource-not-executed-before-event';
+            } else {
+              window.VaadinDesktopIpcDiagnostics.vaadinWebComponentFailureReason =
+                'component-resource-not-executed-before-event';
+            }
           }
           return;
         }
@@ -2679,15 +2786,12 @@ let flowIpcShell = #"""
         try {
           descriptor.prepare(target.element);
           if (descriptor.dispatchDomEvent) {
-            window.VaadinDesktopIpcDiagnostics.vaadinWebComponentEventDispatchMode = 'dom-event';
-            window.VaadinDesktopIpcDiagnostics.vaadinWebComponentEventComponentId = descriptor.id;
-            window.VaadinDesktopIpcDiagnostics.vaadinWebComponentEventType = descriptor.eventType;
-            window.VaadinDesktopIpcDiagnostics.vaadinWebComponentEventValue = String(descriptor.value);
+            recordVaadinComponentDispatch(descriptor);
             target.element.dispatchEvent(new Event(descriptor.eventType, {
               bubbles: true,
               composed: true
             }));
-            window.VaadinDesktopIpcDiagnostics.vaadinWebComponentEventObserved = true;
+            markVaadinComponentDomEventObserved(descriptor);
           } else {
             client.sendEventMessage(target.nodeId, descriptor.eventType, descriptor.data());
           }
@@ -2700,15 +2804,7 @@ let flowIpcShell = #"""
         setTimeout(() => {
           autoComponentEventInFlight = false;
           refreshFlowClientEngineDiagnostics();
-          const textDone = window.VaadinDesktopIpcDiagnostics.flowClientEngineTextInputEventObserved;
-          const checkboxDone = window.VaadinDesktopIpcDiagnostics.flowClientEngineCheckboxEventObserved;
-          const vaadinWebComponentDone =
-            window.VaadinDesktopIpcDiagnostics.vaadinWebComponentEventObserved
-            && window.VaadinDesktopIpcDiagnostics.vaadinWebComponentEventRpcObserved
-            && window.VaadinDesktopIpcDiagnostics.vaadinWebComponentPostEventState.includes(autoVaadinWebComponentValue);
-          if ((descriptor.key === 'text' && textDone)
-              || (descriptor.key === 'checkbox' && checkboxDone)
-              || (descriptor.key === 'vaadin-big-decimal' && vaadinWebComponentDone)) {
+          if (componentEventDone(descriptor)) {
             autoComponentEventIndex += 1;
           }
           if (autoComponentEventIndex >= autoComponentEvents.length) {
@@ -2840,6 +2936,8 @@ let flowIpcShell = #"""
           typeof manifest.blockedReason === 'string' ? manifest.blockedReason : '';
         window.VaadinDesktopIpcDiagnostics.vaadinWebComponentResourceManifestFailureClassification =
           typeof manifest.failureClassification === 'string' ? manifest.failureClassification : '';
+        window.VaadinDesktopIpcDiagnostics.vaadinWebComponentResourceResolverStrategy =
+          typeof manifest.resolverStrategy === 'string' ? manifest.resolverStrategy : '';
         window.VaadinDesktopIpcDiagnostics.vaadinWebComponentResourceBlockedReason =
           window.VaadinDesktopIpcDiagnostics.vaadinWebComponentResourceManifestBlockedReason;
         window.VaadinDesktopIpcDiagnostics.vaadinWebComponentResourceFailureClassification =
@@ -2934,7 +3032,7 @@ let flowIpcShell = #"""
         const securityKey = flowClientState.securityKey || flowClientState.csrfToken;
         send('resourceRequest', {
           purpose,
-          lookupKind: 'BigDecimalField-minimum-component-resource',
+          lookupKind: resource.lookupKind || 'component-frontend-resource',
           path: resource.path,
           expectedSha256: resource.sha256 || '',
           securityKey
@@ -3186,6 +3284,16 @@ let flowIpcShell = #"""
           element = document.createElement('h1');
         } else if (tag === 'span') {
           element = document.createElement('span');
+        } else if (tag.startsWith('vaadin-')) {
+          element = document.createElement(tag);
+          if (tag === 'vaadin-big-decimal-field' || tag === 'vaadin-checkbox') {
+            element.addEventListener('change', () => {
+              const data = tag === 'vaadin-checkbox'
+                ? { 'element.checked': !!element.checked }
+                : { 'element.value': element.value || '' };
+              sendFlowEvent({ id: state.id || '', nodeId }, 'change', data);
+            });
+          }
         } else {
           element = document.createElement('div');
           if (tag.includes('vertical-layout') || tag.includes('horizontal-layout')) {
@@ -3293,6 +3401,16 @@ let flowIpcShell = #"""
         } else if (node.tag === 'h1') {
           element = document.createElement('h1');
           element.textContent = node.text || '';
+        } else if (typeof node.tag === 'string' && node.tag.startsWith('vaadin-')) {
+          element = document.createElement(node.tag);
+          if (node.tag === 'vaadin-big-decimal-field' || node.tag === 'vaadin-checkbox') {
+            element.addEventListener('change', () => {
+              const data = node.tag === 'vaadin-checkbox'
+                ? { 'element.checked': !!element.checked }
+                : { 'element.value': element.value || '' };
+              sendFlowEvent(node, 'change', data);
+            });
+          }
         } else {
           element = document.createElement('div');
           if (node.kind === 'layout') {
@@ -3368,6 +3486,8 @@ let flowIpcShell = #"""
             'ipc-checkbox-status',
             'ipc-vaadin-big-decimal',
             'ipc-vaadin-big-decimal-status',
+            'ipc-vaadin-checkbox',
+            'ipc-vaadin-checkbox-status',
             'ipc-push-status',
             'ipc-push-order-status'
           ];
@@ -3469,6 +3589,26 @@ let flowIpcShell = #"""
           } catch (_) {
             window.VaadinDesktopIpcDiagnostics.vaadinWebComponentRendered = false;
           }
+          try {
+            const checkboxTarget = flowClientEngineElementById('ipc-vaadin-checkbox');
+            const checkboxElement = checkboxTarget ? checkboxTarget.element : null;
+            const checkboxStatus = flowClientEngineElementById('ipc-vaadin-checkbox-status');
+            const checkboxStatusText = checkboxStatus ? (checkboxStatus.element.textContent || '') : '';
+            window.VaadinDesktopIpcDiagnostics.vaadinSecondWebComponentRendered = !!checkboxElement;
+            window.VaadinDesktopIpcDiagnostics.vaadinSecondWebComponentRenderedTag =
+              checkboxElement ? checkboxElement.tagName.toLowerCase() : '';
+            window.VaadinDesktopIpcDiagnostics.vaadinSecondWebComponentRenderedValue =
+              checkboxElement && typeof checkboxElement.checked !== 'undefined' ? String(!!checkboxElement.checked) : '';
+            window.VaadinDesktopIpcDiagnostics.vaadinSecondWebComponentTagDefined =
+              !!customElements.get('vaadin-checkbox');
+            window.VaadinDesktopIpcDiagnostics.vaadinSecondWebComponentStatusText = checkboxStatusText;
+            window.VaadinDesktopIpcDiagnostics.vaadinSecondWebComponentPostEventState = checkboxStatusText;
+            if (checkboxStatusText.includes('Vaadin Checkbox: checked')) {
+              window.VaadinDesktopIpcDiagnostics.vaadinSecondWebComponentEventObserved = true;
+            }
+          } catch (_) {
+            window.VaadinDesktopIpcDiagnostics.vaadinSecondWebComponentRendered = false;
+          }
         }
         if (window.VaadinDesktopIpcDiagnostics.flowClientEngineClientRegistered) {
           window.VaadinDesktopIpcDiagnostics.flowClientEngineInitError = '';
@@ -3496,7 +3636,10 @@ let flowIpcShell = #"""
             && window.VaadinDesktopIpcDiagnostics.flowClientEngineCheckboxEventObserved
             && window.VaadinDesktopIpcDiagnostics.vaadinWebComponentEventObserved
             && window.VaadinDesktopIpcDiagnostics.vaadinWebComponentEventRpcObserved
-            && window.VaadinDesktopIpcDiagnostics.vaadinWebComponentPostEventState.includes(autoVaadinWebComponentValue)) {
+            && window.VaadinDesktopIpcDiagnostics.vaadinWebComponentPostEventState.includes(autoVaadinWebComponentValue)
+            && window.VaadinDesktopIpcDiagnostics.vaadinSecondWebComponentEventObserved
+            && window.VaadinDesktopIpcDiagnostics.vaadinSecondWebComponentEventRpcObserved
+            && window.VaadinDesktopIpcDiagnostics.vaadinSecondWebComponentPostEventState.includes('Vaadin Checkbox: checked')) {
           autoComponentEventsDone = true;
           autoComponentEventInFlight = false;
         }
@@ -3623,6 +3766,8 @@ let flowIpcShell = #"""
       function refreshComponentFrontendResourceDiagnostics() {
         const manifestCount = window.VaadinDesktopIpcDiagnostics.vaadinWebComponentResourceManifestCount
           || componentFrontendResources.length;
+        const primaryResources = componentFrontendPrimaryResources();
+        const primaryResourceCount = primaryResources.length || 1;
         window.VaadinDesktopIpcDiagnostics.vaadinWebComponentResourceVerifiedCount =
           componentFrontendResourceVerifiedPaths.size;
         window.VaadinDesktopIpcDiagnostics.vaadinWebComponentResourceVerifiedPaths =
@@ -3631,6 +3776,8 @@ let flowIpcShell = #"""
           componentFrontendResourceExecutedPaths.size;
         window.VaadinDesktopIpcDiagnostics.vaadinWebComponentResourceExecutedPaths =
           Array.from(componentFrontendResourceExecutedPaths).join(',');
+        window.VaadinDesktopIpcDiagnostics.vaadinWebComponentResourceExecutedTags =
+          Array.from(componentFrontendResourceExecutedTags).join(',');
         window.VaadinDesktopIpcDiagnostics.vaadinWebComponentResourceExecutionFailedCount =
           componentFrontendResourceExecutionFailedPaths.size;
         window.VaadinDesktopIpcDiagnostics.vaadinWebComponentResourceExecutionFailedPaths =
@@ -3646,8 +3793,41 @@ let flowIpcShell = #"""
           window.VaadinDesktopIpcDiagnostics.vaadinWebComponentResourceGraphVerified;
         window.VaadinDesktopIpcDiagnostics.vaadinWebComponentResourceVerified =
           window.VaadinDesktopIpcDiagnostics.vaadinWebComponentResourceGraphVerified;
+        window.VaadinDesktopIpcDiagnostics.vaadinWebComponentResourceExecuted =
+          componentFrontendResourceExecutedPaths.size >= primaryResourceCount
+          && componentFrontendResourceExecutionFailedPaths.size === 0;
         window.VaadinDesktopIpcDiagnostics.vaadinWebComponentTagDefined =
           !!customElements.get('vaadin-big-decimal-field');
+        window.VaadinDesktopIpcDiagnostics.vaadinSecondWebComponentTagDefined =
+          !!customElements.get('vaadin-checkbox');
+      }
+
+      function componentFrontendPrimaryResources() {
+        const primary = componentFrontendResources.filter((entry) => {
+          return entry
+            && typeof entry.path === 'string'
+            && entry.componentPrimary === true;
+        });
+        if (primary.length > 0) {
+          return primary;
+        }
+        const primaryPath = window.VaadinDesktopIpcDiagnostics.vaadinWebComponentResourceManifestPrimaryPath
+          || 'META-INF/resources/frontend/vaadin-big-decimal-field.js';
+        const resource = componentFrontendResourceByPath(primaryPath);
+        return resource ? [resource] : [];
+      }
+
+      function componentTagForResource(resource) {
+        if (resource && typeof resource.componentTag === 'string' && resource.componentTag) {
+          return resource.componentTag;
+        }
+        if (resource && resource.path === 'META-INF/resources/frontend/vaadin-big-decimal-field.js') {
+          return 'vaadin-big-decimal-field';
+        }
+        if (resource && resource.path === 'META-INF/vatori/frontend-shims/vaadin-checkbox.js') {
+          return 'vaadin-checkbox';
+        }
+        return '';
       }
 
       function componentModuleBlobUrl(path, urlsToRevoke) {
@@ -3676,15 +3856,30 @@ let flowIpcShell = #"""
       }
 
       async function maybeExecuteVaadinWebComponentResource() {
-        if (window.VaadinDesktopIpcDiagnostics.vaadinWebComponentResourceExecuted
-            || window.VaadinDesktopIpcDiagnostics.vaadinWebComponentResourceExecutionFailed) {
-          return;
-        }
         if (!window.VaadinDesktopIpcDiagnostics.vaadinWebComponentResourceGraphVerified) {
           return;
         }
-        const primaryPath = window.VaadinDesktopIpcDiagnostics.vaadinWebComponentResourceManifestPrimaryPath
-          || 'META-INF/resources/frontend/vaadin-big-decimal-field.js';
+        const primaryResources = componentFrontendPrimaryResources();
+        if (primaryResources.length === 0) {
+          return;
+        }
+        for (const resource of primaryResources) {
+          if (!resource || typeof resource.path !== 'string') {
+            continue;
+          }
+          if (componentFrontendResourceExecutedPaths.has(resource.path)
+              || componentFrontendResourceExecutionFailedPaths.has(resource.path)) {
+            continue;
+          }
+          await executeComponentFrontendResource(resource);
+        }
+        refreshComponentFrontendResourceDiagnostics();
+        refreshFlowClientEngineDiagnostics();
+        setTimeout(scheduleAutoComponentEvents, 160);
+      }
+
+      async function executeComponentFrontendResource(resource) {
+        const primaryPath = resource.path;
         const primaryBody = componentFrontendResourceBodies.get(primaryPath) || '';
         if (!primaryBody) {
           componentFrontendResourceExecutionFailedPaths.add(primaryPath);
@@ -3693,20 +3888,27 @@ let flowIpcShell = #"""
           refreshComponentFrontendResourceDiagnostics();
           return;
         }
+        const componentTag = componentTagForResource(resource);
         const urlsToRevoke = [];
         try {
-          const rewrittenSource = rewriteVaadinBigDecimalFieldModule(primaryBody, urlsToRevoke);
-          if (!rewrittenSource) {
-            componentFrontendResourceExecutionFailedPaths.add(primaryPath);
-            refreshComponentFrontendResourceDiagnostics();
-            return;
+          let importSource = primaryBody;
+          if (primaryPath === 'META-INF/resources/frontend/vaadin-big-decimal-field.js') {
+            importSource = rewriteVaadinBigDecimalFieldModule(primaryBody, urlsToRevoke);
+            if (!importSource) {
+              componentFrontendResourceExecutionFailedPaths.add(primaryPath);
+              refreshComponentFrontendResourceDiagnostics();
+              return;
+            }
+            window.VaadinDesktopIpcDiagnostics.vaadinWebComponentResourceImportMode =
+              'dynamic-import-blob-with-v1_2-shimmed-transitive-imports';
+          } else if (!window.VaadinDesktopIpcDiagnostics.vaadinWebComponentResourceImportMode) {
+            window.VaadinDesktopIpcDiagnostics.vaadinWebComponentResourceImportMode =
+              'dynamic-import-blob-generic-component-frontend-v1_3';
           }
-          const primaryUrl = URL.createObjectURL(new Blob([rewrittenSource], { type: 'text/javascript' }));
+          const primaryUrl = URL.createObjectURL(new Blob([importSource], { type: 'text/javascript' }));
           urlsToRevoke.push(primaryUrl);
-          window.VaadinDesktopIpcDiagnostics.vaadinWebComponentResourceImportMode =
-            'dynamic-import-blob-with-v1_2-shimmed-transitive-imports';
           await import(primaryUrl);
-          if (!customElements.get('vaadin-big-decimal-field')) {
+          if (componentTag && !customElements.get(componentTag)) {
             componentFrontendResourceExecutionFailedPaths.add(primaryPath);
             window.VaadinDesktopIpcDiagnostics.vaadinWebComponentFailureReason =
               'custom-element-not-defined-after-import';
@@ -3714,13 +3916,21 @@ let flowIpcShell = #"""
             return;
           }
           componentFrontendResourceExecutedPaths.add(primaryPath);
-          window.VaadinDesktopIpcDiagnostics.vaadinWebComponentResourceExecuted = true;
-          window.VaadinDesktopIpcDiagnostics.vaadinWebComponentResourceExecutedPath = primaryPath;
-          window.VaadinDesktopIpcDiagnostics.vaadinWebComponentTagDefined = true;
-          window.VaadinDesktopIpcDiagnostics.vaadinWebComponentFailureReason = '';
+          if (componentTag) {
+            componentFrontendResourceExecutedTags.add(componentTag);
+          }
+          if (!window.VaadinDesktopIpcDiagnostics.vaadinWebComponentResourceExecutedPath) {
+            window.VaadinDesktopIpcDiagnostics.vaadinWebComponentResourceExecutedPath = primaryPath;
+          }
+          if (componentTag === 'vaadin-big-decimal-field') {
+            window.VaadinDesktopIpcDiagnostics.vaadinWebComponentTagDefined = true;
+            window.VaadinDesktopIpcDiagnostics.vaadinWebComponentFailureReason = '';
+          }
+          if (componentTag === 'vaadin-checkbox') {
+            window.VaadinDesktopIpcDiagnostics.vaadinSecondWebComponentTagDefined = true;
+            window.VaadinDesktopIpcDiagnostics.vaadinSecondWebComponentFailureReason = '';
+          }
           refreshComponentFrontendResourceDiagnostics();
-          refreshFlowClientEngineDiagnostics();
-          setTimeout(scheduleAutoComponentEvents, 160);
         } catch (error) {
           componentFrontendResourceExecutionFailedPaths.add(primaryPath);
           window.VaadinDesktopIpcDiagnostics.vaadinWebComponentResourceExecutionError =

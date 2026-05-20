@@ -82,8 +82,28 @@ public final class FlowClientResourceSmokeMain {
         if (!clientText.contains("handleIpcMessage") || !clientText.contains("requestIpcResync")) {
             throw new IllegalStateException("FlowClient.js did not expose the Flow IPC bridge methods");
         }
+        Map<String, Object> componentManifest = resources.componentManifest();
+        Object componentEntries = componentManifest.get("resources");
+        if (!(componentEntries instanceof List<?> componentResources) || componentResources.size() < 4) {
+            throw new IllegalStateException("Component frontend resource manifest does not contain the v1.3 graph");
+        }
+        if (!Objects.equals(componentManifest.get("resolverStrategy"), "generic-component-frontend-manifest-v1_3")) {
+            throw new IllegalStateException("Component frontend manifest is not using the v1.3 resolver strategy");
+        }
+        if (!resources.contains("META-INF/vatori/frontend-shims/vaadin-checkbox.js")) {
+            throw new IllegalStateException("Component frontend manifest is missing the v1.3 checkbox shim");
+        }
+        Map<String, Object> checkboxResponse = resources.response("META-INF/vatori/frontend-shims/vaadin-checkbox.js");
+        if (!Objects.equals(checkboxResponse.get("lookupKind"), "Checkbox-component-resource-v1_3")
+                || !Objects.equals(checkboxResponse.get("componentTag"), "vaadin-checkbox")
+                || !Boolean.TRUE.equals(checkboxResponse.get("componentPrimary"))) {
+            throw new IllegalStateException("Checkbox component frontend shim is missing v1.3 metadata");
+        }
         System.out.println("Flow client resources loaded from classpath: " + entries.size());
         System.out.println("Flow client resource graph responses verified: " + entries.size());
+        System.out.println("Component frontend resources loaded: " + componentResources.size());
+        System.out.println("BigDecimal component classpath resource available: "
+                + resources.contains("META-INF/resources/frontend/vaadin-big-decimal-field.js"));
         System.out.println("FlowBootstrap.js bytes: " + bootstrapResponse.get("bytes"));
         System.out.println("FlowClient.js bytes: " + clientResponse.get("bytes"));
         System.out.println("FlowClient.js IPC bridge: " + clientResponse.get("ipcAugmented"));

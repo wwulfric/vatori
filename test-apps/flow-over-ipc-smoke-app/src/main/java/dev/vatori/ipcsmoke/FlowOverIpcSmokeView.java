@@ -1,6 +1,7 @@
 package dev.vatori.ipcsmoke;
 
 import com.vaadin.flow.component.button.Button;
+import com.vaadin.flow.component.checkbox.Checkbox;
 import com.vaadin.flow.component.html.H1;
 import com.vaadin.flow.component.html.Input;
 import com.vaadin.flow.component.html.Span;
@@ -96,13 +97,24 @@ public class FlowOverIpcSmokeView extends VerticalLayout {
             bigDecimalStatus.setText("Vaadin BigDecimalField: " + value);
         }).addEventData("element.value");
 
+        Checkbox vaadinCheckbox = new Checkbox("Vaadin Checkbox over IPC");
+        vaadinCheckbox.setId("ipc-vaadin-checkbox");
+        Span vaadinCheckboxStatus = new Span("Vaadin Checkbox: pending");
+        vaadinCheckboxStatus.setId("ipc-vaadin-checkbox-status");
+        vaadinCheckbox.getElement().addEventListener("change", event -> {
+            JsonNode checkedNode = event.getEventData().get("element.checked");
+            boolean checked = checkedNode != null && checkedNode.asBoolean();
+            vaadinCheckboxStatus.setText("Vaadin Checkbox: " + (checked ? "checked" : "unchecked"));
+        }).addEventData("element.checked");
+
         VerticalLayout eventMatrix = new VerticalLayout();
         eventMatrix.setId("ipc-event-matrix");
         eventMatrix.setPadding(false);
         eventMatrix.setSpacing(false);
         eventMatrix.add(new Span("6 Component event matrix over IPC READY"),
                 textInput, textStatus, checkbox, checkboxStatus,
-                bigDecimalField, bigDecimalStatus);
+                bigDecimalField, bigDecimalStatus,
+                vaadinCheckbox, vaadinCheckboxStatus);
         add(eventMatrix);
     }
 

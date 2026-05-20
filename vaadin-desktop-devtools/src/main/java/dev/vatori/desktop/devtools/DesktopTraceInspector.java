@@ -358,12 +358,28 @@ public final class DesktopTraceInspector {
                 summary.vaadinWebComponentResourceManifestObserved = true;
                 summary.vaadinWebComponentFailureClassificationObserved = true;
             }
+            if (line.contains("\"type\":\"bootstrapResponse\"")
+                    && line.contains("\"componentFrontendResources\"")
+                    && line.contains("\"resolverStrategy\":\"generic-component-frontend-manifest-v1_3\"")
+                    && line.contains("\"componentCount\":2")
+                    && line.contains("com.vaadin.flow.component.checkbox.Checkbox")
+                    && line.contains("vaadin-checkbox")
+                    && line.contains("META-INF/vatori/frontend-shims/vaadin-checkbox.js")) {
+                summary.componentResolverV13ManifestObserved = true;
+            }
             if (line.contains("\"type\":\"resourceRequest\"")
                     && line.contains("\"purpose\":\"vaadin-web-component-resource-probe\"")
                     && line.contains("\"lookupKind\":\"BigDecimalField-minimum-component-resource\"")
                     && line.contains("META-INF/resources/frontend/vaadin-big-decimal-field.js")
                     && line.contains("\"securityKey\"")) {
                 summary.vaadinWebComponentResourceRequestObserved = true;
+            }
+            if (line.contains("\"type\":\"resourceRequest\"")
+                    && line.contains("\"purpose\":\"vaadin-web-component-resource-probe\"")
+                    && line.contains("\"lookupKind\":\"Checkbox-component-resource-v1_3\"")
+                    && line.contains("META-INF/vatori/frontend-shims/vaadin-checkbox.js")
+                    && line.contains("\"securityKey\"")) {
+                summary.vaadinSecondWebComponentResourceRequestObserved = true;
             }
             if (line.contains("\"type\":\"resourceResponse\"")
                     && line.contains("\"componentFrontendResource\":true")
@@ -372,6 +388,15 @@ public final class DesktopTraceInspector {
                     && line.contains("\"blockedReason\"")
                     && line.contains("\"failureClassification\":\"npm-transitive-imports-shimmed\"")) {
                 summary.vaadinWebComponentResourceResponseObserved = true;
+                summary.vaadinWebComponentFailureClassificationObserved = true;
+            }
+            if (line.contains("\"type\":\"resourceResponse\"")
+                    && line.contains("\"componentFrontendResource\":true")
+                    && line.contains("META-INF/vatori/frontend-shims/vaadin-checkbox.js")
+                    && line.contains("\"lookupKind\":\"Checkbox-component-resource-v1_3\"")
+                    && line.contains("\"bodyRedacted\":true")
+                    && line.contains("\"failureClassification\":\"npm-transitive-imports-shimmed\"")) {
+                summary.vaadinSecondWebComponentResourceResponseObserved = true;
                 summary.vaadinWebComponentFailureClassificationObserved = true;
             }
             if (line.contains("\"type\":\"webview.dom\"")
@@ -463,6 +488,18 @@ public final class DesktopTraceInspector {
                 summary.vaadinWebComponentResourceExecutedDomObserved = true;
             }
             if (line.contains("\"type\":\"webview.dom\"")
+                    && containsStringField(line, "vaadinWebComponentResourceResolverStrategy",
+                            "generic-component-frontend-manifest-v1_3")
+                    && containsLiteralField(line, "vaadinWebComponentResourceExecuted", "true")
+                    && containsLiteralField(line, "vaadinWebComponentResourceExecutedCount", "2")
+                    && line.contains("META-INF/resources/frontend/vaadin-big-decimal-field.js")
+                    && line.contains("META-INF/vatori/frontend-shims/vaadin-checkbox.js")
+                    && containsStringField(line, "vaadinWebComponentResourceExecutedTags",
+                            "vaadin-big-decimal-field,vaadin-checkbox")
+                    && containsLiteralField(line, "vaadinWebComponentResourceExecutionFailed", "false")) {
+                summary.componentResolverV13DomObserved = true;
+            }
+            if (line.contains("\"type\":\"webview.dom\"")
                     && line.contains("flowClientEngineResourceLoaded")
                     && line.contains("flowClientEngineResourceVerified")
                     && line.contains("flowClientEngineModuleLoaded")
@@ -522,6 +559,21 @@ public final class DesktopTraceInspector {
                     && containsStringField(line, "vaadinWebComponentPostEventState", "Vaadin BigDecimalField: 42.5")
                     && containsStringField(line, "vaadinWebComponentFailureReason", "")) {
                 summary.vaadinWebComponentDomObserved = true;
+            }
+            if (line.contains("\"type\":\"webview.dom\"")
+                    && containsLiteralField(line, "vaadinSecondWebComponentRendered", "true")
+                    && containsStringField(line, "vaadinSecondWebComponentRenderedTag", "vaadin-checkbox")
+                    && containsLiteralField(line, "vaadinSecondWebComponentTagDefined", "true")
+                    && containsStringField(line, "vaadinSecondWebComponentEventDispatchMode", "dom-event")
+                    && containsLiteralField(line, "vaadinSecondWebComponentEventObserved", "true")
+                    && containsLiteralField(line, "vaadinSecondWebComponentEventRpcObserved", "true")
+                    && containsStringField(line, "vaadinSecondWebComponentEventComponentId", "ipc-vaadin-checkbox")
+                    && containsStringField(line, "vaadinSecondWebComponentEventType", "change")
+                    && containsStringField(line, "vaadinSecondWebComponentEventValue", "true")
+                    && containsStringField(line, "vaadinSecondWebComponentStatusText", "Vaadin Checkbox: checked")
+                    && containsStringField(line, "vaadinSecondWebComponentPostEventState", "Vaadin Checkbox: checked")
+                    && containsStringField(line, "vaadinSecondWebComponentFailureReason", "")) {
+                summary.vaadinSecondWebComponentDomObserved = true;
             }
             if (line.contains("\"type\":\"webview.dom\"")
                     && containsLiteralField(line, "fileTransferDownloadResultObserved", "true")
@@ -628,6 +680,22 @@ public final class DesktopTraceInspector {
                     && line.contains("\"consumedByWebView\":true")
                     && line.contains("\"flow-client-engine-visible\"")) {
                 summary.vaadinWebComponentPatchObserved = true;
+            }
+            if (line.contains("\"type\":\"event\"")
+                    && line.contains("\"dispatch\":\"flow-client-xhr\"")
+                    && line.contains("\"componentId\":\"ipc-vaadin-checkbox\"")
+                    && line.contains("\"event\":\"change\"")
+                    && line.contains("element.checked")
+                    && line.contains("\"uidlRpc\"")) {
+                summary.vaadinSecondWebComponentEventRpcObserved = true;
+            }
+            if (line.contains("\"type\":\"patch\"")
+                    && line.contains("\"source\":\"UidlRequestHandler\"")
+                    && line.contains("\"eventDispatch\":\"flow-client-xhr\"")
+                    && line.contains("Vaadin Checkbox: checked")
+                    && line.contains("\"consumedByWebView\":true")
+                    && line.contains("\"flow-client-engine-visible\"")) {
+                summary.vaadinSecondWebComponentPatchObserved = true;
             }
             if (line.contains("\"type\":\"patch\"")
                     && line.contains("\"source\":\"UidlRequestHandler\"")
@@ -812,6 +880,13 @@ public final class DesktopTraceInspector {
         private boolean vaadinWebComponentEventRpcObserved;
         private boolean vaadinWebComponentPatchObserved;
         private boolean vaadinWebComponentDomObserved;
+        private boolean componentResolverV13ManifestObserved;
+        private boolean componentResolverV13DomObserved;
+        private boolean vaadinSecondWebComponentResourceRequestObserved;
+        private boolean vaadinSecondWebComponentResourceResponseObserved;
+        private boolean vaadinSecondWebComponentEventRpcObserved;
+        private boolean vaadinSecondWebComponentPatchObserved;
+        private boolean vaadinSecondWebComponentDomObserved;
         private boolean uidlPatchObserved;
         private boolean pushUidlObserved;
         private boolean multiPushUidlObserved;
@@ -904,7 +979,14 @@ public final class DesktopTraceInspector {
 
         public boolean hasRequiredFlowIpcV1_3Types() {
             return hasRequiredFlowIpcV1_2Types()
-                    && flowClientEngineGenericViewportDomObserved;
+                    && flowClientEngineGenericViewportDomObserved
+                    && componentResolverV13ManifestObserved
+                    && componentResolverV13DomObserved
+                    && vaadinSecondWebComponentResourceRequestObserved
+                    && vaadinSecondWebComponentResourceResponseObserved
+                    && vaadinSecondWebComponentEventRpcObserved
+                    && vaadinSecondWebComponentPatchObserved
+                    && vaadinSecondWebComponentDomObserved;
         }
 
         private void print(Path path) {
@@ -993,6 +1075,20 @@ public final class DesktopTraceInspector {
                     + vaadinWebComponentPatchObserved);
             System.out.println("Vaadin Web Component DOM observed: "
                     + vaadinWebComponentDomObserved);
+            System.out.println("Flow IPC v1.3 component resolver manifest observed: "
+                    + componentResolverV13ManifestObserved);
+            System.out.println("Flow IPC v1.3 component resolver DOM observed: "
+                    + componentResolverV13DomObserved);
+            System.out.println("Second Vaadin Web Component resource request observed: "
+                    + vaadinSecondWebComponentResourceRequestObserved);
+            System.out.println("Second Vaadin Web Component resource response observed: "
+                    + vaadinSecondWebComponentResourceResponseObserved);
+            System.out.println("Second Vaadin Web Component event RPC observed: "
+                    + vaadinSecondWebComponentEventRpcObserved);
+            System.out.println("Second Vaadin Web Component patch observed: "
+                    + vaadinSecondWebComponentPatchObserved);
+            System.out.println("Second Vaadin Web Component DOM observed: "
+                    + vaadinSecondWebComponentDomObserved);
             System.out.println("UIDL request handler patch observed: " + uidlPatchObserved);
             System.out.println("server push UIDL observed: " + pushUidlObserved);
             System.out.println("multi-push UIDL observed: " + multiPushUidlObserved);

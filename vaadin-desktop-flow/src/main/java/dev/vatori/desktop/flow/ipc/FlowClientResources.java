@@ -29,6 +29,8 @@ final class FlowClientResources {
             "vaadin-dev-bundle/webapp/VAADIN/build/commonjsHelpers-CUmg6egw.js";
     private static final String DEV_BUNDLE_INDEX_HTML_JS =
             "vaadin-dev-bundle/webapp/VAADIN/build/indexhtml-BfYYZi8S.js";
+    private static final String GENERATED_FLOW_IMPORTS_JS =
+            "META-INF/vatori/generated/flow/generated-flow-imports.js";
     private static final String DEV_BUNDLE_CHECKBOX_ENTRY_JS =
             "META-INF/vatori/dev-bundle-entry/vaadin-checkbox.js";
     private static final String DEV_BUNDLE_SELECT_ENTRY_JS =
@@ -200,6 +202,9 @@ final class FlowClientResources {
                 devBundleAttributes("", DEV_BUNDLE_COMMONJS_JS, false));
         add(discoveredComponentResources, DEV_BUNDLE_INDEX_HTML_JS, "vaadin-dev-bundle-support-module", true,
                 devBundleAttributes("", DEV_BUNDLE_INDEX_HTML_JS, false));
+        add(discoveredComponentResources, GENERATED_FLOW_IMPORTS_JS,
+                "vaadin-generated-flow-imports-module", true,
+                generatedLazyAttributes());
         addText(discoveredComponentResources, DEV_BUNDLE_CHECKBOX_ENTRY_JS,
                 "vaadin-dev-bundle-checkbox-entry", CHECKBOX_DEV_BUNDLE_ENTRY_SOURCE,
                 devBundleAttributes("vaadin-checkbox", DEV_BUNDLE_CHECKBOX_ENTRY_JS, true));
@@ -265,7 +270,7 @@ final class FlowClientResources {
                 artifactFamilyStatus("theme-static", "available", "theme-static-classpath-resource"),
                 artifactFamilyStatus("production-bundle", "partial", "dev-bundle-resource-graph-partial"),
                 artifactFamilyStatus("dev-mode-bundle", "blocked", "dev-mode-bundle-resource-graph-unmapped"),
-                artifactFamilyStatus("generated-lazy", "blocked", "generated-lazy-resource-unmapped")));
+                artifactFamilyStatus("generated-lazy", "partial", "generated-flow-imports-verified")));
         manifest.put("dependencyGraph", Map.of("declared", true,
                 "resolver", COMPONENT_RESOLVER_V1_4,
                 "resourceCount", entries.size()));
@@ -274,8 +279,8 @@ final class FlowClientResources {
                         COMPONENT_TRANSITIVE_BLOCKED_REASON),
                 strictBlocker("dev-mode-bundle", "dev-mode-bundle-resource-graph-unmapped",
                         "dev-mode bundle resources are not yet mapped into the no-localhost IPC resolver"),
-                strictBlocker("generated-lazy", "generated-lazy-resource-unmapped",
-                        "Flow loadOnDemand is verified with a minimum probe, but generated lazy chunks are not yet resolved as frontend artifacts")));
+                strictBlocker("generated-lazy", "generated-lazy-execution-unmapped",
+                        "generated-flow-imports is verified over IPC, but its transitive npm/jar imports and loadOnDemand execution are not yet mapped")));
         manifest.put("transport", "flow-ipc");
         manifest.put("resourceLoading", "ipc-resource-request");
         manifest.put("componentClass", "com.vaadin.flow.component.textfield.BigDecimalField");
@@ -485,6 +490,27 @@ final class FlowClientResources {
         } else {
             attributes.put("componentBundleDependency", true);
         }
+        return attributes;
+    }
+
+    private static Map<String, Object> generatedLazyAttributes() {
+        Map<String, Object> attributes = new LinkedHashMap<>();
+        attributes.put("componentFrontendResource", true);
+        attributes.put("generatedLazyResource", true);
+        attributes.put("moduleSpecifier", GENERATED_FLOW_IMPORTS_JS);
+        attributes.put("resolver", "repository-generated-flow-imports-v1_4");
+        attributes.put("shim", false);
+        attributes.put("artifactFamily", "generated-lazy");
+        attributes.put("origin", "repository-generated-flow-imports");
+        attributes.put("resourceOrigin", "repository-generated-flow-imports-fixture");
+        attributes.put("dependencyOf", "Flow.loadOnDemand");
+        attributes.put("executionPolicy", "verified-only-intentionally-not-executed");
+        attributes.put("artifactStatus", "available");
+        attributes.put("requestedBy", "component-frontend-manifest-v1_4");
+        attributes.put("failureClassification", "generated-flow-imports-verified");
+        attributes.put("blockedReason",
+                "verified generated Flow imports resource; full loadOnDemand execution remains unmapped");
+        attributes.put("lookupKind", "Generated-flow-imports-resource-v1_4");
         return attributes;
     }
 

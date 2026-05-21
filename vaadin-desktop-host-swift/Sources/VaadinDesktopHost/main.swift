@@ -1291,6 +1291,8 @@ final class WebViewHost: NSObject, NSApplicationDelegate, NSWindowDelegate, WKNa
           frontendArtifactThemeStaticVerified: !!(window.VaadinDesktopIpcDiagnostics && window.VaadinDesktopIpcDiagnostics.frontendArtifactThemeStaticVerified),
           frontendArtifactThemeStaticPath: window.VaadinDesktopIpcDiagnostics ? window.VaadinDesktopIpcDiagnostics.frontendArtifactThemeStaticPath : "",
           frontendArtifactThemeStaticBlocker: !!(window.VaadinDesktopIpcDiagnostics && window.VaadinDesktopIpcDiagnostics.frontendArtifactThemeStaticBlocker),
+          frontendArtifactGeneratedLazyVerified: !!(window.VaadinDesktopIpcDiagnostics && window.VaadinDesktopIpcDiagnostics.frontendArtifactGeneratedLazyVerified),
+          frontendArtifactGeneratedLazyPath: window.VaadinDesktopIpcDiagnostics ? window.VaadinDesktopIpcDiagnostics.frontendArtifactGeneratedLazyPath : "",
           frontendArtifactDevModeBlocker: !!(window.VaadinDesktopIpcDiagnostics && window.VaadinDesktopIpcDiagnostics.frontendArtifactDevModeBlocker),
           frontendArtifactGeneratedLazyBlocker: !!(window.VaadinDesktopIpcDiagnostics && window.VaadinDesktopIpcDiagnostics.frontendArtifactGeneratedLazyBlocker),
           flowClientBootstrapInitError: window.VaadinDesktopIpcDiagnostics ? window.VaadinDesktopIpcDiagnostics.flowClientBootstrapInitError : "",
@@ -1908,6 +1910,8 @@ let flowIpcShell = #"""
         frontendArtifactThemeStaticVerified: false,
         frontendArtifactThemeStaticPath: '',
         frontendArtifactThemeStaticBlocker: false,
+        frontendArtifactGeneratedLazyVerified: false,
+        frontendArtifactGeneratedLazyPath: '',
         frontendArtifactDevModeBlocker: false,
         frontendArtifactGeneratedLazyBlocker: false,
         flowClientResourceExecutionError: '',
@@ -3471,6 +3475,17 @@ let flowIpcShell = #"""
             mergeCsv(window.VaadinDesktopIpcDiagnostics.frontendArtifactThemeStaticPath,
               themeStaticResources.map((entry) => entry.path));
         }
+        const generatedLazyResources = resources.filter((entry) => entry
+          && entry.artifactFamily === 'generated-lazy'
+          && entry.artifactStatus === 'available'
+          && typeof entry.path === 'string'
+          && entry.path);
+        if (generatedLazyResources.length > 0) {
+          window.VaadinDesktopIpcDiagnostics.frontendArtifactGeneratedLazyVerified = true;
+          window.VaadinDesktopIpcDiagnostics.frontendArtifactGeneratedLazyPath =
+            mergeCsv(window.VaadinDesktopIpcDiagnostics.frontendArtifactGeneratedLazyPath,
+              generatedLazyResources.map((entry) => entry.path));
+        }
         const blockers = Array.isArray(manifest.strictBlockers) ? manifest.strictBlockers : [];
         if (blockers.length > 0) {
           window.VaadinDesktopIpcDiagnostics.frontendArtifactStrictBlockerCount =
@@ -4355,6 +4370,10 @@ let flowIpcShell = #"""
                 style.textContent = body;
                 document.head.appendChild(style);
               }
+            } else if (payload.artifactFamily === 'generated-lazy') {
+              window.VaadinDesktopIpcDiagnostics.frontendArtifactGeneratedLazyVerified = true;
+              window.VaadinDesktopIpcDiagnostics.frontendArtifactGeneratedLazyPath =
+                mergeCsv(window.VaadinDesktopIpcDiagnostics.frontendArtifactGeneratedLazyPath, [resourcePath]);
             }
           } else {
             componentFrontendResourceExecutionFailedPaths.add(resourcePath);

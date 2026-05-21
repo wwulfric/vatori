@@ -561,6 +561,12 @@ public final class DesktopTraceInspector {
                     && line.contains("\"lookupKind\":\"Theme-static-resource-v1_4\"")) {
                 summary.frontendThemeStaticResourceObserved = true;
             }
+            if ((line.contains("\"type\":\"bootstrapResponse\"") || line.contains("\"type\":\"resourceResponse\""))
+                    && line.contains("\"artifactFamily\":\"generated-lazy\"")
+                    && line.contains("\"artifactStatus\":\"available\"")
+                    && line.contains("\"lookupKind\":\"Generated-flow-imports-resource-v1_4\"")) {
+                summary.frontendGeneratedLazyResourceObserved = true;
+            }
             if (line.contains("\"type\":\"bootstrapResponse\"")
                     && line.contains("\"artifactFamily\":\"dev-mode-bundle\"")
                     && line.contains("\"strictBlocker\":true")
@@ -570,7 +576,8 @@ public final class DesktopTraceInspector {
             if (line.contains("\"type\":\"bootstrapResponse\"")
                     && line.contains("\"artifactFamily\":\"generated-lazy\"")
                     && line.contains("\"strictBlocker\":true")
-                    && line.contains("\"failureClassification\":\"generated-lazy-resource-unmapped\"")) {
+                    && (line.contains("\"failureClassification\":\"generated-lazy-resource-unmapped\"")
+                            || line.contains("\"failureClassification\":\"generated-lazy-execution-unmapped\""))) {
                 summary.frontendGeneratedLazyStrictBlockerObserved = true;
             }
             if (line.contains("\"type\":\"webview.dom\"")
@@ -618,6 +625,11 @@ public final class DesktopTraceInspector {
             if (line.contains("\"type\":\"webview.dom\"")
                     && containsLiteralField(line, "frontendArtifactThemeStaticVerified", "true")) {
                 summary.frontendThemeStaticResourceObserved = true;
+            }
+            if (line.contains("\"type\":\"webview.dom\"")
+                    && containsLiteralField(line, "frontendArtifactGeneratedLazyVerified", "true")
+                    && line.contains("frontendArtifactGeneratedLazyPath")) {
+                summary.frontendGeneratedLazyResourceObserved = true;
             }
             if (line.contains("\"type\":\"webview.dom\"")
                     && containsLiteralField(line, "frontendArtifactThemeStaticBlocker", "true")) {
@@ -1257,6 +1269,7 @@ public final class DesktopTraceInspector {
         private boolean frontendProductionBundlePartialObserved;
         private boolean frontendThemeStaticResourceObserved;
         private boolean frontendThemeStaticStrictBlockerObserved;
+        private boolean frontendGeneratedLazyResourceObserved;
         private boolean frontendDevModeStrictBlockerObserved;
         private boolean frontendGeneratedLazyStrictBlockerObserved;
 
@@ -1586,6 +1599,8 @@ public final class DesktopTraceInspector {
                     + frontendDevModeStrictBlockerObserved);
             System.out.println("Flow IPC v1.4 generated/lazy strict blocker observed: "
                     + frontendGeneratedLazyStrictBlockerObserved);
+            System.out.println("Flow IPC v1.4 generated/lazy resource observed: "
+                    + frontendGeneratedLazyResourceObserved);
             List<String> missing = FLOW_IPC_REQUIRED_TYPES.stream()
                     .filter(type -> !types.containsKey(type))
                     .toList();

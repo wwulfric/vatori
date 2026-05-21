@@ -101,7 +101,7 @@ public final class FlowClientResourceSmokeMain {
         }
         Map<String, Object> componentManifest = resources.componentManifest();
         Object componentEntries = componentManifest.get("resources");
-        if (!(componentEntries instanceof List<?> componentResources) || componentResources.size() < 9) {
+        if (!(componentEntries instanceof List<?> componentResources) || componentResources.size() < 10) {
             throw new IllegalStateException("Component frontend resource manifest does not contain the framework graph");
         }
         if (!Objects.equals(componentManifest.get("resolverStrategy"), "generic-component-frontend-manifest-v1_3")) {
@@ -124,12 +124,13 @@ public final class FlowClientResourceSmokeMain {
         requireListContains(componentManifest.get("artifactFamilies"), "generated-lazy",
                 "Component artifact families");
         requireStrictBlocker(componentManifest, "dev-mode-bundle", "dev-mode-bundle-resource-graph-unmapped");
-        requireStrictBlocker(componentManifest, "generated-lazy", "generated-lazy-resource-unmapped");
+        requireStrictBlocker(componentManifest, "generated-lazy", "generated-lazy-execution-unmapped");
         requireComponentResourceMetadata(componentResources);
         String checkboxDevBundlePath = "META-INF/vatori/dev-bundle-entry/vaadin-checkbox.js";
         String selectDevBundlePath = "META-INF/vatori/dev-bundle-entry/vaadin-select.js";
         String bigDecimalPath = "META-INF/resources/frontend/vaadin-big-decimal-field.js";
         String themeStaticPath = "META-INF/resources/frontend/themes/vatori-flow-ipc-smoke/theme-static.css";
+        String generatedFlowImportsPath = "META-INF/vatori/generated/flow/generated-flow-imports.js";
         if (!resources.contains(bigDecimalPath)) {
             throw new IllegalStateException("Component frontend manifest is missing the BigDecimalField module");
         }
@@ -198,6 +199,27 @@ public final class FlowClientResourceSmokeMain {
                 || !Objects.equals(themeStaticResponse.get("artifactStatus"), "available")
                 || !Boolean.FALSE.equals(themeStaticResponse.get("shim"))) {
             throw new IllegalStateException("Theme/static frontend resource is missing v1.4 metadata");
+        }
+        if (!resources.contains(generatedFlowImportsPath)) {
+            throw new IllegalStateException("Component frontend manifest is missing generated Flow imports");
+        }
+        Map<String, Object> generatedFlowImportsResponse = resources.response(generatedFlowImportsPath);
+        if (!Objects.equals(generatedFlowImportsResponse.get("lookupKind"),
+                "Generated-flow-imports-resource-v1_4")
+                || !Boolean.TRUE.equals(generatedFlowImportsResponse.get("generatedLazyResource"))
+                || !Objects.equals(generatedFlowImportsResponse.get("artifactFamily"), "generated-lazy")
+                || !Objects.equals(generatedFlowImportsResponse.get("origin"), "repository-generated-flow-imports")
+                || !Objects.equals(generatedFlowImportsResponse.get("executionPolicy"),
+                        "verified-only-intentionally-not-executed")
+                || !Objects.equals(generatedFlowImportsResponse.get("artifactStatus"), "available")
+                || !Boolean.FALSE.equals(generatedFlowImportsResponse.get("shim"))) {
+            throw new IllegalStateException("Generated Flow imports resource is missing v1.4 metadata");
+        }
+        Object generatedFlowImportsBody = generatedFlowImportsResponse.get("body");
+        if (!(generatedFlowImportsBody instanceof String generatedFlowImportsText)
+                || !generatedFlowImportsText.contains("@vaadin/button/src/vaadin-button.js")
+                || !generatedFlowImportsText.contains("window.Vaadin.Flow.loadOnDemand")) {
+            throw new IllegalStateException("Generated Flow imports resource body is missing Vaadin generated imports");
         }
         System.out.println("Flow client resources loaded from classpath: " + entries.size());
         System.out.println("Flow client resource graph responses verified: " + entries.size());
@@ -269,6 +291,7 @@ public final class FlowClientResourceSmokeMain {
         boolean devBundleEntryObserved = false;
         boolean devBundleDependencyObserved = false;
         boolean themeStaticResourceObserved = false;
+        boolean generatedLazyResourceObserved = false;
         for (Object entry : componentResources) {
             if (!(entry instanceof Map<?, ?> metadata)) {
                 throw new IllegalStateException("Component frontend resource manifest contains a non-object entry");
@@ -301,9 +324,15 @@ public final class FlowClientResourceSmokeMain {
                     || "theme-static".equals(artifactFamily)
                     && "verify-and-inject-static-style".equals(executionPolicy)
                     && "available".equals(metadata.get("artifactStatus"));
+            generatedLazyResourceObserved = generatedLazyResourceObserved
+                    || "generated-lazy".equals(artifactFamily)
+                    && "verified-only-intentionally-not-executed".equals(executionPolicy)
+                    && "available".equals(metadata.get("artifactStatus"))
+                    && Boolean.TRUE.equals(metadata.get("generatedLazyResource"));
         }
         if (!classpathResourceObserved || !shimBlockerObserved || !devBundleEntryObserved
-                || !devBundleDependencyObserved || !themeStaticResourceObserved) {
+                || !devBundleDependencyObserved || !themeStaticResourceObserved
+                || !generatedLazyResourceObserved) {
             throw new IllegalStateException("Component frontend resource manifest is missing a v1.4 artifact family");
         }
     }

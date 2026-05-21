@@ -1293,6 +1293,9 @@ final class WebViewHost: NSObject, NSApplicationDelegate, NSWindowDelegate, WKNa
           frontendArtifactThemeStaticBlocker: !!(window.VaadinDesktopIpcDiagnostics && window.VaadinDesktopIpcDiagnostics.frontendArtifactThemeStaticBlocker),
           frontendArtifactGeneratedLazyVerified: !!(window.VaadinDesktopIpcDiagnostics && window.VaadinDesktopIpcDiagnostics.frontendArtifactGeneratedLazyVerified),
           frontendArtifactGeneratedLazyPath: window.VaadinDesktopIpcDiagnostics ? window.VaadinDesktopIpcDiagnostics.frontendArtifactGeneratedLazyPath : "",
+          frontendArtifactDevModeVerified: !!(window.VaadinDesktopIpcDiagnostics && window.VaadinDesktopIpcDiagnostics.frontendArtifactDevModeVerified),
+          frontendArtifactDevModePath: window.VaadinDesktopIpcDiagnostics ? window.VaadinDesktopIpcDiagnostics.frontendArtifactDevModePath : "",
+          frontendArtifactDevModePackageGraphResult: window.VaadinDesktopIpcDiagnostics ? window.VaadinDesktopIpcDiagnostics.frontendArtifactDevModePackageGraphResult : "",
           frontendArtifactDevModeBlocker: !!(window.VaadinDesktopIpcDiagnostics && window.VaadinDesktopIpcDiagnostics.frontendArtifactDevModeBlocker),
           frontendArtifactGeneratedLazyBlocker: !!(window.VaadinDesktopIpcDiagnostics && window.VaadinDesktopIpcDiagnostics.frontendArtifactGeneratedLazyBlocker),
           flowClientBootstrapInitError: window.VaadinDesktopIpcDiagnostics ? window.VaadinDesktopIpcDiagnostics.flowClientBootstrapInitError : "",
@@ -1912,6 +1915,9 @@ let flowIpcShell = #"""
         frontendArtifactThemeStaticBlocker: false,
         frontendArtifactGeneratedLazyVerified: false,
         frontendArtifactGeneratedLazyPath: '',
+        frontendArtifactDevModeVerified: false,
+        frontendArtifactDevModePath: '',
+        frontendArtifactDevModePackageGraphResult: '',
         frontendArtifactDevModeBlocker: false,
         frontendArtifactGeneratedLazyBlocker: false,
         flowClientResourceExecutionError: '',
@@ -3486,6 +3492,16 @@ let flowIpcShell = #"""
             mergeCsv(window.VaadinDesktopIpcDiagnostics.frontendArtifactGeneratedLazyPath,
               generatedLazyResources.map((entry) => entry.path));
         }
+        const devModeResources = resources.filter((entry) => entry
+          && entry.artifactFamily === 'dev-mode-bundle'
+          && entry.artifactStatus === 'available'
+          && typeof entry.path === 'string'
+          && entry.path);
+        if (devModeResources.length > 0) {
+          window.VaadinDesktopIpcDiagnostics.frontendArtifactDevModePath =
+            mergeCsv(window.VaadinDesktopIpcDiagnostics.frontendArtifactDevModePath,
+              devModeResources.map((entry) => entry.path));
+        }
         const blockers = Array.isArray(manifest.strictBlockers) ? manifest.strictBlockers : [];
         if (blockers.length > 0) {
           window.VaadinDesktopIpcDiagnostics.frontendArtifactStrictBlockerCount =
@@ -4374,6 +4390,12 @@ let flowIpcShell = #"""
               window.VaadinDesktopIpcDiagnostics.frontendArtifactGeneratedLazyVerified = true;
               window.VaadinDesktopIpcDiagnostics.frontendArtifactGeneratedLazyPath =
                 mergeCsv(window.VaadinDesktopIpcDiagnostics.frontendArtifactGeneratedLazyPath, [resourcePath]);
+            } else if (payload.artifactFamily === 'dev-mode-bundle') {
+              window.VaadinDesktopIpcDiagnostics.frontendArtifactDevModeVerified = true;
+              window.VaadinDesktopIpcDiagnostics.frontendArtifactDevModePath =
+                mergeCsv(window.VaadinDesktopIpcDiagnostics.frontendArtifactDevModePath, [resourcePath]);
+              window.VaadinDesktopIpcDiagnostics.frontendArtifactDevModePackageGraphResult =
+                'verified:' + resourcePath;
             }
           } else {
             componentFrontendResourceExecutionFailedPaths.add(resourcePath);

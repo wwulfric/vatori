@@ -101,7 +101,7 @@ public final class FlowClientResourceSmokeMain {
         }
         Map<String, Object> componentManifest = resources.componentManifest();
         Object componentEntries = componentManifest.get("resources");
-        if (!(componentEntries instanceof List<?> componentResources) || componentResources.size() < 11) {
+        if (!(componentEntries instanceof List<?> componentResources) || componentResources.size() < 12) {
             throw new IllegalStateException("Component frontend resource manifest does not contain the framework graph");
         }
         if (!Objects.equals(componentManifest.get("resolverStrategy"), "generic-component-frontend-manifest-v1_3")) {
@@ -124,7 +124,7 @@ public final class FlowClientResourceSmokeMain {
         requireListContains(componentManifest.get("artifactFamilies"), "generated-lazy",
                 "Component artifact families");
         requireStrictBlocker(componentManifest, "npm-frontend", "textfield-production-class-execution-blocked");
-        requireStrictBlocker(componentManifest, "dev-mode-bundle", "dev-mode-bundle-resource-graph-unmapped");
+        requireStrictBlocker(componentManifest, "dev-mode-bundle", "dev-mode-bundle-execution-unmapped");
         requireStrictBlocker(componentManifest, "generated-lazy", "generated-lazy-execution-unmapped");
         requireComponentResourceMetadata(componentResources);
         String checkboxDevBundlePath = "META-INF/vatori/dev-bundle-entry/vaadin-checkbox.js";
@@ -135,6 +135,7 @@ public final class FlowClientResourceSmokeMain {
         String bigDecimalPath = "META-INF/resources/frontend/vaadin-big-decimal-field.js";
         String themeStaticPath = "META-INF/resources/frontend/themes/vatori-flow-ipc-smoke/theme-static.css";
         String generatedFlowImportsPath = "META-INF/vatori/generated/flow/generated-flow-imports.js";
+        String devModePackageLockPath = "vaadin-dev-bundle/package-lock.json";
         if (!resources.contains(bigDecimalPath)) {
             throw new IllegalStateException("Component frontend manifest is missing the BigDecimalField module");
         }
@@ -300,6 +301,31 @@ public final class FlowClientResourceSmokeMain {
                 || !generatedFlowImportsText.contains("window.Vaadin.Flow.loadOnDemand")) {
             throw new IllegalStateException("Generated Flow imports resource body is missing Vaadin generated imports");
         }
+        if (!resources.contains(devModePackageLockPath)) {
+            throw new IllegalStateException("Component frontend manifest is missing the dev-mode package graph");
+        }
+        Map<String, Object> devModePackageLockResponse = resources.response(devModePackageLockPath);
+        if (!Objects.equals(devModePackageLockResponse.get("lookupKind"),
+                "Dev-mode-package-lock-resource-v1_4")
+                || !Boolean.TRUE.equals(devModePackageLockResponse.get("devModeBundleResource"))
+                || !Boolean.TRUE.equals(devModePackageLockResponse.get("devModePackageGraph"))
+                || !Objects.equals(devModePackageLockResponse.get("artifactFamily"), "dev-mode-bundle")
+                || !Objects.equals(devModePackageLockResponse.get("origin"), "vaadin-dev-bundle")
+                || !Objects.equals(devModePackageLockResponse.get("executionPolicy"),
+                        "verified-only-intentionally-not-executed")
+                || !Objects.equals(devModePackageLockResponse.get("artifactStatus"), "available")
+                || !Boolean.FALSE.equals(devModePackageLockResponse.get("shim"))) {
+            throw new IllegalStateException("Dev-mode package graph resource is missing v1.4 metadata");
+        }
+        Object devModePackageLockBody = devModePackageLockResponse.get("body");
+        if (!(devModePackageLockBody instanceof String packageLockText)
+                || !packageLockText.contains("\"devDependencies\"")
+                || !packageLockText.contains("\"vite\"")
+                || !packageLockText.contains("\"@vitejs/plugin-react\"")
+                || !packageLockText.contains("\"@vaadin/text-field\"")
+                || !packageLockText.contains("\"@vaadin/checkbox\"")) {
+            throw new IllegalStateException("Dev-mode package graph body is missing Vaadin/Vite dependency evidence");
+        }
         System.out.println("Flow client resources loaded from classpath: " + entries.size());
         System.out.println("Flow client resource graph responses verified: " + entries.size());
         System.out.println("Component frontend resources loaded: " + componentResources.size());
@@ -373,6 +399,7 @@ public final class FlowClientResourceSmokeMain {
         boolean devBundleDependencyObserved = false;
         boolean themeStaticResourceObserved = false;
         boolean generatedLazyResourceObserved = false;
+        boolean devModePackageGraphObserved = false;
         for (Object entry : componentResources) {
             if (!(entry instanceof Map<?, ?> metadata)) {
                 throw new IllegalStateException("Component frontend resource manifest contains a non-object entry");
@@ -410,10 +437,15 @@ public final class FlowClientResourceSmokeMain {
                     && "verified-only-intentionally-not-executed".equals(executionPolicy)
                     && "available".equals(metadata.get("artifactStatus"))
                     && Boolean.TRUE.equals(metadata.get("generatedLazyResource"));
+            devModePackageGraphObserved = devModePackageGraphObserved
+                    || "dev-mode-bundle".equals(artifactFamily)
+                    && "verified-only-intentionally-not-executed".equals(executionPolicy)
+                    && "available".equals(metadata.get("artifactStatus"))
+                    && Boolean.TRUE.equals(metadata.get("devModePackageGraph"));
         }
         if (!classpathResourceObserved || !shimBlockerObserved || !devBundleEntryObserved
                 || !devBundleDependencyObserved || !themeStaticResourceObserved
-                || !generatedLazyResourceObserved) {
+                || !generatedLazyResourceObserved || !devModePackageGraphObserved) {
             throw new IllegalStateException("Component frontend resource manifest is missing a v1.4 artifact family");
         }
     }

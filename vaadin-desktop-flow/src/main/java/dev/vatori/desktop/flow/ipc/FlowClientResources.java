@@ -34,6 +34,8 @@ final class FlowClientResources {
             "META-INF/vatori/dev-bundle-entry/component-base-define.js";
     private static final String GENERATED_FLOW_IMPORTS_JS =
             "META-INF/vatori/generated/flow/generated-flow-imports.js";
+    private static final String DEV_MODE_PACKAGE_LOCK_JSON =
+            "vaadin-dev-bundle/package-lock.json";
     private static final String DEV_BUNDLE_CHECKBOX_ENTRY_JS =
             "META-INF/vatori/dev-bundle-entry/vaadin-checkbox.js";
     private static final String DEV_BUNDLE_SELECT_ENTRY_JS =
@@ -305,6 +307,9 @@ final class FlowClientResources {
         add(discoveredComponentResources, GENERATED_FLOW_IMPORTS_JS,
                 "vaadin-generated-flow-imports-module", true,
                 generatedLazyAttributes());
+        add(discoveredComponentResources, DEV_MODE_PACKAGE_LOCK_JSON,
+                "vaadin-dev-mode-package-lock", true,
+                devModePackageLockAttributes());
         addText(discoveredComponentResources, DEV_BUNDLE_CHECKBOX_ENTRY_JS,
                 "vaadin-dev-bundle-checkbox-entry", CHECKBOX_DEV_BUNDLE_ENTRY_SOURCE,
                 devBundleAttributes("vaadin-checkbox", DEV_BUNDLE_CHECKBOX_ENTRY_JS, true));
@@ -369,7 +374,7 @@ final class FlowClientResources {
                 artifactFamilyStatus("npm-frontend", "blocked", "textfield-production-class-execution-blocked"),
                 artifactFamilyStatus("theme-static", "available", "theme-static-classpath-resource"),
                 artifactFamilyStatus("production-bundle", "partial", "dev-bundle-resource-graph-partial"),
-                artifactFamilyStatus("dev-mode-bundle", "blocked", "dev-mode-bundle-resource-graph-unmapped"),
+                artifactFamilyStatus("dev-mode-bundle", "partial", "dev-mode-package-lock-verified"),
                 artifactFamilyStatus("generated-lazy", "partial", "generated-flow-imports-verified")));
         manifest.put("dependencyGraph", Map.of("declared", true,
                 "resolver", COMPONENT_RESOLVER_V1_4,
@@ -377,8 +382,8 @@ final class FlowClientResources {
         manifest.put("strictBlockers", List.of(
                 strictBlocker("npm-frontend", "textfield-production-class-execution-blocked",
                         COMPONENT_TRANSITIVE_BLOCKED_REASON),
-                strictBlocker("dev-mode-bundle", "dev-mode-bundle-resource-graph-unmapped",
-                        "dev-mode bundle resources are not yet mapped into the no-localhost IPC resolver"),
+                strictBlocker("dev-mode-bundle", "dev-mode-bundle-execution-unmapped",
+                        "dev-mode package-lock dependency graph is verified over IPC, but Vite/dev-server module execution is not yet mapped into the no-localhost resolver"),
                 strictBlocker("generated-lazy", "generated-lazy-execution-unmapped",
                         "generated-flow-imports is verified over IPC, but its transitive npm/jar imports and loadOnDemand execution are not yet mapped")));
         manifest.put("transport", "flow-ipc");
@@ -666,6 +671,30 @@ final class FlowClientResources {
         attributes.put("blockedReason",
                 "verified generated Flow imports resource; full loadOnDemand execution remains unmapped");
         attributes.put("lookupKind", "Generated-flow-imports-resource-v1_4");
+        return attributes;
+    }
+
+    private static Map<String, Object> devModePackageLockAttributes() {
+        Map<String, Object> attributes = new LinkedHashMap<>();
+        attributes.put("componentFrontendResource", true);
+        attributes.put("devModeBundleResource", true);
+        attributes.put("devModePackageGraph", true);
+        attributes.put("packageManager", "npm");
+        attributes.put("moduleSpecifier", DEV_MODE_PACKAGE_LOCK_JSON);
+        attributes.put("resolver", "vaadin-dev-bundle-package-graph-v1_4");
+        attributes.put("shim", false);
+        attributes.put("artifactFamily", "dev-mode-bundle");
+        attributes.put("origin", "vaadin-dev-bundle");
+        attributes.put("resourceOrigin", "vaadin-dev-bundle-package-lock");
+        attributes.put("dependencyOf", "dev-mode-frontend-build");
+        attributes.put("executionPolicy", "verified-only-intentionally-not-executed");
+        attributes.put("artifactStatus", "available");
+        attributes.put("requestedBy", "component-frontend-manifest-v1_4");
+        attributes.put("failureClassification", "dev-mode-package-lock-verified");
+        attributes.put("blockedReason",
+                "verified Vaadin dev-mode package-lock dependency graph; Vite/dev-server module execution remains unmapped");
+        attributes.put("lookupKind", "Dev-mode-package-lock-resource-v1_4");
+        attributes.put("devModeExecutionReady", false);
         return attributes;
     }
 

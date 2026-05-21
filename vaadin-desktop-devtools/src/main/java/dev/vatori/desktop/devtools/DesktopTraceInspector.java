@@ -577,10 +577,17 @@ public final class DesktopTraceInspector {
                     && line.contains("\"lookupKind\":\"Generated-flow-imports-resource-v1_4\"")) {
                 summary.frontendGeneratedLazyResourceObserved = true;
             }
+            if ((line.contains("\"type\":\"bootstrapResponse\"") || line.contains("\"type\":\"resourceResponse\""))
+                    && line.contains("\"artifactFamily\":\"dev-mode-bundle\"")
+                    && line.contains("\"artifactStatus\":\"available\"")
+                    && line.contains("\"lookupKind\":\"Dev-mode-package-lock-resource-v1_4\"")) {
+                summary.frontendDevModeResourceObserved = true;
+            }
             if (line.contains("\"type\":\"bootstrapResponse\"")
                     && line.contains("\"artifactFamily\":\"dev-mode-bundle\"")
                     && line.contains("\"strictBlocker\":true")
-                    && line.contains("\"failureClassification\":\"dev-mode-bundle-resource-graph-unmapped\"")) {
+                    && (line.contains("\"failureClassification\":\"dev-mode-bundle-resource-graph-unmapped\"")
+                            || line.contains("\"failureClassification\":\"dev-mode-bundle-execution-unmapped\""))) {
                 summary.frontendDevModeStrictBlockerObserved = true;
             }
             if (line.contains("\"type\":\"bootstrapResponse\"")
@@ -640,6 +647,11 @@ public final class DesktopTraceInspector {
                     && containsLiteralField(line, "frontendArtifactGeneratedLazyVerified", "true")
                     && line.contains("frontendArtifactGeneratedLazyPath")) {
                 summary.frontendGeneratedLazyResourceObserved = true;
+            }
+            if (line.contains("\"type\":\"webview.dom\"")
+                    && containsLiteralField(line, "frontendArtifactDevModeVerified", "true")
+                    && line.contains("frontendArtifactDevModePath")) {
+                summary.frontendDevModeResourceObserved = true;
             }
             if (line.contains("\"type\":\"webview.dom\"")
                     && containsLiteralField(line, "frontendArtifactThemeStaticBlocker", "true")) {
@@ -1286,6 +1298,7 @@ public final class DesktopTraceInspector {
         private boolean frontendThemeStaticResourceObserved;
         private boolean frontendThemeStaticStrictBlockerObserved;
         private boolean frontendGeneratedLazyResourceObserved;
+        private boolean frontendDevModeResourceObserved;
         private boolean frontendDevModeStrictBlockerObserved;
         private boolean frontendGeneratedLazyStrictBlockerObserved;
 
@@ -1394,6 +1407,7 @@ public final class DesktopTraceInspector {
                     && frontendTextFieldDevBundleBlockerObserved
                     && frontendProductionBundlePartialObserved
                     && frontendThemeStaticResourceObserved
+                    && frontendDevModeResourceObserved
                     && frontendDevModeStrictBlockerObserved
                     && frontendGeneratedLazyStrictBlockerObserved
                     && frontendGeneratedLazyResourceObserved;
@@ -1618,6 +1632,8 @@ public final class DesktopTraceInspector {
                     + frontendThemeStaticResourceObserved);
             System.out.println("Flow IPC v1.4 dev-mode strict blocker observed: "
                     + frontendDevModeStrictBlockerObserved);
+            System.out.println("Flow IPC v1.4 dev-mode resource observed: "
+                    + frontendDevModeResourceObserved);
             System.out.println("Flow IPC v1.4 generated/lazy strict blocker observed: "
                     + frontendGeneratedLazyStrictBlockerObserved);
             System.out.println("Flow IPC v1.4 generated/lazy resource observed: "

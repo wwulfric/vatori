@@ -128,6 +128,7 @@ public final class FlowClientResourceSmokeMain {
         requireComponentResourceMetadata(componentResources);
         String checkboxDevBundlePath = "META-INF/vatori/dev-bundle-entry/vaadin-checkbox.js";
         String selectDevBundlePath = "META-INF/vatori/dev-bundle-entry/vaadin-select.js";
+        String litDevBundlePath = "META-INF/vatori/dev-bundle-entry/lit-css.js";
         String textFieldDevBundlePath = "META-INF/vatori/dev-bundle-entry/vaadin-text-field.js";
         String defineDevBundlePath = "META-INF/vatori/dev-bundle-entry/component-base-define.js";
         String bigDecimalPath = "META-INF/resources/frontend/vaadin-big-decimal-field.js";
@@ -152,15 +153,37 @@ public final class FlowClientResourceSmokeMain {
                         "dynamic-import-blob-with-manifest-import-rewrites-v1_4")) {
             throw new IllegalStateException("BigDecimalField component frontend module is missing import rewrite metadata");
         }
-        requireImportRewrite(bigDecimalResponse, "lit", "META-INF/vatori/frontend-shims/lit.js");
+        requireImportRewrite(bigDecimalResponse, "lit", litDevBundlePath);
         requireImportRewrite(bigDecimalResponse, "@vaadin/text-field/src/vaadin-text-field.js",
                 "META-INF/vatori/frontend-shims/vaadin-text-field.js");
         requireImportRewrite(bigDecimalResponse, "@vaadin/component-base/src/define.js",
                 defineDevBundlePath);
         Object shimmedImports = bigDecimalResponse.get("shimmedImports");
         if (!(shimmedImports instanceof List<?> shimmedImportList)
-                || !shimmedImportList.equals(List.of("lit", "@vaadin/text-field/src/vaadin-text-field.js"))) {
-            throw new IllegalStateException("BigDecimalField should report only lit and TextField as remaining shims");
+                || !shimmedImportList.equals(List.of("@vaadin/text-field/src/vaadin-text-field.js"))) {
+            throw new IllegalStateException("BigDecimalField should report only TextField as remaining shim");
+        }
+        if (!resources.contains(litDevBundlePath)) {
+            throw new IllegalStateException("Component frontend manifest is missing the Lit css dev-bundle module");
+        }
+        Map<String, Object> litResponse = resources.response(litDevBundlePath);
+        if (!Objects.equals(litResponse.get("lookupKind"), "Lit-css-dev-bundle-resource-v1_4")
+                || !Objects.equals(litResponse.get("componentClass"), "lit")
+                || !Boolean.TRUE.equals(litResponse.get("componentBundleDependency"))
+                || !Boolean.TRUE.equals(litResponse.get("devBundleResource"))
+                || !Objects.equals(litResponse.get("artifactFamily"), "production-bundle")
+                || !Objects.equals(litResponse.get("origin"), "vaadin-dev-bundle-extracted-entry")
+                || !Objects.equals(litResponse.get("executionPolicy"), "dependency-module")
+                || !Objects.equals(litResponse.get("artifactStatus"), "partial")
+                || !Boolean.FALSE.equals(litResponse.get("shim"))) {
+            throw new IllegalStateException("Lit css dev-bundle module is missing metadata");
+        }
+        Object litBody = litResponse.get("body");
+        if (!(litBody instanceof String litText)
+                || !litText.contains("class CSSResult")
+                || !litText.contains("export const css")
+                || !litText.contains("export const unsafeCSS")) {
+            throw new IllegalStateException("Lit css dev-bundle entry body is missing real export bridge");
         }
         if (!resources.contains(textFieldDevBundlePath)) {
             throw new IllegalStateException("Component frontend manifest is missing the TextField dev-bundle module");

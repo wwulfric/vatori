@@ -483,7 +483,8 @@ public final class DesktopTraceInspector {
                             || line.contains("\"vaadin-component-classpath-plus-dev-bundle-v1_4\""))
                     && line.contains("com.vaadin.flow.component.textfield.BigDecimalField")
                     && line.contains("vaadin-big-decimal-field")
-                    && line.contains("npm-transitive-imports-shimmed")
+                    && (line.contains("npm-transitive-imports-shimmed")
+                            || line.contains("textfield-production-class-execution-blocked"))
                     && line.contains("blockedReason")) {
                 summary.vaadinWebComponentResourceManifestObserved = true;
                 summary.vaadinWebComponentFailureClassificationObserved = true;
@@ -530,7 +531,8 @@ public final class DesktopTraceInspector {
                     && line.contains("\"executionPolicy\":\"blocked-shim-fallback\"")
                     && line.contains("\"artifactStatus\":\"blocked-fallback\"")
                     && line.contains("\"strictBlocker\":true")
-                    && line.contains("\"failureClassification\":\"npm-transitive-imports-shimmed\"")) {
+                    && (line.contains("\"failureClassification\":\"npm-transitive-imports-shimmed\"")
+                            || line.contains("\"failureClassification\":\"textfield-production-class-execution-blocked\""))) {
                 summary.frontendShimBlockerObserved = true;
             }
             if (line.contains("\"type\":\"bootstrapResponse\"")
@@ -539,7 +541,8 @@ public final class DesktopTraceInspector {
                     && line.contains("\"browserExecutionPlan\":\"dynamic-import-blob-with-manifest-import-rewrites-v1_4\"")
                     && line.contains("\"importRewrites\"")
                     && line.contains("\"specifier\":\"lit\"")
-                    && line.contains("\"resourcePath\":\"META-INF/vatori/frontend-shims/lit.js\"")) {
+                    && (line.contains("\"resourcePath\":\"META-INF/vatori/frontend-shims/lit.js\"")
+                            || line.contains("\"resourcePath\":\"META-INF/vatori/dev-bundle-entry/lit-css.js\""))) {
                 summary.frontendManifestImportRewriteObserved = true;
             }
             if (line.contains("\"type\":\"bootstrapResponse\"")
@@ -671,7 +674,8 @@ public final class DesktopTraceInspector {
                     && line.contains("META-INF/resources/frontend/vaadin-big-decimal-field.js")
                     && line.contains("\"bodyRedacted\":true")
                     && line.contains("\"blockedReason\"")
-                    && line.contains("\"failureClassification\":\"npm-transitive-imports-shimmed\"")) {
+                    && (line.contains("\"failureClassification\":\"npm-transitive-imports-shimmed\"")
+                            || line.contains("\"failureClassification\":\"textfield-production-class-execution-blocked\""))) {
                 summary.vaadinWebComponentResourceResponseObserved = true;
                 summary.vaadinWebComponentFailureClassificationObserved = true;
             }
@@ -770,9 +774,11 @@ public final class DesktopTraceInspector {
                     && line.contains("META-INF/resources/frontend/vaadin-big-decimal-field.js")
                     && (line.contains("META-INF/vatori/frontend-shims/vaadin-text-field.js")
                             || line.contains("META-INF/vatori/dev-bundle-entry/vaadin-text-field.js"))
-                    && line.contains("npm-transitive-imports-shimmed")
+                    && (line.contains("npm-transitive-imports-shimmed")
+                            || line.contains("textfield-production-class-execution-blocked"))
                     && (line.contains("full @vaadin/text-field npm graph")
-                            || line.contains("lit npm helper"))) {
+                            || line.contains("lit npm helper")
+                            || line.contains("@vaadin/text-field import is still a controlled shim"))) {
                 summary.vaadinWebComponentResourceDomObserved = true;
                 summary.vaadinWebComponentFailureClassificationObserved = true;
             }

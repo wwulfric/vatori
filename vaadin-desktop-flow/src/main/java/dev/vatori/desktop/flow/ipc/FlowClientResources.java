@@ -20,13 +20,14 @@ final class FlowClientResources {
     private static final String FLOW_CLIENT_JS = "META-INF/frontend/FlowClient.js";
     private static final String BIG_DECIMAL_FIELD_JS =
             "META-INF/resources/frontend/vaadin-big-decimal-field.js";
-    private static final String LIT_SHIM_JS = "META-INF/vatori/frontend-shims/lit.js";
     private static final String TEXT_FIELD_SHIM_JS =
             "META-INF/vatori/frontend-shims/vaadin-text-field.js";
     private static final String DEV_BUNDLE_COMMONJS_JS =
             "vaadin-dev-bundle/webapp/VAADIN/build/commonjsHelpers-CUmg6egw.js";
     private static final String DEV_BUNDLE_INDEX_HTML_JS =
             "vaadin-dev-bundle/webapp/VAADIN/build/indexhtml-BfYYZi8S.js";
+    private static final String DEV_BUNDLE_LIT_ENTRY_JS =
+            "META-INF/vatori/dev-bundle-entry/lit-css.js";
     private static final String DEV_BUNDLE_TEXT_FIELD_ENTRY_JS =
             "META-INF/vatori/dev-bundle-entry/vaadin-text-field.js";
     private static final String DEV_BUNDLE_DEFINE_ENTRY_JS =
@@ -49,27 +50,9 @@ final class FlowClientResources {
             j.sendEventMessage=mI(function(a,b,c){var d=i.a.Z();d.Ab(a,b,c)});j.handleIpcMessage=mI(function(a){var b=typeof a==='string'?JSON.parse(a):a;Pr(i.a.X(),b)});j.requestIpcResync=mI(function(){Cs(Ic(wk(i.a,tf),16))});j.initializing=false;\
             """;
     private static final String COMPONENT_TRANSITIVE_BLOCKED_REASON =
-            "the lit npm helper and @vaadin/text-field are still controlled shims; component-base define is resolved through an extracted Vaadin dev-bundle helper";
+            "the @vaadin/text-field import is still a controlled shim; lit css and component-base define resolve through focused extracted production bundle helpers";
     private static final String DEV_BUNDLE_COMPONENT_REASON =
             "Focused Vaadin dev-bundle entries import production component classes and register real custom elements; full production bundle routing is still not complete.";
-    private static final String LIT_SHIM_SOURCE = """
-            export function css(strings, ...values) {
-              const raw = strings && strings.raw ? strings.raw : strings;
-              let text = '';
-              for (let index = 0; index < raw.length; index += 1) {
-                text += raw[index];
-                if (index < values.length) {
-                  text += values[index];
-                }
-              }
-              return {
-                cssText: text,
-                toString() {
-                  return text;
-                }
-              };
-            }
-            """;
     private static final String TEXT_FIELD_SHIM_SOURCE = """
             export class TextField extends HTMLElement {
               static get is() {
@@ -155,6 +138,56 @@ final class FlowClientResources {
             defineCustomElement(TextField);
 
             export { defineCustomElement, TextField };
+            """;
+    private static final String LIT_DEV_BUNDLE_ENTRY_SOURCE = """
+            const constructionToken = Symbol('vatori-lit-css-result');
+
+            class CSSResult {
+              constructor(cssText, strings, token) {
+                if (token !== constructionToken) {
+                  throw new Error('CSSResult is not constructable. Use `unsafeCSS` or `css` instead.');
+                }
+                this.cssText = cssText;
+                this.t = strings;
+                this._$cssResult$ = true;
+              }
+
+              get styleSheet() {
+                if (!this.o && 'CSSStyleSheet' in globalThis) {
+                  this.o = new CSSStyleSheet();
+                  this.o.replaceSync(this.cssText);
+                }
+                return this.o;
+              }
+
+              toString() {
+                return this.cssText;
+              }
+            }
+
+            function textFromCssValue(value) {
+              if (value && value._$cssResult$ === true) {
+                return value.cssText;
+              }
+              if (typeof value === 'number') {
+                return value;
+              }
+              throw new Error(
+                "Value passed to 'css' function must be a 'css' function result. Use 'unsafeCSS' to pass non-literal values."
+              );
+            }
+
+            export const unsafeCSS = (value) => new CSSResult(String(value), undefined, constructionToken);
+
+            export const css = (strings, ...values) => {
+              const raw = strings && strings.raw ? strings.raw : strings;
+              const cssText = raw.length === 1
+                ? raw[0]
+                : values.reduce((text, value, index) => {
+                    return text + textFromCssValue(value) + raw[index + 1];
+                  }, raw[0]);
+              return new CSSResult(cssText, raw, constructionToken);
+            };
             """;
     private static final String DEFINE_DEV_BUNDLE_ENTRY_SOURCE = """
             window.Vaadin ||= {};
@@ -250,8 +283,6 @@ final class FlowClientResources {
                         "vaadin-big-decimal-field",
                         "./vaadin-big-decimal-field.js",
                         "classpath-frontend-resource"));
-        addText(discoveredComponentResources, LIT_SHIM_JS, "vaadin-web-component-import-shim", LIT_SHIM_SOURCE,
-                componentAttributes(true, "lit", "", "lit", "v1_2-inline-shim"));
         addText(discoveredComponentResources, TEXT_FIELD_SHIM_JS, "vaadin-web-component-import-shim",
                 TEXT_FIELD_SHIM_SOURCE,
                 componentAttributes(true, "com.vaadin.flow.component.textfield.TextField",
@@ -262,6 +293,9 @@ final class FlowClientResources {
                 devBundleAttributes("", DEV_BUNDLE_COMMONJS_JS, false));
         add(discoveredComponentResources, DEV_BUNDLE_INDEX_HTML_JS, "vaadin-dev-bundle-support-module", true,
                 devBundleAttributes("", DEV_BUNDLE_INDEX_HTML_JS, false));
+        addText(discoveredComponentResources, DEV_BUNDLE_LIT_ENTRY_JS,
+                "vaadin-dev-bundle-lit-css-entry", LIT_DEV_BUNDLE_ENTRY_SOURCE,
+                litDevBundleAttributes());
         addText(discoveredComponentResources, DEV_BUNDLE_TEXT_FIELD_ENTRY_JS,
                 "vaadin-dev-bundle-text-field-entry", TEXT_FIELD_DEV_BUNDLE_ENTRY_SOURCE,
                 textFieldDevBundleAttributes());
@@ -332,7 +366,7 @@ final class FlowClientResources {
                 artifactFamilyStatus("flow-client-classpath", "available", "classpath-flow-client-resource"),
                 artifactFamilyStatus("vaadin-component-classpath-frontend", "available",
                         "classpath-component-frontend-resource"),
-                artifactFamilyStatus("npm-frontend", "blocked", "npm-transitive-imports-shimmed"),
+                artifactFamilyStatus("npm-frontend", "blocked", "textfield-production-class-execution-blocked"),
                 artifactFamilyStatus("theme-static", "available", "theme-static-classpath-resource"),
                 artifactFamilyStatus("production-bundle", "partial", "dev-bundle-resource-graph-partial"),
                 artifactFamilyStatus("dev-mode-bundle", "blocked", "dev-mode-bundle-resource-graph-unmapped"),
@@ -341,7 +375,7 @@ final class FlowClientResources {
                 "resolver", COMPONENT_RESOLVER_V1_4,
                 "resourceCount", entries.size()));
         manifest.put("strictBlockers", List.of(
-                strictBlocker("npm-frontend", "npm-transitive-imports-shimmed",
+                strictBlocker("npm-frontend", "textfield-production-class-execution-blocked",
                         COMPONENT_TRANSITIVE_BLOCKED_REASON),
                 strictBlocker("dev-mode-bundle", "dev-mode-bundle-resource-graph-unmapped",
                         "dev-mode bundle resources are not yet mapped into the no-localhost IPC resolver"),
@@ -382,18 +416,18 @@ final class FlowClientResources {
         manifest.put("npmFrontendGraphComplete", false);
         manifest.put("productionBundleReady", false);
         manifest.put("devModeReady", false);
-        manifest.put("failureClassification", "npm-transitive-imports-shimmed");
+        manifest.put("failureClassification", "textfield-production-class-execution-blocked");
         manifest.put("blockedReason", COMPONENT_TRANSITIVE_BLOCKED_REASON);
         manifest.put("unresolvedImports", List.of(
-                Map.of("specifier", "lit",
-                        "classification", "npm-frontend-artifact-missing",
-                        "resolution", LIT_SHIM_JS),
                 Map.of("specifier", "@vaadin/text-field/src/vaadin-text-field.js",
                         "classification", "textfield-production-class-execution-blocked",
                         "resolution", TEXT_FIELD_SHIM_JS)));
         manifest.put("resolvedImports", List.of(
+                Map.of("specifier", "lit",
+                        "classification", "focused-extracted-production-bundle-helper",
+                        "resolution", DEV_BUNDLE_LIT_ENTRY_JS),
                 Map.of("specifier", "@vaadin/component-base/src/define.js",
-                        "classification", "focused-production-bundle-entry",
+                        "classification", "focused-extracted-production-bundle-helper",
                         "resolution", DEV_BUNDLE_DEFINE_ENTRY_JS)));
         manifest.put("count", entries.size());
         manifest.put("resources", entries);
@@ -500,17 +534,24 @@ final class FlowClientResources {
         attributes.put("executionPolicy", shim ? "blocked-shim-fallback" : "execute-primary-module");
         attributes.put("artifactStatus", shim ? "blocked-fallback" : "available");
         attributes.put("requestedBy", "component-frontend-manifest-v1_4");
-        attributes.put("failureClassification", "npm-transitive-imports-shimmed");
+        attributes.put("failureClassification", "textfield-production-class-execution-blocked");
         attributes.put("blockedReason", COMPONENT_TRANSITIVE_BLOCKED_REASON);
         attributes.put("lookupKind", lookupKind(componentClass, resolver));
         if (!shim) {
-            attributes.put("shimmedImports", List.of("lit", "@vaadin/text-field/src/vaadin-text-field.js"));
+            attributes.put("shimmedImports", List.of("@vaadin/text-field/src/vaadin-text-field.js"));
             attributes.put("importRewriteStrategy", "manifest-import-rewrite-v1_4");
             attributes.put("browserExecutionPlan", "dynamic-import-blob-with-manifest-import-rewrites-v1_4");
             attributes.put("importRewrites", List.of(
-                    importRewrite("lit", LIT_SHIM_JS),
+                    importRewrite("lit",
+                            DEV_BUNDLE_LIT_ENTRY_JS,
+                            "production-bundle",
+                            "vaadin-dev-bundle-production-build-v1_4",
+                            "dev-bundle-resource-graph-partial"),
                     importRewrite("@vaadin/text-field/src/vaadin-text-field.js",
-                            TEXT_FIELD_SHIM_JS),
+                            TEXT_FIELD_SHIM_JS,
+                            "npm-frontend",
+                            "manifest-import-rewrite-v1_4",
+                            "textfield-production-class-execution-blocked"),
                     importRewrite("@vaadin/component-base/src/define.js",
                             DEV_BUNDLE_DEFINE_ENTRY_JS,
                             "production-bundle",
@@ -560,6 +601,21 @@ final class FlowClientResources {
         } else {
             attributes.put("componentBundleDependency", true);
         }
+        return attributes;
+    }
+
+    private static Map<String, Object> litDevBundleAttributes() {
+        Map<String, Object> attributes = devBundleAttributes("lit",
+                "",
+                DEV_BUNDLE_LIT_ENTRY_JS,
+                false,
+                "Lit-css-dev-bundle-resource-v1_4",
+                BIG_DECIMAL_FIELD_JS);
+        attributes.put("replacesImportSpecifiers", List.of("lit"));
+        attributes.put("origin", "vaadin-dev-bundle-extracted-entry");
+        attributes.put("resourceOrigin", "vaadin-dev-bundle-extracted-lit-css");
+        attributes.put("blockedReason",
+                "Focused Lit css helper is extracted from the production dev-bundle without executing the full indexhtml chunk; full npm frontend graph remains incomplete because TextField still uses a controlled shim.");
         return attributes;
     }
 
@@ -637,14 +693,6 @@ final class FlowClientResources {
             return "BigDecimalField-minimum-component-resource";
         }
         return "component-transitive-import-shim";
-    }
-
-    private static Map<String, Object> importRewrite(String specifier, String resourcePath) {
-        return importRewrite(specifier,
-                resourcePath,
-                "npm-frontend",
-                "manifest-import-rewrite-v1_4",
-                "npm-transitive-imports-shimmed");
     }
 
     private static Map<String, Object> importRewrite(String specifier, String resourcePath, String artifactFamily,

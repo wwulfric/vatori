@@ -204,6 +204,8 @@ Vaadin：
 - 优先使用小而可 review 的模块和清晰 adapter 边界。
 - 搜索源码时使用 `rg` / `rg --files`。
 - 文件编辑使用 `apply_patch`。
+- 每轮工作按适合粒度提交 commit；提交信息使用 Conventional Commit 前缀，例如
+  `feat:`、`fix:`、`docs:`、`test:`、`chore:`、`refactor:`。
 - 除非明确要求，不要删除生成文件或用户文件。
 
 ## 近期工作

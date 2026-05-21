@@ -48,8 +48,13 @@ public final class FlowClientResourceSmokeMain {
             requireEquals("classpath", metadata.get("origin"), path + " origin");
             requirePresentString(metadata.get("moduleSpecifier"), path + " module specifier");
             requirePresentString(metadata.get("resolver"), path + " resolver");
-            requirePresentString(metadata.get("executionPolicy"), path + " execution policy");
+            requirePresentString(metadata.get("dependencyOf"), path + " dependencyOf");
+            String executionPolicy = requirePresentString(metadata.get("executionPolicy"), path + " execution policy");
             requireEquals("available", metadata.get("artifactStatus"), path + " artifact status");
+            requirePresentString(metadata.get("failureClassification"), path + " failure classification");
+            if (!"execute-primary-module".equals(executionPolicy)) {
+                requirePresentString(metadata.get("blockedReason"), path + " blocked reason");
+            }
             if (!resources.contains(path)) {
                 throw new IllegalStateException("Manifest resource is not available from FlowClientResources: " + path);
             }
@@ -60,8 +65,12 @@ public final class FlowClientResourceSmokeMain {
             requireEquals(metadata.get("sha256"), response.get("sha256"), path + " response sha256");
             requireEquals(metadata.get("artifactFamily"), response.get("artifactFamily"),
                     path + " response artifact family");
+            requireEquals(metadata.get("dependencyOf"), response.get("dependencyOf"),
+                    path + " response dependencyOf");
             requireEquals(metadata.get("executionPolicy"), response.get("executionPolicy"),
                     path + " response execution policy");
+            requireEquals(metadata.get("failureClassification"), response.get("failureClassification"),
+                    path + " response failure classification");
             if (!Boolean.TRUE.equals(response.get("flowClientResource")) || !Boolean.TRUE.equals(response.get("available"))) {
                 throw new IllegalStateException("Flow client resource response is not marked available: " + path);
             }

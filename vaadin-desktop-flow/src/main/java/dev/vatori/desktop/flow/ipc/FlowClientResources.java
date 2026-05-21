@@ -826,9 +826,16 @@ final class FlowClientResources {
         attributes.put("resourceOrigin", "flow-client-classpath");
         attributes.put("moduleSpecifier", path);
         attributes.put("resolver", "flow-client-classpath-resource");
-        attributes.put("executionPolicy", flowClientExecutionPolicy(kind));
+        String executionPolicy = flowClientExecutionPolicy(kind);
+        attributes.put("dependencyOf", flowClientDependencyOf(kind));
+        attributes.put("executionPolicy", executionPolicy);
         attributes.put("artifactStatus", "available");
+        attributes.put("failureClassification", "classpath-flow-client-resource");
         attributes.put("requestedBy", "flow-client-manifest-v1_4");
+        if (!"execute-primary-module".equals(executionPolicy)) {
+            attributes.put("blockedReason",
+                    "Flow client classpath resource is verified over IPC but intentionally not executed by the current dev-ipc runtime slice");
+        }
         return attributes;
     }
 
@@ -837,6 +844,18 @@ final class FlowClientResources {
             return "execute-primary-module";
         }
         return "verified-only-intentionally-not-executed";
+    }
+
+    private static String flowClientDependencyOf(String kind) {
+        return switch (kind) {
+            case "flow-bootstrap-module" -> "flow-client-bootstrap";
+            case "flow-client-module" -> "flow-client-engine";
+            case "flow-client-loader-module" -> "Flow.loadOnDemand";
+            case "flow-client-index-module" -> "flow-client-entrypoint";
+            case "flow-client-static-metadata" -> "flow-client-static-resource-graph";
+            case "flow-client-gwt-bundle" -> "flow-client-gwt-resource-graph";
+            default -> "flow-client-classpath-resource-graph";
+        };
     }
 
     private static Map<String, Object> artifactFamilyStatus(String family, String status, String classification) {

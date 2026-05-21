@@ -31,6 +31,8 @@ final class FlowClientResources {
             "vaadin-dev-bundle/webapp/VAADIN/build/indexhtml-BfYYZi8S.js";
     private static final String DEV_BUNDLE_CHECKBOX_ENTRY_JS =
             "META-INF/vatori/dev-bundle-entry/vaadin-checkbox.js";
+    private static final String THEME_STATIC_CSS =
+            "META-INF/resources/frontend/themes/vatori-flow-ipc-smoke/theme-static.css";
     private static final String FRONTEND_ASSET_PIPELINE_VERSION = "flow-ipc-frontend-assets-v1_4";
     private static final String FRONTEND_ARTIFACT_GRAPH_SOURCE = "vaadin-frontend-artifact-graph-v1_4";
     private static final String COMPONENT_RESOLVER_V1_4 = "frontend-artifact-graph-v1_4";
@@ -192,6 +194,8 @@ final class FlowClientResources {
         addText(discoveredComponentResources, DEV_BUNDLE_CHECKBOX_ENTRY_JS,
                 "vaadin-dev-bundle-checkbox-entry", CHECKBOX_DEV_BUNDLE_ENTRY_SOURCE,
                 devBundleAttributes("vaadin-checkbox", DEV_BUNDLE_CHECKBOX_ENTRY_JS, true));
+        add(discoveredComponentResources, THEME_STATIC_CSS, "theme-static-resource", true,
+                themeStaticAttributes());
 
         flowClientResources = Collections.unmodifiableMap(new LinkedHashMap<>(discoveredFlowClientResources));
         componentResources = Collections.unmodifiableMap(new LinkedHashMap<>(discoveredComponentResources));
@@ -241,7 +245,7 @@ final class FlowClientResources {
                 artifactFamilyStatus("vaadin-component-classpath-frontend", "available",
                         "classpath-component-frontend-resource"),
                 artifactFamilyStatus("npm-frontend", "blocked", "npm-transitive-imports-shimmed"),
-                artifactFamilyStatus("theme-static", "blocked", "theme-static-resource-not-declared"),
+                artifactFamilyStatus("theme-static", "available", "theme-static-classpath-resource"),
                 artifactFamilyStatus("production-bundle", "partial", "dev-bundle-resource-graph-partial"),
                 artifactFamilyStatus("dev-mode-bundle", "blocked", "dev-mode-bundle-resource-graph-unmapped"),
                 artifactFamilyStatus("generated-lazy", "blocked", "generated-lazy-resource-unmapped")));
@@ -251,8 +255,6 @@ final class FlowClientResources {
         manifest.put("strictBlockers", List.of(
                 strictBlocker("npm-frontend", "npm-transitive-imports-shimmed",
                         COMPONENT_TRANSITIVE_BLOCKED_REASON),
-                strictBlocker("theme-static", "theme-static-resource-not-declared",
-                        "current Flow IPC smoke apps do not declare a theme/static frontend asset for no-localhost lookup"),
                 strictBlocker("dev-mode-bundle", "dev-mode-bundle-resource-graph-unmapped",
                         "dev-mode bundle resources are not yet mapped into the no-localhost IPC resolver"),
                 strictBlocker("generated-lazy", "generated-lazy-resource-unmapped",
@@ -445,6 +447,27 @@ final class FlowClientResources {
         } else {
             attributes.put("componentBundleDependency", true);
         }
+        return attributes;
+    }
+
+    private static Map<String, Object> themeStaticAttributes() {
+        Map<String, Object> attributes = new LinkedHashMap<>();
+        attributes.put("componentFrontendResource", true);
+        attributes.put("themeStaticResource", true);
+        attributes.put("themeName", "vatori-flow-ipc-smoke");
+        attributes.put("moduleSpecifier", THEME_STATIC_CSS);
+        attributes.put("resolver", "theme-static-classpath-resource-v1_4");
+        attributes.put("shim", false);
+        attributes.put("artifactFamily", "theme-static");
+        attributes.put("origin", "classpath");
+        attributes.put("resourceOrigin", "theme-static-classpath-resource");
+        attributes.put("dependencyOf", "theme:vatori-flow-ipc-smoke");
+        attributes.put("executionPolicy", "verify-and-inject-static-style");
+        attributes.put("artifactStatus", "available");
+        attributes.put("requestedBy", "component-frontend-manifest-v1_4");
+        attributes.put("failureClassification", "theme-static-classpath-resource");
+        attributes.put("blockedReason", "resolved theme/static classpath resource for the v1.4 no-localhost lookup path");
+        attributes.put("lookupKind", "Theme-static-resource-v1_4");
         return attributes;
     }
 

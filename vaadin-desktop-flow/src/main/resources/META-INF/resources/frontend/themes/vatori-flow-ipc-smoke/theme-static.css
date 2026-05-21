@@ -1,0 +1,7 @@
+html {
+  --vatori-flow-ipc-theme-static-loaded: 1;
+}
+
+body {
+  border-top: 0 solid transparent;
+}

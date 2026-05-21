@@ -1288,6 +1288,8 @@ final class WebViewHost: NSObject, NSApplicationDelegate, NSWindowDelegate, WKNa
           frontendArtifactStrictBlockerCount: window.VaadinDesktopIpcDiagnostics ? window.VaadinDesktopIpcDiagnostics.frontendArtifactStrictBlockerCount : 0,
           frontendArtifactShimFallback: !!(window.VaadinDesktopIpcDiagnostics && window.VaadinDesktopIpcDiagnostics.frontendArtifactShimFallback),
           frontendArtifactProductionBundlePartial: !!(window.VaadinDesktopIpcDiagnostics && window.VaadinDesktopIpcDiagnostics.frontendArtifactProductionBundlePartial),
+          frontendArtifactThemeStaticVerified: !!(window.VaadinDesktopIpcDiagnostics && window.VaadinDesktopIpcDiagnostics.frontendArtifactThemeStaticVerified),
+          frontendArtifactThemeStaticPath: window.VaadinDesktopIpcDiagnostics ? window.VaadinDesktopIpcDiagnostics.frontendArtifactThemeStaticPath : "",
           frontendArtifactThemeStaticBlocker: !!(window.VaadinDesktopIpcDiagnostics && window.VaadinDesktopIpcDiagnostics.frontendArtifactThemeStaticBlocker),
           frontendArtifactDevModeBlocker: !!(window.VaadinDesktopIpcDiagnostics && window.VaadinDesktopIpcDiagnostics.frontendArtifactDevModeBlocker),
           frontendArtifactGeneratedLazyBlocker: !!(window.VaadinDesktopIpcDiagnostics && window.VaadinDesktopIpcDiagnostics.frontendArtifactGeneratedLazyBlocker),
@@ -1895,6 +1897,8 @@ let flowIpcShell = #"""
         frontendArtifactStrictBlockerCount: 0,
         frontendArtifactShimFallback: false,
         frontendArtifactProductionBundlePartial: false,
+        frontendArtifactThemeStaticVerified: false,
+        frontendArtifactThemeStaticPath: '',
         frontendArtifactThemeStaticBlocker: false,
         frontendArtifactDevModeBlocker: false,
         frontendArtifactGeneratedLazyBlocker: false,
@@ -3424,6 +3428,17 @@ let flowIpcShell = #"""
           || resources.some((entry) => entry
             && entry.artifactFamily === 'production-bundle'
             && entry.artifactStatus === 'partial');
+        const themeStaticResources = resources.filter((entry) => entry
+          && entry.artifactFamily === 'theme-static'
+          && entry.artifactStatus === 'available'
+          && typeof entry.path === 'string'
+          && entry.path);
+        if (themeStaticResources.length > 0) {
+          window.VaadinDesktopIpcDiagnostics.frontendArtifactThemeStaticVerified = true;
+          window.VaadinDesktopIpcDiagnostics.frontendArtifactThemeStaticPath =
+            mergeCsv(window.VaadinDesktopIpcDiagnostics.frontendArtifactThemeStaticPath,
+              themeStaticResources.map((entry) => entry.path));
+        }
         const blockers = Array.isArray(manifest.strictBlockers) ? manifest.strictBlockers : [];
         if (blockers.length > 0) {
           window.VaadinDesktopIpcDiagnostics.frontendArtifactStrictBlockerCount =
@@ -3605,8 +3620,10 @@ let flowIpcShell = #"""
           loadOnDemand ? 'api-present-not-invoked-in-smoke' : 'api-not-exposed-on-current-bootstrap';
         window.VaadinDesktopIpcDiagnostics.flowClientResourceBootstrapLazyEntriesResult =
           'no-bootstrap-LAZY-entry-in-smoke';
-        window.VaadinDesktopIpcDiagnostics.flowClientResourceThemeLookupResult =
-          'no-theme-resource-declared-by-smoke-app';
+        if (!window.VaadinDesktopIpcDiagnostics.frontendArtifactThemeStaticVerified) {
+          window.VaadinDesktopIpcDiagnostics.flowClientResourceThemeLookupResult =
+            'no-theme-resource-declared-by-smoke-app';
+        }
         window.VaadinDesktopIpcDiagnostics.flowClientResourceLazyLookupRequested = true;
         window.VaadinDesktopIpcDiagnostics.flowClientResourceLazyLookupPurpose = 'flow-client-lazy-lookup';
         window.VaadinDesktopIpcDiagnostics.flowClientResourceLazyLookupKind = 'Flow.loadOnDemand-minimum-probe';
@@ -4294,6 +4311,19 @@ let flowIpcShell = #"""
           if (metadataMatches && !!body) {
             componentFrontendResourceVerifiedPaths.add(resourcePath);
             componentFrontendResourceBodies.set(resourcePath, body);
+            if (payload.artifactFamily === 'theme-static') {
+              window.VaadinDesktopIpcDiagnostics.frontendArtifactThemeStaticVerified = true;
+              window.VaadinDesktopIpcDiagnostics.frontendArtifactThemeStaticPath =
+                mergeCsv(window.VaadinDesktopIpcDiagnostics.frontendArtifactThemeStaticPath, [resourcePath]);
+              window.VaadinDesktopIpcDiagnostics.flowClientResourceThemeLookupResult =
+                'verified:' + resourcePath;
+              if (!document.querySelector('style[data-vatori-theme-static-resource="' + resourcePath + '"]')) {
+                const style = document.createElement('style');
+                style.dataset.vatoriThemeStaticResource = resourcePath;
+                style.textContent = body;
+                document.head.appendChild(style);
+              }
+            }
           } else {
             componentFrontendResourceExecutionFailedPaths.add(resourcePath);
           }

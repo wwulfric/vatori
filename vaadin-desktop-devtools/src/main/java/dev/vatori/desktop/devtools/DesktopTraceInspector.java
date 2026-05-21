@@ -529,6 +529,12 @@ public final class DesktopTraceInspector {
                     && line.contains("\"failureClassification\":\"theme-static-resource-not-declared\"")) {
                 summary.frontendThemeStaticStrictBlockerObserved = true;
             }
+            if ((line.contains("\"type\":\"bootstrapResponse\"") || line.contains("\"type\":\"resourceResponse\""))
+                    && line.contains("\"artifactFamily\":\"theme-static\"")
+                    && line.contains("\"artifactStatus\":\"available\"")
+                    && line.contains("\"lookupKind\":\"Theme-static-resource-v1_4\"")) {
+                summary.frontendThemeStaticResourceObserved = true;
+            }
             if (line.contains("\"type\":\"bootstrapResponse\"")
                     && line.contains("\"artifactFamily\":\"dev-mode-bundle\"")
                     && line.contains("\"strictBlocker\":true")
@@ -574,6 +580,10 @@ public final class DesktopTraceInspector {
             if (line.contains("\"type\":\"webview.dom\"")
                     && containsLiteralField(line, "frontendArtifactProductionBundlePartial", "true")) {
                 summary.frontendProductionBundlePartialObserved = true;
+            }
+            if (line.contains("\"type\":\"webview.dom\"")
+                    && containsLiteralField(line, "frontendArtifactThemeStaticVerified", "true")) {
+                summary.frontendThemeStaticResourceObserved = true;
             }
             if (line.contains("\"type\":\"webview.dom\"")
                     && containsLiteralField(line, "frontendArtifactThemeStaticBlocker", "true")) {
@@ -695,8 +705,10 @@ public final class DesktopTraceInspector {
                     && containsLiteralField(line, "flowClientResourceStaticLookupVerified", "true")
                     && containsStringField(line, "flowClientResourceStaticLookupPath",
                             "META-INF/resources/VAADIN/static/client/compile.properties")
-                    && containsStringField(line, "flowClientResourceThemeLookupResult",
-                            "no-theme-resource-declared-by-smoke-app")) {
+                    && (containsStringField(line, "flowClientResourceThemeLookupResult",
+                            "no-theme-resource-declared-by-smoke-app")
+                            || line.contains("\"flowClientResourceThemeLookupResult\":\"verified:")
+                            || line.contains("\\\"flowClientResourceThemeLookupResult\\\":\\\"verified:"))) {
                 summary.flowClientResourceLazyLookupDomObserved = true;
             }
             if (line.contains("\"type\":\"webview.dom\"")
@@ -1194,6 +1206,7 @@ public final class DesktopTraceInspector {
         private boolean frontendDependencyGraphObserved;
         private boolean frontendShimBlockerObserved;
         private boolean frontendProductionBundlePartialObserved;
+        private boolean frontendThemeStaticResourceObserved;
         private boolean frontendThemeStaticStrictBlockerObserved;
         private boolean frontendDevModeStrictBlockerObserved;
         private boolean frontendGeneratedLazyStrictBlockerObserved;
@@ -1300,7 +1313,7 @@ public final class DesktopTraceInspector {
                     && frontendDependencyGraphObserved
                     && frontendShimBlockerObserved
                     && frontendProductionBundlePartialObserved
-                    && frontendThemeStaticStrictBlockerObserved
+                    && (frontendThemeStaticResourceObserved || frontendThemeStaticStrictBlockerObserved)
                     && frontendDevModeStrictBlockerObserved
                     && frontendGeneratedLazyStrictBlockerObserved;
         }
@@ -1511,6 +1524,8 @@ public final class DesktopTraceInspector {
                     + frontendProductionBundlePartialObserved);
             System.out.println("Flow IPC v1.4 theme/static strict blocker observed: "
                     + frontendThemeStaticStrictBlockerObserved);
+            System.out.println("Flow IPC v1.4 theme/static resource observed: "
+                    + frontendThemeStaticResourceObserved);
             System.out.println("Flow IPC v1.4 dev-mode strict blocker observed: "
                     + frontendDevModeStrictBlockerObserved);
             System.out.println("Flow IPC v1.4 generated/lazy strict blocker observed: "

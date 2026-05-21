@@ -101,7 +101,7 @@ public final class FlowClientResourceSmokeMain {
         }
         Map<String, Object> componentManifest = resources.componentManifest();
         Object componentEntries = componentManifest.get("resources");
-        if (!(componentEntries instanceof List<?> componentResources) || componentResources.size() < 7) {
+        if (!(componentEntries instanceof List<?> componentResources) || componentResources.size() < 8) {
             throw new IllegalStateException("Component frontend resource manifest does not contain the framework graph");
         }
         if (!Objects.equals(componentManifest.get("resolverStrategy"), "generic-component-frontend-manifest-v1_3")) {
@@ -123,12 +123,12 @@ public final class FlowClientResourceSmokeMain {
                 "Component artifact families");
         requireListContains(componentManifest.get("artifactFamilies"), "generated-lazy",
                 "Component artifact families");
-        requireStrictBlocker(componentManifest, "theme-static", "theme-static-resource-not-declared");
         requireStrictBlocker(componentManifest, "dev-mode-bundle", "dev-mode-bundle-resource-graph-unmapped");
         requireStrictBlocker(componentManifest, "generated-lazy", "generated-lazy-resource-unmapped");
         requireComponentResourceMetadata(componentResources);
         String checkboxDevBundlePath = "META-INF/vatori/dev-bundle-entry/vaadin-checkbox.js";
         String bigDecimalPath = "META-INF/resources/frontend/vaadin-big-decimal-field.js";
+        String themeStaticPath = "META-INF/resources/frontend/themes/vatori-flow-ipc-smoke/theme-static.css";
         if (!resources.contains(bigDecimalPath)) {
             throw new IllegalStateException("Component frontend manifest is missing the BigDecimalField module");
         }
@@ -157,6 +157,19 @@ public final class FlowClientResourceSmokeMain {
                 || !Objects.equals(checkboxResponse.get("artifactStatus"), "partial")
                 || !Boolean.FALSE.equals(checkboxResponse.get("shim"))) {
             throw new IllegalStateException("Checkbox component frontend dev-bundle module is missing metadata");
+        }
+        if (!resources.contains(themeStaticPath)) {
+            throw new IllegalStateException("Component frontend manifest is missing the theme/static resource");
+        }
+        Map<String, Object> themeStaticResponse = resources.response(themeStaticPath);
+        if (!Objects.equals(themeStaticResponse.get("lookupKind"), "Theme-static-resource-v1_4")
+                || !Boolean.TRUE.equals(themeStaticResponse.get("themeStaticResource"))
+                || !Objects.equals(themeStaticResponse.get("artifactFamily"), "theme-static")
+                || !Objects.equals(themeStaticResponse.get("origin"), "classpath")
+                || !Objects.equals(themeStaticResponse.get("executionPolicy"), "verify-and-inject-static-style")
+                || !Objects.equals(themeStaticResponse.get("artifactStatus"), "available")
+                || !Boolean.FALSE.equals(themeStaticResponse.get("shim"))) {
+            throw new IllegalStateException("Theme/static frontend resource is missing v1.4 metadata");
         }
         System.out.println("Flow client resources loaded from classpath: " + entries.size());
         System.out.println("Flow client resource graph responses verified: " + entries.size());
@@ -210,6 +223,7 @@ public final class FlowClientResourceSmokeMain {
         boolean shimBlockerObserved = false;
         boolean devBundleEntryObserved = false;
         boolean devBundleDependencyObserved = false;
+        boolean themeStaticResourceObserved = false;
         for (Object entry : componentResources) {
             if (!(entry instanceof Map<?, ?> metadata)) {
                 throw new IllegalStateException("Component frontend resource manifest contains a non-object entry");
@@ -238,9 +252,13 @@ public final class FlowClientResourceSmokeMain {
             devBundleDependencyObserved = devBundleDependencyObserved
                     || "production-bundle".equals(artifactFamily)
                     && "dependency-module".equals(executionPolicy);
+            themeStaticResourceObserved = themeStaticResourceObserved
+                    || "theme-static".equals(artifactFamily)
+                    && "verify-and-inject-static-style".equals(executionPolicy)
+                    && "available".equals(metadata.get("artifactStatus"));
         }
         if (!classpathResourceObserved || !shimBlockerObserved || !devBundleEntryObserved
-                || !devBundleDependencyObserved) {
+                || !devBundleDependencyObserved || !themeStaticResourceObserved) {
             throw new IllegalStateException("Component frontend resource manifest is missing a v1.4 artifact family");
         }
     }

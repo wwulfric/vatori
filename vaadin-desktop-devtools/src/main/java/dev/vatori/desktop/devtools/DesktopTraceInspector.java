@@ -584,6 +584,14 @@ public final class DesktopTraceInspector {
                 summary.frontendGeneratedLazyResourceObserved = true;
             }
             if ((line.contains("\"type\":\"bootstrapResponse\"") || line.contains("\"type\":\"resourceResponse\""))
+                    && line.contains("\"artifactFamily\":\"generated-lazy\"")
+                    && line.contains("\"artifactStatus\":\"available\"")
+                    && line.contains("\"lookupKind\":\"Generated-flow-imports-dev-bundle-chunk-v1_4\"")
+                    && line.contains("\"generatedLazyBundleChunk\":true")
+                    && line.contains("vaadin-dev-bundle/webapp/VAADIN/build/generated-flow-imports-VW7hRaNw.js")) {
+                summary.frontendGeneratedLazyBundleChunkResourceObserved = true;
+            }
+            if ((line.contains("\"type\":\"bootstrapResponse\"") || line.contains("\"type\":\"resourceResponse\""))
                     && line.contains("\"artifactFamily\":\"dev-mode-bundle\"")
                     && line.contains("\"artifactStatus\":\"available\"")
                     && line.contains("\"lookupKind\":\"Dev-mode-package-lock-resource-v1_4\"")) {
@@ -658,6 +666,12 @@ public final class DesktopTraceInspector {
                     && containsLiteralField(line, "frontendArtifactGeneratedLazyVerified", "true")
                     && line.contains("frontendArtifactGeneratedLazyPath")) {
                 summary.frontendGeneratedLazyResourceObserved = true;
+            }
+            if (line.contains("\"type\":\"webview.dom\"")
+                    && containsLiteralField(line, "frontendArtifactGeneratedLazyBundleChunkVerified", "true")
+                    && line.contains("frontendArtifactGeneratedLazyBundleChunkPath")
+                    && line.contains("vaadin-dev-bundle/webapp/VAADIN/build/generated-flow-imports-VW7hRaNw.js")) {
+                summary.frontendGeneratedLazyBundleChunkResourceObserved = true;
             }
             if (line.contains("\"type\":\"webview.dom\"")
                     && containsLiteralField(line, "frontendArtifactDevModeVerified", "true")
@@ -1310,6 +1324,7 @@ public final class DesktopTraceInspector {
         private boolean frontendThemeStaticResourceObserved;
         private boolean frontendThemeStaticStrictBlockerObserved;
         private boolean frontendGeneratedLazyResourceObserved;
+        private boolean frontendGeneratedLazyBundleChunkResourceObserved;
         private boolean frontendDevModeResourceObserved;
         private boolean frontendDevModeStrictBlockerObserved;
         private boolean frontendGeneratedLazyStrictBlockerObserved;
@@ -1423,7 +1438,8 @@ public final class DesktopTraceInspector {
                     && frontendDevModeResourceObserved
                     && frontendDevModeStrictBlockerObserved
                     && frontendGeneratedLazyStrictBlockerObserved
-                    && frontendGeneratedLazyResourceObserved;
+                    && frontendGeneratedLazyResourceObserved
+                    && frontendGeneratedLazyBundleChunkResourceObserved;
         }
 
         public boolean hasRequiredFlowIpcV1_3FrameworkTypes() {
@@ -1653,6 +1669,8 @@ public final class DesktopTraceInspector {
                     + frontendGeneratedLazyStrictBlockerObserved);
             System.out.println("Flow IPC v1.4 generated/lazy resource observed: "
                     + frontendGeneratedLazyResourceObserved);
+            System.out.println("Flow IPC v1.4 generated/lazy dev-bundle chunk observed: "
+                    + frontendGeneratedLazyBundleChunkResourceObserved);
             List<String> missing = FLOW_IPC_REQUIRED_TYPES.stream()
                     .filter(type -> !types.containsKey(type))
                     .toList();

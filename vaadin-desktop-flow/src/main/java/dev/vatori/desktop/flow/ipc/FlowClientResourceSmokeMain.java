@@ -101,7 +101,7 @@ public final class FlowClientResourceSmokeMain {
         }
         Map<String, Object> componentManifest = resources.componentManifest();
         Object componentEntries = componentManifest.get("resources");
-        if (!(componentEntries instanceof List<?> componentResources) || componentResources.size() < 13) {
+        if (!(componentEntries instanceof List<?> componentResources) || componentResources.size() < 15) {
             throw new IllegalStateException("Component frontend resource manifest does not contain the framework graph");
         }
         if (!Objects.equals(componentManifest.get("resolverStrategy"), "generic-component-frontend-manifest-v1_3")) {
@@ -135,6 +135,10 @@ public final class FlowClientResourceSmokeMain {
         String bigDecimalPath = "META-INF/resources/frontend/vaadin-big-decimal-field.js";
         String themeStaticPath = "META-INF/resources/frontend/themes/vatori-flow-ipc-smoke/theme-static.css";
         String generatedFlowImportsPath = "META-INF/vatori/generated/flow/generated-flow-imports.js";
+        String generatedFlowImportsDevBundlePath =
+                "vaadin-dev-bundle/webapp/VAADIN/build/generated-flow-imports-VW7hRaNw.js";
+        String generatedFlowImportsMarkdownHelperPath =
+                "vaadin-dev-bundle/webapp/VAADIN/build/markdown-helpers-31I0A-hg.js";
         String devModePackageLockPath = "vaadin-dev-bundle/package-lock.json";
         String productionBundleStatsPath = "vaadin-dev-bundle/config/stats.json";
         if (!resources.contains(bigDecimalPath)) {
@@ -329,6 +333,61 @@ public final class FlowClientResourceSmokeMain {
                 || !generatedFlowImportsText.contains("window.Vaadin.Flow.loadOnDemand")) {
             throw new IllegalStateException("Generated Flow imports resource body is missing Vaadin generated imports");
         }
+        if (!resources.contains(generatedFlowImportsDevBundlePath)) {
+            throw new IllegalStateException("Component frontend manifest is missing the dev-bundle generated Flow imports chunk");
+        }
+        Map<String, Object> generatedFlowImportsDevBundleResponse =
+                resources.response(generatedFlowImportsDevBundlePath);
+        if (!Objects.equals(generatedFlowImportsDevBundleResponse.get("lookupKind"),
+                "Generated-flow-imports-dev-bundle-chunk-v1_4")
+                || !Boolean.TRUE.equals(generatedFlowImportsDevBundleResponse.get("generatedLazyResource"))
+                || !Boolean.TRUE.equals(generatedFlowImportsDevBundleResponse.get("generatedLazyBundleChunk"))
+                || !Boolean.TRUE.equals(generatedFlowImportsDevBundleResponse.get("devBundleResource"))
+                || !Boolean.TRUE.equals(generatedFlowImportsDevBundleResponse.get("productionBundleResource"))
+                || !Objects.equals(generatedFlowImportsDevBundleResponse.get("artifactFamily"), "generated-lazy")
+                || !Objects.equals(generatedFlowImportsDevBundleResponse.get("origin"), "vaadin-dev-bundle")
+                || !Objects.equals(generatedFlowImportsDevBundleResponse.get("executionPolicy"),
+                        "verified-only-intentionally-not-executed")
+                || !Objects.equals(generatedFlowImportsDevBundleResponse.get("artifactStatus"), "available")
+                || !Boolean.FALSE.equals(generatedFlowImportsDevBundleResponse.get("shim"))) {
+            throw new IllegalStateException("Generated Flow imports dev-bundle chunk is missing v1.4 metadata");
+        }
+        Object generatedFlowImportsDevBundleBody = generatedFlowImportsDevBundleResponse.get("body");
+        if (!(generatedFlowImportsDevBundleBody instanceof String generatedFlowImportsDevBundleText)
+                || !generatedFlowImportsDevBundleText.contains("from \"./indexhtml-BfYYZi8S.js\"")
+                || !generatedFlowImportsDevBundleText.contains("defineCustomElement(FieldOutline)")
+                || !generatedFlowImportsDevBundleText.contains("renderMarkdownToElement")
+                || !generatedFlowImportsDevBundleText.contains("case \"vaadin-text-field\"")
+                || !generatedFlowImportsDevBundleText.contains("case \"vaadin-checkbox\"")
+                || !generatedFlowImportsDevBundleText.contains("case \"vaadin-select\"")) {
+            throw new IllegalStateException("Generated Flow imports dev-bundle chunk body is missing Vaadin generated imports");
+        }
+        if (!resources.contains(generatedFlowImportsMarkdownHelperPath)) {
+            throw new IllegalStateException("Component frontend manifest is missing the generated Flow imports markdown helper");
+        }
+        Map<String, Object> generatedFlowImportsMarkdownHelperResponse =
+                resources.response(generatedFlowImportsMarkdownHelperPath);
+        if (!Objects.equals(generatedFlowImportsMarkdownHelperResponse.get("lookupKind"),
+                "Generated-flow-imports-dev-bundle-dependency-v1_4")
+                || !Boolean.TRUE.equals(generatedFlowImportsMarkdownHelperResponse.get("generatedLazyResource"))
+                || !Boolean.TRUE.equals(generatedFlowImportsMarkdownHelperResponse.get("generatedLazyBundleDependency"))
+                || !Objects.equals(generatedFlowImportsMarkdownHelperResponse.get("artifactFamily"), "generated-lazy")
+                || !Objects.equals(generatedFlowImportsMarkdownHelperResponse.get("origin"), "vaadin-dev-bundle")
+                || !Objects.equals(generatedFlowImportsMarkdownHelperResponse.get("dependencyOf"),
+                        generatedFlowImportsDevBundlePath)
+                || !Objects.equals(generatedFlowImportsMarkdownHelperResponse.get("executionPolicy"),
+                        "verified-only-intentionally-not-executed")
+                || !Objects.equals(generatedFlowImportsMarkdownHelperResponse.get("artifactStatus"), "available")
+                || !Boolean.FALSE.equals(generatedFlowImportsMarkdownHelperResponse.get("shim"))) {
+            throw new IllegalStateException("Generated Flow imports markdown helper is missing v1.4 metadata");
+        }
+        Object generatedFlowImportsMarkdownHelperBody = generatedFlowImportsMarkdownHelperResponse.get("body");
+        if (!(generatedFlowImportsMarkdownHelperBody instanceof String markdownHelperText)
+                || !markdownHelperText.contains("DOMPurify")
+                || !markdownHelperText.contains("function renderMarkdownToElement")
+                || !markdownHelperText.contains("export {\n  renderMarkdownToElement\n};")) {
+            throw new IllegalStateException("Generated Flow imports markdown helper body is missing Vaadin helper exports");
+        }
         if (!resources.contains(devModePackageLockPath)) {
             throw new IllegalStateException("Component frontend manifest is missing the dev-mode package graph");
         }
@@ -428,6 +487,7 @@ public final class FlowClientResourceSmokeMain {
         boolean productionBundleStatsObserved = false;
         boolean themeStaticResourceObserved = false;
         boolean generatedLazyResourceObserved = false;
+        boolean generatedLazyBundleChunkObserved = false;
         boolean devModePackageGraphObserved = false;
         for (Object entry : componentResources) {
             if (!(entry instanceof Map<?, ?> metadata)) {
@@ -471,6 +531,12 @@ public final class FlowClientResourceSmokeMain {
                     && "verified-only-intentionally-not-executed".equals(executionPolicy)
                     && "available".equals(metadata.get("artifactStatus"))
                     && Boolean.TRUE.equals(metadata.get("generatedLazyResource"));
+            generatedLazyBundleChunkObserved = generatedLazyBundleChunkObserved
+                    || "generated-lazy".equals(artifactFamily)
+                    && "verified-only-intentionally-not-executed".equals(executionPolicy)
+                    && "available".equals(metadata.get("artifactStatus"))
+                    && Boolean.TRUE.equals(metadata.get("generatedLazyBundleChunk"))
+                    && "vaadin-dev-bundle".equals(metadata.get("origin"));
             devModePackageGraphObserved = devModePackageGraphObserved
                     || "dev-mode-bundle".equals(artifactFamily)
                     && "verified-only-intentionally-not-executed".equals(executionPolicy)
@@ -479,7 +545,7 @@ public final class FlowClientResourceSmokeMain {
         }
         if (!classpathResourceObserved || !shimBlockerObserved || !devBundleEntryObserved
                 || !devBundleDependencyObserved || !productionBundleStatsObserved || !themeStaticResourceObserved
-                || !generatedLazyResourceObserved || !devModePackageGraphObserved) {
+                || !generatedLazyResourceObserved || !generatedLazyBundleChunkObserved || !devModePackageGraphObserved) {
             throw new IllegalStateException("Component frontend resource manifest is missing a v1.4 artifact family");
         }
     }

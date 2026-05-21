@@ -1197,18 +1197,27 @@ final class WebViewHost: NSObject, NSApplicationDelegate, NSWindowDelegate, WKNa
             DispatchQueue.main.asyncAfter(deadline: .now() + 9.0) {
                 self.inspectWebView(webView)
             }
-        }
-        if config.flowIpcAutoFrameworkUpdate {
-            DispatchQueue.main.asyncAfter(deadline: .now() + 14.0) {
+            DispatchQueue.main.asyncAfter(deadline: .now() + 16.0) {
+                self.inspectWebView(webView)
+            }
+            DispatchQueue.main.asyncAfter(deadline: .now() + 24.0) {
                 self.inspectWebView(webView)
             }
         }
-        let snapshotDelay = config.flowIpcAutoFrameworkUpdate ? 14.6 : (extendedFlowIpcVerification ? 9.5 : 5.0)
+        if config.flowIpcAutoFrameworkUpdate {
+            DispatchQueue.main.asyncAfter(deadline: .now() + 20.0) {
+                self.inspectWebView(webView)
+            }
+            DispatchQueue.main.asyncAfter(deadline: .now() + 28.0) {
+                self.inspectWebView(webView)
+            }
+        }
+        let snapshotDelay = config.flowIpcAutoFrameworkUpdate ? 29.2 : (extendedFlowIpcVerification ? 24.6 : 5.0)
         DispatchQueue.main.asyncAfter(deadline: .now() + snapshotDelay) {
             self.writeSnapshot(webView)
         }
         if config.flowIpcAutoShutdown {
-            let shutdownDelay = config.flowIpcAutoFrameworkUpdate ? 15.6 : (extendedFlowIpcVerification ? 10.5 : 5.6)
+            let shutdownDelay = config.flowIpcAutoFrameworkUpdate ? 31.0 : (extendedFlowIpcVerification ? 26.0 : 5.6)
             DispatchQueue.main.asyncAfter(deadline: .now() + shutdownDelay) {
                 trace("recv", "window.closeRequested", [
                     "label": "main",
@@ -1296,6 +1305,9 @@ final class WebViewHost: NSObject, NSApplicationDelegate, NSWindowDelegate, WKNa
           frontendArtifactThemeStaticBlocker: !!(window.VaadinDesktopIpcDiagnostics && window.VaadinDesktopIpcDiagnostics.frontendArtifactThemeStaticBlocker),
           frontendArtifactGeneratedLazyVerified: !!(window.VaadinDesktopIpcDiagnostics && window.VaadinDesktopIpcDiagnostics.frontendArtifactGeneratedLazyVerified),
           frontendArtifactGeneratedLazyPath: window.VaadinDesktopIpcDiagnostics ? window.VaadinDesktopIpcDiagnostics.frontendArtifactGeneratedLazyPath : "",
+          frontendArtifactGeneratedLazyBundleChunkVerified: !!(window.VaadinDesktopIpcDiagnostics && window.VaadinDesktopIpcDiagnostics.frontendArtifactGeneratedLazyBundleChunkVerified),
+          frontendArtifactGeneratedLazyBundleChunkPath: window.VaadinDesktopIpcDiagnostics ? window.VaadinDesktopIpcDiagnostics.frontendArtifactGeneratedLazyBundleChunkPath : "",
+          frontendArtifactGeneratedLazyBundleChunkResult: window.VaadinDesktopIpcDiagnostics ? window.VaadinDesktopIpcDiagnostics.frontendArtifactGeneratedLazyBundleChunkResult : "",
           frontendArtifactDevModeVerified: !!(window.VaadinDesktopIpcDiagnostics && window.VaadinDesktopIpcDiagnostics.frontendArtifactDevModeVerified),
           frontendArtifactDevModePath: window.VaadinDesktopIpcDiagnostics ? window.VaadinDesktopIpcDiagnostics.frontendArtifactDevModePath : "",
           frontendArtifactDevModePackageGraphResult: window.VaadinDesktopIpcDiagnostics ? window.VaadinDesktopIpcDiagnostics.frontendArtifactDevModePackageGraphResult : "",
@@ -1921,6 +1933,9 @@ let flowIpcShell = #"""
         frontendArtifactThemeStaticBlocker: false,
         frontendArtifactGeneratedLazyVerified: false,
         frontendArtifactGeneratedLazyPath: '',
+        frontendArtifactGeneratedLazyBundleChunkVerified: false,
+        frontendArtifactGeneratedLazyBundleChunkPath: '',
+        frontendArtifactGeneratedLazyBundleChunkResult: '',
         frontendArtifactDevModeVerified: false,
         frontendArtifactDevModePath: '',
         frontendArtifactDevModePackageGraphResult: '',
@@ -4407,6 +4422,13 @@ let flowIpcShell = #"""
               window.VaadinDesktopIpcDiagnostics.frontendArtifactGeneratedLazyVerified = true;
               window.VaadinDesktopIpcDiagnostics.frontendArtifactGeneratedLazyPath =
                 mergeCsv(window.VaadinDesktopIpcDiagnostics.frontendArtifactGeneratedLazyPath, [resourcePath]);
+              if (payload.generatedLazyBundleChunk === true) {
+                window.VaadinDesktopIpcDiagnostics.frontendArtifactGeneratedLazyBundleChunkVerified = true;
+                window.VaadinDesktopIpcDiagnostics.frontendArtifactGeneratedLazyBundleChunkPath =
+                  mergeCsv(window.VaadinDesktopIpcDiagnostics.frontendArtifactGeneratedLazyBundleChunkPath, [resourcePath]);
+                window.VaadinDesktopIpcDiagnostics.frontendArtifactGeneratedLazyBundleChunkResult =
+                  'verified:' + resourcePath;
+              }
             } else if (payload.artifactFamily === 'production-bundle'
                 && payload.productionBundleStatsGraph === true) {
               window.VaadinDesktopIpcDiagnostics.frontendArtifactProductionBundleStatsVerified = true;

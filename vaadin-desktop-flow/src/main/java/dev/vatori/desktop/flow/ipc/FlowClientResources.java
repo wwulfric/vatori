@@ -26,6 +26,10 @@ final class FlowClientResources {
             "vaadin-dev-bundle/webapp/VAADIN/build/commonjsHelpers-CUmg6egw.js";
     private static final String DEV_BUNDLE_INDEX_HTML_JS =
             "vaadin-dev-bundle/webapp/VAADIN/build/indexhtml-BfYYZi8S.js";
+    private static final String DEV_BUNDLE_GENERATED_FLOW_IMPORTS_JS =
+            "vaadin-dev-bundle/webapp/VAADIN/build/generated-flow-imports-VW7hRaNw.js";
+    private static final String DEV_BUNDLE_MARKDOWN_HELPERS_JS =
+            "vaadin-dev-bundle/webapp/VAADIN/build/markdown-helpers-31I0A-hg.js";
     private static final String DEV_BUNDLE_STATS_JSON =
             "vaadin-dev-bundle/config/stats.json";
     private static final String DEV_BUNDLE_LIT_ENTRY_JS =
@@ -311,6 +315,18 @@ final class FlowClientResources {
         add(discoveredComponentResources, GENERATED_FLOW_IMPORTS_JS,
                 "vaadin-generated-flow-imports-module", true,
                 generatedLazyAttributes());
+        add(discoveredComponentResources, DEV_BUNDLE_GENERATED_FLOW_IMPORTS_JS,
+                "vaadin-dev-bundle-generated-flow-imports-chunk", true,
+                generatedLazyDevBundleChunkAttributes(DEV_BUNDLE_GENERATED_FLOW_IMPORTS_JS,
+                        "Generated-flow-imports-dev-bundle-chunk-v1_4",
+                        "Flow.loadOnDemand",
+                        true));
+        add(discoveredComponentResources, DEV_BUNDLE_MARKDOWN_HELPERS_JS,
+                "vaadin-dev-bundle-generated-flow-imports-dependency", true,
+                generatedLazyDevBundleChunkAttributes(DEV_BUNDLE_MARKDOWN_HELPERS_JS,
+                        "Generated-flow-imports-dev-bundle-dependency-v1_4",
+                        DEV_BUNDLE_GENERATED_FLOW_IMPORTS_JS,
+                        false));
         add(discoveredComponentResources, DEV_MODE_PACKAGE_LOCK_JSON,
                 "vaadin-dev-mode-package-lock", true,
                 devModePackageLockAttributes());
@@ -379,7 +395,8 @@ final class FlowClientResources {
                 artifactFamilyStatus("theme-static", "available", "theme-static-classpath-resource"),
                 artifactFamilyStatus("production-bundle", "partial", "production-bundle-stats-verified"),
                 artifactFamilyStatus("dev-mode-bundle", "partial", "dev-mode-package-lock-verified"),
-                artifactFamilyStatus("generated-lazy", "partial", "generated-flow-imports-verified")));
+                artifactFamilyStatus("generated-lazy", "partial",
+                        "generated-flow-imports-dev-bundle-chunk-verified")));
         manifest.put("dependencyGraph", Map.of("declared", true,
                 "resolver", COMPONENT_RESOLVER_V1_4,
                 "resourceCount", entries.size()));
@@ -389,7 +406,7 @@ final class FlowClientResources {
                 strictBlocker("dev-mode-bundle", "dev-mode-bundle-execution-unmapped",
                         "dev-mode package-lock dependency graph is verified over IPC, but Vite/dev-server module execution is not yet mapped into the no-localhost resolver"),
                 strictBlocker("generated-lazy", "generated-lazy-execution-unmapped",
-                        "generated-flow-imports is verified over IPC, but its transitive npm/jar imports and loadOnDemand execution are not yet mapped")));
+                        "repository and Vaadin dev-bundle generated-flow-imports resources are verified over IPC, but full loadOnDemand execution remains unmapped")));
         manifest.put("transport", "flow-ipc");
         manifest.put("resourceLoading", "ipc-resource-request");
         manifest.put("componentClass", "com.vaadin.flow.component.textfield.BigDecimalField");
@@ -698,6 +715,44 @@ final class FlowClientResources {
         attributes.put("blockedReason",
                 "verified generated Flow imports resource; full loadOnDemand execution remains unmapped");
         attributes.put("lookupKind", "Generated-flow-imports-resource-v1_4");
+        return attributes;
+    }
+
+    private static Map<String, Object> generatedLazyDevBundleChunkAttributes(String path, String lookupKind,
+            String dependencyOf, boolean primary) {
+        Map<String, Object> attributes = new LinkedHashMap<>();
+        attributes.put("componentFrontendResource", true);
+        attributes.put("generatedLazyResource", true);
+        attributes.put("generatedLazyBundleChunk", primary);
+        attributes.put("generatedLazyBundleDependency", !primary);
+        attributes.put("devBundleResource", true);
+        attributes.put("productionBundleResource", true);
+        attributes.put("moduleSpecifier", path);
+        attributes.put("resolver", "vaadin-dev-bundle-generated-flow-imports-v1_4");
+        attributes.put("shim", false);
+        attributes.put("artifactFamily", "generated-lazy");
+        attributes.put("origin", "vaadin-dev-bundle");
+        attributes.put("resourceOrigin",
+                primary ? "vaadin-dev-bundle-generated-flow-imports"
+                        : "vaadin-dev-bundle-generated-flow-imports-dependency");
+        attributes.put("dependencyOf", dependencyOf);
+        attributes.put("executionPolicy", "verified-only-intentionally-not-executed");
+        attributes.put("artifactStatus", "available");
+        attributes.put("requestedBy", "component-frontend-manifest-v1_4");
+        attributes.put("failureClassification",
+                primary ? "generated-flow-imports-dev-bundle-chunk-verified"
+                        : "generated-flow-imports-dev-bundle-dependency-verified");
+        attributes.put("blockedReason",
+                primary
+                        ? "verified Vaadin dev-bundle generated-flow-imports chunk; full loadOnDemand execution remains unmapped"
+                        : "verified generated-flow-imports dependency chunk; full generated/lazy execution remains unmapped");
+        attributes.put("lookupKind", lookupKind);
+        if (primary) {
+            attributes.put("transitiveImports", List.of(
+                    "vaadin-dev-bundle/webapp/VAADIN/build/indexhtml-BfYYZi8S.js",
+                    "vaadin-dev-bundle/webapp/VAADIN/build/commonjsHelpers-CUmg6egw.js",
+                    "vaadin-dev-bundle/webapp/VAADIN/build/markdown-helpers-31I0A-hg.js"));
+        }
         return attributes;
     }
 

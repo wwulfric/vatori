@@ -627,8 +627,11 @@ final class FlowClientResources {
                 "TextField-dev-bundle-resource-v1_4",
                 BIG_DECIMAL_FIELD_JS);
         attributes.put("blockedImportSpecifiers", List.of("@vaadin/text-field/src/vaadin-text-field.js"));
+        attributes.put("blockedExecutionProbe", "big-decimal-import-rewrite-to-textfield-dev-bundle");
+        attributes.put("blockedExecutionError", "null is not an object (evaluating 'outlet._root')");
+        attributes.put("nextResolutionStep", "stage or isolate the TextField npm/frontend graph without executing the full indexhtml application chunk before FlowClient.init");
         attributes.put("blockedReason",
-                "Focused TextField production class entry is verified, but BigDecimalField execution still needs full TextField graph parity; the current acceptance path keeps the TextField shim.");
+                "Focused TextField production class entry is verified, but BigDecimalField execution still needs full TextField graph parity; replacing the current shim with this entry triggers the recorded WebView execution blocker.");
         return attributes;
     }
 

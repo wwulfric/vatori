@@ -123,6 +123,7 @@ public final class FlowClientResourceSmokeMain {
                 "Component artifact families");
         requireListContains(componentManifest.get("artifactFamilies"), "generated-lazy",
                 "Component artifact families");
+        requireStrictBlocker(componentManifest, "npm-frontend", "textfield-production-class-execution-blocked");
         requireStrictBlocker(componentManifest, "dev-mode-bundle", "dev-mode-bundle-resource-graph-unmapped");
         requireStrictBlocker(componentManifest, "generated-lazy", "generated-lazy-execution-unmapped");
         requireComponentResourceMetadata(componentResources);
@@ -199,7 +200,11 @@ public final class FlowClientResourceSmokeMain {
                 || !Objects.equals(textFieldResponse.get("origin"), "vaadin-dev-bundle")
                 || !Objects.equals(textFieldResponse.get("executionPolicy"), "dependency-module")
                 || !Objects.equals(textFieldResponse.get("artifactStatus"), "partial")
-                || !Boolean.FALSE.equals(textFieldResponse.get("shim"))) {
+                || !Boolean.FALSE.equals(textFieldResponse.get("shim"))
+                || !Objects.equals(textFieldResponse.get("blockedExecutionProbe"),
+                        "big-decimal-import-rewrite-to-textfield-dev-bundle")
+                || !(textFieldResponse.get("blockedExecutionError") instanceof String error
+                        && error.contains("outlet._root"))) {
             throw new IllegalStateException("TextField component frontend dev-bundle module is missing metadata");
         }
         Object textFieldBody = textFieldResponse.get("body");

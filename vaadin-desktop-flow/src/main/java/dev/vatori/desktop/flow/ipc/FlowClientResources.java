@@ -26,6 +26,8 @@ final class FlowClientResources {
             "vaadin-dev-bundle/webapp/VAADIN/build/commonjsHelpers-CUmg6egw.js";
     private static final String DEV_BUNDLE_INDEX_HTML_JS =
             "vaadin-dev-bundle/webapp/VAADIN/build/indexhtml-BfYYZi8S.js";
+    private static final String DEV_BUNDLE_STATS_JSON =
+            "vaadin-dev-bundle/config/stats.json";
     private static final String DEV_BUNDLE_LIT_ENTRY_JS =
             "META-INF/vatori/dev-bundle-entry/lit-css.js";
     private static final String DEV_BUNDLE_TEXT_FIELD_ENTRY_JS =
@@ -295,6 +297,8 @@ final class FlowClientResources {
                 devBundleAttributes("", DEV_BUNDLE_COMMONJS_JS, false));
         add(discoveredComponentResources, DEV_BUNDLE_INDEX_HTML_JS, "vaadin-dev-bundle-support-module", true,
                 devBundleAttributes("", DEV_BUNDLE_INDEX_HTML_JS, false));
+        add(discoveredComponentResources, DEV_BUNDLE_STATS_JSON, "vaadin-production-bundle-stats", true,
+                productionBundleStatsAttributes());
         addText(discoveredComponentResources, DEV_BUNDLE_LIT_ENTRY_JS,
                 "vaadin-dev-bundle-lit-css-entry", LIT_DEV_BUNDLE_ENTRY_SOURCE,
                 litDevBundleAttributes());
@@ -373,7 +377,7 @@ final class FlowClientResources {
                         "classpath-component-frontend-resource"),
                 artifactFamilyStatus("npm-frontend", "blocked", "textfield-production-class-execution-blocked"),
                 artifactFamilyStatus("theme-static", "available", "theme-static-classpath-resource"),
-                artifactFamilyStatus("production-bundle", "partial", "dev-bundle-resource-graph-partial"),
+                artifactFamilyStatus("production-bundle", "partial", "production-bundle-stats-verified"),
                 artifactFamilyStatus("dev-mode-bundle", "partial", "dev-mode-package-lock-verified"),
                 artifactFamilyStatus("generated-lazy", "partial", "generated-flow-imports-verified")));
         manifest.put("dependencyGraph", Map.of("declared", true,
@@ -650,6 +654,29 @@ final class FlowClientResources {
         attributes.put("replacesImportSpecifiers", List.of("@vaadin/component-base/src/define.js"));
         attributes.put("origin", "vaadin-dev-bundle-extracted-entry");
         attributes.put("resourceOrigin", "vaadin-dev-bundle-extracted-define");
+        return attributes;
+    }
+
+    private static Map<String, Object> productionBundleStatsAttributes() {
+        Map<String, Object> attributes = new LinkedHashMap<>();
+        attributes.put("componentFrontendResource", true);
+        attributes.put("productionBundleResource", true);
+        attributes.put("productionBundleStatsGraph", true);
+        attributes.put("moduleSpecifier", DEV_BUNDLE_STATS_JSON);
+        attributes.put("resolver", "vaadin-production-bundle-stats-v1_4");
+        attributes.put("shim", false);
+        attributes.put("artifactFamily", "production-bundle");
+        attributes.put("origin", "vaadin-dev-bundle");
+        attributes.put("resourceOrigin", "vaadin-dev-bundle-stats");
+        attributes.put("dependencyOf", "production-bundle-frontend-build");
+        attributes.put("executionPolicy", "verified-only-intentionally-not-executed");
+        attributes.put("artifactStatus", "available");
+        attributes.put("requestedBy", "component-frontend-manifest-v1_4");
+        attributes.put("failureClassification", "production-bundle-stats-verified");
+        attributes.put("blockedReason",
+                "verified Vaadin production bundle stats graph; full production bundle execution remains partial");
+        attributes.put("lookupKind", "Production-bundle-stats-resource-v1_4");
+        attributes.put("productionBundleExecutionReady", false);
         return attributes;
     }
 

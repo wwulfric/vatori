@@ -559,6 +559,12 @@ public final class DesktopTraceInspector {
                     && line.contains("\"failureClassification\":\"dev-bundle-resource-graph-partial\"")) {
                 summary.frontendProductionBundlePartialObserved = true;
             }
+            if ((line.contains("\"type\":\"bootstrapResponse\"") || line.contains("\"type\":\"resourceResponse\""))
+                    && line.contains("\"artifactFamily\":\"production-bundle\"")
+                    && line.contains("\"artifactStatus\":\"available\"")
+                    && line.contains("\"lookupKind\":\"Production-bundle-stats-resource-v1_4\"")) {
+                summary.frontendProductionBundleStatsResourceObserved = true;
+            }
             if (line.contains("\"type\":\"bootstrapResponse\"")
                     && line.contains("\"artifactFamily\":\"theme-static\"")
                     && line.contains("\"strictBlocker\":true")
@@ -638,6 +644,11 @@ public final class DesktopTraceInspector {
             if (line.contains("\"type\":\"webview.dom\"")
                     && containsLiteralField(line, "frontendArtifactProductionBundlePartial", "true")) {
                 summary.frontendProductionBundlePartialObserved = true;
+            }
+            if (line.contains("\"type\":\"webview.dom\"")
+                    && containsLiteralField(line, "frontendArtifactProductionBundleStatsVerified", "true")
+                    && line.contains("frontendArtifactProductionBundleStatsPath")) {
+                summary.frontendProductionBundleStatsResourceObserved = true;
             }
             if (line.contains("\"type\":\"webview.dom\"")
                     && containsLiteralField(line, "frontendArtifactThemeStaticVerified", "true")) {
@@ -1295,6 +1306,7 @@ public final class DesktopTraceInspector {
         private boolean frontendManifestImportRewriteObserved;
         private boolean frontendTextFieldDevBundleBlockerObserved;
         private boolean frontendProductionBundlePartialObserved;
+        private boolean frontendProductionBundleStatsResourceObserved;
         private boolean frontendThemeStaticResourceObserved;
         private boolean frontendThemeStaticStrictBlockerObserved;
         private boolean frontendGeneratedLazyResourceObserved;
@@ -1406,6 +1418,7 @@ public final class DesktopTraceInspector {
                     && frontendManifestImportRewriteObserved
                     && frontendTextFieldDevBundleBlockerObserved
                     && frontendProductionBundlePartialObserved
+                    && frontendProductionBundleStatsResourceObserved
                     && frontendThemeStaticResourceObserved
                     && frontendDevModeResourceObserved
                     && frontendDevModeStrictBlockerObserved
@@ -1626,6 +1639,8 @@ public final class DesktopTraceInspector {
                     + frontendTextFieldDevBundleBlockerObserved);
             System.out.println("Flow IPC v1.4 production bundle partial graph observed: "
                     + frontendProductionBundlePartialObserved);
+            System.out.println("Flow IPC v1.4 production bundle stats resource observed: "
+                    + frontendProductionBundleStatsResourceObserved);
             System.out.println("Flow IPC v1.4 theme/static strict blocker observed: "
                     + frontendThemeStaticStrictBlockerObserved);
             System.out.println("Flow IPC v1.4 theme/static resource observed: "

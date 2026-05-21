@@ -1288,6 +1288,9 @@ final class WebViewHost: NSObject, NSApplicationDelegate, NSWindowDelegate, WKNa
           frontendArtifactStrictBlockerCount: window.VaadinDesktopIpcDiagnostics ? window.VaadinDesktopIpcDiagnostics.frontendArtifactStrictBlockerCount : 0,
           frontendArtifactShimFallback: !!(window.VaadinDesktopIpcDiagnostics && window.VaadinDesktopIpcDiagnostics.frontendArtifactShimFallback),
           frontendArtifactProductionBundlePartial: !!(window.VaadinDesktopIpcDiagnostics && window.VaadinDesktopIpcDiagnostics.frontendArtifactProductionBundlePartial),
+          frontendArtifactProductionBundleStatsVerified: !!(window.VaadinDesktopIpcDiagnostics && window.VaadinDesktopIpcDiagnostics.frontendArtifactProductionBundleStatsVerified),
+          frontendArtifactProductionBundleStatsPath: window.VaadinDesktopIpcDiagnostics ? window.VaadinDesktopIpcDiagnostics.frontendArtifactProductionBundleStatsPath : "",
+          frontendArtifactProductionBundleStatsResult: window.VaadinDesktopIpcDiagnostics ? window.VaadinDesktopIpcDiagnostics.frontendArtifactProductionBundleStatsResult : "",
           frontendArtifactThemeStaticVerified: !!(window.VaadinDesktopIpcDiagnostics && window.VaadinDesktopIpcDiagnostics.frontendArtifactThemeStaticVerified),
           frontendArtifactThemeStaticPath: window.VaadinDesktopIpcDiagnostics ? window.VaadinDesktopIpcDiagnostics.frontendArtifactThemeStaticPath : "",
           frontendArtifactThemeStaticBlocker: !!(window.VaadinDesktopIpcDiagnostics && window.VaadinDesktopIpcDiagnostics.frontendArtifactThemeStaticBlocker),
@@ -1910,6 +1913,9 @@ let flowIpcShell = #"""
         frontendArtifactStrictBlockerCount: 0,
         frontendArtifactShimFallback: false,
         frontendArtifactProductionBundlePartial: false,
+        frontendArtifactProductionBundleStatsVerified: false,
+        frontendArtifactProductionBundleStatsPath: '',
+        frontendArtifactProductionBundleStatsResult: '',
         frontendArtifactThemeStaticVerified: false,
         frontendArtifactThemeStaticPath: '',
         frontendArtifactThemeStaticBlocker: false,
@@ -3470,6 +3476,17 @@ let flowIpcShell = #"""
           || resources.some((entry) => entry
             && entry.artifactFamily === 'production-bundle'
             && entry.artifactStatus === 'partial');
+        const productionBundleStatsResources = resources.filter((entry) => entry
+          && entry.artifactFamily === 'production-bundle'
+          && entry.artifactStatus === 'available'
+          && entry.productionBundleStatsGraph === true
+          && typeof entry.path === 'string'
+          && entry.path);
+        if (productionBundleStatsResources.length > 0) {
+          window.VaadinDesktopIpcDiagnostics.frontendArtifactProductionBundleStatsPath =
+            mergeCsv(window.VaadinDesktopIpcDiagnostics.frontendArtifactProductionBundleStatsPath,
+              productionBundleStatsResources.map((entry) => entry.path));
+        }
         const themeStaticResources = resources.filter((entry) => entry
           && entry.artifactFamily === 'theme-static'
           && entry.artifactStatus === 'available'
@@ -4390,6 +4407,13 @@ let flowIpcShell = #"""
               window.VaadinDesktopIpcDiagnostics.frontendArtifactGeneratedLazyVerified = true;
               window.VaadinDesktopIpcDiagnostics.frontendArtifactGeneratedLazyPath =
                 mergeCsv(window.VaadinDesktopIpcDiagnostics.frontendArtifactGeneratedLazyPath, [resourcePath]);
+            } else if (payload.artifactFamily === 'production-bundle'
+                && payload.productionBundleStatsGraph === true) {
+              window.VaadinDesktopIpcDiagnostics.frontendArtifactProductionBundleStatsVerified = true;
+              window.VaadinDesktopIpcDiagnostics.frontendArtifactProductionBundleStatsPath =
+                mergeCsv(window.VaadinDesktopIpcDiagnostics.frontendArtifactProductionBundleStatsPath, [resourcePath]);
+              window.VaadinDesktopIpcDiagnostics.frontendArtifactProductionBundleStatsResult =
+                'verified:' + resourcePath;
             } else if (payload.artifactFamily === 'dev-mode-bundle') {
               window.VaadinDesktopIpcDiagnostics.frontendArtifactDevModeVerified = true;
               window.VaadinDesktopIpcDiagnostics.frontendArtifactDevModePath =

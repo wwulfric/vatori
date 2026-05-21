@@ -109,6 +109,11 @@ PLIST
     if [[ "${VAADIN_DESKTOP_FLOW_IPC_AUTO_SHUTDOWN:-}" == "1" ]]; then
       OPEN_ENV_ARGS+=(--env "VAADIN_DESKTOP_FLOW_IPC_AUTO_SHUTDOWN=1")
     fi
+    OPEN_BACKGROUND_ARGS=()
+    if [[ "${VAADIN_DESKTOP_HOST_NO_ACTIVATE:-}" == "1" ]]; then
+      OPEN_ENV_ARGS+=(--env "VAADIN_DESKTOP_HOST_NO_ACTIVATE=1")
+      OPEN_BACKGROUND_ARGS+=(-g)
+    fi
     SWIFT_HOST_STDOUT="$SWIFT_HOST_BUILD/host.out.log"
     SWIFT_HOST_STDERR="$SWIFT_HOST_BUILD/host.err.log"
     SWIFT_TRANSPORT="compatibility-http"
@@ -123,7 +128,7 @@ PLIST
     tail -n +1 -f "$SWIFT_HOST_STDOUT" "$SWIFT_HOST_STDERR" &
     TAIL_PID=$!
     trap 'kill "$TAIL_PID" 2>/dev/null || true' EXIT
-    open -n -W -o "$SWIFT_HOST_STDOUT" --stderr "$SWIFT_HOST_STDERR" "${OPEN_ENV_ARGS[@]}" "$SWIFT_HOST_APP" --args \
+    open -n -W "${OPEN_BACKGROUND_ARGS[@]}" -o "$SWIFT_HOST_STDOUT" --stderr "$SWIFT_HOST_STDERR" "${OPEN_ENV_ARGS[@]}" "$SWIFT_HOST_APP" --args \
       --module "$MODULE" \
       --repo-root "$ROOT" \
       --maven-repo "$MAVEN_REPO" \

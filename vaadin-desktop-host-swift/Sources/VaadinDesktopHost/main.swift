@@ -14,6 +14,7 @@ struct HostConfig {
     var flowIpcAutoVaadinTextField: Bool = false
     var flowIpcAutoFrameworkUpdate: Bool = false
     var flowIpcAutoShutdown: Bool = false
+    var hostNoActivate: Bool = false
     var title: String = "Vaadin Desktop"
     var width: Double = 1100
     var height: Double = 780
@@ -59,6 +60,7 @@ struct HostConfig {
             || config.flowIpcAutoClick
         config.flowIpcAutoFrameworkUpdate = ProcessInfo.processInfo.environment["VAADIN_DESKTOP_FLOW_IPC_AUTO_FRAMEWORK_UPDATE"] == "1"
         config.flowIpcAutoShutdown = ProcessInfo.processInfo.environment["VAADIN_DESKTOP_FLOW_IPC_AUTO_SHUTDOWN"] == "1"
+        config.hostNoActivate = ProcessInfo.processInfo.environment["VAADIN_DESKTOP_HOST_NO_ACTIVATE"] == "1"
         return config
     }
 }
@@ -530,12 +532,11 @@ final class WebViewHost: NSObject, NSApplicationDelegate, NSWindowDelegate, WKNa
         window.level = .normal
         window.collectionBehavior = [.fullScreenPrimary]
         window.center()
-        window.makeKeyAndOrderFront(nil)
+        showWindow(window)
 
         self.window = window
         self.webView = webView
 
-        NSRunningApplication.current.activate(options: [.activateAllWindows])
         webView.load(URLRequest(url: url))
         trace("recv", "window.ready", ["label": "main"])
     }
@@ -597,14 +598,35 @@ final class WebViewHost: NSObject, NSApplicationDelegate, NSWindowDelegate, WKNa
         window.level = .normal
         window.collectionBehavior = [.fullScreenPrimary]
         window.center()
-        window.makeKeyAndOrderFront(nil)
+        showWindow(window)
 
         self.window = window
         self.webView = webView
 
-        NSRunningApplication.current.activate(options: [.activateAllWindows])
         webView.loadHTMLString(flowIpcShell, baseURL: nil)
         trace("recv", "window.ready", ["label": "main", "transport": "flow-ipc"])
+    }
+
+    private func showWindow(_ window: NSWindow) {
+        if config.hostNoActivate {
+            window.orderFront(nil)
+            trace("recv", "window.activation", [
+                "label": "main",
+                "mode": "no-activate",
+                "keyWindow": window.isKeyWindow,
+                "activeApplication": NSApplication.shared.isActive
+            ])
+            return
+        }
+
+        window.makeKeyAndOrderFront(nil)
+        NSRunningApplication.current.activate(options: [.activateAllWindows])
+        trace("recv", "window.activation", [
+            "label": "main",
+            "mode": "activate",
+            "keyWindow": window.isKeyWindow,
+            "activeApplication": NSApplication.shared.isActive
+        ])
     }
 
     private func handleFlowIpcEnvelope(_ raw: String, _ object: [String: Any]) {

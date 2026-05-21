@@ -144,6 +144,16 @@ public final class FlowClientResourceSmokeMain {
                 || !Boolean.FALSE.equals(bigDecimalResponse.get("shim"))) {
             throw new IllegalStateException("BigDecimalField component frontend module is missing metadata");
         }
+        if (!Objects.equals(bigDecimalResponse.get("importRewriteStrategy"), "manifest-import-rewrite-v1_4")
+                || !Objects.equals(bigDecimalResponse.get("browserExecutionPlan"),
+                        "dynamic-import-blob-with-manifest-import-rewrites-v1_4")) {
+            throw new IllegalStateException("BigDecimalField component frontend module is missing import rewrite metadata");
+        }
+        requireImportRewrite(bigDecimalResponse, "lit", "META-INF/vatori/frontend-shims/lit.js");
+        requireImportRewrite(bigDecimalResponse, "@vaadin/text-field/src/vaadin-text-field.js",
+                "META-INF/vatori/frontend-shims/vaadin-text-field.js");
+        requireImportRewrite(bigDecimalResponse, "@vaadin/component-base/src/define.js",
+                "META-INF/vatori/frontend-shims/component-base-define.js");
         if (!resources.contains(checkboxDevBundlePath)) {
             throw new IllegalStateException("Component frontend manifest is missing the checkbox dev-bundle module");
         }
@@ -234,6 +244,23 @@ public final class FlowClientResourceSmokeMain {
             }
         }
         throw new IllegalStateException("Component frontend manifest is missing strict blocker for " + family);
+    }
+
+    private static void requireImportRewrite(Map<String, Object> metadata, String specifier, String resourcePath) {
+        Object value = metadata.get("importRewrites");
+        if (!(value instanceof List<?> rewrites)) {
+            throw new IllegalStateException("Component frontend resource is missing importRewrites");
+        }
+        for (Object rewrite : rewrites) {
+            if (rewrite instanceof Map<?, ?> entry
+                    && Objects.equals(entry.get("specifier"), specifier)
+                    && Objects.equals(entry.get("resourcePath"), resourcePath)
+                    && Objects.equals(entry.get("resolver"), "manifest-import-rewrite-v1_4")
+                    && Objects.equals(entry.get("failureClassification"), "npm-transitive-imports-shimmed")) {
+                return;
+            }
+        }
+        throw new IllegalStateException("Component frontend resource is missing import rewrite for " + specifier);
     }
 
     private static void requireComponentResourceMetadata(List<?> componentResources) {

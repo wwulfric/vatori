@@ -534,6 +534,15 @@ public final class DesktopTraceInspector {
                 summary.frontendShimBlockerObserved = true;
             }
             if (line.contains("\"type\":\"bootstrapResponse\"")
+                    && line.contains("\"componentFrontendResources\"")
+                    && line.contains("\"importRewriteStrategy\":\"manifest-import-rewrite-v1_4\"")
+                    && line.contains("\"browserExecutionPlan\":\"dynamic-import-blob-with-manifest-import-rewrites-v1_4\"")
+                    && line.contains("\"importRewrites\"")
+                    && line.contains("\"specifier\":\"lit\"")
+                    && line.contains("\"resourcePath\":\"META-INF/vatori/frontend-shims/lit.js\"")) {
+                summary.frontendManifestImportRewriteObserved = true;
+            }
+            if (line.contains("\"type\":\"bootstrapResponse\"")
                     && line.contains("\"artifactFamily\":\"production-bundle\"")
                     && line.contains("\"executionPolicy\":\"execute-dev-bundle-entry\"")
                     && line.contains("\"executionPolicy\":\"dependency-module\"")
@@ -593,6 +602,14 @@ public final class DesktopTraceInspector {
             if (line.contains("\"type\":\"webview.dom\"")
                     && containsLiteralField(line, "frontendArtifactShimFallback", "true")) {
                 summary.frontendShimBlockerObserved = true;
+            }
+            if (line.contains("\"type\":\"webview.dom\"")
+                    && containsStringField(line, "vaadinWebComponentImportRewriteStrategy",
+                            "manifest-import-rewrite-v1_4")
+                    && containsPositiveIntegerField(line, "vaadinWebComponentImportRewriteCount")
+                    && line.contains("vaadinWebComponentImportRewriteSpecifiers")
+                    && line.contains("vaadinWebComponentImportRewritePaths")) {
+                summary.frontendManifestImportRewriteObserved = true;
             }
             if (line.contains("\"type\":\"webview.dom\"")
                     && containsLiteralField(line, "frontendArtifactProductionBundlePartial", "true")) {
@@ -749,8 +766,10 @@ public final class DesktopTraceInspector {
                     && containsLiteralField(line, "vaadinWebComponentResourceExecuted", "true")
                     && containsStringField(line, "vaadinWebComponentResourceExecutedPath",
                             "META-INF/resources/frontend/vaadin-big-decimal-field.js")
-                    && containsStringField(line, "vaadinWebComponentResourceImportMode",
+                    && (containsStringField(line, "vaadinWebComponentResourceImportMode",
                             "dynamic-import-blob-with-v1_2-shimmed-transitive-imports")
+                            || containsStringField(line, "vaadinWebComponentResourceImportMode",
+                                    "dynamic-import-blob-with-manifest-import-rewrites-v1_4"))
                     && containsLiteralField(line, "vaadinWebComponentTagDefined", "true")
                     && containsLiteralField(line, "vaadinWebComponentResourceExecutionFailed", "false")) {
                 summary.vaadinWebComponentResourceExecutedDomObserved = true;
@@ -1234,6 +1253,7 @@ public final class DesktopTraceInspector {
         private boolean frontendArtifactFamilyModelObserved;
         private boolean frontendDependencyGraphObserved;
         private boolean frontendShimBlockerObserved;
+        private boolean frontendManifestImportRewriteObserved;
         private boolean frontendProductionBundlePartialObserved;
         private boolean frontendThemeStaticResourceObserved;
         private boolean frontendThemeStaticStrictBlockerObserved;
@@ -1554,6 +1574,8 @@ public final class DesktopTraceInspector {
                     + frontendDependencyGraphObserved);
             System.out.println("Flow IPC v1.4 frontend shim blocker observed: "
                     + frontendShimBlockerObserved);
+            System.out.println("Flow IPC v1.4 manifest import rewrite observed: "
+                    + frontendManifestImportRewriteObserved);
             System.out.println("Flow IPC v1.4 production bundle partial graph observed: "
                     + frontendProductionBundlePartialObserved);
             System.out.println("Flow IPC v1.4 theme/static strict blocker observed: "

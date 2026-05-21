@@ -47,7 +47,7 @@ final class FlowClientResources {
     private static final String COMPONENT_TRANSITIVE_BLOCKED_REASON =
             "full @vaadin/text-field npm graph is not bundled in the v1.2 no-localhost smoke runtime";
     private static final String DEV_BUNDLE_COMPONENT_REASON =
-            "A focused Vaadin dev-bundle entry imports the production Checkbox class and registers the real vaadin-checkbox element; full production bundle routing is still not complete.";
+            "Focused Vaadin dev-bundle entries import production component classes and register real custom elements; full production bundle routing is still not complete.";
     private static final String LIT_SHIM_SOURCE = """
             export function css(strings, ...values) {
               const raw = strings && strings.raw ? strings.raw : strings;
@@ -435,6 +435,12 @@ final class FlowClientResources {
             attributes.put("shimmedImports", List.of("lit",
                     "@vaadin/text-field/src/vaadin-text-field.js",
                     "@vaadin/component-base/src/define.js"));
+            attributes.put("importRewriteStrategy", "manifest-import-rewrite-v1_4");
+            attributes.put("browserExecutionPlan", "dynamic-import-blob-with-manifest-import-rewrites-v1_4");
+            attributes.put("importRewrites", List.of(
+                    importRewrite("lit", LIT_SHIM_JS),
+                    importRewrite("@vaadin/text-field/src/vaadin-text-field.js", TEXT_FIELD_SHIM_JS),
+                    importRewrite("@vaadin/component-base/src/define.js", DEFINE_SHIM_JS)));
         }
         if ("classpath-frontend-resource".equals(resolver)) {
             attributes.put("componentPrimary", true);
@@ -509,6 +515,14 @@ final class FlowClientResources {
             return "BigDecimalField-minimum-component-resource";
         }
         return "component-transitive-import-shim";
+    }
+
+    private static Map<String, Object> importRewrite(String specifier, String resourcePath) {
+        return Map.of("specifier", specifier,
+                "resourcePath", resourcePath,
+                "artifactFamily", "npm-frontend",
+                "resolver", "manifest-import-rewrite-v1_4",
+                "failureClassification", "npm-transitive-imports-shimmed");
     }
 
     private static Map<String, Object> flowClientAttributes(String path, String kind) {

@@ -1324,6 +1324,10 @@ final class WebViewHost: NSObject, NSApplicationDelegate, NSWindowDelegate, WKNa
           vaadinWebComponentResourceFailureClassification: window.VaadinDesktopIpcDiagnostics ? window.VaadinDesktopIpcDiagnostics.vaadinWebComponentResourceFailureClassification : "",
           vaadinWebComponentResourceShimmedImports: window.VaadinDesktopIpcDiagnostics ? window.VaadinDesktopIpcDiagnostics.vaadinWebComponentResourceShimmedImports : "",
           vaadinWebComponentResourceImportMode: window.VaadinDesktopIpcDiagnostics ? window.VaadinDesktopIpcDiagnostics.vaadinWebComponentResourceImportMode : "",
+          vaadinWebComponentImportRewriteStrategy: window.VaadinDesktopIpcDiagnostics ? window.VaadinDesktopIpcDiagnostics.vaadinWebComponentImportRewriteStrategy : "",
+          vaadinWebComponentImportRewriteCount: window.VaadinDesktopIpcDiagnostics ? window.VaadinDesktopIpcDiagnostics.vaadinWebComponentImportRewriteCount : 0,
+          vaadinWebComponentImportRewriteSpecifiers: window.VaadinDesktopIpcDiagnostics ? window.VaadinDesktopIpcDiagnostics.vaadinWebComponentImportRewriteSpecifiers : "",
+          vaadinWebComponentImportRewritePaths: window.VaadinDesktopIpcDiagnostics ? window.VaadinDesktopIpcDiagnostics.vaadinWebComponentImportRewritePaths : "",
           vaadinWebComponentResourceExecutionError: window.VaadinDesktopIpcDiagnostics ? window.VaadinDesktopIpcDiagnostics.vaadinWebComponentResourceExecutionError : "",
           vaadinWebComponentTagDefined: !!(window.VaadinDesktopIpcDiagnostics && window.VaadinDesktopIpcDiagnostics.vaadinWebComponentTagDefined),
           vaadinWebComponentRendered: !!(window.VaadinDesktopIpcDiagnostics && window.VaadinDesktopIpcDiagnostics.vaadinWebComponentRendered),
@@ -4462,24 +4466,51 @@ let flowIpcShell = #"""
         return url;
       }
 
-      function rewriteVaadinBigDecimalFieldModule(source, urlsToRevoke) {
-        const litUrl = componentModuleBlobUrl('META-INF/vatori/frontend-shims/lit.js', urlsToRevoke);
-        const textFieldUrl = componentModuleBlobUrl('META-INF/vatori/frontend-shims/vaadin-text-field.js', urlsToRevoke);
-        const defineUrl = componentModuleBlobUrl('META-INF/vatori/frontend-shims/component-base-define.js', urlsToRevoke);
-        if (!litUrl || !textFieldUrl || !defineUrl) {
-          window.VaadinDesktopIpcDiagnostics.vaadinWebComponentFailureReason =
-            'missing-v1_2-component-import-shim';
-          return '';
-        }
-        return source
-          .replace("from 'lit'", "from '" + litUrl + "'")
-            .replace("from '@vaadin/text-field/src/vaadin-text-field.js'", "from '" + textFieldUrl + "'")
-            .replace("from '@vaadin/component-base/src/define.js'", "from '" + defineUrl + "'");
-      }
-
       function componentModuleFileName(path) {
         const index = path.lastIndexOf('/');
         return index >= 0 ? path.substring(index + 1) : path;
+      }
+
+      function rewriteStaticImportSpecifier(source, specifier, replacementUrl) {
+        return source
+          .split("from '" + specifier + "'").join("from '" + replacementUrl + "'")
+          .split('from "' + specifier + '"').join('from "' + replacementUrl + '"')
+          .split("import '" + specifier + "'").join("import '" + replacementUrl + "'")
+          .split('import "' + specifier + '"').join('import "' + replacementUrl + '"');
+      }
+
+      function rewriteManifestImportSpecifiers(source, resource, urlsToRevoke) {
+        const rewrites = Array.isArray(resource && resource.importRewrites) ? resource.importRewrites : [];
+        if (rewrites.length === 0) {
+          return source;
+        }
+        let rewritten = source;
+        const observedSpecifiers = [];
+        const observedPaths = [];
+        for (const rewrite of rewrites) {
+          const specifier = rewrite && typeof rewrite.specifier === 'string' ? rewrite.specifier : '';
+          const resourcePath = rewrite && typeof rewrite.resourcePath === 'string' ? rewrite.resourcePath : '';
+          if (!specifier || !resourcePath) {
+            continue;
+          }
+          const url = componentModuleBlobUrl(resourcePath, urlsToRevoke);
+          if (!url) {
+            window.VaadinDesktopIpcDiagnostics.vaadinWebComponentFailureReason =
+              'missing-manifest-import-rewrite-resource';
+            return '';
+          }
+          rewritten = rewriteStaticImportSpecifier(rewritten, specifier, url);
+          observedSpecifiers.push(specifier);
+          observedPaths.push(resourcePath);
+        }
+        window.VaadinDesktopIpcDiagnostics.vaadinWebComponentImportRewriteStrategy =
+          resource.importRewriteStrategy || 'manifest-import-rewrite-v1_4';
+        window.VaadinDesktopIpcDiagnostics.vaadinWebComponentImportRewriteCount = observedSpecifiers.length;
+        window.VaadinDesktopIpcDiagnostics.vaadinWebComponentImportRewriteSpecifiers =
+          observedSpecifiers.join(',');
+        window.VaadinDesktopIpcDiagnostics.vaadinWebComponentImportRewritePaths =
+          observedPaths.join(',');
+        return rewritten;
       }
 
       function rewriteVaadinDevBundleModule(source, currentPath, urlsToRevoke) {
@@ -4603,15 +4634,15 @@ let flowIpcShell = #"""
         const urlsToRevoke = [];
         try {
           let importSource = primaryBody;
-          if (primaryPath === 'META-INF/resources/frontend/vaadin-big-decimal-field.js') {
-            importSource = rewriteVaadinBigDecimalFieldModule(primaryBody, urlsToRevoke);
+          if (Array.isArray(resource.importRewrites) && resource.importRewrites.length > 0) {
+            importSource = rewriteManifestImportSpecifiers(primaryBody, resource, urlsToRevoke);
             if (!importSource) {
               componentFrontendResourceExecutionFailedPaths.add(primaryPath);
               refreshComponentFrontendResourceDiagnostics();
               return;
             }
             window.VaadinDesktopIpcDiagnostics.vaadinWebComponentResourceImportMode =
-              'dynamic-import-blob-with-v1_2-shimmed-transitive-imports';
+              resource.browserExecutionPlan || 'dynamic-import-blob-with-manifest-import-rewrites-v1_4';
           } else if (resource.devBundleResource === true) {
             installOpaqueOriginStorageFallbacks();
             installVaadinDevBundleGlobals();

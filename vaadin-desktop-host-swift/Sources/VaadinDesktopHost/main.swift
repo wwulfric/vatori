@@ -4439,6 +4439,9 @@ let flowIpcShell = #"""
         if (resource && resource.path === 'META-INF/vatori/dev-bundle-entry/vaadin-checkbox.js') {
           return 'vaadin-checkbox';
         }
+        if (resource && resource.path === 'META-INF/vatori/dev-bundle-entry/vaadin-select.js') {
+          return 'vaadin-select';
+        }
         return '';
       }
 

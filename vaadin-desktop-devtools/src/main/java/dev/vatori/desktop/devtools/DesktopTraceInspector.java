@@ -491,7 +491,8 @@ public final class DesktopTraceInspector {
             if (line.contains("\"type\":\"bootstrapResponse\"")
                     && line.contains("\"componentFrontendResources\"")
                     && line.contains("\"resolverStrategy\":\"generic-component-frontend-manifest-v1_3\"")
-                    && line.contains("\"componentCount\":2")
+                    && (line.contains("\"componentCount\":2")
+                            || line.contains("\"componentCount\":3"))
                     && line.contains("com.vaadin.flow.component.checkbox.Checkbox")
                     && line.contains("vaadin-checkbox")
                     && (line.contains("META-INF/vatori/frontend-shims/vaadin-checkbox.js")
@@ -758,14 +759,17 @@ public final class DesktopTraceInspector {
                     && containsStringField(line, "vaadinWebComponentResourceResolverStrategy",
                             "generic-component-frontend-manifest-v1_3")
                     && containsLiteralField(line, "vaadinWebComponentResourceExecuted", "true")
-                    && containsLiteralField(line, "vaadinWebComponentResourceExecutedCount", "2")
+                    && (containsLiteralField(line, "vaadinWebComponentResourceExecutedCount", "2")
+                            || containsLiteralField(line, "vaadinWebComponentResourceExecutedCount", "3"))
                     && line.contains("META-INF/resources/frontend/vaadin-big-decimal-field.js")
                     && (line.contains("META-INF/vatori/frontend-shims/vaadin-checkbox.js")
                             || line.contains(
                                     "vaadin-dev-bundle/webapp/VAADIN/build/generated-flow-imports-VW7hRaNw.js")
                             || line.contains("META-INF/vatori/dev-bundle-entry/vaadin-checkbox.js"))
-                    && containsStringField(line, "vaadinWebComponentResourceExecutedTags",
+                    && (containsStringField(line, "vaadinWebComponentResourceExecutedTags",
                             "vaadin-big-decimal-field,vaadin-checkbox")
+                            || containsStringField(line, "vaadinWebComponentResourceExecutedTags",
+                                    "vaadin-big-decimal-field,vaadin-checkbox,vaadin-select"))
                     && containsLiteralField(line, "vaadinWebComponentResourceExecutionFailed", "false")) {
                 summary.componentResolverV13DomObserved = true;
             }

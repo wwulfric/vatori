@@ -31,6 +31,8 @@ final class FlowClientResources {
             "vaadin-dev-bundle/webapp/VAADIN/build/indexhtml-BfYYZi8S.js";
     private static final String DEV_BUNDLE_CHECKBOX_ENTRY_JS =
             "META-INF/vatori/dev-bundle-entry/vaadin-checkbox.js";
+    private static final String DEV_BUNDLE_SELECT_ENTRY_JS =
+            "META-INF/vatori/dev-bundle-entry/vaadin-select.js";
     private static final String THEME_STATIC_CSS =
             "META-INF/resources/frontend/themes/vatori-flow-ipc-smoke/theme-static.css";
     private static final String FRONTEND_ASSET_PIPELINE_VERSION = "flow-ipc-frontend-assets-v1_4";
@@ -154,6 +156,13 @@ final class FlowClientResources {
 
             export { Checkbox };
             """;
+    private static final String SELECT_DEV_BUNDLE_ENTRY_SOURCE = """
+            import { aG as defineCustomElement, c6 as Select } from './indexhtml-BfYYZi8S.js';
+
+            defineCustomElement(Select);
+
+            export { Select };
+            """;
     private final Map<String, Resource> flowClientResources;
     private final Map<String, Resource> componentResources;
     private final Map<String, Resource> allResources;
@@ -194,6 +203,14 @@ final class FlowClientResources {
         addText(discoveredComponentResources, DEV_BUNDLE_CHECKBOX_ENTRY_JS,
                 "vaadin-dev-bundle-checkbox-entry", CHECKBOX_DEV_BUNDLE_ENTRY_SOURCE,
                 devBundleAttributes("vaadin-checkbox", DEV_BUNDLE_CHECKBOX_ENTRY_JS, true));
+        addText(discoveredComponentResources, DEV_BUNDLE_SELECT_ENTRY_JS,
+                "vaadin-dev-bundle-select-entry", SELECT_DEV_BUNDLE_ENTRY_SOURCE,
+                devBundleAttributes("com.vaadin.flow.component.select.Select",
+                        "vaadin-select",
+                        DEV_BUNDLE_SELECT_ENTRY_JS,
+                        true,
+                        "Select-dev-bundle-resource-v1_4",
+                        "com.vaadin.flow.component.select.Select"));
         add(discoveredComponentResources, THEME_STATIC_CSS, "theme-static-resource", true,
                 themeStaticAttributes());
 
@@ -265,9 +282,11 @@ final class FlowClientResources {
         manifest.put("componentTag", "vaadin-big-decimal-field");
         manifest.put("primaryResource", BIG_DECIMAL_FIELD_JS);
         manifest.put("resolverStrategy", "generic-component-frontend-manifest-v1_3");
-        manifest.put("componentCount", 2);
-        manifest.put("componentTags", List.of("vaadin-big-decimal-field", "vaadin-checkbox"));
-        manifest.put("primaryResources", List.of(BIG_DECIMAL_FIELD_JS, DEV_BUNDLE_CHECKBOX_ENTRY_JS));
+        manifest.put("componentCount", 3);
+        manifest.put("componentTags", List.of("vaadin-big-decimal-field", "vaadin-checkbox", "vaadin-select"));
+        manifest.put("primaryResources", List.of(BIG_DECIMAL_FIELD_JS,
+                DEV_BUNDLE_CHECKBOX_ENTRY_JS,
+                DEV_BUNDLE_SELECT_ENTRY_JS));
         manifest.put("components", List.of(
                 Map.of("componentClass", "com.vaadin.flow.component.textfield.BigDecimalField",
                         "componentTag", "vaadin-big-decimal-field",
@@ -279,6 +298,12 @@ final class FlowClientResources {
                         "primaryResource", DEV_BUNDLE_CHECKBOX_ENTRY_JS,
                         "requestedModule", "@vaadin/checkbox/src/vaadin-checkbox.js",
                         "resourceOrigin", "vaadin-dev-bundle-checkbox-entry",
+                        "productionBundleReady", true),
+                Map.of("componentClass", "com.vaadin.flow.component.select.Select",
+                        "componentTag", "vaadin-select",
+                        "primaryResource", DEV_BUNDLE_SELECT_ENTRY_JS,
+                        "requestedModule", "@vaadin/select/src/vaadin-select.js",
+                        "resourceOrigin", "vaadin-dev-bundle-select-entry",
                         "productionBundleReady", true)));
         manifest.put("requestedComponent", "com.vaadin.flow.component.textfield.TextField");
         manifest.put("substituteReason", "TextField class is available but its npm frontend graph is not classpath-resolved in this smoke runtime; BigDecimalField provides a real TextField-family classpath frontend module.");
@@ -418,9 +443,19 @@ final class FlowClientResources {
     }
 
     private static Map<String, Object> devBundleAttributes(String tag, String moduleSpecifier, boolean primary) {
+        return devBundleAttributes("com.vaadin.flow.component.checkbox.Checkbox",
+                tag,
+                moduleSpecifier,
+                primary,
+                primary ? "Checkbox-dev-bundle-resource-v1_4" : "Checkbox-dev-bundle-support-resource-v1_4",
+                primary ? "com.vaadin.flow.component.checkbox.Checkbox" : DEV_BUNDLE_CHECKBOX_ENTRY_JS);
+    }
+
+    private static Map<String, Object> devBundleAttributes(String componentClass, String tag, String moduleSpecifier,
+            boolean primary, String lookupKind, String dependencyOf) {
         Map<String, Object> attributes = new LinkedHashMap<>();
         attributes.put("componentFrontendResource", true);
-        attributes.put("componentClass", "com.vaadin.flow.component.checkbox.Checkbox");
+        attributes.put("componentClass", componentClass);
         if (!tag.isBlank()) {
             attributes.put("componentTag", tag);
         }
@@ -430,9 +465,7 @@ final class FlowClientResources {
         attributes.put("artifactFamily", "production-bundle");
         attributes.put("origin", primary ? "vaadin-dev-bundle-focused-entry" : "vaadin-dev-bundle");
         attributes.put("resourceOrigin", "vaadin-dev-bundle");
-        attributes.put("dependencyOf", primary
-                ? "com.vaadin.flow.component.checkbox.Checkbox"
-                : DEV_BUNDLE_CHECKBOX_ENTRY_JS);
+        attributes.put("dependencyOf", dependencyOf);
         attributes.put("executionPolicy", primary ? "execute-dev-bundle-entry" : "dependency-module");
         attributes.put("artifactStatus", "partial");
         attributes.put("requestedBy", "component-frontend-manifest-v1_4");
@@ -440,8 +473,7 @@ final class FlowClientResources {
         attributes.put("devBundleResource", true);
         attributes.put("blockedReason", DEV_BUNDLE_COMPONENT_REASON);
         attributes.put("failureClassification", "dev-bundle-resource-graph-partial");
-        attributes.put("lookupKind", primary ? "Checkbox-dev-bundle-resource-v1_4"
-                : "Checkbox-dev-bundle-support-resource-v1_4");
+        attributes.put("lookupKind", lookupKind);
         if (primary) {
             attributes.put("componentPrimary", true);
         } else {

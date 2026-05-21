@@ -101,7 +101,7 @@ public final class FlowClientResourceSmokeMain {
         }
         Map<String, Object> componentManifest = resources.componentManifest();
         Object componentEntries = componentManifest.get("resources");
-        if (!(componentEntries instanceof List<?> componentResources) || componentResources.size() < 8) {
+        if (!(componentEntries instanceof List<?> componentResources) || componentResources.size() < 9) {
             throw new IllegalStateException("Component frontend resource manifest does not contain the framework graph");
         }
         if (!Objects.equals(componentManifest.get("resolverStrategy"), "generic-component-frontend-manifest-v1_3")) {
@@ -127,6 +127,7 @@ public final class FlowClientResourceSmokeMain {
         requireStrictBlocker(componentManifest, "generated-lazy", "generated-lazy-resource-unmapped");
         requireComponentResourceMetadata(componentResources);
         String checkboxDevBundlePath = "META-INF/vatori/dev-bundle-entry/vaadin-checkbox.js";
+        String selectDevBundlePath = "META-INF/vatori/dev-bundle-entry/vaadin-select.js";
         String bigDecimalPath = "META-INF/resources/frontend/vaadin-big-decimal-field.js";
         String themeStaticPath = "META-INF/resources/frontend/themes/vatori-flow-ipc-smoke/theme-static.css";
         if (!resources.contains(bigDecimalPath)) {
@@ -160,6 +161,23 @@ public final class FlowClientResourceSmokeMain {
         }
         if (!resources.contains(themeStaticPath)) {
             throw new IllegalStateException("Component frontend manifest is missing the theme/static resource");
+        }
+        if (!resources.contains(selectDevBundlePath)) {
+            throw new IllegalStateException("Component frontend manifest is missing the Select dev-bundle module");
+        }
+        Map<String, Object> selectResponse = resources.response(selectDevBundlePath);
+        if (!Objects.equals(selectResponse.get("lookupKind"), "Select-dev-bundle-resource-v1_4")
+                || !Objects.equals(selectResponse.get("componentTag"), "vaadin-select")
+                || !Objects.equals(selectResponse.get("componentClass"),
+                        "com.vaadin.flow.component.select.Select")
+                || !Boolean.TRUE.equals(selectResponse.get("componentPrimary"))
+                || !Boolean.TRUE.equals(selectResponse.get("devBundleResource"))
+                || !Objects.equals(selectResponse.get("artifactFamily"), "production-bundle")
+                || !Objects.equals(selectResponse.get("origin"), "vaadin-dev-bundle-focused-entry")
+                || !Objects.equals(selectResponse.get("executionPolicy"), "execute-dev-bundle-entry")
+                || !Objects.equals(selectResponse.get("artifactStatus"), "partial")
+                || !Boolean.FALSE.equals(selectResponse.get("shim"))) {
+            throw new IllegalStateException("Select component frontend dev-bundle module is missing metadata");
         }
         Map<String, Object> themeStaticResponse = resources.response(themeStaticPath);
         if (!Objects.equals(themeStaticResponse.get("lookupKind"), "Theme-static-resource-v1_4")

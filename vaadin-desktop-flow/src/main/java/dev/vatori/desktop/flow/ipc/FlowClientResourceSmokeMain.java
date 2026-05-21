@@ -101,7 +101,7 @@ public final class FlowClientResourceSmokeMain {
         }
         Map<String, Object> componentManifest = resources.componentManifest();
         Object componentEntries = componentManifest.get("resources");
-        if (!(componentEntries instanceof List<?> componentResources) || componentResources.size() < 10) {
+        if (!(componentEntries instanceof List<?> componentResources) || componentResources.size() < 11) {
             throw new IllegalStateException("Component frontend resource manifest does not contain the framework graph");
         }
         if (!Objects.equals(componentManifest.get("resolverStrategy"), "generic-component-frontend-manifest-v1_3")) {
@@ -128,6 +128,8 @@ public final class FlowClientResourceSmokeMain {
         requireComponentResourceMetadata(componentResources);
         String checkboxDevBundlePath = "META-INF/vatori/dev-bundle-entry/vaadin-checkbox.js";
         String selectDevBundlePath = "META-INF/vatori/dev-bundle-entry/vaadin-select.js";
+        String textFieldDevBundlePath = "META-INF/vatori/dev-bundle-entry/vaadin-text-field.js";
+        String defineDevBundlePath = "META-INF/vatori/dev-bundle-entry/component-base-define.js";
         String bigDecimalPath = "META-INF/resources/frontend/vaadin-big-decimal-field.js";
         String themeStaticPath = "META-INF/resources/frontend/themes/vatori-flow-ipc-smoke/theme-static.css";
         String generatedFlowImportsPath = "META-INF/vatori/generated/flow/generated-flow-imports.js";
@@ -154,7 +156,56 @@ public final class FlowClientResourceSmokeMain {
         requireImportRewrite(bigDecimalResponse, "@vaadin/text-field/src/vaadin-text-field.js",
                 "META-INF/vatori/frontend-shims/vaadin-text-field.js");
         requireImportRewrite(bigDecimalResponse, "@vaadin/component-base/src/define.js",
-                "META-INF/vatori/frontend-shims/component-base-define.js");
+                defineDevBundlePath);
+        Object shimmedImports = bigDecimalResponse.get("shimmedImports");
+        if (!(shimmedImports instanceof List<?> shimmedImportList)
+                || !shimmedImportList.equals(List.of("lit", "@vaadin/text-field/src/vaadin-text-field.js"))) {
+            throw new IllegalStateException("BigDecimalField should report only lit and TextField as remaining shims");
+        }
+        if (!resources.contains(textFieldDevBundlePath)) {
+            throw new IllegalStateException("Component frontend manifest is missing the TextField dev-bundle module");
+        }
+        Map<String, Object> textFieldResponse = resources.response(textFieldDevBundlePath);
+        if (!Objects.equals(textFieldResponse.get("lookupKind"), "TextField-dev-bundle-resource-v1_4")
+                || !Objects.equals(textFieldResponse.get("componentTag"), "vaadin-text-field")
+                || !Objects.equals(textFieldResponse.get("componentClass"),
+                        "com.vaadin.flow.component.textfield.TextField")
+                || !Boolean.TRUE.equals(textFieldResponse.get("componentBundleDependency"))
+                || !Boolean.TRUE.equals(textFieldResponse.get("devBundleResource"))
+                || !Objects.equals(textFieldResponse.get("artifactFamily"), "production-bundle")
+                || !Objects.equals(textFieldResponse.get("origin"), "vaadin-dev-bundle")
+                || !Objects.equals(textFieldResponse.get("executionPolicy"), "dependency-module")
+                || !Objects.equals(textFieldResponse.get("artifactStatus"), "partial")
+                || !Boolean.FALSE.equals(textFieldResponse.get("shim"))) {
+            throw new IllegalStateException("TextField component frontend dev-bundle module is missing metadata");
+        }
+        Object textFieldBody = textFieldResponse.get("body");
+        if (!(textFieldBody instanceof String textFieldText)
+                || !textFieldText.contains("c7 as TextField")
+                || !textFieldText.contains("export { defineCustomElement, TextField }")) {
+            throw new IllegalStateException("TextField dev-bundle entry body is missing real export bridge");
+        }
+        if (!resources.contains(defineDevBundlePath)) {
+            throw new IllegalStateException("Component frontend manifest is missing the component-base define dev-bundle module");
+        }
+        Map<String, Object> defineResponse = resources.response(defineDevBundlePath);
+        if (!Objects.equals(defineResponse.get("lookupKind"), "Component-base-define-dev-bundle-resource-v1_4")
+                || !Objects.equals(defineResponse.get("componentClass"), "@vaadin/component-base/src/define.js")
+                || !Boolean.TRUE.equals(defineResponse.get("componentBundleDependency"))
+                || !Boolean.TRUE.equals(defineResponse.get("devBundleResource"))
+                || !Objects.equals(defineResponse.get("artifactFamily"), "production-bundle")
+                || !Objects.equals(defineResponse.get("origin"), "vaadin-dev-bundle-extracted-entry")
+                || !Objects.equals(defineResponse.get("executionPolicy"), "dependency-module")
+                || !Objects.equals(defineResponse.get("artifactStatus"), "partial")
+                || !Boolean.FALSE.equals(defineResponse.get("shim"))) {
+            throw new IllegalStateException("component-base define dev-bundle module is missing metadata");
+        }
+        Object defineBody = defineResponse.get("body");
+        if (!(defineBody instanceof String defineText)
+                || !defineText.contains("export function defineCustomElement")
+                || !defineText.contains("window.Vaadin.featureFlags")) {
+            throw new IllegalStateException("component-base define dev-bundle entry body is missing real export bridge");
+        }
         if (!resources.contains(checkboxDevBundlePath)) {
             throw new IllegalStateException("Component frontend manifest is missing the checkbox dev-bundle module");
         }
@@ -277,8 +328,10 @@ public final class FlowClientResourceSmokeMain {
             if (rewrite instanceof Map<?, ?> entry
                     && Objects.equals(entry.get("specifier"), specifier)
                     && Objects.equals(entry.get("resourcePath"), resourcePath)
-                    && Objects.equals(entry.get("resolver"), "manifest-import-rewrite-v1_4")
-                    && Objects.equals(entry.get("failureClassification"), "npm-transitive-imports-shimmed")) {
+                    && entry.get("resolver") instanceof String resolver
+                    && !resolver.isBlank()
+                    && entry.get("failureClassification") instanceof String classification
+                    && !classification.isBlank()) {
                 return;
             }
         }

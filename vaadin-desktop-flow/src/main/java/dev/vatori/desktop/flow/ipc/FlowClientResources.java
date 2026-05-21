@@ -23,12 +23,14 @@ final class FlowClientResources {
     private static final String LIT_SHIM_JS = "META-INF/vatori/frontend-shims/lit.js";
     private static final String TEXT_FIELD_SHIM_JS =
             "META-INF/vatori/frontend-shims/vaadin-text-field.js";
-    private static final String DEFINE_SHIM_JS =
-            "META-INF/vatori/frontend-shims/component-base-define.js";
     private static final String DEV_BUNDLE_COMMONJS_JS =
             "vaadin-dev-bundle/webapp/VAADIN/build/commonjsHelpers-CUmg6egw.js";
     private static final String DEV_BUNDLE_INDEX_HTML_JS =
             "vaadin-dev-bundle/webapp/VAADIN/build/indexhtml-BfYYZi8S.js";
+    private static final String DEV_BUNDLE_TEXT_FIELD_ENTRY_JS =
+            "META-INF/vatori/dev-bundle-entry/vaadin-text-field.js";
+    private static final String DEV_BUNDLE_DEFINE_ENTRY_JS =
+            "META-INF/vatori/dev-bundle-entry/component-base-define.js";
     private static final String GENERATED_FLOW_IMPORTS_JS =
             "META-INF/vatori/generated/flow/generated-flow-imports.js";
     private static final String DEV_BUNDLE_CHECKBOX_ENTRY_JS =
@@ -47,7 +49,7 @@ final class FlowClientResources {
             j.sendEventMessage=mI(function(a,b,c){var d=i.a.Z();d.Ab(a,b,c)});j.handleIpcMessage=mI(function(a){var b=typeof a==='string'?JSON.parse(a):a;Pr(i.a.X(),b)});j.requestIpcResync=mI(function(){Cs(Ic(wk(i.a,tf),16))});j.initializing=false;\
             """;
     private static final String COMPONENT_TRANSITIVE_BLOCKED_REASON =
-            "full @vaadin/text-field npm graph is not bundled in the v1.2 no-localhost smoke runtime";
+            "the lit npm helper and @vaadin/text-field are still controlled shims; component-base define is resolved through an extracted Vaadin dev-bundle helper";
     private static final String DEV_BUNDLE_COMPONENT_REASON =
             "Focused Vaadin dev-bundle entries import production component classes and register real custom elements; full production bundle routing is still not complete.";
     private static final String LIT_SHIM_SOURCE = """
@@ -66,14 +68,6 @@ final class FlowClientResources {
                   return text;
                 }
               };
-            }
-            """;
-    private static final String DEFINE_SHIM_SOURCE = """
-            export function defineCustomElement(elementClass) {
-              const tag = elementClass && elementClass.is;
-              if (tag && !customElements.get(tag)) {
-                customElements.define(tag, elementClass);
-              }
             }
             """;
     private static final String TEXT_FIELD_SHIM_SOURCE = """
@@ -145,10 +139,78 @@ final class FlowClientResources {
               get placeholder() {
                 return this.inputElement ? this.inputElement.placeholder : '';
               }
+
+              set invalid(value) {
+                this.toggleAttribute('invalid', Boolean(value));
+              }
+
+              get invalid() {
+                return this.hasAttribute('invalid');
+              }
+            }
+            """;
+    private static final String TEXT_FIELD_DEV_BUNDLE_ENTRY_SOURCE = """
+            import { aG as defineCustomElement, c7 as TextField } from './indexhtml-BfYYZi8S.js';
+
+            defineCustomElement(TextField);
+
+            export { defineCustomElement, TextField };
+            """;
+    private static final String DEFINE_DEV_BUNDLE_ENTRY_SOURCE = """
+            window.Vaadin ||= {};
+            window.Vaadin.featureFlags ||= {};
+
+            function dashToCamelCase(dash) {
+              return dash.replace(/-[a-z]/gu, (match) => match[1].toUpperCase());
             }
 
-            if (!customElements.get(TextField.is)) {
-              customElements.define(TextField.is, TextField);
+            const experimentalMap = {};
+
+            export function defineCustomElement(CustomElement, version = '25.1.2') {
+              Object.defineProperty(CustomElement, 'version', {
+                get() {
+                  return version;
+                }
+              });
+              if (CustomElement.experimental) {
+                const featureFlagKey = typeof CustomElement.experimental === 'string'
+                  ? CustomElement.experimental
+                  : `${dashToCamelCase(CustomElement.is.split('-').slice(1).join('-'))}Component`;
+                if (!window.Vaadin.featureFlags[featureFlagKey] && !experimentalMap[featureFlagKey]) {
+                  experimentalMap[featureFlagKey] = new Set();
+                  experimentalMap[featureFlagKey].add(CustomElement);
+                  Object.defineProperty(window.Vaadin.featureFlags, featureFlagKey, {
+                    get() {
+                      return experimentalMap[featureFlagKey].size === 0;
+                    },
+                    set(value) {
+                      if (!!value && experimentalMap[featureFlagKey].size > 0) {
+                        experimentalMap[featureFlagKey].forEach((elementClass) => {
+                          customElements.define(elementClass.is, elementClass);
+                        });
+                        experimentalMap[featureFlagKey].clear();
+                      }
+                    }
+                  });
+                  return;
+                } else if (experimentalMap[featureFlagKey]) {
+                  experimentalMap[featureFlagKey].add(CustomElement);
+                  return;
+                }
+              }
+              const defined = customElements.get(CustomElement.is);
+              if (!defined) {
+                customElements.define(CustomElement.is, CustomElement);
+              } else {
+                const definedVersion = defined.version;
+                if (definedVersion && CustomElement.version && definedVersion === CustomElement.version) {
+                  console.warn(`The component ${CustomElement.is} has been loaded twice`);
+                } else {
+                  console.error(
+                    `Tried to define ${CustomElement.is} version ${CustomElement.version} when version ${defined.version} is already in use. Something will probably break.`
+                  );
+                }
+              }
             }
             """;
     private static final String CHECKBOX_DEV_BUNDLE_ENTRY_SOURCE = """
@@ -192,16 +254,20 @@ final class FlowClientResources {
                 componentAttributes(true, "lit", "", "lit", "v1_2-inline-shim"));
         addText(discoveredComponentResources, TEXT_FIELD_SHIM_JS, "vaadin-web-component-import-shim",
                 TEXT_FIELD_SHIM_SOURCE,
-                componentAttributes(true, "@vaadin/text-field", "vaadin-text-field",
-                        "@vaadin/text-field/src/vaadin-text-field.js", "v1_2-inline-shim"));
-        addText(discoveredComponentResources, DEFINE_SHIM_JS, "vaadin-web-component-import-shim",
-                DEFINE_SHIM_SOURCE,
-                componentAttributes(true, "@vaadin/component-base", "",
-                        "@vaadin/component-base/src/define.js", "v1_2-inline-shim"));
+                componentAttributes(true, "com.vaadin.flow.component.textfield.TextField",
+                        "vaadin-text-field",
+                        "@vaadin/text-field/src/vaadin-text-field.js",
+                        "v1_2-inline-shim"));
         add(discoveredComponentResources, DEV_BUNDLE_COMMONJS_JS, "vaadin-dev-bundle-support-module", true,
                 devBundleAttributes("", DEV_BUNDLE_COMMONJS_JS, false));
         add(discoveredComponentResources, DEV_BUNDLE_INDEX_HTML_JS, "vaadin-dev-bundle-support-module", true,
                 devBundleAttributes("", DEV_BUNDLE_INDEX_HTML_JS, false));
+        addText(discoveredComponentResources, DEV_BUNDLE_TEXT_FIELD_ENTRY_JS,
+                "vaadin-dev-bundle-text-field-entry", TEXT_FIELD_DEV_BUNDLE_ENTRY_SOURCE,
+                textFieldDevBundleAttributes());
+        addText(discoveredComponentResources, DEV_BUNDLE_DEFINE_ENTRY_JS,
+                "vaadin-dev-bundle-define-entry", DEFINE_DEV_BUNDLE_ENTRY_SOURCE,
+                defineDevBundleAttributes());
         add(discoveredComponentResources, GENERATED_FLOW_IMPORTS_JS,
                 "vaadin-generated-flow-imports-module", true,
                 generatedLazyAttributes());
@@ -323,11 +389,12 @@ final class FlowClientResources {
                         "classification", "npm-frontend-artifact-missing",
                         "resolution", LIT_SHIM_JS),
                 Map.of("specifier", "@vaadin/text-field/src/vaadin-text-field.js",
-                        "classification", "npm-frontend-artifact-missing",
-                        "resolution", TEXT_FIELD_SHIM_JS),
+                        "classification", "textfield-production-class-execution-blocked",
+                        "resolution", TEXT_FIELD_SHIM_JS)));
+        manifest.put("resolvedImports", List.of(
                 Map.of("specifier", "@vaadin/component-base/src/define.js",
-                        "classification", "npm-frontend-artifact-missing",
-                        "resolution", DEFINE_SHIM_JS)));
+                        "classification", "focused-production-bundle-entry",
+                        "resolution", DEV_BUNDLE_DEFINE_ENTRY_JS)));
         manifest.put("count", entries.size());
         manifest.put("resources", entries);
         return manifest;
@@ -437,15 +504,18 @@ final class FlowClientResources {
         attributes.put("blockedReason", COMPONENT_TRANSITIVE_BLOCKED_REASON);
         attributes.put("lookupKind", lookupKind(componentClass, resolver));
         if (!shim) {
-            attributes.put("shimmedImports", List.of("lit",
-                    "@vaadin/text-field/src/vaadin-text-field.js",
-                    "@vaadin/component-base/src/define.js"));
+            attributes.put("shimmedImports", List.of("lit", "@vaadin/text-field/src/vaadin-text-field.js"));
             attributes.put("importRewriteStrategy", "manifest-import-rewrite-v1_4");
             attributes.put("browserExecutionPlan", "dynamic-import-blob-with-manifest-import-rewrites-v1_4");
             attributes.put("importRewrites", List.of(
                     importRewrite("lit", LIT_SHIM_JS),
-                    importRewrite("@vaadin/text-field/src/vaadin-text-field.js", TEXT_FIELD_SHIM_JS),
-                    importRewrite("@vaadin/component-base/src/define.js", DEFINE_SHIM_JS)));
+                    importRewrite("@vaadin/text-field/src/vaadin-text-field.js",
+                            TEXT_FIELD_SHIM_JS),
+                    importRewrite("@vaadin/component-base/src/define.js",
+                            DEV_BUNDLE_DEFINE_ENTRY_JS,
+                            "production-bundle",
+                            "vaadin-dev-bundle-production-build-v1_4",
+                            "dev-bundle-resource-graph-partial")));
         }
         if ("classpath-frontend-resource".equals(resolver)) {
             attributes.put("componentPrimary", true);
@@ -490,6 +560,32 @@ final class FlowClientResources {
         } else {
             attributes.put("componentBundleDependency", true);
         }
+        return attributes;
+    }
+
+    private static Map<String, Object> textFieldDevBundleAttributes() {
+        Map<String, Object> attributes = devBundleAttributes("com.vaadin.flow.component.textfield.TextField",
+                "vaadin-text-field",
+                DEV_BUNDLE_TEXT_FIELD_ENTRY_JS,
+                false,
+                "TextField-dev-bundle-resource-v1_4",
+                BIG_DECIMAL_FIELD_JS);
+        attributes.put("blockedImportSpecifiers", List.of("@vaadin/text-field/src/vaadin-text-field.js"));
+        attributes.put("blockedReason",
+                "Focused TextField production class entry is verified, but BigDecimalField execution still needs full TextField graph parity; the current acceptance path keeps the TextField shim.");
+        return attributes;
+    }
+
+    private static Map<String, Object> defineDevBundleAttributes() {
+        Map<String, Object> attributes = devBundleAttributes("@vaadin/component-base/src/define.js",
+                "",
+                DEV_BUNDLE_DEFINE_ENTRY_JS,
+                false,
+                "Component-base-define-dev-bundle-resource-v1_4",
+                BIG_DECIMAL_FIELD_JS);
+        attributes.put("replacesImportSpecifiers", List.of("@vaadin/component-base/src/define.js"));
+        attributes.put("origin", "vaadin-dev-bundle-extracted-entry");
+        attributes.put("resourceOrigin", "vaadin-dev-bundle-extracted-define");
         return attributes;
     }
 
@@ -544,11 +640,20 @@ final class FlowClientResources {
     }
 
     private static Map<String, Object> importRewrite(String specifier, String resourcePath) {
+        return importRewrite(specifier,
+                resourcePath,
+                "npm-frontend",
+                "manifest-import-rewrite-v1_4",
+                "npm-transitive-imports-shimmed");
+    }
+
+    private static Map<String, Object> importRewrite(String specifier, String resourcePath, String artifactFamily,
+            String resolver, String failureClassification) {
         return Map.of("specifier", specifier,
                 "resourcePath", resourcePath,
-                "artifactFamily", "npm-frontend",
-                "resolver", "manifest-import-rewrite-v1_4",
-                "failureClassification", "npm-transitive-imports-shimmed");
+                "artifactFamily", artifactFamily,
+                "resolver", resolver,
+                "failureClassification", failureClassification);
     }
 
     private static Map<String, Object> flowClientAttributes(String path, String kind) {

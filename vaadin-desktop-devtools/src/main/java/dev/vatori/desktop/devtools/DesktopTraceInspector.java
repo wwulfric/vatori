@@ -768,9 +768,11 @@ public final class DesktopTraceInspector {
                     && containsLiteralField(line, "vaadinWebComponentResourceGraphComplete", "true")
                     && containsLiteralField(line, "vaadinWebComponentResourceGraphVerified", "true")
                     && line.contains("META-INF/resources/frontend/vaadin-big-decimal-field.js")
-                    && line.contains("META-INF/vatori/frontend-shims/vaadin-text-field.js")
+                    && (line.contains("META-INF/vatori/frontend-shims/vaadin-text-field.js")
+                            || line.contains("META-INF/vatori/dev-bundle-entry/vaadin-text-field.js"))
                     && line.contains("npm-transitive-imports-shimmed")
-                    && line.contains("full @vaadin/text-field npm graph")) {
+                    && (line.contains("full @vaadin/text-field npm graph")
+                            || line.contains("lit npm helper"))) {
                 summary.vaadinWebComponentResourceDomObserved = true;
                 summary.vaadinWebComponentFailureClassificationObserved = true;
             }

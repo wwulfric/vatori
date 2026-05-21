@@ -4468,20 +4468,35 @@ let flowIpcShell = #"""
         return '';
       }
 
-      function componentModuleBlobUrl(path, urlsToRevoke) {
+      function componentModuleBlobUrl(path, urlsToRevoke, urlCache) {
+        if (urlCache && urlCache.has(path)) {
+          return urlCache.get(path);
+        }
         const resource = componentFrontendResourceByPath(path);
         let body = componentFrontendResourceBodies.get(path) || '';
         if (!body) {
+          window.VaadinDesktopIpcDiagnostics.vaadinWebComponentResourceExecutionError =
+            'missing-component-module-body path=' + path;
           return '';
         }
-        if (resource && resource.devBundleResource === true && resource.componentBundleDependency === true) {
-          body = rewriteVaadinDevBundleModule(body, path, urlsToRevoke);
+        if (resource && resource.devBundleResource === true) {
+          installOpaqueOriginStorageFallbacks();
+          installVaadinDevBundleGlobals();
+        }
+        if (resource && resource.devBundleResource === true) {
+          body = rewriteVaadinDevBundleModule(body, path, urlsToRevoke, urlCache);
           if (!body) {
+            window.VaadinDesktopIpcDiagnostics.vaadinWebComponentResourceExecutionError =
+              window.VaadinDesktopIpcDiagnostics.vaadinWebComponentResourceExecutionError
+              || ('failed-dev-bundle-rewrite path=' + path);
             return '';
           }
         }
         const url = URL.createObjectURL(new Blob([body], { type: 'text/javascript' }));
         urlsToRevoke.push(url);
+        if (urlCache) {
+          urlCache.set(path, url);
+        }
         return url;
       }
 
@@ -4498,7 +4513,7 @@ let flowIpcShell = #"""
           .split('import "' + specifier + '"').join('import "' + replacementUrl + '"');
       }
 
-      function rewriteManifestImportSpecifiers(source, resource, urlsToRevoke) {
+      function rewriteManifestImportSpecifiers(source, resource, urlsToRevoke, urlCache) {
         const rewrites = Array.isArray(resource && resource.importRewrites) ? resource.importRewrites : [];
         if (rewrites.length === 0) {
           return source;
@@ -4512,10 +4527,14 @@ let flowIpcShell = #"""
           if (!specifier || !resourcePath) {
             continue;
           }
-          const url = componentModuleBlobUrl(resourcePath, urlsToRevoke);
+          const url = componentModuleBlobUrl(resourcePath, urlsToRevoke, urlCache);
           if (!url) {
             window.VaadinDesktopIpcDiagnostics.vaadinWebComponentFailureReason =
               'missing-manifest-import-rewrite-resource';
+            window.VaadinDesktopIpcDiagnostics.vaadinWebComponentResourceExecutionError =
+              window.VaadinDesktopIpcDiagnostics.vaadinWebComponentResourceExecutionError
+              || ('missing-manifest-import-rewrite-resource specifier=' + specifier
+                + ' path=' + resourcePath);
             return '';
           }
           rewritten = rewriteStaticImportSpecifier(rewritten, specifier, url);
@@ -4532,7 +4551,7 @@ let flowIpcShell = #"""
         return rewritten;
       }
 
-      function rewriteVaadinDevBundleModule(source, currentPath, urlsToRevoke) {
+      function rewriteVaadinDevBundleModule(source, currentPath, urlsToRevoke, urlCache) {
         let rewritten = source;
         for (const resource of componentFrontendResources) {
           if (!resource
@@ -4545,10 +4564,14 @@ let flowIpcShell = #"""
           if (!rewritten.includes('"' + specifier + '"') && !rewritten.includes("'" + specifier + "'")) {
             continue;
           }
-          const url = componentModuleBlobUrl(resource.path, urlsToRevoke);
+          const url = componentModuleBlobUrl(resource.path, urlsToRevoke, urlCache);
           if (!url) {
             window.VaadinDesktopIpcDiagnostics.vaadinWebComponentFailureReason =
               'missing-v1_4-dev-bundle-dependency';
+            window.VaadinDesktopIpcDiagnostics.vaadinWebComponentResourceExecutionError =
+              window.VaadinDesktopIpcDiagnostics.vaadinWebComponentResourceExecutionError
+              || ('missing-v1_4-dev-bundle-dependency current=' + currentPath
+                + ' dependency=' + resource.path);
             return '';
           }
           rewritten = rewritten
@@ -4651,10 +4674,11 @@ let flowIpcShell = #"""
         }
         const componentTag = componentTagForResource(resource);
         const urlsToRevoke = [];
+        const urlCache = new Map();
         try {
           let importSource = primaryBody;
           if (Array.isArray(resource.importRewrites) && resource.importRewrites.length > 0) {
-            importSource = rewriteManifestImportSpecifiers(primaryBody, resource, urlsToRevoke);
+            importSource = rewriteManifestImportSpecifiers(primaryBody, resource, urlsToRevoke, urlCache);
             if (!importSource) {
               componentFrontendResourceExecutionFailedPaths.add(primaryPath);
               refreshComponentFrontendResourceDiagnostics();
@@ -4665,7 +4689,7 @@ let flowIpcShell = #"""
           } else if (resource.devBundleResource === true) {
             installOpaqueOriginStorageFallbacks();
             installVaadinDevBundleGlobals();
-            importSource = rewriteVaadinDevBundleModule(primaryBody, primaryPath, urlsToRevoke);
+            importSource = rewriteVaadinDevBundleModule(primaryBody, primaryPath, urlsToRevoke, urlCache);
             if (!importSource) {
               componentFrontendResourceExecutionFailedPaths.add(primaryPath);
               refreshComponentFrontendResourceDiagnostics();
@@ -4684,6 +4708,19 @@ let flowIpcShell = #"""
           await import(primaryUrl);
           if (componentTag && !customElements.get(componentTag)) {
             componentFrontendResourceExecutionFailedPaths.add(primaryPath);
+            const textFieldDefined = !!customElements.get('vaadin-text-field');
+            const featureFlagKey = componentTag
+              ? componentTag.split('-').slice(1).map((part, index) => {
+                  return index === 0 ? part : part.charAt(0).toUpperCase() + part.slice(1);
+                }).join('') + 'Component'
+              : '';
+            const featureFlagEnabled = featureFlagKey && window.Vaadin && window.Vaadin.featureFlags
+              ? String(!!window.Vaadin.featureFlags[featureFlagKey])
+              : '';
+            window.VaadinDesktopIpcDiagnostics.vaadinWebComponentResourceExecutionError =
+              'custom-element-not-defined-after-import tag=' + componentTag
+              + ' textFieldDefined=' + textFieldDefined
+              + ' featureFlag=' + featureFlagKey + ':' + featureFlagEnabled;
             window.VaadinDesktopIpcDiagnostics.vaadinWebComponentFailureReason =
               'custom-element-not-defined-after-import';
             refreshComponentFrontendResourceDiagnostics();
@@ -4716,8 +4753,10 @@ let flowIpcShell = #"""
               window.VaadinDesktopIpcDiagnostics.vaadinSecondWebComponentTagDefined = true;
               window.VaadinDesktopIpcDiagnostics.vaadinSecondWebComponentFailureReason = '';
             }
-            window.VaadinDesktopIpcDiagnostics.vaadinWebComponentResourceExecutionError = '';
-            window.VaadinDesktopIpcDiagnostics.vaadinWebComponentFailureReason = '';
+            if (componentFrontendResourceExecutionFailedPaths.size === 0) {
+              window.VaadinDesktopIpcDiagnostics.vaadinWebComponentResourceExecutionError = '';
+              window.VaadinDesktopIpcDiagnostics.vaadinWebComponentFailureReason = '';
+            }
             refreshComponentFrontendResourceDiagnostics();
             return;
           }

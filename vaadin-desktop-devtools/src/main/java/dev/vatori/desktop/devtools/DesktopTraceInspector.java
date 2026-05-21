@@ -541,6 +541,52 @@ public final class DesktopTraceInspector {
                     && line.contains("\"failureClassification\":\"generated-lazy-resource-unmapped\"")) {
                 summary.frontendGeneratedLazyStrictBlockerObserved = true;
             }
+            if (line.contains("\"type\":\"webview.dom\"")
+                    && containsLiteralField(line, "frontendArtifactGraphManifestObserved", "true")
+                    && containsStringField(line, "frontendAssetPipelineVersion", "flow-ipc-frontend-assets-v1_4")
+                    && containsStringField(line, "frontendArtifactGraphSource",
+                            "vaadin-frontend-artifact-graph-v1_4")) {
+                summary.frontendAssetPipelineV14Observed = true;
+            }
+            if (line.contains("\"type\":\"webview.dom\"")
+                    && line.contains("frontendArtifactFamilies")
+                    && line.contains("flow-client-classpath")
+                    && line.contains("vaadin-component-classpath-frontend")
+                    && line.contains("npm-frontend")
+                    && line.contains("theme-static")
+                    && line.contains("production-bundle")
+                    && line.contains("dev-mode-bundle")
+                    && line.contains("generated-lazy")) {
+                summary.frontendArtifactFamilyModelObserved = true;
+            }
+            if (line.contains("\"type\":\"webview.dom\"")
+                    && containsLiteralField(line, "frontendArtifactGraphDependencyObserved", "true")
+                    && line.contains("frontendArtifactGraphRequestedBy")
+                    && line.contains("frontendArtifactGraphDependencyOf")
+                    && line.contains("frontendArtifactGraphModuleSpecifiers")
+                    && line.contains("frontendArtifactExecutionPolicies")) {
+                summary.frontendDependencyGraphObserved = true;
+            }
+            if (line.contains("\"type\":\"webview.dom\"")
+                    && containsLiteralField(line, "frontendArtifactShimFallback", "true")) {
+                summary.frontendShimBlockerObserved = true;
+            }
+            if (line.contains("\"type\":\"webview.dom\"")
+                    && containsLiteralField(line, "frontendArtifactProductionBundlePartial", "true")) {
+                summary.frontendProductionBundlePartialObserved = true;
+            }
+            if (line.contains("\"type\":\"webview.dom\"")
+                    && containsLiteralField(line, "frontendArtifactThemeStaticBlocker", "true")) {
+                summary.frontendThemeStaticStrictBlockerObserved = true;
+            }
+            if (line.contains("\"type\":\"webview.dom\"")
+                    && containsLiteralField(line, "frontendArtifactDevModeBlocker", "true")) {
+                summary.frontendDevModeStrictBlockerObserved = true;
+            }
+            if (line.contains("\"type\":\"webview.dom\"")
+                    && containsLiteralField(line, "frontendArtifactGeneratedLazyBlocker", "true")) {
+                summary.frontendGeneratedLazyStrictBlockerObserved = true;
+            }
             if (line.contains("\"type\":\"resourceRequest\"")
                     && line.contains("\"purpose\":\"vaadin-web-component-resource-probe\"")
                     && line.contains("\"lookupKind\":\"BigDecimalField-minimum-component-resource\"")

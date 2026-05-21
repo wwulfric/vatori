@@ -1273,6 +1273,24 @@ final class WebViewHost: NSObject, NSApplicationDelegate, NSWindowDelegate, WKNa
           flowClientResourceStaticLookupVerified: !!(window.VaadinDesktopIpcDiagnostics && window.VaadinDesktopIpcDiagnostics.flowClientResourceStaticLookupVerified),
           flowClientResourceStaticLookupPath: window.VaadinDesktopIpcDiagnostics ? window.VaadinDesktopIpcDiagnostics.flowClientResourceStaticLookupPath : "",
           flowClientResourceThemeLookupResult: window.VaadinDesktopIpcDiagnostics ? window.VaadinDesktopIpcDiagnostics.flowClientResourceThemeLookupResult : "",
+          frontendAssetPipelineVersion: window.VaadinDesktopIpcDiagnostics ? window.VaadinDesktopIpcDiagnostics.frontendAssetPipelineVersion : "",
+          frontendArtifactGraphSource: window.VaadinDesktopIpcDiagnostics ? window.VaadinDesktopIpcDiagnostics.frontendArtifactGraphSource : "",
+          frontendArtifactGraphManifestObserved: !!(window.VaadinDesktopIpcDiagnostics && window.VaadinDesktopIpcDiagnostics.frontendArtifactGraphManifestObserved),
+          frontendArtifactFamilies: window.VaadinDesktopIpcDiagnostics ? window.VaadinDesktopIpcDiagnostics.frontendArtifactFamilies : "",
+          frontendArtifactFamilyCount: window.VaadinDesktopIpcDiagnostics ? window.VaadinDesktopIpcDiagnostics.frontendArtifactFamilyCount : 0,
+          frontendArtifactGraphDependencyObserved: !!(window.VaadinDesktopIpcDiagnostics && window.VaadinDesktopIpcDiagnostics.frontendArtifactGraphDependencyObserved),
+          frontendArtifactGraphRequestedBy: window.VaadinDesktopIpcDiagnostics ? window.VaadinDesktopIpcDiagnostics.frontendArtifactGraphRequestedBy : "",
+          frontendArtifactGraphDependencyOf: window.VaadinDesktopIpcDiagnostics ? window.VaadinDesktopIpcDiagnostics.frontendArtifactGraphDependencyOf : "",
+          frontendArtifactGraphModuleSpecifiers: window.VaadinDesktopIpcDiagnostics ? window.VaadinDesktopIpcDiagnostics.frontendArtifactGraphModuleSpecifiers : "",
+          frontendArtifactExecutionPolicies: window.VaadinDesktopIpcDiagnostics ? window.VaadinDesktopIpcDiagnostics.frontendArtifactExecutionPolicies : "",
+          frontendArtifactStatuses: window.VaadinDesktopIpcDiagnostics ? window.VaadinDesktopIpcDiagnostics.frontendArtifactStatuses : "",
+          frontendArtifactStrictBlockers: window.VaadinDesktopIpcDiagnostics ? window.VaadinDesktopIpcDiagnostics.frontendArtifactStrictBlockers : "",
+          frontendArtifactStrictBlockerCount: window.VaadinDesktopIpcDiagnostics ? window.VaadinDesktopIpcDiagnostics.frontendArtifactStrictBlockerCount : 0,
+          frontendArtifactShimFallback: !!(window.VaadinDesktopIpcDiagnostics && window.VaadinDesktopIpcDiagnostics.frontendArtifactShimFallback),
+          frontendArtifactProductionBundlePartial: !!(window.VaadinDesktopIpcDiagnostics && window.VaadinDesktopIpcDiagnostics.frontendArtifactProductionBundlePartial),
+          frontendArtifactThemeStaticBlocker: !!(window.VaadinDesktopIpcDiagnostics && window.VaadinDesktopIpcDiagnostics.frontendArtifactThemeStaticBlocker),
+          frontendArtifactDevModeBlocker: !!(window.VaadinDesktopIpcDiagnostics && window.VaadinDesktopIpcDiagnostics.frontendArtifactDevModeBlocker),
+          frontendArtifactGeneratedLazyBlocker: !!(window.VaadinDesktopIpcDiagnostics && window.VaadinDesktopIpcDiagnostics.frontendArtifactGeneratedLazyBlocker),
           flowClientBootstrapInitError: window.VaadinDesktopIpcDiagnostics ? window.VaadinDesktopIpcDiagnostics.flowClientBootstrapInitError : "",
           flowClientResourceExecutionError: window.VaadinDesktopIpcDiagnostics ? window.VaadinDesktopIpcDiagnostics.flowClientResourceExecutionError : "",
           vaadinWebComponentResourceManifestObserved: !!(window.VaadinDesktopIpcDiagnostics && window.VaadinDesktopIpcDiagnostics.vaadinWebComponentResourceManifestObserved),
@@ -1862,6 +1880,24 @@ let flowIpcShell = #"""
         flowClientResourceStaticLookupVerified: false,
         flowClientResourceStaticLookupPath: '',
         flowClientResourceThemeLookupResult: '',
+        frontendAssetPipelineVersion: '',
+        frontendArtifactGraphSource: '',
+        frontendArtifactGraphManifestObserved: false,
+        frontendArtifactFamilies: '',
+        frontendArtifactFamilyCount: 0,
+        frontendArtifactGraphDependencyObserved: false,
+        frontendArtifactGraphRequestedBy: '',
+        frontendArtifactGraphDependencyOf: '',
+        frontendArtifactGraphModuleSpecifiers: '',
+        frontendArtifactExecutionPolicies: '',
+        frontendArtifactStatuses: '',
+        frontendArtifactStrictBlockers: '',
+        frontendArtifactStrictBlockerCount: 0,
+        frontendArtifactShimFallback: false,
+        frontendArtifactProductionBundlePartial: false,
+        frontendArtifactThemeStaticBlocker: false,
+        frontendArtifactDevModeBlocker: false,
+        frontendArtifactGeneratedLazyBlocker: false,
         flowClientResourceExecutionError: '',
         vaadinWebComponentResourceManifestObserved: false,
         vaadinWebComponentResourceManifestCount: 0,
@@ -3029,7 +3065,7 @@ let flowIpcShell = #"""
           return;
         }
         autoClickReadinessAttempts += 1;
-        if (autoClickReadinessAttempts >= 30 && button) {
+        if (autoClickReadinessAttempts >= 30 && button && !autoComponentEventEnabled) {
           autoClickDone = true;
           button.click();
           return;
@@ -3311,16 +3347,129 @@ let flowIpcShell = #"""
           { reason: 'verification-error-probe' }), 40);
       }
 
+      function csvUnique(values) {
+        const unique = [];
+        for (const value of values) {
+          if (typeof value !== 'string' || !value || unique.includes(value)) {
+            continue;
+          }
+          unique.push(value);
+        }
+        return unique.join(',');
+      }
+
+      function mergeCsv(existing, values) {
+        const merged = [];
+        if (typeof existing === 'string' && existing) {
+          merged.push(...existing.split(','));
+        }
+        merged.push(...values);
+        return csvUnique(merged);
+      }
+
+      function recordFrontendArtifactManifest(manifest) {
+        if (!manifest || typeof manifest !== 'object') {
+          return;
+        }
+        if (typeof manifest.frontendAssetPipelineVersion === 'string') {
+          window.VaadinDesktopIpcDiagnostics.frontendAssetPipelineVersion =
+            manifest.frontendAssetPipelineVersion;
+        }
+        if (typeof manifest.artifactGraphSource === 'string') {
+          window.VaadinDesktopIpcDiagnostics.frontendArtifactGraphSource =
+            manifest.artifactGraphSource;
+        }
+        if (window.VaadinDesktopIpcDiagnostics.frontendAssetPipelineVersion
+            || window.VaadinDesktopIpcDiagnostics.frontendArtifactGraphSource) {
+          window.VaadinDesktopIpcDiagnostics.frontendArtifactGraphManifestObserved = true;
+        }
+        const families = Array.isArray(manifest.artifactFamilies)
+          ? manifest.artifactFamilies.filter((value) => typeof value === 'string')
+          : [];
+        if (families.length > 0) {
+          window.VaadinDesktopIpcDiagnostics.frontendArtifactFamilies =
+            mergeCsv(window.VaadinDesktopIpcDiagnostics.frontendArtifactFamilies, families);
+          window.VaadinDesktopIpcDiagnostics.frontendArtifactFamilyCount =
+            window.VaadinDesktopIpcDiagnostics.frontendArtifactFamilies
+              ? window.VaadinDesktopIpcDiagnostics.frontendArtifactFamilies.split(',').length
+              : 0;
+        }
+        const resources = Array.isArray(manifest.resources) ? manifest.resources : [];
+        const requestedBy = resources.map((entry) => entry && entry.requestedBy);
+        const dependencyOf = resources.map((entry) => entry && entry.dependencyOf);
+        const moduleSpecifiers = resources.map((entry) => entry && entry.moduleSpecifier);
+        const executionPolicies = resources.map((entry) => entry && entry.executionPolicy);
+        const artifactStatuses = resources.map((entry) => entry && entry.artifactStatus);
+        if (requestedBy.concat(dependencyOf, moduleSpecifiers, executionPolicies)
+            .some((value) => typeof value === 'string' && value)) {
+          window.VaadinDesktopIpcDiagnostics.frontendArtifactGraphDependencyObserved = true;
+          window.VaadinDesktopIpcDiagnostics.frontendArtifactGraphRequestedBy =
+            mergeCsv(window.VaadinDesktopIpcDiagnostics.frontendArtifactGraphRequestedBy, requestedBy);
+          window.VaadinDesktopIpcDiagnostics.frontendArtifactGraphDependencyOf =
+            mergeCsv(window.VaadinDesktopIpcDiagnostics.frontendArtifactGraphDependencyOf, dependencyOf);
+          window.VaadinDesktopIpcDiagnostics.frontendArtifactGraphModuleSpecifiers =
+            mergeCsv(window.VaadinDesktopIpcDiagnostics.frontendArtifactGraphModuleSpecifiers, moduleSpecifiers);
+          window.VaadinDesktopIpcDiagnostics.frontendArtifactExecutionPolicies =
+            mergeCsv(window.VaadinDesktopIpcDiagnostics.frontendArtifactExecutionPolicies, executionPolicies);
+          window.VaadinDesktopIpcDiagnostics.frontendArtifactStatuses =
+            mergeCsv(window.VaadinDesktopIpcDiagnostics.frontendArtifactStatuses, artifactStatuses);
+        }
+        window.VaadinDesktopIpcDiagnostics.frontendArtifactShimFallback =
+          window.VaadinDesktopIpcDiagnostics.frontendArtifactShimFallback
+          || resources.some((entry) => entry
+            && entry.artifactFamily === 'npm-frontend'
+            && entry.executionPolicy === 'blocked-shim-fallback');
+        window.VaadinDesktopIpcDiagnostics.frontendArtifactProductionBundlePartial =
+          window.VaadinDesktopIpcDiagnostics.frontendArtifactProductionBundlePartial
+          || resources.some((entry) => entry
+            && entry.artifactFamily === 'production-bundle'
+            && entry.artifactStatus === 'partial');
+        const blockers = Array.isArray(manifest.strictBlockers) ? manifest.strictBlockers : [];
+        if (blockers.length > 0) {
+          window.VaadinDesktopIpcDiagnostics.frontendArtifactStrictBlockerCount =
+            Math.max(window.VaadinDesktopIpcDiagnostics.frontendArtifactStrictBlockerCount, blockers.length);
+          window.VaadinDesktopIpcDiagnostics.frontendArtifactStrictBlockers = csvUnique(blockers.map((entry) => {
+            if (!entry || typeof entry.artifactFamily !== 'string') {
+              return '';
+            }
+            return entry.artifactFamily + ':' + (entry.failureClassification || 'blocked');
+          }));
+          window.VaadinDesktopIpcDiagnostics.frontendArtifactThemeStaticBlocker =
+            window.VaadinDesktopIpcDiagnostics.frontendArtifactThemeStaticBlocker
+            || blockers.some((entry) => entry && entry.artifactFamily === 'theme-static' && entry.strictBlocker === true);
+          window.VaadinDesktopIpcDiagnostics.frontendArtifactDevModeBlocker =
+            window.VaadinDesktopIpcDiagnostics.frontendArtifactDevModeBlocker
+            || blockers.some((entry) => entry && entry.artifactFamily === 'dev-mode-bundle' && entry.strictBlocker === true);
+          window.VaadinDesktopIpcDiagnostics.frontendArtifactGeneratedLazyBlocker =
+            window.VaadinDesktopIpcDiagnostics.frontendArtifactGeneratedLazyBlocker
+            || blockers.some((entry) => entry && entry.artifactFamily === 'generated-lazy' && entry.strictBlocker === true);
+        }
+      }
+
+      function artifactRequestMetadata(resource) {
+        return {
+          artifactFamily: resource.artifactFamily || '',
+          moduleSpecifier: resource.moduleSpecifier || '',
+          dependencyOf: resource.dependencyOf || '',
+          executionPolicy: resource.executionPolicy || '',
+          requestedBy: resource.requestedBy || '',
+          resolver: resource.resolver || '',
+          artifactStatus: resource.artifactStatus || ''
+        };
+      }
+
       function requestFlowClientResourceProbe(payload) {
         flowClientResources = payload && payload.flowClientResources && Array.isArray(payload.flowClientResources.resources)
           ? payload.flowClientResources.resources
           : [];
+        recordFrontendArtifactManifest(payload && payload.flowClientResources ? payload.flowClientResources : {});
         window.VaadinDesktopIpcDiagnostics.flowClientResourceManifestCount = flowClientResources.length;
         requestFlowClientResource('META-INF/frontend/FlowBootstrap.js', 'flow-bootstrap-module', 'flow-client-resource-probe');
       }
 
       function requestComponentFrontendResourceProbe(payload) {
         const manifest = payload && payload.componentFrontendResources ? payload.componentFrontendResources : {};
+        recordFrontendArtifactManifest(manifest);
         componentFrontendResources = Array.isArray(manifest.resources) ? manifest.resources : [];
         window.VaadinDesktopIpcDiagnostics.vaadinWebComponentResourceManifestObserved =
           componentFrontendResources.length > 0;
@@ -3389,12 +3538,13 @@ let flowIpcShell = #"""
         } else if (kind === 'flow-client-module') {
           window.VaadinDesktopIpcDiagnostics.flowClientEngineResourceExpectedSha256 = resource.sha256 || '';
         }
-        send('resourceRequest', {
+        const requestPayload = Object.assign({
           purpose,
           path: resource.path,
           expectedSha256: resource.sha256 || '',
           securityKey
-        });
+        }, artifactRequestMetadata(resource));
+        send('resourceRequest', requestPayload);
       }
 
       function requestComponentFrontendResource(path, kind, purpose) {
@@ -3425,13 +3575,14 @@ let flowIpcShell = #"""
             resource.shimmedImports.join(',');
         }
         const securityKey = flowClientState.securityKey || flowClientState.csrfToken;
-        send('resourceRequest', {
+        const requestPayload = Object.assign({
           purpose,
           lookupKind: resource.lookupKind || 'component-frontend-resource',
           path: resource.path,
           expectedSha256: resource.sha256 || '',
           securityKey
-        });
+        }, artifactRequestMetadata(resource));
+        send('resourceRequest', requestPayload);
       }
 
       function requestFlowClientLazyResourceLookup() {
@@ -3463,13 +3614,14 @@ let flowIpcShell = #"""
         window.VaadinDesktopIpcDiagnostics.flowClientResourceLazyLookupResult = 'requested';
         flowClientResourceExpectedSha256ByPath.set(resource.path, resource.sha256 || '');
         const securityKey = flowClientState.securityKey || flowClientState.csrfToken;
-        send('resourceRequest', {
+        const requestPayload = Object.assign({
           purpose: 'flow-client-lazy-lookup',
           lookupKind: 'Flow.loadOnDemand-minimum-probe',
           path: resource.path,
           expectedSha256: resource.sha256 || '',
           securityKey
-        });
+        }, artifactRequestMetadata(resource));
+        send('resourceRequest', requestPayload);
       }
 
       function refreshFlowClientResourceExecutionDiagnostics() {
@@ -4408,8 +4560,10 @@ let flowIpcShell = #"""
               refreshComponentFrontendResourceDiagnostics();
               return;
             }
-            window.VaadinDesktopIpcDiagnostics.vaadinWebComponentResourceImportMode =
-              'dynamic-import-blob-vaadin-dev-bundle-production-build-v1_4';
+            if (!window.VaadinDesktopIpcDiagnostics.vaadinWebComponentResourceImportMode) {
+              window.VaadinDesktopIpcDiagnostics.vaadinWebComponentResourceImportMode =
+                'dynamic-import-blob-vaadin-dev-bundle-production-build-v1_4';
+            }
           } else if (!window.VaadinDesktopIpcDiagnostics.vaadinWebComponentResourceImportMode) {
             window.VaadinDesktopIpcDiagnostics.vaadinWebComponentResourceImportMode =
               'dynamic-import-blob-generic-component-frontend-v1_3';

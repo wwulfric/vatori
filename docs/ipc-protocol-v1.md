@@ -173,6 +173,8 @@ The v1.4 frontend asset pipeline keeps the existing no-localhost resource channe
 
 The BigDecimalField classpath module and focused checkbox dev-bundle entry remain the executable regression samples. The remaining BigDecimalField npm imports, theme/static resources, dev-mode bundle resources and generated lazy chunks are explicit strict blockers in the manifest instead of hidden path-specific fallbacks.
 
+WebView-originated `resourceRequest` payloads also echo the manifest metadata for auditability: `artifactFamily`, `moduleSpecifier`, `dependencyOf`, `executionPolicy`, `requestedBy`, `resolver` and `artifactStatus`. The same values are returned in `resourceResponse`, so a host trace can connect every requested dependency back to the manifest graph without inspecting resource bodies.
+
 The WebView bridge requests every resource advertised by `flowClientResources`. It imports `FlowBootstrap.js` and then `FlowClient.js`; the remaining resources are requested and verified as resource graph coverage, then classified as verified-only and intentionally not executed for the current smoke slice:
 
 ```json
@@ -182,7 +184,13 @@ The WebView bridge requests every resource advertised by `flowClientResources`. 
     "purpose": "flow-client-resource-probe",
     "path": "META-INF/frontend/FlowBootstrap.js",
     "expectedSha256": "...",
-    "securityKey": "trace-csrf"
+    "securityKey": "trace-csrf",
+    "artifactFamily": "flow-client-classpath",
+    "moduleSpecifier": "META-INF/frontend/FlowBootstrap.js",
+    "executionPolicy": "execute-primary-module",
+    "requestedBy": "flow-client-manifest-v1_4",
+    "resolver": "flow-client-classpath-resource",
+    "artifactStatus": "available"
   }
 }
 ```

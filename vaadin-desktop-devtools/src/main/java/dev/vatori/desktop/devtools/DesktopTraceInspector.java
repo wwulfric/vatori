@@ -545,6 +545,13 @@ public final class DesktopTraceInspector {
                             || line.contains("\"resourcePath\":\"META-INF/vatori/dev-bundle-entry/lit-css.js\""))) {
                 summary.frontendManifestImportRewriteObserved = true;
             }
+            if ((line.contains("\"type\":\"bootstrapResponse\"") || line.contains("\"type\":\"resourceResponse\""))
+                    && line.contains("\"lookupKind\":\"TextField-dev-bundle-resource-v1_4\"")
+                    && line.contains("\"blockedExecutionProbe\":\"big-decimal-import-rewrite-to-textfield-dev-bundle\"")
+                    && line.contains("\"blockedExecutionError\":\"null is not an object (evaluating 'outlet._root')\"")
+                    && line.contains("\"nextResolutionStep\"")) {
+                summary.frontendTextFieldDevBundleBlockerObserved = true;
+            }
             if (line.contains("\"type\":\"bootstrapResponse\"")
                     && line.contains("\"artifactFamily\":\"production-bundle\"")
                     && line.contains("\"executionPolicy\":\"execute-dev-bundle-entry\"")
@@ -1274,6 +1281,7 @@ public final class DesktopTraceInspector {
         private boolean frontendDependencyGraphObserved;
         private boolean frontendShimBlockerObserved;
         private boolean frontendManifestImportRewriteObserved;
+        private boolean frontendTextFieldDevBundleBlockerObserved;
         private boolean frontendProductionBundlePartialObserved;
         private boolean frontendThemeStaticResourceObserved;
         private boolean frontendThemeStaticStrictBlockerObserved;
@@ -1382,10 +1390,13 @@ public final class DesktopTraceInspector {
                     && frontendArtifactFamilyModelObserved
                     && frontendDependencyGraphObserved
                     && frontendShimBlockerObserved
+                    && frontendManifestImportRewriteObserved
+                    && frontendTextFieldDevBundleBlockerObserved
                     && frontendProductionBundlePartialObserved
-                    && (frontendThemeStaticResourceObserved || frontendThemeStaticStrictBlockerObserved)
+                    && frontendThemeStaticResourceObserved
                     && frontendDevModeStrictBlockerObserved
-                    && frontendGeneratedLazyStrictBlockerObserved;
+                    && frontendGeneratedLazyStrictBlockerObserved
+                    && frontendGeneratedLazyResourceObserved;
         }
 
         public boolean hasRequiredFlowIpcV1_3FrameworkTypes() {
@@ -1597,6 +1608,8 @@ public final class DesktopTraceInspector {
                     + frontendShimBlockerObserved);
             System.out.println("Flow IPC v1.4 manifest import rewrite observed: "
                     + frontendManifestImportRewriteObserved);
+            System.out.println("Flow IPC v1.4 TextField dev-bundle blocker observed: "
+                    + frontendTextFieldDevBundleBlockerObserved);
             System.out.println("Flow IPC v1.4 production bundle partial graph observed: "
                     + frontendProductionBundlePartialObserved);
             System.out.println("Flow IPC v1.4 theme/static strict blocker observed: "

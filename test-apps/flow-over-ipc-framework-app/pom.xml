@@ -25,6 +25,10 @@
             <groupId>com.vaadin</groupId>
             <artifactId>vaadin-checkbox-flow</artifactId>
         </dependency>
+        <dependency>
+            <groupId>com.vaadin</groupId>
+            <artifactId>vaadin-select-flow</artifactId>
+        </dependency>
     </dependencies>
     <build>
         <plugins>

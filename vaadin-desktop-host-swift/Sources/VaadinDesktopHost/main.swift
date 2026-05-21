@@ -1437,6 +1437,7 @@ final class WebViewHost: NSObject, NSApplicationDelegate, NSWindowDelegate, WKNa
           frameworkAppRootId: window.VaadinDesktopIpcDiagnostics ? window.VaadinDesktopIpcDiagnostics.frameworkAppRootId : "",
           frameworkAppBudgetRendered: !!(window.VaadinDesktopIpcDiagnostics && window.VaadinDesktopIpcDiagnostics.frameworkAppBudgetRendered),
           frameworkAppCheckboxRendered: !!(window.VaadinDesktopIpcDiagnostics && window.VaadinDesktopIpcDiagnostics.frameworkAppCheckboxRendered),
+          frameworkAppSelectRendered: !!(window.VaadinDesktopIpcDiagnostics && window.VaadinDesktopIpcDiagnostics.frameworkAppSelectRendered),
           frameworkAppApplyRendered: !!(window.VaadinDesktopIpcDiagnostics && window.VaadinDesktopIpcDiagnostics.frameworkAppApplyRendered),
           frameworkAppStatusText: window.VaadinDesktopIpcDiagnostics ? window.VaadinDesktopIpcDiagnostics.frameworkAppStatusText : "",
           frameworkAppComponentStatusText: window.VaadinDesktopIpcDiagnostics ? window.VaadinDesktopIpcDiagnostics.frameworkAppComponentStatusText : "",
@@ -1445,6 +1446,8 @@ final class WebViewHost: NSObject, NSApplicationDelegate, NSWindowDelegate, WKNa
           frameworkAppBudgetEventObserved: !!(window.VaadinDesktopIpcDiagnostics && window.VaadinDesktopIpcDiagnostics.frameworkAppBudgetEventObserved),
           frameworkAppCheckboxEventRpcObserved: !!(window.VaadinDesktopIpcDiagnostics && window.VaadinDesktopIpcDiagnostics.frameworkAppCheckboxEventRpcObserved),
           frameworkAppCheckboxEventObserved: !!(window.VaadinDesktopIpcDiagnostics && window.VaadinDesktopIpcDiagnostics.frameworkAppCheckboxEventObserved),
+          frameworkAppSelectEventRpcObserved: !!(window.VaadinDesktopIpcDiagnostics && window.VaadinDesktopIpcDiagnostics.frameworkAppSelectEventRpcObserved),
+          frameworkAppSelectEventObserved: !!(window.VaadinDesktopIpcDiagnostics && window.VaadinDesktopIpcDiagnostics.frameworkAppSelectEventObserved),
           frameworkAppApplyEventRpcObserved: !!(window.VaadinDesktopIpcDiagnostics && window.VaadinDesktopIpcDiagnostics.frameworkAppApplyEventRpcObserved),
           frameworkAppApplyEventObserved: !!(window.VaadinDesktopIpcDiagnostics && window.VaadinDesktopIpcDiagnostics.frameworkAppApplyEventObserved),
           frameworkAppEventPatchCount: window.VaadinDesktopIpcDiagnostics ? window.VaadinDesktopIpcDiagnostics.frameworkAppEventPatchCount : 0,
@@ -1781,6 +1784,7 @@ let flowIpcShell = #"""
       let autoComponentEventInFlight = false;
       let autoComponentEventsDone = false;
       const autoFrameworkBudgetValue = '73.25';
+      const autoFrameworkPriorityValue = 'audit';
       let autoFrameworkUpdateStep = 0;
       let autoFrameworkUpdateAttempts = 0;
       let autoFrameworkUpdateInFlight = false;
@@ -2047,6 +2051,7 @@ let flowIpcShell = #"""
         frameworkAppRootId: '',
         frameworkAppBudgetRendered: false,
         frameworkAppCheckboxRendered: false,
+        frameworkAppSelectRendered: false,
         frameworkAppApplyRendered: false,
         frameworkAppStatusText: '',
         frameworkAppComponentStatusText: '',
@@ -2055,6 +2060,8 @@ let flowIpcShell = #"""
         frameworkAppBudgetEventObserved: false,
         frameworkAppCheckboxEventRpcObserved: false,
         frameworkAppCheckboxEventObserved: false,
+        frameworkAppSelectEventRpcObserved: false,
+        frameworkAppSelectEventObserved: false,
         frameworkAppApplyEventRpcObserved: false,
         frameworkAppApplyEventObserved: false,
         frameworkAppEventPatchCount: 0,
@@ -2451,6 +2458,7 @@ let flowIpcShell = #"""
         const root = flowClientEngineElementById('framework-root');
         const budget = flowClientEngineElementById('framework-budget');
         const checkbox = flowClientEngineElementById('framework-expedite');
+        const priority = flowClientEngineElementById('framework-priority');
         const apply = flowClientEngineElementById('framework-apply');
         const status = flowClientEngineElementById('framework-status');
         const componentStatus = flowClientEngineElementById('framework-component-status');
@@ -2466,6 +2474,9 @@ let flowIpcShell = #"""
           !!budget && budget.element.tagName.toLowerCase() === 'vaadin-big-decimal-field';
         window.VaadinDesktopIpcDiagnostics.frameworkAppCheckboxRendered =
           !!checkbox && checkbox.element.tagName.toLowerCase() === 'vaadin-checkbox';
+        window.VaadinDesktopIpcDiagnostics.frameworkAppSelectRendered =
+          !!priority && priority.element.tagName.toLowerCase() === 'vaadin-select'
+          && !!customElements.get('vaadin-select');
         window.VaadinDesktopIpcDiagnostics.frameworkAppApplyRendered = !!apply;
         window.VaadinDesktopIpcDiagnostics.frameworkAppStatusText = statusText;
         window.VaadinDesktopIpcDiagnostics.frameworkAppComponentStatusText = componentStatusText;
@@ -2477,8 +2488,12 @@ let flowIpcShell = #"""
         if (componentStatusText.includes('Expedite changed: yes')) {
           window.VaadinDesktopIpcDiagnostics.frameworkAppCheckboxEventObserved = true;
         }
+        if (componentStatusText.includes('Priority changed: ' + autoFrameworkPriorityValue)) {
+          window.VaadinDesktopIpcDiagnostics.frameworkAppSelectEventObserved = true;
+        }
         if (statusText.includes('Revision 1:')
             && updatesText.includes('Revision 1:')
+            && updatesText.includes('priority ' + autoFrameworkPriorityValue)
             && updatesText.includes('Renderer owned by Flow client engine')) {
           window.VaadinDesktopIpcDiagnostics.frameworkAppApplyEventObserved = true;
         }
@@ -2487,6 +2502,8 @@ let flowIpcShell = #"""
           && window.VaadinDesktopIpcDiagnostics.frameworkAppBudgetEventObserved
           && window.VaadinDesktopIpcDiagnostics.frameworkAppCheckboxEventRpcObserved
           && window.VaadinDesktopIpcDiagnostics.frameworkAppCheckboxEventObserved
+          && window.VaadinDesktopIpcDiagnostics.frameworkAppSelectEventRpcObserved
+          && window.VaadinDesktopIpcDiagnostics.frameworkAppSelectEventObserved
           && window.VaadinDesktopIpcDiagnostics.frameworkAppApplyEventRpcObserved
           && window.VaadinDesktopIpcDiagnostics.frameworkAppApplyEventObserved;
         if (window.VaadinDesktopIpcDiagnostics.frameworkAppInteractionComplete) {
@@ -2539,15 +2556,18 @@ let flowIpcShell = #"""
         if (autoFrameworkUpdateStep === 1) {
           return window.VaadinDesktopIpcDiagnostics.frameworkAppCheckboxEventObserved;
         }
+        if (autoFrameworkUpdateStep === 2) {
+          return window.VaadinDesktopIpcDiagnostics.frameworkAppSelectEventObserved;
+        }
         return window.VaadinDesktopIpcDiagnostics.frameworkAppApplyEventObserved;
       }
 
       function advanceFrameworkAppStepIfDone() {
-        while (autoFrameworkUpdateStep < 3 && frameworkAppStepDone()) {
+        while (autoFrameworkUpdateStep < 4 && frameworkAppStepDone()) {
           autoFrameworkUpdateStep += 1;
           autoFrameworkUpdateAttempts = 0;
         }
-        if (autoFrameworkUpdateStep >= 3) {
+        if (autoFrameworkUpdateStep >= 4) {
           refreshFrameworkAppDiagnostics();
           if (window.VaadinDesktopIpcDiagnostics.frameworkAppInteractionComplete) {
             autoFrameworkUpdateDone = true;
@@ -2597,6 +2617,12 @@ let flowIpcShell = #"""
               }
             });
         } else if (autoFrameworkUpdateStep === 2) {
+          sent = sendFrameworkAppEvent('framework-priority', 'change',
+            { 'element.value': autoFrameworkPriorityValue },
+            (element) => {
+              element.value = autoFrameworkPriorityValue;
+            });
+        } else if (autoFrameworkUpdateStep === 3) {
           sent = sendFrameworkAppEvent('framework-apply', 'click', {});
         }
         if (!sent) {
@@ -2960,6 +2986,8 @@ let flowIpcShell = #"""
                 window.VaadinDesktopIpcDiagnostics.frameworkAppBudgetEventRpcObserved = true;
               } else if (pending.componentId === 'framework-expedite') {
                 window.VaadinDesktopIpcDiagnostics.frameworkAppCheckboxEventRpcObserved = true;
+              } else if (pending.componentId === 'framework-priority') {
+                window.VaadinDesktopIpcDiagnostics.frameworkAppSelectEventRpcObserved = true;
               } else if (pending.componentId === 'framework-apply') {
                 window.VaadinDesktopIpcDiagnostics.frameworkAppApplyEventRpcObserved = true;
                 autoFrameworkUpdateInFlight = false;

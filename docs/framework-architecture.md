@@ -21,7 +21,7 @@ The older `SystemWebViewDesktopHost` remains as a macOS fallback path.
 ## Current IPC Slice
 
 ```text
-Vaadin Flow View (@Route, Button, Span, Layout, BigDecimalField, Checkbox)
+Vaadin Flow View (@Route, Button, Span, Layout, BigDecimalField, Checkbox, Select)
   -> FlowIpcLauncher / FlowIpcRuntime
   -> VFIPC1 stdin/stdout envelopes
   -> vaadin-desktop-host-swift
@@ -34,7 +34,7 @@ This path is started with:
 bash bin/vaadin-desktop dev-ipc test-apps/flow-over-ipc-smoke-app
 ```
 
-The same `dev-ipc` command can also launch `test-apps/flow-over-ipc-framework-app`, a less smoke-specific validation app written with ordinary Flow Java APIs for Button, `BigDecimalField`, `Checkbox`, repeated-list text updates and desktop capability calls. The strict v1/v1.1/v1.2/v1.3/v1.4 fixtures remain on the smoke app, while the framework app has a dedicated `--require-flow-ipc-v1_3-framework` host-log gate to check first meaningful paint and prove that the shell and Flow client bridge are not shaped only around smoke DOM ids.
+The same `dev-ipc` command can also launch `test-apps/flow-over-ipc-framework-app`, a less smoke-specific validation app written with ordinary Flow Java APIs for Button, `BigDecimalField`, `Checkbox`, `Select`, repeated-list text updates and desktop capability calls. The strict v1/v1.1/v1.2/v1.3/v1.4 fixtures remain on the smoke app, while the framework app has a dedicated `--require-flow-ipc-v1_3-framework` host-log gate to check first meaningful paint and prove that the shell and Flow client bridge are not shaped only around smoke DOM ids.
 
 It does not use localhost HTTP for bootstrap/push/event/patch/resync in the smoke app. Bootstrap advertises real Vaadin `flow-client` classpath resources and a v1.4 frontend artifact manifest. The WebView requests, verifies and classifies the advertised resource graph through IPC while echoing artifact family, module specifier, dependency, execution policy, resolver and status metadata in `resourceRequest`; it imports and initializes `FlowBootstrap.js` / `FlowClient.js` as the first local-resource bridge. The same resource channel now records a dynamic `flow-client-lazy-lookup` probe for `Flow.js`, verifies the static `compile.properties` lookup, and classifies resources that are intentionally not executed by this smoke slice. The component bootstrap also advertises `componentFrontendResources` for `com.vaadin.flow.component.textfield.BigDecimalField` and `com.vaadin.flow.component.checkbox.Checkbox`; the WebView requests and executes the real `META-INF/resources/frontend/vaadin-big-decimal-field.js` classpath module plus a focused Vaadin dev-bundle checkbox entry backed by the production `indexhtml` chunk, and requests/injects one real theme/static classpath CSS resource. Missing BigDecimalField transitive imports (`lit`, `@vaadin/text-field` and `@vaadin/component-base`), dev-mode bundle resources and generated/lazy resources are explicit shim/strict-blocker classifications rather than hidden production bundle/dev-mode parity. Once the Flow client engine binds the bootstrap UIDL nodes, its container becomes the visible WebView surface; the repository-local rendered tree remains only as a diagnostic fallback for non-engine or failed-delivery paths.
 

@@ -75,7 +75,7 @@ To check the same runtime against a less smoke-specific Flow project:
 bash bin/vaadin-desktop dev-ipc test-apps/flow-over-ipc-framework-app
 ```
 
-`flow-over-ipc-framework-app` uses ordinary Flow Java APIs for a Button, `BigDecimalField`, `Checkbox`, repeated list updates and manifest-gated desktop capability calls. It is a framework validation target; the strict trace gates still use `flow-over-ipc-smoke-app`.
+`flow-over-ipc-framework-app` uses ordinary Flow Java APIs for a Button, `BigDecimalField`, `Checkbox`, `Select`, repeated list updates and manifest-gated desktop capability calls. It is a framework validation target; the strict trace gates still use `flow-over-ipc-smoke-app`.
 
 For an unattended framework interaction check:
 

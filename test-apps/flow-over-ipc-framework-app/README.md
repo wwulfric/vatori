@@ -10,9 +10,9 @@ bash bin/vaadin-desktop dev-ipc test-apps/flow-over-ipc-framework-app
 
 Current scope:
 
-- The view is written with ordinary Flow Java APIs: `@Route`, `Button`, `VerticalLayout`, `Span`, `BigDecimalField` and `Checkbox`.
+- The view is written with ordinary Flow Java APIs: `@Route`, `Button`, `VerticalLayout`, `Span`, `BigDecimalField`, `Checkbox` and `Select`.
 - It uses semantic component ids only for optional diagnostics; the runtime must not depend on them for renderer promotion, layout, push/resync delivery or bridge installation.
-- It covers a Button command path, two real Vaadin Web Components, a repeated-list text update and manifest-gated desktop capability calls.
+- It covers a Button command path, three real Vaadin Web Components, a repeated-list text update and manifest-gated desktop capability calls.
 - It has a dedicated framework-shape gate, while `test-apps/flow-over-ipc-smoke-app` remains the strict trace fixture for v1/v1.1/v1.2/v1.3.
 
 For unattended first-paint verification:

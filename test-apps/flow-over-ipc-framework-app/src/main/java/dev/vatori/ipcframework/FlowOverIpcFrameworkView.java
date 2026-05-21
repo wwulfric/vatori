@@ -5,6 +5,7 @@ import com.vaadin.flow.component.checkbox.Checkbox;
 import com.vaadin.flow.component.html.H1;
 import com.vaadin.flow.component.html.Span;
 import com.vaadin.flow.component.orderedlayout.VerticalLayout;
+import com.vaadin.flow.component.select.Select;
 import com.vaadin.flow.component.textfield.BigDecimalField;
 import com.vaadin.flow.router.Route;
 import dev.vatori.desktop.Desktop;
@@ -16,6 +17,7 @@ import java.math.BigDecimal;
 public class FlowOverIpcFrameworkView extends VerticalLayout {
     private final VerticalLayout updateList = new VerticalLayout();
     private int revision;
+    private String priorityValue = "standard";
 
     public FlowOverIpcFrameworkView() {
         setId("framework-root");
@@ -35,6 +37,12 @@ public class FlowOverIpcFrameworkView extends VerticalLayout {
         Checkbox expedited = new Checkbox("Expedite processing");
         expedited.setId("framework-expedite");
 
+        Select<String> priority = new Select<>();
+        priority.setId("framework-priority");
+        priority.setLabel("Priority");
+        priority.setItems("standard", "audit", "deferred");
+        priority.setValue(priorityValue);
+
         Span componentStatus = new Span("Components: pending");
         componentStatus.setId("framework-component-status");
         Span latestUpdate = new Span("Revision pending");
@@ -52,11 +60,21 @@ public class FlowOverIpcFrameworkView extends VerticalLayout {
             componentStatus.setText("Expedite changed: " + (checked ? "yes" : "no"));
         }).addEventData("element.checked");
 
+        priority.getElement().addEventListener("change", event -> {
+            JsonNode valueNode = event.getEventData().get("element.value");
+            String value = valueNode == null ? "" : valueNode.asString();
+            if (!value.isBlank()) {
+                priorityValue = value;
+            }
+            componentStatus.setText("Priority changed: " + priorityValue);
+        }).addEventData("element.value");
+
         Button apply = new Button("Apply Update", event -> {
             revision++;
             String budgetText = budget.getValue() == null ? "unset" : budget.getValue().toPlainString();
             String mode = expedited.getValue() ? "expedited" : "standard";
-            String update = "Revision " + revision + ": budget " + budgetText + ", mode " + mode;
+            String update = "Revision " + revision + ": budget " + budgetText
+                    + ", mode " + mode + ", priority " + priorityValue;
             status.setText(update);
             latestUpdate.setText(update);
             Desktop.current().setWindowTitle("Flow IPC Framework App - " + revision);
@@ -72,7 +90,7 @@ public class FlowOverIpcFrameworkView extends VerticalLayout {
         appendUpdate("Renderer owned by Flow client engine");
         updateList.add(latestUpdate);
 
-        add(title, budget, expedited, apply, status, componentStatus, updateList);
+        add(title, budget, expedited, priority, apply, status, componentStatus, updateList);
     }
 
     private void appendUpdate(String text) {

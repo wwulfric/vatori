@@ -275,10 +275,12 @@ public final class DesktopTraceInspector {
                     && line.contains("framework-root")
                     && line.contains("framework-budget")
                     && line.contains("framework-expedite")
+                    && line.contains("framework-priority")
                     && line.contains("framework-apply")
                     && line.contains("framework-updates")
                     && line.contains("com.vaadin.flow.component.textfield.BigDecimalField")
-                    && line.contains("com.vaadin.flow.component.checkbox.Checkbox")) {
+                    && line.contains("com.vaadin.flow.component.checkbox.Checkbox")
+                    && line.contains("com.vaadin.flow.component.select.Select")) {
                 summary.frameworkAppBootstrapObserved = true;
             }
             if (line.contains("\"type\":\"event\"")
@@ -314,6 +316,13 @@ public final class DesktopTraceInspector {
             }
             if (line.contains("\"type\":\"event\"")
                     && line.contains("\"dispatch\":\"flow-client-xhr\"")
+                    && line.contains("\"componentId\":\"framework-priority\"")
+                    && line.contains("\"event\":\"change\"")
+                    && line.contains("\"element.value\":\"audit\"")) {
+                summary.frameworkAppSelectEventRpcObserved = true;
+            }
+            if (line.contains("\"type\":\"event\"")
+                    && line.contains("\"dispatch\":\"flow-client-xhr\"")
                     && line.contains("\"componentId\":\"framework-apply\"")
                     && line.contains("\"event\":\"click\"")) {
                 summary.frameworkAppApplyEventRpcObserved = true;
@@ -333,7 +342,14 @@ public final class DesktopTraceInspector {
             if (line.contains("\"type\":\"patch\"")
                     && line.contains("\"source\":\"UidlRequestHandler\"")
                     && line.contains("\"reason\":\"event\"")
+                    && line.contains("Priority changed: audit")) {
+                summary.frameworkAppSelectPatchObserved = true;
+            }
+            if (line.contains("\"type\":\"patch\"")
+                    && line.contains("\"source\":\"UidlRequestHandler\"")
+                    && line.contains("\"reason\":\"event\"")
                     && line.contains("Revision 1:")
+                    && line.contains("priority audit")
                     && line.contains("Renderer owned by Flow client engine")) {
                 summary.frameworkAppApplyPatchObserved = true;
             }
@@ -906,6 +922,7 @@ public final class DesktopTraceInspector {
                     && containsStringField(line, "frameworkAppRootId", "framework-root")
                     && containsLiteralField(line, "frameworkAppBudgetRendered", "true")
                     && containsLiteralField(line, "frameworkAppCheckboxRendered", "true")
+                    && containsLiteralField(line, "frameworkAppSelectRendered", "true")
                     && containsLiteralField(line, "frameworkAppApplyRendered", "true")
                     && containsStringField(line, "flowClientEngineViewportRootId", "framework-root")
                     && containsStringField(line, "flowClientEnginePromotionGate", "generic-flow-viewport")
@@ -919,12 +936,18 @@ public final class DesktopTraceInspector {
                     && containsLiteralField(line, "frameworkAppBudgetEventObserved", "true")
                     && containsLiteralField(line, "frameworkAppCheckboxEventRpcObserved", "true")
                     && containsLiteralField(line, "frameworkAppCheckboxEventObserved", "true")
+                    && containsLiteralField(line, "frameworkAppSelectEventRpcObserved", "true")
+                    && containsLiteralField(line, "frameworkAppSelectEventObserved", "true")
                     && containsLiteralField(line, "frameworkAppApplyEventRpcObserved", "true")
                     && containsLiteralField(line, "frameworkAppApplyEventObserved", "true")
                     && containsLiteralField(line, "frameworkAppInteractionComplete", "true")
                     && containsPositiveIntegerField(line, "frameworkAppEventPatchCount")
-                    && line.contains("framework-budget,framework-expedite,framework-apply")
+                    && line.contains("framework-budget")
+                    && line.contains("framework-expedite")
+                    && line.contains("framework-priority")
+                    && line.contains("framework-apply")
                     && line.contains("Revision 1:")
+                    && line.contains("priority audit")
                     && line.contains("Renderer owned by Flow client engine")) {
                 summary.frameworkAppInteractionDomObserved = true;
             }
@@ -1188,9 +1211,11 @@ public final class DesktopTraceInspector {
         private boolean frameworkAppBootstrapObserved;
         private boolean frameworkAppBudgetEventRpcObserved;
         private boolean frameworkAppCheckboxEventRpcObserved;
+        private boolean frameworkAppSelectEventRpcObserved;
         private boolean frameworkAppApplyEventRpcObserved;
         private boolean frameworkAppBudgetPatchObserved;
         private boolean frameworkAppCheckboxPatchObserved;
+        private boolean frameworkAppSelectPatchObserved;
         private boolean frameworkAppApplyPatchObserved;
         private boolean frameworkAppWindowTitleCommandObserved;
         private boolean frameworkAppClipboardCommandObserved;
@@ -1369,9 +1394,11 @@ public final class DesktopTraceInspector {
                     && frameworkAppDomObserved
                     && frameworkAppBudgetEventRpcObserved
                     && frameworkAppCheckboxEventRpcObserved
+                    && frameworkAppSelectEventRpcObserved
                     && frameworkAppApplyEventRpcObserved
                     && frameworkAppBudgetPatchObserved
                     && frameworkAppCheckboxPatchObserved
+                    && frameworkAppSelectPatchObserved
                     && frameworkAppApplyPatchObserved
                     && frameworkAppWindowTitleCommandObserved
                     && frameworkAppClipboardCommandObserved
@@ -1498,10 +1525,13 @@ public final class DesktopTraceInspector {
                     + frameworkAppBudgetEventRpcObserved);
             System.out.println("framework app checkbox event RPC observed: "
                     + frameworkAppCheckboxEventRpcObserved);
+            System.out.println("framework app select event RPC observed: "
+                    + frameworkAppSelectEventRpcObserved);
             System.out.println("framework app apply event RPC observed: "
                     + frameworkAppApplyEventRpcObserved);
             System.out.println("framework app budget patch observed: " + frameworkAppBudgetPatchObserved);
             System.out.println("framework app checkbox patch observed: " + frameworkAppCheckboxPatchObserved);
+            System.out.println("framework app select patch observed: " + frameworkAppSelectPatchObserved);
             System.out.println("framework app apply patch observed: " + frameworkAppApplyPatchObserved);
             System.out.println("framework app window title command/result observed: "
                     + frameworkAppWindowTitleCommandObserved + "/" + frameworkAppWindowTitleResultObserved);

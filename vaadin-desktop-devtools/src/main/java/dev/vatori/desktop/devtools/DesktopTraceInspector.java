@@ -46,6 +46,7 @@ public final class DesktopTraceInspector {
         boolean requireFlowIpcV1_1 = false;
         boolean requireFlowIpcV1_2 = false;
         boolean requireFlowIpcV1_3 = false;
+        boolean requireFlowIpcV1_4 = false;
         boolean requireFlowIpcV1_3Framework = false;
         List<Path> paths = new ArrayList<>();
         for (String arg : args) {
@@ -63,6 +64,12 @@ public final class DesktopTraceInspector {
                 requireFlowIpcV1_1 = true;
                 requireFlowIpcV1_2 = true;
                 requireFlowIpcV1_3 = true;
+            } else if ("--require-flow-ipc-v1_4".equals(arg)) {
+                requireFlowIpc = true;
+                requireFlowIpcV1_1 = true;
+                requireFlowIpcV1_2 = true;
+                requireFlowIpcV1_3 = true;
+                requireFlowIpcV1_4 = true;
             } else if ("--require-flow-ipc-v1_3-framework".equals(arg)) {
                 requireFlowIpcV1_3Framework = true;
             } else {
@@ -89,6 +96,9 @@ public final class DesktopTraceInspector {
                 failures++;
             }
             if (requireFlowIpcV1_3 && !summary.hasRequiredFlowIpcV1_3Types()) {
+                failures++;
+            }
+            if (requireFlowIpcV1_4 && !summary.hasRequiredFlowIpcV1_4Types()) {
                 failures++;
             }
             if (requireFlowIpcV1_3Framework && !summary.hasRequiredFlowIpcV1_3FrameworkTypes()) {
@@ -473,6 +483,63 @@ public final class DesktopTraceInspector {
                                     "vaadin-dev-bundle/webapp/VAADIN/build/generated-flow-imports-VW7hRaNw.js")
                             || line.contains("META-INF/vatori/dev-bundle-entry/vaadin-checkbox.js"))) {
                 summary.componentResolverV13ManifestObserved = true;
+            }
+            if (line.contains("\"type\":\"bootstrapResponse\"")
+                    && line.contains("\"componentFrontendResources\"")
+                    && line.contains("\"frontendAssetPipelineVersion\":\"flow-ipc-frontend-assets-v1_4\"")
+                    && line.contains("\"artifactGraphSource\":\"vaadin-frontend-artifact-graph-v1_4\"")) {
+                summary.frontendAssetPipelineV14Observed = true;
+            }
+            if (line.contains("\"type\":\"bootstrapResponse\"")
+                    && line.contains("\"artifactFamilies\"")
+                    && line.contains("flow-client-classpath")
+                    && line.contains("vaadin-component-classpath-frontend")
+                    && line.contains("npm-frontend")
+                    && line.contains("theme-static")
+                    && line.contains("production-bundle")
+                    && line.contains("dev-mode-bundle")
+                    && line.contains("generated-lazy")) {
+                summary.frontendArtifactFamilyModelObserved = true;
+            }
+            if (line.contains("\"type\":\"bootstrapResponse\"")
+                    && line.contains("\"dependencyGraph\"")
+                    && line.contains("\"dependencyOf\"")
+                    && line.contains("\"executionPolicy\"")
+                    && line.contains("\"requestedBy\":\"component-frontend-manifest-v1_4\"")) {
+                summary.frontendDependencyGraphObserved = true;
+            }
+            if (line.contains("\"type\":\"bootstrapResponse\"")
+                    && line.contains("\"artifactFamily\":\"npm-frontend\"")
+                    && line.contains("\"executionPolicy\":\"blocked-shim-fallback\"")
+                    && line.contains("\"artifactStatus\":\"blocked-fallback\"")
+                    && line.contains("\"strictBlocker\":true")
+                    && line.contains("\"failureClassification\":\"npm-transitive-imports-shimmed\"")) {
+                summary.frontendShimBlockerObserved = true;
+            }
+            if (line.contains("\"type\":\"bootstrapResponse\"")
+                    && line.contains("\"artifactFamily\":\"production-bundle\"")
+                    && line.contains("\"executionPolicy\":\"execute-dev-bundle-entry\"")
+                    && line.contains("\"executionPolicy\":\"dependency-module\"")
+                    && line.contains("\"failureClassification\":\"dev-bundle-resource-graph-partial\"")) {
+                summary.frontendProductionBundlePartialObserved = true;
+            }
+            if (line.contains("\"type\":\"bootstrapResponse\"")
+                    && line.contains("\"artifactFamily\":\"theme-static\"")
+                    && line.contains("\"strictBlocker\":true")
+                    && line.contains("\"failureClassification\":\"theme-static-resource-not-declared\"")) {
+                summary.frontendThemeStaticStrictBlockerObserved = true;
+            }
+            if (line.contains("\"type\":\"bootstrapResponse\"")
+                    && line.contains("\"artifactFamily\":\"dev-mode-bundle\"")
+                    && line.contains("\"strictBlocker\":true")
+                    && line.contains("\"failureClassification\":\"dev-mode-bundle-resource-graph-unmapped\"")) {
+                summary.frontendDevModeStrictBlockerObserved = true;
+            }
+            if (line.contains("\"type\":\"bootstrapResponse\"")
+                    && line.contains("\"artifactFamily\":\"generated-lazy\"")
+                    && line.contains("\"strictBlocker\":true")
+                    && line.contains("\"failureClassification\":\"generated-lazy-resource-unmapped\"")) {
+                summary.frontendGeneratedLazyStrictBlockerObserved = true;
             }
             if (line.contains("\"type\":\"resourceRequest\"")
                     && line.contains("\"purpose\":\"vaadin-web-component-resource-probe\"")
@@ -971,7 +1038,7 @@ public final class DesktopTraceInspector {
     }
 
     private static void usage() {
-        System.out.println("Usage: bin/flow-ipc-trace-inspect [--require-flow-ipc-v1|--require-flow-ipc-v1_1|--require-flow-ipc-v1_2|--require-flow-ipc-v1_3|--require-flow-ipc-v1_3-framework] <trace.ndjson>...");
+        System.out.println("Usage: bin/flow-ipc-trace-inspect [--require-flow-ipc-v1|--require-flow-ipc-v1_1|--require-flow-ipc-v1_2|--require-flow-ipc-v1_3|--require-flow-ipc-v1_4|--require-flow-ipc-v1_3-framework] <trace.ndjson>...");
     }
 
     public static final class TraceSummary {
@@ -1076,6 +1143,14 @@ public final class DesktopTraceInspector {
         private boolean frameworkAppDomObserved;
         private boolean frameworkAppInteractionDomObserved;
         private boolean firstMeaningfulPaintObserved;
+        private boolean frontendAssetPipelineV14Observed;
+        private boolean frontendArtifactFamilyModelObserved;
+        private boolean frontendDependencyGraphObserved;
+        private boolean frontendShimBlockerObserved;
+        private boolean frontendProductionBundlePartialObserved;
+        private boolean frontendThemeStaticStrictBlockerObserved;
+        private boolean frontendDevModeStrictBlockerObserved;
+        private boolean frontendGeneratedLazyStrictBlockerObserved;
 
         public boolean hasRequiredFlowIpcTypes() {
             return types.keySet().containsAll(FLOW_IPC_REQUIRED_TYPES)
@@ -1170,6 +1245,18 @@ public final class DesktopTraceInspector {
                     && vaadinSecondWebComponentEventRpcObserved
                     && vaadinSecondWebComponentPatchObserved
                     && vaadinSecondWebComponentDomObserved;
+        }
+
+        public boolean hasRequiredFlowIpcV1_4Types() {
+            return hasRequiredFlowIpcV1_3Types()
+                    && frontendAssetPipelineV14Observed
+                    && frontendArtifactFamilyModelObserved
+                    && frontendDependencyGraphObserved
+                    && frontendShimBlockerObserved
+                    && frontendProductionBundlePartialObserved
+                    && frontendThemeStaticStrictBlockerObserved
+                    && frontendDevModeStrictBlockerObserved
+                    && frontendGeneratedLazyStrictBlockerObserved;
         }
 
         public boolean hasRequiredFlowIpcV1_3FrameworkTypes() {
@@ -1366,6 +1453,22 @@ public final class DesktopTraceInspector {
             System.out.println("first meaningful paint observed: " + firstMeaningfulPaintObserved);
             System.out.println("framework app DOM observed: " + frameworkAppDomObserved);
             System.out.println("framework app interaction DOM observed: " + frameworkAppInteractionDomObserved);
+            System.out.println("Flow IPC v1.4 frontend asset pipeline observed: "
+                    + frontendAssetPipelineV14Observed);
+            System.out.println("Flow IPC v1.4 frontend artifact families observed: "
+                    + frontendArtifactFamilyModelObserved);
+            System.out.println("Flow IPC v1.4 frontend dependency graph observed: "
+                    + frontendDependencyGraphObserved);
+            System.out.println("Flow IPC v1.4 frontend shim blocker observed: "
+                    + frontendShimBlockerObserved);
+            System.out.println("Flow IPC v1.4 production bundle partial graph observed: "
+                    + frontendProductionBundlePartialObserved);
+            System.out.println("Flow IPC v1.4 theme/static strict blocker observed: "
+                    + frontendThemeStaticStrictBlockerObserved);
+            System.out.println("Flow IPC v1.4 dev-mode strict blocker observed: "
+                    + frontendDevModeStrictBlockerObserved);
+            System.out.println("Flow IPC v1.4 generated/lazy strict blocker observed: "
+                    + frontendGeneratedLazyStrictBlockerObserved);
             List<String> missing = FLOW_IPC_REQUIRED_TYPES.stream()
                     .filter(type -> !types.containsKey(type))
                     .toList();

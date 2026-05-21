@@ -31,6 +31,9 @@ final class FlowClientResources {
             "vaadin-dev-bundle/webapp/VAADIN/build/indexhtml-BfYYZi8S.js";
     private static final String DEV_BUNDLE_CHECKBOX_ENTRY_JS =
             "META-INF/vatori/dev-bundle-entry/vaadin-checkbox.js";
+    private static final String FRONTEND_ASSET_PIPELINE_VERSION = "flow-ipc-frontend-assets-v1_4";
+    private static final String FRONTEND_ARTIFACT_GRAPH_SOURCE = "vaadin-frontend-artifact-graph-v1_4";
+    private static final String COMPONENT_RESOLVER_V1_4 = "frontend-artifact-graph-v1_4";
     private static final String FLOW_CLIENT_IPC_BRIDGE_NEEDLE = """
             j.sendEventMessage=mI(function(a,b,c){var d=i.a.Z();d.Ab(a,b,c)});j.initializing=false;\
             """;
@@ -205,6 +208,10 @@ final class FlowClientResources {
         }
         Map<String, Object> manifest = new LinkedHashMap<>();
         manifest.put("source", "flow-client-classpath");
+        manifest.put("frontendAssetPipelineVersion", FRONTEND_ASSET_PIPELINE_VERSION);
+        manifest.put("artifactGraphSource", FRONTEND_ARTIFACT_GRAPH_SOURCE);
+        manifest.put("artifactFamilies", List.of("flow-client-classpath"));
+        manifest.put("resolverStrategy", COMPONENT_RESOLVER_V1_4);
         manifest.put("transport", "flow-ipc");
         manifest.put("resourceLoading", "ipc-resource-request");
         manifest.put("classpath", true);
@@ -220,6 +227,36 @@ final class FlowClientResources {
         }
         Map<String, Object> manifest = new LinkedHashMap<>();
         manifest.put("source", "vaadin-component-classpath-plus-dev-bundle-v1_4");
+        manifest.put("frontendAssetPipelineVersion", FRONTEND_ASSET_PIPELINE_VERSION);
+        manifest.put("artifactGraphSource", FRONTEND_ARTIFACT_GRAPH_SOURCE);
+        manifest.put("artifactFamilies", List.of("flow-client-classpath",
+                "vaadin-component-classpath-frontend",
+                "npm-frontend",
+                "theme-static",
+                "production-bundle",
+                "dev-mode-bundle",
+                "generated-lazy"));
+        manifest.put("artifactFamilyStatuses", List.of(
+                artifactFamilyStatus("flow-client-classpath", "available", "classpath-flow-client-resource"),
+                artifactFamilyStatus("vaadin-component-classpath-frontend", "available",
+                        "classpath-component-frontend-resource"),
+                artifactFamilyStatus("npm-frontend", "blocked", "npm-transitive-imports-shimmed"),
+                artifactFamilyStatus("theme-static", "blocked", "theme-static-resource-not-declared"),
+                artifactFamilyStatus("production-bundle", "partial", "dev-bundle-resource-graph-partial"),
+                artifactFamilyStatus("dev-mode-bundle", "blocked", "dev-mode-bundle-resource-graph-unmapped"),
+                artifactFamilyStatus("generated-lazy", "blocked", "generated-lazy-resource-unmapped")));
+        manifest.put("dependencyGraph", Map.of("declared", true,
+                "resolver", COMPONENT_RESOLVER_V1_4,
+                "resourceCount", entries.size()));
+        manifest.put("strictBlockers", List.of(
+                strictBlocker("npm-frontend", "npm-transitive-imports-shimmed",
+                        COMPONENT_TRANSITIVE_BLOCKED_REASON),
+                strictBlocker("theme-static", "theme-static-resource-not-declared",
+                        "current Flow IPC smoke apps do not declare a theme/static frontend asset for no-localhost lookup"),
+                strictBlocker("dev-mode-bundle", "dev-mode-bundle-resource-graph-unmapped",
+                        "dev-mode bundle resources are not yet mapped into the no-localhost IPC resolver"),
+                strictBlocker("generated-lazy", "generated-lazy-resource-unmapped",
+                        "Flow loadOnDemand is verified with a minimum probe, but generated lazy chunks are not yet resolved as frontend artifacts")));
         manifest.put("transport", "flow-ipc");
         manifest.put("resourceLoading", "ipc-resource-request");
         manifest.put("componentClass", "com.vaadin.flow.component.textfield.BigDecimalField");
@@ -301,7 +338,7 @@ final class FlowClientResources {
     }
 
     private void add(Map<String, Resource> target, String path, String kind, boolean text) {
-        add(target, path, kind, text, Map.of("flowClientResource", true));
+        add(target, path, kind, text, flowClientAttributes(path, kind));
     }
 
     private void add(Map<String, Resource> target, String path, String kind, boolean text, Map<String, Object> attributes) {
@@ -317,7 +354,7 @@ final class FlowClientResources {
     }
 
     private Resource read(String path, String kind, boolean text) {
-        return read(path, kind, text, Map.of("flowClientResource", true));
+        return read(path, kind, text, flowClientAttributes(path, kind));
     }
 
     private Resource read(String path, String kind, boolean text, Map<String, Object> attributes) {
@@ -357,6 +394,13 @@ final class FlowClientResources {
         attributes.put("moduleSpecifier", moduleSpecifier);
         attributes.put("resolver", resolver);
         attributes.put("shim", shim);
+        attributes.put("artifactFamily", shim ? "npm-frontend" : "vaadin-component-classpath-frontend");
+        attributes.put("origin", shim ? "inline-diagnostic-shim" : "classpath");
+        attributes.put("resourceOrigin", shim ? "inline-diagnostic-shim" : "classpath-frontend-resource");
+        attributes.put("dependencyOf", BIG_DECIMAL_FIELD_JS);
+        attributes.put("executionPolicy", shim ? "blocked-shim-fallback" : "execute-primary-module");
+        attributes.put("artifactStatus", shim ? "blocked-fallback" : "available");
+        attributes.put("requestedBy", "component-frontend-manifest-v1_4");
         attributes.put("failureClassification", "npm-transitive-imports-shimmed");
         attributes.put("blockedReason", COMPONENT_TRANSITIVE_BLOCKED_REASON);
         attributes.put("lookupKind", lookupKind(componentClass, resolver));
@@ -381,7 +425,15 @@ final class FlowClientResources {
         attributes.put("moduleSpecifier", moduleSpecifier);
         attributes.put("resolver", "vaadin-dev-bundle-production-build-v1_4");
         attributes.put("shim", false);
+        attributes.put("artifactFamily", "production-bundle");
+        attributes.put("origin", primary ? "vaadin-dev-bundle-focused-entry" : "vaadin-dev-bundle");
         attributes.put("resourceOrigin", "vaadin-dev-bundle");
+        attributes.put("dependencyOf", primary
+                ? "com.vaadin.flow.component.checkbox.Checkbox"
+                : DEV_BUNDLE_CHECKBOX_ENTRY_JS);
+        attributes.put("executionPolicy", primary ? "execute-dev-bundle-entry" : "dependency-module");
+        attributes.put("artifactStatus", "partial");
+        attributes.put("requestedBy", "component-frontend-manifest-v1_4");
         attributes.put("productionBundleReady", true);
         attributes.put("devBundleResource", true);
         attributes.put("blockedReason", DEV_BUNDLE_COMPONENT_REASON);
@@ -402,6 +454,41 @@ final class FlowClientResources {
             return "BigDecimalField-minimum-component-resource";
         }
         return "component-transitive-import-shim";
+    }
+
+    private static Map<String, Object> flowClientAttributes(String path, String kind) {
+        Map<String, Object> attributes = new LinkedHashMap<>();
+        attributes.put("flowClientResource", true);
+        attributes.put("artifactFamily", "flow-client-classpath");
+        attributes.put("origin", "classpath");
+        attributes.put("resourceOrigin", "flow-client-classpath");
+        attributes.put("moduleSpecifier", path);
+        attributes.put("resolver", "flow-client-classpath-resource");
+        attributes.put("executionPolicy", flowClientExecutionPolicy(kind));
+        attributes.put("artifactStatus", "available");
+        attributes.put("requestedBy", "flow-client-manifest-v1_4");
+        return attributes;
+    }
+
+    private static String flowClientExecutionPolicy(String kind) {
+        if ("flow-bootstrap-module".equals(kind) || "flow-client-module".equals(kind)) {
+            return "execute-primary-module";
+        }
+        return "verified-only-intentionally-not-executed";
+    }
+
+    private static Map<String, Object> artifactFamilyStatus(String family, String status, String classification) {
+        return Map.of("artifactFamily", family,
+                "status", status,
+                "failureClassification", classification);
+    }
+
+    private static Map<String, Object> strictBlocker(String family, String classification, String reason) {
+        return Map.of("artifactFamily", family,
+                "status", "blocked",
+                "strictBlocker", true,
+                "failureClassification", classification,
+                "blockedReason", reason);
     }
 
     private record Resource(String path, String kind, byte[] bytes, boolean text, boolean ipcAugmented,

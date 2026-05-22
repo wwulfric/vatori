@@ -1,262 +1,187 @@
-# Goal: Vaadin Flow over IPC Runtime v1
-
-基于当前 Vaadin Desktop Framework v0、Swift/AppKit native host、Host Protocol v0 和
-`flow-transport-adapter-spike`，推进并实现最终的 **Flow over IPC** 架构，使 Vaadin Flow
-桌面应用的核心 UI transport 从 Servlet/HTTP/WebSocket compatibility mode 迁移到本地 IPC。
-
-目标不是继续增强 localhost WebView compatibility mode，也不是简单优化 Swift host，而是完成一个可运行、可评审、可继续产品化的 Vaadin Flow over IPC runtime。
-
-开发者仍然编写普通 Vaadin Flow Java View，例如 `@Route`、`Button`、`Grid`、`Layout` 和事件 listener；框架负责通过本地 IPC 完成 bootstrap、client event、server-side UIDL/patch、resync/push 的传输，并由 Swift/AppKit host 管理系统 WebView、Java sidecar、窗口生命周期和 native capability gateway。
-
-请持续推进，直到仓库中至少有一个真实 Vaadin Flow desktop app 在核心 UI 交互路径上不依赖 localhost HTTP server，并能通过真实 macOS 桌面窗口验证可用。
-
-## 实现范围
-
-### 1. 最终架构边界
-
-明确并实现三方边界：
-
-- Java Flow runtime / sidecar
-- Swift/AppKit native host
-- WKWebView 中的 Flow client engine / bridge
-
-核心 UI transport 必须走 IPC：
-
-- bootstrap
-- client event dispatch
-- UIDL/patch response
-- resync/reload
-- 最小 push 或 server-initiated update
-
-localhost HTTP/Servlet/WebSocket 只能保留为 compatibility fallback，不能参与最终验证 app 的核心 UI 闭环。
-
-继续保留 Vaadin Flow Java 编程模型，不要求应用开发者手写 IPC。
-
-### 2. Flow Transport Adapter
-
-在 `vaadin-desktop-flow` 中实现真实 `FlowTransportAdapter`，替代当前 spike。
-
-基于本地 Vaadin 源码 `/Users/bytedance/IdeaProjects/study/vaadin` 继续定位并封装：
-
-- bootstrap/UI 初始化路径
-- `UidlRequestHandler`
-- `ServerRpcHandler`
-- `UidlWriter`
-- `VaadinSession`
-- `UI` lookup / lock / access
-- CSRF/security key
-- sync id / resync
-
-实现一个 desktop `VaadinRequest` / `VaadinResponse` adapter 或等价 SPI，使 Flow event -> listener -> UIDL patch 可以脱离真实 HTTP socket。
-
-如果必须修改或 fork Vaadin 内部逻辑，先在仓库内做最小 adapter/fork spike，不直接修改 upstream Vaadin 源码，除非另行确认。
-
-### 3. IPC Protocol v1
-
-从 Host Protocol v0 演进为 Flow IPC Protocol v1。
-
-协议必须覆盖：
-
-- `launch`
-- `ready`
-- `bootstrapRequest`
-- `bootstrapResponse`
-- `event`
-- `patch`
-- `command`
-- `capabilityResult`
-- `push`
-- `resync`
-- `error`
-- `shutdown`
-
-envelope 至少包含：
-
-- `type`
-- `id`
-- `correlationId`
-- `sessionId`
-- `uiId`
-- `route`
-- `payload`
-- `error`
-- `timestamp`
-
-协议必须有版本号、错误模型、trace 格式和兼容策略。
-
-提供 `docs/ipc-protocol-v1.md` 和真实 trace 示例。
-
-### 4. Swift/AppKit Native Host
-
-继续以 `vaadin-desktop-host-swift` 作为 macOS native host 主线。
-
-Host 负责：
-
-- 启动 Java sidecar
-- 建立 IPC transport
-- 打开 AppKit `NSWindow`
-- 创建 `WKWebView`
-- 加载本地 Flow client resources
-- 注入 WebView bridge
-- 转发 WebView event 到 Java Flow runtime
-- 接收 Java patch 并应用到 WebView
-- 管理窗口关闭、sidecar 清理、异常退出
-
-不再把最终路径定义为 `WKWebView.load(http://127.0.0.1:port)`。
-
-如需加载静态资源，应优先使用 app bundle、本地文件、自定义 scheme 或 `WKURLSchemeHandler`，而不是 localhost HTTP server。
-
-### 5. WebView Bridge / Flow Client Engine
-
-建立 WebView 内的 JS bridge，使 Vaadin Flow client engine 可以：
-
-- 请求 bootstrap
-- 发送 client events
-- 接收 UIDL/patch
-- 触发 resync
-- 上报错误
-
-尽量复用 Vaadin Flow client engine，不重新实现完整客户端。
-
-明确记录需要 shim、patch 或复用的 Flow client 部分。
-
-验证 Button click、Grid/List 数据展示、状态更新不走 HTTP。
-
-### 6. Native Capability Gateway
-
-将当前 desktop API scaffold 演进为真实 native gateway 初稿。
-
-至少实现并验证：
-
-- window title
-- notification 或 clipboard 二选一
-- file dialog 可先保留 scaffold，但接口要稳定
-
-Capability 调用必须走 IPC command/capabilityResult。
-
-文档中明确 capability 权限模型的最小设计，即使 v1 只实现 allow-all dev mode。
-
-### 7. 真实测试应用
-
-继续使用 `test-apps/vaadin-desktop-smoke-app` 作为独立测试工程。
-
-新增或改造一个最终验证 app，例如：
-
-- `test-apps/flow-over-ipc-smoke-app`
-
-该测试工程必须像普通开发者项目一样依赖框架模块。
-
-测试工程必须包含真实 Vaadin Flow View：
-
-- `@Route("")`
-- Button click listener
-- Span/Label 状态更新
-- Grid/List 数据展示
-- 至少一个 desktop runtime API 调用
-
-该测试工程的核心 UI 闭环必须不依赖 localhost HTTP server。
-
-### 8. 开发命令
-
-新增明确命令，例如：
-
-```bash
-bash bin/vaadin-desktop dev-ipc test-apps/flow-over-ipc-smoke-app
-```
-
-`dev-ipc` 必须启动最终 IPC runtime。
-
-`dev` 或 `dev-swift` 可以保留为 compatibility mode，但命名、README 和日志必须清楚区分。
-
-启动日志必须直接显示当前 transport：
-
-- `transport=flow-ipc`
-- `compatibilityMode=false`
-- 或失败时明确说明为何 fallback 到 compatibility mode
-
-### 9. 可观测性和调试
-
-提供完整 IPC trace：
-
-- bootstrap request/response
-- event
-- patch
-- command
-- capabilityResult
-- push/resync
-- error
-- shutdown
-
-trace 必须能关联一次 Button click 的完整链路：
-
-- WebView event
-- IPC event envelope
-- Java listener
-- UIDL/patch generation
-- IPC patch envelope
-- WebView patch applied
-
-提供最小 inspector 或 trace replay/readme，能让工程师 review 问题。
-
-### 10. 文档更新
-
-新增或更新：
-
-- `docs/flow-over-ipc-runtime.md`
-- `docs/ipc-protocol-v1.md`
-- `docs/flow-transport-adapter.md`
-- `docs/native-host.md`
-- `docs/framework-architecture.md`
-- `docs/getting-started.md`
-- `docs/roadmap.md`
-- `AGENTS.md`
-
-文档必须明确：
-
-- 当前最终 IPC runtime 如何工作
-- 哪些 Flow 能力已经脱离 HTTP
-- 哪些能力仍在 compatibility fallback
-- 为什么这个方案不是 WebView 套壳
-- Swift/AppKit host、WKWebView、Java sidecar、Flow runtime 的责任边界
-- 后续如何推进 push、upload/download、packaging、permission、upstream Vaadin SPI
-
-## 验收标准
-
-1. 仓库中存在可运行的 Flow over IPC runtime 路径。
-2. 有明确命令可以启动 IPC 模式，例如 `dev-ipc`。
-3. 至少一个真实独立测试工程可以在真实 macOS 桌面窗口中运行。
-4. 测试工程使用真实 Vaadin Flow API 编写 UI。
-5. Button click -> Java listener -> UI state change -> UIDL/patch -> WebView update 的闭环不依赖 localhost HTTP server。
-6. Grid/List 数据展示路径不依赖 localhost HTTP server。
-7. 至少一个 desktop runtime API 调用走 IPC command/capabilityResult。
-8. trace 中能完整看到 bootstrap、event、patch、command、capabilityResult、shutdown。
-9. 真实窗口通过 WindowServer、截图或等价方式验证，不只依赖单元测试或日志。
-10. compatibility mode 仍可保留，但不能被作为最终 Flow over IPC 验收路径。
-11. 所有未完成的 Flow 能力必须明确列出，例如 push、upload/download、resource loading、dev mode、production bundle。
-12. 文档足够让工程团队继续拆 issue，而不是只留下实验代码。
-
-## 非目标
-
-- 不要求一次完成三平台实现。
-- 不要求生产级签名、自动更新、安装器。
-- 不要求完整权限系统。
-- 不要求覆盖所有 Vaadin 组件和高级能力。
-- 不要求立刻 upstream 到 Vaadin Flow。
-- 不要求删除 compatibility mode。
-- 不允许把 localhost HTTP WebView 路径伪装成最终 Flow over IPC。
-
-## 停止条件
-
-当前仓库形成一个可运行、可评审的 **Vaadin Flow over IPC runtime v1**：
-
-- 工程师可以用 `dev-ipc` 启动一个真实 Vaadin Flow desktop app。
-- 真实 macOS native window 中的 Button、状态更新、Grid/List 和至少一个 desktop capability 调用都通过 IPC runtime 完成。
-- 核心 UI 交互路径不依赖 localhost HTTP/Servlet/WebSocket。
-
-同时，仓库必须包含完整协议文档、Flow adapter 文档、native host 文档、trace 示例、独立测试工程和明确的 compatibility fallback 边界，使下一阶段可以继续推进 push、resource loading、upload/download、packaging、permission model 和可能的 Vaadin upstream SPI。
-
-## 关键约束
-
-本 goal 的关键验收约束是：**Button click 到 UI patch 回 WebView 的核心闭环不能依赖 localhost HTTP server**。
-
-这会强制实现真正触达 Vaadin Flow transport，而不是继续只增强 native host 外壳。
+# Goal: Vaadin Desktop Framework Long-Term Vision
+
+本文件是仓库的长期总目标，用于持续跟踪 `Vaadin Desktop Framework` 从当前
+v0/v1 runtime 切片走向可产品化桌面框架的最终完成状态。
+
+历史阶段目标保留为不可变的阶段快照：
+
+- `docs/goal-1_0.md`：Flow over IPC Runtime v1，已完成。
+- `docs/goal-1_1.md`：Flow IPC runtime hardening，已完成。
+- `docs/goal-1_2.md`：first real Vaadin Web Component over Flow IPC，已完成。
+- `docs/goal-1_3.md`：framework-shaped Flow IPC validation app，已完成。
+- `docs/goal-1_4.md`：Flow IPC frontend asset pipeline，已完成。
+- `docs/goal-1_5.md`：no-localhost frontend bundle staging，已完成。
+
+后续阶段应继续以 `docs/goal-1_6.md`、`docs/goal-1_7.md` 等文件拆分，
+每个阶段只拿走本长期目标中的一个可评审切片。不要把本文件改写成短期任务清单；
+它是长期北极星和完成度账本。
+
+## 最终愿景
+
+构建一个真实可用的 `Vaadin Desktop Framework`：
+
+- Java 开发者继续使用普通 Vaadin Flow 编程模型，例如 `@Route`、`Button`、
+  `Grid`、`FormLayout`、`Upload`、`Dialog`、`Binder`、listeners 和 server-side state。
+- 桌面应用通过系统 WebView 渲染，但核心 UI transport 不依赖 localhost
+  HTTP/Servlet/WebSocket。
+- Flow bootstrap、client event、UIDL patch、server push、resync、resource loading、
+  command 和 capability result 都有清晰 IPC contract。
+- Swift/AppKit、Windows WebView2 和 Linux WebKitGTK host 管理窗口、菜单、托盘、
+  clipboard、dialog、notification、drag/drop、快捷键、生命周期、打包和更新。
+- Compatibility mode 明确保留为开发/迁移 fallback，但不伪装成最终架构。
+- 框架像 Tauri + Vaadin Flow 的组合：开发者写 Java/Vaadin，框架负责 native host、
+  IPC、能力网关、打包和运行时边界。
+
+## 当前基线
+
+截至 goal 1.5，仓库已经证明：
+
+- `dev-ipc` 可以启动 no-localhost Flow IPC runtime。
+- 真实 macOS Swift/AppKit/WKWebView 窗口可以运行 Flow IPC smoke app 和 framework
+  validation app。
+- Button、BigDecimalField、Checkbox、Select、list/repeated update、desktop capability
+  baseline 都有 trace gate 或 host-log gate 证据。
+- Java sidecar 通过 `UidlWriter`、`UidlRequestHandler`、`ServerRpcHandler`、
+  desktop `VaadinRequest` / `VaadinResponse` adapter 切片生成真实 UIDL。
+- WebView 中可见 Flow client engine 消费 bootstrap、event patch、push 和 resync。
+- Flow client classpath resources、component frontend、theme/static、production bundle、
+  dev-mode bundle 和 generated/lazy artifact families 已能通过 IPC manifest 表达和验证。
+- v1.5 已建立 no-localhost frontend staging resolver：真实 artifact body 可被 stage 成
+  Blob-backed module URL，并以 `resourceStage` trace 记录 staged、executed、failed 和
+  strict blocker 状态。
+- TextField/npm graph、完整 generated/lazy execution、production bundle execution 和
+  dev-mode/Vite execution 仍是明确 blocker，不计入完成。
+
+## 最终完成标准
+
+长期目标完成时，仓库应满足以下条件。
+
+### 1. Flow Over IPC 是默认主线
+
+- `dev-ipc` 或其后继命令是默认推荐的桌面开发路径。
+- 核心 UI 闭环不依赖 localhost HTTP/Servlet/WebSocket：
+  bootstrap、events、UIDL patches、push、resync 和 resource loading 都通过 IPC。
+- Compatibility mode 仍可运行，但文档、日志和 CLI 明确标记为 fallback。
+- Runtime 不依赖 smoke-only hooks 才能正常工作。
+
+### 2. Flow Adapter 边界稳定
+
+- `vaadin-desktop-flow` 中有清晰、可维护的 Flow transport adapter。
+- `UidlRequestHandler`、`ServerRpcHandler`、`UidlWriter`、`VaadinSession`、
+  UI lock/access、CSRF/security key、sync id 和 resync 语义被封装在稳定边界内。
+- 不直接修改本地 upstream Vaadin 源码；如需 upstream SPI，先以仓库内 adapter/fork
+  证明并记录。
+- 错误路径、session lifecycle、multi-window/multi-UI 行为有明确 trace 和测试。
+
+### 3. Frontend Artifact Pipeline 可产品化
+
+- Flow client resources、component frontend modules、theme/static、generated/lazy、
+  production bundle 和 dev-mode/Vite resource graph 都有统一 resolver。
+- TextField/npm graph 不再依赖旧 shim；真实 TextField、Checkbox、Select 等组件通过
+  真实 Vaadin frontend artifact 执行。
+- Generated/lazy `Flow.loadOnDemand` path 可以稳定工作，或有可接受的替代 SPI。
+- Production bundle / dev-mode bundle 有明确 staging、cache、cleanup 和 integrity 策略。
+- WebView resource loading 使用 app bundle、本地 staging、custom scheme 或等价
+  no-localhost mechanism。
+
+### 4. 组件和 Flow 功能覆盖足够真实
+
+- 不只覆盖 Button 和少数组件；至少覆盖真实业务应用常见路径：
+  TextField、Number/BigDecimalField、Checkbox、Select、ComboBox、DatePicker、
+  Dialog、FormLayout、Grid/VirtualList、Upload/Download、theme variants。
+- 事件必须经 Flow client engine -> IPC-backed bridge -> Java listener ->
+  UIDL patch -> visible DOM 的真实链路。
+- Repeated data、selection、validation、enabled/disabled、attach/detach、locale/format、
+  focus/keyboard 和 error state 有回归验证。
+
+### 5. Native Host 具备桌面框架能力
+
+- macOS Swift/AppKit host 是稳定主线，并有可重复 smoke tests。
+- Windows WebView2 和 Linux WebKitGTK host 至少达到可运行的同级架构切片。
+- Host 负责 native 行为：窗口、菜单、托盘、clipboard、file dialog、notification、
+  drag/drop、shortcuts、IME/focus、context menu、lifecycle、crash cleanup。
+- Window activation、window level、first meaningful paint、blank/flicker recovery、
+  close/shutdown 和 sidecar cleanup 有自动化验证。
+
+### 6. Capability Gateway 有权限模型
+
+- Java desktop API 稳定且面向开发者，例如 window、clipboard、notification、
+  file dialog、file transfer、shell/open URL、menu/tray。
+- IPC `command` / `capabilityResult` typed、async、可追踪，并带 correlation id。
+- `desktop-capabilities.json` 或后继 manifest 支持 allow、deny、trace-only、dev override
+  和 production policy。
+- 文件能力支持受控路径、真实 native panel、security-scoped metadata、redacted trace、
+  byte count 和错误分类。
+
+### 7. CLI、打包和开发体验完整
+
+- CLI 能创建、运行、调试、打包和检查桌面应用。
+- Maven/Gradle 插件或等价工具能处理 framework dependencies、frontend bundle staging、
+  native host assets、capability manifest 和 release metadata。
+- 开发者项目像普通外部项目一样依赖 framework modules，不需要复制 test-app 特殊代码。
+- Trace inspector、doctor、resource graph inspector 和 failure diagnostics 足够让工程师
+  快速拆 issue。
+
+### 8. 分发和更新路径可落地
+
+- macOS 至少支持 app bundle、签名/公证规划、DMG/PKG 或等价分发。
+- Windows/Linux 有清楚打包边界和后续实现计划。
+- Java sidecar、native host、frontend artifacts、capability manifest 和 updater metadata
+  有一致的发布结构。
+- 自动更新可以先是设计和 skeleton，但最终需要可验证的安全更新路径。
+
+### 9. 文档和验证体系完整
+
+- README、getting started、architecture、native host、Flow adapter、IPC protocol、
+  runtime limitation、roadmap、troubleshooting 都保持同步。
+- 每个阶段都有 fixture trace、strict inspector gate、真实窗口验证命令和 commit。
+- 文档明确已完成能力、compatibility fallback、partial bridge、diagnostic shim、
+  strict blocker 和下一步拆解。
+- 不把实验路径包装成 final，不把 localhost compatibility mode 包装成 Flow over IPC。
+
+## 长期未完成账本
+
+以下项目仍需要后续阶段推进：
+
+- 替换 v1.5 中剩余的 TextField/npm shim fallback，完成真实 TextField graph parity。
+- 完整 generated/lazy `Flow.loadOnDemand` execution。
+- Production bundle chunk execution 和 packaging-time staging。
+- Dev-mode/Vite graph execution 或可靠替代模式。
+- Broader Vaadin component parity，尤其是 Grid/VirtualList、ComboBox、DatePicker、
+  Dialog、Upload。
+- Durable push queue、ack、reconnect、reload 和 resync 语义。
+- Multi-window / multi-UI / multi-session lifecycle。
+- Host-side smoke tests：window launch、activation、sidecar cleanup、capability calls。
+- macOS host 默认化、Windows/Linux host 切片、打包和更新。
+- Production permission model 和 security-scoped file access。
+- Upstream Vaadin SPI 评估。
+
+## 后续阶段制定规则
+
+每个新的 `goal-1_x.md` 应满足：
+
+- 从本文件的未完成账本中选择一个可评审切片。
+- 明确继承哪些已完成阶段能力，且不得回退。
+- 明确不使用 localhost compatibility mode 作为 Flow IPC 成功证据。
+- 明确验收命令、fixture trace、真实窗口验证和文档更新范围。
+- 如果选择 blocker 化路径，必须给出 source artifact、runtime layer、browser/native error、
+  failure classification 和下一步拆解。
+- 每轮工作按适合粒度提交 Conventional Commit。
+
+## 当前建议的下一阶段
+
+下一阶段应优先选择以下方向之一：
+
+1. **Goal 1.6: TextField / npm graph parity**
+   - 目标是替换或严格拆解 `@vaadin/text-field` 剩余 shim，推进真实 TextField frontend
+     graph staged execution。
+2. **Goal 1.6: Generated/lazy loadOnDemand execution**
+   - 目标是把 v1.5 的 generated/lazy staged strict blocker 推进到可执行 lazy path。
+3. **Goal 1.6: Durable push / reconnect / resync**
+   - 目标是把 duplicate/late probe 扩展为 durable queue、ack、reconnect 和 resync 语义。
+4. **Goal 1.6: Host tests and default host readiness**
+   - 目标是为 Swift host window launch、no-activate、sidecar cleanup 和 native capability
+     增加可重复 smoke tests，为默认 host 做准备。
+
+短期建议优先做 TextField/npm graph parity；它直接拆掉 v1.5 最刺眼的 frontend blocker，
+也能给 production bundle / generated lazy 后续工作提供更硬的资源解析证据。

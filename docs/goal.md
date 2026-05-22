@@ -11,6 +11,7 @@ v0/v1 runtime 切片走向可产品化桌面框架的最终完成状态。
 - `docs/goal-1_3.md`：framework-shaped Flow IPC validation app，已完成。
 - `docs/goal-1_4.md`：Flow IPC frontend asset pipeline，已完成。
 - `docs/goal-1_5.md`：no-localhost frontend bundle staging，已完成。
+- `docs/goal-1_6.md`：TextField / npm graph parity，已指定，待执行。
 
 后续阶段应继续以 `docs/goal-1_6.md`、`docs/goal-1_7.md` 等文件拆分，
 每个阶段只拿走本长期目标中的一个可评审切片。不要把本文件改写成短期任务清单；
@@ -170,18 +171,11 @@ v0/v1 runtime 切片走向可产品化桌面框架的最终完成状态。
 
 ## 当前建议的下一阶段
 
-下一阶段应优先选择以下方向之一：
+当前已指定的下一阶段是：
 
-1. **Goal 1.6: TextField / npm graph parity**
-   - 目标是替换或严格拆解 `@vaadin/text-field` 剩余 shim，推进真实 TextField frontend
-     graph staged execution。
-2. **Goal 1.6: Generated/lazy loadOnDemand execution**
-   - 目标是把 v1.5 的 generated/lazy staged strict blocker 推进到可执行 lazy path。
-3. **Goal 1.6: Durable push / reconnect / resync**
-   - 目标是把 duplicate/late probe 扩展为 durable queue、ack、reconnect 和 resync 语义。
-4. **Goal 1.6: Host tests and default host readiness**
-   - 目标是为 Swift host window launch、no-activate、sidecar cleanup 和 native capability
-     增加可重复 smoke tests，为默认 host 做准备。
+- **Goal 1.6: TextField / npm graph parity**
+  - 目标是替换或严格拆解 `@vaadin/text-field` 剩余 shim，推进真实 TextField frontend
+    graph staged execution。
 
-短期建议优先做 TextField/npm graph parity；它直接拆掉 v1.5 最刺眼的 frontend blocker，
-也能给 production bundle / generated lazy 后续工作提供更硬的资源解析证据。
+后续候选方向仍包括 generated/lazy `loadOnDemand` execution、durable push /
+reconnect / resync，以及 Swift host tests / default-host readiness。

@@ -1183,6 +1183,10 @@ final class WebViewHost: NSObject, NSApplicationDelegate, NSWindowDelegate, WKNa
             trace("recv", messageType, object["payload"] as? [String: Any] ?? [:])
             return
         }
+        if messageType == "resourceStage" {
+            trace("recv", messageType, object["payload"] as? [String: Any] ?? [:])
+            return
+        }
         trace("send", messageType, [
             "target": "java-sidecar",
             "transport": "flow-ipc",
@@ -1330,11 +1334,33 @@ final class WebViewHost: NSObject, NSApplicationDelegate, NSWindowDelegate, WKNa
           frontendArtifactGeneratedLazyBundleChunkVerified: !!(window.VaadinDesktopIpcDiagnostics && window.VaadinDesktopIpcDiagnostics.frontendArtifactGeneratedLazyBundleChunkVerified),
           frontendArtifactGeneratedLazyBundleChunkPath: window.VaadinDesktopIpcDiagnostics ? window.VaadinDesktopIpcDiagnostics.frontendArtifactGeneratedLazyBundleChunkPath : "",
           frontendArtifactGeneratedLazyBundleChunkResult: window.VaadinDesktopIpcDiagnostics ? window.VaadinDesktopIpcDiagnostics.frontendArtifactGeneratedLazyBundleChunkResult : "",
+          frontendArtifactGeneratedLazyExecutionAttempted: !!(window.VaadinDesktopIpcDiagnostics && window.VaadinDesktopIpcDiagnostics.frontendArtifactGeneratedLazyExecutionAttempted),
+          frontendArtifactGeneratedLazyExecuted: !!(window.VaadinDesktopIpcDiagnostics && window.VaadinDesktopIpcDiagnostics.frontendArtifactGeneratedLazyExecuted),
+          frontendArtifactGeneratedLazyExecutionResult: window.VaadinDesktopIpcDiagnostics ? window.VaadinDesktopIpcDiagnostics.frontendArtifactGeneratedLazyExecutionResult : "",
+          frontendArtifactGeneratedLazyExecutionError: window.VaadinDesktopIpcDiagnostics ? window.VaadinDesktopIpcDiagnostics.frontendArtifactGeneratedLazyExecutionError : "",
+          frontendArtifactGeneratedLazyLoadOnDemandResult: window.VaadinDesktopIpcDiagnostics ? window.VaadinDesktopIpcDiagnostics.frontendArtifactGeneratedLazyLoadOnDemandResult : "",
           frontendArtifactDevModeVerified: !!(window.VaadinDesktopIpcDiagnostics && window.VaadinDesktopIpcDiagnostics.frontendArtifactDevModeVerified),
           frontendArtifactDevModePath: window.VaadinDesktopIpcDiagnostics ? window.VaadinDesktopIpcDiagnostics.frontendArtifactDevModePath : "",
           frontendArtifactDevModePackageGraphResult: window.VaadinDesktopIpcDiagnostics ? window.VaadinDesktopIpcDiagnostics.frontendArtifactDevModePackageGraphResult : "",
           frontendArtifactDevModeBlocker: !!(window.VaadinDesktopIpcDiagnostics && window.VaadinDesktopIpcDiagnostics.frontendArtifactDevModeBlocker),
           frontendArtifactGeneratedLazyBlocker: !!(window.VaadinDesktopIpcDiagnostics && window.VaadinDesktopIpcDiagnostics.frontendArtifactGeneratedLazyBlocker),
+          frontendStagingResolverVersion: window.VaadinDesktopIpcDiagnostics ? window.VaadinDesktopIpcDiagnostics.frontendStagingResolverVersion : "",
+          frontendStagingObserved: !!(window.VaadinDesktopIpcDiagnostics && window.VaadinDesktopIpcDiagnostics.frontendStagingObserved),
+          frontendStagedResourceCount: window.VaadinDesktopIpcDiagnostics ? window.VaadinDesktopIpcDiagnostics.frontendStagedResourceCount : 0,
+          frontendStagedResourcePaths: window.VaadinDesktopIpcDiagnostics ? window.VaadinDesktopIpcDiagnostics.frontendStagedResourcePaths : "",
+          frontendStagedResourceFamilies: window.VaadinDesktopIpcDiagnostics ? window.VaadinDesktopIpcDiagnostics.frontendStagedResourceFamilies : "",
+          frontendStagedResourceSchemes: window.VaadinDesktopIpcDiagnostics ? window.VaadinDesktopIpcDiagnostics.frontendStagedResourceSchemes : "",
+          frontendStagedResourceCacheHitCount: window.VaadinDesktopIpcDiagnostics ? window.VaadinDesktopIpcDiagnostics.frontendStagedResourceCacheHitCount : 0,
+          frontendStagedResourceCacheMissCount: window.VaadinDesktopIpcDiagnostics ? window.VaadinDesktopIpcDiagnostics.frontendStagedResourceCacheMissCount : 0,
+          frontendStagedResourceExecutedCount: window.VaadinDesktopIpcDiagnostics ? window.VaadinDesktopIpcDiagnostics.frontendStagedResourceExecutedCount : 0,
+          frontendStagedResourceExecutedPaths: window.VaadinDesktopIpcDiagnostics ? window.VaadinDesktopIpcDiagnostics.frontendStagedResourceExecutedPaths : "",
+          frontendStagedResourceFailedCount: window.VaadinDesktopIpcDiagnostics ? window.VaadinDesktopIpcDiagnostics.frontendStagedResourceFailedCount : 0,
+          frontendStagedResourceFailedPaths: window.VaadinDesktopIpcDiagnostics ? window.VaadinDesktopIpcDiagnostics.frontendStagedResourceFailedPaths : "",
+          frontendArtifactTextFieldStagedBlocker: !!(window.VaadinDesktopIpcDiagnostics && window.VaadinDesktopIpcDiagnostics.frontendArtifactTextFieldStagedBlocker),
+          frontendArtifactTextFieldStagedBlockerPath: window.VaadinDesktopIpcDiagnostics ? window.VaadinDesktopIpcDiagnostics.frontendArtifactTextFieldStagedBlockerPath : "",
+          frontendArtifactTextFieldStagedBlockerReason: window.VaadinDesktopIpcDiagnostics ? window.VaadinDesktopIpcDiagnostics.frontendArtifactTextFieldStagedBlockerReason : "",
+          frontendArtifactTextFieldStagedBlockerError: window.VaadinDesktopIpcDiagnostics ? window.VaadinDesktopIpcDiagnostics.frontendArtifactTextFieldStagedBlockerError : "",
+          frontendArtifactTextFieldStagedBlockerDependency: window.VaadinDesktopIpcDiagnostics ? window.VaadinDesktopIpcDiagnostics.frontendArtifactTextFieldStagedBlockerDependency : "",
           flowClientBootstrapInitError: window.VaadinDesktopIpcDiagnostics ? window.VaadinDesktopIpcDiagnostics.flowClientBootstrapInitError : "",
           flowClientResourceExecutionError: window.VaadinDesktopIpcDiagnostics ? window.VaadinDesktopIpcDiagnostics.flowClientResourceExecutionError : "",
           vaadinWebComponentResourceManifestObserved: !!(window.VaadinDesktopIpcDiagnostics && window.VaadinDesktopIpcDiagnostics.vaadinWebComponentResourceManifestObserved),
@@ -1863,6 +1889,16 @@ let flowIpcShell = #"""
       const componentFrontendResourceExecutedPaths = new Set();
       const componentFrontendResourceExecutedTags = new Set();
       const componentFrontendResourceExecutionFailedPaths = new Set();
+      const frontendStagedResourcePaths = new Set();
+      const frontendStagedResourceFamilies = new Set();
+      const frontendStagedResourceUrls = new Map();
+      const frontendStagedResourceCacheHitPaths = new Set();
+      const frontendStagedResourceCacheMissPaths = new Set();
+      const frontendStagedResourceExecutedPaths = new Set();
+      const frontendStagedResourceFailedPaths = new Set();
+      const frontendStageResourceByUrl = new Map();
+      let generatedLazyBundleExecutionAttempted = false;
+      let textFieldDevBundleStageAttempted = false;
       const pendingFlowClientXhrRequests = new Map();
       const queuedFlowClientEngineMessages = [];
       const queuedFlowClientEngineMessageOrder = [];
@@ -1958,11 +1994,33 @@ let flowIpcShell = #"""
         frontendArtifactGeneratedLazyBundleChunkVerified: false,
         frontendArtifactGeneratedLazyBundleChunkPath: '',
         frontendArtifactGeneratedLazyBundleChunkResult: '',
+        frontendArtifactGeneratedLazyExecutionAttempted: false,
+        frontendArtifactGeneratedLazyExecuted: false,
+        frontendArtifactGeneratedLazyExecutionResult: '',
+        frontendArtifactGeneratedLazyExecutionError: '',
+        frontendArtifactGeneratedLazyLoadOnDemandResult: '',
         frontendArtifactDevModeVerified: false,
         frontendArtifactDevModePath: '',
         frontendArtifactDevModePackageGraphResult: '',
         frontendArtifactDevModeBlocker: false,
         frontendArtifactGeneratedLazyBlocker: false,
+        frontendStagingResolverVersion: '',
+        frontendStagingObserved: false,
+        frontendStagedResourceCount: 0,
+        frontendStagedResourcePaths: '',
+        frontendStagedResourceFamilies: '',
+        frontendStagedResourceSchemes: '',
+        frontendStagedResourceCacheHitCount: 0,
+        frontendStagedResourceCacheMissCount: 0,
+        frontendStagedResourceExecutedCount: 0,
+        frontendStagedResourceExecutedPaths: '',
+        frontendStagedResourceFailedCount: 0,
+        frontendStagedResourceFailedPaths: '',
+        frontendArtifactTextFieldStagedBlocker: false,
+        frontendArtifactTextFieldStagedBlockerPath: '',
+        frontendArtifactTextFieldStagedBlockerReason: '',
+        frontendArtifactTextFieldStagedBlockerError: '',
+        frontendArtifactTextFieldStagedBlockerDependency: '',
         flowClientResourceExecutionError: '',
         vaadinWebComponentResourceManifestObserved: false,
         vaadinWebComponentResourceManifestCount: 0,
@@ -3590,6 +3648,122 @@ let flowIpcShell = #"""
         };
       }
 
+      function stagedUrlScheme(stagedUrl) {
+        if (typeof stagedUrl !== 'string') {
+          return '';
+        }
+        const index = stagedUrl.indexOf(':');
+        return index > 0 ? stagedUrl.substring(0, index) : '';
+      }
+
+      function refreshFrontendStagingDiagnostics() {
+        window.VaadinDesktopIpcDiagnostics.frontendStagingResolverVersion = 'flow-ipc-resource-staging-v1_5';
+        window.VaadinDesktopIpcDiagnostics.frontendStagingObserved = frontendStagedResourcePaths.size > 0;
+        window.VaadinDesktopIpcDiagnostics.frontendStagedResourceCount = frontendStagedResourcePaths.size;
+        window.VaadinDesktopIpcDiagnostics.frontendStagedResourcePaths =
+          Array.from(frontendStagedResourcePaths).join(',');
+        window.VaadinDesktopIpcDiagnostics.frontendStagedResourceFamilies =
+          Array.from(frontendStagedResourceFamilies).join(',');
+        window.VaadinDesktopIpcDiagnostics.frontendStagedResourceSchemes =
+          Array.from(new Set(Array.from(frontendStagedResourceUrls.values()))).join(',');
+        window.VaadinDesktopIpcDiagnostics.frontendStagedResourceCacheHitCount =
+          frontendStagedResourceCacheHitPaths.size;
+        window.VaadinDesktopIpcDiagnostics.frontendStagedResourceCacheMissCount =
+          frontendStagedResourceCacheMissPaths.size;
+        window.VaadinDesktopIpcDiagnostics.frontendStagedResourceExecutedCount =
+          frontendStagedResourceExecutedPaths.size;
+        window.VaadinDesktopIpcDiagnostics.frontendStagedResourceExecutedPaths =
+          Array.from(frontendStagedResourceExecutedPaths).join(',');
+        window.VaadinDesktopIpcDiagnostics.frontendStagedResourceFailedCount =
+          frontendStagedResourceFailedPaths.size;
+        window.VaadinDesktopIpcDiagnostics.frontendStagedResourceFailedPaths =
+          Array.from(frontendStagedResourceFailedPaths).join(',');
+      }
+
+      function recordFrontendStage(resource, stagedUrl, executionStatus, cacheStatus, extra) {
+        if (!resource || typeof resource.path !== 'string' || !resource.path) {
+          return;
+        }
+        const sourcePath = resource.path;
+        const body = extra && typeof extra.body === 'string' ? extra.body : '';
+        const bytes = Number.isFinite(resource.bytes) ? resource.bytes : (body ? new Blob([body]).size : 0);
+        const family = resource.artifactFamily || '';
+        const scheme = stagedUrlScheme(stagedUrl);
+        frontendStagedResourcePaths.add(sourcePath);
+        if (family) {
+          frontendStagedResourceFamilies.add(family);
+        }
+        if (scheme) {
+          frontendStagedResourceUrls.set(sourcePath, scheme);
+        }
+        if (cacheStatus === 'hit') {
+          frontendStagedResourceCacheHitPaths.add(sourcePath);
+        } else if (cacheStatus === 'miss') {
+          frontendStagedResourceCacheMissPaths.add(sourcePath);
+        }
+        if (executionStatus === 'executed') {
+          frontendStagedResourceExecutedPaths.add(sourcePath);
+          frontendStagedResourceFailedPaths.delete(sourcePath);
+        } else if (executionStatus === 'strict-blocker' || executionStatus === 'execution-failed') {
+          frontendStagedResourceFailedPaths.add(sourcePath);
+        }
+        refreshFrontendStagingDiagnostics();
+        sendHostTrace('resourceStage', {
+          stagingResolverVersion: 'flow-ipc-resource-staging-v1_5',
+          sourcePath,
+          stagedUrl,
+          stagedUrlScheme: scheme,
+          stagedPath: '',
+          artifactFamily: family,
+          moduleSpecifier: resource.moduleSpecifier || '',
+          sha256: resource.sha256 || '',
+          bytes,
+          dependencyOf: resource.dependencyOf || '',
+          requestedBy: resource.requestedBy || '',
+          resolver: resource.resolver || '',
+          lookupKind: resource.lookupKind || '',
+          cacheStatus: cacheStatus || '',
+          cleanupPolicy: extra && extra.cleanupPolicy
+            ? extra.cleanupPolicy
+            : 'revoke-on-module-graph-complete',
+          executionStatus,
+          failureClassification: extra && extra.failureClassification
+            ? extra.failureClassification
+            : (resource.failureClassification || ''),
+          blockedReason: extra && extra.blockedReason
+            ? extra.blockedReason
+            : (resource.blockedReason || ''),
+          browserError: extra && extra.browserError ? extra.browserError : ''
+        });
+      }
+
+      function stageFrontendArtifact(resource, body, executionStatus, urlsToRevoke, urlCache, extra) {
+        if (!resource || typeof resource.path !== 'string' || !resource.path || typeof body !== 'string') {
+          return '';
+        }
+        if (urlCache && urlCache.has(resource.path)) {
+          const cachedUrl = urlCache.get(resource.path);
+          recordFrontendStage(resource, cachedUrl, executionStatus || 'staged', 'hit',
+            Object.assign({ body }, extra || {}));
+          return cachedUrl;
+        }
+        const url = URL.createObjectURL(new Blob([body], { type: 'text/javascript' }));
+        frontendStageResourceByUrl.set(url, resource);
+        if (Array.isArray(urlsToRevoke)) {
+          urlsToRevoke.push(url);
+        }
+        if (urlCache) {
+          urlCache.set(resource.path, url);
+        }
+        recordFrontendStage(resource, url, executionStatus || 'staged', 'miss',
+          Object.assign({ body }, extra || {}));
+        return url;
+      }
+
+      function recordFrontendStageOutcome(resource, stagedUrl, executionStatus, extra) {
+        recordFrontendStage(resource, stagedUrl, executionStatus || 'executed', 'hit', extra || {});
+      }
+
       function requestFlowClientResourceProbe(payload) {
         flowClientResources = payload && payload.flowClientResources && Array.isArray(payload.flowClientResources.resources)
           ? payload.flowClientResources.resources
@@ -4485,7 +4659,34 @@ let flowIpcShell = #"""
             payload.shimmedImports.join(',');
         }
         refreshComponentFrontendResourceDiagnostics();
-        await maybeExecuteVaadinWebComponentResource();
+        try {
+          await maybeExecuteVaadinWebComponentResource();
+        } catch (error) {
+          window.VaadinDesktopIpcDiagnostics.vaadinWebComponentResourceExecutionError =
+            error && error.message ? error.message : String(error);
+        }
+        try {
+          await maybeExecuteGeneratedLazyBundleResource();
+        } catch (error) {
+          window.VaadinDesktopIpcDiagnostics.frontendArtifactGeneratedLazyExecutionAttempted = true;
+          window.VaadinDesktopIpcDiagnostics.frontendArtifactGeneratedLazyExecutionResult =
+            'strict-blocker:probe-dispatch';
+          window.VaadinDesktopIpcDiagnostics.frontendArtifactGeneratedLazyExecutionError =
+            error && error.message ? error.message : String(error);
+          window.VaadinDesktopIpcDiagnostics.frontendArtifactGeneratedLazyBlocker = true;
+        }
+        try {
+          await maybeStageTextFieldDevBundleBlocker();
+        } catch (error) {
+          const resource = textFieldDevBundleResource();
+          window.VaadinDesktopIpcDiagnostics.frontendArtifactTextFieldStagedBlocker = true;
+          window.VaadinDesktopIpcDiagnostics.frontendArtifactTextFieldStagedBlockerPath =
+            resource && resource.path ? resource.path : 'TextField-dev-bundle-resource-v1_4';
+          window.VaadinDesktopIpcDiagnostics.frontendArtifactTextFieldStagedBlockerReason =
+            'textfield-staging-probe-dispatch-failed';
+          window.VaadinDesktopIpcDiagnostics.frontendArtifactTextFieldStagedBlockerError =
+            error && error.message ? error.message : String(error);
+        }
       }
 
       function refreshComponentFrontendResourceDiagnostics() {
@@ -4559,10 +4760,12 @@ let flowIpcShell = #"""
       }
 
       function componentModuleBlobUrl(path, urlsToRevoke, urlCache) {
-        if (urlCache && urlCache.has(path)) {
-          return urlCache.get(path);
-        }
         const resource = componentFrontendResourceByPath(path);
+        if (urlCache && urlCache.has(path)) {
+          return stageFrontendArtifact(resource || { path }, '', 'staged', urlsToRevoke, urlCache, {
+            cleanupPolicy: 'revoke-on-module-graph-complete'
+          });
+        }
         let body = componentFrontendResourceBodies.get(path) || '';
         if (!body) {
           window.VaadinDesktopIpcDiagnostics.vaadinWebComponentResourceExecutionError =
@@ -4582,12 +4785,9 @@ let flowIpcShell = #"""
             return '';
           }
         }
-        const url = URL.createObjectURL(new Blob([body], { type: 'text/javascript' }));
-        urlsToRevoke.push(url);
-        if (urlCache) {
-          urlCache.set(path, url);
-        }
-        return url;
+        return stageFrontendArtifact(resource || { path }, body, 'staged', urlsToRevoke, urlCache, {
+          cleanupPolicy: 'revoke-on-module-graph-complete'
+        });
       }
 
       function componentModuleFileName(path) {
@@ -4752,6 +4952,173 @@ let flowIpcShell = #"""
         setTimeout(scheduleAutoComponentEvents, 160);
       }
 
+      function generatedLazyBundleResource() {
+        return componentFrontendResources.find((entry) => entry
+          && entry.generatedLazyBundleChunk === true
+          && entry.artifactFamily === 'generated-lazy'
+          && typeof entry.path === 'string')
+          || null;
+      }
+
+      function textFieldDevBundleResource() {
+        return componentFrontendResources.find((entry) => entry
+          && entry.lookupKind === 'TextField-dev-bundle-resource-v1_4'
+          && typeof entry.path === 'string')
+          || null;
+      }
+
+      function markStagedDependenciesStrictBlocker(urlCache, browserError) {
+        for (const [dependencyPath, dependencyUrl] of urlCache.entries()) {
+          const dependency = componentFrontendResourceByPath(dependencyPath);
+          recordFrontendStageOutcome(dependency, dependencyUrl, 'strict-blocker', {
+            cleanupPolicy: 'revoke-on-module-graph-complete',
+            blockedReason: 'blocked-by-parent-module-execution',
+            browserError
+          });
+        }
+      }
+
+      async function maybeExecuteGeneratedLazyBundleResource() {
+        if (generatedLazyBundleExecutionAttempted
+            || !window.VaadinDesktopIpcDiagnostics.vaadinWebComponentResourceGraphVerified) {
+          return;
+        }
+        const resource = generatedLazyBundleResource();
+        if (!resource) {
+          return;
+        }
+        const source = componentFrontendResourceBodies.get(resource.path) || '';
+        if (!source) {
+          return;
+        }
+        generatedLazyBundleExecutionAttempted = true;
+        window.VaadinDesktopIpcDiagnostics.frontendArtifactGeneratedLazyExecutionAttempted = true;
+        const loadOnDemand = window.Vaadin && window.Vaadin.Flow
+          && typeof window.Vaadin.Flow.loadOnDemand === 'function';
+        window.VaadinDesktopIpcDiagnostics.frontendArtifactGeneratedLazyLoadOnDemandResult =
+          loadOnDemand
+            ? 'api-present-not-called:no-bootstrap-lazy-entry;staged-import-attempted'
+            : 'api-not-exposed-on-current-bootstrap;staged-import-attempted';
+        const urlsToRevoke = [];
+        const urlCache = new Map();
+        let stagedUrl = '';
+        try {
+          installOpaqueOriginStorageFallbacks();
+          installVaadinDevBundleGlobals();
+          const importSource = rewriteVaadinDevBundleModule(source, resource.path, urlsToRevoke, urlCache);
+          if (!importSource) {
+            throw new Error(window.VaadinDesktopIpcDiagnostics.vaadinWebComponentResourceExecutionError
+              || 'generated-lazy-staging-rewrite-failed');
+          }
+          stagedUrl = stageFrontendArtifact(resource, importSource, 'execution-attempt', urlsToRevoke, null, {
+            cleanupPolicy: 'revoke-after-generated-lazy-import'
+          });
+          await import(stagedUrl);
+          window.VaadinDesktopIpcDiagnostics.frontendArtifactGeneratedLazyExecuted = true;
+          window.VaadinDesktopIpcDiagnostics.frontendArtifactGeneratedLazyExecutionResult =
+            'executed:' + resource.path;
+          window.VaadinDesktopIpcDiagnostics.frontendArtifactGeneratedLazyBundleChunkResult =
+            'executed:' + resource.path;
+          window.VaadinDesktopIpcDiagnostics.frontendArtifactGeneratedLazyExecutionError = '';
+          window.VaadinDesktopIpcDiagnostics.frontendArtifactGeneratedLazyBlocker = false;
+          recordFrontendStageOutcome(resource, stagedUrl, 'executed', {
+            cleanupPolicy: 'revoke-after-generated-lazy-import'
+          });
+          for (const [dependencyPath, dependencyUrl] of urlCache.entries()) {
+            const dependency = componentFrontendResourceByPath(dependencyPath);
+            recordFrontendStageOutcome(dependency, dependencyUrl, 'executed', {
+              cleanupPolicy: 'revoke-on-module-graph-complete'
+            });
+          }
+        } catch (error) {
+          const message = error && error.message ? error.message : String(error);
+          window.VaadinDesktopIpcDiagnostics.frontendArtifactGeneratedLazyExecuted = false;
+          window.VaadinDesktopIpcDiagnostics.frontendArtifactGeneratedLazyExecutionResult =
+            'strict-blocker:' + resource.path;
+          window.VaadinDesktopIpcDiagnostics.frontendArtifactGeneratedLazyBundleChunkResult =
+            'strict-blocker:' + resource.path;
+          window.VaadinDesktopIpcDiagnostics.frontendArtifactGeneratedLazyExecutionError = message;
+          window.VaadinDesktopIpcDiagnostics.frontendArtifactGeneratedLazyBlocker = true;
+          recordFrontendStageOutcome(resource, stagedUrl, 'strict-blocker', {
+            cleanupPolicy: 'revoke-after-generated-lazy-import',
+            blockedReason: resource.blockedReason || 'generated-lazy-staged-execution-blocked',
+            browserError: message
+          });
+          markStagedDependenciesStrictBlocker(urlCache, message);
+        } finally {
+          refreshFrontendStagingDiagnostics();
+          for (const url of urlsToRevoke) {
+            URL.revokeObjectURL(url);
+          }
+        }
+      }
+
+      async function maybeStageTextFieldDevBundleBlocker() {
+        if (textFieldDevBundleStageAttempted
+            || !window.VaadinDesktopIpcDiagnostics.vaadinWebComponentResourceGraphVerified) {
+          return;
+        }
+        const resource = textFieldDevBundleResource();
+        if (!resource) {
+          return;
+        }
+        const source = componentFrontendResourceBodies.get(resource.path) || '';
+        if (!source) {
+          return;
+        }
+        textFieldDevBundleStageAttempted = true;
+        const urlsToRevoke = [];
+        const urlCache = new Map();
+        let stagedUrl = '';
+        try {
+          installOpaqueOriginStorageFallbacks();
+          installVaadinDevBundleGlobals();
+          const importSource = rewriteVaadinDevBundleModule(source, resource.path, urlsToRevoke, urlCache);
+          if (!importSource) {
+            throw new Error(window.VaadinDesktopIpcDiagnostics.vaadinWebComponentResourceExecutionError
+              || 'textfield-staging-rewrite-failed');
+          }
+          stagedUrl = stageFrontendArtifact(resource, importSource, 'execution-attempt', urlsToRevoke, null, {
+            cleanupPolicy: 'revoke-after-textfield-blocker-probe'
+          });
+          await import(stagedUrl);
+          if (customElements.get('vaadin-text-field')) {
+            recordFrontendStageOutcome(resource, stagedUrl, 'executed', {
+              cleanupPolicy: 'revoke-after-textfield-blocker-probe'
+            });
+            for (const [dependencyPath, dependencyUrl] of urlCache.entries()) {
+              const dependency = componentFrontendResourceByPath(dependencyPath);
+              recordFrontendStageOutcome(dependency, dependencyUrl, 'executed', {
+                cleanupPolicy: 'revoke-on-module-graph-complete'
+              });
+            }
+            return;
+          }
+          throw new Error('vaadin-text-field not defined after staged dev-bundle import');
+        } catch (error) {
+          const message = error && error.message ? error.message : String(error);
+          const dependency = Array.from(urlCache.keys()).join(',');
+          window.VaadinDesktopIpcDiagnostics.frontendArtifactTextFieldStagedBlocker = true;
+          window.VaadinDesktopIpcDiagnostics.frontendArtifactTextFieldStagedBlockerPath = resource.path;
+          window.VaadinDesktopIpcDiagnostics.frontendArtifactTextFieldStagedBlockerReason =
+            resource.blockedReason || 'textfield-staged-dev-bundle-execution-blocked';
+          window.VaadinDesktopIpcDiagnostics.frontendArtifactTextFieldStagedBlockerError = message;
+          window.VaadinDesktopIpcDiagnostics.frontendArtifactTextFieldStagedBlockerDependency = dependency;
+          recordFrontendStageOutcome(resource, stagedUrl, 'strict-blocker', {
+            cleanupPolicy: 'revoke-after-textfield-blocker-probe',
+            failureClassification: resource.failureClassification || 'textfield-production-class-execution-blocked',
+            blockedReason: resource.blockedReason || 'textfield-staged-dev-bundle-execution-blocked',
+            browserError: message
+          });
+          markStagedDependenciesStrictBlocker(urlCache, message);
+        } finally {
+          refreshFrontendStagingDiagnostics();
+          for (const url of urlsToRevoke) {
+            URL.revokeObjectURL(url);
+          }
+        }
+      }
+
       async function executeComponentFrontendResource(resource) {
         const primaryPath = resource.path;
         const primaryBody = componentFrontendResourceBodies.get(primaryPath) || '';
@@ -4765,6 +5132,7 @@ let flowIpcShell = #"""
         const componentTag = componentTagForResource(resource);
         const urlsToRevoke = [];
         const urlCache = new Map();
+        let primaryUrl = '';
         try {
           let importSource = primaryBody;
           if (Array.isArray(resource.importRewrites) && resource.importRewrites.length > 0) {
@@ -4793,8 +5161,9 @@ let flowIpcShell = #"""
             window.VaadinDesktopIpcDiagnostics.vaadinWebComponentResourceImportMode =
               'dynamic-import-blob-generic-component-frontend-v1_3';
           }
-          const primaryUrl = URL.createObjectURL(new Blob([importSource], { type: 'text/javascript' }));
-          urlsToRevoke.push(primaryUrl);
+          primaryUrl = stageFrontendArtifact(resource, importSource, 'execution-attempt', urlsToRevoke, null, {
+            cleanupPolicy: 'revoke-after-dynamic-import'
+          });
           await import(primaryUrl);
           if (componentTag && !customElements.get(componentTag)) {
             componentFrontendResourceExecutionFailedPaths.add(primaryPath);
@@ -4813,10 +5182,23 @@ let flowIpcShell = #"""
               + ' featureFlag=' + featureFlagKey + ':' + featureFlagEnabled;
             window.VaadinDesktopIpcDiagnostics.vaadinWebComponentFailureReason =
               'custom-element-not-defined-after-import';
+            recordFrontendStageOutcome(resource, primaryUrl, 'execution-failed', {
+              cleanupPolicy: 'revoke-after-dynamic-import',
+              browserError: window.VaadinDesktopIpcDiagnostics.vaadinWebComponentResourceExecutionError
+            });
             refreshComponentFrontendResourceDiagnostics();
             return;
           }
           componentFrontendResourceExecutedPaths.add(primaryPath);
+          recordFrontendStageOutcome(resource, primaryUrl, 'executed', {
+            cleanupPolicy: 'revoke-after-dynamic-import'
+          });
+          for (const [dependencyPath, dependencyUrl] of urlCache.entries()) {
+            const dependency = componentFrontendResourceByPath(dependencyPath);
+            recordFrontendStageOutcome(dependency, dependencyUrl, 'executed', {
+              cleanupPolicy: 'revoke-on-module-graph-complete'
+            });
+          }
           if (componentTag) {
             componentFrontendResourceExecutedTags.add(componentTag);
           }
@@ -4835,6 +5217,10 @@ let flowIpcShell = #"""
         } catch (error) {
           if (resource.devBundleResource === true && componentTag && customElements.get(componentTag)) {
             componentFrontendResourceExecutedPaths.add(primaryPath);
+            recordFrontendStageOutcome(resource, primaryUrl, 'executed', {
+              cleanupPolicy: 'revoke-after-dynamic-import',
+              browserError: error && error.message ? error.message : String(error)
+            });
             componentFrontendResourceExecutedTags.add(componentTag);
             if (!window.VaadinDesktopIpcDiagnostics.vaadinWebComponentResourceExecutedPath) {
               window.VaadinDesktopIpcDiagnostics.vaadinWebComponentResourceExecutedPath = primaryPath;
@@ -4855,6 +5241,10 @@ let flowIpcShell = #"""
             error && error.message ? error.message : String(error);
           window.VaadinDesktopIpcDiagnostics.vaadinWebComponentFailureReason =
             'browser-execution-error';
+          recordFrontendStageOutcome(resource, primaryUrl, 'execution-failed', {
+            cleanupPolicy: 'revoke-after-dynamic-import',
+            browserError: window.VaadinDesktopIpcDiagnostics.vaadinWebComponentResourceExecutionError
+          });
           refreshComponentFrontendResourceDiagnostics();
         } finally {
           for (const url of urlsToRevoke) {

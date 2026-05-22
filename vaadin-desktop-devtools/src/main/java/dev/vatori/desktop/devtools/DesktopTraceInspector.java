@@ -47,6 +47,7 @@ public final class DesktopTraceInspector {
         boolean requireFlowIpcV1_2 = false;
         boolean requireFlowIpcV1_3 = false;
         boolean requireFlowIpcV1_4 = false;
+        boolean requireFlowIpcV1_5 = false;
         boolean requireFlowIpcV1_3Framework = false;
         List<Path> paths = new ArrayList<>();
         for (String arg : args) {
@@ -70,6 +71,13 @@ public final class DesktopTraceInspector {
                 requireFlowIpcV1_2 = true;
                 requireFlowIpcV1_3 = true;
                 requireFlowIpcV1_4 = true;
+            } else if ("--require-flow-ipc-v1_5".equals(arg)) {
+                requireFlowIpc = true;
+                requireFlowIpcV1_1 = true;
+                requireFlowIpcV1_2 = true;
+                requireFlowIpcV1_3 = true;
+                requireFlowIpcV1_4 = true;
+                requireFlowIpcV1_5 = true;
             } else if ("--require-flow-ipc-v1_3-framework".equals(arg)) {
                 requireFlowIpcV1_3Framework = true;
             } else {
@@ -99,6 +107,9 @@ public final class DesktopTraceInspector {
                 failures++;
             }
             if (requireFlowIpcV1_4 && !summary.hasRequiredFlowIpcV1_4Types()) {
+                failures++;
+            }
+            if (requireFlowIpcV1_5 && !summary.hasRequiredFlowIpcV1_5Types()) {
                 failures++;
             }
             if (requireFlowIpcV1_3Framework && !summary.hasRequiredFlowIpcV1_3FrameworkTypes()) {
@@ -690,6 +701,95 @@ public final class DesktopTraceInspector {
                     && containsLiteralField(line, "frontendArtifactGeneratedLazyBlocker", "true")) {
                 summary.frontendGeneratedLazyStrictBlockerObserved = true;
             }
+            if (line.contains("\"type\":\"resourceStage\"")
+                    && line.contains("\"stagingResolverVersion\":\"flow-ipc-resource-staging-v1_5\"")
+                    && line.contains("\"sourcePath\"")
+                    && line.contains("\"stagedUrlScheme\"")
+                    && line.contains("\"artifactFamily\"")
+                    && line.contains("\"moduleSpecifier\"")
+                    && line.contains("\"sha256\"")
+                    && line.contains("\"bytes\"")
+                    && line.contains("\"dependencyOf\"")
+                    && line.contains("\"requestedBy\"")
+                    && line.contains("\"cacheStatus\"")
+                    && line.contains("\"cleanupPolicy\"")
+                    && line.contains("\"executionStatus\"")) {
+                summary.frontendResourceStageObserved = true;
+            }
+            if (line.contains("\"type\":\"resourceStage\"")
+                    && line.contains("\"executionStatus\":\"executed\"")) {
+                summary.frontendResourceStageExecutedObserved = true;
+            }
+            if (line.contains("\"type\":\"resourceStage\"")
+                    && line.contains("\"executionStatus\":\"strict-blocker\"")
+                    && line.contains("\"browserError\"")) {
+                summary.frontendResourceStageStrictBlockerObserved = true;
+                if (line.contains("\"failureClassification\":\"")
+                        && !line.contains("\"failureClassification\":\"\"")) {
+                    summary.frontendResourceStageFailureClassificationObserved = true;
+                }
+            }
+            if (line.contains("\"type\":\"resourceStage\"")
+                    && line.contains("\"lookupKind\":\"TextField-dev-bundle-resource-v1_4\"")
+                    && line.contains("\"executionStatus\":\"executed\"")) {
+                summary.frontendTextFieldStagedExecutionObserved = true;
+            }
+            if (line.contains("\"type\":\"resourceStage\"")
+                    && line.contains("\"lookupKind\":\"TextField-dev-bundle-resource-v1_4\"")
+                    && line.contains("\"executionStatus\":\"strict-blocker\"")
+                    && line.contains("\"browserError\"")
+                    && line.contains("\"failureClassification\":\"textfield-production-class-execution-blocked\"")) {
+                summary.frontendTextFieldStagedBlockerObserved = true;
+            }
+            if (line.contains("\"type\":\"resourceStage\"")
+                    && line.contains("\"artifactFamily\":\"generated-lazy\"")
+                    && line.contains("vaadin-dev-bundle/webapp/VAADIN/build/generated-flow-imports-VW7hRaNw.js")
+                    && (line.contains("\"executionStatus\":\"execution-attempt\"")
+                            || line.contains("\"executionStatus\":\"executed\"")
+                            || line.contains("\"executionStatus\":\"strict-blocker\""))) {
+                summary.frontendGeneratedLazyExecutionAttemptObserved = true;
+            }
+            if (line.contains("\"type\":\"resourceStage\"")
+                    && line.contains("\"artifactFamily\":\"generated-lazy\"")
+                    && line.contains("vaadin-dev-bundle/webapp/VAADIN/build/generated-flow-imports-VW7hRaNw.js")
+                    && (line.contains("\"executionStatus\":\"executed\"")
+                            || (line.contains("\"executionStatus\":\"strict-blocker\"")
+                                    && line.contains("\"browserError\"")))) {
+                summary.frontendGeneratedLazyExecutionResolvedObserved = true;
+            }
+            if (line.contains("\"type\":\"webview.dom\"")
+                    && containsStringField(line, "frontendStagingResolverVersion", "flow-ipc-resource-staging-v1_5")
+                    && containsLiteralField(line, "frontendStagingObserved", "true")
+                    && containsPositiveIntegerField(line, "frontendStagedResourceCount")
+                    && line.contains("frontendStagedResourcePaths")
+                    && line.contains("frontendStagedResourceFamilies")
+                    && line.contains("frontendStagedResourceSchemes")) {
+                summary.frontendStagingDomObserved = true;
+            }
+            if (line.contains("\"type\":\"webview.dom\"")
+                    && (containsLiteralField(line, "frontendArtifactTextFieldStagedBlocker", "true")
+                            || line.contains("frontendArtifactTextFieldStagedBlockerPath"))
+                    && line.contains("TextField")
+                    && line.contains("frontendArtifactTextFieldStagedBlockerError")) {
+                summary.frontendTextFieldStagedBlockerObserved = true;
+            }
+            if (line.contains("\"type\":\"webview.dom\"")
+                    && containsLiteralField(line, "frontendArtifactGeneratedLazyExecutionAttempted", "true")
+                    && line.contains("frontendArtifactGeneratedLazyExecutionResult")
+                    && line.contains("frontendArtifactGeneratedLazyLoadOnDemandResult")) {
+                summary.frontendGeneratedLazyExecutionAttemptObserved = true;
+            }
+            if (line.contains("\"type\":\"webview.dom\"")
+                    && containsLiteralField(line, "frontendArtifactGeneratedLazyExecutionAttempted", "true")
+                    && (containsLiteralField(line, "frontendArtifactGeneratedLazyExecuted", "true")
+                            || line.contains("strict-blocker:vaadin-dev-bundle/webapp/VAADIN/build/generated-flow-imports-VW7hRaNw.js"))) {
+                summary.frontendGeneratedLazyExecutionResolvedObserved = true;
+            }
+            if (line.contains("\"type\":\"webview.dom\"")
+                    && line.contains("frontendArtifactGeneratedLazyLoadOnDemandResult")
+                    && line.contains("staged-import-attempted")) {
+                summary.frontendLoadOnDemandBoundaryObserved = true;
+            }
             if (line.contains("\"type\":\"resourceRequest\"")
                     && line.contains("\"purpose\":\"vaadin-web-component-resource-probe\"")
                     && line.contains("\"lookupKind\":\"BigDecimalField-minimum-component-resource\"")
@@ -1206,7 +1306,7 @@ public final class DesktopTraceInspector {
     }
 
     private static void usage() {
-        System.out.println("Usage: bin/flow-ipc-trace-inspect [--require-flow-ipc-v1|--require-flow-ipc-v1_1|--require-flow-ipc-v1_2|--require-flow-ipc-v1_3|--require-flow-ipc-v1_4|--require-flow-ipc-v1_3-framework] <trace.ndjson>...");
+        System.out.println("Usage: bin/flow-ipc-trace-inspect [--require-flow-ipc-v1|--require-flow-ipc-v1_1|--require-flow-ipc-v1_2|--require-flow-ipc-v1_3|--require-flow-ipc-v1_4|--require-flow-ipc-v1_5|--require-flow-ipc-v1_3-framework] <trace.ndjson>...");
     }
 
     public static final class TraceSummary {
@@ -1328,6 +1428,16 @@ public final class DesktopTraceInspector {
         private boolean frontendDevModeResourceObserved;
         private boolean frontendDevModeStrictBlockerObserved;
         private boolean frontendGeneratedLazyStrictBlockerObserved;
+        private boolean frontendResourceStageObserved;
+        private boolean frontendResourceStageExecutedObserved;
+        private boolean frontendResourceStageStrictBlockerObserved;
+        private boolean frontendResourceStageFailureClassificationObserved;
+        private boolean frontendStagingDomObserved;
+        private boolean frontendTextFieldStagedExecutionObserved;
+        private boolean frontendTextFieldStagedBlockerObserved;
+        private boolean frontendGeneratedLazyExecutionAttemptObserved;
+        private boolean frontendGeneratedLazyExecutionResolvedObserved;
+        private boolean frontendLoadOnDemandBoundaryObserved;
 
         public boolean hasRequiredFlowIpcTypes() {
             return types.keySet().containsAll(FLOW_IPC_REQUIRED_TYPES)
@@ -1440,6 +1550,18 @@ public final class DesktopTraceInspector {
                     && frontendGeneratedLazyStrictBlockerObserved
                     && frontendGeneratedLazyResourceObserved
                     && frontendGeneratedLazyBundleChunkResourceObserved;
+        }
+
+        public boolean hasRequiredFlowIpcV1_5Types() {
+            return hasRequiredFlowIpcV1_4Types()
+                    && frontendResourceStageObserved
+                    && frontendStagingDomObserved
+                    && (frontendResourceStageExecutedObserved || frontendResourceStageStrictBlockerObserved)
+                    && frontendResourceStageFailureClassificationObserved
+                    && (frontendTextFieldStagedExecutionObserved || frontendTextFieldStagedBlockerObserved)
+                    && frontendGeneratedLazyExecutionAttemptObserved
+                    && frontendGeneratedLazyExecutionResolvedObserved
+                    && frontendLoadOnDemandBoundaryObserved;
         }
 
         public boolean hasRequiredFlowIpcV1_3FrameworkTypes() {
@@ -1671,6 +1793,21 @@ public final class DesktopTraceInspector {
                     + frontendGeneratedLazyResourceObserved);
             System.out.println("Flow IPC v1.4 generated/lazy dev-bundle chunk observed: "
                     + frontendGeneratedLazyBundleChunkResourceObserved);
+            System.out.println("Flow IPC v1.5 resource staging observed: "
+                    + frontendResourceStageObserved);
+            System.out.println("Flow IPC v1.5 staging DOM observed: "
+                    + frontendStagingDomObserved);
+            System.out.println("Flow IPC v1.5 staged execution/strict blocker observed: "
+                    + frontendResourceStageExecutedObserved + "/" + frontendResourceStageStrictBlockerObserved);
+            System.out.println("Flow IPC v1.5 staged failure classification observed: "
+                    + frontendResourceStageFailureClassificationObserved);
+            System.out.println("Flow IPC v1.5 TextField staged execution/blocker observed: "
+                    + frontendTextFieldStagedExecutionObserved + "/" + frontendTextFieldStagedBlockerObserved);
+            System.out.println("Flow IPC v1.5 generated/lazy execution attempt/resolution observed: "
+                    + frontendGeneratedLazyExecutionAttemptObserved + "/"
+                    + frontendGeneratedLazyExecutionResolvedObserved);
+            System.out.println("Flow IPC v1.5 loadOnDemand boundary observed: "
+                    + frontendLoadOnDemandBoundaryObserved);
             List<String> missing = FLOW_IPC_REQUIRED_TYPES.stream()
                     .filter(type -> !types.containsKey(type))
                     .toList();

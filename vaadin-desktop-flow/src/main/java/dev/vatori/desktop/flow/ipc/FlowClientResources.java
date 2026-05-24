@@ -51,6 +51,19 @@ final class FlowClientResources {
     private static final String FRONTEND_ASSET_PIPELINE_VERSION = "flow-ipc-frontend-assets-v1_4";
     private static final String FRONTEND_ARTIFACT_GRAPH_SOURCE = "vaadin-frontend-artifact-graph-v1_4";
     private static final String COMPONENT_RESOLVER_V1_4 = "frontend-artifact-graph-v1_4";
+    private static final String TEXT_FIELD_GRAPH_PARITY_VERSION = "flow-ipc-textfield-graph-v1_6";
+    private static final String TEXT_FIELD_BLOCKER_VERSION = "flow-ipc-textfield-v1_6";
+    private static final String TEXT_FIELD_GRAPH_PROBE = "direct-textfield-dev-bundle-entry-staged-graph-v1_6";
+    private static final String TEXT_FIELD_IMPORT_RESOLUTION_STRATEGY =
+            "blob-module-rewrite-dev-bundle-entry-plus-indexhtml-dependency-v1_6";
+    private static final String TEXT_FIELD_NARROWED_FAILURE_CLASSIFICATION =
+            "textfield-production-indexhtml-duplicate-custom-element-definition";
+    private static final String TEXT_FIELD_FAILURE_LAYER =
+            "custom-element-registry-conflict-after-production-indexhtml-reimport";
+    private static final String TEXT_FIELD_MINIMAL_REPRODUCTION =
+            "stage META-INF/vatori/dev-bundle-entry/vaadin-text-field.js, rewrite ./indexhtml-BfYYZi8S.js to a staged dependency, import the entry after BigDecimalField has defined vaadin-text-field, and capture the duplicate custom element definition with registry before/after state";
+    private static final String TEXT_FIELD_NEXT_RESOLUTION_STEP =
+            "dedupe production indexhtml imports or split the TextField export away from production indexhtml side effects, then move this graph to a custom-scheme/file-backed module resolver that preserves relative imports without re-registering vaadin-text-field";
     private static final String FLOW_CLIENT_IPC_BRIDGE_NEEDLE = """
             j.sendEventMessage=mI(function(a,b,c){var d=i.a.Z();d.Ab(a,b,c)});j.initializing=false;\
             """;
@@ -380,6 +393,16 @@ final class FlowClientResources {
         manifest.put("source", "vaadin-component-classpath-plus-dev-bundle-v1_4");
         manifest.put("frontendAssetPipelineVersion", FRONTEND_ASSET_PIPELINE_VERSION);
         manifest.put("artifactGraphSource", FRONTEND_ARTIFACT_GRAPH_SOURCE);
+        manifest.put("textfieldGraphParityVersion", TEXT_FIELD_GRAPH_PARITY_VERSION);
+        manifest.put("textfieldBlockerVersion", TEXT_FIELD_BLOCKER_VERSION);
+        manifest.put("textfieldGraphProbe", TEXT_FIELD_GRAPH_PROBE);
+        manifest.put("textfieldImportResolutionStrategy", TEXT_FIELD_IMPORT_RESOLUTION_STRATEGY);
+        manifest.put("textfieldNarrowedFailureClassification", TEXT_FIELD_NARROWED_FAILURE_CLASSIFICATION);
+        manifest.put("textfieldFailureLayer", TEXT_FIELD_FAILURE_LAYER);
+        manifest.put("textfieldEntryArtifact", DEV_BUNDLE_TEXT_FIELD_ENTRY_JS);
+        manifest.put("textfieldTransitiveArtifacts", List.of(DEV_BUNDLE_INDEX_HTML_JS, DEV_BUNDLE_COMMONJS_JS));
+        manifest.put("textfieldMinimalReproduction", TEXT_FIELD_MINIMAL_REPRODUCTION);
+        manifest.put("textfieldNextResolutionStep", TEXT_FIELD_NEXT_RESOLUTION_STEP);
         manifest.put("artifactFamilies", List.of("flow-client-classpath",
                 "vaadin-component-classpath-frontend",
                 "npm-frontend",
@@ -443,6 +466,8 @@ final class FlowClientResources {
         manifest.put("productionBundleReady", false);
         manifest.put("devModeReady", false);
         manifest.put("failureClassification", "textfield-production-class-execution-blocked");
+        manifest.put("narrowedFailureClassification", TEXT_FIELD_NARROWED_FAILURE_CLASSIFICATION);
+        manifest.put("blockerVersion", TEXT_FIELD_BLOCKER_VERSION);
         manifest.put("blockedReason", COMPONENT_TRANSITIVE_BLOCKED_REASON);
         manifest.put("unresolvedImports", List.of(
                 Map.of("specifier", "@vaadin/text-field/src/vaadin-text-field.js",
@@ -653,11 +678,20 @@ final class FlowClientResources {
                 "TextField-dev-bundle-resource-v1_4",
                 BIG_DECIMAL_FIELD_JS);
         attributes.put("blockedImportSpecifiers", List.of("@vaadin/text-field/src/vaadin-text-field.js"));
+        attributes.put("textfieldGraphParityVersion", TEXT_FIELD_GRAPH_PARITY_VERSION);
+        attributes.put("blockerVersion", TEXT_FIELD_BLOCKER_VERSION);
+        attributes.put("graphProbe", TEXT_FIELD_GRAPH_PROBE);
+        attributes.put("graphEntryArtifact", DEV_BUNDLE_TEXT_FIELD_ENTRY_JS);
+        attributes.put("transitiveImports", List.of(DEV_BUNDLE_INDEX_HTML_JS, DEV_BUNDLE_COMMONJS_JS));
+        attributes.put("importResolutionStrategy", TEXT_FIELD_IMPORT_RESOLUTION_STRATEGY);
+        attributes.put("narrowedFailureClassification", TEXT_FIELD_NARROWED_FAILURE_CLASSIFICATION);
+        attributes.put("failureLayer", TEXT_FIELD_FAILURE_LAYER);
+        attributes.put("minimalReproduction", TEXT_FIELD_MINIMAL_REPRODUCTION);
         attributes.put("blockedExecutionProbe", "big-decimal-import-rewrite-to-textfield-dev-bundle");
         attributes.put("blockedExecutionError", "null is not an object (evaluating 'outlet._root')");
-        attributes.put("nextResolutionStep", "stage or isolate the TextField npm/frontend graph without executing the full indexhtml application chunk before FlowClient.init");
+        attributes.put("nextResolutionStep", TEXT_FIELD_NEXT_RESOLUTION_STEP);
         attributes.put("blockedReason",
-                "Focused TextField production class entry is verified, but BigDecimalField execution still needs full TextField graph parity; replacing the current shim with this entry triggers the recorded WebView execution blocker.");
+                "Focused TextField production class entry is verified and staged through the no-localhost resolver, but the entry imports the production indexhtml chunk; after the BigDecimalField path has defined vaadin-text-field, the direct TextField probe reaches the custom element registry and fails on duplicate definition.");
         return attributes;
     }
 

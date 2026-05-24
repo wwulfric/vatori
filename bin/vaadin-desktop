@@ -31,7 +31,11 @@ ensure_module() {
 }
 
 install_module_with_dependencies() {
-  mvn -U -Dmaven.repo.local="$MAVEN_REPO" -f "$ROOT/pom.xml" -pl "$MODULE" -am -DskipTests install
+  local maven_mode="-U"
+  if [[ "${VAADIN_DESKTOP_MAVEN_OFFLINE:-}" == "1" ]]; then
+    maven_mode="-o"
+  fi
+  mvn "$maven_mode" -Dmaven.repo.local="$MAVEN_REPO" -f "$ROOT/pom.xml" -pl "$MODULE" -am -DskipTests install
 }
 
 case "$COMMAND" in
@@ -113,6 +117,9 @@ PLIST
     if [[ "${VAADIN_DESKTOP_HOST_NO_ACTIVATE:-}" == "1" ]]; then
       OPEN_ENV_ARGS+=(--env "VAADIN_DESKTOP_HOST_NO_ACTIVATE=1")
       OPEN_BACKGROUND_ARGS+=(-g)
+    fi
+    if [[ "${VAADIN_DESKTOP_MAVEN_OFFLINE:-}" == "1" ]]; then
+      OPEN_ENV_ARGS+=(--env "VAADIN_DESKTOP_MAVEN_OFFLINE=1")
     fi
     SWIFT_HOST_STDOUT="$SWIFT_HOST_BUILD/host.out.log"
     SWIFT_HOST_STDERR="$SWIFT_HOST_BUILD/host.err.log"

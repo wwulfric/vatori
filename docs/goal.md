@@ -11,9 +11,9 @@ v0/v1 runtime 切片走向可产品化桌面框架的最终完成状态。
 - `docs/goal-1_3.md`：framework-shaped Flow IPC validation app，已完成。
 - `docs/goal-1_4.md`：Flow IPC frontend asset pipeline，已完成。
 - `docs/goal-1_5.md`：no-localhost frontend bundle staging，已完成。
-- `docs/goal-1_6.md`：TextField / npm graph parity，已指定，待执行。
+- `docs/goal-1_6.md`：TextField / npm graph parity，已完成。
 
-后续阶段应继续以 `docs/goal-1_6.md`、`docs/goal-1_7.md` 等文件拆分，
+后续阶段应继续以 `docs/goal-1_7.md`、`docs/goal-1_8.md` 等文件拆分，
 每个阶段只拿走本长期目标中的一个可评审切片。不要把本文件改写成短期任务清单；
 它是长期北极星和完成度账本。
 
@@ -35,7 +35,7 @@ v0/v1 runtime 切片走向可产品化桌面框架的最终完成状态。
 
 ## 当前基线
 
-截至 goal 1.5，仓库已经证明：
+截至 goal 1.6，仓库已经证明：
 
 - `dev-ipc` 可以启动 no-localhost Flow IPC runtime。
 - 真实 macOS Swift/AppKit/WKWebView 窗口可以运行 Flow IPC smoke app 和 framework
@@ -50,8 +50,15 @@ v0/v1 runtime 切片走向可产品化桌面框架的最终完成状态。
 - v1.5 已建立 no-localhost frontend staging resolver：真实 artifact body 可被 stage 成
   Blob-backed module URL，并以 `resourceStage` trace 记录 staged、executed、failed 和
   strict blocker 状态。
-- TextField/npm graph、完整 generated/lazy execution、production bundle execution 和
-  dev-mode/Vite execution 仍是明确 blocker，不计入完成。
+- v1.6 已把 TextField/npm graph 的旧宽泛 blocker 收敛为可复现 staged module blocker：
+  `META-INF/vatori/dev-bundle-entry/vaadin-text-field.js` 通过同一 no-localhost staging
+  resolver 进入 direct probe，`./indexhtml-BfYYZi8S.js` 被重写到 staged dependency，
+  并在 BigDecimalField 路径已经定义 `vaadin-text-field` 后触发 duplicate custom
+  element definition。trace 记录 `blockerVersion=flow-ipc-textfield-v1_6`、
+  custom element registry before/after、transitive artifacts、browser error、
+  failure layer 和下一步拆解路径。
+- TextField 真实组件执行、完整 generated/lazy execution、production bundle execution
+  和 dev-mode/Vite execution 仍是明确 blocker，不计入完成。
 
 ## 最终完成标准
 
@@ -144,7 +151,9 @@ v0/v1 runtime 切片走向可产品化桌面框架的最终完成状态。
 
 以下项目仍需要后续阶段推进：
 
-- 替换 v1.5 中剩余的 TextField/npm shim fallback，完成真实 TextField graph parity。
+- 基于 v1.6 的 exact blocker，拆解 production `indexhtml` side effect：去重
+  `vaadin-text-field` custom element registration，或把 TextField export 从 production
+  app chunk side effect 中分离出来，最终让旧 `@vaadin/text-field` shim 退出成功路径。
 - 完整 generated/lazy `Flow.loadOnDemand` execution。
 - Production bundle chunk execution 和 packaging-time staging。
 - Dev-mode/Vite graph execution 或可靠替代模式。
@@ -171,11 +180,18 @@ v0/v1 runtime 切片走向可产品化桌面框架的最终完成状态。
 
 ## 当前建议的下一阶段
 
-当前已指定的下一阶段是：
+当前建议的下一阶段可以从以下方向中选择一个：
 
-- **Goal 1.6: TextField / npm graph parity**
-  - 目标是替换或严格拆解 `@vaadin/text-field` 剩余 shim，推进真实 TextField frontend
-    graph staged execution。
+- **Goal 1.7: TextField production chunk side-effect split**
+  - 基于 v1.6 blocker，处理 production `indexhtml` 重入导致的
+    `vaadin-text-field` duplicate custom element definition，并推动真实 TextField graph
+    从 blocker 证据进入可执行路径。
+- **Goal 1.7: generated/lazy `Flow.loadOnDemand` execution**
+  - 处理 staged generated-flow-imports chunk 的 relative import 和
+    `Flow.loadOnDemand` bootstrap API 边界。
+- **Goal 1.7: Swift host tests / default-host readiness**
+  - 为 window launch、no-activate、sidecar cleanup 和 capability calls 增加可重复 host
+    smoke tests。
 
-后续候选方向仍包括 generated/lazy `loadOnDemand` execution、durable push /
-reconnect / resync，以及 Swift host tests / default-host readiness。
+后续候选方向仍包括 durable push / reconnect / resync、broader component parity、
+production/dev bundle execution、打包和更新。

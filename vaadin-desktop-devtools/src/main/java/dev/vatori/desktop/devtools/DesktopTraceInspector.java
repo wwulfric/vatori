@@ -48,6 +48,7 @@ public final class DesktopTraceInspector {
         boolean requireFlowIpcV1_3 = false;
         boolean requireFlowIpcV1_4 = false;
         boolean requireFlowIpcV1_5 = false;
+        boolean requireFlowIpcV1_6 = false;
         boolean requireFlowIpcV1_3Framework = false;
         List<Path> paths = new ArrayList<>();
         for (String arg : args) {
@@ -78,6 +79,14 @@ public final class DesktopTraceInspector {
                 requireFlowIpcV1_3 = true;
                 requireFlowIpcV1_4 = true;
                 requireFlowIpcV1_5 = true;
+            } else if ("--require-flow-ipc-v1_6".equals(arg)) {
+                requireFlowIpc = true;
+                requireFlowIpcV1_1 = true;
+                requireFlowIpcV1_2 = true;
+                requireFlowIpcV1_3 = true;
+                requireFlowIpcV1_4 = true;
+                requireFlowIpcV1_5 = true;
+                requireFlowIpcV1_6 = true;
             } else if ("--require-flow-ipc-v1_3-framework".equals(arg)) {
                 requireFlowIpcV1_3Framework = true;
             } else {
@@ -110,6 +119,9 @@ public final class DesktopTraceInspector {
                 failures++;
             }
             if (requireFlowIpcV1_5 && !summary.hasRequiredFlowIpcV1_5Types()) {
+                failures++;
+            }
+            if (requireFlowIpcV1_6 && !summary.hasRequiredFlowIpcV1_6Types()) {
                 failures++;
             }
             if (requireFlowIpcV1_3Framework && !summary.hasRequiredFlowIpcV1_3FrameworkTypes()) {
@@ -464,7 +476,7 @@ public final class DesktopTraceInspector {
             if (line.contains("\"type\":\"resourceRequest\"")
                     && line.contains("\"purpose\":\"flow-client-lazy-lookup\"")
                     && line.contains("\"lookupKind\":\"Flow.loadOnDemand-minimum-probe\"")
-                    && line.contains("META-INF/frontend/Flow.js")
+                    && containsPath(line, "META-INF/frontend/Flow.js")
                     && line.contains("\"securityKey\"")) {
                 summary.flowClientResourceLazyLookupRequestObserved = true;
             }
@@ -484,7 +496,7 @@ public final class DesktopTraceInspector {
                     && line.contains("\"flowClientResource\":true")
                     && line.contains("\"requestPurpose\":\"flow-client-lazy-lookup\"")
                     && line.contains("\"lookupKind\":\"Flow.loadOnDemand-minimum-probe\"")
-                    && line.contains("META-INF/frontend/Flow.js")
+                    && containsPath(line, "META-INF/frontend/Flow.js")
                     && line.contains("\"bodyRedacted\":true")) {
                 summary.flowClientResourceLazyLookupResponseObserved = true;
             }
@@ -562,6 +574,25 @@ public final class DesktopTraceInspector {
                     && line.contains("\"blockedExecutionError\":\"null is not an object (evaluating 'outlet._root')\"")
                     && line.contains("\"nextResolutionStep\"")) {
                 summary.frontendTextFieldDevBundleBlockerObserved = true;
+            }
+            if ((line.contains("\"type\":\"bootstrapResponse\"") || line.contains("\"type\":\"resourceResponse\""))
+                    && line.contains("\"lookupKind\":\"TextField-dev-bundle-resource-v1_4\"")
+                    && line.contains("\"textfieldGraphParityVersion\":\"flow-ipc-textfield-graph-v1_6\"")
+                    && line.contains("\"blockerVersion\":\"flow-ipc-textfield-v1_6\"")
+                    && line.contains("\"narrowedFailureClassification\":\"textfield-production-indexhtml-duplicate-custom-element-definition\"")
+                    && line.contains("\"failureLayer\":\"custom-element-registry-conflict-after-production-indexhtml-reimport\"")
+                    && line.contains("\"minimalReproduction\"")
+                    && line.contains("indexhtml-BfYYZi8S.js")
+                    && line.contains("\"nextResolutionStep\"")) {
+                summary.frontendTextFieldV16ManifestObserved = true;
+            }
+            if (line.contains("\"type\":\"resourceRequest\"")
+                    && line.contains("META-INF/vatori/dev-bundle-entry/vaadin-text-field.js")
+                    && line.contains("\"lookupKind\":\"TextField-dev-bundle-resource-v1_4\"")
+                    && line.contains("\"blockerVersion\":\"flow-ipc-textfield-v1_6\"")
+                    && line.contains("\"narrowedFailureClassification\":\"textfield-production-indexhtml-duplicate-custom-element-definition\"")
+                    && line.contains("\"transitiveImports\"")) {
+                summary.frontendTextFieldV16RequestObserved = true;
             }
             if (line.contains("\"type\":\"bootstrapResponse\"")
                     && line.contains("\"artifactFamily\":\"production-bundle\"")
@@ -742,6 +773,33 @@ public final class DesktopTraceInspector {
                 summary.frontendTextFieldStagedBlockerObserved = true;
             }
             if (line.contains("\"type\":\"resourceStage\"")
+                    && line.contains("\"lookupKind\":\"TextField-dev-bundle-resource-v1_4\"")
+                    && line.contains("\"sourcePath\":\"META-INF/vatori/dev-bundle-entry/vaadin-text-field.js\"")
+                    && line.contains("\"executionStatus\":\"strict-blocker\"")
+                    && line.contains("\"blockerVersion\":\"flow-ipc-textfield-v1_6\"")
+                    && line.contains("\"textfieldGraphParityVersion\":\"flow-ipc-textfield-graph-v1_6\"")
+                    && line.contains("\"narrowedFailureClassification\":\"textfield-production-indexhtml-duplicate-custom-element-definition\"")
+                    && line.contains("\"failureLayer\":\"custom-element-registry-conflict-after-production-indexhtml-reimport\"")
+                    && line.contains("\"importResolutionStrategy\":\"blob-module-rewrite-dev-bundle-entry-plus-indexhtml-dependency-v1_6\"")
+                    && line.contains("\"customElementTag\":\"vaadin-text-field\"")
+                    && line.contains("\"customElementRegistryBefore\"")
+                    && line.contains("\"customElementRegistryAfter\"")
+                    && line.contains("\"minimalReproduction\"")
+                    && line.contains("\"nextResolutionStep\"")
+                    && line.contains("\"browserError\"")
+                    && !line.contains("META-INF/vatori/frontend-shims/vaadin-text-field.js")) {
+                summary.frontendTextFieldV16StageBlockerObserved = true;
+            }
+            if (line.contains("\"type\":\"resourceStage\"")
+                    && line.contains("vaadin-dev-bundle/webapp/VAADIN/build/indexhtml-BfYYZi8S.js")
+                    && line.contains("\"executionStatus\":\"strict-blocker\"")
+                    && line.contains("\"blockerVersion\":\"flow-ipc-textfield-v1_6\"")
+                    && line.contains("\"failureClassification\":\"")
+                    && !line.contains("\"failureClassification\":\"\"")
+                    && line.contains("\"browserError\"")) {
+                summary.frontendTextFieldV16DependencyClassificationObserved = true;
+            }
+            if (line.contains("\"type\":\"resourceStage\"")
                     && line.contains("\"artifactFamily\":\"generated-lazy\"")
                     && line.contains("vaadin-dev-bundle/webapp/VAADIN/build/generated-flow-imports-VW7hRaNw.js")
                     && (line.contains("\"executionStatus\":\"execution-attempt\"")
@@ -772,6 +830,22 @@ public final class DesktopTraceInspector {
                     && line.contains("TextField")
                     && line.contains("frontendArtifactTextFieldStagedBlockerError")) {
                 summary.frontendTextFieldStagedBlockerObserved = true;
+            }
+            if (line.contains("\"type\":\"webview.dom\"")
+                    && containsStringField(line, "frontendArtifactTextFieldGraphParityVersion",
+                            "flow-ipc-textfield-graph-v1_6")
+                    && containsStringField(line, "frontendArtifactTextFieldBlockerVersion",
+                            "flow-ipc-textfield-v1_6")
+                    && containsStringField(line, "frontendArtifactTextFieldNarrowedFailureClassification",
+                            "textfield-production-indexhtml-duplicate-custom-element-definition")
+                    && containsStringField(line, "frontendArtifactTextFieldFailureLayer",
+                            "custom-element-registry-conflict-after-production-indexhtml-reimport")
+                    && line.contains("frontendArtifactTextFieldCustomElementRegistryBefore")
+                    && line.contains("frontendArtifactTextFieldCustomElementRegistryAfter")
+                    && line.contains("frontendArtifactTextFieldNextResolutionStep")
+                    && line.contains("frontendArtifactTextFieldStagedBlockerPath")
+                    && line.contains("META-INF/vatori/dev-bundle-entry/vaadin-text-field.js")) {
+                summary.frontendTextFieldV16DomObserved = true;
             }
             if (line.contains("\"type\":\"webview.dom\"")
                     && containsLiteralField(line, "frontendArtifactGeneratedLazyExecutionAttempted", "true")
@@ -1040,7 +1114,7 @@ public final class DesktopTraceInspector {
                     && containsPositiveIntegerField(line, "fileTransferDownloadByteCount")
                     && containsPositiveIntegerField(line, "fileTransferUploadByteCount")
                     && containsPositiveIntegerField(line, "fileTransferUploadSampledBytes")
-                    && containsStringField(line, "fileTransferResultOrder", "download,upload")
+                    && containsStringFieldPrefix(line, "fileTransferResultOrder", "download,upload")
                     && line.contains("flow-ipc-download-smoke.txt")
                     && line.contains("flow-ipc-upload-smoke.txt")) {
                 summary.fileTransferDomObserved = true;
@@ -1264,8 +1338,23 @@ public final class DesktopTraceInspector {
     }
 
     private static boolean containsStringField(String line, String field, String value) {
+        String slashEscapedValue = value.replace("/", "\\/");
         return line.contains("\"" + field + "\":\"" + value + "\"")
-                || line.contains("\\\"" + field + "\\\":\\\"" + value + "\\\"");
+                || line.contains("\"" + field + "\":\"" + slashEscapedValue + "\"")
+                || line.contains("\\\"" + field + "\\\":\\\"" + value + "\\\"")
+                || line.contains("\\\"" + field + "\\\":\\\"" + slashEscapedValue + "\\\"");
+    }
+
+    private static boolean containsStringFieldPrefix(String line, String field, String valuePrefix) {
+        String slashEscapedValuePrefix = valuePrefix.replace("/", "\\/");
+        return line.contains("\"" + field + "\":\"" + valuePrefix)
+                || line.contains("\"" + field + "\":\"" + slashEscapedValuePrefix)
+                || line.contains("\\\"" + field + "\\\":\\\"" + valuePrefix)
+                || line.contains("\\\"" + field + "\\\":\\\"" + slashEscapedValuePrefix);
+    }
+
+    private static boolean containsPath(String line, String path) {
+        return line.contains(path) || line.contains(path.replace("/", "\\/"));
     }
 
     private static boolean containsPositiveIntegerField(String line, String field) {
@@ -1306,7 +1395,7 @@ public final class DesktopTraceInspector {
     }
 
     private static void usage() {
-        System.out.println("Usage: bin/flow-ipc-trace-inspect [--require-flow-ipc-v1|--require-flow-ipc-v1_1|--require-flow-ipc-v1_2|--require-flow-ipc-v1_3|--require-flow-ipc-v1_4|--require-flow-ipc-v1_5|--require-flow-ipc-v1_3-framework] <trace.ndjson>...");
+        System.out.println("Usage: bin/flow-ipc-trace-inspect [--require-flow-ipc-v1|--require-flow-ipc-v1_1|--require-flow-ipc-v1_2|--require-flow-ipc-v1_3|--require-flow-ipc-v1_4|--require-flow-ipc-v1_5|--require-flow-ipc-v1_6|--require-flow-ipc-v1_3-framework] <trace.ndjson>...");
     }
 
     public static final class TraceSummary {
@@ -1435,6 +1524,11 @@ public final class DesktopTraceInspector {
         private boolean frontendStagingDomObserved;
         private boolean frontendTextFieldStagedExecutionObserved;
         private boolean frontendTextFieldStagedBlockerObserved;
+        private boolean frontendTextFieldV16ManifestObserved;
+        private boolean frontendTextFieldV16RequestObserved;
+        private boolean frontendTextFieldV16StageBlockerObserved;
+        private boolean frontendTextFieldV16DependencyClassificationObserved;
+        private boolean frontendTextFieldV16DomObserved;
         private boolean frontendGeneratedLazyExecutionAttemptObserved;
         private boolean frontendGeneratedLazyExecutionResolvedObserved;
         private boolean frontendLoadOnDemandBoundaryObserved;
@@ -1562,6 +1656,15 @@ public final class DesktopTraceInspector {
                     && frontendGeneratedLazyExecutionAttemptObserved
                     && frontendGeneratedLazyExecutionResolvedObserved
                     && frontendLoadOnDemandBoundaryObserved;
+        }
+
+        public boolean hasRequiredFlowIpcV1_6Types() {
+            return hasRequiredFlowIpcV1_5Types()
+                    && frontendTextFieldV16ManifestObserved
+                    && frontendTextFieldV16RequestObserved
+                    && frontendTextFieldV16StageBlockerObserved
+                    && frontendTextFieldV16DependencyClassificationObserved
+                    && frontendTextFieldV16DomObserved;
         }
 
         public boolean hasRequiredFlowIpcV1_3FrameworkTypes() {
@@ -1808,6 +1911,16 @@ public final class DesktopTraceInspector {
                     + frontendGeneratedLazyExecutionResolvedObserved);
             System.out.println("Flow IPC v1.5 loadOnDemand boundary observed: "
                     + frontendLoadOnDemandBoundaryObserved);
+            System.out.println("Flow IPC v1.6 TextField graph manifest observed: "
+                    + frontendTextFieldV16ManifestObserved);
+            System.out.println("Flow IPC v1.6 TextField graph request observed: "
+                    + frontendTextFieldV16RequestObserved);
+            System.out.println("Flow IPC v1.6 TextField narrowed staged blocker observed: "
+                    + frontendTextFieldV16StageBlockerObserved);
+            System.out.println("Flow IPC v1.6 TextField dependency classification observed: "
+                    + frontendTextFieldV16DependencyClassificationObserved);
+            System.out.println("Flow IPC v1.6 TextField DOM diagnostics observed: "
+                    + frontendTextFieldV16DomObserved);
             List<String> missing = FLOW_IPC_REQUIRED_TYPES.stream()
                     .filter(type -> !types.containsKey(type))
                     .toList();

@@ -120,6 +120,22 @@ public final class FlowClientResourceSmokeMain {
                 "Component frontend asset pipeline version");
         requireEquals("vaadin-frontend-artifact-graph-v1_4", componentManifest.get("artifactGraphSource"),
                 "Component artifact graph source");
+        requireEquals("flow-ipc-textfield-graph-v1_6", componentManifest.get("textfieldGraphParityVersion"),
+                "TextField graph parity version");
+        requireEquals("flow-ipc-textfield-v1_6", componentManifest.get("textfieldBlockerVersion"),
+                "TextField blocker version");
+        requireEquals("textfield-production-indexhtml-duplicate-custom-element-definition",
+                componentManifest.get("textfieldNarrowedFailureClassification"),
+                "TextField narrowed failure classification");
+        requireEquals("custom-element-registry-conflict-after-production-indexhtml-reimport",
+                componentManifest.get("textfieldFailureLayer"),
+                "TextField failure layer");
+        requireEquals("META-INF/vatori/dev-bundle-entry/vaadin-text-field.js",
+                componentManifest.get("textfieldEntryArtifact"),
+                "TextField entry artifact");
+        requireListContains(componentManifest.get("textfieldTransitiveArtifacts"),
+                "vaadin-dev-bundle/webapp/VAADIN/build/indexhtml-BfYYZi8S.js",
+                "TextField transitive artifacts");
         requireListContains(componentManifest.get("artifactFamilies"), "vaadin-component-classpath-frontend",
                 "Component artifact families");
         requireListContains(componentManifest.get("artifactFamilies"), "npm-frontend",
@@ -222,6 +238,26 @@ public final class FlowClientResourceSmokeMain {
                         && error.contains("outlet._root"))) {
             throw new IllegalStateException("TextField component frontend dev-bundle module is missing metadata");
         }
+        if (!Objects.equals(textFieldResponse.get("textfieldGraphParityVersion"), "flow-ipc-textfield-graph-v1_6")
+                || !Objects.equals(textFieldResponse.get("blockerVersion"), "flow-ipc-textfield-v1_6")
+                || !Objects.equals(textFieldResponse.get("graphProbe"),
+                        "direct-textfield-dev-bundle-entry-staged-graph-v1_6")
+                || !Objects.equals(textFieldResponse.get("importResolutionStrategy"),
+                        "blob-module-rewrite-dev-bundle-entry-plus-indexhtml-dependency-v1_6")
+                || !Objects.equals(textFieldResponse.get("narrowedFailureClassification"),
+                        "textfield-production-indexhtml-duplicate-custom-element-definition")
+                || !Objects.equals(textFieldResponse.get("failureLayer"),
+                        "custom-element-registry-conflict-after-production-indexhtml-reimport")
+                || !(textFieldResponse.get("minimalReproduction") instanceof String minimalReproduction
+                        && minimalReproduction.contains("indexhtml-BfYYZi8S.js")
+                        && minimalReproduction.contains("duplicate custom element"))
+                || !(textFieldResponse.get("nextResolutionStep") instanceof String nextStep
+                        && nextStep.contains("custom-scheme"))) {
+            throw new IllegalStateException("TextField dev-bundle entry is missing v1.6 narrowed blocker metadata");
+        }
+        requireListContains(textFieldResponse.get("transitiveImports"),
+                "vaadin-dev-bundle/webapp/VAADIN/build/indexhtml-BfYYZi8S.js",
+                "TextField transitive imports");
         Object textFieldBody = textFieldResponse.get("body");
         if (!(textFieldBody instanceof String textFieldText)
                 || !textFieldText.contains("c7 as TextField")

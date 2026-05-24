@@ -12,8 +12,9 @@ v0/v1 runtime 切片走向可产品化桌面框架的最终完成状态。
 - `docs/goal-1_4.md`：Flow IPC frontend asset pipeline，已完成。
 - `docs/goal-1_5.md`：no-localhost frontend bundle staging，已完成。
 - `docs/goal-1_6.md`：TextField / npm graph parity，已完成。
+- `docs/goal-1_7.md`：TextField production chunk side-effect split，已设计，待执行。
 
-后续阶段应继续以 `docs/goal-1_7.md`、`docs/goal-1_8.md` 等文件拆分，
+后续阶段应继续以 `docs/goal-1_8.md`、`docs/goal-1_9.md` 等文件拆分，
 每个阶段只拿走本长期目标中的一个可评审切片。不要把本文件改写成短期任务清单；
 它是长期北极星和完成度账本。
 
@@ -180,18 +181,15 @@ v0/v1 runtime 切片走向可产品化桌面框架的最终完成状态。
 
 ## 当前建议的下一阶段
 
-当前建议的下一阶段可以从以下方向中选择一个：
+当前已设计的下一阶段是：
 
 - **Goal 1.7: TextField production chunk side-effect split**
   - 基于 v1.6 blocker，处理 production `indexhtml` 重入导致的
-    `vaadin-text-field` duplicate custom element definition，并推动真实 TextField graph
-    从 blocker 证据进入可执行路径。
-- **Goal 1.7: generated/lazy `Flow.loadOnDemand` execution**
-  - 处理 staged generated-flow-imports chunk 的 relative import 和
-    `Flow.loadOnDemand` bootstrap API 边界。
-- **Goal 1.7: Swift host tests / default-host readiness**
-  - 为 window launch、no-activate、sidecar cleanup 和 capability calls 增加可重复 host
-    smoke tests。
+    `vaadin-text-field` duplicate custom element definition。
+  - 目标是让真实 TextField graph 从 blocker 证据进入可执行路径，并验证真实 Flow
+    `TextField` component event path；如果仍失败，blocker 必须越过 v1.6 duplicate
+    custom element layer，进入新的、更具体的 Vaadin/WebKit/runtime 层。
 
-后续候选方向仍包括 durable push / reconnect / resync、broader component parity、
+后续候选方向仍包括 generated/lazy `Flow.loadOnDemand` execution、Swift host tests /
+default-host readiness、durable push / reconnect / resync、broader component parity、
 production/dev bundle execution、打包和更新。

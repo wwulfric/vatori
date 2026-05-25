@@ -288,7 +288,7 @@ bash bin/flow-ipc-trace-inspect --require-flow-ipc-v1_7 docs/traces/flow-ipc-v1_
 真实窗口 smoke 验证：
 
 ```bash
-VAADIN_DESKTOP_MAVEN_OFFLINE=1 VAADIN_DESKTOP_HOST_NO_ACTIVATE=1 VAADIN_DESKTOP_FLOW_IPC_AUTO_CLICK=1 VAADIN_DESKTOP_FLOW_IPC_AUTO_VAADIN_TEXT_FIELD=1 VAADIN_DESKTOP_FLOW_IPC_AUTO_VAADIN_TEXT_FIELD_REAL=1 VAADIN_DESKTOP_FLOW_IPC_AUTO_RESYNC=1 VAADIN_DESKTOP_FLOW_IPC_AUTO_ERROR=1 VAADIN_DESKTOP_FLOW_IPC_AUTO_FILE_DIALOG_CANCEL=1 VAADIN_DESKTOP_FLOW_IPC_AUTO_SHUTDOWN=1 bash bin/vaadin-desktop dev-ipc test-apps/flow-over-ipc-smoke-app
+VAADIN_DESKTOP_MAVEN_OFFLINE=1 VAADIN_DESKTOP_HOST_NO_ACTIVATE=1 VAADIN_DESKTOP_FLOW_IPC_AUTO_CLICK=1 VAADIN_DESKTOP_FLOW_IPC_AUTO_VAADIN_TEXT_FIELD_REAL=1 VAADIN_DESKTOP_FLOW_IPC_AUTO_RESYNC=1 VAADIN_DESKTOP_FLOW_IPC_AUTO_ERROR=1 VAADIN_DESKTOP_FLOW_IPC_AUTO_FILE_DIALOG_CANCEL=1 VAADIN_DESKTOP_FLOW_IPC_AUTO_SHUTDOWN=1 bash bin/vaadin-desktop dev-ipc test-apps/flow-over-ipc-smoke-app
 ```
 
 framework app 回归：
@@ -310,3 +310,14 @@ bash bin/flow-ipc-trace-inspect --require-flow-ipc-v1_3-framework .build/vaadin-
 - 不要求生产打包、签名、公证或自动更新。
 
 这些仍保留在 `docs/goal.md` 的长期未完成账本中。
+
+## 完成记录
+
+v1.7 实现选择了 stable resource-path Blob module identity 路径，而不是抽取新的
+伪组件或恢复 localhost transport。TextField dev-bundle entry 与 production
+`indexhtml` dependency 共享稳定 module identity，v1.6 的 duplicate custom element
+definition 不再是最终 blocker。Strict gate 要求真实 Flow `TextField` event RPC、
+`UidlRequestHandler` patch 和可见 DOM `Vaadin TextField: Flow IPC typed`。
+
+旧 `@vaadin/text-field` shim 仍保留为 legacy fallback / regression guard，但
+`--require-flow-ipc-v1_7` 不把它计入成功。

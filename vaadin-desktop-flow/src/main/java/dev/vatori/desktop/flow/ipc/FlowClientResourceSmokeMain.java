@@ -122,17 +122,34 @@ public final class FlowClientResourceSmokeMain {
                 "Component artifact graph source");
         requireEquals("flow-ipc-textfield-graph-v1_6", componentManifest.get("textfieldGraphParityVersion"),
                 "TextField graph parity version");
-        requireEquals("flow-ipc-textfield-v1_6", componentManifest.get("textfieldBlockerVersion"),
-                "TextField blocker version");
-        requireEquals("textfield-production-indexhtml-duplicate-custom-element-definition",
+        requireEquals("flow-ipc-textfield-v1_6", componentManifest.get("textfieldPreviousBlockerVersion"),
+                "TextField previous blocker version");
+        requireEquals("flow-ipc-textfield-v1_7", componentManifest.get("textfieldExecutionVersion"),
+                "TextField execution version");
+        requireEquals("flow-ipc-textfield-side-effect-v1_7", componentManifest.get("textfieldSideEffectVersion"),
+                "TextField side-effect version");
+        requireEquals("textfield-production-indexhtml-side-effect-deduped",
                 componentManifest.get("textfieldNarrowedFailureClassification"),
                 "TextField narrowed failure classification");
-        requireEquals("custom-element-registry-conflict-after-production-indexhtml-reimport",
+        requireEquals("resolved-v1_6-custom-element-registry-conflict",
                 componentManifest.get("textfieldFailureLayer"),
                 "TextField failure layer");
         requireEquals("META-INF/vatori/dev-bundle-entry/vaadin-text-field.js",
                 componentManifest.get("textfieldEntryArtifact"),
                 "TextField entry artifact");
+        requireEquals("vaadin-dev-bundle/webapp/VAADIN/build/indexhtml-BfYYZi8S.js",
+                componentManifest.get("textfieldClassExportArtifact"),
+                "TextField class export artifact");
+        requireEquals("vaadin-text-field", componentManifest.get("textfieldDuplicateTag"),
+                "TextField duplicate tag");
+        requireEquals("none", componentManifest.get("textfieldRemainingBlockerClassification"),
+                "TextField remaining blocker classification");
+        requireEquals("stable-resource-path-blob-module-identity-v1_7",
+                componentManifest.get("textfieldImportResolutionStrategy"),
+                "TextField import resolution strategy");
+        requireEquals("reuse-production-indexhtml-module-identity-before-textfield-entry-import",
+                componentManifest.get("textfieldSideEffectStrategy"),
+                "TextField side-effect strategy");
         requireListContains(componentManifest.get("textfieldTransitiveArtifacts"),
                 "vaadin-dev-bundle/webapp/VAADIN/build/indexhtml-BfYYZi8S.js",
                 "TextField transitive artifacts");
@@ -148,7 +165,7 @@ public final class FlowClientResourceSmokeMain {
                 "Component artifact families");
         requireListContains(componentManifest.get("artifactFamilies"), "generated-lazy",
                 "Component artifact families");
-        requireStrictBlocker(componentManifest, "npm-frontend", "textfield-production-class-execution-blocked");
+        requireNoStrictBlocker(componentManifest, "npm-frontend");
         requireStrictBlocker(componentManifest, "dev-mode-bundle", "dev-mode-bundle-execution-unmapped");
         requireStrictBlocker(componentManifest, "generated-lazy", "generated-lazy-execution-unmapped");
         requireComponentResourceMetadata(componentResources);
@@ -187,13 +204,16 @@ public final class FlowClientResourceSmokeMain {
         }
         requireImportRewrite(bigDecimalResponse, "lit", litDevBundlePath);
         requireImportRewrite(bigDecimalResponse, "@vaadin/text-field/src/vaadin-text-field.js",
-                "META-INF/vatori/frontend-shims/vaadin-text-field.js");
+                textFieldDevBundlePath);
         requireImportRewrite(bigDecimalResponse, "@vaadin/component-base/src/define.js",
                 defineDevBundlePath);
         Object shimmedImports = bigDecimalResponse.get("shimmedImports");
         if (!(shimmedImports instanceof List<?> shimmedImportList)
-                || !shimmedImportList.equals(List.of("@vaadin/text-field/src/vaadin-text-field.js"))) {
-            throw new IllegalStateException("BigDecimalField should report only TextField as remaining shim");
+                || !shimmedImportList.isEmpty()) {
+            throw new IllegalStateException("BigDecimalField should not count TextField as a v1.7 shim");
+        }
+        if (!Boolean.TRUE.equals(bigDecimalResponse.get("realTextFieldGraphImport"))) {
+            throw new IllegalStateException("BigDecimalField should import the real TextField graph");
         }
         if (!resources.contains(litDevBundlePath)) {
             throw new IllegalStateException("Component frontend manifest is missing the Lit css dev-bundle module");
@@ -233,27 +253,39 @@ public final class FlowClientResourceSmokeMain {
                 || !Objects.equals(textFieldResponse.get("artifactStatus"), "partial")
                 || !Boolean.FALSE.equals(textFieldResponse.get("shim"))
                 || !Objects.equals(textFieldResponse.get("blockedExecutionProbe"),
-                        "big-decimal-import-rewrite-to-textfield-dev-bundle")
+                        "legacy-v1_6-big-decimal-import-rewrite-to-textfield-dev-bundle")
                 || !(textFieldResponse.get("blockedExecutionError") instanceof String error
-                        && error.contains("outlet._root"))) {
+                        && error.equals("resolved-by-stable-module-identity-v1_7"))) {
             throw new IllegalStateException("TextField component frontend dev-bundle module is missing metadata");
         }
         if (!Objects.equals(textFieldResponse.get("textfieldGraphParityVersion"), "flow-ipc-textfield-graph-v1_6")
-                || !Objects.equals(textFieldResponse.get("blockerVersion"), "flow-ipc-textfield-v1_6")
+                || !Objects.equals(textFieldResponse.get("previousBlockerVersion"), "flow-ipc-textfield-v1_6")
+                || !Objects.equals(textFieldResponse.get("executionVersion"), "flow-ipc-textfield-v1_7")
+                || !Objects.equals(textFieldResponse.get("textfieldSideEffectVersion"),
+                        "flow-ipc-textfield-side-effect-v1_7")
                 || !Objects.equals(textFieldResponse.get("graphProbe"),
-                        "direct-textfield-dev-bundle-entry-staged-graph-v1_6")
+                        "direct-textfield-dev-bundle-entry-module-identity-v1_7")
                 || !Objects.equals(textFieldResponse.get("importResolutionStrategy"),
-                        "blob-module-rewrite-dev-bundle-entry-plus-indexhtml-dependency-v1_6")
+                        "stable-resource-path-blob-module-identity-v1_7")
+                || !Objects.equals(textFieldResponse.get("sideEffectStrategy"),
+                        "reuse-production-indexhtml-module-identity-before-textfield-entry-import")
                 || !Objects.equals(textFieldResponse.get("narrowedFailureClassification"),
-                        "textfield-production-indexhtml-duplicate-custom-element-definition")
+                        "textfield-production-indexhtml-side-effect-deduped")
                 || !Objects.equals(textFieldResponse.get("failureLayer"),
-                        "custom-element-registry-conflict-after-production-indexhtml-reimport")
+                        "resolved-v1_6-custom-element-registry-conflict")
+                || !Objects.equals(textFieldResponse.get("classExportArtifact"),
+                        "vaadin-dev-bundle/webapp/VAADIN/build/indexhtml-BfYYZi8S.js")
+                || !Objects.equals(textFieldResponse.get("duplicateTag"), "vaadin-text-field")
+                || !Objects.equals(textFieldResponse.get("remainingBlockerClassification"), "none")
+                || !Objects.equals(textFieldResponse.get("moduleIdentityStrategy"),
+                        "stable-resource-path-blob-module-identity-v1_7")
+                || !Boolean.FALSE.equals(textFieldResponse.get("legacyShimSuccessPath"))
                 || !(textFieldResponse.get("minimalReproduction") instanceof String minimalReproduction
                         && minimalReproduction.contains("indexhtml-BfYYZi8S.js")
-                        && minimalReproduction.contains("duplicate custom element"))
+                        && minimalReproduction.contains("registry no longer throws duplicate definition"))
                 || !(textFieldResponse.get("nextResolutionStep") instanceof String nextStep
                         && nextStep.contains("custom-scheme"))) {
-            throw new IllegalStateException("TextField dev-bundle entry is missing v1.6 narrowed blocker metadata");
+            throw new IllegalStateException("TextField dev-bundle entry is missing v1.7 side-effect metadata");
         }
         requireListContains(textFieldResponse.get("transitiveImports"),
                 "vaadin-dev-bundle/webapp/VAADIN/build/indexhtml-BfYYZi8S.js",
@@ -505,6 +537,21 @@ public final class FlowClientResourceSmokeMain {
         throw new IllegalStateException("Component frontend manifest is missing strict blocker for " + family);
     }
 
+    private static void requireNoStrictBlocker(Map<String, Object> manifest, String family) {
+        Object value = manifest.get("strictBlockers");
+        if (!(value instanceof List<?> blockers)) {
+            throw new IllegalStateException("Component frontend manifest is missing strictBlockers");
+        }
+        for (Object blocker : blockers) {
+            if (blocker instanceof Map<?, ?> metadata
+                    && Objects.equals(metadata.get("artifactFamily"), family)
+                    && Boolean.TRUE.equals(metadata.get("strictBlocker"))) {
+                throw new IllegalStateException("Component frontend manifest should not contain strict blocker for "
+                        + family + ": " + metadata);
+            }
+        }
+    }
+
     private static void requireImportRewrite(Map<String, Object> metadata, String specifier, String resourcePath) {
         Object value = metadata.get("importRewrites");
         if (!(value instanceof List<?> rewrites)) {
@@ -526,7 +573,7 @@ public final class FlowClientResourceSmokeMain {
 
     private static void requireComponentResourceMetadata(List<?> componentResources) {
         boolean classpathResourceObserved = false;
-        boolean shimBlockerObserved = false;
+        boolean legacyShimFallbackObserved = false;
         boolean devBundleEntryObserved = false;
         boolean devBundleDependencyObserved = false;
         boolean productionBundleStatsObserved = false;
@@ -552,10 +599,12 @@ public final class FlowClientResourceSmokeMain {
             requirePresentString(metadata.get("blockedReason"), "Component frontend blocked reason");
             classpathResourceObserved = classpathResourceObserved
                     || "vaadin-component-classpath-frontend".equals(artifactFamily);
-            shimBlockerObserved = shimBlockerObserved
+            legacyShimFallbackObserved = legacyShimFallbackObserved
                     || "npm-frontend".equals(artifactFamily)
-                    && "blocked-shim-fallback".equals(executionPolicy)
-                    && Boolean.TRUE.equals(metadata.get("shim"));
+                    && "legacy-shim-fallback".equals(executionPolicy)
+                    && Boolean.TRUE.equals(metadata.get("shim"))
+                    && Boolean.TRUE.equals(metadata.get("legacyFallback"))
+                    && Boolean.FALSE.equals(metadata.get("successPath"));
             devBundleEntryObserved = devBundleEntryObserved
                     || "production-bundle".equals(artifactFamily)
                     && "execute-dev-bundle-entry".equals(executionPolicy);
@@ -588,7 +637,7 @@ public final class FlowClientResourceSmokeMain {
                     && "available".equals(metadata.get("artifactStatus"))
                     && Boolean.TRUE.equals(metadata.get("devModePackageGraph"));
         }
-        if (!classpathResourceObserved || !shimBlockerObserved || !devBundleEntryObserved
+        if (!classpathResourceObserved || !legacyShimFallbackObserved || !devBundleEntryObserved
                 || !devBundleDependencyObserved || !productionBundleStatsObserved || !themeStaticResourceObserved
                 || !generatedLazyResourceObserved || !generatedLazyBundleChunkObserved || !devModePackageGraphObserved) {
             throw new IllegalStateException("Component frontend resource manifest is missing a v1.4 artifact family");

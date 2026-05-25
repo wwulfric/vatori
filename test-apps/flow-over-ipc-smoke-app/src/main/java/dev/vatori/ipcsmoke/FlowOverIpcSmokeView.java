@@ -7,6 +7,7 @@ import com.vaadin.flow.component.html.Input;
 import com.vaadin.flow.component.html.Span;
 import com.vaadin.flow.component.orderedlayout.VerticalLayout;
 import com.vaadin.flow.component.textfield.BigDecimalField;
+import com.vaadin.flow.component.textfield.TextField;
 import com.vaadin.flow.router.Route;
 import dev.vatori.desktop.Desktop;
 import dev.vatori.desktop.DesktopCommand;
@@ -97,6 +98,17 @@ public class FlowOverIpcSmokeView extends VerticalLayout {
             bigDecimalStatus.setText("Vaadin BigDecimalField: " + value);
         }).addEventData("element.value");
 
+        TextField textField = new TextField("Vaadin TextField over IPC");
+        textField.setId("ipc-vaadin-text-field");
+        textField.setPlaceholder("Flow IPC typed");
+        Span textFieldStatus = new Span("Vaadin TextField: pending");
+        textFieldStatus.setId("ipc-vaadin-text-field-status");
+        textField.getElement().addEventListener("change", event -> {
+            JsonNode valueNode = event.getEventData().get("element.value");
+            String value = valueNode == null ? "" : valueNode.asString();
+            textFieldStatus.setText("Vaadin TextField: " + value);
+        }).addEventData("element.value");
+
         Checkbox vaadinCheckbox = new Checkbox("Vaadin Checkbox over IPC");
         vaadinCheckbox.setId("ipc-vaadin-checkbox");
         Span vaadinCheckboxStatus = new Span("Vaadin Checkbox: pending");
@@ -114,6 +126,7 @@ public class FlowOverIpcSmokeView extends VerticalLayout {
         eventMatrix.add(new Span("6 Component event matrix over IPC READY"),
                 textInput, textStatus, checkbox, checkboxStatus,
                 bigDecimalField, bigDecimalStatus,
+                textField, textFieldStatus,
                 vaadinCheckbox, vaadinCheckboxStatus);
         add(eventMatrix);
     }

@@ -12,7 +12,7 @@ v0/v1 runtime 切片走向可产品化桌面框架的最终完成状态。
 - `docs/goal-1_4.md`：Flow IPC frontend asset pipeline，已完成。
 - `docs/goal-1_5.md`：no-localhost frontend bundle staging，已完成。
 - `docs/goal-1_6.md`：TextField / npm graph parity，已完成。
-- `docs/goal-1_7.md`：TextField production chunk side-effect split，已设计，待执行。
+- `docs/goal-1_7.md`：TextField production chunk side-effect split，已完成。
 
 后续阶段应继续以 `docs/goal-1_8.md`、`docs/goal-1_9.md` 等文件拆分，
 每个阶段只拿走本长期目标中的一个可评审切片。不要把本文件改写成短期任务清单；
@@ -36,7 +36,7 @@ v0/v1 runtime 切片走向可产品化桌面框架的最终完成状态。
 
 ## 当前基线
 
-截至 goal 1.6，仓库已经证明：
+截至 goal 1.7，仓库已经证明：
 
 - `dev-ipc` 可以启动 no-localhost Flow IPC runtime。
 - 真实 macOS Swift/AppKit/WKWebView 窗口可以运行 Flow IPC smoke app 和 framework
@@ -58,8 +58,14 @@ v0/v1 runtime 切片走向可产品化桌面框架的最终完成状态。
   element definition。trace 记录 `blockerVersion=flow-ipc-textfield-v1_6`、
   custom element registry before/after、transitive artifacts、browser error、
   failure layer 和下一步拆解路径。
-- TextField 真实组件执行、完整 generated/lazy execution、production bundle execution
-  和 dev-mode/Vite execution 仍是明确 blocker，不计入完成。
+- v1.7 已越过 v1.6 duplicate custom element blocker：TextField entry 和 production
+  `indexhtml` dependency 使用 stable resource-path Blob module identity，真实
+  `vaadin-text-field` graph 执行，旧 TextField shim 只保留为 legacy fallback，
+  `test-apps/flow-over-ipc-smoke-app` 中的真实 Flow `TextField` Java listener 能经
+  visible Flow client engine -> IPC-backed XHR -> Java sidecar -> `UidlRequestHandler`
+  -> UIDL patch -> visible DOM 更新为 `Vaadin TextField: Flow IPC typed`。
+- 完整 generated/lazy execution、production bundle execution 和 dev-mode/Vite
+  execution 仍是明确 blocker，不计入完成。
 
 ## 最终完成标准
 
@@ -152,9 +158,9 @@ v0/v1 runtime 切片走向可产品化桌面框架的最终完成状态。
 
 以下项目仍需要后续阶段推进：
 
-- 基于 v1.6 的 exact blocker，拆解 production `indexhtml` side effect：去重
-  `vaadin-text-field` custom element registration，或把 TextField export 从 production
-  app chunk side effect 中分离出来，最终让旧 `@vaadin/text-field` shim 退出成功路径。
+- 基于 v1.7 的 stable module identity 结果，继续把 generated/lazy
+  `Flow.loadOnDemand`、production bundle execution 和 dev-mode/Vite execution 从
+  strict blocker 推进到真实可执行路径。
 - 完整 generated/lazy `Flow.loadOnDemand` execution。
 - Production bundle chunk execution 和 packaging-time staging。
 - Dev-mode/Vite graph execution 或可靠替代模式。
@@ -181,15 +187,13 @@ v0/v1 runtime 切片走向可产品化桌面框架的最终完成状态。
 
 ## 当前建议的下一阶段
 
-当前已设计的下一阶段是：
+当前建议的下一阶段候选是：
 
-- **Goal 1.7: TextField production chunk side-effect split**
-  - 基于 v1.6 blocker，处理 production `indexhtml` 重入导致的
-    `vaadin-text-field` duplicate custom element definition。
-  - 目标是让真实 TextField graph 从 blocker 证据进入可执行路径，并验证真实 Flow
-    `TextField` component event path；如果仍失败，blocker 必须越过 v1.6 duplicate
-    custom element layer，进入新的、更具体的 Vaadin/WebKit/runtime 层。
+- **Goal 1.8: Generated/lazy frontend execution 或 durable push queue**
+  - 前者承接 v1.7 后仍存在的 `Flow.loadOnDemand` / generated-flow-imports staged
+    blocker，处理 relative dependency、load-on-demand API 和 lazy chunk execution。
+  - 后者把受控 duplicate/late push probe 推进为 durable queue、ack、reconnect 和
+    resync 语义。
 
-后续候选方向仍包括 generated/lazy `Flow.loadOnDemand` execution、Swift host tests /
-default-host readiness、durable push / reconnect / resync、broader component parity、
-production/dev bundle execution、打包和更新。
+后续候选方向仍包括 Swift host tests / default-host readiness、broader component
+parity、production/dev bundle execution、打包和更新。

@@ -57,6 +57,7 @@ struct HostConfig {
         config.flowIpcAutoFileDialogCancel = ProcessInfo.processInfo.environment["VAADIN_DESKTOP_FLOW_IPC_AUTO_FILE_DIALOG_CANCEL"] == "1"
             || config.flowIpcAutoClick
         config.flowIpcAutoVaadinTextField = ProcessInfo.processInfo.environment["VAADIN_DESKTOP_FLOW_IPC_AUTO_VAADIN_TEXT_FIELD"] == "1"
+            || ProcessInfo.processInfo.environment["VAADIN_DESKTOP_FLOW_IPC_AUTO_VAADIN_TEXT_FIELD_REAL"] == "1"
             || config.flowIpcAutoClick
         config.flowIpcAutoFrameworkUpdate = ProcessInfo.processInfo.environment["VAADIN_DESKTOP_FLOW_IPC_AUTO_FRAMEWORK_UPDATE"] == "1"
         config.flowIpcAutoShutdown = ProcessInfo.processInfo.environment["VAADIN_DESKTOP_FLOW_IPC_AUTO_SHUTDOWN"] == "1"
@@ -575,7 +576,7 @@ final class WebViewHost: NSObject, NSApplicationDelegate, NSWindowDelegate, WKNa
             userContentController.addUserScript(WKUserScript(source: source, injectionTime: .atDocumentStart, forMainFrameOnly: true))
         }
         if config.flowIpcAutoVaadinTextField {
-            let source = "window.__VAADIN_DESKTOP_FLOW_IPC_AUTO_VAADIN_TEXT_FIELD__ = true;"
+            let source = "window.__VAADIN_DESKTOP_FLOW_IPC_AUTO_VAADIN_TEXT_FIELD__ = true; window.__VAADIN_DESKTOP_FLOW_IPC_AUTO_VAADIN_TEXT_FIELD_REAL__ = true;"
             userContentController.addUserScript(WKUserScript(source: source, injectionTime: .atDocumentStart, forMainFrameOnly: true))
         }
         if config.flowIpcAutoFrameworkUpdate {
@@ -1283,16 +1284,15 @@ final class WebViewHost: NSObject, NSApplicationDelegate, NSWindowDelegate, WKNa
               !!d.flowClientEngineTextInputEventObserved
               && !!d.flowClientEngineCheckboxEventObserved
               && !!d.vaadinWebComponentEventRpcObserved
+              && !!d.vaadinTextFieldEventRpcObserved
               && !!d.vaadinSecondWebComponentEventRpcObserved
             ))
             && (!window.__VAADIN_DESKTOP_FLOW_IPC_AUTO_RESYNC__ || !!d.flowClientEngineResyncPatchConsumed)
             && (!window.__VAADIN_DESKTOP_FLOW_IPC_AUTO_ERROR__ || !!d.flowClientEngineErrorReported)
             && (!window.__VAADIN_DESKTOP_FLOW_IPC_AUTO_VAADIN_TEXT_FIELD__ || (
-              d.frontendArtifactTextFieldBlockerVersion === 'flow-ipc-textfield-v1_6'
-              && (
-                !!d.frontendArtifactTextFieldStagedBlocker
-                || String(d.frontendStagedResourceExecutedPaths || '').includes('META-INF/vatori/dev-bundle-entry/vaadin-text-field.js')
-              )
+              d.frontendArtifactTextFieldExecutionVersion === 'flow-ipc-textfield-v1_7'
+              && !!d.frontendArtifactTextFieldExecuted
+              && !d.frontendArtifactTextFieldShimUsed
             ))
             && !!d.flowClientResourceExecutionClassificationComplete
             && !!d.vaadinWebComponentResourceGraphVerified
@@ -1309,6 +1309,7 @@ final class WebViewHost: NSObject, NSApplicationDelegate, NSWindowDelegate, WKNa
             text: !!d.flowClientEngineTextInputEventObserved,
             checkbox: !!d.flowClientEngineCheckboxEventObserved,
             bigDecimal: !!d.vaadinWebComponentEventRpcObserved,
+            textField: !!d.vaadinTextFieldEventRpcObserved,
             vaadinCheckbox: !!d.vaadinSecondWebComponentEventRpcObserved,
             resync: !!d.flowClientEngineResyncPatchConsumed,
             error: !!d.flowClientEngineErrorReported,
@@ -1316,7 +1317,9 @@ final class WebViewHost: NSObject, NSApplicationDelegate, NSWindowDelegate, WKNa
             componentGraph: !!d.vaadinWebComponentResourceGraphVerified,
             staging: !!d.frontendStagingObserved,
             textFieldBlocker: !!d.frontendArtifactTextFieldStagedBlocker,
-            textFieldBlockerVersion: d.frontendArtifactTextFieldBlockerVersion || ''
+            textFieldBlockerVersion: d.frontendArtifactTextFieldBlockerVersion || '',
+            textFieldExecutionVersion: d.frontendArtifactTextFieldExecutionVersion || '',
+            textFieldExecuted: !!d.frontendArtifactTextFieldExecuted
           });
         })();
         """
@@ -1455,6 +1458,18 @@ final class WebViewHost: NSObject, NSApplicationDelegate, NSWindowDelegate, WKNa
           frontendArtifactTextFieldEntryArtifact: window.VaadinDesktopIpcDiagnostics ? window.VaadinDesktopIpcDiagnostics.frontendArtifactTextFieldEntryArtifact : "",
           frontendArtifactTextFieldTransitiveArtifacts: window.VaadinDesktopIpcDiagnostics ? window.VaadinDesktopIpcDiagnostics.frontendArtifactTextFieldTransitiveArtifacts : "",
           frontendArtifactTextFieldImportResolutionStrategy: window.VaadinDesktopIpcDiagnostics ? window.VaadinDesktopIpcDiagnostics.frontendArtifactTextFieldImportResolutionStrategy : "",
+          frontendArtifactTextFieldSideEffectVersion: window.VaadinDesktopIpcDiagnostics ? window.VaadinDesktopIpcDiagnostics.frontendArtifactTextFieldSideEffectVersion : "",
+          frontendArtifactTextFieldSideEffectStrategy: window.VaadinDesktopIpcDiagnostics ? window.VaadinDesktopIpcDiagnostics.frontendArtifactTextFieldSideEffectStrategy : "",
+          frontendArtifactTextFieldExecutionVersion: window.VaadinDesktopIpcDiagnostics ? window.VaadinDesktopIpcDiagnostics.frontendArtifactTextFieldExecutionVersion : "",
+          frontendArtifactTextFieldExecuted: !!(window.VaadinDesktopIpcDiagnostics && window.VaadinDesktopIpcDiagnostics.frontendArtifactTextFieldExecuted),
+          frontendArtifactTextFieldShimUsed: !!(window.VaadinDesktopIpcDiagnostics && window.VaadinDesktopIpcDiagnostics.frontendArtifactTextFieldShimUsed),
+          frontendArtifactTextFieldClassExportArtifact: window.VaadinDesktopIpcDiagnostics ? window.VaadinDesktopIpcDiagnostics.frontendArtifactTextFieldClassExportArtifact : "",
+          frontendArtifactTextFieldFirstDefinitionSource: window.VaadinDesktopIpcDiagnostics ? window.VaadinDesktopIpcDiagnostics.frontendArtifactTextFieldFirstDefinitionSource : "",
+          frontendArtifactTextFieldSecondDefinitionSource: window.VaadinDesktopIpcDiagnostics ? window.VaadinDesktopIpcDiagnostics.frontendArtifactTextFieldSecondDefinitionSource : "",
+          frontendArtifactTextFieldDuplicateTag: window.VaadinDesktopIpcDiagnostics ? window.VaadinDesktopIpcDiagnostics.frontendArtifactTextFieldDuplicateTag : "",
+          frontendArtifactTextFieldRemainingBlockerClassification: window.VaadinDesktopIpcDiagnostics ? window.VaadinDesktopIpcDiagnostics.frontendArtifactTextFieldRemainingBlockerClassification : "",
+          frontendArtifactTextFieldModuleIdentityStrategy: window.VaadinDesktopIpcDiagnostics ? window.VaadinDesktopIpcDiagnostics.frontendArtifactTextFieldModuleIdentityStrategy : "",
+          frontendArtifactTextFieldModuleIdentityPaths: window.VaadinDesktopIpcDiagnostics ? window.VaadinDesktopIpcDiagnostics.frontendArtifactTextFieldModuleIdentityPaths : "",
           frontendArtifactTextFieldNarrowedFailureClassification: window.VaadinDesktopIpcDiagnostics ? window.VaadinDesktopIpcDiagnostics.frontendArtifactTextFieldNarrowedFailureClassification : "",
           frontendArtifactTextFieldFailureLayer: window.VaadinDesktopIpcDiagnostics ? window.VaadinDesktopIpcDiagnostics.frontendArtifactTextFieldFailureLayer : "",
           frontendArtifactTextFieldMinimalReproduction: window.VaadinDesktopIpcDiagnostics ? window.VaadinDesktopIpcDiagnostics.frontendArtifactTextFieldMinimalReproduction : "",
@@ -1523,6 +1538,19 @@ final class WebViewHost: NSObject, NSApplicationDelegate, NSWindowDelegate, WKNa
           vaadinSecondWebComponentStatusText: window.VaadinDesktopIpcDiagnostics ? window.VaadinDesktopIpcDiagnostics.vaadinSecondWebComponentStatusText : "",
           vaadinSecondWebComponentPostEventState: window.VaadinDesktopIpcDiagnostics ? window.VaadinDesktopIpcDiagnostics.vaadinSecondWebComponentPostEventState : "",
           vaadinSecondWebComponentFailureReason: window.VaadinDesktopIpcDiagnostics ? window.VaadinDesktopIpcDiagnostics.vaadinSecondWebComponentFailureReason : "",
+          vaadinTextFieldRendered: !!(window.VaadinDesktopIpcDiagnostics && window.VaadinDesktopIpcDiagnostics.vaadinTextFieldRendered),
+          vaadinTextFieldRenderedTag: window.VaadinDesktopIpcDiagnostics ? window.VaadinDesktopIpcDiagnostics.vaadinTextFieldRenderedTag : "",
+          vaadinTextFieldRenderedValue: window.VaadinDesktopIpcDiagnostics ? window.VaadinDesktopIpcDiagnostics.vaadinTextFieldRenderedValue : "",
+          vaadinTextFieldTagDefined: !!(window.VaadinDesktopIpcDiagnostics && window.VaadinDesktopIpcDiagnostics.vaadinTextFieldTagDefined),
+          vaadinTextFieldEventDispatchMode: window.VaadinDesktopIpcDiagnostics ? window.VaadinDesktopIpcDiagnostics.vaadinTextFieldEventDispatchMode : "",
+          vaadinTextFieldEventObserved: !!(window.VaadinDesktopIpcDiagnostics && window.VaadinDesktopIpcDiagnostics.vaadinTextFieldEventObserved),
+          vaadinTextFieldEventRpcObserved: !!(window.VaadinDesktopIpcDiagnostics && window.VaadinDesktopIpcDiagnostics.vaadinTextFieldEventRpcObserved),
+          vaadinTextFieldEventComponentId: window.VaadinDesktopIpcDiagnostics ? window.VaadinDesktopIpcDiagnostics.vaadinTextFieldEventComponentId : "",
+          vaadinTextFieldEventType: window.VaadinDesktopIpcDiagnostics ? window.VaadinDesktopIpcDiagnostics.vaadinTextFieldEventType : "",
+          vaadinTextFieldEventValue: window.VaadinDesktopIpcDiagnostics ? window.VaadinDesktopIpcDiagnostics.vaadinTextFieldEventValue : "",
+          vaadinTextFieldStatusText: window.VaadinDesktopIpcDiagnostics ? window.VaadinDesktopIpcDiagnostics.vaadinTextFieldStatusText : "",
+          vaadinTextFieldPostEventState: window.VaadinDesktopIpcDiagnostics ? window.VaadinDesktopIpcDiagnostics.vaadinTextFieldPostEventState : "",
+          vaadinTextFieldFailureReason: window.VaadinDesktopIpcDiagnostics ? window.VaadinDesktopIpcDiagnostics.vaadinTextFieldFailureReason : "",
           flowClientEngineResourceLoaded: !!(window.VaadinDesktopIpcDiagnostics && window.VaadinDesktopIpcDiagnostics.flowClientEngineResourceLoaded),
           flowClientEngineResourcePath: window.VaadinDesktopIpcDiagnostics ? window.VaadinDesktopIpcDiagnostics.flowClientEngineResourcePath : "",
           flowClientEngineResourceBytes: window.VaadinDesktopIpcDiagnostics ? window.VaadinDesktopIpcDiagnostics.flowClientEngineResourceBytes : 0,
@@ -1821,6 +1849,8 @@ let flowIpcShell = #"""
     #flow-client-engine-root input,
     #app vaadin-big-decimal-field,
     #flow-client-engine-root vaadin-big-decimal-field,
+    #app vaadin-text-field,
+    #flow-client-engine-root vaadin-text-field,
     #app vaadin-checkbox,
     #flow-client-engine-root vaadin-checkbox {
       display: inline-block;
@@ -1897,6 +1927,7 @@ let flowIpcShell = #"""
       let autoClickInFlight = false;
       let autoComponentEventValue = 'Flow IPC typed';
       let autoVaadinWebComponentValue = '42.5';
+      let autoVaadinTextFieldValue = 'Flow IPC typed';
       let autoVaadinCheckboxValue = true;
       let autoComponentEventRetryLimit = 30;
       let autoComponentEventDelayMs = 140;
@@ -1935,6 +1966,22 @@ let flowIpcShell = #"""
             element.value = autoVaadinWebComponentValue;
             if (element.inputElement) {
               element.inputElement.value = autoVaadinWebComponentValue;
+            }
+          }
+        },
+        {
+          key: 'vaadin-text-field',
+          id: 'ipc-vaadin-text-field',
+          eventType: 'change',
+          value: autoVaadinTextFieldValue,
+          data: () => ({ 'element.value': autoVaadinTextFieldValue }),
+          requiresComponentResource: true,
+          requiredTag: 'vaadin-text-field',
+          dispatchDomEvent: true,
+          prepare: (element) => {
+            element.value = autoVaadinTextFieldValue;
+            if (element.inputElement) {
+              element.inputElement.value = autoVaadinTextFieldValue;
             }
           }
         },
@@ -1999,6 +2046,8 @@ let flowIpcShell = #"""
       const frontendStagedResourcePaths = new Set();
       const frontendStagedResourceFamilies = new Set();
       const frontendStagedResourceUrls = new Map();
+      const frontendModuleIdentityUrlCache = new Map();
+      const frontendModuleIdentityResourcePaths = new Set();
       const frontendStagedResourceCacheHitPaths = new Set();
       const frontendStagedResourceCacheMissPaths = new Set();
       const frontendStagedResourceExecutedPaths = new Set();
@@ -2134,6 +2183,18 @@ let flowIpcShell = #"""
         frontendArtifactTextFieldEntryArtifact: '',
         frontendArtifactTextFieldTransitiveArtifacts: '',
         frontendArtifactTextFieldImportResolutionStrategy: '',
+        frontendArtifactTextFieldSideEffectVersion: '',
+        frontendArtifactTextFieldSideEffectStrategy: '',
+        frontendArtifactTextFieldExecutionVersion: '',
+        frontendArtifactTextFieldExecuted: false,
+        frontendArtifactTextFieldShimUsed: false,
+        frontendArtifactTextFieldClassExportArtifact: '',
+        frontendArtifactTextFieldFirstDefinitionSource: '',
+        frontendArtifactTextFieldSecondDefinitionSource: '',
+        frontendArtifactTextFieldDuplicateTag: '',
+        frontendArtifactTextFieldRemainingBlockerClassification: '',
+        frontendArtifactTextFieldModuleIdentityStrategy: '',
+        frontendArtifactTextFieldModuleIdentityPaths: '',
         frontendArtifactTextFieldNarrowedFailureClassification: '',
         frontendArtifactTextFieldFailureLayer: '',
         frontendArtifactTextFieldMinimalReproduction: '',
@@ -2197,6 +2258,19 @@ let flowIpcShell = #"""
         vaadinSecondWebComponentStatusText: '',
         vaadinSecondWebComponentPostEventState: '',
         vaadinSecondWebComponentFailureReason: '',
+        vaadinTextFieldRendered: false,
+        vaadinTextFieldRenderedTag: '',
+        vaadinTextFieldRenderedValue: '',
+        vaadinTextFieldTagDefined: false,
+        vaadinTextFieldEventDispatchMode: '',
+        vaadinTextFieldEventObserved: false,
+        vaadinTextFieldEventRpcObserved: false,
+        vaadinTextFieldEventComponentId: '',
+        vaadinTextFieldEventType: '',
+        vaadinTextFieldEventValue: '',
+        vaadinTextFieldStatusText: '',
+        vaadinTextFieldPostEventState: '',
+        vaadinTextFieldFailureReason: '',
         flowClientEngineResourceLoaded: false,
         flowClientEngineResourcePath: '',
         flowClientEngineResourceBytes: 0,
@@ -3295,6 +3369,14 @@ let flowIpcShell = #"""
                 window.VaadinDesktopIpcDiagnostics.vaadinWebComponentEventValue = autoVaadinWebComponentValue;
                 window.VaadinDesktopIpcDiagnostics.vaadinWebComponentPostEventState =
                   'Vaadin BigDecimalField: ' + autoVaadinWebComponentValue;
+              } else if (pending.componentId === 'ipc-vaadin-text-field') {
+                window.VaadinDesktopIpcDiagnostics.vaadinTextFieldEventRpcObserved = true;
+                window.VaadinDesktopIpcDiagnostics.vaadinTextFieldEventObserved = true;
+                window.VaadinDesktopIpcDiagnostics.vaadinTextFieldEventComponentId = pending.componentId;
+                window.VaadinDesktopIpcDiagnostics.vaadinTextFieldEventType = pending.eventType;
+                window.VaadinDesktopIpcDiagnostics.vaadinTextFieldEventValue = autoVaadinTextFieldValue;
+                window.VaadinDesktopIpcDiagnostics.vaadinTextFieldPostEventState =
+                  'Vaadin TextField: ' + autoVaadinTextFieldValue;
               } else if (pending.componentId === 'ipc-vaadin-checkbox') {
                 window.VaadinDesktopIpcDiagnostics.vaadinSecondWebComponentEventRpcObserved = true;
                 window.VaadinDesktopIpcDiagnostics.vaadinSecondWebComponentEventObserved = true;
@@ -3413,6 +3495,13 @@ let flowIpcShell = #"""
           window.VaadinDesktopIpcDiagnostics.vaadinSecondWebComponentEventValue = String(descriptor.value);
           return;
         }
+        if (descriptor.key === 'vaadin-text-field') {
+          window.VaadinDesktopIpcDiagnostics.vaadinTextFieldEventDispatchMode = 'dom-event';
+          window.VaadinDesktopIpcDiagnostics.vaadinTextFieldEventComponentId = descriptor.id;
+          window.VaadinDesktopIpcDiagnostics.vaadinTextFieldEventType = descriptor.eventType;
+          window.VaadinDesktopIpcDiagnostics.vaadinTextFieldEventValue = String(descriptor.value);
+          return;
+        }
         window.VaadinDesktopIpcDiagnostics.vaadinWebComponentEventDispatchMode = 'dom-event';
         window.VaadinDesktopIpcDiagnostics.vaadinWebComponentEventComponentId = descriptor.id;
         window.VaadinDesktopIpcDiagnostics.vaadinWebComponentEventType = descriptor.eventType;
@@ -3422,6 +3511,8 @@ let flowIpcShell = #"""
       function markVaadinComponentDomEventObserved(descriptor) {
         if (descriptor.key === 'vaadin-checkbox') {
           window.VaadinDesktopIpcDiagnostics.vaadinSecondWebComponentEventObserved = true;
+        } else if (descriptor.key === 'vaadin-text-field') {
+          window.VaadinDesktopIpcDiagnostics.vaadinTextFieldEventObserved = true;
         } else {
           window.VaadinDesktopIpcDiagnostics.vaadinWebComponentEventObserved = true;
         }
@@ -3441,6 +3532,12 @@ let flowIpcShell = #"""
             && (patchObserved
               || window.VaadinDesktopIpcDiagnostics.vaadinSecondWebComponentEventObserved
               || window.VaadinDesktopIpcDiagnostics.vaadinSecondWebComponentPostEventState.includes('Vaadin Checkbox: checked'));
+        }
+        if (descriptor.key === 'vaadin-text-field') {
+          return window.VaadinDesktopIpcDiagnostics.vaadinTextFieldEventRpcObserved
+            && (patchObserved
+              || window.VaadinDesktopIpcDiagnostics.vaadinTextFieldEventObserved
+              || window.VaadinDesktopIpcDiagnostics.vaadinTextFieldPostEventState.includes(autoVaadinTextFieldValue));
         }
         return window.VaadinDesktopIpcDiagnostics.vaadinWebComponentEventRpcObserved
           && (patchObserved
@@ -3494,6 +3591,9 @@ let flowIpcShell = #"""
           } else {
             if (descriptor.key === 'vaadin-checkbox') {
               window.VaadinDesktopIpcDiagnostics.vaadinSecondWebComponentFailureReason =
+                'component-resource-not-executed-before-event';
+            } else if (descriptor.key === 'vaadin-text-field') {
+              window.VaadinDesktopIpcDiagnostics.vaadinTextFieldFailureReason =
                 'component-resource-not-executed-before-event';
             } else {
               window.VaadinDesktopIpcDiagnostics.vaadinWebComponentFailureReason =
@@ -3691,6 +3791,18 @@ let flowIpcShell = #"""
           window.VaadinDesktopIpcDiagnostics.frontendArtifactTextFieldBlockerVersion =
             manifest.textfieldBlockerVersion;
         }
+        if (typeof manifest.textfieldPreviousBlockerVersion === 'string') {
+          window.VaadinDesktopIpcDiagnostics.frontendArtifactTextFieldBlockerVersion =
+            manifest.textfieldPreviousBlockerVersion;
+        }
+        if (typeof manifest.textfieldExecutionVersion === 'string') {
+          window.VaadinDesktopIpcDiagnostics.frontendArtifactTextFieldExecutionVersion =
+            manifest.textfieldExecutionVersion;
+        }
+        if (typeof manifest.textfieldSideEffectVersion === 'string') {
+          window.VaadinDesktopIpcDiagnostics.frontendArtifactTextFieldSideEffectVersion =
+            manifest.textfieldSideEffectVersion;
+        }
         if (typeof manifest.textfieldGraphProbe === 'string') {
           window.VaadinDesktopIpcDiagnostics.frontendArtifactTextFieldGraphProbe =
             manifest.textfieldGraphProbe;
@@ -3699,6 +3811,10 @@ let flowIpcShell = #"""
           window.VaadinDesktopIpcDiagnostics.frontendArtifactTextFieldEntryArtifact =
             manifest.textfieldEntryArtifact;
         }
+        if (typeof manifest.textfieldClassExportArtifact === 'string') {
+          window.VaadinDesktopIpcDiagnostics.frontendArtifactTextFieldClassExportArtifact =
+            manifest.textfieldClassExportArtifact;
+        }
         if (Array.isArray(manifest.textfieldTransitiveArtifacts)) {
           window.VaadinDesktopIpcDiagnostics.frontendArtifactTextFieldTransitiveArtifacts =
             manifest.textfieldTransitiveArtifacts.filter((value) => typeof value === 'string').join(',');
@@ -3706,6 +3822,28 @@ let flowIpcShell = #"""
         if (typeof manifest.textfieldImportResolutionStrategy === 'string') {
           window.VaadinDesktopIpcDiagnostics.frontendArtifactTextFieldImportResolutionStrategy =
             manifest.textfieldImportResolutionStrategy;
+          window.VaadinDesktopIpcDiagnostics.frontendArtifactTextFieldModuleIdentityStrategy =
+            manifest.textfieldImportResolutionStrategy;
+        }
+        if (typeof manifest.textfieldSideEffectStrategy === 'string') {
+          window.VaadinDesktopIpcDiagnostics.frontendArtifactTextFieldSideEffectStrategy =
+            manifest.textfieldSideEffectStrategy;
+        }
+        if (typeof manifest.textfieldFirstDefinitionSource === 'string') {
+          window.VaadinDesktopIpcDiagnostics.frontendArtifactTextFieldFirstDefinitionSource =
+            manifest.textfieldFirstDefinitionSource;
+        }
+        if (typeof manifest.textfieldSecondDefinitionSource === 'string') {
+          window.VaadinDesktopIpcDiagnostics.frontendArtifactTextFieldSecondDefinitionSource =
+            manifest.textfieldSecondDefinitionSource;
+        }
+        if (typeof manifest.textfieldDuplicateTag === 'string') {
+          window.VaadinDesktopIpcDiagnostics.frontendArtifactTextFieldDuplicateTag =
+            manifest.textfieldDuplicateTag;
+        }
+        if (typeof manifest.textfieldRemainingBlockerClassification === 'string') {
+          window.VaadinDesktopIpcDiagnostics.frontendArtifactTextFieldRemainingBlockerClassification =
+            manifest.textfieldRemainingBlockerClassification;
         }
         if (typeof manifest.textfieldNarrowedFailureClassification === 'string') {
           window.VaadinDesktopIpcDiagnostics.frontendArtifactTextFieldNarrowedFailureClassification =
@@ -3762,7 +3900,8 @@ let flowIpcShell = #"""
           window.VaadinDesktopIpcDiagnostics.frontendArtifactShimFallback
           || resources.some((entry) => entry
             && entry.artifactFamily === 'npm-frontend'
-            && entry.executionPolicy === 'blocked-shim-fallback');
+            && (entry.executionPolicy === 'blocked-shim-fallback'
+              || entry.executionPolicy === 'legacy-shim-fallback'));
         window.VaadinDesktopIpcDiagnostics.frontendArtifactProductionBundlePartial =
           window.VaadinDesktopIpcDiagnostics.frontendArtifactProductionBundlePartial
           || resources.some((entry) => entry
@@ -3845,14 +3984,25 @@ let flowIpcShell = #"""
           lookupKind: resource.lookupKind || '',
           textfieldGraphParityVersion: resource.textfieldGraphParityVersion || '',
           blockerVersion: resource.blockerVersion || '',
+          previousBlockerVersion: resource.previousBlockerVersion || '',
+          executionVersion: resource.executionVersion || '',
+          textfieldSideEffectVersion: resource.textfieldSideEffectVersion || '',
           graphProbe: resource.graphProbe || '',
           graphEntryArtifact: resource.graphEntryArtifact || '',
+          classExportArtifact: resource.classExportArtifact || '',
           transitiveImports: Array.isArray(resource.transitiveImports) ? resource.transitiveImports : [],
           importResolutionStrategy: resource.importResolutionStrategy || '',
+          sideEffectStrategy: resource.sideEffectStrategy || '',
           narrowedFailureClassification: resource.narrowedFailureClassification || '',
           failureLayer: resource.failureLayer || '',
           minimalReproduction: resource.minimalReproduction || '',
-          nextResolutionStep: resource.nextResolutionStep || ''
+          nextResolutionStep: resource.nextResolutionStep || '',
+          firstDefinitionSource: resource.firstDefinitionSource || '',
+          secondDefinitionSource: resource.secondDefinitionSource || '',
+          duplicateTag: resource.duplicateTag || '',
+          remainingBlockerClassification: resource.remainingBlockerClassification || '',
+          moduleIdentityStrategy: resource.moduleIdentityStrategy || '',
+          legacyShimSuccessPath: resource.legacyShimSuccessPath === true
         };
       }
 
@@ -3886,6 +4036,8 @@ let flowIpcShell = #"""
           frontendStagedResourceFailedPaths.size;
         window.VaadinDesktopIpcDiagnostics.frontendStagedResourceFailedPaths =
           Array.from(frontendStagedResourceFailedPaths).join(',');
+        window.VaadinDesktopIpcDiagnostics.frontendArtifactTextFieldModuleIdentityPaths =
+          Array.from(frontendModuleIdentityResourcePaths).join(',');
       }
 
       function recordFrontendStage(resource, stagedUrl, executionStatus, cacheStatus, extra) {
@@ -3944,6 +4096,15 @@ let flowIpcShell = #"""
           blockerVersion: extra && extra.blockerVersion
             ? extra.blockerVersion
             : (resource.blockerVersion || ''),
+          previousBlockerVersion: extra && extra.previousBlockerVersion
+            ? extra.previousBlockerVersion
+            : (resource.previousBlockerVersion || ''),
+          executionVersion: extra && extra.executionVersion
+            ? extra.executionVersion
+            : (resource.executionVersion || ''),
+          textfieldSideEffectVersion: extra && extra.textfieldSideEffectVersion
+            ? extra.textfieldSideEffectVersion
+            : (resource.textfieldSideEffectVersion || ''),
           textfieldGraphParityVersion: extra && extra.textfieldGraphParityVersion
             ? extra.textfieldGraphParityVersion
             : (resource.textfieldGraphParityVersion || ''),
@@ -3951,12 +4112,21 @@ let flowIpcShell = #"""
           graphEntryArtifact: extra && extra.graphEntryArtifact
             ? extra.graphEntryArtifact
             : (resource.graphEntryArtifact || ''),
+          classExportArtifact: extra && extra.classExportArtifact
+            ? extra.classExportArtifact
+            : (resource.classExportArtifact || ''),
           transitiveArtifacts: extra && extra.transitiveArtifacts
             ? extra.transitiveArtifacts
             : (Array.isArray(resource.transitiveImports) ? resource.transitiveImports.join(',') : ''),
           importResolutionStrategy: extra && extra.importResolutionStrategy
             ? extra.importResolutionStrategy
             : (resource.importResolutionStrategy || ''),
+          sideEffectStrategy: extra && extra.sideEffectStrategy
+            ? extra.sideEffectStrategy
+            : (resource.sideEffectStrategy || ''),
+          moduleIdentityStrategy: extra && extra.moduleIdentityStrategy
+            ? extra.moduleIdentityStrategy
+            : (resource.moduleIdentityStrategy || ''),
           failureLayer: extra && extra.failureLayer ? extra.failureLayer : (resource.failureLayer || ''),
           blockedReason: extra && extra.blockedReason
             ? extra.blockedReason
@@ -3982,7 +4152,12 @@ let flowIpcShell = #"""
             ? extra.customElementRegistryAfter
             : '',
           firstDefinitionSource: extra && extra.firstDefinitionSource ? extra.firstDefinitionSource : '',
-          secondDefinitionSource: extra && extra.secondDefinitionSource ? extra.secondDefinitionSource : ''
+          secondDefinitionSource: extra && extra.secondDefinitionSource ? extra.secondDefinitionSource : '',
+          duplicateTag: extra && extra.duplicateTag ? extra.duplicateTag : (resource.duplicateTag || ''),
+          remainingBlockerClassification: extra && extra.remainingBlockerClassification
+            ? extra.remainingBlockerClassification
+            : (resource.remainingBlockerClassification || ''),
+          moduleIdentityKey: extra && extra.moduleIdentityKey ? extra.moduleIdentityKey : sourcePath
         });
       }
 
@@ -4144,6 +4319,7 @@ let flowIpcShell = #"""
             && (!d.flowClientEngineTextInputEventObserved
               || !d.flowClientEngineCheckboxEventObserved
               || !d.vaadinWebComponentEventRpcObserved
+              || !d.vaadinTextFieldEventRpcObserved
               || !d.vaadinSecondWebComponentEventRpcObserved)) {
           return false;
         }
@@ -4505,7 +4681,9 @@ let flowIpcShell = #"""
           element = document.createElement('span');
         } else if (tag.startsWith('vaadin-')) {
           element = document.createElement(tag);
-          if (tag === 'vaadin-big-decimal-field' || tag === 'vaadin-checkbox') {
+          if (tag === 'vaadin-big-decimal-field'
+              || tag === 'vaadin-text-field'
+              || tag === 'vaadin-checkbox') {
             element.addEventListener('change', () => {
               const data = tag === 'vaadin-checkbox'
                 ? { 'element.checked': !!element.checked }
@@ -4622,7 +4800,9 @@ let flowIpcShell = #"""
           element.textContent = node.text || '';
         } else if (typeof node.tag === 'string' && node.tag.startsWith('vaadin-')) {
           element = document.createElement(node.tag);
-          if (node.tag === 'vaadin-big-decimal-field' || node.tag === 'vaadin-checkbox') {
+          if (node.tag === 'vaadin-big-decimal-field'
+              || node.tag === 'vaadin-text-field'
+              || node.tag === 'vaadin-checkbox') {
             element.addEventListener('change', () => {
               const data = node.tag === 'vaadin-checkbox'
                 ? { 'element.checked': !!element.checked }
@@ -4708,6 +4888,8 @@ let flowIpcShell = #"""
             'ipc-checkbox-status',
             'ipc-vaadin-big-decimal',
             'ipc-vaadin-big-decimal-status',
+            'ipc-vaadin-text-field',
+            'ipc-vaadin-text-field-status',
             'ipc-vaadin-checkbox',
             'ipc-vaadin-checkbox-status',
             'ipc-push-status',
@@ -4810,6 +4992,26 @@ let flowIpcShell = #"""
             }
           } catch (_) {
             window.VaadinDesktopIpcDiagnostics.vaadinWebComponentRendered = false;
+          }
+          try {
+            const textFieldTarget = flowClientEngineElementById('ipc-vaadin-text-field');
+            const textFieldElement = textFieldTarget ? textFieldTarget.element : null;
+            const textFieldStatus = flowClientEngineElementById('ipc-vaadin-text-field-status');
+            const textFieldStatusText = textFieldStatus ? (textFieldStatus.element.textContent || '') : '';
+            window.VaadinDesktopIpcDiagnostics.vaadinTextFieldRendered = !!textFieldElement;
+            window.VaadinDesktopIpcDiagnostics.vaadinTextFieldRenderedTag =
+              textFieldElement ? textFieldElement.tagName.toLowerCase() : '';
+            window.VaadinDesktopIpcDiagnostics.vaadinTextFieldRenderedValue =
+              textFieldElement && typeof textFieldElement.value !== 'undefined' ? String(textFieldElement.value || '') : '';
+            window.VaadinDesktopIpcDiagnostics.vaadinTextFieldTagDefined =
+              !!customElements.get('vaadin-text-field');
+            window.VaadinDesktopIpcDiagnostics.vaadinTextFieldStatusText = textFieldStatusText;
+            window.VaadinDesktopIpcDiagnostics.vaadinTextFieldPostEventState = textFieldStatusText;
+            if (textFieldStatusText.includes('Vaadin TextField: ' + autoVaadinTextFieldValue)) {
+              window.VaadinDesktopIpcDiagnostics.vaadinTextFieldEventObserved = true;
+            }
+          } catch (_) {
+            window.VaadinDesktopIpcDiagnostics.vaadinTextFieldRendered = false;
           }
           try {
             const checkboxTarget = flowClientEngineElementById('ipc-vaadin-checkbox');
@@ -5156,12 +5358,36 @@ let flowIpcShell = #"""
         return '';
       }
 
-      function componentModuleBlobUrl(path, urlsToRevoke, urlCache) {
+      function usesStableModuleIdentity(resource) {
+        return !!(resource
+          && (resource.devBundleResource === true
+            || resource.artifactFamily === 'production-bundle'
+            || resource.path === 'META-INF/vatori/dev-bundle-entry/vaadin-text-field.js'
+            || resource.path === 'vaadin-dev-bundle/webapp/VAADIN/build/indexhtml-BfYYZi8S.js'
+            || resource.path === 'vaadin-dev-bundle/webapp/VAADIN/build/commonjsHelpers-CUmg6egw.js'));
+      }
+
+      function componentModuleBlobUrl(path, urlsToRevoke, urlCache, executionStatus, extra) {
         const resource = componentFrontendResourceByPath(path);
-        if (urlCache && urlCache.has(path)) {
-          return stageFrontendArtifact(resource || { path }, '', 'staged', urlsToRevoke, urlCache, {
-            cleanupPolicy: 'revoke-on-module-graph-complete'
-          });
+        const stableIdentity = usesStableModuleIdentity(resource);
+        const cache = stableIdentity ? frontendModuleIdentityUrlCache : urlCache;
+        const cleanupPolicy = stableIdentity
+          ? 'retain-for-window-lifetime-module-identity-v1_7'
+          : 'revoke-on-module-graph-complete';
+        const stageExtra = Object.assign({
+          cleanupPolicy,
+          moduleIdentityStrategy: stableIdentity
+            ? 'stable-resource-path-blob-module-identity-v1_7'
+            : '',
+          moduleIdentityKey: path
+        }, extra || {});
+        if (cache && cache.has(path)) {
+          const cachedUrl = stageFrontendArtifact(resource || { path }, '', executionStatus || 'staged',
+            stableIdentity ? null : urlsToRevoke, cache, stageExtra);
+          if (stableIdentity && urlCache) {
+            urlCache.set(path, cachedUrl);
+          }
+          return cachedUrl;
         }
         let body = componentFrontendResourceBodies.get(path) || '';
         if (!body) {
@@ -5182,9 +5408,15 @@ let flowIpcShell = #"""
             return '';
           }
         }
-        return stageFrontendArtifact(resource || { path }, body, 'staged', urlsToRevoke, urlCache, {
-          cleanupPolicy: 'revoke-on-module-graph-complete'
-        });
+        if (stableIdentity) {
+          frontendModuleIdentityResourcePaths.add(path);
+        }
+        const stagedUrl = stageFrontendArtifact(resource || { path }, body, executionStatus || 'staged',
+          stableIdentity ? null : urlsToRevoke, cache, stageExtra);
+        if (stableIdentity && urlCache) {
+          urlCache.set(path, stagedUrl);
+        }
+        return stagedUrl;
       }
 
       function componentModuleFileName(path) {
@@ -5371,6 +5603,10 @@ let flowIpcShell = #"""
 
       function markStagedDependenciesStrictBlocker(urlCache, browserError, extra) {
         for (const [dependencyPath, dependencyUrl] of urlCache.entries()) {
+          if (frontendStagedResourceExecutedPaths.has(dependencyPath)
+              && frontendModuleIdentityResourcePaths.has(dependencyPath)) {
+            continue;
+          }
           const dependency = componentFrontendResourceByPath(dependencyPath);
           recordFrontendStageOutcome(dependency, dependencyUrl, 'strict-blocker', Object.assign({
             cleanupPolicy: 'revoke-on-module-graph-complete',
@@ -5480,19 +5716,39 @@ let flowIpcShell = #"""
         window.VaadinDesktopIpcDiagnostics.frontendArtifactTextFieldGraphParityVersion =
           resource.textfieldGraphParityVersion || window.VaadinDesktopIpcDiagnostics.frontendArtifactTextFieldGraphParityVersion;
         window.VaadinDesktopIpcDiagnostics.frontendArtifactTextFieldBlockerVersion =
-          resource.blockerVersion || window.VaadinDesktopIpcDiagnostics.frontendArtifactTextFieldBlockerVersion;
+          resource.previousBlockerVersion || resource.blockerVersion || window.VaadinDesktopIpcDiagnostics.frontendArtifactTextFieldBlockerVersion;
+        window.VaadinDesktopIpcDiagnostics.frontendArtifactTextFieldExecutionVersion =
+          resource.executionVersion || window.VaadinDesktopIpcDiagnostics.frontendArtifactTextFieldExecutionVersion;
+        window.VaadinDesktopIpcDiagnostics.frontendArtifactTextFieldSideEffectVersion =
+          resource.textfieldSideEffectVersion || window.VaadinDesktopIpcDiagnostics.frontendArtifactTextFieldSideEffectVersion;
         window.VaadinDesktopIpcDiagnostics.frontendArtifactTextFieldGraphProbe =
           resource.graphProbe || window.VaadinDesktopIpcDiagnostics.frontendArtifactTextFieldGraphProbe;
         window.VaadinDesktopIpcDiagnostics.frontendArtifactTextFieldEntryArtifact =
           resource.graphEntryArtifact || resource.path;
+        window.VaadinDesktopIpcDiagnostics.frontendArtifactTextFieldClassExportArtifact =
+          resource.classExportArtifact || window.VaadinDesktopIpcDiagnostics.frontendArtifactTextFieldClassExportArtifact;
         window.VaadinDesktopIpcDiagnostics.frontendArtifactTextFieldTransitiveArtifacts =
           transitiveArtifacts;
         window.VaadinDesktopIpcDiagnostics.frontendArtifactTextFieldImportResolutionStrategy =
           resource.importResolutionStrategy || '';
+        window.VaadinDesktopIpcDiagnostics.frontendArtifactTextFieldSideEffectStrategy =
+          resource.sideEffectStrategy || '';
+        window.VaadinDesktopIpcDiagnostics.frontendArtifactTextFieldModuleIdentityStrategy =
+          resource.moduleIdentityStrategy || resource.importResolutionStrategy || '';
         window.VaadinDesktopIpcDiagnostics.frontendArtifactTextFieldNarrowedFailureClassification =
           resource.narrowedFailureClassification || '';
         window.VaadinDesktopIpcDiagnostics.frontendArtifactTextFieldFailureLayer =
           resource.failureLayer || '';
+        window.VaadinDesktopIpcDiagnostics.frontendArtifactTextFieldFirstDefinitionSource =
+          resource.firstDefinitionSource || '';
+        window.VaadinDesktopIpcDiagnostics.frontendArtifactTextFieldSecondDefinitionSource =
+          resource.secondDefinitionSource || '';
+        window.VaadinDesktopIpcDiagnostics.frontendArtifactTextFieldDuplicateTag =
+          resource.duplicateTag || 'vaadin-text-field';
+        window.VaadinDesktopIpcDiagnostics.frontendArtifactTextFieldRemainingBlockerClassification =
+          resource.remainingBlockerClassification || '';
+        window.VaadinDesktopIpcDiagnostics.frontendArtifactTextFieldShimUsed =
+          resource.legacyShimSuccessPath === true;
         window.VaadinDesktopIpcDiagnostics.frontendArtifactTextFieldMinimalReproduction =
           resource.minimalReproduction || '';
         window.VaadinDesktopIpcDiagnostics.frontendArtifactTextFieldNextResolutionStep =
@@ -5502,24 +5758,53 @@ let flowIpcShell = #"""
         try {
           installOpaqueOriginStorageFallbacks();
           installVaadinDevBundleGlobals();
-          const importSource = rewriteVaadinDevBundleModule(source, resource.path, urlsToRevoke, urlCache);
-          if (!importSource) {
+          stagedUrl = componentModuleBlobUrl(resource.path, urlsToRevoke, urlCache, 'execution-attempt', {
+            cleanupPolicy: 'retain-for-window-lifetime-module-identity-v1_7',
+            previousBlockerVersion: resource.previousBlockerVersion || resource.blockerVersion || '',
+            executionVersion: resource.executionVersion || '',
+            textfieldSideEffectVersion: resource.textfieldSideEffectVersion || '',
+            graphProbe: resource.graphProbe || '',
+            graphEntryArtifact: resource.graphEntryArtifact || resource.path,
+            classExportArtifact: resource.classExportArtifact || '',
+            transitiveArtifacts,
+            importResolutionStrategy: resource.importResolutionStrategy || '',
+            sideEffectStrategy: resource.sideEffectStrategy || '',
+            moduleIdentityStrategy: resource.moduleIdentityStrategy || resource.importResolutionStrategy || '',
+            narrowedFailureClassification: resource.narrowedFailureClassification || '',
+            failureLayer: resource.failureLayer || '',
+            minimalReproduction: resource.minimalReproduction || '',
+            nextResolutionStep: resource.nextResolutionStep || '',
+            firstDefinitionSource: resource.firstDefinitionSource || '',
+            secondDefinitionSource: resource.secondDefinitionSource || '',
+            duplicateTag: resource.duplicateTag || 'vaadin-text-field',
+            remainingBlockerClassification: resource.remainingBlockerClassification || ''
+          });
+          if (!stagedUrl) {
             throw new Error(window.VaadinDesktopIpcDiagnostics.vaadinWebComponentResourceExecutionError
               || 'textfield-staging-rewrite-failed');
           }
-          stagedUrl = stageFrontendArtifact(resource, importSource, 'execution-attempt', urlsToRevoke, null, {
-            cleanupPolicy: 'revoke-after-textfield-blocker-probe'
-          });
           await import(stagedUrl);
           if (customElements.get('vaadin-text-field')) {
+            window.VaadinDesktopIpcDiagnostics.frontendArtifactTextFieldExecuted = true;
+            window.VaadinDesktopIpcDiagnostics.frontendArtifactTextFieldStagedBlocker = false;
+            window.VaadinDesktopIpcDiagnostics.frontendArtifactTextFieldStagedBlockerError = '';
+            window.VaadinDesktopIpcDiagnostics.frontendArtifactTextFieldStagedBlockerReason = '';
+            window.VaadinDesktopIpcDiagnostics.frontendArtifactTextFieldStagedBlockerDependency = '';
+            window.VaadinDesktopIpcDiagnostics.frontendArtifactTextFieldRemainingBlockerClassification =
+              resource.remainingBlockerClassification || 'none';
             recordFrontendStageOutcome(resource, stagedUrl, 'executed', {
-              cleanupPolicy: 'revoke-after-textfield-blocker-probe',
-              blockerVersion: resource.blockerVersion || '',
+              cleanupPolicy: 'retain-for-window-lifetime-module-identity-v1_7',
+              previousBlockerVersion: resource.previousBlockerVersion || resource.blockerVersion || '',
+              executionVersion: resource.executionVersion || '',
+              textfieldSideEffectVersion: resource.textfieldSideEffectVersion || '',
               textfieldGraphParityVersion: resource.textfieldGraphParityVersion || '',
               graphProbe: resource.graphProbe || '',
               graphEntryArtifact: resource.graphEntryArtifact || resource.path,
+              classExportArtifact: resource.classExportArtifact || '',
               transitiveArtifacts,
               importResolutionStrategy: resource.importResolutionStrategy || '',
+              sideEffectStrategy: resource.sideEffectStrategy || '',
+              moduleIdentityStrategy: resource.moduleIdentityStrategy || resource.importResolutionStrategy || '',
               narrowedFailureClassification: resource.narrowedFailureClassification || '',
               failureLayer: resource.failureLayer || '',
               minimalReproduction: resource.minimalReproduction || '',
@@ -5528,12 +5813,21 @@ let flowIpcShell = #"""
               customElementDefinedBefore: textFieldDefinedBefore,
               customElementDefinedAfter: true,
               customElementRegistryBefore: registryBefore,
-              customElementRegistryAfter: customElementRegistrySnapshot('vaadin-text-field')
+              customElementRegistryAfter: customElementRegistrySnapshot('vaadin-text-field'),
+              firstDefinitionSource: resource.firstDefinitionSource || '',
+              secondDefinitionSource: resource.secondDefinitionSource || '',
+              duplicateTag: resource.duplicateTag || 'vaadin-text-field',
+              remainingBlockerClassification: resource.remainingBlockerClassification || 'none'
             });
             for (const [dependencyPath, dependencyUrl] of urlCache.entries()) {
               const dependency = componentFrontendResourceByPath(dependencyPath);
               recordFrontendStageOutcome(dependency, dependencyUrl, 'executed', {
-                cleanupPolicy: 'revoke-on-module-graph-complete'
+                cleanupPolicy: usesStableModuleIdentity(dependency)
+                  ? 'retain-for-window-lifetime-module-identity-v1_7'
+                  : 'revoke-on-module-graph-complete',
+                moduleIdentityStrategy: usesStableModuleIdentity(dependency)
+                  ? 'stable-resource-path-blob-module-identity-v1_7'
+                  : ''
               });
             }
             return;
@@ -5553,16 +5847,24 @@ let flowIpcShell = #"""
           window.VaadinDesktopIpcDiagnostics.frontendArtifactTextFieldCustomElementRegistryAfter =
             registryAfter;
           const blockerDetails = {
-            cleanupPolicy: 'revoke-after-textfield-blocker-probe',
-            blockerVersion: resource.blockerVersion || '',
+            cleanupPolicy: 'retain-for-window-lifetime-module-identity-v1_7',
+            blockerVersion: resource.executionVersion || 'flow-ipc-textfield-v1_7',
+            previousBlockerVersion: resource.previousBlockerVersion || resource.blockerVersion || '',
+            executionVersion: resource.executionVersion || '',
+            textfieldSideEffectVersion: resource.textfieldSideEffectVersion || '',
             textfieldGraphParityVersion: resource.textfieldGraphParityVersion || '',
             graphProbe: resource.graphProbe || '',
             graphEntryArtifact: resource.graphEntryArtifact || resource.path,
+            classExportArtifact: resource.classExportArtifact || '',
             transitiveArtifacts: dependency || transitiveArtifacts,
             importResolutionStrategy: resource.importResolutionStrategy || '',
+            sideEffectStrategy: resource.sideEffectStrategy || '',
+            moduleIdentityStrategy: resource.moduleIdentityStrategy || resource.importResolutionStrategy || '',
             failureClassification: resource.failureClassification || 'textfield-production-class-execution-blocked',
             narrowedFailureClassification: resource.narrowedFailureClassification || '',
-            failureLayer: resource.failureLayer || '',
+            failureLayer: message.includes('multiple custom elements')
+              ? 'module-identity-regression-duplicate-custom-element-v1_7'
+              : 'textfield-real-graph-execution-failed-v1_7',
             blockedReason: resource.blockedReason || 'textfield-staged-dev-bundle-execution-blocked',
             browserError: message,
             minimalReproduction: resource.minimalReproduction || '',
@@ -5573,11 +5875,13 @@ let flowIpcShell = #"""
             customElementRegistryBefore: registryBefore,
             customElementRegistryAfter: registryAfter,
             firstDefinitionSource: textFieldDefinedBefore
-              ? 'customElements registry before TextField v1.6 staged probe'
-              : 'not-defined-before-v1_6-probe',
+              ? (resource.firstDefinitionSource || 'customElements registry before TextField v1.7 staged probe')
+              : 'not-defined-before-v1_7-probe',
             secondDefinitionSource: textFieldDefinedAfter
-              ? 'TextField staged dev-bundle graph'
-              : 'not-defined-after-v1_6-probe'
+              ? (resource.secondDefinitionSource || 'TextField staged dev-bundle graph')
+              : 'not-defined-after-v1_7-probe',
+            duplicateTag: resource.duplicateTag || 'vaadin-text-field',
+            remainingBlockerClassification: 'textfield-real-graph-execution-failed-v1_7'
           };
           recordFrontendStageOutcome(resource, stagedUrl, 'strict-blocker', blockerDetails);
           markStagedDependenciesStrictBlocker(urlCache, message, blockerDetails);
@@ -5666,7 +5970,12 @@ let flowIpcShell = #"""
           for (const [dependencyPath, dependencyUrl] of urlCache.entries()) {
             const dependency = componentFrontendResourceByPath(dependencyPath);
             recordFrontendStageOutcome(dependency, dependencyUrl, 'executed', {
-              cleanupPolicy: 'revoke-on-module-graph-complete'
+              cleanupPolicy: usesStableModuleIdentity(dependency)
+                ? 'retain-for-window-lifetime-module-identity-v1_7'
+                : 'revoke-on-module-graph-complete',
+              moduleIdentityStrategy: usesStableModuleIdentity(dependency)
+                ? 'stable-resource-path-blob-module-identity-v1_7'
+                : ''
             });
           }
           if (componentTag) {
@@ -5685,8 +5994,9 @@ let flowIpcShell = #"""
           }
           refreshComponentFrontendResourceDiagnostics();
         } catch (error) {
-          if (resource.devBundleResource === true && componentTag && customElements.get(componentTag)) {
+          if (componentTag && customElements.get(componentTag)) {
             componentFrontendResourceExecutedPaths.add(primaryPath);
+            componentFrontendResourceExecutionFailedPaths.delete(primaryPath);
             recordFrontendStageOutcome(resource, primaryUrl, 'executed', {
               cleanupPolicy: 'revoke-after-dynamic-import',
               browserError: error && error.message ? error.message : String(error)
@@ -5698,6 +6008,10 @@ let flowIpcShell = #"""
             if (componentTag === 'vaadin-checkbox') {
               window.VaadinDesktopIpcDiagnostics.vaadinSecondWebComponentTagDefined = true;
               window.VaadinDesktopIpcDiagnostics.vaadinSecondWebComponentFailureReason = '';
+            }
+            if (componentTag === 'vaadin-big-decimal-field') {
+              window.VaadinDesktopIpcDiagnostics.vaadinWebComponentTagDefined = true;
+              window.VaadinDesktopIpcDiagnostics.vaadinWebComponentFailureReason = '';
             }
             if (componentFrontendResourceExecutionFailedPaths.size === 0) {
               window.VaadinDesktopIpcDiagnostics.vaadinWebComponentResourceExecutionError = '';

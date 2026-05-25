@@ -20,12 +20,13 @@ The current exception is `--require-flow-ipc-v1_6`. It preserves the narrowed Te
 - `bin/uidl-rpc-smoke`
 - `bin/flow-ipc-scope-smoke`
 - `bin/flow-client-resource-smoke`
-- `vaadin-desktop-flow/src/main/java/dev/vatori/desktop/flow/transport/UidlAdapterSmokeMain.java`
-- `vaadin-desktop-flow/src/main/java/dev/vatori/desktop/flow/transport/UidlRpcSmokeMain.java`
-- `vaadin-desktop-flow/src/main/java/dev/vatori/desktop/flow/ipc/FlowIpcScopeSmokeMain.java`
-- `vaadin-desktop-flow/src/main/java/dev/vatori/desktop/flow/ipc/FlowClientResourceSmokeMain.java`
+- `vaadin-desktop-flow/src/test/java/dev/vatori/desktop/flow/transport/UidlAdapterSmokeMain.java`
+- `vaadin-desktop-flow/src/test/java/dev/vatori/desktop/flow/transport/UidlRpcSmokeMain.java`
+- `vaadin-desktop-flow/src/test/java/dev/vatori/desktop/flow/ipc/FlowIpcScopeSmokeMain.java`
+- `vaadin-desktop-flow/src/test/java/dev/vatori/desktop/flow/ipc/FlowClientResourceSmokeMain.java`
 
 These commands build a minimal desktop-shaped Flow boundary in process. They are used to verify the UIDL writer, RPC dispatch, session/UI scope rejection and advertised Flow client resource graph without opening a desktop window.
+They live under `src/test/java` and run on Maven's test classpath so the production `vaadin-desktop-flow` artifact does not export smoke entrypoints.
 
 ## Real-window acceptance hooks
 

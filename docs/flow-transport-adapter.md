@@ -52,6 +52,9 @@ The current `FlowIpcRuntime` adapter intentionally does not claim to be the fina
 - `dev.vatori.desktop.flow.transport.DesktopVaadinResponse`
 - `dev.vatori.desktop.flow.transport.DesktopWrappedSession`
 - `dev.vatori.desktop.flow.transport.DesktopFlowRuntimeSession`
+
+The executable smoke harnesses live under `vaadin-desktop-flow/src/test/java` and keep the same package names so they can verify package-private transport/session boundaries without being packaged into the production runtime artifact:
+
 - `dev.vatori.desktop.flow.transport.UidlAdapterSmokeMain`
 - `dev.vatori.desktop.flow.transport.UidlRpcSmokeMain`
 

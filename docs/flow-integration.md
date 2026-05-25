@@ -71,9 +71,13 @@ That issue has now started in compiled framework code:
 - `dev.vatori.desktop.flow.transport.DesktopVaadinResponse`
 - `dev.vatori.desktop.flow.transport.DesktopWrappedSession`
 - `dev.vatori.desktop.flow.transport.DesktopFlowRuntimeSession`
+- `dev.vatori.desktop.flow.ipc.FlowClientResources`
+
+The smoke entrypoints are test-source harnesses, not runtime API:
+
 - `dev.vatori.desktop.flow.transport.UidlAdapterSmokeMain`
 - `dev.vatori.desktop.flow.transport.UidlRpcSmokeMain`
-- `dev.vatori.desktop.flow.ipc.FlowClientResources`
+- `dev.vatori.desktop.flow.ipc.FlowIpcScopeSmokeMain`
 - `dev.vatori.desktop.flow.ipc.FlowClientResourceSmokeMain`
 
 This adapter now has a runnable smoke command:

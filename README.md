@@ -127,6 +127,7 @@ VAADIN_DESKTOP_HOST=browser bash bin/vaadin-desktop dev examples/counter-app
 - [IPC Protocol v1](docs/ipc-protocol-v1.md)
 - [Flow over IPC Runtime](docs/flow-over-ipc-runtime.md)
 - [Flow Transport Adapter](docs/flow-transport-adapter.md)
+- [Acceptance and Smoke Tools](docs/acceptance-tools.md)
 - [Native Host](docs/native-host.md)
 - [Roadmap](docs/roadmap.md)
 - [Original Design Package](docs/flow-over-ipc-design.md)

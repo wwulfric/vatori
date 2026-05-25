@@ -190,6 +190,7 @@ Vaadin：
 - `docs/ipc-protocol-v1.md`：Flow IPC v1 envelope 和 message taxonomy。
 - `docs/flow-over-ipc-runtime.md`：当前 `dev-ipc` runtime 切片和限制。
 - `docs/flow-transport-adapter.md`：当前 adapter 实现和下一个 UIDL 边界。
+- `docs/acceptance-tools.md`：trace gate、smoke harness、真实窗口验收 hook 和 runtime diagnostics 的边界说明。
 - `docs/native-host.md`：当前 WKWebView host 和 host roadmap。
 - `docs/roadmap.md`：下一阶段工程路线。
 - `docs/flow-over-ipc-design.md`：原始中文设计包。

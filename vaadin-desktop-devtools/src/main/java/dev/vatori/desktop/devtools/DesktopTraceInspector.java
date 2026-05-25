@@ -5,6 +5,7 @@ import java.nio.charset.StandardCharsets;
 import java.nio.file.Files;
 import java.nio.file.Path;
 import java.util.ArrayList;
+import java.util.EnumSet;
 import java.util.LinkedHashMap;
 import java.util.List;
 import java.util.Map;
@@ -36,78 +37,92 @@ public final class DesktopTraceInspector {
     private DesktopTraceInspector() {
     }
 
+    private enum AcceptanceGate {
+        FLOW_IPC_V1("--require-flow-ipc-v1"),
+        FLOW_IPC_V1_1("--require-flow-ipc-v1_1"),
+        FLOW_IPC_V1_2("--require-flow-ipc-v1_2"),
+        FLOW_IPC_V1_3("--require-flow-ipc-v1_3"),
+        FLOW_IPC_V1_4("--require-flow-ipc-v1_4"),
+        FLOW_IPC_V1_5("--require-flow-ipc-v1_5"),
+        FLOW_IPC_V1_6("--require-flow-ipc-v1_6"),
+        FLOW_IPC_V1_7("--require-flow-ipc-v1_7"),
+        FLOW_IPC_V1_8("--require-flow-ipc-v1_8"),
+        FLOW_IPC_V1_3_FRAMEWORK("--require-flow-ipc-v1_3-framework");
+
+        private final String option;
+
+        AcceptanceGate(String option) {
+            this.option = option;
+        }
+
+        private static AcceptanceGate fromOption(String arg) {
+            for (AcceptanceGate gate : values()) {
+                if (gate.option.equals(arg)) {
+                    return gate;
+                }
+            }
+            return null;
+        }
+
+        private static String usageOptions() {
+            List<String> options = new ArrayList<>();
+            for (AcceptanceGate gate : values()) {
+                options.add(gate.option);
+            }
+            return String.join("|", options);
+        }
+
+        private EnumSet<AcceptanceGate> expandedRequirements() {
+            return switch (this) {
+                case FLOW_IPC_V1 -> EnumSet.of(FLOW_IPC_V1);
+                case FLOW_IPC_V1_1 -> EnumSet.of(FLOW_IPC_V1, FLOW_IPC_V1_1);
+                case FLOW_IPC_V1_2 -> EnumSet.of(FLOW_IPC_V1, FLOW_IPC_V1_1, FLOW_IPC_V1_2);
+                case FLOW_IPC_V1_3 -> EnumSet.of(FLOW_IPC_V1, FLOW_IPC_V1_1, FLOW_IPC_V1_2,
+                        FLOW_IPC_V1_3);
+                case FLOW_IPC_V1_4 -> EnumSet.of(FLOW_IPC_V1, FLOW_IPC_V1_1, FLOW_IPC_V1_2,
+                        FLOW_IPC_V1_3, FLOW_IPC_V1_4);
+                case FLOW_IPC_V1_5 -> EnumSet.of(FLOW_IPC_V1, FLOW_IPC_V1_1, FLOW_IPC_V1_2,
+                        FLOW_IPC_V1_3, FLOW_IPC_V1_4, FLOW_IPC_V1_5);
+                case FLOW_IPC_V1_6 -> EnumSet.of(FLOW_IPC_V1, FLOW_IPC_V1_1, FLOW_IPC_V1_2,
+                        FLOW_IPC_V1_3, FLOW_IPC_V1_4, FLOW_IPC_V1_5, FLOW_IPC_V1_6);
+                // v1.6 is a preserved blocker-evidence gate. v1.7/v1.8 supersede that path.
+                case FLOW_IPC_V1_7 -> EnumSet.of(FLOW_IPC_V1, FLOW_IPC_V1_1, FLOW_IPC_V1_2,
+                        FLOW_IPC_V1_3, FLOW_IPC_V1_4, FLOW_IPC_V1_5, FLOW_IPC_V1_7);
+                case FLOW_IPC_V1_8 -> EnumSet.of(FLOW_IPC_V1, FLOW_IPC_V1_1, FLOW_IPC_V1_2,
+                        FLOW_IPC_V1_3, FLOW_IPC_V1_4, FLOW_IPC_V1_5, FLOW_IPC_V1_7,
+                        FLOW_IPC_V1_8);
+                case FLOW_IPC_V1_3_FRAMEWORK -> EnumSet.of(FLOW_IPC_V1_3_FRAMEWORK);
+            };
+        }
+
+        private boolean isSatisfiedBy(TraceSummary summary) {
+            return switch (this) {
+                case FLOW_IPC_V1 -> summary.hasRequiredFlowIpcTypes();
+                case FLOW_IPC_V1_1 -> summary.hasRequiredFlowIpcV1_1Types();
+                case FLOW_IPC_V1_2 -> summary.hasRequiredFlowIpcV1_2Types();
+                case FLOW_IPC_V1_3 -> summary.hasRequiredFlowIpcV1_3Types();
+                case FLOW_IPC_V1_4 -> summary.hasRequiredFlowIpcV1_4Types();
+                case FLOW_IPC_V1_5 -> summary.hasRequiredFlowIpcV1_5Types();
+                case FLOW_IPC_V1_6 -> summary.hasRequiredFlowIpcV1_6Types();
+                case FLOW_IPC_V1_7 -> summary.hasRequiredFlowIpcV1_7Types();
+                case FLOW_IPC_V1_8 -> summary.hasRequiredFlowIpcV1_8Types();
+                case FLOW_IPC_V1_3_FRAMEWORK -> summary.hasRequiredFlowIpcV1_3FrameworkTypes();
+            };
+        }
+    }
+
     public static void main(String[] args) throws IOException {
         if (args.length == 0 || "--help".equals(args[0])) {
             usage();
             return;
         }
 
-        boolean requireFlowIpc = false;
-        boolean requireFlowIpcV1_1 = false;
-        boolean requireFlowIpcV1_2 = false;
-        boolean requireFlowIpcV1_3 = false;
-        boolean requireFlowIpcV1_4 = false;
-        boolean requireFlowIpcV1_5 = false;
-        boolean requireFlowIpcV1_6 = false;
-        boolean requireFlowIpcV1_7 = false;
-        boolean requireFlowIpcV1_8 = false;
-        boolean requireFlowIpcV1_3Framework = false;
+        EnumSet<AcceptanceGate> requiredGates = EnumSet.noneOf(AcceptanceGate.class);
         List<Path> paths = new ArrayList<>();
         for (String arg : args) {
-            if ("--require-flow-ipc-v1".equals(arg)) {
-                requireFlowIpc = true;
-            } else if ("--require-flow-ipc-v1_1".equals(arg)) {
-                requireFlowIpc = true;
-                requireFlowIpcV1_1 = true;
-            } else if ("--require-flow-ipc-v1_2".equals(arg)) {
-                requireFlowIpc = true;
-                requireFlowIpcV1_1 = true;
-                requireFlowIpcV1_2 = true;
-            } else if ("--require-flow-ipc-v1_3".equals(arg)) {
-                requireFlowIpc = true;
-                requireFlowIpcV1_1 = true;
-                requireFlowIpcV1_2 = true;
-                requireFlowIpcV1_3 = true;
-            } else if ("--require-flow-ipc-v1_4".equals(arg)) {
-                requireFlowIpc = true;
-                requireFlowIpcV1_1 = true;
-                requireFlowIpcV1_2 = true;
-                requireFlowIpcV1_3 = true;
-                requireFlowIpcV1_4 = true;
-            } else if ("--require-flow-ipc-v1_5".equals(arg)) {
-                requireFlowIpc = true;
-                requireFlowIpcV1_1 = true;
-                requireFlowIpcV1_2 = true;
-                requireFlowIpcV1_3 = true;
-                requireFlowIpcV1_4 = true;
-                requireFlowIpcV1_5 = true;
-            } else if ("--require-flow-ipc-v1_6".equals(arg)) {
-                requireFlowIpc = true;
-                requireFlowIpcV1_1 = true;
-                requireFlowIpcV1_2 = true;
-                requireFlowIpcV1_3 = true;
-                requireFlowIpcV1_4 = true;
-                requireFlowIpcV1_5 = true;
-                requireFlowIpcV1_6 = true;
-            } else if ("--require-flow-ipc-v1_7".equals(arg)) {
-                requireFlowIpc = true;
-                requireFlowIpcV1_1 = true;
-                requireFlowIpcV1_2 = true;
-                requireFlowIpcV1_3 = true;
-                requireFlowIpcV1_4 = true;
-                requireFlowIpcV1_5 = true;
-                requireFlowIpcV1_7 = true;
-            } else if ("--require-flow-ipc-v1_8".equals(arg)) {
-                requireFlowIpc = true;
-                requireFlowIpcV1_1 = true;
-                requireFlowIpcV1_2 = true;
-                requireFlowIpcV1_3 = true;
-                requireFlowIpcV1_4 = true;
-                requireFlowIpcV1_5 = true;
-                requireFlowIpcV1_7 = true;
-                requireFlowIpcV1_8 = true;
-            } else if ("--require-flow-ipc-v1_3-framework".equals(arg)) {
-                requireFlowIpcV1_3Framework = true;
+            AcceptanceGate gate = AcceptanceGate.fromOption(arg);
+            if (gate != null) {
+                requiredGates.addAll(gate.expandedRequirements());
             } else {
                 paths.add(Path.of(arg));
             }
@@ -121,36 +136,11 @@ public final class DesktopTraceInspector {
         int failures = 0;
         for (Path path : paths) {
             TraceSummary summary = inspect(path);
-            summary.print(path, requireFlowIpc);
-            if (requireFlowIpc && !summary.hasRequiredFlowIpcTypes()) {
-                failures++;
-            }
-            if (requireFlowIpcV1_1 && !summary.hasRequiredFlowIpcV1_1Types()) {
-                failures++;
-            }
-            if (requireFlowIpcV1_2 && !summary.hasRequiredFlowIpcV1_2Types()) {
-                failures++;
-            }
-            if (requireFlowIpcV1_3 && !summary.hasRequiredFlowIpcV1_3Types()) {
-                failures++;
-            }
-            if (requireFlowIpcV1_4 && !summary.hasRequiredFlowIpcV1_4Types()) {
-                failures++;
-            }
-            if (requireFlowIpcV1_5 && !summary.hasRequiredFlowIpcV1_5Types()) {
-                failures++;
-            }
-            if (requireFlowIpcV1_6 && !summary.hasRequiredFlowIpcV1_6Types()) {
-                failures++;
-            }
-            if (requireFlowIpcV1_7 && !summary.hasRequiredFlowIpcV1_7Types()) {
-                failures++;
-            }
-            if (requireFlowIpcV1_8 && !summary.hasRequiredFlowIpcV1_8Types()) {
-                failures++;
-            }
-            if (requireFlowIpcV1_3Framework && !summary.hasRequiredFlowIpcV1_3FrameworkTypes()) {
-                failures++;
+            summary.print(path, requiredGates.contains(AcceptanceGate.FLOW_IPC_V1));
+            for (AcceptanceGate gate : AcceptanceGate.values()) {
+                if (requiredGates.contains(gate) && !gate.isSatisfiedBy(summary)) {
+                    failures++;
+                }
             }
         }
 
@@ -1611,7 +1601,8 @@ public final class DesktopTraceInspector {
     }
 
     private static void usage() {
-        System.out.println("Usage: bin/flow-ipc-trace-inspect [--require-flow-ipc-v1|--require-flow-ipc-v1_1|--require-flow-ipc-v1_2|--require-flow-ipc-v1_3|--require-flow-ipc-v1_4|--require-flow-ipc-v1_5|--require-flow-ipc-v1_6|--require-flow-ipc-v1_7|--require-flow-ipc-v1_8|--require-flow-ipc-v1_3-framework] <trace.ndjson>...");
+        System.out.println("Usage: bin/flow-ipc-trace-inspect [" + AcceptanceGate.usageOptions()
+                + "] <trace.ndjson>...");
     }
 
     public static final class TraceSummary {

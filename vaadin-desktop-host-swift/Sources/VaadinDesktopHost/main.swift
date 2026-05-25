@@ -51,6 +51,7 @@ struct HostConfig {
         if !config.module.hasPrefix("/") {
             config.module = "\(config.repoRoot)/\(config.module)"
         }
+        // Real-window acceptance hooks; keep them opt-in and documented in docs/acceptance-tools.md.
         config.flowIpcAutoClick = ProcessInfo.processInfo.environment["VAADIN_DESKTOP_FLOW_IPC_AUTO_CLICK"] == "1"
         config.flowIpcAutoResync = ProcessInfo.processInfo.environment["VAADIN_DESKTOP_FLOW_IPC_AUTO_RESYNC"] == "1"
         config.flowIpcAutoError = ProcessInfo.processInfo.environment["VAADIN_DESKTOP_FLOW_IPC_AUTO_ERROR"] == "1"

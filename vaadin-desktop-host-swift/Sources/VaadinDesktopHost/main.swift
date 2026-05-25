@@ -1430,6 +1430,18 @@ final class WebViewHost: NSObject, NSApplicationDelegate, NSWindowDelegate, WKNa
           frontendArtifactGeneratedLazyExecutionResult: window.VaadinDesktopIpcDiagnostics ? window.VaadinDesktopIpcDiagnostics.frontendArtifactGeneratedLazyExecutionResult : "",
           frontendArtifactGeneratedLazyExecutionError: window.VaadinDesktopIpcDiagnostics ? window.VaadinDesktopIpcDiagnostics.frontendArtifactGeneratedLazyExecutionError : "",
           frontendArtifactGeneratedLazyLoadOnDemandResult: window.VaadinDesktopIpcDiagnostics ? window.VaadinDesktopIpcDiagnostics.frontendArtifactGeneratedLazyLoadOnDemandResult : "",
+          frontendArtifactGeneratedLazyResolverVersion: window.VaadinDesktopIpcDiagnostics ? window.VaadinDesktopIpcDiagnostics.frontendArtifactGeneratedLazyResolverVersion : "",
+          frontendArtifactGeneratedLazyExecutionVersion: window.VaadinDesktopIpcDiagnostics ? window.VaadinDesktopIpcDiagnostics.frontendArtifactGeneratedLazyExecutionVersion : "",
+          frontendArtifactGeneratedLazyImportResolutionStrategy: window.VaadinDesktopIpcDiagnostics ? window.VaadinDesktopIpcDiagnostics.frontendArtifactGeneratedLazyImportResolutionStrategy : "",
+          frontendArtifactGeneratedLazyRelativeImportSpecifier: window.VaadinDesktopIpcDiagnostics ? window.VaadinDesktopIpcDiagnostics.frontendArtifactGeneratedLazyRelativeImportSpecifier : "",
+          frontendArtifactGeneratedLazyResolvedDependencyPath: window.VaadinDesktopIpcDiagnostics ? window.VaadinDesktopIpcDiagnostics.frontendArtifactGeneratedLazyResolvedDependencyPath : "",
+          frontendArtifactGeneratedLazyRelativeDependencyResolved: !!(window.VaadinDesktopIpcDiagnostics && window.VaadinDesktopIpcDiagnostics.frontendArtifactGeneratedLazyRelativeDependencyResolved),
+          frontendArtifactGeneratedLazyFailureLayer: window.VaadinDesktopIpcDiagnostics ? window.VaadinDesktopIpcDiagnostics.frontendArtifactGeneratedLazyFailureLayer : "",
+          frontendArtifactGeneratedLazyBlockerVersion: window.VaadinDesktopIpcDiagnostics ? window.VaadinDesktopIpcDiagnostics.frontendArtifactGeneratedLazyBlockerVersion : "",
+          frontendArtifactGeneratedLazyNextResolutionStep: window.VaadinDesktopIpcDiagnostics ? window.VaadinDesktopIpcDiagnostics.frontendArtifactGeneratedLazyNextResolutionStep : "",
+          frontendArtifactGeneratedLazyModuleIdentityStrategy: window.VaadinDesktopIpcDiagnostics ? window.VaadinDesktopIpcDiagnostics.frontendArtifactGeneratedLazyModuleIdentityStrategy : "",
+          frontendArtifactGeneratedLazyModuleIdentityKey: window.VaadinDesktopIpcDiagnostics ? window.VaadinDesktopIpcDiagnostics.frontendArtifactGeneratedLazyModuleIdentityKey : "",
+          frontendArtifactGeneratedLazyStagedDependencyGraph: window.VaadinDesktopIpcDiagnostics ? window.VaadinDesktopIpcDiagnostics.frontendArtifactGeneratedLazyStagedDependencyGraph : "",
           frontendArtifactDevModeVerified: !!(window.VaadinDesktopIpcDiagnostics && window.VaadinDesktopIpcDiagnostics.frontendArtifactDevModeVerified),
           frontendArtifactDevModePath: window.VaadinDesktopIpcDiagnostics ? window.VaadinDesktopIpcDiagnostics.frontendArtifactDevModePath : "",
           frontendArtifactDevModePackageGraphResult: window.VaadinDesktopIpcDiagnostics ? window.VaadinDesktopIpcDiagnostics.frontendArtifactDevModePackageGraphResult : "",
@@ -2155,6 +2167,18 @@ let flowIpcShell = #"""
         frontendArtifactGeneratedLazyExecutionResult: '',
         frontendArtifactGeneratedLazyExecutionError: '',
         frontendArtifactGeneratedLazyLoadOnDemandResult: '',
+        frontendArtifactGeneratedLazyResolverVersion: '',
+        frontendArtifactGeneratedLazyExecutionVersion: '',
+        frontendArtifactGeneratedLazyImportResolutionStrategy: '',
+        frontendArtifactGeneratedLazyRelativeImportSpecifier: '',
+        frontendArtifactGeneratedLazyResolvedDependencyPath: '',
+        frontendArtifactGeneratedLazyRelativeDependencyResolved: false,
+        frontendArtifactGeneratedLazyFailureLayer: '',
+        frontendArtifactGeneratedLazyBlockerVersion: '',
+        frontendArtifactGeneratedLazyNextResolutionStep: '',
+        frontendArtifactGeneratedLazyModuleIdentityStrategy: '',
+        frontendArtifactGeneratedLazyModuleIdentityKey: '',
+        frontendArtifactGeneratedLazyStagedDependencyGraph: '',
         frontendArtifactDevModeVerified: false,
         frontendArtifactDevModePath: '',
         frontendArtifactDevModePackageGraphResult: '',
@@ -3939,6 +3963,22 @@ let flowIpcShell = #"""
           window.VaadinDesktopIpcDiagnostics.frontendArtifactGeneratedLazyPath =
             mergeCsv(window.VaadinDesktopIpcDiagnostics.frontendArtifactGeneratedLazyPath,
               generatedLazyResources.map((entry) => entry.path));
+          window.VaadinDesktopIpcDiagnostics.frontendArtifactGeneratedLazyResolverVersion =
+            manifest.generatedLazyResolverVersion || window.VaadinDesktopIpcDiagnostics.frontendArtifactGeneratedLazyResolverVersion;
+          window.VaadinDesktopIpcDiagnostics.frontendArtifactGeneratedLazyExecutionVersion =
+            manifest.generatedLazyExecutionVersion || window.VaadinDesktopIpcDiagnostics.frontendArtifactGeneratedLazyExecutionVersion;
+          window.VaadinDesktopIpcDiagnostics.frontendArtifactGeneratedLazyImportResolutionStrategy =
+            manifest.generatedLazyImportResolutionStrategy || window.VaadinDesktopIpcDiagnostics.frontendArtifactGeneratedLazyImportResolutionStrategy;
+          window.VaadinDesktopIpcDiagnostics.frontendArtifactGeneratedLazyRelativeImportSpecifier =
+            manifest.generatedLazyRelativeImportSpecifier || window.VaadinDesktopIpcDiagnostics.frontendArtifactGeneratedLazyRelativeImportSpecifier;
+          window.VaadinDesktopIpcDiagnostics.frontendArtifactGeneratedLazyResolvedDependencyPath =
+            manifest.generatedLazyResolvedDependencyPath || window.VaadinDesktopIpcDiagnostics.frontendArtifactGeneratedLazyResolvedDependencyPath;
+          window.VaadinDesktopIpcDiagnostics.frontendArtifactGeneratedLazyFailureLayer =
+            manifest.generatedLazyFailureLayer || window.VaadinDesktopIpcDiagnostics.frontendArtifactGeneratedLazyFailureLayer;
+          window.VaadinDesktopIpcDiagnostics.frontendArtifactGeneratedLazyBlockerVersion =
+            manifest.generatedLazyBlockerVersion || window.VaadinDesktopIpcDiagnostics.frontendArtifactGeneratedLazyBlockerVersion;
+          window.VaadinDesktopIpcDiagnostics.frontendArtifactGeneratedLazyNextResolutionStep =
+            manifest.generatedLazyNextResolutionStep || window.VaadinDesktopIpcDiagnostics.frontendArtifactGeneratedLazyNextResolutionStep;
         }
         const devModeResources = resources.filter((entry) => entry
           && entry.artifactFamily === 'dev-mode-bundle'
@@ -4002,6 +4042,13 @@ let flowIpcShell = #"""
           duplicateTag: resource.duplicateTag || '',
           remainingBlockerClassification: resource.remainingBlockerClassification || '',
           moduleIdentityStrategy: resource.moduleIdentityStrategy || '',
+          generatedLazyResolverVersion: resource.generatedLazyResolverVersion || '',
+          generatedLazyExecutionVersion: resource.generatedLazyExecutionVersion || '',
+          generatedLazyImportResolutionStrategy: resource.generatedLazyImportResolutionStrategy || '',
+          generatedLazyRelativeImportSpecifier: resource.generatedLazyRelativeImportSpecifier || '',
+          generatedLazyResolvedDependencyPath: resource.generatedLazyResolvedDependencyPath || '',
+          generatedLazyGraphProbe: resource.generatedLazyGraphProbe || '',
+          generatedLazyBlockerVersion: resource.generatedLazyBlockerVersion || '',
           legacyShimSuccessPath: resource.legacyShimSuccessPath === true
         };
       }
@@ -4157,6 +4204,34 @@ let flowIpcShell = #"""
           remainingBlockerClassification: extra && extra.remainingBlockerClassification
             ? extra.remainingBlockerClassification
             : (resource.remainingBlockerClassification || ''),
+          generatedLazyResolverVersion: extra && extra.generatedLazyResolverVersion
+            ? extra.generatedLazyResolverVersion
+            : (resource.generatedLazyResolverVersion || ''),
+          generatedLazyExecutionVersion: extra && extra.generatedLazyExecutionVersion
+            ? extra.generatedLazyExecutionVersion
+            : (resource.generatedLazyExecutionVersion || ''),
+          generatedLazyImportResolutionStrategy: extra && extra.generatedLazyImportResolutionStrategy
+            ? extra.generatedLazyImportResolutionStrategy
+            : (resource.generatedLazyImportResolutionStrategy || ''),
+          generatedLazyRelativeImportSpecifier: extra && extra.generatedLazyRelativeImportSpecifier
+            ? extra.generatedLazyRelativeImportSpecifier
+            : (resource.generatedLazyRelativeImportSpecifier || ''),
+          generatedLazyResolvedDependencyPath: extra && extra.generatedLazyResolvedDependencyPath
+            ? extra.generatedLazyResolvedDependencyPath
+            : (resource.generatedLazyResolvedDependencyPath || ''),
+          generatedLazyRelativeDependencyResolved: extra
+            && typeof extra.generatedLazyRelativeDependencyResolved === 'boolean'
+            ? extra.generatedLazyRelativeDependencyResolved
+            : false,
+          generatedLazyGraphProbe: extra && extra.generatedLazyGraphProbe
+            ? extra.generatedLazyGraphProbe
+            : (resource.generatedLazyGraphProbe || ''),
+          generatedLazyBlockerVersion: extra && extra.generatedLazyBlockerVersion
+            ? extra.generatedLazyBlockerVersion
+            : (resource.generatedLazyBlockerVersion || ''),
+          generatedLazySourceArtifact: extra && extra.generatedLazySourceArtifact
+            ? extra.generatedLazySourceArtifact
+            : '',
           moduleIdentityKey: extra && extra.moduleIdentityKey ? extra.moduleIdentityKey : sourcePath
         });
       }
@@ -5472,10 +5547,16 @@ let flowIpcShell = #"""
 
       function rewriteVaadinDevBundleModule(source, currentPath, urlsToRevoke, urlCache) {
         let rewritten = source;
+        const currentResource = componentFrontendResourceByPath(currentPath);
         for (const resource of componentFrontendResources) {
+          const componentDependency = resource && resource.componentBundleDependency === true;
+          const generatedLazyDependency = currentResource
+            && currentResource.generatedLazyBundleChunk === true
+            && resource
+            && resource.generatedLazyBundleDependency === true;
           if (!resource
               || resource.devBundleResource !== true
-              || resource.componentBundleDependency !== true
+              || (!componentDependency && !generatedLazyDependency)
               || resource.path === currentPath) {
             continue;
           }
@@ -5483,19 +5564,74 @@ let flowIpcShell = #"""
           if (!rewritten.includes('"' + specifier + '"') && !rewritten.includes("'" + specifier + "'")) {
             continue;
           }
-          const url = componentModuleBlobUrl(resource.path, urlsToRevoke, urlCache);
+          const generatedLazyExtra = generatedLazyDependency ? {
+            cleanupPolicy: usesStableModuleIdentity(resource)
+              ? 'retain-for-window-lifetime-module-identity-v1_7'
+              : 'revoke-on-module-graph-complete',
+            importResolutionStrategy: currentResource.generatedLazyImportResolutionStrategy
+              || resource.generatedLazyImportResolutionStrategy
+              || 'stable-relative-import-rewrite-generated-lazy-v1_8',
+            generatedLazyResolverVersion: currentResource.generatedLazyResolverVersion
+              || resource.generatedLazyResolverVersion
+              || 'flow-ipc-generated-lazy-resolver-v1_8',
+            generatedLazyExecutionVersion: currentResource.generatedLazyExecutionVersion
+              || resource.generatedLazyExecutionVersion
+              || 'flow-ipc-generated-lazy-v1_8',
+            generatedLazyImportResolutionStrategy: currentResource.generatedLazyImportResolutionStrategy
+              || resource.generatedLazyImportResolutionStrategy
+              || 'stable-relative-import-rewrite-generated-lazy-v1_8',
+            generatedLazyRelativeImportSpecifier: specifier,
+            generatedLazyResolvedDependencyPath: resource.path,
+            generatedLazyRelativeDependencyResolved: true,
+            generatedLazyGraphProbe: currentResource.generatedLazyGraphProbe || resource.generatedLazyGraphProbe || '',
+            generatedLazyBlockerVersion: currentResource.generatedLazyBlockerVersion
+              || resource.generatedLazyBlockerVersion
+              || 'flow-ipc-generated-lazy-v1_8',
+            generatedLazySourceArtifact: currentPath,
+            moduleIdentityStrategy: usesStableModuleIdentity(resource)
+              ? 'stable-resource-path-blob-module-identity-v1_7'
+              : '',
+            moduleIdentityKey: resource.path
+          } : {};
+          const url = componentModuleBlobUrl(resource.path, urlsToRevoke, urlCache, 'staged', generatedLazyExtra);
           if (!url) {
             window.VaadinDesktopIpcDiagnostics.vaadinWebComponentFailureReason =
-              'missing-v1_4-dev-bundle-dependency';
+              generatedLazyDependency
+                ? 'missing-v1_8-generated-lazy-relative-dependency'
+                : 'missing-v1_4-dev-bundle-dependency';
             window.VaadinDesktopIpcDiagnostics.vaadinWebComponentResourceExecutionError =
               window.VaadinDesktopIpcDiagnostics.vaadinWebComponentResourceExecutionError
-              || ('missing-v1_4-dev-bundle-dependency current=' + currentPath
+              || ((generatedLazyDependency
+                ? 'missing-v1_8-generated-lazy-relative-dependency current='
+                : 'missing-v1_4-dev-bundle-dependency current=') + currentPath
                 + ' dependency=' + resource.path);
             return '';
           }
           rewritten = rewritten
             .split('"' + specifier + '"').join('"' + url + '"')
             .split("'" + specifier + "'").join("'" + url + "'");
+          if (generatedLazyDependency) {
+            window.VaadinDesktopIpcDiagnostics.frontendArtifactGeneratedLazyRelativeDependencyResolved = true;
+            window.VaadinDesktopIpcDiagnostics.frontendArtifactGeneratedLazyResolverVersion =
+              generatedLazyExtra.generatedLazyResolverVersion;
+            window.VaadinDesktopIpcDiagnostics.frontendArtifactGeneratedLazyExecutionVersion =
+              generatedLazyExtra.generatedLazyExecutionVersion;
+            window.VaadinDesktopIpcDiagnostics.frontendArtifactGeneratedLazyImportResolutionStrategy =
+              generatedLazyExtra.generatedLazyImportResolutionStrategy;
+            window.VaadinDesktopIpcDiagnostics.frontendArtifactGeneratedLazyRelativeImportSpecifier = specifier;
+            window.VaadinDesktopIpcDiagnostics.frontendArtifactGeneratedLazyResolvedDependencyPath = resource.path;
+            window.VaadinDesktopIpcDiagnostics.frontendArtifactGeneratedLazyBlockerVersion =
+              generatedLazyExtra.generatedLazyBlockerVersion;
+            window.VaadinDesktopIpcDiagnostics.frontendArtifactGeneratedLazyFailureLayer =
+              currentResource.failureLayer || resource.failureLayer || 'relative-dependency-resolved-flow-loadondemand-boundary';
+            window.VaadinDesktopIpcDiagnostics.frontendArtifactGeneratedLazyNextResolutionStep =
+              currentResource.nextResolutionStep || resource.nextResolutionStep || '';
+            window.VaadinDesktopIpcDiagnostics.frontendArtifactGeneratedLazyModuleIdentityStrategy =
+              generatedLazyExtra.moduleIdentityStrategy;
+            window.VaadinDesktopIpcDiagnostics.frontendArtifactGeneratedLazyModuleIdentityKey = resource.path;
+            window.VaadinDesktopIpcDiagnostics.frontendArtifactGeneratedLazyStagedDependencyGraph =
+              currentPath + '=>' + specifier + '=>' + resource.path;
+          }
         }
         return rewritten;
       }
@@ -5602,7 +5738,11 @@ let flowIpcShell = #"""
       }
 
       function markStagedDependenciesStrictBlocker(urlCache, browserError, extra) {
+        const skipPath = extra && typeof extra.skipPath === 'string' ? extra.skipPath : '';
         for (const [dependencyPath, dependencyUrl] of urlCache.entries()) {
+          if (skipPath && dependencyPath === skipPath) {
+            continue;
+          }
           if (frontendStagedResourceExecutedPaths.has(dependencyPath)
               && frontendModuleIdentityResourcePaths.has(dependencyPath)) {
             continue;
@@ -5631,6 +5771,22 @@ let flowIpcShell = #"""
         }
         generatedLazyBundleExecutionAttempted = true;
         window.VaadinDesktopIpcDiagnostics.frontendArtifactGeneratedLazyExecutionAttempted = true;
+        window.VaadinDesktopIpcDiagnostics.frontendArtifactGeneratedLazyResolverVersion =
+          resource.generatedLazyResolverVersion || window.VaadinDesktopIpcDiagnostics.frontendArtifactGeneratedLazyResolverVersion;
+        window.VaadinDesktopIpcDiagnostics.frontendArtifactGeneratedLazyExecutionVersion =
+          resource.generatedLazyExecutionVersion || window.VaadinDesktopIpcDiagnostics.frontendArtifactGeneratedLazyExecutionVersion;
+        window.VaadinDesktopIpcDiagnostics.frontendArtifactGeneratedLazyImportResolutionStrategy =
+          resource.generatedLazyImportResolutionStrategy || window.VaadinDesktopIpcDiagnostics.frontendArtifactGeneratedLazyImportResolutionStrategy;
+        window.VaadinDesktopIpcDiagnostics.frontendArtifactGeneratedLazyRelativeImportSpecifier =
+          resource.generatedLazyRelativeImportSpecifier || window.VaadinDesktopIpcDiagnostics.frontendArtifactGeneratedLazyRelativeImportSpecifier;
+        window.VaadinDesktopIpcDiagnostics.frontendArtifactGeneratedLazyResolvedDependencyPath =
+          resource.generatedLazyResolvedDependencyPath || window.VaadinDesktopIpcDiagnostics.frontendArtifactGeneratedLazyResolvedDependencyPath;
+        window.VaadinDesktopIpcDiagnostics.frontendArtifactGeneratedLazyBlockerVersion =
+          resource.generatedLazyBlockerVersion || resource.blockerVersion || window.VaadinDesktopIpcDiagnostics.frontendArtifactGeneratedLazyBlockerVersion;
+        window.VaadinDesktopIpcDiagnostics.frontendArtifactGeneratedLazyFailureLayer =
+          resource.failureLayer || window.VaadinDesktopIpcDiagnostics.frontendArtifactGeneratedLazyFailureLayer;
+        window.VaadinDesktopIpcDiagnostics.frontendArtifactGeneratedLazyNextResolutionStep =
+          resource.nextResolutionStep || window.VaadinDesktopIpcDiagnostics.frontendArtifactGeneratedLazyNextResolutionStep;
         const loadOnDemand = window.Vaadin && window.Vaadin.Flow
           && typeof window.Vaadin.Flow.loadOnDemand === 'function';
         window.VaadinDesktopIpcDiagnostics.frontendArtifactGeneratedLazyLoadOnDemandResult =
@@ -5643,15 +5799,51 @@ let flowIpcShell = #"""
         try {
           installOpaqueOriginStorageFallbacks();
           installVaadinDevBundleGlobals();
-          const importSource = rewriteVaadinDevBundleModule(source, resource.path, urlsToRevoke, urlCache);
-          if (!importSource) {
+          stagedUrl = componentModuleBlobUrl(resource.path, urlsToRevoke, urlCache, 'execution-attempt', {
+            cleanupPolicy: usesStableModuleIdentity(resource)
+              ? 'retain-for-window-lifetime-module-identity-v1_7'
+              : 'revoke-after-generated-lazy-import',
+            importResolutionStrategy: resource.generatedLazyImportResolutionStrategy
+              || 'stable-relative-import-rewrite-generated-lazy-v1_8',
+            generatedLazyResolverVersion: resource.generatedLazyResolverVersion
+              || 'flow-ipc-generated-lazy-resolver-v1_8',
+            generatedLazyExecutionVersion: resource.generatedLazyExecutionVersion
+              || 'flow-ipc-generated-lazy-v1_8',
+            generatedLazyImportResolutionStrategy: resource.generatedLazyImportResolutionStrategy
+              || 'stable-relative-import-rewrite-generated-lazy-v1_8',
+            generatedLazyRelativeImportSpecifier: resource.generatedLazyRelativeImportSpecifier || '',
+            generatedLazyResolvedDependencyPath: resource.generatedLazyResolvedDependencyPath || '',
+            generatedLazyRelativeDependencyResolved:
+              window.VaadinDesktopIpcDiagnostics.frontendArtifactGeneratedLazyRelativeDependencyResolved,
+            generatedLazyGraphProbe: resource.generatedLazyGraphProbe || '',
+            generatedLazyBlockerVersion: resource.generatedLazyBlockerVersion
+              || resource.blockerVersion
+              || 'flow-ipc-generated-lazy-v1_8',
+            moduleIdentityStrategy: usesStableModuleIdentity(resource)
+              ? 'stable-resource-path-blob-module-identity-v1_7'
+              : '',
+            moduleIdentityKey: resource.path
+          });
+          if (!stagedUrl) {
             throw new Error(window.VaadinDesktopIpcDiagnostics.vaadinWebComponentResourceExecutionError
               || 'generated-lazy-staging-rewrite-failed');
           }
-          stagedUrl = stageFrontendArtifact(resource, importSource, 'execution-attempt', urlsToRevoke, null, {
-            cleanupPolicy: 'revoke-after-generated-lazy-import'
-          });
           await import(stagedUrl);
+          const loadOnDemandAfter = window.Vaadin && window.Vaadin.Flow
+            && typeof window.Vaadin.Flow.loadOnDemand === 'function';
+          if (loadOnDemandAfter) {
+            let loadOnDemandProbe = 'not-invoked';
+            try {
+              const probeResult = await window.Vaadin.Flow.loadOnDemand('vatori-flow-ipc-generated-lazy-v1_8-probe');
+              loadOnDemandProbe = 'probe-returned=' + String(probeResult);
+            } catch (probeError) {
+              loadOnDemandProbe = 'probe-failed='
+                + (probeError && probeError.message ? probeError.message : String(probeError));
+            }
+            window.VaadinDesktopIpcDiagnostics.frontendArtifactGeneratedLazyLoadOnDemandResult =
+              'api-installed-by-staged-generated-flow-imports;direct-staged-import-executed;'
+              + loadOnDemandProbe + ';not-flow-client-triggered';
+          }
           window.VaadinDesktopIpcDiagnostics.frontendArtifactGeneratedLazyExecuted = true;
           window.VaadinDesktopIpcDiagnostics.frontendArtifactGeneratedLazyExecutionResult =
             'executed:' + resource.path;
@@ -5660,12 +5852,73 @@ let flowIpcShell = #"""
           window.VaadinDesktopIpcDiagnostics.frontendArtifactGeneratedLazyExecutionError = '';
           window.VaadinDesktopIpcDiagnostics.frontendArtifactGeneratedLazyBlocker = false;
           recordFrontendStageOutcome(resource, stagedUrl, 'executed', {
-            cleanupPolicy: 'revoke-after-generated-lazy-import'
+            cleanupPolicy: usesStableModuleIdentity(resource)
+              ? 'retain-for-window-lifetime-module-identity-v1_7'
+              : 'revoke-after-generated-lazy-import',
+            importResolutionStrategy: resource.generatedLazyImportResolutionStrategy
+              || 'stable-relative-import-rewrite-generated-lazy-v1_8',
+            generatedLazyResolverVersion: resource.generatedLazyResolverVersion
+              || 'flow-ipc-generated-lazy-resolver-v1_8',
+            generatedLazyExecutionVersion: resource.generatedLazyExecutionVersion
+              || 'flow-ipc-generated-lazy-v1_8',
+            generatedLazyImportResolutionStrategy: resource.generatedLazyImportResolutionStrategy
+              || 'stable-relative-import-rewrite-generated-lazy-v1_8',
+            generatedLazyRelativeImportSpecifier: resource.generatedLazyRelativeImportSpecifier || '',
+            generatedLazyResolvedDependencyPath: resource.generatedLazyResolvedDependencyPath || '',
+            generatedLazyRelativeDependencyResolved:
+              window.VaadinDesktopIpcDiagnostics.frontendArtifactGeneratedLazyRelativeDependencyResolved,
+            generatedLazyGraphProbe: resource.generatedLazyGraphProbe || '',
+            generatedLazyBlockerVersion: resource.generatedLazyBlockerVersion
+              || resource.blockerVersion
+              || 'flow-ipc-generated-lazy-v1_8',
+            moduleIdentityStrategy: usesStableModuleIdentity(resource)
+              ? 'stable-resource-path-blob-module-identity-v1_7'
+              : '',
+            moduleIdentityKey: resource.path
           });
           for (const [dependencyPath, dependencyUrl] of urlCache.entries()) {
+            if (dependencyPath === resource.path) {
+              continue;
+            }
             const dependency = componentFrontendResourceByPath(dependencyPath);
             recordFrontendStageOutcome(dependency, dependencyUrl, 'executed', {
-              cleanupPolicy: 'revoke-on-module-graph-complete'
+              cleanupPolicy: usesStableModuleIdentity(dependency)
+                ? 'retain-for-window-lifetime-module-identity-v1_7'
+                : 'revoke-on-module-graph-complete',
+              importResolutionStrategy: dependency && dependency.generatedLazyBundleDependency === true
+                ? (resource.generatedLazyImportResolutionStrategy
+                  || 'stable-relative-import-rewrite-generated-lazy-v1_8')
+                : '',
+              generatedLazyResolverVersion: dependency && dependency.generatedLazyBundleDependency === true
+                ? (resource.generatedLazyResolverVersion || 'flow-ipc-generated-lazy-resolver-v1_8')
+                : '',
+              generatedLazyExecutionVersion: dependency && dependency.generatedLazyBundleDependency === true
+                ? (resource.generatedLazyExecutionVersion || 'flow-ipc-generated-lazy-v1_8')
+                : '',
+              generatedLazyImportResolutionStrategy: dependency && dependency.generatedLazyBundleDependency === true
+                ? (resource.generatedLazyImportResolutionStrategy
+                  || 'stable-relative-import-rewrite-generated-lazy-v1_8')
+                : '',
+              generatedLazyRelativeImportSpecifier: dependency && dependency.generatedLazyBundleDependency === true
+                ? (resource.generatedLazyRelativeImportSpecifier || '')
+                : '',
+              generatedLazyResolvedDependencyPath: dependency && dependency.generatedLazyBundleDependency === true
+                ? dependencyPath
+                : '',
+              generatedLazyRelativeDependencyResolved: dependency && dependency.generatedLazyBundleDependency === true,
+              generatedLazyGraphProbe: dependency && dependency.generatedLazyBundleDependency === true
+                ? (resource.generatedLazyGraphProbe || '')
+                : '',
+              generatedLazyBlockerVersion: dependency && dependency.generatedLazyBundleDependency === true
+                ? (resource.generatedLazyBlockerVersion || resource.blockerVersion || 'flow-ipc-generated-lazy-v1_8')
+                : '',
+              generatedLazySourceArtifact: dependency && dependency.generatedLazyBundleDependency === true
+                ? resource.path
+                : '',
+              moduleIdentityStrategy: usesStableModuleIdentity(dependency)
+                ? 'stable-resource-path-blob-module-identity-v1_7'
+                : '',
+              moduleIdentityKey: dependencyPath
             });
           }
         } catch (error) {
@@ -5678,11 +5931,49 @@ let flowIpcShell = #"""
           window.VaadinDesktopIpcDiagnostics.frontendArtifactGeneratedLazyExecutionError = message;
           window.VaadinDesktopIpcDiagnostics.frontendArtifactGeneratedLazyBlocker = true;
           recordFrontendStageOutcome(resource, stagedUrl, 'strict-blocker', {
-            cleanupPolicy: 'revoke-after-generated-lazy-import',
+            cleanupPolicy: usesStableModuleIdentity(resource)
+              ? 'retain-for-window-lifetime-module-identity-v1_7'
+              : 'revoke-after-generated-lazy-import',
             blockedReason: resource.blockedReason || 'generated-lazy-staged-execution-blocked',
-            browserError: message
+            browserError: message,
+            importResolutionStrategy: resource.generatedLazyImportResolutionStrategy
+              || 'stable-relative-import-rewrite-generated-lazy-v1_8',
+            generatedLazyResolverVersion: resource.generatedLazyResolverVersion
+              || 'flow-ipc-generated-lazy-resolver-v1_8',
+            generatedLazyExecutionVersion: resource.generatedLazyExecutionVersion
+              || 'flow-ipc-generated-lazy-v1_8',
+            generatedLazyImportResolutionStrategy: resource.generatedLazyImportResolutionStrategy
+              || 'stable-relative-import-rewrite-generated-lazy-v1_8',
+            generatedLazyRelativeImportSpecifier: resource.generatedLazyRelativeImportSpecifier || '',
+            generatedLazyResolvedDependencyPath: resource.generatedLazyResolvedDependencyPath || '',
+            generatedLazyRelativeDependencyResolved:
+              window.VaadinDesktopIpcDiagnostics.frontendArtifactGeneratedLazyRelativeDependencyResolved,
+            generatedLazyGraphProbe: resource.generatedLazyGraphProbe || '',
+            generatedLazyBlockerVersion: resource.generatedLazyBlockerVersion
+              || resource.blockerVersion
+              || 'flow-ipc-generated-lazy-v1_8',
+            moduleIdentityStrategy: usesStableModuleIdentity(resource)
+              ? 'stable-resource-path-blob-module-identity-v1_7'
+              : '',
+            moduleIdentityKey: resource.path
           });
-          markStagedDependenciesStrictBlocker(urlCache, message);
+          markStagedDependenciesStrictBlocker(urlCache, message, {
+            skipPath: resource.path,
+            generatedLazyResolverVersion: resource.generatedLazyResolverVersion
+              || 'flow-ipc-generated-lazy-resolver-v1_8',
+            generatedLazyExecutionVersion: resource.generatedLazyExecutionVersion
+              || 'flow-ipc-generated-lazy-v1_8',
+            generatedLazyImportResolutionStrategy: resource.generatedLazyImportResolutionStrategy
+              || 'stable-relative-import-rewrite-generated-lazy-v1_8',
+            generatedLazyRelativeImportSpecifier: resource.generatedLazyRelativeImportSpecifier || '',
+            generatedLazyResolvedDependencyPath: resource.generatedLazyResolvedDependencyPath || '',
+            generatedLazyRelativeDependencyResolved:
+              window.VaadinDesktopIpcDiagnostics.frontendArtifactGeneratedLazyRelativeDependencyResolved,
+            generatedLazyBlockerVersion: resource.generatedLazyBlockerVersion
+              || resource.blockerVersion
+              || 'flow-ipc-generated-lazy-v1_8',
+            generatedLazyGraphProbe: resource.generatedLazyGraphProbe || ''
+          });
         } finally {
           refreshFrontendStagingDiagnostics();
           for (const url of urlsToRevoke) {

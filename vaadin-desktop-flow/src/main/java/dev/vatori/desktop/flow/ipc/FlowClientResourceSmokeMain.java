@@ -167,7 +167,22 @@ public final class FlowClientResourceSmokeMain {
                 "Component artifact families");
         requireNoStrictBlocker(componentManifest, "npm-frontend");
         requireStrictBlocker(componentManifest, "dev-mode-bundle", "dev-mode-bundle-execution-unmapped");
-        requireStrictBlocker(componentManifest, "generated-lazy", "generated-lazy-execution-unmapped");
+        requireStrictBlocker(componentManifest, "generated-lazy", "generated-lazy-loadondemand-api-boundary-v1_8");
+        requireEquals("flow-ipc-generated-lazy-resolver-v1_8",
+                componentManifest.get("generatedLazyResolverVersion"),
+                "Generated/lazy resolver version");
+        requireEquals("flow-ipc-generated-lazy-v1_8",
+                componentManifest.get("generatedLazyExecutionVersion"),
+                "Generated/lazy execution version");
+        requireEquals("stable-relative-import-rewrite-generated-lazy-v1_8",
+                componentManifest.get("generatedLazyImportResolutionStrategy"),
+                "Generated/lazy import resolution strategy");
+        requireEquals("./markdown-helpers-31I0A-hg.js",
+                componentManifest.get("generatedLazyRelativeImportSpecifier"),
+                "Generated/lazy relative import specifier");
+        requireEquals("vaadin-dev-bundle/webapp/VAADIN/build/markdown-helpers-31I0A-hg.js",
+                componentManifest.get("generatedLazyResolvedDependencyPath"),
+                "Generated/lazy resolved dependency path");
         requireComponentResourceMetadata(componentResources);
         String checkboxDevBundlePath = "META-INF/vatori/dev-bundle-entry/vaadin-checkbox.js";
         String selectDevBundlePath = "META-INF/vatori/dev-bundle-entry/vaadin-select.js";
@@ -424,10 +439,20 @@ public final class FlowClientResourceSmokeMain {
                 || !Objects.equals(generatedFlowImportsDevBundleResponse.get("artifactFamily"), "generated-lazy")
                 || !Objects.equals(generatedFlowImportsDevBundleResponse.get("origin"), "vaadin-dev-bundle")
                 || !Objects.equals(generatedFlowImportsDevBundleResponse.get("executionPolicy"),
-                        "verified-only-intentionally-not-executed")
-                || !Objects.equals(generatedFlowImportsDevBundleResponse.get("artifactStatus"), "available")
+                        "stage-and-import-generated-lazy-chunk-v1_8")
+                || !Objects.equals(generatedFlowImportsDevBundleResponse.get("artifactStatus"), "partial")
+                || !Objects.equals(generatedFlowImportsDevBundleResponse.get("generatedLazyResolverVersion"),
+                        "flow-ipc-generated-lazy-resolver-v1_8")
+                || !Objects.equals(generatedFlowImportsDevBundleResponse.get("generatedLazyExecutionVersion"),
+                        "flow-ipc-generated-lazy-v1_8")
+                || !Objects.equals(generatedFlowImportsDevBundleResponse.get("generatedLazyImportResolutionStrategy"),
+                        "stable-relative-import-rewrite-generated-lazy-v1_8")
+                || !Objects.equals(generatedFlowImportsDevBundleResponse.get("generatedLazyRelativeImportSpecifier"),
+                        "./markdown-helpers-31I0A-hg.js")
+                || !Objects.equals(generatedFlowImportsDevBundleResponse.get("generatedLazyResolvedDependencyPath"),
+                        generatedFlowImportsMarkdownHelperPath)
                 || !Boolean.FALSE.equals(generatedFlowImportsDevBundleResponse.get("shim"))) {
-            throw new IllegalStateException("Generated Flow imports dev-bundle chunk is missing v1.4 metadata");
+            throw new IllegalStateException("Generated Flow imports dev-bundle chunk is missing v1.8 metadata");
         }
         Object generatedFlowImportsDevBundleBody = generatedFlowImportsDevBundleResponse.get("body");
         if (!(generatedFlowImportsDevBundleBody instanceof String generatedFlowImportsDevBundleText)
@@ -453,10 +478,16 @@ public final class FlowClientResourceSmokeMain {
                 || !Objects.equals(generatedFlowImportsMarkdownHelperResponse.get("dependencyOf"),
                         generatedFlowImportsDevBundlePath)
                 || !Objects.equals(generatedFlowImportsMarkdownHelperResponse.get("executionPolicy"),
-                        "verified-only-intentionally-not-executed")
-                || !Objects.equals(generatedFlowImportsMarkdownHelperResponse.get("artifactStatus"), "available")
+                        "stable-dependency-module-generated-lazy-v1_8")
+                || !Objects.equals(generatedFlowImportsMarkdownHelperResponse.get("artifactStatus"), "partial")
+                || !Objects.equals(generatedFlowImportsMarkdownHelperResponse.get("generatedLazyResolverVersion"),
+                        "flow-ipc-generated-lazy-resolver-v1_8")
+                || !Objects.equals(generatedFlowImportsMarkdownHelperResponse.get("generatedLazyExecutionVersion"),
+                        "flow-ipc-generated-lazy-v1_8")
+                || !Objects.equals(generatedFlowImportsMarkdownHelperResponse.get("generatedLazyImportResolutionStrategy"),
+                        "stable-relative-import-rewrite-generated-lazy-v1_8")
                 || !Boolean.FALSE.equals(generatedFlowImportsMarkdownHelperResponse.get("shim"))) {
-            throw new IllegalStateException("Generated Flow imports markdown helper is missing v1.4 metadata");
+            throw new IllegalStateException("Generated Flow imports markdown helper is missing v1.8 metadata");
         }
         Object generatedFlowImportsMarkdownHelperBody = generatedFlowImportsMarkdownHelperResponse.get("body");
         if (!(generatedFlowImportsMarkdownHelperBody instanceof String markdownHelperText)
@@ -622,15 +653,19 @@ public final class FlowClientResourceSmokeMain {
                     && "available".equals(metadata.get("artifactStatus"));
             generatedLazyResourceObserved = generatedLazyResourceObserved
                     || "generated-lazy".equals(artifactFamily)
-                    && "verified-only-intentionally-not-executed".equals(executionPolicy)
-                    && "available".equals(metadata.get("artifactStatus"))
+                    && ("verified-only-intentionally-not-executed".equals(executionPolicy)
+                            || executionPolicy.startsWith("stage-and-import-generated-lazy-chunk")
+                            || executionPolicy.startsWith("stable-dependency-module-generated-lazy"))
+                    && ("available".equals(metadata.get("artifactStatus"))
+                            || "partial".equals(metadata.get("artifactStatus")))
                     && Boolean.TRUE.equals(metadata.get("generatedLazyResource"));
             generatedLazyBundleChunkObserved = generatedLazyBundleChunkObserved
                     || "generated-lazy".equals(artifactFamily)
-                    && "verified-only-intentionally-not-executed".equals(executionPolicy)
-                    && "available".equals(metadata.get("artifactStatus"))
+                    && "stage-and-import-generated-lazy-chunk-v1_8".equals(executionPolicy)
+                    && "partial".equals(metadata.get("artifactStatus"))
                     && Boolean.TRUE.equals(metadata.get("generatedLazyBundleChunk"))
-                    && "vaadin-dev-bundle".equals(metadata.get("origin"));
+                    && "vaadin-dev-bundle".equals(metadata.get("origin"))
+                    && "flow-ipc-generated-lazy-resolver-v1_8".equals(metadata.get("generatedLazyResolverVersion"));
             devModePackageGraphObserved = devModePackageGraphObserved
                     || "dev-mode-bundle".equals(artifactFamily)
                     && "verified-only-intentionally-not-executed".equals(executionPolicy)

@@ -13,9 +13,9 @@ v0/v1 runtime 切片走向可产品化桌面框架的最终完成状态。
 - `docs/goal-1_5.md`：no-localhost frontend bundle staging，已完成。
 - `docs/goal-1_6.md`：TextField / npm graph parity，已完成。
 - `docs/goal-1_7.md`：TextField production chunk side-effect split，已完成。
-- `docs/goal-1_8.md`：Generated/lazy frontend execution boundary，已设计，待执行。
+- `docs/goal-1_8.md`：Generated/lazy frontend execution boundary，已完成。
 
-后续阶段应继续以 `docs/goal-1_8.md`、`docs/goal-1_9.md` 等文件拆分，
+后续阶段应继续以 `docs/goal-1_9.md`、`docs/goal-1_10.md` 等文件拆分，
 每个阶段只拿走本长期目标中的一个可评审切片。不要把本文件改写成短期任务清单；
 它是长期北极星和完成度账本。
 
@@ -37,7 +37,7 @@ v0/v1 runtime 切片走向可产品化桌面框架的最终完成状态。
 
 ## 当前基线
 
-截至 goal 1.7，仓库已经证明：
+截至 goal 1.8，仓库已经证明：
 
 - `dev-ipc` 可以启动 no-localhost Flow IPC runtime。
 - 真实 macOS Swift/AppKit/WKWebView 窗口可以运行 Flow IPC smoke app 和 framework
@@ -65,7 +65,16 @@ v0/v1 runtime 切片走向可产品化桌面框架的最终完成状态。
   `test-apps/flow-over-ipc-smoke-app` 中的真实 Flow `TextField` Java listener 能经
   visible Flow client engine -> IPC-backed XHR -> Java sidecar -> `UidlRequestHandler`
   -> UIDL patch -> visible DOM 更新为 `Vaadin TextField: Flow IPC typed`。
-- 完整 generated/lazy execution、production bundle execution 和 dev-mode/Vite
+- v1.8 已越过 generated/lazy staged graph 的 `./markdown-helpers-31I0A-hg.js`
+  unresolved relative import blocker：真实 Vaadin dev-bundle
+  `generated-flow-imports-VW7hRaNw.js` 和 `markdown-helpers-31I0A-hg.js` 通过
+  stable resource-path Blob module identity stage，relative import 被重写到 staged
+  dependency，`resourceStage` / `webview.dom` 记录
+  `flow-ipc-generated-lazy-resolver-v1_8`、resolved dependency、module identity、
+  `frontendArtifactGeneratedLazyExecuted=true` 和
+  `api-installed-by-staged-generated-flow-imports` 的受控 `Flow.loadOnDemand` probe。
+- 完整 Flow-client-triggered generated/lazy `Flow.loadOnDemand` path、
+  production bundle execution 和 dev-mode/Vite
   execution 仍是明确 blocker，不计入完成。
 
 ## 最终完成标准
@@ -159,10 +168,10 @@ v0/v1 runtime 切片走向可产品化桌面框架的最终完成状态。
 
 以下项目仍需要后续阶段推进：
 
-- 基于 v1.7 的 stable module identity 结果，继续把 generated/lazy
-  `Flow.loadOnDemand`、production bundle execution 和 dev-mode/Vite execution 从
-  strict blocker 推进到真实可执行路径。
-- 完整 generated/lazy `Flow.loadOnDemand` execution。
+- 基于 v1.8 的 generated/lazy relative dependency resolver 结果，继续把完整
+  Flow-client-triggered `Flow.loadOnDemand`、production bundle execution 和
+  dev-mode/Vite execution 从 partial/blocker 推进到真实可执行路径。
+- 完整 generated/lazy `Flow.loadOnDemand` execution，不再依赖 direct staged import probe。
 - Production bundle chunk execution 和 packaging-time staging。
 - Dev-mode/Vite graph execution 或可靠替代模式。
 - Broader Vaadin component parity，尤其是 Grid/VirtualList、ComboBox、DatePicker、
@@ -188,14 +197,12 @@ v0/v1 runtime 切片走向可产品化桌面框架的最终完成状态。
 
 ## 当前建议的下一阶段
 
-当前已设计的下一阶段是：
+当前建议的下一阶段应从以下方向中选一个可评审切片：
 
-- **Goal 1.8: Generated/lazy frontend execution boundary**
-  - 承接 v1.7 后仍存在的 `Flow.loadOnDemand` / generated-flow-imports staged
-    blocker，处理 relative dependency、load-on-demand API 和 lazy chunk execution。
-  - 目标是让至少一个真实 generated/lazy artifact path 进入 no-localhost 可执行状态；
-    如果仍失败，blocker 必须越过当前 `markdown-helpers` relative dependency 层，
-    收敛到新的、更具体的 Flow client / Vaadin bootstrap / runtime integration 层。
-
-后续候选方向仍包括 Swift host tests / default-host readiness、broader component
-parity、production/dev bundle execution、durable push / reconnect / resync、打包和更新。
+- 完整 Flow-client-triggered generated/lazy `Flow.loadOnDemand` contract，把 v1.8 的
+  direct staged import probe 替换为真实 Flow lazy path 或受支持 SPI。
+- Production bundle execution / packaging-time staging，从 `stats.json` verified-only
+  进入更真实的 executable bundle graph。
+- Dev-mode/Vite execution 或可靠替代模式。
+- Swift host tests / default-host readiness。
+- Broader component parity、durable push / reconnect / resync、打包和更新。

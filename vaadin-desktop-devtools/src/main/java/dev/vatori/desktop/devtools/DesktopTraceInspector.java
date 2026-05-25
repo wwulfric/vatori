@@ -50,6 +50,7 @@ public final class DesktopTraceInspector {
         boolean requireFlowIpcV1_5 = false;
         boolean requireFlowIpcV1_6 = false;
         boolean requireFlowIpcV1_7 = false;
+        boolean requireFlowIpcV1_8 = false;
         boolean requireFlowIpcV1_3Framework = false;
         List<Path> paths = new ArrayList<>();
         for (String arg : args) {
@@ -96,6 +97,15 @@ public final class DesktopTraceInspector {
                 requireFlowIpcV1_4 = true;
                 requireFlowIpcV1_5 = true;
                 requireFlowIpcV1_7 = true;
+            } else if ("--require-flow-ipc-v1_8".equals(arg)) {
+                requireFlowIpc = true;
+                requireFlowIpcV1_1 = true;
+                requireFlowIpcV1_2 = true;
+                requireFlowIpcV1_3 = true;
+                requireFlowIpcV1_4 = true;
+                requireFlowIpcV1_5 = true;
+                requireFlowIpcV1_7 = true;
+                requireFlowIpcV1_8 = true;
             } else if ("--require-flow-ipc-v1_3-framework".equals(arg)) {
                 requireFlowIpcV1_3Framework = true;
             } else {
@@ -134,6 +144,9 @@ public final class DesktopTraceInspector {
                 failures++;
             }
             if (requireFlowIpcV1_7 && !summary.hasRequiredFlowIpcV1_7Types()) {
+                failures++;
+            }
+            if (requireFlowIpcV1_8 && !summary.hasRequiredFlowIpcV1_8Types()) {
                 failures++;
             }
             if (requireFlowIpcV1_3Framework && !summary.hasRequiredFlowIpcV1_3FrameworkTypes()) {
@@ -555,6 +568,19 @@ public final class DesktopTraceInspector {
                 summary.frontendAssetPipelineV14Observed = true;
             }
             if (line.contains("\"type\":\"bootstrapResponse\"")
+                    && line.contains("\"componentFrontendResources\"")
+                    && containsStringField(line, "generatedLazyResolverVersion",
+                            "flow-ipc-generated-lazy-resolver-v1_8")
+                    && containsStringField(line, "generatedLazyExecutionVersion",
+                            "flow-ipc-generated-lazy-v1_8")
+                    && containsStringField(line, "generatedLazyImportResolutionStrategy",
+                            "stable-relative-import-rewrite-generated-lazy-v1_8")
+                    && containsStringField(line, "generatedLazyRelativeImportSpecifier",
+                            "./markdown-helpers-31I0A-hg.js")
+                    && containsPath(line, "vaadin-dev-bundle/webapp/VAADIN/build/markdown-helpers-31I0A-hg.js")) {
+                summary.frontendGeneratedLazyV18ManifestObserved = true;
+            }
+            if (line.contains("\"type\":\"bootstrapResponse\"")
                     && line.contains("\"artifactFamilies\"")
                     && line.contains("flow-client-classpath")
                     && line.contains("vaadin-component-classpath-frontend")
@@ -806,6 +832,10 @@ public final class DesktopTraceInspector {
             if (line.contains("\"type\":\"resourceStage\"")
                     && line.contains("\"executionStatus\":\"executed\"")) {
                 summary.frontendResourceStageExecutedObserved = true;
+                if (line.contains("\"failureClassification\":\"")
+                        && !line.contains("\"failureClassification\":\"\"")) {
+                    summary.frontendResourceStageFailureClassificationObserved = true;
+                }
             }
             if (line.contains("\"type\":\"resourceStage\"")
                     && line.contains("\"executionStatus\":\"strict-blocker\"")
@@ -894,6 +924,44 @@ public final class DesktopTraceInspector {
                                     && line.contains("\"browserError\"")))) {
                 summary.frontendGeneratedLazyExecutionResolvedObserved = true;
             }
+            if (line.contains("\"type\":\"resourceRequest\"")
+                    && line.contains("\"purpose\":\"vaadin-web-component-resource-probe\"")
+                    && line.contains("\"lookupKind\":\"Generated-flow-imports-dev-bundle-chunk-v1_4\"")
+                    && containsPath(line, "vaadin-dev-bundle/webapp/VAADIN/build/generated-flow-imports-VW7hRaNw.js")
+                    && containsStringField(line, "generatedLazyResolverVersion",
+                            "flow-ipc-generated-lazy-resolver-v1_8")
+                    && containsStringField(line, "generatedLazyExecutionVersion", "flow-ipc-generated-lazy-v1_8")
+                    && containsStringField(line, "generatedLazyImportResolutionStrategy",
+                            "stable-relative-import-rewrite-generated-lazy-v1_8")) {
+                summary.frontendGeneratedLazyV18RequestObserved = true;
+            }
+            if (line.contains("\"type\":\"resourceStage\"")
+                    && line.contains("\"artifactFamily\":\"generated-lazy\"")
+                    && containsPath(line, "vaadin-dev-bundle/webapp/VAADIN/build/markdown-helpers-31I0A-hg.js")
+                    && containsStringField(line, "generatedLazyResolverVersion",
+                            "flow-ipc-generated-lazy-resolver-v1_8")
+                    && containsStringField(line, "generatedLazyImportResolutionStrategy",
+                            "stable-relative-import-rewrite-generated-lazy-v1_8")
+                    && containsLiteralField(line, "generatedLazyRelativeDependencyResolved", "true")
+                    && containsStringField(line, "generatedLazyRelativeImportSpecifier",
+                            "./markdown-helpers-31I0A-hg.js")
+                    && containsPath(line, "vaadin-dev-bundle/webapp/VAADIN/build/markdown-helpers-31I0A-hg.js")) {
+                summary.frontendGeneratedLazyV18DependencyRewriteObserved = true;
+            }
+            if (line.contains("\"type\":\"resourceStage\"")
+                    && line.contains("\"artifactFamily\":\"generated-lazy\"")
+                    && containsPath(line, "vaadin-dev-bundle/webapp/VAADIN/build/generated-flow-imports-VW7hRaNw.js")
+                    && containsStringField(line, "generatedLazyExecutionVersion", "flow-ipc-generated-lazy-v1_8")
+                    && containsStringField(line, "generatedLazyImportResolutionStrategy",
+                            "stable-relative-import-rewrite-generated-lazy-v1_8")
+                    && (line.contains("\"executionStatus\":\"executed\"")
+                            || (line.contains("\"executionStatus\":\"strict-blocker\"")
+                                    && containsStringField(line, "generatedLazyBlockerVersion",
+                                            "flow-ipc-generated-lazy-v1_8")
+                                    && containsStringField(line, "failureLayer",
+                                            "relative-dependency-resolved-flow-loadondemand-boundary")))) {
+                summary.frontendGeneratedLazyV18ExecutionOrNarrowedBlockerObserved = true;
+            }
             if (line.contains("\"type\":\"webview.dom\"")
                     && containsStringField(line, "frontendStagingResolverVersion", "flow-ipc-resource-staging-v1_5")
                     && containsLiteralField(line, "frontendStagingObserved", "true")
@@ -963,8 +1031,25 @@ public final class DesktopTraceInspector {
             }
             if (line.contains("\"type\":\"webview.dom\"")
                     && line.contains("frontendArtifactGeneratedLazyLoadOnDemandResult")
-                    && line.contains("staged-import-attempted")) {
+                    && (line.contains("staged-import-attempted")
+                            || line.contains("api-installed-by-staged-generated-flow-imports"))) {
                 summary.frontendLoadOnDemandBoundaryObserved = true;
+            }
+            if (line.contains("\"type\":\"webview.dom\"")
+                    && containsStringField(line, "frontendArtifactGeneratedLazyResolverVersion",
+                            "flow-ipc-generated-lazy-resolver-v1_8")
+                    && containsStringField(line, "frontendArtifactGeneratedLazyExecutionVersion",
+                            "flow-ipc-generated-lazy-v1_8")
+                    && containsStringField(line, "frontendArtifactGeneratedLazyImportResolutionStrategy",
+                            "stable-relative-import-rewrite-generated-lazy-v1_8")
+                    && containsLiteralField(line, "frontendArtifactGeneratedLazyRelativeDependencyResolved", "true")
+                    && containsStringField(line, "frontendArtifactGeneratedLazyRelativeImportSpecifier",
+                            "./markdown-helpers-31I0A-hg.js")
+                    && containsPath(line, "vaadin-dev-bundle/webapp/VAADIN/build/markdown-helpers-31I0A-hg.js")
+                    && (containsLiteralField(line, "frontendArtifactGeneratedLazyExecuted", "true")
+                            || containsStringField(line, "frontendArtifactGeneratedLazyBlockerVersion",
+                                    "flow-ipc-generated-lazy-v1_8"))) {
+                summary.frontendGeneratedLazyV18DomObserved = true;
             }
             if (line.contains("\"type\":\"resourceRequest\"")
                     && line.contains("\"purpose\":\"vaadin-web-component-resource-probe\"")
@@ -1526,7 +1611,7 @@ public final class DesktopTraceInspector {
     }
 
     private static void usage() {
-        System.out.println("Usage: bin/flow-ipc-trace-inspect [--require-flow-ipc-v1|--require-flow-ipc-v1_1|--require-flow-ipc-v1_2|--require-flow-ipc-v1_3|--require-flow-ipc-v1_4|--require-flow-ipc-v1_5|--require-flow-ipc-v1_6|--require-flow-ipc-v1_7|--require-flow-ipc-v1_3-framework] <trace.ndjson>...");
+        System.out.println("Usage: bin/flow-ipc-trace-inspect [--require-flow-ipc-v1|--require-flow-ipc-v1_1|--require-flow-ipc-v1_2|--require-flow-ipc-v1_3|--require-flow-ipc-v1_4|--require-flow-ipc-v1_5|--require-flow-ipc-v1_6|--require-flow-ipc-v1_7|--require-flow-ipc-v1_8|--require-flow-ipc-v1_3-framework] <trace.ndjson>...");
     }
 
     public static final class TraceSummary {
@@ -1671,6 +1756,11 @@ public final class DesktopTraceInspector {
         private boolean frontendGeneratedLazyExecutionAttemptObserved;
         private boolean frontendGeneratedLazyExecutionResolvedObserved;
         private boolean frontendLoadOnDemandBoundaryObserved;
+        private boolean frontendGeneratedLazyV18ManifestObserved;
+        private boolean frontendGeneratedLazyV18RequestObserved;
+        private boolean frontendGeneratedLazyV18DependencyRewriteObserved;
+        private boolean frontendGeneratedLazyV18ExecutionOrNarrowedBlockerObserved;
+        private boolean frontendGeneratedLazyV18DomObserved;
 
         public boolean hasRequiredFlowIpcTypes() {
             return types.keySet().containsAll(FLOW_IPC_REQUIRED_TYPES)
@@ -1816,6 +1906,15 @@ public final class DesktopTraceInspector {
                     && vaadinTextFieldEventRpcObserved
                     && vaadinTextFieldPatchObserved
                     && vaadinTextFieldDomObserved;
+        }
+
+        public boolean hasRequiredFlowIpcV1_8Types() {
+            return hasRequiredFlowIpcV1_7Types()
+                    && frontendGeneratedLazyV18ManifestObserved
+                    && frontendGeneratedLazyV18RequestObserved
+                    && frontendGeneratedLazyV18DependencyRewriteObserved
+                    && frontendGeneratedLazyV18ExecutionOrNarrowedBlockerObserved
+                    && frontendGeneratedLazyV18DomObserved;
         }
 
         public boolean hasRequiredFlowIpcV1_3FrameworkTypes() {
@@ -2065,6 +2164,16 @@ public final class DesktopTraceInspector {
                     + frontendGeneratedLazyExecutionResolvedObserved);
             System.out.println("Flow IPC v1.5 loadOnDemand boundary observed: "
                     + frontendLoadOnDemandBoundaryObserved);
+            System.out.println("Flow IPC v1.8 generated/lazy manifest observed: "
+                    + frontendGeneratedLazyV18ManifestObserved);
+            System.out.println("Flow IPC v1.8 generated/lazy request observed: "
+                    + frontendGeneratedLazyV18RequestObserved);
+            System.out.println("Flow IPC v1.8 generated/lazy dependency rewrite observed: "
+                    + frontendGeneratedLazyV18DependencyRewriteObserved);
+            System.out.println("Flow IPC v1.8 generated/lazy execution/narrowed blocker observed: "
+                    + frontendGeneratedLazyV18ExecutionOrNarrowedBlockerObserved);
+            System.out.println("Flow IPC v1.8 generated/lazy DOM observed: "
+                    + frontendGeneratedLazyV18DomObserved);
             System.out.println("Flow IPC v1.6 TextField graph manifest observed: "
                     + frontendTextFieldV16ManifestObserved);
             System.out.println("Flow IPC v1.6 TextField graph request observed: "

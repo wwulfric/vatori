@@ -75,6 +75,18 @@ final class FlowClientResources {
             "stage META-INF/vatori/dev-bundle-entry/vaadin-text-field.js, rewrite ./indexhtml-BfYYZi8S.js to the stable staged dependency already used by the component graph, import the entry, and verify the registry no longer throws duplicate definition";
     private static final String TEXT_FIELD_NEXT_RESOLUTION_STEP =
             "replace the retained Blob module identity with a custom-scheme or file-backed resolver that preserves the same one-module-per-artifact identity without keeping large Blob URLs for the full window lifetime";
+    private static final String GENERATED_LAZY_RESOLVER_VERSION = "flow-ipc-generated-lazy-resolver-v1_8";
+    private static final String GENERATED_LAZY_EXECUTION_VERSION = "flow-ipc-generated-lazy-v1_8";
+    private static final String GENERATED_LAZY_IMPORT_RESOLUTION_STRATEGY =
+            "stable-relative-import-rewrite-generated-lazy-v1_8";
+    private static final String GENERATED_LAZY_GRAPH_PROBE =
+            "direct-generated-flow-imports-dev-bundle-chunk-v1_8";
+    private static final String GENERATED_LAZY_BLOCKER_VERSION = "flow-ipc-generated-lazy-v1_8";
+    private static final String GENERATED_LAZY_RELATIVE_IMPORT_SPECIFIER = "./markdown-helpers-31I0A-hg.js";
+    private static final String GENERATED_LAZY_FAILURE_LAYER =
+            "relative-dependency-resolved-flow-loadondemand-boundary";
+    private static final String GENERATED_LAZY_NEXT_RESOLUTION_STEP =
+            "replace the direct staged import probe with a Flow client triggered loadOnDemand path or supported Vaadin lazy-loading SPI";
     private static final String FLOW_CLIENT_IPC_BRIDGE_NEEDLE = """
             j.sendEventMessage=mI(function(a,b,c){var d=i.a.Z();d.Ab(a,b,c)});j.initializing=false;\
             """;
@@ -422,6 +434,15 @@ final class FlowClientResources {
         manifest.put("textfieldRemainingBlockerClassification", TEXT_FIELD_REMAINING_BLOCKER_CLASSIFICATION);
         manifest.put("textfieldMinimalReproduction", TEXT_FIELD_MINIMAL_REPRODUCTION);
         manifest.put("textfieldNextResolutionStep", TEXT_FIELD_NEXT_RESOLUTION_STEP);
+        manifest.put("generatedLazyResolverVersion", GENERATED_LAZY_RESOLVER_VERSION);
+        manifest.put("generatedLazyExecutionVersion", GENERATED_LAZY_EXECUTION_VERSION);
+        manifest.put("generatedLazyImportResolutionStrategy", GENERATED_LAZY_IMPORT_RESOLUTION_STRATEGY);
+        manifest.put("generatedLazyGraphProbe", GENERATED_LAZY_GRAPH_PROBE);
+        manifest.put("generatedLazyBlockerVersion", GENERATED_LAZY_BLOCKER_VERSION);
+        manifest.put("generatedLazyRelativeImportSpecifier", GENERATED_LAZY_RELATIVE_IMPORT_SPECIFIER);
+        manifest.put("generatedLazyResolvedDependencyPath", DEV_BUNDLE_MARKDOWN_HELPERS_JS);
+        manifest.put("generatedLazyFailureLayer", GENERATED_LAZY_FAILURE_LAYER);
+        manifest.put("generatedLazyNextResolutionStep", GENERATED_LAZY_NEXT_RESOLUTION_STEP);
         manifest.put("artifactFamilies", List.of("flow-client-classpath",
                 "vaadin-component-classpath-frontend",
                 "npm-frontend",
@@ -438,15 +459,15 @@ final class FlowClientResources {
                 artifactFamilyStatus("production-bundle", "partial", "production-bundle-stats-verified"),
                 artifactFamilyStatus("dev-mode-bundle", "partial", "dev-mode-package-lock-verified"),
                 artifactFamilyStatus("generated-lazy", "partial",
-                        "generated-flow-imports-dev-bundle-chunk-verified")));
+                        "generated-lazy-relative-dependency-resolved-v1_8")));
         manifest.put("dependencyGraph", Map.of("declared", true,
                 "resolver", COMPONENT_RESOLVER_V1_4,
                 "resourceCount", entries.size()));
         manifest.put("strictBlockers", List.of(
                 strictBlocker("dev-mode-bundle", "dev-mode-bundle-execution-unmapped",
                         "dev-mode package-lock dependency graph is verified over IPC, but Vite/dev-server module execution is not yet mapped into the no-localhost resolver"),
-                strictBlocker("generated-lazy", "generated-lazy-execution-unmapped",
-                        "repository and Vaadin dev-bundle generated-flow-imports resources are verified over IPC, but full loadOnDemand execution remains unmapped")));
+                strictBlocker("generated-lazy", "generated-lazy-loadondemand-api-boundary-v1_8",
+                        "generated-flow-imports relative dependencies are resolved by the no-localhost staging resolver, but full Flow.loadOnDemand integration is still a controlled probe")));
         manifest.put("transport", "flow-ipc");
         manifest.put("resourceLoading", "ipc-resource-request");
         manifest.put("componentClass", "com.vaadin.flow.component.textfield.BigDecimalField");
@@ -805,6 +826,13 @@ final class FlowClientResources {
         attributes.put("generatedLazyResource", true);
         attributes.put("generatedLazyBundleChunk", primary);
         attributes.put("generatedLazyBundleDependency", !primary);
+        attributes.put("generatedLazyResolverVersion", GENERATED_LAZY_RESOLVER_VERSION);
+        attributes.put("generatedLazyExecutionVersion", GENERATED_LAZY_EXECUTION_VERSION);
+        attributes.put("generatedLazyImportResolutionStrategy", GENERATED_LAZY_IMPORT_RESOLUTION_STRATEGY);
+        attributes.put("generatedLazyGraphProbe", GENERATED_LAZY_GRAPH_PROBE);
+        attributes.put("generatedLazyBlockerVersion", GENERATED_LAZY_BLOCKER_VERSION);
+        attributes.put("generatedLazyRelativeImportSpecifier", GENERATED_LAZY_RELATIVE_IMPORT_SPECIFIER);
+        attributes.put("generatedLazyResolvedDependencyPath", DEV_BUNDLE_MARKDOWN_HELPERS_JS);
         attributes.put("devBundleResource", true);
         attributes.put("productionBundleResource", true);
         attributes.put("moduleSpecifier", path);
@@ -816,17 +844,24 @@ final class FlowClientResources {
                 primary ? "vaadin-dev-bundle-generated-flow-imports"
                         : "vaadin-dev-bundle-generated-flow-imports-dependency");
         attributes.put("dependencyOf", dependencyOf);
-        attributes.put("executionPolicy", "verified-only-intentionally-not-executed");
-        attributes.put("artifactStatus", "available");
+        attributes.put("executionPolicy",
+                primary ? "stage-and-import-generated-lazy-chunk-v1_8"
+                        : "stable-dependency-module-generated-lazy-v1_8");
+        attributes.put("artifactStatus", "partial");
         attributes.put("requestedBy", "component-frontend-manifest-v1_4");
         attributes.put("failureClassification",
-                primary ? "generated-flow-imports-dev-bundle-chunk-verified"
-                        : "generated-flow-imports-dev-bundle-dependency-verified");
+                primary ? "generated-lazy-relative-import-resolved-v1_8"
+                        : "generated-lazy-dependency-module-resolved-v1_8");
         attributes.put("blockedReason",
                 primary
-                        ? "verified Vaadin dev-bundle generated-flow-imports chunk; full loadOnDemand execution remains unmapped"
-                        : "verified generated-flow-imports dependency chunk; full generated/lazy execution remains unmapped");
+                        ? "Vaadin dev-bundle generated-flow-imports chunk is staged with relative imports rewritten to stable module identities; full Flow.loadOnDemand integration remains partial"
+                        : "generated-flow-imports dependency chunk is available as a stable staged module identity for the v1.8 generated/lazy resolver");
         attributes.put("lookupKind", lookupKind);
+        attributes.put("blockerVersion", GENERATED_LAZY_BLOCKER_VERSION);
+        attributes.put("failureLayer", GENERATED_LAZY_FAILURE_LAYER);
+        attributes.put("nextResolutionStep", GENERATED_LAZY_NEXT_RESOLUTION_STEP);
+        attributes.put("importResolutionStrategy", GENERATED_LAZY_IMPORT_RESOLUTION_STRATEGY);
+        attributes.put("moduleIdentityStrategy", "stable-resource-path-blob-module-identity-v1_7");
         if (primary) {
             attributes.put("transitiveImports", List.of(
                     "vaadin-dev-bundle/webapp/VAADIN/build/indexhtml-BfYYZi8S.js",

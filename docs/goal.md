@@ -13,6 +13,7 @@ v0/v1 runtime 切片走向可产品化桌面框架的最终完成状态。
 - `docs/goal-1_5.md`：no-localhost frontend bundle staging，已完成。
 - `docs/goal-1_6.md`：TextField / npm graph parity，已完成。
 - `docs/goal-1_7.md`：TextField production chunk side-effect split，已完成。
+- `docs/goal-1_8.md`：Generated/lazy frontend execution boundary，已设计，待执行。
 
 后续阶段应继续以 `docs/goal-1_8.md`、`docs/goal-1_9.md` 等文件拆分，
 每个阶段只拿走本长期目标中的一个可评审切片。不要把本文件改写成短期任务清单；
@@ -187,13 +188,14 @@ v0/v1 runtime 切片走向可产品化桌面框架的最终完成状态。
 
 ## 当前建议的下一阶段
 
-当前建议的下一阶段候选是：
+当前已设计的下一阶段是：
 
-- **Goal 1.8: Generated/lazy frontend execution 或 durable push queue**
-  - 前者承接 v1.7 后仍存在的 `Flow.loadOnDemand` / generated-flow-imports staged
+- **Goal 1.8: Generated/lazy frontend execution boundary**
+  - 承接 v1.7 后仍存在的 `Flow.loadOnDemand` / generated-flow-imports staged
     blocker，处理 relative dependency、load-on-demand API 和 lazy chunk execution。
-  - 后者把受控 duplicate/late push probe 推进为 durable queue、ack、reconnect 和
-    resync 语义。
+  - 目标是让至少一个真实 generated/lazy artifact path 进入 no-localhost 可执行状态；
+    如果仍失败，blocker 必须越过当前 `markdown-helpers` relative dependency 层，
+    收敛到新的、更具体的 Flow client / Vaadin bootstrap / runtime integration 层。
 
 后续候选方向仍包括 Swift host tests / default-host readiness、broader component
-parity、production/dev bundle execution、打包和更新。
+parity、production/dev bundle execution、durable push / reconnect / resync、打包和更新。

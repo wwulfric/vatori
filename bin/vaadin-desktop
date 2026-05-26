@@ -116,10 +116,10 @@ PLIST
     if [[ "${VAADIN_DESKTOP_FLOW_IPC_AUTO_SHUTDOWN:-}" == "1" ]]; then
       OPEN_ENV_ARGS+=(--env "VAADIN_DESKTOP_FLOW_IPC_AUTO_SHUTDOWN=1")
     fi
-    OPEN_BACKGROUND_ARGS=()
+    OPEN_BACKGROUND=0
     if [[ "${VAADIN_DESKTOP_HOST_NO_ACTIVATE:-}" == "1" ]]; then
       OPEN_ENV_ARGS+=(--env "VAADIN_DESKTOP_HOST_NO_ACTIVATE=1")
-      OPEN_BACKGROUND_ARGS+=(-g)
+      OPEN_BACKGROUND=1
     fi
     if [[ "${VAADIN_DESKTOP_MAVEN_OFFLINE:-}" == "1" ]]; then
       OPEN_ENV_ARGS+=(--env "VAADIN_DESKTOP_MAVEN_OFFLINE=1")
@@ -138,12 +138,21 @@ PLIST
     tail -n +1 -f "$SWIFT_HOST_STDOUT" "$SWIFT_HOST_STDERR" &
     TAIL_PID=$!
     trap 'kill "$TAIL_PID" 2>/dev/null || true' EXIT
-    open -n -W "${OPEN_BACKGROUND_ARGS[@]}" -o "$SWIFT_HOST_STDOUT" --stderr "$SWIFT_HOST_STDERR" "${OPEN_ENV_ARGS[@]}" "$SWIFT_HOST_APP" --args \
-      --module "$MODULE" \
-      --repo-root "$ROOT" \
-      --maven-repo "$MAVEN_REPO" \
-      --maven-executable "$MVN_EXE" \
-      --transport "$SWIFT_TRANSPORT"
+    if [[ "$OPEN_BACKGROUND" == "1" ]]; then
+      open -n -W -g -o "$SWIFT_HOST_STDOUT" --stderr "$SWIFT_HOST_STDERR" "${OPEN_ENV_ARGS[@]}" "$SWIFT_HOST_APP" --args \
+        --module "$MODULE" \
+        --repo-root "$ROOT" \
+        --maven-repo "$MAVEN_REPO" \
+        --maven-executable "$MVN_EXE" \
+        --transport "$SWIFT_TRANSPORT"
+    else
+      open -n -W -o "$SWIFT_HOST_STDOUT" --stderr "$SWIFT_HOST_STDERR" "${OPEN_ENV_ARGS[@]}" "$SWIFT_HOST_APP" --args \
+        --module "$MODULE" \
+        --repo-root "$ROOT" \
+        --maven-repo "$MAVEN_REPO" \
+        --maven-executable "$MVN_EXE" \
+        --transport "$SWIFT_TRANSPORT"
+    fi
     STATUS=$?
     kill "$TAIL_PID" 2>/dev/null || true
     wait "$TAIL_PID" 2>/dev/null || true

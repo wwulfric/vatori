@@ -18,8 +18,9 @@ v0/v1 runtime 切片走向可产品化桌面框架的最终完成状态。
 - `docs/goal-1_10.md`：Flow lazy dependency and production bundle runtime slice，已完成。
 - `docs/goal-1_11.md`：Generated `Flow.loadOnDemand` chunk runtime path，已完成。
 - `docs/goal-1_12.md`：Generated LoadOnDemand chunk file registry and side-effect proof，已完成。
+- `docs/goal-1_13.md`：Production Bundle Owned Runtime Boundary，已规划但尚未执行。
 
-当前已规划但尚未执行的阶段目标：暂无。
+当前已规划但尚未执行的阶段目标：`docs/goal-1_13.md`。
 
 后续阶段应继续以 `docs/goal-1_13.md`、`docs/goal-1_14.md` 等文件拆分，
 每个阶段只拿走本长期目标中的一个可评审切片。不要把本文件改写成短期任务清单；
@@ -252,12 +253,19 @@ v0/v1 runtime 切片走向可产品化桌面框架的最终完成状态。
 
 ## 当前建议的下一阶段
 
-当前建议的下一阶段应从以下方向中选一个可评审切片：
+当前已选择 `docs/goal-1_13.md` 作为下一阶段：production bundle owned runtime boundary。
+这个方向承接 v1.10 的 production bundle `execution-attempt`，同时避开 v1.12 已证明当前 build
+没有 generated chunk file 的死胡同。目标不是 broad production parity，而是把 production
+artifact 从 focused component entry import 中拆出独立 owner、生命周期、side-effect 和 blocker
+证据。
+
+后续阶段可继续从以下方向选择：
 
 - 让当前 smoke/framework build 产生真实 generated lazy chunk file，或评估受支持 Vaadin lazy
   chunk SPI，越过 v1.12 的 `chunk-file-not-generated` blocker。
-- Production bundle owned runtime execution / packaging-time staging，把 v1.10 的
-  staged execution attempt 推进到可运行 side-effect ownership。
+- Dev-mode/Vite graph execution 或可靠替代模式。
+- Broader Vaadin component parity，尤其是 Grid/VirtualList、ComboBox、DatePicker、Dialog、
+  Upload。
 - Dev-mode/Vite execution 或可靠替代模式。
 - Swift host tests / default-host readiness。
 - Broader component parity、durable push / reconnect / resync、打包和更新。

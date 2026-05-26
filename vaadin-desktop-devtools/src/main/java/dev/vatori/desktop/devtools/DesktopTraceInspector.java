@@ -52,6 +52,8 @@ public final class DesktopTraceInspector {
         FLOW_IPC_V1_10_LAZY_DEPENDENCY("--require-flow-ipc-v1_10-lazy-dependency"),
         FLOW_IPC_V1_10_PRODUCTION_RUNTIME("--require-flow-ipc-v1_10-production-runtime"),
         FLOW_IPC_V1_10("--require-flow-ipc-v1_10"),
+        FLOW_IPC_V1_11_LOADONDEMAND_CHUNK("--require-flow-ipc-v1_11-loadondemand-chunk"),
+        FLOW_IPC_V1_11("--require-flow-ipc-v1_11"),
         FLOW_IPC_V1_3_FRAMEWORK("--require-flow-ipc-v1_3-framework");
 
         private final String option;
@@ -109,6 +111,12 @@ public final class DesktopTraceInspector {
                         FLOW_IPC_V1_8, FLOW_IPC_V1_9_LOADONDEMAND, FLOW_IPC_V1_9,
                         FLOW_IPC_V1_10_LAZY_DEPENDENCY, FLOW_IPC_V1_10_PRODUCTION_RUNTIME,
                         FLOW_IPC_V1_10);
+                case FLOW_IPC_V1_11_LOADONDEMAND_CHUNK -> EnumSet.of(FLOW_IPC_V1_11_LOADONDEMAND_CHUNK);
+                case FLOW_IPC_V1_11 -> EnumSet.of(FLOW_IPC_V1, FLOW_IPC_V1_1, FLOW_IPC_V1_2,
+                        FLOW_IPC_V1_3, FLOW_IPC_V1_4, FLOW_IPC_V1_5, FLOW_IPC_V1_7,
+                        FLOW_IPC_V1_8, FLOW_IPC_V1_9_LOADONDEMAND, FLOW_IPC_V1_9,
+                        FLOW_IPC_V1_10_LAZY_DEPENDENCY, FLOW_IPC_V1_10_PRODUCTION_RUNTIME,
+                        FLOW_IPC_V1_10, FLOW_IPC_V1_11_LOADONDEMAND_CHUNK, FLOW_IPC_V1_11);
                 case FLOW_IPC_V1_3_FRAMEWORK -> EnumSet.of(FLOW_IPC_V1_3_FRAMEWORK);
             };
         }
@@ -129,6 +137,8 @@ public final class DesktopTraceInspector {
                 case FLOW_IPC_V1_10_LAZY_DEPENDENCY -> summary.hasRequiredFlowIpcV1_10LazyDependencyTypes();
                 case FLOW_IPC_V1_10_PRODUCTION_RUNTIME -> summary.hasRequiredFlowIpcV1_10ProductionRuntimeTypes();
                 case FLOW_IPC_V1_10 -> summary.hasRequiredFlowIpcV1_10Types();
+                case FLOW_IPC_V1_11_LOADONDEMAND_CHUNK -> summary.hasRequiredFlowIpcV1_11LoadOnDemandChunkTypes();
+                case FLOW_IPC_V1_11 -> summary.hasRequiredFlowIpcV1_11Types();
                 case FLOW_IPC_V1_3_FRAMEWORK -> summary.hasRequiredFlowIpcV1_3FrameworkTypes();
             };
         }
@@ -653,6 +663,31 @@ public final class DesktopTraceInspector {
                 summary.productionRuntimeV110ManifestObserved = true;
             }
             if (line.contains("\"type\":\"bootstrapResponse\"")
+                    && line.contains("\"uidl\"")
+                    && line.contains("return window.Vaadin.Flow.loadOnDemand('")) {
+                summary.generatedLoadOnDemandChunkV111UidlExpressionObserved = true;
+            }
+            if (line.contains("\"type\":\"bootstrapResponse\"")
+                    && line.contains("\"componentFrontendResources\"")
+                    && containsStringField(line, "loadOnDemandChunkContractVersion",
+                            "flow-ipc-loadondemand-chunk-v1_11")
+                    && containsStringField(line, "generatedLazyChunkExpressionSource",
+                            "bootstrap-uidl-dependencies")
+                    && containsStringField(line, "generatedLazyChunkTriggerOwner",
+                            "visible-flow-client-dependencyloader")
+                    && containsStringField(line, "loadOnDemandChunkRegistrySource",
+                            "uidl-expression-to-dev-bundle-generated-flow-imports-registry-v1_11")
+                    && containsStringField(line, "loadOnDemandChunkMappingSource",
+                            "flow-ipc-generated-loadondemand-chunk-map-v1_11")
+                    && containsStringField(line, "loadOnDemandChunkBlockerVersion",
+                            "flow-ipc-loadondemand-chunk-v1_11")
+                    && containsLiteralField(line, "generatedLazyChunkDiagnosticBridgeUsed", "false")
+                    && containsLiteralField(line, "generatedLazyChunkDirectImportProbeUsed", "false")
+                    && containsPath(line,
+                            "vaadin-dev-bundle/webapp/VAADIN/build/generated-flow-imports-VW7hRaNw.js")) {
+                summary.generatedLoadOnDemandChunkV111ManifestObserved = true;
+            }
+            if (line.contains("\"type\":\"bootstrapResponse\"")
                     && line.contains("\"artifactFamilies\"")
                     && line.contains("flow-client-classpath")
                     && line.contains("vaadin-component-classpath-frontend")
@@ -1056,6 +1091,24 @@ public final class DesktopTraceInspector {
                             "vaadin-dev-bundle/webapp/VAADIN/build/indexhtml-BfYYZi8S.js")) {
                 summary.productionRuntimeV110RequestObserved = true;
             }
+            if (line.contains("\"type\":\"resourceRequest\"")
+                    && line.contains("\"purpose\":\"generated-loadondemand-chunk-v1_11\"")
+                    && line.contains("\"lookupKind\":\"Generated-flow-imports-dev-bundle-chunk-v1_4\"")
+                    && containsPath(line, "vaadin-dev-bundle/webapp/VAADIN/build/generated-flow-imports-VW7hRaNw.js")
+                    && containsStringField(line, "loadOnDemandChunkContractVersion",
+                            "flow-ipc-loadondemand-chunk-v1_11")
+                    && containsStringField(line, "generatedLazyChunkExpressionSource",
+                            "bootstrap-uidl-dependencies")
+                    && containsStringField(line, "generatedLazyChunkTriggerOwner",
+                            "visible-flow-client-dependencyloader")
+                    && containsStringFieldPrefix(line, "loadOnDemandChunkRequestedChunk", "")
+                    && containsLiteralField(line, "generatedLazyChunkTriggeredByFlowClient", "true")
+                    && containsLiteralField(line, "loadOnDemandChunkTriggeredByFlowClient", "true")
+                    && containsLiteralField(line, "generatedLazyChunkDiagnosticBridgeUsed", "false")
+                    && containsLiteralField(line, "generatedLazyChunkDirectImportProbeUsed", "false")
+                    && line.contains("return window.Vaadin.Flow.loadOnDemand('")) {
+                summary.generatedLoadOnDemandChunkV111RequestObserved = true;
+            }
             if (line.contains("\"type\":\"resourceStage\"")
                     && line.contains("\"artifactFamily\":\"generated-lazy\"")
                     && containsPath(line, "vaadin-dev-bundle/webapp/VAADIN/build/markdown-helpers-31I0A-hg.js")
@@ -1138,6 +1191,26 @@ public final class DesktopTraceInspector {
                             || line.contains("\"executionStatus\":\"executed\"")
                             || line.contains("\"executionStatus\":\"execution-failed\""))) {
                 summary.productionRuntimeV110StageObserved = true;
+            }
+            if (line.contains("\"type\":\"resourceStage\"")
+                    && line.contains("\"artifactFamily\":\"generated-lazy\"")
+                    && containsPath(line, "vaadin-dev-bundle/webapp/VAADIN/build/generated-flow-imports-VW7hRaNw.js")
+                    && containsStringField(line, "loadOnDemandChunkContractVersion",
+                            "flow-ipc-loadondemand-chunk-v1_11")
+                    && containsStringField(line, "generatedLazyChunkExpressionSource",
+                            "bootstrap-uidl-dependencies")
+                    && containsStringFieldPrefix(line, "loadOnDemandChunkRequestedChunk", "")
+                    && containsLiteralField(line, "generatedLazyChunkTriggeredByFlowClient", "true")
+                    && containsLiteralField(line, "loadOnDemandChunkTriggeredByFlowClient", "true")
+                    && containsLiteralField(line, "generatedLazyChunkDiagnosticBridgeUsed", "false")
+                    && containsLiteralField(line, "generatedLazyChunkDirectImportProbeUsed", "false")
+                    && containsStringField(line, "loadOnDemandChunkBlockerVersion",
+                            "flow-ipc-loadondemand-chunk-v1_11")
+                    && containsStringField(line, "loadOnDemandChunkFailureLayer",
+                            "dev-bundle-generated-imports-loadondemand-no-op-no-chunk-file")
+                    && (line.contains("\"executionStatus\":\"executed\"")
+                            || line.contains("\"executionStatus\":\"strict-blocker\""))) {
+                summary.generatedLoadOnDemandChunkV111StageObserved = true;
             }
             if (line.contains("\"type\":\"webview.dom\"")
                     && containsStringField(line, "frontendStagingResolverVersion", "flow-ipc-resource-staging-v1_5")
@@ -1297,6 +1370,32 @@ public final class DesktopTraceInspector {
                             "production-runtime-ownership-not-yet-separated-from-focused-component-entry-imports")
                     && line.contains("execution-attempt:vaadin-dev-bundle/webapp/VAADIN/build/indexhtml-BfYYZi8S.js")) {
                 summary.productionRuntimeV110DomObserved = true;
+            }
+            if (line.contains("\"type\":\"webview.dom\"")
+                    && containsLiteralField(line, "generatedLazyChunkUidlExpressionObserved", "true")
+                    && containsStringField(line, "generatedLazyChunkExpressionSource",
+                            "bootstrap-uidl-dependencies")
+                    && line.contains("return window.Vaadin.Flow.loadOnDemand('")
+                    && containsStringFieldPrefix(line, "generatedLazyChunkId", "")
+                    && containsStringField(line, "generatedLazyChunkTriggerOwner",
+                            "visible-flow-client-dependencyloader")
+                    && containsLiteralField(line, "generatedLazyChunkTriggeredByFlowClient", "true")
+                    && containsLiteralField(line, "generatedLazyChunkDiagnosticBridgeUsed", "false")
+                    && containsLiteralField(line, "generatedLazyChunkDirectImportProbeUsed", "false")
+                    && containsStringField(line, "loadOnDemandChunkContractVersion",
+                            "flow-ipc-loadondemand-chunk-v1_11")
+                    && containsStringFieldPrefix(line, "loadOnDemandChunkRequestedChunk", "")
+                    && containsLiteralField(line, "loadOnDemandChunkTriggeredByFlowClient", "true")
+                    && containsLiteralField(line, "loadOnDemandChunkStageObserved", "true")
+                    && containsStringField(line, "loadOnDemandChunkResolvedArtifactPath",
+                            "vaadin-dev-bundle/webapp/VAADIN/build/generated-flow-imports-VW7hRaNw.js")
+                    && containsStringField(line, "loadOnDemandChunkBlockerVersion",
+                            "flow-ipc-loadondemand-chunk-v1_11")
+                    && containsStringField(line, "loadOnDemandChunkFailureLayer",
+                            "dev-bundle-generated-imports-loadondemand-no-op-no-chunk-file")
+                    && (containsLiteralField(line, "loadOnDemandChunkExecuted", "true")
+                            || line.contains("\"loadOnDemandChunkExecutionResult\":\"strict-blocker:"))) {
+                summary.generatedLoadOnDemandChunkV111DomObserved = true;
             }
             if (line.contains("\"type\":\"resourceRequest\"")
                     && line.contains("\"purpose\":\"vaadin-web-component-resource-probe\"")
@@ -2022,6 +2121,11 @@ public final class DesktopTraceInspector {
         private boolean productionRuntimeV110RequestObserved;
         private boolean productionRuntimeV110StageObserved;
         private boolean productionRuntimeV110DomObserved;
+        private boolean generatedLoadOnDemandChunkV111ManifestObserved;
+        private boolean generatedLoadOnDemandChunkV111UidlExpressionObserved;
+        private boolean generatedLoadOnDemandChunkV111RequestObserved;
+        private boolean generatedLoadOnDemandChunkV111StageObserved;
+        private boolean generatedLoadOnDemandChunkV111DomObserved;
 
         public boolean hasRequiredFlowIpcTypes() {
             return types.keySet().containsAll(FLOW_IPC_REQUIRED_TYPES)
@@ -2172,7 +2276,7 @@ public final class DesktopTraceInspector {
         public boolean hasRequiredFlowIpcV1_8Types() {
             return hasRequiredFlowIpcV1_7Types()
                     && frontendGeneratedLazyV18ManifestObserved
-                    && frontendGeneratedLazyV18RequestObserved
+                    && (frontendGeneratedLazyV18RequestObserved || generatedLoadOnDemandChunkV111RequestObserved)
                     && frontendGeneratedLazyV18DependencyRewriteObserved
                     && frontendGeneratedLazyV18ExecutionOrNarrowedBlockerObserved
                     && frontendGeneratedLazyV18DomObserved;
@@ -2180,7 +2284,7 @@ public final class DesktopTraceInspector {
 
         public boolean hasRequiredFlowIpcV1_9LoadOnDemandTypes() {
             return frontendGeneratedLazyV19ManifestObserved
-                    && frontendGeneratedLazyV19RequestObserved
+                    && (frontendGeneratedLazyV19RequestObserved || generatedLoadOnDemandChunkV111RequestObserved)
                     && frontendGeneratedLazyV19StageObserved
                     && frontendGeneratedLazyV19DomObserved;
         }
@@ -2210,6 +2314,19 @@ public final class DesktopTraceInspector {
             return hasRequiredFlowIpcV1_9Types()
                     && hasRequiredFlowIpcV1_10LazyDependencyTypes()
                     && hasRequiredFlowIpcV1_10ProductionRuntimeTypes();
+        }
+
+        public boolean hasRequiredFlowIpcV1_11LoadOnDemandChunkTypes() {
+            return generatedLoadOnDemandChunkV111ManifestObserved
+                    && generatedLoadOnDemandChunkV111UidlExpressionObserved
+                    && generatedLoadOnDemandChunkV111RequestObserved
+                    && generatedLoadOnDemandChunkV111StageObserved
+                    && generatedLoadOnDemandChunkV111DomObserved;
+        }
+
+        public boolean hasRequiredFlowIpcV1_11Types() {
+            return hasRequiredFlowIpcV1_10Types()
+                    && hasRequiredFlowIpcV1_11LoadOnDemandChunkTypes();
         }
 
         public boolean hasRequiredFlowIpcV1_3FrameworkTypes() {
@@ -2495,6 +2612,16 @@ public final class DesktopTraceInspector {
                     + productionRuntimeV110StageObserved);
             System.out.println("Flow IPC v1.10 production runtime DOM observed: "
                     + productionRuntimeV110DomObserved);
+            System.out.println("Flow IPC v1.11 loadOnDemand chunk manifest observed: "
+                    + generatedLoadOnDemandChunkV111ManifestObserved);
+            System.out.println("Flow IPC v1.11 loadOnDemand UIDL expression observed: "
+                    + generatedLoadOnDemandChunkV111UidlExpressionObserved);
+            System.out.println("Flow IPC v1.11 loadOnDemand chunk request observed: "
+                    + generatedLoadOnDemandChunkV111RequestObserved);
+            System.out.println("Flow IPC v1.11 loadOnDemand chunk stage observed: "
+                    + generatedLoadOnDemandChunkV111StageObserved);
+            System.out.println("Flow IPC v1.11 loadOnDemand chunk DOM observed: "
+                    + generatedLoadOnDemandChunkV111DomObserved);
             System.out.println("Flow IPC v1.6 TextField graph manifest observed: "
                     + frontendTextFieldV16ManifestObserved);
             System.out.println("Flow IPC v1.6 TextField graph request observed: "

@@ -105,6 +105,20 @@ final class FlowClientResources {
             "loadondemand-api-installed-by-generated-imports-not-flow-client-triggered";
     private static final String GENERATED_LAZY_NEXT_RESOLUTION_STEP =
             "discover the Flow client bootstrap lazy registry or supported Vaadin SPI that maps real lazy keys to generated-lazy artifacts without direct staged import";
+    private static final String GENERATED_LAZY_CHUNK_CONTRACT_VERSION = "flow-ipc-loadondemand-chunk-v1_11";
+    private static final String GENERATED_LAZY_CHUNK_EXPRESSION_SOURCE = "bootstrap-uidl-dependencies";
+    private static final String GENERATED_LAZY_CHUNK_TRIGGER_OWNER = "visible-flow-client-dependencyloader";
+    private static final String GENERATED_LAZY_CHUNK_REGISTRY_SOURCE =
+            "uidl-expression-to-dev-bundle-generated-flow-imports-registry-v1_11";
+    private static final String GENERATED_LAZY_CHUNK_MAPPING_SOURCE =
+            "flow-ipc-generated-loadondemand-chunk-map-v1_11";
+    private static final String GENERATED_LAZY_CHUNK_API_INSTALL_SOURCE =
+            "flow-ipc-loadondemand-bridge-before-generated-imports";
+    private static final String GENERATED_LAZY_CHUNK_FAILURE_LAYER =
+            "dev-bundle-generated-imports-loadondemand-no-op-no-chunk-file";
+    private static final String GENERATED_LAZY_CHUNK_BLOCKER_VERSION = "flow-ipc-loadondemand-chunk-v1_11";
+    private static final String GENERATED_LAZY_CHUNK_NEXT_RESOLUTION_STEP =
+            "derive chunk-id-to-file mapping from generated-flow-imports or stats.json instead of staging only the generated imports module";
     private static final String FLOW_LAZY_DEPENDENCY_VERSION = "flow-ipc-lazy-dependency-v1_10";
     private static final String FLOW_LAZY_DEPENDENCY_SOURCE =
             "flow-uidl-dependencyloader-loadmode-lazy-v1_10";
@@ -508,6 +522,25 @@ final class FlowClientResources {
         manifest.put("generatedLazyResolvedDependencyPath", DEV_BUNDLE_MARKDOWN_HELPERS_JS);
         manifest.put("generatedLazyFailureLayer", GENERATED_LAZY_FAILURE_LAYER);
         manifest.put("generatedLazyNextResolutionStep", GENERATED_LAZY_NEXT_RESOLUTION_STEP);
+        manifest.put("generatedLazyChunkExpressionSource", GENERATED_LAZY_CHUNK_EXPRESSION_SOURCE);
+        manifest.put("generatedLazyChunkTriggerOwner", GENERATED_LAZY_CHUNK_TRIGGER_OWNER);
+        manifest.put("generatedLazyChunkResolvedArtifactPath", DEV_BUNDLE_GENERATED_FLOW_IMPORTS_JS);
+        manifest.put("generatedLazyChunkDiagnosticBridgeUsed", false);
+        manifest.put("generatedLazyChunkDirectImportProbeUsed", false);
+        manifest.put("generatedLazyChunkFailureLayer", GENERATED_LAZY_CHUNK_FAILURE_LAYER);
+        manifest.put("generatedLazyChunkBlockerVersion", GENERATED_LAZY_CHUNK_BLOCKER_VERSION);
+        manifest.put("generatedLazyChunkNextResolutionStep", GENERATED_LAZY_CHUNK_NEXT_RESOLUTION_STEP);
+        manifest.put("loadOnDemandChunkContractVersion", GENERATED_LAZY_CHUNK_CONTRACT_VERSION);
+        manifest.put("loadOnDemandChunkApiOwner", GENERATED_LAZY_LOAD_ON_DEMAND_API_OWNER);
+        manifest.put("loadOnDemandChunkApiInstallSource", GENERATED_LAZY_CHUNK_API_INSTALL_SOURCE);
+        manifest.put("loadOnDemandChunkRegistrySource", GENERATED_LAZY_CHUNK_REGISTRY_SOURCE);
+        manifest.put("loadOnDemandChunkMappingSource", GENERATED_LAZY_CHUNK_MAPPING_SOURCE);
+        manifest.put("loadOnDemandChunkResolvedArtifactPath", DEV_BUNDLE_GENERATED_FLOW_IMPORTS_JS);
+        manifest.put("loadOnDemandChunkModuleIdentity",
+                "stable-resource-path-blob-module-identity-v1_7:" + DEV_BUNDLE_GENERATED_FLOW_IMPORTS_JS);
+        manifest.put("loadOnDemandChunkFailureLayer", GENERATED_LAZY_CHUNK_FAILURE_LAYER);
+        manifest.put("loadOnDemandChunkBlockerVersion", GENERATED_LAZY_CHUNK_BLOCKER_VERSION);
+        manifest.put("loadOnDemandChunkNextResolutionStep", GENERATED_LAZY_CHUNK_NEXT_RESOLUTION_STEP);
         manifest.put("runtimeResolverContractVersion", RUNTIME_RESOLVER_CONTRACT_VERSION);
         manifest.put("flowLazyDependencyVersion", FLOW_LAZY_DEPENDENCY_VERSION);
         manifest.put("flowLazyDependencySource", FLOW_LAZY_DEPENDENCY_SOURCE);
@@ -544,7 +577,7 @@ final class FlowClientResources {
                         "production-bundle-runtime-registry-v1_10"),
                 artifactFamilyStatus("dev-mode-bundle", "partial", "dev-mode-package-lock-verified"),
                 artifactFamilyStatus("generated-lazy", "partial",
-                        "generated-lazy-loadondemand-contract-narrowed-v1_9"),
+                        "generated-lazy-loadondemand-chunk-mapped-v1_11"),
                 artifactFamilyStatus("flow-lazy-dependency", "available",
                         "flow-lazy-dependency-runtime-v1_10")));
         manifest.put("dependencyGraph", Map.of("declared", true,
@@ -555,6 +588,8 @@ final class FlowClientResources {
                         "dev-mode package-lock dependency graph is verified over IPC, but Vite/dev-server module execution is not yet mapped into the no-localhost resolver"),
                 strictBlocker("generated-lazy", "generated-lazy-loadondemand-api-boundary-v1_9",
                         "generated-flow-imports relative dependencies execute through the no-localhost staging resolver, but the real Flow.loadOnDemand API is still installed by the direct staged generated-flow-imports artifact rather than triggered by the Flow client engine"),
+                strictBlocker("generated-lazy", GENERATED_LAZY_CHUNK_BLOCKER_VERSION,
+                        "real UIDL Flow.loadOnDemand expressions are observed and mapped to the generated-flow-imports artifact, but this dev bundle exposes a no-op loadOnDemand table without chunk-file resolution"),
                 strictBlocker("production-bundle", "flow-ipc-production-runtime-v1_10",
                         "production bundle stats now selects an executable runtime artifact and stages it through stable module identity, but full production runtime ownership is still blocked until side effects can be executed without relying on focused component entry imports")));
         manifest.put("transport", "flow-ipc");
@@ -995,6 +1030,11 @@ final class FlowClientResources {
         attributes.put("generatedLazyResolvedArtifactPath", GENERATED_FLOW_IMPORTS_JS);
         attributes.put("generatedLazyFlowClientTriggered", false);
         attributes.put("generatedLazyDiagnosticBridge", false);
+        attributes.put("generatedLazyChunkExpressionSource", "repository-fixture-verified-only");
+        attributes.put("generatedLazyChunkTriggerOwner", "repository-local-generated-flow-fixture");
+        attributes.put("generatedLazyChunkResolvedArtifactPath", GENERATED_FLOW_IMPORTS_JS);
+        attributes.put("generatedLazyChunkDiagnosticBridgeUsed", false);
+        attributes.put("generatedLazyChunkDirectImportProbeUsed", false);
         return attributes;
     }
 
@@ -1027,6 +1067,29 @@ final class FlowClientResources {
         attributes.put("generatedLazyBlockerVersion", GENERATED_LAZY_BLOCKER_VERSION);
         attributes.put("generatedLazyRelativeImportSpecifier", GENERATED_LAZY_RELATIVE_IMPORT_SPECIFIER);
         attributes.put("generatedLazyResolvedDependencyPath", DEV_BUNDLE_MARKDOWN_HELPERS_JS);
+        attributes.put("generatedLazyChunkExpressionSource",
+                primary ? GENERATED_LAZY_CHUNK_EXPRESSION_SOURCE
+                        : "generated-lazy-stable-relative-dependency");
+        attributes.put("generatedLazyChunkTriggerOwner",
+                primary ? GENERATED_LAZY_CHUNK_TRIGGER_OWNER
+                        : "generated-flow-imports-relative-import");
+        attributes.put("generatedLazyChunkResolvedArtifactPath", path);
+        attributes.put("generatedLazyChunkDiagnosticBridgeUsed", false);
+        attributes.put("generatedLazyChunkDirectImportProbeUsed", false);
+        attributes.put("generatedLazyChunkFailureLayer", GENERATED_LAZY_CHUNK_FAILURE_LAYER);
+        attributes.put("generatedLazyChunkBlockerVersion", GENERATED_LAZY_CHUNK_BLOCKER_VERSION);
+        attributes.put("generatedLazyChunkNextResolutionStep", GENERATED_LAZY_CHUNK_NEXT_RESOLUTION_STEP);
+        attributes.put("loadOnDemandChunkContractVersion", GENERATED_LAZY_CHUNK_CONTRACT_VERSION);
+        attributes.put("loadOnDemandChunkApiOwner", GENERATED_LAZY_LOAD_ON_DEMAND_API_OWNER);
+        attributes.put("loadOnDemandChunkApiInstallSource", GENERATED_LAZY_CHUNK_API_INSTALL_SOURCE);
+        attributes.put("loadOnDemandChunkRegistrySource", GENERATED_LAZY_CHUNK_REGISTRY_SOURCE);
+        attributes.put("loadOnDemandChunkMappingSource", GENERATED_LAZY_CHUNK_MAPPING_SOURCE);
+        attributes.put("loadOnDemandChunkResolvedArtifactPath", path);
+        attributes.put("loadOnDemandChunkModuleIdentity",
+                "stable-resource-path-blob-module-identity-v1_7:" + path);
+        attributes.put("loadOnDemandChunkFailureLayer", GENERATED_LAZY_CHUNK_FAILURE_LAYER);
+        attributes.put("loadOnDemandChunkBlockerVersion", GENERATED_LAZY_CHUNK_BLOCKER_VERSION);
+        attributes.put("loadOnDemandChunkNextResolutionStep", GENERATED_LAZY_CHUNK_NEXT_RESOLUTION_STEP);
         attributes.put("devBundleResource", true);
         attributes.put("productionBundleResource", true);
         attributes.put("moduleSpecifier", path);

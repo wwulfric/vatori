@@ -1453,6 +1453,35 @@ final class WebViewHost: NSObject, NSApplicationDelegate, NSWindowDelegate, WKNa
           frontendArtifactGeneratedLazyNextResolutionStep: window.VaadinDesktopIpcDiagnostics ? window.VaadinDesktopIpcDiagnostics.frontendArtifactGeneratedLazyNextResolutionStep : "",
           frontendArtifactGeneratedLazyModuleIdentityStrategy: window.VaadinDesktopIpcDiagnostics ? window.VaadinDesktopIpcDiagnostics.frontendArtifactGeneratedLazyModuleIdentityStrategy : "",
           frontendArtifactGeneratedLazyModuleIdentityKey: window.VaadinDesktopIpcDiagnostics ? window.VaadinDesktopIpcDiagnostics.frontendArtifactGeneratedLazyModuleIdentityKey : "",
+          generatedLazyChunkUidlExpressionObserved: !!(window.VaadinDesktopIpcDiagnostics && window.VaadinDesktopIpcDiagnostics.generatedLazyChunkUidlExpressionObserved),
+          generatedLazyChunkExpressionSource: window.VaadinDesktopIpcDiagnostics ? window.VaadinDesktopIpcDiagnostics.generatedLazyChunkExpressionSource : "",
+          generatedLazyChunkExpression: window.VaadinDesktopIpcDiagnostics ? window.VaadinDesktopIpcDiagnostics.generatedLazyChunkExpression : "",
+          generatedLazyChunkId: window.VaadinDesktopIpcDiagnostics ? window.VaadinDesktopIpcDiagnostics.generatedLazyChunkId : "",
+          generatedLazyChunkIds: window.VaadinDesktopIpcDiagnostics ? window.VaadinDesktopIpcDiagnostics.generatedLazyChunkIds : "",
+          generatedLazyChunkTriggerOwner: window.VaadinDesktopIpcDiagnostics ? window.VaadinDesktopIpcDiagnostics.generatedLazyChunkTriggerOwner : "",
+          generatedLazyChunkTriggeredByFlowClient: !!(window.VaadinDesktopIpcDiagnostics && window.VaadinDesktopIpcDiagnostics.generatedLazyChunkTriggeredByFlowClient),
+          generatedLazyChunkDiagnosticBridgeUsed: !!(window.VaadinDesktopIpcDiagnostics && window.VaadinDesktopIpcDiagnostics.generatedLazyChunkDiagnosticBridgeUsed),
+          generatedLazyChunkDirectImportProbeUsed: !!(window.VaadinDesktopIpcDiagnostics && window.VaadinDesktopIpcDiagnostics.generatedLazyChunkDirectImportProbeUsed),
+          generatedLazyChunkResolvedArtifactPath: window.VaadinDesktopIpcDiagnostics ? window.VaadinDesktopIpcDiagnostics.generatedLazyChunkResolvedArtifactPath : "",
+          generatedLazyChunkFailureLayer: window.VaadinDesktopIpcDiagnostics ? window.VaadinDesktopIpcDiagnostics.generatedLazyChunkFailureLayer : "",
+          generatedLazyChunkBlockerVersion: window.VaadinDesktopIpcDiagnostics ? window.VaadinDesktopIpcDiagnostics.generatedLazyChunkBlockerVersion : "",
+          generatedLazyChunkNextResolutionStep: window.VaadinDesktopIpcDiagnostics ? window.VaadinDesktopIpcDiagnostics.generatedLazyChunkNextResolutionStep : "",
+          loadOnDemandChunkContractVersion: window.VaadinDesktopIpcDiagnostics ? window.VaadinDesktopIpcDiagnostics.loadOnDemandChunkContractVersion : "",
+          loadOnDemandChunkApiOwner: window.VaadinDesktopIpcDiagnostics ? window.VaadinDesktopIpcDiagnostics.loadOnDemandChunkApiOwner : "",
+          loadOnDemandChunkApiInstallSource: window.VaadinDesktopIpcDiagnostics ? window.VaadinDesktopIpcDiagnostics.loadOnDemandChunkApiInstallSource : "",
+          loadOnDemandChunkRegistrySource: window.VaadinDesktopIpcDiagnostics ? window.VaadinDesktopIpcDiagnostics.loadOnDemandChunkRegistrySource : "",
+          loadOnDemandChunkMappingSource: window.VaadinDesktopIpcDiagnostics ? window.VaadinDesktopIpcDiagnostics.loadOnDemandChunkMappingSource : "",
+          loadOnDemandChunkRequestedChunk: window.VaadinDesktopIpcDiagnostics ? window.VaadinDesktopIpcDiagnostics.loadOnDemandChunkRequestedChunk : "",
+          loadOnDemandChunkResolvedArtifactPath: window.VaadinDesktopIpcDiagnostics ? window.VaadinDesktopIpcDiagnostics.loadOnDemandChunkResolvedArtifactPath : "",
+          loadOnDemandChunkModuleIdentity: window.VaadinDesktopIpcDiagnostics ? window.VaadinDesktopIpcDiagnostics.loadOnDemandChunkModuleIdentity : "",
+          loadOnDemandChunkTriggeredByFlowClient: !!(window.VaadinDesktopIpcDiagnostics && window.VaadinDesktopIpcDiagnostics.loadOnDemandChunkTriggeredByFlowClient),
+          loadOnDemandChunkStageObserved: !!(window.VaadinDesktopIpcDiagnostics && window.VaadinDesktopIpcDiagnostics.loadOnDemandChunkStageObserved),
+          loadOnDemandChunkExecuted: !!(window.VaadinDesktopIpcDiagnostics && window.VaadinDesktopIpcDiagnostics.loadOnDemandChunkExecuted),
+          loadOnDemandChunkExecutionResult: window.VaadinDesktopIpcDiagnostics ? window.VaadinDesktopIpcDiagnostics.loadOnDemandChunkExecutionResult : "",
+          loadOnDemandChunkFailureLayer: window.VaadinDesktopIpcDiagnostics ? window.VaadinDesktopIpcDiagnostics.loadOnDemandChunkFailureLayer : "",
+          loadOnDemandChunkBrowserError: window.VaadinDesktopIpcDiagnostics ? window.VaadinDesktopIpcDiagnostics.loadOnDemandChunkBrowserError : "",
+          loadOnDemandChunkBlockerVersion: window.VaadinDesktopIpcDiagnostics ? window.VaadinDesktopIpcDiagnostics.loadOnDemandChunkBlockerVersion : "",
+          loadOnDemandChunkNextResolutionStep: window.VaadinDesktopIpcDiagnostics ? window.VaadinDesktopIpcDiagnostics.loadOnDemandChunkNextResolutionStep : "",
           frontendRuntimeResolverContractVersion: window.VaadinDesktopIpcDiagnostics ? window.VaadinDesktopIpcDiagnostics.frontendRuntimeResolverContractVersion : "",
           frontendRuntimeResolverLogicalRequestIds: window.VaadinDesktopIpcDiagnostics ? window.VaadinDesktopIpcDiagnostics.frontendRuntimeResolverLogicalRequestIds : "",
           frontendRuntimeResolverPathMappings: window.VaadinDesktopIpcDiagnostics ? window.VaadinDesktopIpcDiagnostics.frontendRuntimeResolverPathMappings : "",
@@ -2111,6 +2140,7 @@ let flowIpcShell = #"""
       const frontendStagedResourceFailedPaths = new Set();
       const frontendStageResourceByUrl = new Map();
       let generatedLazyBundleExecutionAttempted = false;
+      const generatedLoadOnDemandChunkPromises = new Map();
       let flowLazyDependencyExecutionAttempted = false;
       let productionBundleRuntimeStageAttempted = false;
       let textFieldDevBundleStageAttempted = false;
@@ -2238,9 +2268,38 @@ let flowIpcShell = #"""
         frontendArtifactGeneratedLazyModuleIdentityStrategy: '',
         frontendArtifactGeneratedLazyModuleIdentityKey: '',
         frontendArtifactGeneratedLazyStagedDependencyGraph: '',
+        generatedLazyChunkUidlExpressionObserved: false,
+        generatedLazyChunkExpressionSource: '',
+        generatedLazyChunkExpression: '',
+        generatedLazyChunkId: '',
+        generatedLazyChunkIds: '',
+        generatedLazyChunkTriggerOwner: '',
+        generatedLazyChunkTriggeredByFlowClient: false,
+        generatedLazyChunkDiagnosticBridgeUsed: false,
+        generatedLazyChunkDirectImportProbeUsed: false,
+        generatedLazyChunkResolvedArtifactPath: '',
+        generatedLazyChunkFailureLayer: '',
+        generatedLazyChunkBlockerVersion: '',
+        generatedLazyChunkNextResolutionStep: '',
         frontendRuntimeResolverContractVersion: '',
         frontendRuntimeResolverLogicalRequestIds: '',
         frontendRuntimeResolverPathMappings: '',
+        loadOnDemandChunkContractVersion: '',
+        loadOnDemandChunkApiOwner: '',
+        loadOnDemandChunkApiInstallSource: '',
+        loadOnDemandChunkRegistrySource: '',
+        loadOnDemandChunkMappingSource: '',
+        loadOnDemandChunkRequestedChunk: '',
+        loadOnDemandChunkResolvedArtifactPath: '',
+        loadOnDemandChunkModuleIdentity: '',
+        loadOnDemandChunkTriggeredByFlowClient: false,
+        loadOnDemandChunkStageObserved: false,
+        loadOnDemandChunkExecuted: false,
+        loadOnDemandChunkExecutionResult: '',
+        loadOnDemandChunkFailureLayer: '',
+        loadOnDemandChunkBrowserError: '',
+        loadOnDemandChunkBlockerVersion: '',
+        loadOnDemandChunkNextResolutionStep: '',
         flowLazyDependencyObserved: false,
         flowLazyDependencyRequested: false,
         flowLazyDependencyResponse: false,
@@ -2762,8 +2821,12 @@ let flowIpcShell = #"""
         }
         for (let nodeId = 1; nodeId < 240; nodeId += 1) {
           const element = flowClientEngineElement(nodeId);
-          if (element && (element.id === id || element.getAttribute('id') === id
-              || element.dataset && element.dataset.flowId === id)) {
+          const elementId = element && element.id ? element.id : '';
+          const attributeId = element && typeof element.getAttribute === 'function'
+            ? element.getAttribute('id')
+            : '';
+          const flowId = element && element.dataset ? element.dataset.flowId : '';
+          if (element && (elementId === id || attributeId === id || flowId === id)) {
             return { element, nodeId, id };
           }
         }
@@ -4091,6 +4154,42 @@ let flowIpcShell = #"""
             manifest.generatedLazyBlockerVersion || window.VaadinDesktopIpcDiagnostics.frontendArtifactGeneratedLazyBlockerVersion;
           window.VaadinDesktopIpcDiagnostics.frontendArtifactGeneratedLazyNextResolutionStep =
             manifest.generatedLazyNextResolutionStep || window.VaadinDesktopIpcDiagnostics.frontendArtifactGeneratedLazyNextResolutionStep;
+          window.VaadinDesktopIpcDiagnostics.generatedLazyChunkExpressionSource =
+            manifest.generatedLazyChunkExpressionSource || window.VaadinDesktopIpcDiagnostics.generatedLazyChunkExpressionSource;
+          window.VaadinDesktopIpcDiagnostics.generatedLazyChunkTriggerOwner =
+            manifest.generatedLazyChunkTriggerOwner || window.VaadinDesktopIpcDiagnostics.generatedLazyChunkTriggerOwner;
+          window.VaadinDesktopIpcDiagnostics.generatedLazyChunkResolvedArtifactPath =
+            manifest.generatedLazyChunkResolvedArtifactPath || window.VaadinDesktopIpcDiagnostics.generatedLazyChunkResolvedArtifactPath;
+          window.VaadinDesktopIpcDiagnostics.generatedLazyChunkDiagnosticBridgeUsed =
+            manifest.generatedLazyChunkDiagnosticBridgeUsed === true;
+          window.VaadinDesktopIpcDiagnostics.generatedLazyChunkDirectImportProbeUsed =
+            manifest.generatedLazyChunkDirectImportProbeUsed === true;
+          window.VaadinDesktopIpcDiagnostics.generatedLazyChunkFailureLayer =
+            manifest.generatedLazyChunkFailureLayer || window.VaadinDesktopIpcDiagnostics.generatedLazyChunkFailureLayer;
+          window.VaadinDesktopIpcDiagnostics.generatedLazyChunkBlockerVersion =
+            manifest.generatedLazyChunkBlockerVersion || window.VaadinDesktopIpcDiagnostics.generatedLazyChunkBlockerVersion;
+          window.VaadinDesktopIpcDiagnostics.generatedLazyChunkNextResolutionStep =
+            manifest.generatedLazyChunkNextResolutionStep || window.VaadinDesktopIpcDiagnostics.generatedLazyChunkNextResolutionStep;
+          window.VaadinDesktopIpcDiagnostics.loadOnDemandChunkContractVersion =
+            manifest.loadOnDemandChunkContractVersion || window.VaadinDesktopIpcDiagnostics.loadOnDemandChunkContractVersion;
+          window.VaadinDesktopIpcDiagnostics.loadOnDemandChunkApiOwner =
+            manifest.loadOnDemandChunkApiOwner || window.VaadinDesktopIpcDiagnostics.loadOnDemandChunkApiOwner;
+          window.VaadinDesktopIpcDiagnostics.loadOnDemandChunkApiInstallSource =
+            manifest.loadOnDemandChunkApiInstallSource || window.VaadinDesktopIpcDiagnostics.loadOnDemandChunkApiInstallSource;
+          window.VaadinDesktopIpcDiagnostics.loadOnDemandChunkRegistrySource =
+            manifest.loadOnDemandChunkRegistrySource || window.VaadinDesktopIpcDiagnostics.loadOnDemandChunkRegistrySource;
+          window.VaadinDesktopIpcDiagnostics.loadOnDemandChunkMappingSource =
+            manifest.loadOnDemandChunkMappingSource || window.VaadinDesktopIpcDiagnostics.loadOnDemandChunkMappingSource;
+          window.VaadinDesktopIpcDiagnostics.loadOnDemandChunkResolvedArtifactPath =
+            manifest.loadOnDemandChunkResolvedArtifactPath || window.VaadinDesktopIpcDiagnostics.loadOnDemandChunkResolvedArtifactPath;
+          window.VaadinDesktopIpcDiagnostics.loadOnDemandChunkModuleIdentity =
+            manifest.loadOnDemandChunkModuleIdentity || window.VaadinDesktopIpcDiagnostics.loadOnDemandChunkModuleIdentity;
+          window.VaadinDesktopIpcDiagnostics.loadOnDemandChunkFailureLayer =
+            manifest.loadOnDemandChunkFailureLayer || window.VaadinDesktopIpcDiagnostics.loadOnDemandChunkFailureLayer;
+          window.VaadinDesktopIpcDiagnostics.loadOnDemandChunkBlockerVersion =
+            manifest.loadOnDemandChunkBlockerVersion || window.VaadinDesktopIpcDiagnostics.loadOnDemandChunkBlockerVersion;
+          window.VaadinDesktopIpcDiagnostics.loadOnDemandChunkNextResolutionStep =
+            manifest.loadOnDemandChunkNextResolutionStep || window.VaadinDesktopIpcDiagnostics.loadOnDemandChunkNextResolutionStep;
         }
         if (typeof manifest.runtimeResolverContractVersion === 'string') {
           window.VaadinDesktopIpcDiagnostics.frontendRuntimeResolverContractVersion =
@@ -4236,6 +4335,24 @@ let flowIpcShell = #"""
           generatedLazyResolvedDependencyPath: resource.generatedLazyResolvedDependencyPath || '',
           generatedLazyGraphProbe: resource.generatedLazyGraphProbe || '',
           generatedLazyBlockerVersion: resource.generatedLazyBlockerVersion || '',
+          generatedLazyChunkExpressionSource: resource.generatedLazyChunkExpressionSource || '',
+          generatedLazyChunkTriggerOwner: resource.generatedLazyChunkTriggerOwner || '',
+          generatedLazyChunkResolvedArtifactPath: resource.generatedLazyChunkResolvedArtifactPath || '',
+          generatedLazyChunkDiagnosticBridgeUsed: resource.generatedLazyChunkDiagnosticBridgeUsed === true,
+          generatedLazyChunkDirectImportProbeUsed: resource.generatedLazyChunkDirectImportProbeUsed === true,
+          generatedLazyChunkFailureLayer: resource.generatedLazyChunkFailureLayer || '',
+          generatedLazyChunkBlockerVersion: resource.generatedLazyChunkBlockerVersion || '',
+          generatedLazyChunkNextResolutionStep: resource.generatedLazyChunkNextResolutionStep || '',
+          loadOnDemandChunkContractVersion: resource.loadOnDemandChunkContractVersion || '',
+          loadOnDemandChunkApiOwner: resource.loadOnDemandChunkApiOwner || '',
+          loadOnDemandChunkApiInstallSource: resource.loadOnDemandChunkApiInstallSource || '',
+          loadOnDemandChunkRegistrySource: resource.loadOnDemandChunkRegistrySource || '',
+          loadOnDemandChunkMappingSource: resource.loadOnDemandChunkMappingSource || '',
+          loadOnDemandChunkResolvedArtifactPath: resource.loadOnDemandChunkResolvedArtifactPath || '',
+          loadOnDemandChunkModuleIdentity: resource.loadOnDemandChunkModuleIdentity || '',
+          loadOnDemandChunkFailureLayer: resource.loadOnDemandChunkFailureLayer || '',
+          loadOnDemandChunkBlockerVersion: resource.loadOnDemandChunkBlockerVersion || '',
+          loadOnDemandChunkNextResolutionStep: resource.loadOnDemandChunkNextResolutionStep || '',
           runtimeResolverContractVersion: resource.runtimeResolverContractVersion || '',
           logicalRequestId: resource.logicalRequestId || '',
           pathMapping: resource.pathMapping || '',
@@ -4476,6 +4593,84 @@ let flowIpcShell = #"""
           generatedLazyBlockerVersion: extra && extra.generatedLazyBlockerVersion
             ? extra.generatedLazyBlockerVersion
             : (resource.generatedLazyBlockerVersion || ''),
+          generatedLazyChunkExpressionSource: extra && extra.generatedLazyChunkExpressionSource
+            ? extra.generatedLazyChunkExpressionSource
+            : (resource.generatedLazyChunkExpressionSource || ''),
+          generatedLazyChunkExpression: extra && extra.generatedLazyChunkExpression
+            ? extra.generatedLazyChunkExpression
+            : '',
+          generatedLazyChunkId: extra && extra.generatedLazyChunkId ? extra.generatedLazyChunkId : '',
+          generatedLazyChunkIds: extra && extra.generatedLazyChunkIds ? extra.generatedLazyChunkIds : '',
+          generatedLazyChunkTriggerOwner: extra && extra.generatedLazyChunkTriggerOwner
+            ? extra.generatedLazyChunkTriggerOwner
+            : (resource.generatedLazyChunkTriggerOwner || ''),
+          generatedLazyChunkTriggeredByFlowClient: extra
+            && typeof extra.generatedLazyChunkTriggeredByFlowClient === 'boolean'
+            ? extra.generatedLazyChunkTriggeredByFlowClient
+            : false,
+          generatedLazyChunkDiagnosticBridgeUsed: extra
+            && typeof extra.generatedLazyChunkDiagnosticBridgeUsed === 'boolean'
+            ? extra.generatedLazyChunkDiagnosticBridgeUsed
+            : resource.generatedLazyChunkDiagnosticBridgeUsed === true,
+          generatedLazyChunkDirectImportProbeUsed: extra
+            && typeof extra.generatedLazyChunkDirectImportProbeUsed === 'boolean'
+            ? extra.generatedLazyChunkDirectImportProbeUsed
+            : resource.generatedLazyChunkDirectImportProbeUsed === true,
+          generatedLazyChunkResolvedArtifactPath: extra && extra.generatedLazyChunkResolvedArtifactPath
+            ? extra.generatedLazyChunkResolvedArtifactPath
+            : (resource.generatedLazyChunkResolvedArtifactPath || ''),
+          generatedLazyChunkFailureLayer: extra && extra.generatedLazyChunkFailureLayer
+            ? extra.generatedLazyChunkFailureLayer
+            : (resource.generatedLazyChunkFailureLayer || ''),
+          generatedLazyChunkBlockerVersion: extra && extra.generatedLazyChunkBlockerVersion
+            ? extra.generatedLazyChunkBlockerVersion
+            : (resource.generatedLazyChunkBlockerVersion || ''),
+          generatedLazyChunkNextResolutionStep: extra && extra.generatedLazyChunkNextResolutionStep
+            ? extra.generatedLazyChunkNextResolutionStep
+            : (resource.generatedLazyChunkNextResolutionStep || ''),
+          loadOnDemandChunkContractVersion: extra && extra.loadOnDemandChunkContractVersion
+            ? extra.loadOnDemandChunkContractVersion
+            : (resource.loadOnDemandChunkContractVersion || ''),
+          loadOnDemandChunkApiOwner: extra && extra.loadOnDemandChunkApiOwner
+            ? extra.loadOnDemandChunkApiOwner
+            : (resource.loadOnDemandChunkApiOwner || ''),
+          loadOnDemandChunkApiInstallSource: extra && extra.loadOnDemandChunkApiInstallSource
+            ? extra.loadOnDemandChunkApiInstallSource
+            : (resource.loadOnDemandChunkApiInstallSource || ''),
+          loadOnDemandChunkRegistrySource: extra && extra.loadOnDemandChunkRegistrySource
+            ? extra.loadOnDemandChunkRegistrySource
+            : (resource.loadOnDemandChunkRegistrySource || ''),
+          loadOnDemandChunkMappingSource: extra && extra.loadOnDemandChunkMappingSource
+            ? extra.loadOnDemandChunkMappingSource
+            : (resource.loadOnDemandChunkMappingSource || ''),
+          loadOnDemandChunkRequestedChunk: extra && extra.loadOnDemandChunkRequestedChunk
+            ? extra.loadOnDemandChunkRequestedChunk
+            : '',
+          loadOnDemandChunkResolvedArtifactPath: extra && extra.loadOnDemandChunkResolvedArtifactPath
+            ? extra.loadOnDemandChunkResolvedArtifactPath
+            : (resource.loadOnDemandChunkResolvedArtifactPath || ''),
+          loadOnDemandChunkModuleIdentity: extra && extra.loadOnDemandChunkModuleIdentity
+            ? extra.loadOnDemandChunkModuleIdentity
+            : (resource.loadOnDemandChunkModuleIdentity || ''),
+          loadOnDemandChunkTriggeredByFlowClient: extra
+            && typeof extra.loadOnDemandChunkTriggeredByFlowClient === 'boolean'
+            ? extra.loadOnDemandChunkTriggeredByFlowClient
+            : false,
+          loadOnDemandChunkExecutionResult: extra && extra.loadOnDemandChunkExecutionResult
+            ? extra.loadOnDemandChunkExecutionResult
+            : '',
+          loadOnDemandChunkFailureLayer: extra && extra.loadOnDemandChunkFailureLayer
+            ? extra.loadOnDemandChunkFailureLayer
+            : (resource.loadOnDemandChunkFailureLayer || ''),
+          loadOnDemandChunkBrowserError: extra && extra.loadOnDemandChunkBrowserError
+            ? extra.loadOnDemandChunkBrowserError
+            : '',
+          loadOnDemandChunkBlockerVersion: extra && extra.loadOnDemandChunkBlockerVersion
+            ? extra.loadOnDemandChunkBlockerVersion
+            : (resource.loadOnDemandChunkBlockerVersion || ''),
+          loadOnDemandChunkNextResolutionStep: extra && extra.loadOnDemandChunkNextResolutionStep
+            ? extra.loadOnDemandChunkNextResolutionStep
+            : (resource.loadOnDemandChunkNextResolutionStep || ''),
           generatedLazySourceArtifact: extra && extra.generatedLazySourceArtifact
             ? extra.generatedLazySourceArtifact
             : '',
@@ -4788,13 +4983,14 @@ let flowIpcShell = #"""
         send('resourceRequest', requestPayload);
       }
 
-      function requestComponentFrontendResource(path, kind, purpose) {
+      function requestComponentFrontendResource(path, kind, purpose, extra) {
         const resource = componentFrontendResources.find((entry) => entry.path === path)
           || componentFrontendResources.find((entry) => entry.kind === kind);
         if (!resource || typeof resource.path !== 'string') {
           return;
         }
-        if (componentFrontendResourceRequests.has(resource.path)) {
+        const allowDuplicateLoadOnDemandTrace = purpose === 'generated-loadondemand-chunk-v1_11';
+        if (componentFrontendResourceRequests.has(resource.path) && !allowDuplicateLoadOnDemandTrace) {
           return;
         }
         componentFrontendResourceRequests.add(resource.path);
@@ -4816,7 +5012,7 @@ let flowIpcShell = #"""
             resource.shimmedImports.join(',');
         }
         const securityKey = flowClientState.securityKey || flowClientState.csrfToken;
-        const requestPayload = Object.assign(artifactRequestMetadata(resource), {
+        const requestPayload = Object.assign(artifactRequestMetadata(resource), extra || {}, {
           purpose,
           lookupKind: resource.lookupKind || 'component-frontend-resource',
           path: resource.path,
@@ -4994,7 +5190,45 @@ let flowIpcShell = #"""
 
       function rememberFlowClientBootstrapPayload(payload) {
         flowClientBootstrapInitResponse = createFlowClientBootstrapInitResponse(payload);
+        rememberGeneratedLazyLoadOnDemandUidlExpressions(payload);
         window.VaadinDesktopIpcDiagnostics.flowClientBootstrapAppId = flowBootstrapAppId;
+      }
+
+      function rememberGeneratedLazyLoadOnDemandUidlExpressions(payload) {
+        const body = payload && payload.uidl && payload.uidl.body;
+        if (typeof body !== 'string' || body.length === 0) {
+          return;
+        }
+        const regex = /return window\.Vaadin\.Flow\.loadOnDemand\('([^']+)'\);/g;
+        const ids = [];
+        const expressions = [];
+        let match = regex.exec(body);
+        while (match) {
+          const expression = match[0];
+          const chunkId = match[1] || '';
+          if (chunkId && !ids.includes(chunkId)) {
+            ids.push(chunkId);
+          }
+          if (expression && !expressions.includes(expression)) {
+            expressions.push(expression);
+          }
+          match = regex.exec(body);
+        }
+        if (ids.length === 0) {
+          return;
+        }
+        window.VaadinDesktopIpcDiagnostics.generatedLazyChunkUidlExpressionObserved = true;
+        window.VaadinDesktopIpcDiagnostics.generatedLazyChunkExpressionSource =
+          window.VaadinDesktopIpcDiagnostics.generatedLazyChunkExpressionSource
+          || 'bootstrap-uidl-dependencies';
+        window.VaadinDesktopIpcDiagnostics.generatedLazyChunkExpression = expressions[0] || '';
+        window.VaadinDesktopIpcDiagnostics.generatedLazyChunkId = ids[0] || '';
+        window.VaadinDesktopIpcDiagnostics.generatedLazyChunkIds = ids.join(',');
+        window.VaadinDesktopIpcDiagnostics.generatedLazyChunkTriggerOwner =
+          window.VaadinDesktopIpcDiagnostics.generatedLazyChunkTriggerOwner
+          || 'visible-flow-client-dependencyloader';
+        window.VaadinDesktopIpcDiagnostics.generatedLazyChunkDiagnosticBridgeUsed = false;
+        window.VaadinDesktopIpcDiagnostics.generatedLazyChunkDirectImportProbeUsed = false;
       }
 
       function parseUidl(payload) {
@@ -5239,7 +5473,9 @@ let flowIpcShell = #"""
         }
         try {
           const container = ensureFlowClientContainer();
+          installGeneratedLoadOnDemandChunkBridge();
           module.init(flowClientBootstrapInitResponse);
+          installGeneratedLoadOnDemandChunkBridge();
           normalizeFlowClientViewport(container);
           const flow = window.Vaadin && window.Vaadin.Flow ? window.Vaadin.Flow : null;
           const appIds = flow && typeof flow.getAppIds === 'function' ? flow.getAppIds() : [];
@@ -5489,6 +5725,7 @@ let flowIpcShell = #"""
           ensureFlowClientContainer();
           installFlowIpcXhrBridge();
           installFlowIpcDependencyLoaderBridge();
+          installGeneratedLoadOnDemandChunkBridge();
           module.init();
           refreshFlowClientEngineDiagnostics();
           setTimeout(refreshFlowClientEngineDiagnostics, 250);
@@ -5588,6 +5825,54 @@ let flowIpcShell = #"""
                   mergeCsv(window.VaadinDesktopIpcDiagnostics.frontendArtifactGeneratedLazyBundleChunkPath, [resourcePath]);
                 window.VaadinDesktopIpcDiagnostics.frontendArtifactGeneratedLazyBundleChunkResult =
                   'verified:' + resourcePath;
+                window.VaadinDesktopIpcDiagnostics.generatedLazyChunkResolvedArtifactPath =
+                  payload.generatedLazyChunkResolvedArtifactPath
+                  || payload.loadOnDemandChunkResolvedArtifactPath
+                  || resourcePath;
+                window.VaadinDesktopIpcDiagnostics.generatedLazyChunkExpressionSource =
+                  payload.generatedLazyChunkExpressionSource
+                  || window.VaadinDesktopIpcDiagnostics.generatedLazyChunkExpressionSource;
+                window.VaadinDesktopIpcDiagnostics.generatedLazyChunkTriggerOwner =
+                  payload.generatedLazyChunkTriggerOwner
+                  || window.VaadinDesktopIpcDiagnostics.generatedLazyChunkTriggerOwner;
+                window.VaadinDesktopIpcDiagnostics.generatedLazyChunkFailureLayer =
+                  payload.generatedLazyChunkFailureLayer
+                  || window.VaadinDesktopIpcDiagnostics.generatedLazyChunkFailureLayer;
+                window.VaadinDesktopIpcDiagnostics.generatedLazyChunkBlockerVersion =
+                  payload.generatedLazyChunkBlockerVersion
+                  || window.VaadinDesktopIpcDiagnostics.generatedLazyChunkBlockerVersion;
+                window.VaadinDesktopIpcDiagnostics.generatedLazyChunkNextResolutionStep =
+                  payload.generatedLazyChunkNextResolutionStep
+                  || window.VaadinDesktopIpcDiagnostics.generatedLazyChunkNextResolutionStep;
+                window.VaadinDesktopIpcDiagnostics.loadOnDemandChunkContractVersion =
+                  payload.loadOnDemandChunkContractVersion
+                  || window.VaadinDesktopIpcDiagnostics.loadOnDemandChunkContractVersion;
+                window.VaadinDesktopIpcDiagnostics.loadOnDemandChunkApiOwner =
+                  payload.loadOnDemandChunkApiOwner
+                  || window.VaadinDesktopIpcDiagnostics.loadOnDemandChunkApiOwner;
+                window.VaadinDesktopIpcDiagnostics.loadOnDemandChunkApiInstallSource =
+                  payload.loadOnDemandChunkApiInstallSource
+                  || window.VaadinDesktopIpcDiagnostics.loadOnDemandChunkApiInstallSource;
+                window.VaadinDesktopIpcDiagnostics.loadOnDemandChunkRegistrySource =
+                  payload.loadOnDemandChunkRegistrySource
+                  || window.VaadinDesktopIpcDiagnostics.loadOnDemandChunkRegistrySource;
+                window.VaadinDesktopIpcDiagnostics.loadOnDemandChunkMappingSource =
+                  payload.loadOnDemandChunkMappingSource
+                  || window.VaadinDesktopIpcDiagnostics.loadOnDemandChunkMappingSource;
+                window.VaadinDesktopIpcDiagnostics.loadOnDemandChunkResolvedArtifactPath =
+                  payload.loadOnDemandChunkResolvedArtifactPath || resourcePath;
+                window.VaadinDesktopIpcDiagnostics.loadOnDemandChunkModuleIdentity =
+                  payload.loadOnDemandChunkModuleIdentity
+                  || window.VaadinDesktopIpcDiagnostics.loadOnDemandChunkModuleIdentity;
+                window.VaadinDesktopIpcDiagnostics.loadOnDemandChunkFailureLayer =
+                  payload.loadOnDemandChunkFailureLayer
+                  || window.VaadinDesktopIpcDiagnostics.loadOnDemandChunkFailureLayer;
+                window.VaadinDesktopIpcDiagnostics.loadOnDemandChunkBlockerVersion =
+                  payload.loadOnDemandChunkBlockerVersion
+                  || window.VaadinDesktopIpcDiagnostics.loadOnDemandChunkBlockerVersion;
+                window.VaadinDesktopIpcDiagnostics.loadOnDemandChunkNextResolutionStep =
+                  payload.loadOnDemandChunkNextResolutionStep
+                  || window.VaadinDesktopIpcDiagnostics.loadOnDemandChunkNextResolutionStep;
               }
             } else if (payload.artifactFamily === 'production-bundle'
                 && payload.productionBundleStatsGraph === true) {
@@ -6148,6 +6433,320 @@ let flowIpcShell = #"""
           || null;
       }
 
+      function observedGeneratedLoadOnDemandChunkIds() {
+        const csv = window.VaadinDesktopIpcDiagnostics.generatedLazyChunkIds || '';
+        return csv.split(',').map((entry) => entry.trim()).filter((entry) => entry);
+      }
+
+      function isObservedGeneratedLoadOnDemandChunk(chunkId) {
+        return observedGeneratedLoadOnDemandChunkIds().includes(String(chunkId || ''));
+      }
+
+      function generatedLoadOnDemandChunkExpression(chunkId) {
+        const expression = window.VaadinDesktopIpcDiagnostics.generatedLazyChunkExpression || '';
+        if (expression.includes("'" + chunkId + "'")) {
+          return expression;
+        }
+        return "return window.Vaadin.Flow.loadOnDemand('" + chunkId + "');";
+      }
+
+      function generatedLoadOnDemandChunkStageExtra(resource, chunkId, expression, extra) {
+        return Object.assign({
+          cleanupPolicy: usesStableModuleIdentity(resource)
+            ? 'retain-for-window-lifetime-module-identity-v1_7'
+            : 'revoke-after-generated-loadondemand-chunk',
+          importResolutionStrategy: resource.generatedLazyImportResolutionStrategy
+            || 'stable-relative-import-rewrite-generated-lazy-v1_8',
+          generatedLazyResolverVersion: resource.generatedLazyResolverVersion
+            || 'flow-ipc-generated-lazy-resolver-v1_8',
+          generatedLazyExecutionVersion: resource.generatedLazyExecutionVersion
+            || 'flow-ipc-generated-lazy-v1_8',
+          generatedLazyImportResolutionStrategy: resource.generatedLazyImportResolutionStrategy
+            || 'stable-relative-import-rewrite-generated-lazy-v1_8',
+          generatedLazyLoadOnDemandContractVersion: resource.generatedLazyLoadOnDemandContractVersion
+            || 'flow-ipc-loadondemand-v1_9',
+          generatedLazyTriggerSource: resource.generatedLazyTriggerSource
+            || 'diagnostic-preflight-and-direct-staged-import',
+          generatedLazyApiOwner: resource.generatedLazyApiOwner || 'window.Vaadin.Flow.loadOnDemand',
+          generatedLazyApiInstallSource: resource.generatedLazyApiInstallSource
+            || 'generated-flow-imports-dev-bundle-after-direct-staged-import',
+          generatedLazyRequestedChunk: resource.generatedLazyRequestedChunk
+            || 'vatori-flow-ipc-generated-lazy-v1_9-probe',
+          generatedLazyRegistrySource: resource.generatedLazyRegistrySource
+            || 'no-bootstrap-lazy-registry-observed',
+          generatedLazyMappingSource: resource.generatedLazyMappingSource
+            || 'component-frontend-manifest-generated-lazy-v1_9',
+          generatedLazyResolvedArtifactPath: resource.generatedLazyResolvedArtifactPath || resource.path,
+          generatedLazyFlowClientTriggered: false,
+          generatedLazyDiagnosticBridge: resource.generatedLazyDiagnosticBridge === true,
+          generatedLazyChunkExpressionSource: resource.generatedLazyChunkExpressionSource
+            || 'bootstrap-uidl-dependencies',
+          generatedLazyChunkExpression: expression,
+          generatedLazyChunkId: chunkId,
+          generatedLazyChunkIds: window.VaadinDesktopIpcDiagnostics.generatedLazyChunkIds || chunkId,
+          generatedLazyChunkTriggerOwner: resource.generatedLazyChunkTriggerOwner
+            || 'visible-flow-client-dependencyloader',
+          generatedLazyChunkTriggeredByFlowClient: true,
+          generatedLazyChunkDiagnosticBridgeUsed: false,
+          generatedLazyChunkDirectImportProbeUsed: false,
+          generatedLazyChunkResolvedArtifactPath: resource.generatedLazyChunkResolvedArtifactPath || resource.path,
+          generatedLazyChunkFailureLayer: resource.generatedLazyChunkFailureLayer
+            || 'dev-bundle-generated-imports-loadondemand-no-op-no-chunk-file',
+          generatedLazyChunkBlockerVersion: resource.generatedLazyChunkBlockerVersion
+            || 'flow-ipc-loadondemand-chunk-v1_11',
+          generatedLazyChunkNextResolutionStep: resource.generatedLazyChunkNextResolutionStep || '',
+          loadOnDemandChunkContractVersion: resource.loadOnDemandChunkContractVersion
+            || 'flow-ipc-loadondemand-chunk-v1_11',
+          loadOnDemandChunkApiOwner: resource.loadOnDemandChunkApiOwner || 'window.Vaadin.Flow.loadOnDemand',
+          loadOnDemandChunkApiInstallSource: resource.loadOnDemandChunkApiInstallSource
+            || 'flow-ipc-loadondemand-bridge-before-generated-imports',
+          loadOnDemandChunkRegistrySource: resource.loadOnDemandChunkRegistrySource
+            || 'uidl-expression-to-dev-bundle-generated-flow-imports-registry-v1_11',
+          loadOnDemandChunkMappingSource: resource.loadOnDemandChunkMappingSource
+            || 'flow-ipc-generated-loadondemand-chunk-map-v1_11',
+          loadOnDemandChunkRequestedChunk: chunkId,
+          loadOnDemandChunkResolvedArtifactPath: resource.loadOnDemandChunkResolvedArtifactPath || resource.path,
+          loadOnDemandChunkModuleIdentity: resource.loadOnDemandChunkModuleIdentity || resource.path,
+          loadOnDemandChunkTriggeredByFlowClient: true,
+          loadOnDemandChunkFailureLayer: resource.loadOnDemandChunkFailureLayer
+            || 'dev-bundle-generated-imports-loadondemand-no-op-no-chunk-file',
+          loadOnDemandChunkBlockerVersion: resource.loadOnDemandChunkBlockerVersion
+            || 'flow-ipc-loadondemand-chunk-v1_11',
+          loadOnDemandChunkNextResolutionStep: resource.loadOnDemandChunkNextResolutionStep || '',
+          blockerClassification: resource.loadOnDemandChunkBlockerVersion
+            || 'flow-ipc-loadondemand-chunk-v1_11',
+          moduleIdentityStrategy: usesStableModuleIdentity(resource)
+            ? 'stable-resource-path-blob-module-identity-v1_7'
+            : '',
+          moduleIdentityKey: resource.path
+        }, extra || {});
+      }
+
+      function rememberGeneratedLoadOnDemandChunkRequest(resource, chunkId, expression) {
+        const stageExtra = generatedLoadOnDemandChunkStageExtra(resource, chunkId, expression, {
+          loadOnDemandChunkExecutionResult: 'resource-requested:' + resource.path
+        });
+        window.VaadinDesktopIpcDiagnostics.generatedLazyChunkTriggeredByFlowClient = true;
+        window.VaadinDesktopIpcDiagnostics.loadOnDemandChunkTriggeredByFlowClient = true;
+        window.VaadinDesktopIpcDiagnostics.loadOnDemandChunkRequestedChunk = chunkId;
+        window.VaadinDesktopIpcDiagnostics.loadOnDemandChunkResolvedArtifactPath =
+          stageExtra.loadOnDemandChunkResolvedArtifactPath;
+        window.VaadinDesktopIpcDiagnostics.loadOnDemandChunkContractVersion =
+          stageExtra.loadOnDemandChunkContractVersion;
+        window.VaadinDesktopIpcDiagnostics.loadOnDemandChunkApiOwner =
+          stageExtra.loadOnDemandChunkApiOwner;
+        window.VaadinDesktopIpcDiagnostics.loadOnDemandChunkApiInstallSource =
+          stageExtra.loadOnDemandChunkApiInstallSource;
+        window.VaadinDesktopIpcDiagnostics.loadOnDemandChunkRegistrySource =
+          stageExtra.loadOnDemandChunkRegistrySource;
+        window.VaadinDesktopIpcDiagnostics.loadOnDemandChunkMappingSource =
+          stageExtra.loadOnDemandChunkMappingSource;
+        window.VaadinDesktopIpcDiagnostics.loadOnDemandChunkModuleIdentity =
+          stageExtra.loadOnDemandChunkModuleIdentity;
+        window.VaadinDesktopIpcDiagnostics.generatedLazyChunkResolvedArtifactPath =
+          stageExtra.generatedLazyChunkResolvedArtifactPath;
+        window.VaadinDesktopIpcDiagnostics.generatedLazyChunkFailureLayer =
+          stageExtra.generatedLazyChunkFailureLayer;
+        window.VaadinDesktopIpcDiagnostics.generatedLazyChunkBlockerVersion =
+          stageExtra.generatedLazyChunkBlockerVersion;
+        window.VaadinDesktopIpcDiagnostics.generatedLazyChunkNextResolutionStep =
+          stageExtra.generatedLazyChunkNextResolutionStep;
+        window.VaadinDesktopIpcDiagnostics.loadOnDemandChunkFailureLayer =
+          stageExtra.loadOnDemandChunkFailureLayer;
+        window.VaadinDesktopIpcDiagnostics.loadOnDemandChunkBlockerVersion =
+          stageExtra.loadOnDemandChunkBlockerVersion;
+        window.VaadinDesktopIpcDiagnostics.loadOnDemandChunkNextResolutionStep =
+          stageExtra.loadOnDemandChunkNextResolutionStep;
+        requestComponentFrontendResource(resource.path, resource.kind || '',
+          'generated-loadondemand-chunk-v1_11', stageExtra);
+      }
+
+      function requestGeneratedLoadOnDemandChunkDependencies(resource, chunkId, expression) {
+        const dependencyPaths = [];
+        if (Array.isArray(resource.transitiveImports)) {
+          for (const path of resource.transitiveImports) {
+            if (typeof path === 'string' && path && path !== resource.path && !dependencyPaths.includes(path)) {
+              dependencyPaths.push(path);
+            }
+          }
+        }
+        if (resource.generatedLazyResolvedDependencyPath
+            && !dependencyPaths.includes(resource.generatedLazyResolvedDependencyPath)) {
+          dependencyPaths.push(resource.generatedLazyResolvedDependencyPath);
+        }
+        for (const path of dependencyPaths) {
+          const dependency = componentFrontendResourceByPath(path);
+          if (!dependency || componentFrontendResourceBodies.has(path)) {
+            continue;
+          }
+          requestComponentFrontendResource(path, dependency.kind || '',
+            'generated-loadondemand-chunk-dependency-v1_11',
+            generatedLoadOnDemandChunkStageExtra(resource, chunkId, expression, {
+              generatedLazyChunkResolvedArtifactPath: path,
+              loadOnDemandChunkResolvedArtifactPath: resource.path,
+              loadOnDemandChunkExecutionResult: 'dependency-requested:' + path
+            }));
+        }
+      }
+
+      async function waitForGeneratedLoadOnDemandChunkDependencies(resource) {
+        const waits = [];
+        if (Array.isArray(resource.transitiveImports)) {
+          for (const path of resource.transitiveImports) {
+            if (typeof path !== 'string' || !path || path === resource.path) {
+              continue;
+            }
+            if (componentFrontendResourceByPath(path)) {
+              waits.push(waitForComponentFrontendResourceBody(path, 0));
+            }
+          }
+        }
+        if (resource.generatedLazyResolvedDependencyPath
+            && componentFrontendResourceByPath(resource.generatedLazyResolvedDependencyPath)) {
+          waits.push(waitForComponentFrontendResourceBody(resource.generatedLazyResolvedDependencyPath, 0));
+        }
+        if (waits.length > 0) {
+          await Promise.all(waits);
+        }
+      }
+
+      function waitForComponentFrontendResourceBody(path, attempts) {
+        if (componentFrontendResourceBodies.has(path)) {
+          return Promise.resolve(componentFrontendResourceBodies.get(path) || '');
+        }
+        if ((attempts || 0) >= 60) {
+          return Promise.reject(new Error('generated-loadondemand-chunk-resource-timeout:' + path));
+        }
+        return new Promise((resolve, reject) => {
+          setTimeout(() => {
+            waitForComponentFrontendResourceBody(path, (attempts || 0) + 1).then(resolve, reject);
+          }, 100);
+        });
+      }
+
+      async function executeGeneratedLoadOnDemandChunk(chunkId) {
+        const normalizedChunkId = String(chunkId || '');
+        if (!normalizedChunkId) {
+          return 0;
+        }
+        const resource = generatedLazyBundleResource();
+        if (!resource) {
+          window.VaadinDesktopIpcDiagnostics.loadOnDemandChunkExecutionResult =
+            'strict-blocker:generated-lazy-resource-missing';
+          window.VaadinDesktopIpcDiagnostics.loadOnDemandChunkFailureLayer =
+            'generated-lazy-resource-not-advertised';
+          return 0;
+        }
+        const expression = generatedLoadOnDemandChunkExpression(normalizedChunkId);
+        const executionKey = resource.path || normalizedChunkId;
+        if (generatedLoadOnDemandChunkPromises.has(executionKey)) {
+          return generatedLoadOnDemandChunkPromises.get(executionKey);
+        }
+        const promise = (async () => {
+          rememberGeneratedLoadOnDemandChunkRequest(resource, normalizedChunkId, expression);
+          requestGeneratedLoadOnDemandChunkDependencies(resource, normalizedChunkId, expression);
+          const urlsToRevoke = [];
+          const urlCache = new Map();
+          let stagedUrl = '';
+          const source = await waitForComponentFrontendResourceBody(resource.path, 0);
+          await waitForGeneratedLoadOnDemandChunkDependencies(resource);
+          const stageExtra = generatedLoadOnDemandChunkStageExtra(resource, normalizedChunkId, expression, {
+            loadOnDemandChunkExecutionResult: 'execution-attempt:' + resource.path
+          });
+          try {
+            installOpaqueOriginStorageFallbacks();
+            installVaadinDevBundleGlobals();
+            window.VaadinDesktopIpcDiagnostics.loadOnDemandChunkStageObserved = true;
+            stagedUrl = componentModuleBlobUrl(resource.path, urlsToRevoke, urlCache,
+              'execution-attempt', stageExtra);
+            if (!stagedUrl) {
+              throw new Error('generated-loadondemand-chunk-stage-url-missing');
+            }
+            await import(stagedUrl);
+            const generatedDelegate = window.Vaadin && window.Vaadin.Flow
+              && typeof window.Vaadin.Flow.loadOnDemand === 'function'
+              ? window.Vaadin.Flow.loadOnDemand
+              : null;
+            let delegateResult = 'delegate-missing';
+            if (generatedDelegate && generatedDelegate.__vatoriGeneratedLoadOnDemandChunkBridge !== true) {
+              try {
+                const value = await generatedDelegate(normalizedChunkId);
+                delegateResult = 'delegate-returned=' + String(value);
+              } catch (delegateError) {
+                delegateResult = 'delegate-failed='
+                  + (delegateError && delegateError.message ? delegateError.message : String(delegateError));
+              }
+            }
+            window.VaadinDesktopIpcDiagnostics.loadOnDemandChunkExecuted = true;
+            window.VaadinDesktopIpcDiagnostics.loadOnDemandChunkExecutionResult =
+              'executed:' + resource.path + ';' + delegateResult + ';remaining-blocker='
+              + stageExtra.loadOnDemandChunkFailureLayer;
+            window.VaadinDesktopIpcDiagnostics.loadOnDemandChunkBrowserError = '';
+            window.VaadinDesktopIpcDiagnostics.loadOnDemandChunkFailureLayer =
+              stageExtra.loadOnDemandChunkFailureLayer;
+            window.VaadinDesktopIpcDiagnostics.generatedLazyChunkFailureLayer =
+              stageExtra.generatedLazyChunkFailureLayer;
+            recordFrontendStageOutcome(resource, stagedUrl, 'executed',
+              generatedLoadOnDemandChunkStageExtra(resource, normalizedChunkId, expression, {
+                loadOnDemandChunkExecutionResult:
+                  window.VaadinDesktopIpcDiagnostics.loadOnDemandChunkExecutionResult
+              }));
+            installGeneratedLoadOnDemandChunkBridge(generatedDelegate);
+          } catch (error) {
+            const message = error && error.message ? error.message : String(error);
+            window.VaadinDesktopIpcDiagnostics.loadOnDemandChunkExecuted = false;
+            window.VaadinDesktopIpcDiagnostics.loadOnDemandChunkExecutionResult =
+              'strict-blocker:' + resource.path;
+            window.VaadinDesktopIpcDiagnostics.loadOnDemandChunkBrowserError = message;
+            window.VaadinDesktopIpcDiagnostics.loadOnDemandChunkFailureLayer =
+              stageExtra.loadOnDemandChunkFailureLayer || 'generated-loadondemand-chunk-browser-execution';
+            recordFrontendStageOutcome(resource, stagedUrl, 'strict-blocker',
+              generatedLoadOnDemandChunkStageExtra(resource, normalizedChunkId, expression, {
+                browserError: message,
+                loadOnDemandChunkBrowserError: message,
+                loadOnDemandChunkExecutionResult:
+                  window.VaadinDesktopIpcDiagnostics.loadOnDemandChunkExecutionResult
+              }));
+          } finally {
+            refreshFrontendStagingDiagnostics();
+            for (const url of urlsToRevoke) {
+              URL.revokeObjectURL(url);
+            }
+          }
+          return 0;
+        })();
+        generatedLoadOnDemandChunkPromises.set(executionKey, promise);
+        return promise;
+      }
+
+      function installGeneratedLoadOnDemandChunkBridge(delegate) {
+        window.Vaadin = window.Vaadin || {};
+        window.Vaadin.Flow = window.Vaadin.Flow || {};
+        const existing = typeof window.Vaadin.Flow.loadOnDemand === 'function'
+          ? window.Vaadin.Flow.loadOnDemand
+          : null;
+        if (existing && existing.__vatoriGeneratedLoadOnDemandChunkBridge === true) {
+          return;
+        }
+        const delegatedLoadOnDemand = delegate || existing || null;
+        if (delegatedLoadOnDemand && delegatedLoadOnDemand.__vatoriGeneratedLoadOnDemandChunkBridge !== true) {
+          window.__vatoriGeneratedLoadOnDemandDelegate = delegatedLoadOnDemand;
+        }
+        const bridge = function(key) {
+          const chunkId = String(key || '');
+          const delegated = window.__vatoriGeneratedLoadOnDemandDelegate || null;
+          if (!isObservedGeneratedLoadOnDemandChunk(chunkId)) {
+            if (typeof delegated === 'function') {
+              return Promise.resolve(delegated.call(this, key));
+            }
+            return Promise.resolve(0);
+          }
+          return executeGeneratedLoadOnDemandChunk(chunkId);
+        };
+        bridge.__vatoriGeneratedLoadOnDemandChunkBridge = true;
+        window.Vaadin.Flow.loadOnDemand = bridge;
+      }
+
       function flowLazyDependencyPathFromUrl(url) {
         const resource = flowLazyDependencyResource();
         if (!resource || typeof url !== 'string' || !url) {
@@ -6537,6 +7136,11 @@ let flowIpcShell = #"""
               || 'generated-lazy-staging-rewrite-failed');
           }
           await import(stagedUrl);
+          const generatedLazyLoadOnDemandDelegate = window.Vaadin && window.Vaadin.Flow
+            && typeof window.Vaadin.Flow.loadOnDemand === 'function'
+            ? window.Vaadin.Flow.loadOnDemand
+            : null;
+          installGeneratedLoadOnDemandChunkBridge(generatedLazyLoadOnDemandDelegate);
           const loadOnDemandAfter = window.Vaadin && window.Vaadin.Flow
             && typeof window.Vaadin.Flow.loadOnDemand === 'function';
           if (loadOnDemandAfter) {

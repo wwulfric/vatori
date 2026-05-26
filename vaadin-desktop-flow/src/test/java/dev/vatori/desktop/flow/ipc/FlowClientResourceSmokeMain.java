@@ -170,6 +170,7 @@ public final class FlowClientResourceSmokeMain {
         requireNoStrictBlocker(componentManifest, "npm-frontend");
         requireStrictBlocker(componentManifest, "dev-mode-bundle", "dev-mode-bundle-execution-unmapped");
         requireStrictBlocker(componentManifest, "generated-lazy", "generated-lazy-loadondemand-api-boundary-v1_9");
+        requireStrictBlocker(componentManifest, "generated-lazy", "flow-ipc-loadondemand-chunk-v1_11");
         requireStrictBlocker(componentManifest, "production-bundle", "flow-ipc-production-runtime-v1_10");
         requireEquals("flow-ipc-frontend-runtime-resolver-v1_10",
                 componentManifest.get("runtimeResolverContractVersion"),
@@ -223,6 +224,25 @@ public final class FlowClientResourceSmokeMain {
         requireEquals("loadondemand-api-installed-by-generated-imports-not-flow-client-triggered",
                 componentManifest.get("generatedLazyFailureLayer"),
                 "Generated/lazy failure layer");
+        requireEquals("flow-ipc-loadondemand-chunk-v1_11",
+                componentManifest.get("loadOnDemandChunkContractVersion"),
+                "Generated/lazy real UIDL loadOnDemand chunk contract version");
+        requireEquals("bootstrap-uidl-dependencies",
+                componentManifest.get("generatedLazyChunkExpressionSource"),
+                "Generated/lazy real UIDL expression source");
+        requireEquals("visible-flow-client-dependencyloader",
+                componentManifest.get("generatedLazyChunkTriggerOwner"),
+                "Generated/lazy real UIDL trigger owner");
+        requireEquals("vaadin-dev-bundle/webapp/VAADIN/build/generated-flow-imports-VW7hRaNw.js",
+                componentManifest.get("loadOnDemandChunkResolvedArtifactPath"),
+                "Generated/lazy real UIDL resolved artifact path");
+        requireEquals(Boolean.FALSE, componentManifest.get("generatedLazyChunkDiagnosticBridgeUsed"),
+                "Generated/lazy real UIDL diagnostic bridge flag");
+        requireEquals(Boolean.FALSE, componentManifest.get("generatedLazyChunkDirectImportProbeUsed"),
+                "Generated/lazy real UIDL direct import probe flag");
+        requireEquals("dev-bundle-generated-imports-loadondemand-no-op-no-chunk-file",
+                componentManifest.get("loadOnDemandChunkFailureLayer"),
+                "Generated/lazy real UIDL loadOnDemand blocker layer");
         requireEquals("flow-ipc-lazy-dependency-v1_10",
                 componentManifest.get("flowLazyDependencyVersion"),
                 "Flow lazy dependency version");
@@ -567,6 +587,22 @@ public final class FlowClientResourceSmokeMain {
                         generatedFlowImportsDevBundlePath)
                 || !Objects.equals(generatedFlowImportsDevBundleResponse.get("generatedLazyBlockerVersion"),
                         "flow-ipc-loadondemand-v1_9")
+                || !Objects.equals(generatedFlowImportsDevBundleResponse.get("loadOnDemandChunkContractVersion"),
+                        "flow-ipc-loadondemand-chunk-v1_11")
+                || !Objects.equals(generatedFlowImportsDevBundleResponse.get("generatedLazyChunkExpressionSource"),
+                        "bootstrap-uidl-dependencies")
+                || !Objects.equals(generatedFlowImportsDevBundleResponse.get("generatedLazyChunkTriggerOwner"),
+                        "visible-flow-client-dependencyloader")
+                || !Objects.equals(generatedFlowImportsDevBundleResponse.get("loadOnDemandChunkResolvedArtifactPath"),
+                        generatedFlowImportsDevBundlePath)
+                || !Objects.equals(generatedFlowImportsDevBundleResponse.get("loadOnDemandChunkBlockerVersion"),
+                        "flow-ipc-loadondemand-chunk-v1_11")
+                || !Objects.equals(generatedFlowImportsDevBundleResponse.get("loadOnDemandChunkFailureLayer"),
+                        "dev-bundle-generated-imports-loadondemand-no-op-no-chunk-file")
+                || !Boolean.FALSE.equals(
+                        generatedFlowImportsDevBundleResponse.get("generatedLazyChunkDiagnosticBridgeUsed"))
+                || !Boolean.FALSE.equals(
+                        generatedFlowImportsDevBundleResponse.get("generatedLazyChunkDirectImportProbeUsed"))
                 || !Objects.equals(generatedFlowImportsDevBundleResponse.get("failureLayer"),
                         "loadondemand-api-installed-by-generated-imports-not-flow-client-triggered")
                 || !Boolean.FALSE.equals(generatedFlowImportsDevBundleResponse.get("generatedLazyFlowClientTriggered"))
@@ -774,6 +810,7 @@ public final class FlowClientResourceSmokeMain {
         boolean themeStaticResourceObserved = false;
         boolean generatedLazyResourceObserved = false;
         boolean generatedLazyBundleChunkObserved = false;
+        boolean generatedLoadOnDemandChunkObserved = false;
         boolean devModePackageGraphObserved = false;
         boolean flowLazyDependencyObserved = false;
         boolean productionRuntimeArtifactObserved = false;
@@ -837,6 +874,17 @@ public final class FlowClientResourceSmokeMain {
                             metadata.get("generatedLazyTriggerSource"))
                     && Boolean.FALSE.equals(metadata.get("generatedLazyFlowClientTriggered"))
                     && Boolean.TRUE.equals(metadata.get("generatedLazyDiagnosticBridge"));
+            generatedLoadOnDemandChunkObserved = generatedLoadOnDemandChunkObserved
+                    || "generated-lazy".equals(artifactFamily)
+                    && "stage-and-import-generated-lazy-chunk-v1_8".equals(executionPolicy)
+                    && "flow-ipc-loadondemand-chunk-v1_11".equals(
+                            metadata.get("loadOnDemandChunkContractVersion"))
+                    && "bootstrap-uidl-dependencies".equals(metadata.get("generatedLazyChunkExpressionSource"))
+                    && "visible-flow-client-dependencyloader".equals(metadata.get("generatedLazyChunkTriggerOwner"))
+                    && "flow-ipc-loadondemand-chunk-v1_11".equals(
+                            metadata.get("loadOnDemandChunkBlockerVersion"))
+                    && Boolean.FALSE.equals(metadata.get("generatedLazyChunkDiagnosticBridgeUsed"))
+                    && Boolean.FALSE.equals(metadata.get("generatedLazyChunkDirectImportProbeUsed"));
             devModePackageGraphObserved = devModePackageGraphObserved
                     || "dev-mode-bundle".equals(artifactFamily)
                     && "verified-only-intentionally-not-executed".equals(executionPolicy)
@@ -864,7 +912,8 @@ public final class FlowClientResourceSmokeMain {
         if (!classpathResourceObserved || !legacyShimFallbackObserved || !devBundleEntryObserved
                 || !devBundleDependencyObserved || !productionBundleStatsObserved || !themeStaticResourceObserved
                 || !generatedLazyResourceObserved || !generatedLazyBundleChunkObserved || !devModePackageGraphObserved
-                || !flowLazyDependencyObserved || !productionRuntimeArtifactObserved) {
+                || !generatedLoadOnDemandChunkObserved || !flowLazyDependencyObserved
+                || !productionRuntimeArtifactObserved) {
             throw new IllegalStateException("Component frontend resource manifest is missing a v1.4 artifact family");
         }
     }

@@ -16,10 +16,9 @@ v0/v1 runtime 切片走向可产品化桌面框架的最终完成状态。
 - `docs/goal-1_8.md`：Generated/lazy frontend execution boundary，已完成。
 - `docs/goal-1_9.md`：Flow-client-triggered generated/lazy loading contract，已完成。
 - `docs/goal-1_10.md`：Flow lazy dependency and production bundle runtime slice，已完成。
+- `docs/goal-1_11.md`：Generated `Flow.loadOnDemand` chunk runtime path，已完成。
 
-当前已规划但尚未执行的阶段目标：
-
-- `docs/goal-1_11.md`：Generated `Flow.loadOnDemand` chunk runtime path，待执行。
+当前没有已规划但尚未执行的阶段目标。后续阶段应从长期未完成账本中继续拆分。
 
 后续阶段应继续以 `docs/goal-1_12.md`、`docs/goal-1_13.md` 等文件拆分，
 每个阶段只拿走本长期目标中的一个可评审切片。不要把本文件改写成短期任务清单；
@@ -43,7 +42,7 @@ v0/v1 runtime 切片走向可产品化桌面框架的最终完成状态。
 
 ## 当前基线
 
-截至 goal 1.10，仓库已经证明：
+截至 goal 1.11，仓库已经证明：
 
 - `dev-ipc` 可以启动 no-localhost Flow IPC runtime。
 - 真实 macOS Swift/AppKit/WKWebView 窗口可以运行 Flow IPC smoke app 和 framework
@@ -103,8 +102,21 @@ v0/v1 runtime 切片走向可产品化桌面框架的最终完成状态。
   stable module identity 和 `execution-attempt`。完整 production runtime ownership 仍是
   blocker，failure layer 是
   `production-runtime-ownership-not-yet-separated-from-focused-component-entry-imports`。
-- 完整 Flow-client-engine-triggered generated/lazy `Flow.loadOnDemand` path、production
-  bundle owned execution 和 dev-mode/Vite execution 仍是明确 blocker，不计入完成。
+- v1.11 已把 generated `Flow.loadOnDemand(chunkId)` 从 v1.9 diagnostic bridge 推进到真实
+  UIDL lazy expression path：host 从 bootstrap UIDL dependency 捕获
+  `return window.Vaadin.Flow.loadOnDemand('<chunkId>');`，可见 Flow client /
+  `DependencyLoader` 调用 `window.Vaadin.Flow.loadOnDemand(chunkId)` 时由 no-localhost bridge
+  转成 `purpose=generated-loadondemand-chunk-v1_11` 的 IPC resource request，映射到真实
+  `vaadin-dev-bundle/webapp/VAADIN/build/generated-flow-imports-VW7hRaNw.js` artifact，并以
+  stable resource-path module identity stage/import。trace 记录
+  `flow-ipc-loadondemand-chunk-v1_11`、`generatedLazyExpressionSource=bootstrap-uidl-dependencies`、
+  `loadOnDemandChunkTriggeredByFlowClient=true`、registry/mapping source、resolved artifact、
+  stage evidence 和精确 blocker
+  `failureLayer=dev-bundle-generated-imports-loadondemand-no-op-no-chunk-file`。这已经越过
+  v1.9 diagnostic bridge 和 v1.10 ordinary `LoadMode.LAZY` 层，但还不是完整 chunk-id ->
+  real chunk file / side-effect ownership parity。
+- 完整 generated/lazy chunk file registry、production bundle owned execution 和 dev-mode/Vite
+  execution 仍是明确 blocker，不计入最终完成。
 
 ## 最终完成标准
 
@@ -197,11 +209,11 @@ v0/v1 runtime 切片走向可产品化桌面框架的最终完成状态。
 
 以下项目仍需要后续阶段推进：
 
-- 基于 v1.9/v1.10 的 lazy/runtime blocker 结果，继续把完整
-  Flow-client-engine-triggered generated/lazy `Flow.loadOnDemand` path、production bundle
-  owned execution 和 dev-mode/Vite execution 从 partial/blocker 推进到真实可执行路径。
-- 完整 generated/lazy `Flow.loadOnDemand` execution，不再依赖 diagnostic bridge 或 direct
-  staged import 来安装/触发 API。
+- 基于 v1.11 的真实 UIDL `Flow.loadOnDemand(chunkId)` 结果，继续把 generated/lazy chunk id
+  映射到真实 chunk file、callback/side-effect ownership、production bundle owned execution
+  和 dev-mode/Vite execution 从 partial/blocker 推进到真实可执行路径。
+- 完整 generated/lazy `Flow.loadOnDemand` execution，不再停在 staged generated-flow-imports
+  no-op / missing chunk file blocker。
 - Production bundle owned runtime execution、chunk side-effect ownership 和 packaging-time
   staging。
 - Dev-mode/Vite graph execution 或可靠替代模式。
@@ -230,8 +242,8 @@ v0/v1 runtime 切片走向可产品化桌面框架的最终完成状态。
 
 当前建议的下一阶段应从以下方向中选一个可评审切片：
 
-- 完整 Flow-client-engine-triggered generated/lazy `Flow.loadOnDemand` contract，把 v1.9
-  的 diagnostic bridge / API registry blocker 替换为真实 Flow lazy path 或受支持 SPI。
+- Generated `Flow.loadOnDemand(chunkId)` chunk file registry / side-effect proof，把 v1.11
+  的 generated-flow-imports no-op blocker 拆到真实 chunk artifact 或受支持 SPI。
 - Production bundle owned runtime execution / packaging-time staging，把 v1.10 的
   staged execution attempt 推进到可运行 side-effect ownership。
 - Dev-mode/Vite execution 或可靠替代模式。

@@ -16,6 +16,8 @@ The current exception is `--require-flow-ipc-v1_6`. It preserves the narrowed Te
 
 `--require-flow-ipc-v1_10-lazy-dependency` and `--require-flow-ipc-v1_10-production-runtime` are delta gates. The first verifies the v1.10 Flow `LoadMode.LAZY` dependency path: a real Flow DependencyLoader-created lazy script request is intercepted by the no-localhost IPC resolver, staged as a Blob module and executed. The second verifies the production-bundle runtime registry path: the Vaadin dev-bundle stats graph selects the production `indexhtml` artifact and records a staged `execution-attempt` with blocker `flow-ipc-production-runtime-v1_10`. `--require-flow-ipc-v1_10` is cumulative: it requires the v1.9 baseline plus both v1.10 deltas.
 
+`--require-flow-ipc-v1_11-loadondemand-chunk` is a delta gate. It verifies the v1.11 generated `Flow.loadOnDemand(chunkId)` path: a real bootstrap UIDL lazy expression is observed, the visible Flow client triggers `window.Vaadin.Flow.loadOnDemand`, the host maps the requested chunk to the real generated-flow-imports artifact, stages/imports it over IPC and records either execution or the precise `flow-ipc-loadondemand-chunk-v1_11` blocker. `--require-flow-ipc-v1_11` is cumulative: it requires the v1.10 baseline plus this v1.11 delta.
+
 `--require-flow-ipc-v1_3-framework` is separate from the strict smoke-app gate. It verifies a developer-shaped app with ordinary Flow APIs, generic viewport promotion and desktop capability command/result evidence.
 
 ## In-process smoke harnesses
@@ -63,6 +65,7 @@ Some runtime code still emits diagnostic probes because the corresponding framew
 - The v1.9 generated/lazy diagnostic bridge: it calls the real `window.Vaadin.Flow.loadOnDemand` only after the real generated-flow-imports artifact installs it through direct staged import. It is traced as `frontendArtifactGeneratedLazyDiagnosticBridge=true` and does not count as a Flow-client-engine-triggered success.
 - The v1.10 Flow lazy dependency bridge: it intercepts the real Flow DependencyLoader's `LoadMode.LAZY` script element for `context://vatori-flow-ipc-lazy-v1_10.js`, resolves it over IPC and dispatches the load/error event back to the element. This counts only for the ordinary lazy dependency path, not for generated `Flow.loadOnDemand` chunk parity.
 - The v1.10 production runtime registry path: it stages the stats-selected production `indexhtml` artifact as an execution attempt and keeps the remaining ownership gap explicit as `flow-ipc-production-runtime-v1_10`.
+- The v1.11 generated loadOnDemand chunk bridge: it only counts chunk ids captured from real UIDL `Flow.loadOnDemand('<chunkId>')` expressions and triggered by the visible Flow client. It records chunk mapping/staging evidence and keeps the remaining chunk-file gap explicit as `flow-ipc-loadondemand-chunk-v1_11`.
 - The repository-local UIDL applier fallback for non-engine or failed-delivery diagnostics.
 
 These are acceptable only when the trace names the blocker or fallback explicitly. They should not be described as final runtime behavior, and successful future work should move stable checks toward trace gates, smoke commands or validation apps instead of growing hidden app-specific runtime branches.

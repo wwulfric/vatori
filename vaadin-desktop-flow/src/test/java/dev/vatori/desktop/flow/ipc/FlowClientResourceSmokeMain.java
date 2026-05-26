@@ -165,9 +165,15 @@ public final class FlowClientResourceSmokeMain {
                 "Component artifact families");
         requireListContains(componentManifest.get("artifactFamilies"), "generated-lazy",
                 "Component artifact families");
+        requireListContains(componentManifest.get("artifactFamilies"), "flow-lazy-dependency",
+                "Component artifact families");
         requireNoStrictBlocker(componentManifest, "npm-frontend");
         requireStrictBlocker(componentManifest, "dev-mode-bundle", "dev-mode-bundle-execution-unmapped");
         requireStrictBlocker(componentManifest, "generated-lazy", "generated-lazy-loadondemand-api-boundary-v1_9");
+        requireStrictBlocker(componentManifest, "production-bundle", "flow-ipc-production-runtime-v1_10");
+        requireEquals("flow-ipc-frontend-runtime-resolver-v1_10",
+                componentManifest.get("runtimeResolverContractVersion"),
+                "Runtime resolver contract version");
         requireEquals("flow-ipc-generated-lazy-resolver-v1_8",
                 componentManifest.get("generatedLazyResolverVersion"),
                 "Generated/lazy resolver version");
@@ -217,6 +223,34 @@ public final class FlowClientResourceSmokeMain {
         requireEquals("loadondemand-api-installed-by-generated-imports-not-flow-client-triggered",
                 componentManifest.get("generatedLazyFailureLayer"),
                 "Generated/lazy failure layer");
+        requireEquals("flow-ipc-lazy-dependency-v1_10",
+                componentManifest.get("flowLazyDependencyVersion"),
+                "Flow lazy dependency version");
+        requireEquals("flow-uidl-dependencyloader-loadmode-lazy-v1_10",
+                componentManifest.get("flowLazyDependencySource"),
+                "Flow lazy dependency source");
+        requireEquals("LoadMode.LAZY", componentManifest.get("flowLazyDependencyMode"),
+                "Flow lazy dependency mode");
+        requireEquals("context://vatori-flow-ipc-lazy-v1_10.js",
+                componentManifest.get("flowLazyDependencyExpression"),
+                "Flow lazy dependency expression");
+        requireEquals("vatori-flow-ipc-lazy-v1_10",
+                componentManifest.get("flowLazyDependencyChunkId"),
+                "Flow lazy dependency chunk id");
+        requireEquals("vatori-flow-ipc-lazy-v1_10.js",
+                componentManifest.get("flowLazyDependencyResolvedPath"),
+                "Flow lazy dependency resolved path");
+        requireEquals(Boolean.TRUE, componentManifest.get("flowLazyDependencyTriggeredByFlowClient"),
+                "Flow lazy dependency Flow-client trigger flag");
+        requireEquals("flow-ipc-production-runtime-v1_10",
+                componentManifest.get("productionBundleRuntimeVersion"),
+                "Production runtime version");
+        requireEquals("vaadin-dev-bundle-stats-runtime-registry-v1_10",
+                componentManifest.get("productionBundleRuntimeRegistrySource"),
+                "Production runtime registry source");
+        requireEquals("vaadin-dev-bundle/webapp/VAADIN/build/indexhtml-BfYYZi8S.js",
+                componentManifest.get("productionBundleRuntimeSelectedArtifact"),
+                "Production runtime selected artifact");
         requireComponentResourceMetadata(componentResources);
         String checkboxDevBundlePath = "META-INF/vatori/dev-bundle-entry/vaadin-checkbox.js";
         String selectDevBundlePath = "META-INF/vatori/dev-bundle-entry/vaadin-select.js";
@@ -230,8 +264,10 @@ public final class FlowClientResourceSmokeMain {
                 "vaadin-dev-bundle/webapp/VAADIN/build/generated-flow-imports-VW7hRaNw.js";
         String generatedFlowImportsMarkdownHelperPath =
                 "vaadin-dev-bundle/webapp/VAADIN/build/markdown-helpers-31I0A-hg.js";
+        String devBundleIndexHtmlPath = "vaadin-dev-bundle/webapp/VAADIN/build/indexhtml-BfYYZi8S.js";
         String devModePackageLockPath = "vaadin-dev-bundle/package-lock.json";
         String productionBundleStatsPath = "vaadin-dev-bundle/config/stats.json";
+        String flowLazyDependencyPath = "vatori-flow-ipc-lazy-v1_10.js";
         if (!resources.contains(bigDecimalPath)) {
             throw new IllegalStateException("Component frontend manifest is missing the BigDecimalField module");
         }
@@ -392,6 +428,34 @@ public final class FlowClientResourceSmokeMain {
                 || !statsText.contains("\"@vaadin/select\"")
                 || !statsText.contains("VAADIN/build/indexhtml-BfYYZi8S.js")) {
             throw new IllegalStateException("Production bundle stats graph body is missing Vaadin bundle evidence");
+        }
+        if (!Objects.equals(productionBundleStatsResponse.get("runtimeResolverContractVersion"),
+                "flow-ipc-frontend-runtime-resolver-v1_10")
+                || !Objects.equals(productionBundleStatsResponse.get("productionBundleRuntimeVersion"),
+                        "flow-ipc-production-runtime-v1_10")
+                || !Objects.equals(productionBundleStatsResponse.get("productionBundleRuntimeSelectedArtifact"),
+                        devBundleIndexHtmlPath)
+                || !Objects.equals(productionBundleStatsResponse.get("productionBundleRuntimeBlockerVersion"),
+                        "flow-ipc-production-runtime-v1_10")) {
+            throw new IllegalStateException("Production bundle stats graph is missing v1.10 runtime registry metadata");
+        }
+        Map<String, Object> productionRuntimeResponse = resources.response(devBundleIndexHtmlPath);
+        if (!Boolean.TRUE.equals(productionRuntimeResponse.get("productionBundleRuntimeArtifact"))
+                || !Objects.equals(productionRuntimeResponse.get("runtimeResolverContractVersion"),
+                        "flow-ipc-frontend-runtime-resolver-v1_10")
+                || !Objects.equals(productionRuntimeResponse.get("logicalRequestId"),
+                        "production-runtime:indexhtml:v1_10")
+                || !Objects.equals(productionRuntimeResponse.get("productionBundleRuntimeVersion"),
+                        "flow-ipc-production-runtime-v1_10")
+                || !Objects.equals(productionRuntimeResponse.get("productionBundleRuntimeRegistrySource"),
+                        "vaadin-dev-bundle-stats-runtime-registry-v1_10")
+                || !Objects.equals(productionRuntimeResponse.get("productionBundleRuntimeSelectedArtifact"),
+                        devBundleIndexHtmlPath)
+                || !Objects.equals(productionRuntimeResponse.get("productionBundleRuntimeBlockerVersion"),
+                        "flow-ipc-production-runtime-v1_10")
+                || !Objects.equals(productionRuntimeResponse.get("productionBundleRuntimeExecutionPolicy"),
+                        "stage-execution-attempt-production-bundle-runtime-v1_10")) {
+            throw new IllegalStateException("Production bundle runtime artifact is missing v1.10 metadata");
         }
         if (!resources.contains(checkboxDevBundlePath)) {
             throw new IllegalStateException("Component frontend manifest is missing the checkbox dev-bundle module");
@@ -562,6 +626,39 @@ public final class FlowClientResourceSmokeMain {
                 || !markdownHelperText.contains("export {\n  renderMarkdownToElement\n};")) {
             throw new IllegalStateException("Generated Flow imports markdown helper body is missing Vaadin helper exports");
         }
+        if (!resources.contains(flowLazyDependencyPath)) {
+            throw new IllegalStateException("Component frontend manifest is missing the v1.10 Flow lazy dependency");
+        }
+        Map<String, Object> flowLazyDependencyResponse = resources.response(flowLazyDependencyPath);
+        if (!Objects.equals(flowLazyDependencyResponse.get("lookupKind"),
+                "Flow-lazy-dependency-resource-v1_10")
+                || !Boolean.TRUE.equals(flowLazyDependencyResponse.get("flowLazyDependencyResource"))
+                || !Objects.equals(flowLazyDependencyResponse.get("runtimeResolverContractVersion"),
+                        "flow-ipc-frontend-runtime-resolver-v1_10")
+                || !Objects.equals(flowLazyDependencyResponse.get("artifactFamily"), "flow-lazy-dependency")
+                || !Objects.equals(flowLazyDependencyResponse.get("executionPolicy"),
+                        "execute-after-flow-dependencyloader-trigger-v1_10")
+                || !Objects.equals(flowLazyDependencyResponse.get("lazyDependencyVersion"),
+                        "flow-ipc-lazy-dependency-v1_10")
+                || !Objects.equals(flowLazyDependencyResponse.get("lazyDependencySource"),
+                        "flow-uidl-dependencyloader-loadmode-lazy-v1_10")
+                || !Objects.equals(flowLazyDependencyResponse.get("lazyDependencyMode"), "LoadMode.LAZY")
+                || !Objects.equals(flowLazyDependencyResponse.get("lazyDependencyExpression"),
+                        "context://vatori-flow-ipc-lazy-v1_10.js")
+                || !Objects.equals(flowLazyDependencyResponse.get("lazyDependencyResolvedPath"),
+                        flowLazyDependencyPath)
+                || !Objects.equals(flowLazyDependencyResponse.get("lazyDependencyTriggerOwner"),
+                        "visible-flow-client-dependencyloader")
+                || !Boolean.TRUE.equals(flowLazyDependencyResponse.get("lazyDependencyTriggeredByFlowClient"))
+                || !Boolean.FALSE.equals(flowLazyDependencyResponse.get("shim"))) {
+            throw new IllegalStateException("Flow lazy dependency resource is missing v1.10 metadata");
+        }
+        Object flowLazyDependencyBody = flowLazyDependencyResponse.get("body");
+        if (!(flowLazyDependencyBody instanceof String lazyDependencyText)
+                || !lazyDependencyText.contains("VaadinDesktopIpcLazyDependencyProbe")
+                || !lazyDependencyText.contains("flow-uidl-dependencyloader-loadmode-lazy-v1_10")) {
+            throw new IllegalStateException("Flow lazy dependency body is missing runtime probe evidence");
+        }
         if (!resources.contains(devModePackageLockPath)) {
             throw new IllegalStateException("Component frontend manifest is missing the dev-mode package graph");
         }
@@ -678,6 +775,8 @@ public final class FlowClientResourceSmokeMain {
         boolean generatedLazyResourceObserved = false;
         boolean generatedLazyBundleChunkObserved = false;
         boolean devModePackageGraphObserved = false;
+        boolean flowLazyDependencyObserved = false;
+        boolean productionRuntimeArtifactObserved = false;
         for (Object entry : componentResources) {
             if (!(entry instanceof Map<?, ?> metadata)) {
                 throw new IllegalStateException("Component frontend resource manifest contains a non-object entry");
@@ -743,10 +842,29 @@ public final class FlowClientResourceSmokeMain {
                     && "verified-only-intentionally-not-executed".equals(executionPolicy)
                     && "available".equals(metadata.get("artifactStatus"))
                     && Boolean.TRUE.equals(metadata.get("devModePackageGraph"));
+            flowLazyDependencyObserved = flowLazyDependencyObserved
+                    || "flow-lazy-dependency".equals(artifactFamily)
+                    && "execute-after-flow-dependencyloader-trigger-v1_10".equals(executionPolicy)
+                    && "available".equals(metadata.get("artifactStatus"))
+                    && Boolean.TRUE.equals(metadata.get("flowLazyDependencyResource"))
+                    && "flow-ipc-frontend-runtime-resolver-v1_10".equals(
+                            metadata.get("runtimeResolverContractVersion"))
+                    && "flow-ipc-lazy-dependency-v1_10".equals(metadata.get("lazyDependencyVersion"))
+                    && Boolean.TRUE.equals(metadata.get("lazyDependencyTriggeredByFlowClient"));
+            productionRuntimeArtifactObserved = productionRuntimeArtifactObserved
+                    || "production-bundle".equals(artifactFamily)
+                    && Boolean.TRUE.equals(metadata.get("productionBundleRuntimeArtifact"))
+                    && "flow-ipc-frontend-runtime-resolver-v1_10".equals(
+                            metadata.get("runtimeResolverContractVersion"))
+                    && "flow-ipc-production-runtime-v1_10".equals(
+                            metadata.get("productionBundleRuntimeVersion"))
+                    && "stage-execution-attempt-production-bundle-runtime-v1_10".equals(
+                            metadata.get("productionBundleRuntimeExecutionPolicy"));
         }
         if (!classpathResourceObserved || !legacyShimFallbackObserved || !devBundleEntryObserved
                 || !devBundleDependencyObserved || !productionBundleStatsObserved || !themeStaticResourceObserved
-                || !generatedLazyResourceObserved || !generatedLazyBundleChunkObserved || !devModePackageGraphObserved) {
+                || !generatedLazyResourceObserved || !generatedLazyBundleChunkObserved || !devModePackageGraphObserved
+                || !flowLazyDependencyObserved || !productionRuntimeArtifactObserved) {
             throw new IllegalStateException("Component frontend resource manifest is missing a v1.4 artifact family");
         }
     }

@@ -49,6 +49,9 @@ public final class DesktopTraceInspector {
         FLOW_IPC_V1_8("--require-flow-ipc-v1_8"),
         FLOW_IPC_V1_9_LOADONDEMAND("--require-flow-ipc-v1_9-loadondemand"),
         FLOW_IPC_V1_9("--require-flow-ipc-v1_9"),
+        FLOW_IPC_V1_10_LAZY_DEPENDENCY("--require-flow-ipc-v1_10-lazy-dependency"),
+        FLOW_IPC_V1_10_PRODUCTION_RUNTIME("--require-flow-ipc-v1_10-production-runtime"),
+        FLOW_IPC_V1_10("--require-flow-ipc-v1_10"),
         FLOW_IPC_V1_3_FRAMEWORK("--require-flow-ipc-v1_3-framework");
 
         private final String option;
@@ -99,6 +102,13 @@ public final class DesktopTraceInspector {
                 case FLOW_IPC_V1_9 -> EnumSet.of(FLOW_IPC_V1, FLOW_IPC_V1_1, FLOW_IPC_V1_2,
                         FLOW_IPC_V1_3, FLOW_IPC_V1_4, FLOW_IPC_V1_5, FLOW_IPC_V1_7,
                         FLOW_IPC_V1_8, FLOW_IPC_V1_9_LOADONDEMAND, FLOW_IPC_V1_9);
+                case FLOW_IPC_V1_10_LAZY_DEPENDENCY -> EnumSet.of(FLOW_IPC_V1_10_LAZY_DEPENDENCY);
+                case FLOW_IPC_V1_10_PRODUCTION_RUNTIME -> EnumSet.of(FLOW_IPC_V1_10_PRODUCTION_RUNTIME);
+                case FLOW_IPC_V1_10 -> EnumSet.of(FLOW_IPC_V1, FLOW_IPC_V1_1, FLOW_IPC_V1_2,
+                        FLOW_IPC_V1_3, FLOW_IPC_V1_4, FLOW_IPC_V1_5, FLOW_IPC_V1_7,
+                        FLOW_IPC_V1_8, FLOW_IPC_V1_9_LOADONDEMAND, FLOW_IPC_V1_9,
+                        FLOW_IPC_V1_10_LAZY_DEPENDENCY, FLOW_IPC_V1_10_PRODUCTION_RUNTIME,
+                        FLOW_IPC_V1_10);
                 case FLOW_IPC_V1_3_FRAMEWORK -> EnumSet.of(FLOW_IPC_V1_3_FRAMEWORK);
             };
         }
@@ -116,6 +126,9 @@ public final class DesktopTraceInspector {
                 case FLOW_IPC_V1_8 -> summary.hasRequiredFlowIpcV1_8Types();
                 case FLOW_IPC_V1_9_LOADONDEMAND -> summary.hasRequiredFlowIpcV1_9LoadOnDemandTypes();
                 case FLOW_IPC_V1_9 -> summary.hasRequiredFlowIpcV1_9Types();
+                case FLOW_IPC_V1_10_LAZY_DEPENDENCY -> summary.hasRequiredFlowIpcV1_10LazyDependencyTypes();
+                case FLOW_IPC_V1_10_PRODUCTION_RUNTIME -> summary.hasRequiredFlowIpcV1_10ProductionRuntimeTypes();
+                case FLOW_IPC_V1_10 -> summary.hasRequiredFlowIpcV1_10Types();
                 case FLOW_IPC_V1_3_FRAMEWORK -> summary.hasRequiredFlowIpcV1_3FrameworkTypes();
             };
         }
@@ -606,6 +619,40 @@ public final class DesktopTraceInspector {
                 summary.frontendGeneratedLazyV19ManifestObserved = true;
             }
             if (line.contains("\"type\":\"bootstrapResponse\"")
+                    && line.contains("\"componentFrontendResources\"")
+                    && containsStringField(line, "runtimeResolverContractVersion",
+                            "flow-ipc-frontend-runtime-resolver-v1_10")
+                    && line.contains("\"logicalRequestId\"")
+                    && line.contains("\"pathMapping\"")) {
+                summary.frontendRuntimeResolverV110ManifestObserved = true;
+            }
+            if (line.contains("\"type\":\"bootstrapResponse\"")
+                    && line.contains("\"componentFrontendResources\"")
+                    && containsStringField(line, "flowLazyDependencyVersion",
+                            "flow-ipc-lazy-dependency-v1_10")
+                    && containsStringField(line, "flowLazyDependencySource",
+                            "flow-uidl-dependencyloader-loadmode-lazy-v1_10")
+                    && containsStringField(line, "flowLazyDependencyMode", "LoadMode.LAZY")
+                    && containsStringField(line, "flowLazyDependencyExpression",
+                            "context://vatori-flow-ipc-lazy-v1_10.js")
+                    && containsStringField(line, "flowLazyDependencyResolvedPath",
+                            "vatori-flow-ipc-lazy-v1_10.js")
+                    && containsLiteralField(line, "flowLazyDependencyTriggeredByFlowClient", "true")) {
+                summary.flowLazyDependencyV110ManifestObserved = true;
+            }
+            if (line.contains("\"type\":\"bootstrapResponse\"")
+                    && line.contains("\"componentFrontendResources\"")
+                    && containsStringField(line, "productionBundleRuntimeVersion",
+                            "flow-ipc-production-runtime-v1_10")
+                    && containsStringField(line, "productionBundleRuntimeRegistrySource",
+                            "vaadin-dev-bundle-stats-runtime-registry-v1_10")
+                    && containsStringField(line, "productionBundleRuntimeSelectedArtifact",
+                            "vaadin-dev-bundle/webapp/VAADIN/build/indexhtml-BfYYZi8S.js")
+                    && containsStringField(line, "productionBundleRuntimeBlockerVersion",
+                            "flow-ipc-production-runtime-v1_10")) {
+                summary.productionRuntimeV110ManifestObserved = true;
+            }
+            if (line.contains("\"type\":\"bootstrapResponse\"")
                     && line.contains("\"artifactFamilies\"")
                     && line.contains("flow-client-classpath")
                     && line.contains("vaadin-component-classpath-frontend")
@@ -979,6 +1026,36 @@ public final class DesktopTraceInspector {
                     && containsLiteralField(line, "generatedLazyDiagnosticBridge", "true")) {
                 summary.frontendGeneratedLazyV19RequestObserved = true;
             }
+            if (line.contains("\"type\":\"resourceRequest\"")
+                    && line.contains("\"purpose\":\"flow-lazy-dependency-loader\"")
+                    && line.contains("\"lookupKind\":\"Flow-lazy-dependency-resource-v1_10\"")
+                    && containsStringField(line, "runtimeResolverContractVersion",
+                            "flow-ipc-frontend-runtime-resolver-v1_10")
+                    && containsStringField(line, "lazyDependencyVersion",
+                            "flow-ipc-lazy-dependency-v1_10")
+                    && containsStringField(line, "lazyDependencySource",
+                            "flow-uidl-dependencyloader-loadmode-lazy-v1_10")
+                    && containsStringField(line, "lazyDependencyMode", "LoadMode.LAZY")
+                    && containsStringField(line, "lazyDependencyExpression",
+                            "context://vatori-flow-ipc-lazy-v1_10.js")
+                    && containsStringField(line, "lazyDependencyResolvedPath",
+                            "vatori-flow-ipc-lazy-v1_10.js")
+                    && containsLiteralField(line, "lazyDependencyTriggeredByFlowClient", "true")
+                    && containsPath(line, "vatori-flow-ipc-lazy-v1_10.js")) {
+                summary.flowLazyDependencyV110RequestObserved = true;
+            }
+            if (line.contains("\"type\":\"resourceRequest\"")
+                    && line.contains("\"purpose\":\"vaadin-web-component-resource-probe\"")
+                    && containsPath(line, "vaadin-dev-bundle/webapp/VAADIN/build/indexhtml-BfYYZi8S.js")
+                    && containsLiteralField(line, "productionBundleRuntimeArtifact", "true")
+                    && containsStringField(line, "productionBundleRuntimeVersion",
+                            "flow-ipc-production-runtime-v1_10")
+                    && containsStringField(line, "productionBundleRuntimeRegistrySource",
+                            "vaadin-dev-bundle-stats-runtime-registry-v1_10")
+                    && containsStringField(line, "productionBundleRuntimeSelectedArtifact",
+                            "vaadin-dev-bundle/webapp/VAADIN/build/indexhtml-BfYYZi8S.js")) {
+                summary.productionRuntimeV110RequestObserved = true;
+            }
             if (line.contains("\"type\":\"resourceStage\"")
                     && line.contains("\"artifactFamily\":\"generated-lazy\"")
                     && containsPath(line, "vaadin-dev-bundle/webapp/VAADIN/build/markdown-helpers-31I0A-hg.js")
@@ -1028,6 +1105,39 @@ public final class DesktopTraceInspector {
                             || line.contains("\"executionStatus\":\"executed\"")
                             || line.contains("\"executionStatus\":\"strict-blocker\""))) {
                 summary.frontendGeneratedLazyV19StageObserved = true;
+            }
+            if (line.contains("\"type\":\"resourceStage\"")
+                    && line.contains("\"artifactFamily\":\"flow-lazy-dependency\"")
+                    && containsPath(line, "vatori-flow-ipc-lazy-v1_10.js")
+                    && containsStringField(line, "runtimeResolverContractVersion",
+                            "flow-ipc-frontend-runtime-resolver-v1_10")
+                    && containsStringField(line, "lazyDependencyVersion",
+                            "flow-ipc-lazy-dependency-v1_10")
+                    && containsStringField(line, "lazyDependencySource",
+                            "flow-uidl-dependencyloader-loadmode-lazy-v1_10")
+                    && containsStringField(line, "lazyDependencyMode", "LoadMode.LAZY")
+                    && containsLiteralField(line, "lazyDependencyTriggeredByFlowClient", "true")
+                    && line.contains("\"executionStatus\":\"executed\"")) {
+                summary.flowLazyDependencyV110StageObserved = true;
+            }
+            if (line.contains("\"type\":\"resourceStage\"")
+                    && line.contains("\"artifactFamily\":\"production-bundle\"")
+                    && containsPath(line, "vaadin-dev-bundle/webapp/VAADIN/build/indexhtml-BfYYZi8S.js")
+                    && containsLiteralField(line, "productionBundleRuntimeArtifact", "true")
+                    && containsStringField(line, "runtimeResolverContractVersion",
+                            "flow-ipc-frontend-runtime-resolver-v1_10")
+                    && containsStringField(line, "productionBundleRuntimeVersion",
+                            "flow-ipc-production-runtime-v1_10")
+                    && containsStringField(line, "productionBundleRuntimeRegistrySource",
+                            "vaadin-dev-bundle-stats-runtime-registry-v1_10")
+                    && containsStringField(line, "productionBundleRuntimeSelectedArtifact",
+                            "vaadin-dev-bundle/webapp/VAADIN/build/indexhtml-BfYYZi8S.js")
+                    && containsStringField(line, "productionBundleRuntimeBlockerVersion",
+                            "flow-ipc-production-runtime-v1_10")
+                    && (line.contains("\"executionStatus\":\"execution-attempt\"")
+                            || line.contains("\"executionStatus\":\"executed\"")
+                            || line.contains("\"executionStatus\":\"execution-failed\""))) {
+                summary.productionRuntimeV110StageObserved = true;
             }
             if (line.contains("\"type\":\"webview.dom\"")
                     && containsStringField(line, "frontendStagingResolverVersion", "flow-ipc-resource-staging-v1_5")
@@ -1145,6 +1255,48 @@ public final class DesktopTraceInspector {
                     && (line.contains("diagnostic-loadondemand-call")
                             || line.contains("diagnostic-direct-import-required"))) {
                 summary.frontendGeneratedLazyV19DomObserved = true;
+            }
+            if (line.contains("\"type\":\"webview.dom\"")
+                    && containsStringField(line, "frontendRuntimeResolverContractVersion",
+                            "flow-ipc-frontend-runtime-resolver-v1_10")
+                    && line.contains("frontendRuntimeResolverLogicalRequestIds")
+                    && line.contains("flow-lazy-dependency:v1_10")
+                    && line.contains("production-runtime:indexhtml:v1_10")) {
+                summary.frontendRuntimeResolverV110ManifestObserved = true;
+            }
+            if (line.contains("\"type\":\"webview.dom\"")
+                    && containsLiteralField(line, "flowLazyDependencyObserved", "true")
+                    && containsLiteralField(line, "flowLazyDependencyRequested", "true")
+                    && containsLiteralField(line, "flowLazyDependencyResponse", "true")
+                    && containsLiteralField(line, "flowLazyDependencyStageObserved", "true")
+                    && containsLiteralField(line, "flowLazyDependencyExecuted", "true")
+                    && containsStringField(line, "flowLazyDependencyVersion",
+                            "flow-ipc-lazy-dependency-v1_10")
+                    && containsStringField(line, "flowLazyDependencySource",
+                            "flow-uidl-dependencyloader-loadmode-lazy-v1_10")
+                    && containsStringField(line, "flowLazyDependencyMode", "LoadMode.LAZY")
+                    && containsStringField(line, "flowLazyDependencyExpression",
+                            "context://vatori-flow-ipc-lazy-v1_10.js")
+                    && containsStringField(line, "flowLazyDependencyResolvedPath",
+                            "vatori-flow-ipc-lazy-v1_10.js")
+                    && containsLiteralField(line, "flowLazyDependencyTriggeredByFlowClient", "true")
+                    && line.contains("executed:vatori-flow-ipc-lazy-v1_10.js")) {
+                summary.flowLazyDependencyV110DomObserved = true;
+            }
+            if (line.contains("\"type\":\"webview.dom\"")
+                    && containsLiteralField(line, "frontendArtifactProductionBundleRuntimeObserved", "true")
+                    && containsLiteralField(line, "frontendArtifactProductionBundleRuntimeStageAttempted", "true")
+                    && containsLiteralField(line, "frontendArtifactProductionBundleRuntimeBlocker", "true")
+                    && containsStringField(line, "frontendArtifactProductionBundleRuntimeVersion",
+                            "flow-ipc-production-runtime-v1_10")
+                    && containsStringField(line, "frontendArtifactProductionBundleRuntimeRegistrySource",
+                            "vaadin-dev-bundle-stats-runtime-registry-v1_10")
+                    && containsStringField(line, "frontendArtifactProductionBundleRuntimeSelectedArtifact",
+                            "vaadin-dev-bundle/webapp/VAADIN/build/indexhtml-BfYYZi8S.js")
+                    && containsStringField(line, "frontendArtifactProductionBundleRuntimeFailureLayer",
+                            "production-runtime-ownership-not-yet-separated-from-focused-component-entry-imports")
+                    && line.contains("execution-attempt:vaadin-dev-bundle/webapp/VAADIN/build/indexhtml-BfYYZi8S.js")) {
+                summary.productionRuntimeV110DomObserved = true;
             }
             if (line.contains("\"type\":\"resourceRequest\"")
                     && line.contains("\"purpose\":\"vaadin-web-component-resource-probe\"")
@@ -1861,6 +2013,15 @@ public final class DesktopTraceInspector {
         private boolean frontendGeneratedLazyV19RequestObserved;
         private boolean frontendGeneratedLazyV19StageObserved;
         private boolean frontendGeneratedLazyV19DomObserved;
+        private boolean frontendRuntimeResolverV110ManifestObserved;
+        private boolean flowLazyDependencyV110ManifestObserved;
+        private boolean flowLazyDependencyV110RequestObserved;
+        private boolean flowLazyDependencyV110StageObserved;
+        private boolean flowLazyDependencyV110DomObserved;
+        private boolean productionRuntimeV110ManifestObserved;
+        private boolean productionRuntimeV110RequestObserved;
+        private boolean productionRuntimeV110StageObserved;
+        private boolean productionRuntimeV110DomObserved;
 
         public boolean hasRequiredFlowIpcTypes() {
             return types.keySet().containsAll(FLOW_IPC_REQUIRED_TYPES)
@@ -2027,6 +2188,28 @@ public final class DesktopTraceInspector {
         public boolean hasRequiredFlowIpcV1_9Types() {
             return hasRequiredFlowIpcV1_8Types()
                     && hasRequiredFlowIpcV1_9LoadOnDemandTypes();
+        }
+
+        public boolean hasRequiredFlowIpcV1_10LazyDependencyTypes() {
+            return frontendRuntimeResolverV110ManifestObserved
+                    && flowLazyDependencyV110ManifestObserved
+                    && flowLazyDependencyV110RequestObserved
+                    && flowLazyDependencyV110StageObserved
+                    && flowLazyDependencyV110DomObserved;
+        }
+
+        public boolean hasRequiredFlowIpcV1_10ProductionRuntimeTypes() {
+            return frontendRuntimeResolverV110ManifestObserved
+                    && productionRuntimeV110ManifestObserved
+                    && productionRuntimeV110RequestObserved
+                    && productionRuntimeV110StageObserved
+                    && productionRuntimeV110DomObserved;
+        }
+
+        public boolean hasRequiredFlowIpcV1_10Types() {
+            return hasRequiredFlowIpcV1_9Types()
+                    && hasRequiredFlowIpcV1_10LazyDependencyTypes()
+                    && hasRequiredFlowIpcV1_10ProductionRuntimeTypes();
         }
 
         public boolean hasRequiredFlowIpcV1_3FrameworkTypes() {
@@ -2294,6 +2477,24 @@ public final class DesktopTraceInspector {
                     + frontendGeneratedLazyV19StageObserved);
             System.out.println("Flow IPC v1.9 loadOnDemand DOM observed: "
                     + frontendGeneratedLazyV19DomObserved);
+            System.out.println("Flow IPC v1.10 runtime resolver manifest observed: "
+                    + frontendRuntimeResolverV110ManifestObserved);
+            System.out.println("Flow IPC v1.10 lazy dependency manifest observed: "
+                    + flowLazyDependencyV110ManifestObserved);
+            System.out.println("Flow IPC v1.10 lazy dependency request observed: "
+                    + flowLazyDependencyV110RequestObserved);
+            System.out.println("Flow IPC v1.10 lazy dependency stage observed: "
+                    + flowLazyDependencyV110StageObserved);
+            System.out.println("Flow IPC v1.10 lazy dependency DOM observed: "
+                    + flowLazyDependencyV110DomObserved);
+            System.out.println("Flow IPC v1.10 production runtime manifest observed: "
+                    + productionRuntimeV110ManifestObserved);
+            System.out.println("Flow IPC v1.10 production runtime request observed: "
+                    + productionRuntimeV110RequestObserved);
+            System.out.println("Flow IPC v1.10 production runtime stage observed: "
+                    + productionRuntimeV110StageObserved);
+            System.out.println("Flow IPC v1.10 production runtime DOM observed: "
+                    + productionRuntimeV110DomObserved);
             System.out.println("Flow IPC v1.6 TextField graph manifest observed: "
                     + frontendTextFieldV16ManifestObserved);
             System.out.println("Flow IPC v1.6 TextField graph request observed: "

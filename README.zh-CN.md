@@ -99,6 +99,8 @@ bash bin/flow-client-resource-smoke
 
 这些命令会在进程内构造一个最小 desktop-shaped `VaadinSession` / `UI`。第一个命令验证 Vaadin 的真实 `UidlWriter` 会发出 UIDL `changes`、`syncId` 和 bootstrap `Vaadin-Security-Key`；第二个命令把真实 Flow event RPC body 通过 `UidlRequestHandler` / `ServerRpcHandler` 发送，验证 click listener UIDL patch，并确认无效 Flow IPC `csrfToken` / security key、过期 `syncId` 和乱序 `clientId` 会在 dispatch 前被拒绝。第三个命令验证无效 Flow IPC envelope `sessionId` / `uiId` 会在 event handling 前被拒绝。第四个命令验证 runtime 可以读取并响应每一个 advertised Vaadin `flow-client` classpath resource，包括 `FlowBootstrap.js`、`FlowClient.js`、`Flow.js`、`index.js`、`compile.properties` 和生成的 GWT client bundle。
 
+预期诊断输出：这些 smoke 命令里的 `SLF4J(W): No SLF4J providers` 是无害警告。UIDL RPC 和 scope smoke 会故意发送无效 token、过期 ID 和无效 scope；如果输出 `invalid csrfToken rejected`、`invalid securityKey rejected`、`stale syncId rejected`、`out-of-order clientId rejected` 或 `invalid Flow IPC sessionId/uiId rejected`，表示负向断言通过。无人值守 `dev-ipc` 验证里，`VAADIN_DESKTOP_FLOW_IPC_AUTO_ERROR=1` 会故意发出一条 `FLOW_IPC_CLIENT_ERROR ... webviewVerificationProbe` trace；是否成功以进程退出码和对应 `flow-ipc-trace-inspect` gate 为准。普通 `dev`、`dev-swift` 和 `dev-ipc` 命令是交互式桌面运行，会一直保持到窗口或应用关闭；需要可重复 smoke 验证时，请使用上面的 auto-shutdown 形式。
+
 在 macOS 上，原始 `dev` 命令默认仍会打开原生 WKWebView desktop window。该路径现在是 macOS fallback / compatibility host。
 
 Host 选择：

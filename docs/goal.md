@@ -19,9 +19,9 @@ v0/v1 runtime 切片走向可产品化桌面框架的最终完成状态。
 
 当前已规划但尚未执行的阶段目标：
 
-- 暂无。下一阶段应基于本文件的长期未完成账本另行制定。
+- `docs/goal-1_11.md`：Generated `Flow.loadOnDemand` chunk runtime path，待执行。
 
-后续阶段应继续以 `docs/goal-1_11.md`、`docs/goal-1_12.md` 等文件拆分，
+后续阶段应继续以 `docs/goal-1_12.md`、`docs/goal-1_13.md` 等文件拆分，
 每个阶段只拿走本长期目标中的一个可评审切片。不要把本文件改写成短期任务清单；
 它是长期北极星和完成度账本。
 

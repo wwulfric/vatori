@@ -56,6 +56,7 @@ case "$COMMAND" in
     SWIFT_HOST_CONTENTS="$SWIFT_HOST_APP/Contents"
     SWIFT_HOST_MACOS="$SWIFT_HOST_CONTENTS/MacOS"
     SWIFT_HOST_EXE="$SWIFT_HOST_MACOS/VaadinDesktopHost"
+    SWIFT_HOST_BUNDLE_ID="dev.vatori.desktop.host.swift"
     SWIFT_MODULE_CACHE="$ROOT/.build/clang-module-cache"
     MVN_EXE="$(command -v mvn)"
     mkdir -p "$SWIFT_HOST_MACOS"
@@ -137,25 +138,58 @@ PLIST
     echo "  stderr: $SWIFT_HOST_STDERR"
     tail -n +1 -f "$SWIFT_HOST_STDOUT" "$SWIFT_HOST_STDERR" &
     TAIL_PID=$!
-    trap 'kill "$TAIL_PID" 2>/dev/null || true' EXIT
-    if [[ "$OPEN_BACKGROUND" == "1" ]]; then
-      open -n -W -g -o "$SWIFT_HOST_STDOUT" --stderr "$SWIFT_HOST_STDERR" "${OPEN_ENV_ARGS[@]}" "$SWIFT_HOST_APP" --args \
-        --module "$MODULE" \
-        --repo-root "$ROOT" \
-        --maven-repo "$MAVEN_REPO" \
-        --maven-executable "$MVN_EXE" \
-        --transport "$SWIFT_TRANSPORT"
-    else
-      open -n -W -o "$SWIFT_HOST_STDOUT" --stderr "$SWIFT_HOST_STDERR" "${OPEN_ENV_ARGS[@]}" "$SWIFT_HOST_APP" --args \
-        --module "$MODULE" \
-        --repo-root "$ROOT" \
-        --maven-repo "$MAVEN_REPO" \
-        --maven-executable "$MVN_EXE" \
-        --transport "$SWIFT_TRANSPORT"
-    fi
+    cleanup_tail() {
+      if [[ -n "${TAIL_PID:-}" ]]; then
+        kill "$TAIL_PID" 2>/dev/null || true
+        wait "$TAIL_PID" 2>/dev/null || true
+        TAIL_PID=""
+      fi
+    }
+    request_swift_host_shutdown() {
+      if command -v osascript >/dev/null 2>&1; then
+        osascript -e "tell application id \"$SWIFT_HOST_BUNDLE_ID\" to quit" >/dev/null 2>&1 || true
+      fi
+      if command -v pgrep >/dev/null 2>&1; then
+        for _ in 1 2 3 4 5; do
+          pgrep -f "$SWIFT_HOST_EXE" >/dev/null 2>&1 || return 0
+          sleep 0.2
+        done
+      fi
+      if command -v pkill >/dev/null 2>&1; then
+        pkill -f "$SWIFT_HOST_EXE" >/dev/null 2>&1 || true
+      fi
+    }
+    handle_swift_host_interrupt() {
+      trap - INT TERM
+      request_swift_host_shutdown
+      cleanup_tail
+      exit 130
+    }
+    run_swift_host_open() {
+      if [[ "$OPEN_BACKGROUND" == "1" ]]; then
+        open -n -W -g -o "$SWIFT_HOST_STDOUT" --stderr "$SWIFT_HOST_STDERR" "${OPEN_ENV_ARGS[@]}" "$SWIFT_HOST_APP" --args \
+          --module "$MODULE" \
+          --repo-root "$ROOT" \
+          --maven-repo "$MAVEN_REPO" \
+          --maven-executable "$MVN_EXE" \
+          --transport "$SWIFT_TRANSPORT"
+      else
+        open -n -W -o "$SWIFT_HOST_STDOUT" --stderr "$SWIFT_HOST_STDERR" "${OPEN_ENV_ARGS[@]}" "$SWIFT_HOST_APP" --args \
+          --module "$MODULE" \
+          --repo-root "$ROOT" \
+          --maven-repo "$MAVEN_REPO" \
+          --maven-executable "$MVN_EXE" \
+          --transport "$SWIFT_TRANSPORT"
+      fi
+    }
+    trap cleanup_tail EXIT
+    trap handle_swift_host_interrupt INT TERM
+    set +e
+    run_swift_host_open
     STATUS=$?
-    kill "$TAIL_PID" 2>/dev/null || true
-    wait "$TAIL_PID" 2>/dev/null || true
+    set -e
+    cleanup_tail
+    trap - EXIT INT TERM
     exit "$STATUS"
     ;;
   package)

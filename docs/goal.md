@@ -18,9 +18,11 @@ v0/v1 runtime 切片走向可产品化桌面框架的最终完成状态。
 - `docs/goal-1_10.md`：Flow lazy dependency and production bundle runtime slice，已完成。
 - `docs/goal-1_11.md`：Generated `Flow.loadOnDemand` chunk runtime path，已完成。
 
-当前没有已规划但尚未执行的阶段目标。后续阶段应从长期未完成账本中继续拆分。
+当前已规划但尚未执行的阶段目标：
 
-后续阶段应继续以 `docs/goal-1_12.md`、`docs/goal-1_13.md` 等文件拆分，
+- `docs/goal-1_12.md`：Generated LoadOnDemand chunk file registry and side-effect proof，待执行。
+
+后续阶段应继续以 `docs/goal-1_13.md`、`docs/goal-1_14.md` 等文件拆分，
 每个阶段只拿走本长期目标中的一个可评审切片。不要把本文件改写成短期任务清单；
 它是长期北极星和完成度账本。
 

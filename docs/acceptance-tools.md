@@ -12,6 +12,8 @@ This document classifies the repository code that exists to verify staged framew
 
 The current exception is `--require-flow-ipc-v1_6`. It preserves the narrowed TextField duplicate-definition blocker proof. `--require-flow-ipc-v1_7` and `--require-flow-ipc-v1_8` supersede that path and inherit from v1.5, not v1.6, because they prove the replacement stable module identity and generated/lazy resolver paths.
 
+`--require-flow-ipc-v1_9-loadondemand` is a delta gate. It verifies only the v1.9 generated/lazy `Flow.loadOnDemand` contract evidence: API owner/install source, trigger source, requested chunk, registry/mapping source, resolved artifact path and the current `flow-ipc-loadondemand-v1_9` blocker. `--require-flow-ipc-v1_9` is the cumulative gate: it requires the v1.8 baseline plus this v1.9 delta.
+
 `--require-flow-ipc-v1_3-framework` is separate from the strict smoke-app gate. It verifies a developer-shaped app with ordinary Flow APIs, generic viewport promotion and desktop capability command/result evidence.
 
 ## In-process smoke harnesses
@@ -56,6 +58,7 @@ Some runtime code still emits diagnostic probes because the corresponding framew
 
 - Controlled duplicate/late push probes and resync diagnostics in `FlowIpcRuntime`.
 - Resource staging, frontend artifact classification and generated/lazy blocker metadata in `FlowClientResources`.
+- The v1.9 generated/lazy diagnostic bridge: it calls the real `window.Vaadin.Flow.loadOnDemand` only after the real generated-flow-imports artifact installs it through direct staged import. It is traced as `frontendArtifactGeneratedLazyDiagnosticBridge=true` and does not count as a Flow-client-engine-triggered success.
 - The repository-local UIDL applier fallback for non-engine or failed-delivery diagnostics.
 
 These are acceptable only when the trace names the blocker or fallback explicitly. They should not be described as final runtime behavior, and successful future work should move stable checks toward trace gates, smoke commands or validation apps instead of growing hidden app-specific runtime branches.

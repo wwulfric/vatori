@@ -47,6 +47,8 @@ public final class DesktopTraceInspector {
         FLOW_IPC_V1_6("--require-flow-ipc-v1_6"),
         FLOW_IPC_V1_7("--require-flow-ipc-v1_7"),
         FLOW_IPC_V1_8("--require-flow-ipc-v1_8"),
+        FLOW_IPC_V1_9_LOADONDEMAND("--require-flow-ipc-v1_9-loadondemand"),
+        FLOW_IPC_V1_9("--require-flow-ipc-v1_9"),
         FLOW_IPC_V1_3_FRAMEWORK("--require-flow-ipc-v1_3-framework");
 
         private final String option;
@@ -91,6 +93,12 @@ public final class DesktopTraceInspector {
                 case FLOW_IPC_V1_8 -> EnumSet.of(FLOW_IPC_V1, FLOW_IPC_V1_1, FLOW_IPC_V1_2,
                         FLOW_IPC_V1_3, FLOW_IPC_V1_4, FLOW_IPC_V1_5, FLOW_IPC_V1_7,
                         FLOW_IPC_V1_8);
+                // Delta gate: only the v1.9 Flow.loadOnDemand contract evidence.
+                case FLOW_IPC_V1_9_LOADONDEMAND -> EnumSet.of(FLOW_IPC_V1_9_LOADONDEMAND);
+                // Cumulative gate: v1.8 baseline plus the v1.9 lazy-loading delta.
+                case FLOW_IPC_V1_9 -> EnumSet.of(FLOW_IPC_V1, FLOW_IPC_V1_1, FLOW_IPC_V1_2,
+                        FLOW_IPC_V1_3, FLOW_IPC_V1_4, FLOW_IPC_V1_5, FLOW_IPC_V1_7,
+                        FLOW_IPC_V1_8, FLOW_IPC_V1_9_LOADONDEMAND, FLOW_IPC_V1_9);
                 case FLOW_IPC_V1_3_FRAMEWORK -> EnumSet.of(FLOW_IPC_V1_3_FRAMEWORK);
             };
         }
@@ -106,6 +114,8 @@ public final class DesktopTraceInspector {
                 case FLOW_IPC_V1_6 -> summary.hasRequiredFlowIpcV1_6Types();
                 case FLOW_IPC_V1_7 -> summary.hasRequiredFlowIpcV1_7Types();
                 case FLOW_IPC_V1_8 -> summary.hasRequiredFlowIpcV1_8Types();
+                case FLOW_IPC_V1_9_LOADONDEMAND -> summary.hasRequiredFlowIpcV1_9LoadOnDemandTypes();
+                case FLOW_IPC_V1_9 -> summary.hasRequiredFlowIpcV1_9Types();
                 case FLOW_IPC_V1_3_FRAMEWORK -> summary.hasRequiredFlowIpcV1_3FrameworkTypes();
             };
         }
@@ -571,6 +581,31 @@ public final class DesktopTraceInspector {
                 summary.frontendGeneratedLazyV18ManifestObserved = true;
             }
             if (line.contains("\"type\":\"bootstrapResponse\"")
+                    && line.contains("\"componentFrontendResources\"")
+                    && containsStringField(line, "generatedLazyLoadOnDemandContractVersion",
+                            "flow-ipc-loadondemand-v1_9")
+                    && containsStringField(line, "generatedLazyTriggerSource",
+                            "diagnostic-preflight-and-direct-staged-import")
+                    && containsStringField(line, "generatedLazyApiOwner", "window.Vaadin.Flow.loadOnDemand")
+                    && containsStringField(line, "generatedLazyApiInstallSource",
+                            "generated-flow-imports-dev-bundle-after-direct-staged-import")
+                    && containsStringField(line, "generatedLazyRequestedChunk",
+                            "vatori-flow-ipc-generated-lazy-v1_9-probe")
+                    && containsStringField(line, "generatedLazyRegistrySource",
+                            "no-bootstrap-lazy-registry-observed")
+                    && containsStringField(line, "generatedLazyMappingSource",
+                            "component-frontend-manifest-generated-lazy-v1_9")
+                    && containsStringField(line, "generatedLazyBlockerVersion",
+                            "flow-ipc-loadondemand-v1_9")
+                    && containsStringField(line, "generatedLazyFailureLayer",
+                            "loadondemand-api-installed-by-generated-imports-not-flow-client-triggered")
+                    && containsLiteralField(line, "generatedLazyFlowClientTriggered", "false")
+                    && containsLiteralField(line, "generatedLazyDiagnosticBridge", "true")
+                    && containsPath(line,
+                            "vaadin-dev-bundle/webapp/VAADIN/build/generated-flow-imports-VW7hRaNw.js")) {
+                summary.frontendGeneratedLazyV19ManifestObserved = true;
+            }
+            if (line.contains("\"type\":\"bootstrapResponse\"")
                     && line.contains("\"artifactFamilies\"")
                     && line.contains("flow-client-classpath")
                     && line.contains("vaadin-component-classpath-frontend")
@@ -722,7 +757,9 @@ public final class DesktopTraceInspector {
                     && line.contains("\"artifactFamily\":\"generated-lazy\"")
                     && line.contains("\"strictBlocker\":true")
                     && (line.contains("\"failureClassification\":\"generated-lazy-resource-unmapped\"")
-                            || line.contains("\"failureClassification\":\"generated-lazy-execution-unmapped\""))) {
+                            || line.contains("\"failureClassification\":\"generated-lazy-execution-unmapped\"")
+                            || line.contains(
+                                    "\"failureClassification\":\"generated-lazy-loadondemand-api-boundary-v1_9\""))) {
                 summary.frontendGeneratedLazyStrictBlockerObserved = true;
             }
             if (line.contains("\"type\":\"webview.dom\"")
@@ -925,6 +962,23 @@ public final class DesktopTraceInspector {
                             "stable-relative-import-rewrite-generated-lazy-v1_8")) {
                 summary.frontendGeneratedLazyV18RequestObserved = true;
             }
+            if (line.contains("\"type\":\"resourceRequest\"")
+                    && line.contains("\"purpose\":\"vaadin-web-component-resource-probe\"")
+                    && line.contains("\"lookupKind\":\"Generated-flow-imports-dev-bundle-chunk-v1_4\"")
+                    && containsPath(line, "vaadin-dev-bundle/webapp/VAADIN/build/generated-flow-imports-VW7hRaNw.js")
+                    && containsStringField(line, "generatedLazyLoadOnDemandContractVersion",
+                            "flow-ipc-loadondemand-v1_9")
+                    && containsStringField(line, "generatedLazyTriggerSource",
+                            "diagnostic-preflight-and-direct-staged-import")
+                    && containsStringField(line, "generatedLazyApiOwner", "window.Vaadin.Flow.loadOnDemand")
+                    && containsStringField(line, "generatedLazyRequestedChunk",
+                            "vatori-flow-ipc-generated-lazy-v1_9-probe")
+                    && containsStringField(line, "generatedLazyMappingSource",
+                            "component-frontend-manifest-generated-lazy-v1_9")
+                    && containsLiteralField(line, "generatedLazyFlowClientTriggered", "false")
+                    && containsLiteralField(line, "generatedLazyDiagnosticBridge", "true")) {
+                summary.frontendGeneratedLazyV19RequestObserved = true;
+            }
             if (line.contains("\"type\":\"resourceStage\"")
                     && line.contains("\"artifactFamily\":\"generated-lazy\"")
                     && containsPath(line, "vaadin-dev-bundle/webapp/VAADIN/build/markdown-helpers-31I0A-hg.js")
@@ -951,6 +1005,29 @@ public final class DesktopTraceInspector {
                                     && containsStringField(line, "failureLayer",
                                             "relative-dependency-resolved-flow-loadondemand-boundary")))) {
                 summary.frontendGeneratedLazyV18ExecutionOrNarrowedBlockerObserved = true;
+            }
+            if (line.contains("\"type\":\"resourceStage\"")
+                    && line.contains("\"artifactFamily\":\"generated-lazy\"")
+                    && containsPath(line, "vaadin-dev-bundle/webapp/VAADIN/build/generated-flow-imports-VW7hRaNw.js")
+                    && containsStringField(line, "generatedLazyLoadOnDemandContractVersion",
+                            "flow-ipc-loadondemand-v1_9")
+                    && containsStringField(line, "generatedLazyTriggerSource",
+                            "diagnostic-preflight-and-direct-staged-import")
+                    && containsStringField(line, "generatedLazyApiOwner", "window.Vaadin.Flow.loadOnDemand")
+                    && containsStringField(line, "generatedLazyRequestedChunk",
+                            "vatori-flow-ipc-generated-lazy-v1_9-probe")
+                    && containsStringField(line, "generatedLazyMappingSource",
+                            "component-frontend-manifest-generated-lazy-v1_9")
+                    && containsStringField(line, "generatedLazyBlockerVersion",
+                            "flow-ipc-loadondemand-v1_9")
+                    && containsStringField(line, "failureLayer",
+                            "loadondemand-api-installed-by-generated-imports-not-flow-client-triggered")
+                    && containsLiteralField(line, "generatedLazyFlowClientTriggered", "false")
+                    && containsLiteralField(line, "generatedLazyDiagnosticBridge", "true")
+                    && (line.contains("\"executionStatus\":\"execution-attempt\"")
+                            || line.contains("\"executionStatus\":\"executed\"")
+                            || line.contains("\"executionStatus\":\"strict-blocker\""))) {
+                summary.frontendGeneratedLazyV19StageObserved = true;
             }
             if (line.contains("\"type\":\"webview.dom\"")
                     && containsStringField(line, "frontendStagingResolverVersion", "flow-ipc-resource-staging-v1_5")
@@ -1040,6 +1117,34 @@ public final class DesktopTraceInspector {
                             || containsStringField(line, "frontendArtifactGeneratedLazyBlockerVersion",
                                     "flow-ipc-generated-lazy-v1_8"))) {
                 summary.frontendGeneratedLazyV18DomObserved = true;
+            }
+            if (line.contains("\"type\":\"webview.dom\"")
+                    && containsStringField(line, "frontendArtifactGeneratedLazyLoadOnDemandContractVersion",
+                            "flow-ipc-loadondemand-v1_9")
+                    && containsStringField(line, "frontendArtifactGeneratedLazyTriggerSource",
+                            "diagnostic-preflight-and-direct-staged-import")
+                    && containsStringField(line, "frontendArtifactGeneratedLazyApiOwner",
+                            "window.Vaadin.Flow.loadOnDemand")
+                    && containsStringField(line, "frontendArtifactGeneratedLazyApiInstallSource",
+                            "generated-flow-imports-dev-bundle-after-direct-staged-import")
+                    && containsStringField(line, "frontendArtifactGeneratedLazyRequestedChunk",
+                            "vatori-flow-ipc-generated-lazy-v1_9-probe")
+                    && containsStringField(line, "frontendArtifactGeneratedLazyRegistrySource",
+                            "no-bootstrap-lazy-registry-observed")
+                    && containsStringField(line, "frontendArtifactGeneratedLazyMappingSource",
+                            "component-frontend-manifest-generated-lazy-v1_9")
+                    && containsPath(line, "vaadin-dev-bundle/webapp/VAADIN/build/generated-flow-imports-VW7hRaNw.js")
+                    && containsStringField(line, "frontendArtifactGeneratedLazyBlockerVersion",
+                            "flow-ipc-loadondemand-v1_9")
+                    && containsStringField(line, "frontendArtifactGeneratedLazyFailureLayer",
+                            "loadondemand-api-installed-by-generated-imports-not-flow-client-triggered")
+                    && containsLiteralField(line, "frontendArtifactGeneratedLazyFlowClientTriggered", "false")
+                    && containsLiteralField(line, "frontendArtifactGeneratedLazyDiagnosticBridge", "true")
+                    && containsLiteralField(line, "frontendArtifactGeneratedLazyLoadOnDemandBlocker", "true")
+                    && line.contains("frontendArtifactGeneratedLazyLoadOnDemandResult")
+                    && (line.contains("diagnostic-loadondemand-call")
+                            || line.contains("diagnostic-direct-import-required"))) {
+                summary.frontendGeneratedLazyV19DomObserved = true;
             }
             if (line.contains("\"type\":\"resourceRequest\"")
                     && line.contains("\"purpose\":\"vaadin-web-component-resource-probe\"")
@@ -1752,6 +1857,10 @@ public final class DesktopTraceInspector {
         private boolean frontendGeneratedLazyV18DependencyRewriteObserved;
         private boolean frontendGeneratedLazyV18ExecutionOrNarrowedBlockerObserved;
         private boolean frontendGeneratedLazyV18DomObserved;
+        private boolean frontendGeneratedLazyV19ManifestObserved;
+        private boolean frontendGeneratedLazyV19RequestObserved;
+        private boolean frontendGeneratedLazyV19StageObserved;
+        private boolean frontendGeneratedLazyV19DomObserved;
 
         public boolean hasRequiredFlowIpcTypes() {
             return types.keySet().containsAll(FLOW_IPC_REQUIRED_TYPES)
@@ -1906,6 +2015,18 @@ public final class DesktopTraceInspector {
                     && frontendGeneratedLazyV18DependencyRewriteObserved
                     && frontendGeneratedLazyV18ExecutionOrNarrowedBlockerObserved
                     && frontendGeneratedLazyV18DomObserved;
+        }
+
+        public boolean hasRequiredFlowIpcV1_9LoadOnDemandTypes() {
+            return frontendGeneratedLazyV19ManifestObserved
+                    && frontendGeneratedLazyV19RequestObserved
+                    && frontendGeneratedLazyV19StageObserved
+                    && frontendGeneratedLazyV19DomObserved;
+        }
+
+        public boolean hasRequiredFlowIpcV1_9Types() {
+            return hasRequiredFlowIpcV1_8Types()
+                    && hasRequiredFlowIpcV1_9LoadOnDemandTypes();
         }
 
         public boolean hasRequiredFlowIpcV1_3FrameworkTypes() {
@@ -2165,6 +2286,14 @@ public final class DesktopTraceInspector {
                     + frontendGeneratedLazyV18ExecutionOrNarrowedBlockerObserved);
             System.out.println("Flow IPC v1.8 generated/lazy DOM observed: "
                     + frontendGeneratedLazyV18DomObserved);
+            System.out.println("Flow IPC v1.9 loadOnDemand manifest observed: "
+                    + frontendGeneratedLazyV19ManifestObserved);
+            System.out.println("Flow IPC v1.9 loadOnDemand request observed: "
+                    + frontendGeneratedLazyV19RequestObserved);
+            System.out.println("Flow IPC v1.9 loadOnDemand stage observed: "
+                    + frontendGeneratedLazyV19StageObserved);
+            System.out.println("Flow IPC v1.9 loadOnDemand DOM observed: "
+                    + frontendGeneratedLazyV19DomObserved);
             System.out.println("Flow IPC v1.6 TextField graph manifest observed: "
                     + frontendTextFieldV16ManifestObserved);
             System.out.println("Flow IPC v1.6 TextField graph request observed: "

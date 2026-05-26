@@ -1431,6 +1431,17 @@ final class WebViewHost: NSObject, NSApplicationDelegate, NSWindowDelegate, WKNa
           frontendArtifactGeneratedLazyExecutionResult: window.VaadinDesktopIpcDiagnostics ? window.VaadinDesktopIpcDiagnostics.frontendArtifactGeneratedLazyExecutionResult : "",
           frontendArtifactGeneratedLazyExecutionError: window.VaadinDesktopIpcDiagnostics ? window.VaadinDesktopIpcDiagnostics.frontendArtifactGeneratedLazyExecutionError : "",
           frontendArtifactGeneratedLazyLoadOnDemandResult: window.VaadinDesktopIpcDiagnostics ? window.VaadinDesktopIpcDiagnostics.frontendArtifactGeneratedLazyLoadOnDemandResult : "",
+          frontendArtifactGeneratedLazyLoadOnDemandContractVersion: window.VaadinDesktopIpcDiagnostics ? window.VaadinDesktopIpcDiagnostics.frontendArtifactGeneratedLazyLoadOnDemandContractVersion : "",
+          frontendArtifactGeneratedLazyTriggerSource: window.VaadinDesktopIpcDiagnostics ? window.VaadinDesktopIpcDiagnostics.frontendArtifactGeneratedLazyTriggerSource : "",
+          frontendArtifactGeneratedLazyApiOwner: window.VaadinDesktopIpcDiagnostics ? window.VaadinDesktopIpcDiagnostics.frontendArtifactGeneratedLazyApiOwner : "",
+          frontendArtifactGeneratedLazyApiInstallSource: window.VaadinDesktopIpcDiagnostics ? window.VaadinDesktopIpcDiagnostics.frontendArtifactGeneratedLazyApiInstallSource : "",
+          frontendArtifactGeneratedLazyRequestedChunk: window.VaadinDesktopIpcDiagnostics ? window.VaadinDesktopIpcDiagnostics.frontendArtifactGeneratedLazyRequestedChunk : "",
+          frontendArtifactGeneratedLazyRegistrySource: window.VaadinDesktopIpcDiagnostics ? window.VaadinDesktopIpcDiagnostics.frontendArtifactGeneratedLazyRegistrySource : "",
+          frontendArtifactGeneratedLazyMappingSource: window.VaadinDesktopIpcDiagnostics ? window.VaadinDesktopIpcDiagnostics.frontendArtifactGeneratedLazyMappingSource : "",
+          frontendArtifactGeneratedLazyResolvedArtifactPath: window.VaadinDesktopIpcDiagnostics ? window.VaadinDesktopIpcDiagnostics.frontendArtifactGeneratedLazyResolvedArtifactPath : "",
+          frontendArtifactGeneratedLazyFlowClientTriggered: !!(window.VaadinDesktopIpcDiagnostics && window.VaadinDesktopIpcDiagnostics.frontendArtifactGeneratedLazyFlowClientTriggered),
+          frontendArtifactGeneratedLazyDiagnosticBridge: !!(window.VaadinDesktopIpcDiagnostics && window.VaadinDesktopIpcDiagnostics.frontendArtifactGeneratedLazyDiagnosticBridge),
+          frontendArtifactGeneratedLazyLoadOnDemandBlocker: !!(window.VaadinDesktopIpcDiagnostics && window.VaadinDesktopIpcDiagnostics.frontendArtifactGeneratedLazyLoadOnDemandBlocker),
           frontendArtifactGeneratedLazyResolverVersion: window.VaadinDesktopIpcDiagnostics ? window.VaadinDesktopIpcDiagnostics.frontendArtifactGeneratedLazyResolverVersion : "",
           frontendArtifactGeneratedLazyExecutionVersion: window.VaadinDesktopIpcDiagnostics ? window.VaadinDesktopIpcDiagnostics.frontendArtifactGeneratedLazyExecutionVersion : "",
           frontendArtifactGeneratedLazyImportResolutionStrategy: window.VaadinDesktopIpcDiagnostics ? window.VaadinDesktopIpcDiagnostics.frontendArtifactGeneratedLazyImportResolutionStrategy : "",
@@ -2168,6 +2179,17 @@ let flowIpcShell = #"""
         frontendArtifactGeneratedLazyExecutionResult: '',
         frontendArtifactGeneratedLazyExecutionError: '',
         frontendArtifactGeneratedLazyLoadOnDemandResult: '',
+        frontendArtifactGeneratedLazyLoadOnDemandContractVersion: '',
+        frontendArtifactGeneratedLazyTriggerSource: '',
+        frontendArtifactGeneratedLazyApiOwner: '',
+        frontendArtifactGeneratedLazyApiInstallSource: '',
+        frontendArtifactGeneratedLazyRequestedChunk: '',
+        frontendArtifactGeneratedLazyRegistrySource: '',
+        frontendArtifactGeneratedLazyMappingSource: '',
+        frontendArtifactGeneratedLazyResolvedArtifactPath: '',
+        frontendArtifactGeneratedLazyFlowClientTriggered: false,
+        frontendArtifactGeneratedLazyDiagnosticBridge: false,
+        frontendArtifactGeneratedLazyLoadOnDemandBlocker: false,
         frontendArtifactGeneratedLazyResolverVersion: '',
         frontendArtifactGeneratedLazyExecutionVersion: '',
         frontendArtifactGeneratedLazyImportResolutionStrategy: '',
@@ -3970,6 +3992,26 @@ let flowIpcShell = #"""
             manifest.generatedLazyExecutionVersion || window.VaadinDesktopIpcDiagnostics.frontendArtifactGeneratedLazyExecutionVersion;
           window.VaadinDesktopIpcDiagnostics.frontendArtifactGeneratedLazyImportResolutionStrategy =
             manifest.generatedLazyImportResolutionStrategy || window.VaadinDesktopIpcDiagnostics.frontendArtifactGeneratedLazyImportResolutionStrategy;
+          window.VaadinDesktopIpcDiagnostics.frontendArtifactGeneratedLazyLoadOnDemandContractVersion =
+            manifest.generatedLazyLoadOnDemandContractVersion || window.VaadinDesktopIpcDiagnostics.frontendArtifactGeneratedLazyLoadOnDemandContractVersion;
+          window.VaadinDesktopIpcDiagnostics.frontendArtifactGeneratedLazyTriggerSource =
+            manifest.generatedLazyTriggerSource || window.VaadinDesktopIpcDiagnostics.frontendArtifactGeneratedLazyTriggerSource;
+          window.VaadinDesktopIpcDiagnostics.frontendArtifactGeneratedLazyApiOwner =
+            manifest.generatedLazyApiOwner || window.VaadinDesktopIpcDiagnostics.frontendArtifactGeneratedLazyApiOwner;
+          window.VaadinDesktopIpcDiagnostics.frontendArtifactGeneratedLazyApiInstallSource =
+            manifest.generatedLazyApiInstallSource || window.VaadinDesktopIpcDiagnostics.frontendArtifactGeneratedLazyApiInstallSource;
+          window.VaadinDesktopIpcDiagnostics.frontendArtifactGeneratedLazyRequestedChunk =
+            manifest.generatedLazyRequestedChunk || window.VaadinDesktopIpcDiagnostics.frontendArtifactGeneratedLazyRequestedChunk;
+          window.VaadinDesktopIpcDiagnostics.frontendArtifactGeneratedLazyRegistrySource =
+            manifest.generatedLazyRegistrySource || window.VaadinDesktopIpcDiagnostics.frontendArtifactGeneratedLazyRegistrySource;
+          window.VaadinDesktopIpcDiagnostics.frontendArtifactGeneratedLazyMappingSource =
+            manifest.generatedLazyMappingSource || window.VaadinDesktopIpcDiagnostics.frontendArtifactGeneratedLazyMappingSource;
+          window.VaadinDesktopIpcDiagnostics.frontendArtifactGeneratedLazyResolvedArtifactPath =
+            manifest.generatedLazyResolvedArtifactPath || window.VaadinDesktopIpcDiagnostics.frontendArtifactGeneratedLazyResolvedArtifactPath;
+          window.VaadinDesktopIpcDiagnostics.frontendArtifactGeneratedLazyFlowClientTriggered =
+            manifest.generatedLazyFlowClientTriggered === true;
+          window.VaadinDesktopIpcDiagnostics.frontendArtifactGeneratedLazyDiagnosticBridge =
+            manifest.generatedLazyDiagnosticBridge === true;
           window.VaadinDesktopIpcDiagnostics.frontendArtifactGeneratedLazyRelativeImportSpecifier =
             manifest.generatedLazyRelativeImportSpecifier || window.VaadinDesktopIpcDiagnostics.frontendArtifactGeneratedLazyRelativeImportSpecifier;
           window.VaadinDesktopIpcDiagnostics.frontendArtifactGeneratedLazyResolvedDependencyPath =
@@ -4046,6 +4088,16 @@ let flowIpcShell = #"""
           generatedLazyResolverVersion: resource.generatedLazyResolverVersion || '',
           generatedLazyExecutionVersion: resource.generatedLazyExecutionVersion || '',
           generatedLazyImportResolutionStrategy: resource.generatedLazyImportResolutionStrategy || '',
+          generatedLazyLoadOnDemandContractVersion: resource.generatedLazyLoadOnDemandContractVersion || '',
+          generatedLazyTriggerSource: resource.generatedLazyTriggerSource || '',
+          generatedLazyApiOwner: resource.generatedLazyApiOwner || '',
+          generatedLazyApiInstallSource: resource.generatedLazyApiInstallSource || '',
+          generatedLazyRequestedChunk: resource.generatedLazyRequestedChunk || '',
+          generatedLazyRegistrySource: resource.generatedLazyRegistrySource || '',
+          generatedLazyMappingSource: resource.generatedLazyMappingSource || '',
+          generatedLazyResolvedArtifactPath: resource.generatedLazyResolvedArtifactPath || '',
+          generatedLazyFlowClientTriggered: resource.generatedLazyFlowClientTriggered === true,
+          generatedLazyDiagnosticBridge: resource.generatedLazyDiagnosticBridge === true,
           generatedLazyRelativeImportSpecifier: resource.generatedLazyRelativeImportSpecifier || '',
           generatedLazyResolvedDependencyPath: resource.generatedLazyResolvedDependencyPath || '',
           generatedLazyGraphProbe: resource.generatedLazyGraphProbe || '',
@@ -4214,6 +4266,38 @@ let flowIpcShell = #"""
           generatedLazyImportResolutionStrategy: extra && extra.generatedLazyImportResolutionStrategy
             ? extra.generatedLazyImportResolutionStrategy
             : (resource.generatedLazyImportResolutionStrategy || ''),
+          generatedLazyLoadOnDemandContractVersion: extra && extra.generatedLazyLoadOnDemandContractVersion
+            ? extra.generatedLazyLoadOnDemandContractVersion
+            : (resource.generatedLazyLoadOnDemandContractVersion || ''),
+          generatedLazyTriggerSource: extra && extra.generatedLazyTriggerSource
+            ? extra.generatedLazyTriggerSource
+            : (resource.generatedLazyTriggerSource || ''),
+          generatedLazyApiOwner: extra && extra.generatedLazyApiOwner
+            ? extra.generatedLazyApiOwner
+            : (resource.generatedLazyApiOwner || ''),
+          generatedLazyApiInstallSource: extra && extra.generatedLazyApiInstallSource
+            ? extra.generatedLazyApiInstallSource
+            : (resource.generatedLazyApiInstallSource || ''),
+          generatedLazyRequestedChunk: extra && extra.generatedLazyRequestedChunk
+            ? extra.generatedLazyRequestedChunk
+            : (resource.generatedLazyRequestedChunk || ''),
+          generatedLazyRegistrySource: extra && extra.generatedLazyRegistrySource
+            ? extra.generatedLazyRegistrySource
+            : (resource.generatedLazyRegistrySource || ''),
+          generatedLazyMappingSource: extra && extra.generatedLazyMappingSource
+            ? extra.generatedLazyMappingSource
+            : (resource.generatedLazyMappingSource || ''),
+          generatedLazyResolvedArtifactPath: extra && extra.generatedLazyResolvedArtifactPath
+            ? extra.generatedLazyResolvedArtifactPath
+            : (resource.generatedLazyResolvedArtifactPath || ''),
+          generatedLazyFlowClientTriggered: extra
+            && typeof extra.generatedLazyFlowClientTriggered === 'boolean'
+            ? extra.generatedLazyFlowClientTriggered
+            : resource.generatedLazyFlowClientTriggered === true,
+          generatedLazyDiagnosticBridge: extra
+            && typeof extra.generatedLazyDiagnosticBridge === 'boolean'
+            ? extra.generatedLazyDiagnosticBridge
+            : resource.generatedLazyDiagnosticBridge === true,
           generatedLazyRelativeImportSpecifier: extra && extra.generatedLazyRelativeImportSpecifier
             ? extra.generatedLazyRelativeImportSpecifier
             : (resource.generatedLazyRelativeImportSpecifier || ''),
@@ -5581,6 +5665,28 @@ let flowIpcShell = #"""
             generatedLazyImportResolutionStrategy: currentResource.generatedLazyImportResolutionStrategy
               || resource.generatedLazyImportResolutionStrategy
               || 'stable-relative-import-rewrite-generated-lazy-v1_8',
+            generatedLazyLoadOnDemandContractVersion: currentResource.generatedLazyLoadOnDemandContractVersion
+              || resource.generatedLazyLoadOnDemandContractVersion
+              || 'flow-ipc-loadondemand-v1_9',
+            generatedLazyTriggerSource: currentResource.generatedLazyTriggerSource
+              || resource.generatedLazyTriggerSource
+              || 'diagnostic-preflight-and-direct-staged-import',
+            generatedLazyApiOwner: currentResource.generatedLazyApiOwner
+              || resource.generatedLazyApiOwner
+              || 'window.Vaadin.Flow.loadOnDemand',
+            generatedLazyApiInstallSource: 'dependency-staged-for-generated-flow-imports',
+            generatedLazyRequestedChunk: currentResource.generatedLazyRequestedChunk
+              || resource.generatedLazyRequestedChunk
+              || 'vatori-flow-ipc-generated-lazy-v1_9-probe',
+            generatedLazyRegistrySource: currentResource.generatedLazyRegistrySource
+              || resource.generatedLazyRegistrySource
+              || 'no-bootstrap-lazy-registry-observed',
+            generatedLazyMappingSource: currentResource.generatedLazyMappingSource
+              || resource.generatedLazyMappingSource
+              || 'component-frontend-manifest-generated-lazy-v1_9',
+            generatedLazyResolvedArtifactPath: resource.path,
+            generatedLazyFlowClientTriggered: false,
+            generatedLazyDiagnosticBridge: false,
             generatedLazyRelativeImportSpecifier: specifier,
             generatedLazyResolvedDependencyPath: resource.path,
             generatedLazyRelativeDependencyResolved: true,
@@ -5788,12 +5894,48 @@ let flowIpcShell = #"""
           resource.failureLayer || window.VaadinDesktopIpcDiagnostics.frontendArtifactGeneratedLazyFailureLayer;
         window.VaadinDesktopIpcDiagnostics.frontendArtifactGeneratedLazyNextResolutionStep =
           resource.nextResolutionStep || window.VaadinDesktopIpcDiagnostics.frontendArtifactGeneratedLazyNextResolutionStep;
+        window.VaadinDesktopIpcDiagnostics.frontendArtifactGeneratedLazyLoadOnDemandContractVersion =
+          resource.generatedLazyLoadOnDemandContractVersion
+          || window.VaadinDesktopIpcDiagnostics.frontendArtifactGeneratedLazyLoadOnDemandContractVersion
+          || 'flow-ipc-loadondemand-v1_9';
+        window.VaadinDesktopIpcDiagnostics.frontendArtifactGeneratedLazyTriggerSource =
+          resource.generatedLazyTriggerSource
+          || window.VaadinDesktopIpcDiagnostics.frontendArtifactGeneratedLazyTriggerSource
+          || 'diagnostic-preflight-and-direct-staged-import';
+        window.VaadinDesktopIpcDiagnostics.frontendArtifactGeneratedLazyApiOwner =
+          resource.generatedLazyApiOwner
+          || window.VaadinDesktopIpcDiagnostics.frontendArtifactGeneratedLazyApiOwner
+          || 'window.Vaadin.Flow.loadOnDemand';
+        window.VaadinDesktopIpcDiagnostics.frontendArtifactGeneratedLazyApiInstallSource =
+          resource.generatedLazyApiInstallSource
+          || window.VaadinDesktopIpcDiagnostics.frontendArtifactGeneratedLazyApiInstallSource
+          || 'generated-flow-imports-dev-bundle-after-direct-staged-import';
+        window.VaadinDesktopIpcDiagnostics.frontendArtifactGeneratedLazyRequestedChunk =
+          resource.generatedLazyRequestedChunk
+          || window.VaadinDesktopIpcDiagnostics.frontendArtifactGeneratedLazyRequestedChunk
+          || 'vatori-flow-ipc-generated-lazy-v1_9-probe';
+        window.VaadinDesktopIpcDiagnostics.frontendArtifactGeneratedLazyRegistrySource =
+          resource.generatedLazyRegistrySource
+          || window.VaadinDesktopIpcDiagnostics.frontendArtifactGeneratedLazyRegistrySource
+          || 'no-bootstrap-lazy-registry-observed';
+        window.VaadinDesktopIpcDiagnostics.frontendArtifactGeneratedLazyMappingSource =
+          resource.generatedLazyMappingSource
+          || window.VaadinDesktopIpcDiagnostics.frontendArtifactGeneratedLazyMappingSource
+          || 'component-frontend-manifest-generated-lazy-v1_9';
+        window.VaadinDesktopIpcDiagnostics.frontendArtifactGeneratedLazyResolvedArtifactPath =
+          resource.generatedLazyResolvedArtifactPath
+          || window.VaadinDesktopIpcDiagnostics.frontendArtifactGeneratedLazyResolvedArtifactPath
+          || resource.path;
+        window.VaadinDesktopIpcDiagnostics.frontendArtifactGeneratedLazyFlowClientTriggered = false;
+        window.VaadinDesktopIpcDiagnostics.frontendArtifactGeneratedLazyDiagnosticBridge =
+          resource.generatedLazyDiagnosticBridge === true;
+        window.VaadinDesktopIpcDiagnostics.frontendArtifactGeneratedLazyLoadOnDemandBlocker = true;
         const loadOnDemand = window.Vaadin && window.Vaadin.Flow
           && typeof window.Vaadin.Flow.loadOnDemand === 'function';
         window.VaadinDesktopIpcDiagnostics.frontendArtifactGeneratedLazyLoadOnDemandResult =
           loadOnDemand
-            ? 'api-present-not-called:no-bootstrap-lazy-entry;staged-import-attempted'
-            : 'api-not-exposed-on-current-bootstrap;staged-import-attempted';
+            ? 'api-present-before-generated-flow-imports;registry-unmapped;diagnostic-direct-import-required'
+            : 'api-not-installed-before-generated-flow-imports;diagnostic-direct-import-required';
         const urlsToRevoke = [];
         const urlCache = new Map();
         let stagedUrl = '';
@@ -5812,6 +5954,22 @@ let flowIpcShell = #"""
               || 'flow-ipc-generated-lazy-v1_8',
             generatedLazyImportResolutionStrategy: resource.generatedLazyImportResolutionStrategy
               || 'stable-relative-import-rewrite-generated-lazy-v1_8',
+            generatedLazyLoadOnDemandContractVersion: resource.generatedLazyLoadOnDemandContractVersion
+              || 'flow-ipc-loadondemand-v1_9',
+            generatedLazyTriggerSource: resource.generatedLazyTriggerSource
+              || 'diagnostic-preflight-and-direct-staged-import',
+            generatedLazyApiOwner: resource.generatedLazyApiOwner || 'window.Vaadin.Flow.loadOnDemand',
+            generatedLazyApiInstallSource: resource.generatedLazyApiInstallSource
+              || 'generated-flow-imports-dev-bundle-after-direct-staged-import',
+            generatedLazyRequestedChunk: resource.generatedLazyRequestedChunk
+              || 'vatori-flow-ipc-generated-lazy-v1_9-probe',
+            generatedLazyRegistrySource: resource.generatedLazyRegistrySource
+              || 'no-bootstrap-lazy-registry-observed',
+            generatedLazyMappingSource: resource.generatedLazyMappingSource
+              || 'component-frontend-manifest-generated-lazy-v1_9',
+            generatedLazyResolvedArtifactPath: resource.generatedLazyResolvedArtifactPath || resource.path,
+            generatedLazyFlowClientTriggered: false,
+            generatedLazyDiagnosticBridge: resource.generatedLazyDiagnosticBridge === true,
             generatedLazyRelativeImportSpecifier: resource.generatedLazyRelativeImportSpecifier || '',
             generatedLazyResolvedDependencyPath: resource.generatedLazyResolvedDependencyPath || '',
             generatedLazyRelativeDependencyResolved:
@@ -5819,7 +5977,7 @@ let flowIpcShell = #"""
             generatedLazyGraphProbe: resource.generatedLazyGraphProbe || '',
             generatedLazyBlockerVersion: resource.generatedLazyBlockerVersion
               || resource.blockerVersion
-              || 'flow-ipc-generated-lazy-v1_8',
+              || 'flow-ipc-loadondemand-v1_9',
             moduleIdentityStrategy: usesStableModuleIdentity(resource)
               ? 'stable-resource-path-blob-module-identity-v1_7'
               : '',
@@ -5835,15 +5993,24 @@ let flowIpcShell = #"""
           if (loadOnDemandAfter) {
             let loadOnDemandProbe = 'not-invoked';
             try {
-              const probeResult = await window.Vaadin.Flow.loadOnDemand('vatori-flow-ipc-generated-lazy-v1_8-probe');
+              const probeResult = await window.Vaadin.Flow.loadOnDemand(
+                window.VaadinDesktopIpcDiagnostics.frontendArtifactGeneratedLazyRequestedChunk
+                  || 'vatori-flow-ipc-generated-lazy-v1_9-probe');
               loadOnDemandProbe = 'probe-returned=' + String(probeResult);
             } catch (probeError) {
               loadOnDemandProbe = 'probe-failed='
                 + (probeError && probeError.message ? probeError.message : String(probeError));
             }
+            window.VaadinDesktopIpcDiagnostics.frontendArtifactGeneratedLazyApiInstallSource =
+              resource.generatedLazyApiInstallSource
+              || 'generated-flow-imports-dev-bundle-after-direct-staged-import';
+            window.VaadinDesktopIpcDiagnostics.frontendArtifactGeneratedLazyDiagnosticBridge = true;
+            window.VaadinDesktopIpcDiagnostics.frontendArtifactGeneratedLazyFlowClientTriggered = false;
+            window.VaadinDesktopIpcDiagnostics.frontendArtifactGeneratedLazyLoadOnDemandBlocker = true;
             window.VaadinDesktopIpcDiagnostics.frontendArtifactGeneratedLazyLoadOnDemandResult =
-              'api-installed-by-staged-generated-flow-imports;direct-staged-import-executed;'
-              + loadOnDemandProbe + ';not-flow-client-triggered';
+              'api-installed-by-staged-generated-flow-imports;diagnostic-loadondemand-call;'
+              + loadOnDemandProbe + ';triggerSource=diagnostic-preflight-and-direct-staged-import;'
+              + 'flow-client-triggered=false;blocker=flow-ipc-loadondemand-v1_9';
           }
           window.VaadinDesktopIpcDiagnostics.frontendArtifactGeneratedLazyExecuted = true;
           window.VaadinDesktopIpcDiagnostics.frontendArtifactGeneratedLazyExecutionResult =
@@ -5852,6 +6019,7 @@ let flowIpcShell = #"""
             'executed:' + resource.path;
           window.VaadinDesktopIpcDiagnostics.frontendArtifactGeneratedLazyExecutionError = '';
           window.VaadinDesktopIpcDiagnostics.frontendArtifactGeneratedLazyBlocker = false;
+          window.VaadinDesktopIpcDiagnostics.frontendArtifactGeneratedLazyLoadOnDemandBlocker = true;
           recordFrontendStageOutcome(resource, stagedUrl, 'executed', {
             cleanupPolicy: usesStableModuleIdentity(resource)
               ? 'retain-for-window-lifetime-module-identity-v1_7'
@@ -5864,6 +6032,22 @@ let flowIpcShell = #"""
               || 'flow-ipc-generated-lazy-v1_8',
             generatedLazyImportResolutionStrategy: resource.generatedLazyImportResolutionStrategy
               || 'stable-relative-import-rewrite-generated-lazy-v1_8',
+            generatedLazyLoadOnDemandContractVersion: resource.generatedLazyLoadOnDemandContractVersion
+              || 'flow-ipc-loadondemand-v1_9',
+            generatedLazyTriggerSource: resource.generatedLazyTriggerSource
+              || 'diagnostic-preflight-and-direct-staged-import',
+            generatedLazyApiOwner: resource.generatedLazyApiOwner || 'window.Vaadin.Flow.loadOnDemand',
+            generatedLazyApiInstallSource: resource.generatedLazyApiInstallSource
+              || 'generated-flow-imports-dev-bundle-after-direct-staged-import',
+            generatedLazyRequestedChunk: resource.generatedLazyRequestedChunk
+              || 'vatori-flow-ipc-generated-lazy-v1_9-probe',
+            generatedLazyRegistrySource: resource.generatedLazyRegistrySource
+              || 'no-bootstrap-lazy-registry-observed',
+            generatedLazyMappingSource: resource.generatedLazyMappingSource
+              || 'component-frontend-manifest-generated-lazy-v1_9',
+            generatedLazyResolvedArtifactPath: resource.generatedLazyResolvedArtifactPath || resource.path,
+            generatedLazyFlowClientTriggered: false,
+            generatedLazyDiagnosticBridge: true,
             generatedLazyRelativeImportSpecifier: resource.generatedLazyRelativeImportSpecifier || '',
             generatedLazyResolvedDependencyPath: resource.generatedLazyResolvedDependencyPath || '',
             generatedLazyRelativeDependencyResolved:
@@ -5871,7 +6055,7 @@ let flowIpcShell = #"""
             generatedLazyGraphProbe: resource.generatedLazyGraphProbe || '',
             generatedLazyBlockerVersion: resource.generatedLazyBlockerVersion
               || resource.blockerVersion
-              || 'flow-ipc-generated-lazy-v1_8',
+              || 'flow-ipc-loadondemand-v1_9',
             moduleIdentityStrategy: usesStableModuleIdentity(resource)
               ? 'stable-resource-path-blob-module-identity-v1_7'
               : '',
@@ -5900,6 +6084,32 @@ let flowIpcShell = #"""
                 ? (resource.generatedLazyImportResolutionStrategy
                   || 'stable-relative-import-rewrite-generated-lazy-v1_8')
                 : '',
+              generatedLazyLoadOnDemandContractVersion: dependency && dependency.generatedLazyBundleDependency === true
+                ? (resource.generatedLazyLoadOnDemandContractVersion || 'flow-ipc-loadondemand-v1_9')
+                : '',
+              generatedLazyTriggerSource: dependency && dependency.generatedLazyBundleDependency === true
+                ? (resource.generatedLazyTriggerSource || 'diagnostic-preflight-and-direct-staged-import')
+                : '',
+              generatedLazyApiOwner: dependency && dependency.generatedLazyBundleDependency === true
+                ? (resource.generatedLazyApiOwner || 'window.Vaadin.Flow.loadOnDemand')
+                : '',
+              generatedLazyApiInstallSource: dependency && dependency.generatedLazyBundleDependency === true
+                ? 'dependency-staged-for-generated-flow-imports'
+                : '',
+              generatedLazyRequestedChunk: dependency && dependency.generatedLazyBundleDependency === true
+                ? (resource.generatedLazyRequestedChunk || 'vatori-flow-ipc-generated-lazy-v1_9-probe')
+                : '',
+              generatedLazyRegistrySource: dependency && dependency.generatedLazyBundleDependency === true
+                ? (resource.generatedLazyRegistrySource || 'no-bootstrap-lazy-registry-observed')
+                : '',
+              generatedLazyMappingSource: dependency && dependency.generatedLazyBundleDependency === true
+                ? (resource.generatedLazyMappingSource || 'component-frontend-manifest-generated-lazy-v1_9')
+                : '',
+              generatedLazyResolvedArtifactPath: dependency && dependency.generatedLazyBundleDependency === true
+                ? dependencyPath
+                : '',
+              generatedLazyFlowClientTriggered: false,
+              generatedLazyDiagnosticBridge: false,
               generatedLazyRelativeImportSpecifier: dependency && dependency.generatedLazyBundleDependency === true
                 ? (resource.generatedLazyRelativeImportSpecifier || '')
                 : '',
@@ -5911,7 +6121,7 @@ let flowIpcShell = #"""
                 ? (resource.generatedLazyGraphProbe || '')
                 : '',
               generatedLazyBlockerVersion: dependency && dependency.generatedLazyBundleDependency === true
-                ? (resource.generatedLazyBlockerVersion || resource.blockerVersion || 'flow-ipc-generated-lazy-v1_8')
+                ? (resource.generatedLazyBlockerVersion || resource.blockerVersion || 'flow-ipc-loadondemand-v1_9')
                 : '',
               generatedLazySourceArtifact: dependency && dependency.generatedLazyBundleDependency === true
                 ? resource.path
@@ -5945,6 +6155,22 @@ let flowIpcShell = #"""
               || 'flow-ipc-generated-lazy-v1_8',
             generatedLazyImportResolutionStrategy: resource.generatedLazyImportResolutionStrategy
               || 'stable-relative-import-rewrite-generated-lazy-v1_8',
+            generatedLazyLoadOnDemandContractVersion: resource.generatedLazyLoadOnDemandContractVersion
+              || 'flow-ipc-loadondemand-v1_9',
+            generatedLazyTriggerSource: resource.generatedLazyTriggerSource
+              || 'diagnostic-preflight-and-direct-staged-import',
+            generatedLazyApiOwner: resource.generatedLazyApiOwner || 'window.Vaadin.Flow.loadOnDemand',
+            generatedLazyApiInstallSource: resource.generatedLazyApiInstallSource
+              || 'generated-flow-imports-dev-bundle-after-direct-staged-import',
+            generatedLazyRequestedChunk: resource.generatedLazyRequestedChunk
+              || 'vatori-flow-ipc-generated-lazy-v1_9-probe',
+            generatedLazyRegistrySource: resource.generatedLazyRegistrySource
+              || 'no-bootstrap-lazy-registry-observed',
+            generatedLazyMappingSource: resource.generatedLazyMappingSource
+              || 'component-frontend-manifest-generated-lazy-v1_9',
+            generatedLazyResolvedArtifactPath: resource.generatedLazyResolvedArtifactPath || resource.path,
+            generatedLazyFlowClientTriggered: false,
+            generatedLazyDiagnosticBridge: resource.generatedLazyDiagnosticBridge === true,
             generatedLazyRelativeImportSpecifier: resource.generatedLazyRelativeImportSpecifier || '',
             generatedLazyResolvedDependencyPath: resource.generatedLazyResolvedDependencyPath || '',
             generatedLazyRelativeDependencyResolved:
@@ -5952,7 +6178,7 @@ let flowIpcShell = #"""
             generatedLazyGraphProbe: resource.generatedLazyGraphProbe || '',
             generatedLazyBlockerVersion: resource.generatedLazyBlockerVersion
               || resource.blockerVersion
-              || 'flow-ipc-generated-lazy-v1_8',
+              || 'flow-ipc-loadondemand-v1_9',
             moduleIdentityStrategy: usesStableModuleIdentity(resource)
               ? 'stable-resource-path-blob-module-identity-v1_7'
               : '',
@@ -5966,13 +6192,28 @@ let flowIpcShell = #"""
               || 'flow-ipc-generated-lazy-v1_8',
             generatedLazyImportResolutionStrategy: resource.generatedLazyImportResolutionStrategy
               || 'stable-relative-import-rewrite-generated-lazy-v1_8',
+            generatedLazyLoadOnDemandContractVersion: resource.generatedLazyLoadOnDemandContractVersion
+              || 'flow-ipc-loadondemand-v1_9',
+            generatedLazyTriggerSource: resource.generatedLazyTriggerSource
+              || 'diagnostic-preflight-and-direct-staged-import',
+            generatedLazyApiOwner: resource.generatedLazyApiOwner || 'window.Vaadin.Flow.loadOnDemand',
+            generatedLazyApiInstallSource: 'dependency-staged-for-generated-flow-imports',
+            generatedLazyRequestedChunk: resource.generatedLazyRequestedChunk
+              || 'vatori-flow-ipc-generated-lazy-v1_9-probe',
+            generatedLazyRegistrySource: resource.generatedLazyRegistrySource
+              || 'no-bootstrap-lazy-registry-observed',
+            generatedLazyMappingSource: resource.generatedLazyMappingSource
+              || 'component-frontend-manifest-generated-lazy-v1_9',
+            generatedLazyResolvedArtifactPath: resource.generatedLazyResolvedArtifactPath || '',
+            generatedLazyFlowClientTriggered: false,
+            generatedLazyDiagnosticBridge: false,
             generatedLazyRelativeImportSpecifier: resource.generatedLazyRelativeImportSpecifier || '',
             generatedLazyResolvedDependencyPath: resource.generatedLazyResolvedDependencyPath || '',
             generatedLazyRelativeDependencyResolved:
               window.VaadinDesktopIpcDiagnostics.frontendArtifactGeneratedLazyRelativeDependencyResolved,
             generatedLazyBlockerVersion: resource.generatedLazyBlockerVersion
               || resource.blockerVersion
-              || 'flow-ipc-generated-lazy-v1_8',
+              || 'flow-ipc-loadondemand-v1_9',
             generatedLazyGraphProbe: resource.generatedLazyGraphProbe || ''
           });
         } finally {

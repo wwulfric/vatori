@@ -14,6 +14,7 @@ v0/v1 runtime 切片走向可产品化桌面框架的最终完成状态。
 - `docs/goal-1_6.md`：TextField / npm graph parity，已完成。
 - `docs/goal-1_7.md`：TextField production chunk side-effect split，已完成。
 - `docs/goal-1_8.md`：Generated/lazy frontend execution boundary，已完成。
+- `docs/goal-1_9.md`：Flow-client-triggered generated/lazy loading contract，已完成。
 
 后续阶段应继续以 `docs/goal-1_9.md`、`docs/goal-1_10.md` 等文件拆分，
 每个阶段只拿走本长期目标中的一个可评审切片。不要把本文件改写成短期任务清单；
@@ -37,7 +38,7 @@ v0/v1 runtime 切片走向可产品化桌面框架的最终完成状态。
 
 ## 当前基线
 
-截至 goal 1.8，仓库已经证明：
+截至 goal 1.9，仓库已经证明：
 
 - `dev-ipc` 可以启动 no-localhost Flow IPC runtime。
 - 真实 macOS Swift/AppKit/WKWebView 窗口可以运行 Flow IPC smoke app 和 framework
@@ -73,7 +74,16 @@ v0/v1 runtime 切片走向可产品化桌面框架的最终完成状态。
   `flow-ipc-generated-lazy-resolver-v1_8`、resolved dependency、module identity、
   `frontendArtifactGeneratedLazyExecuted=true` 和
   `api-installed-by-staged-generated-flow-imports` 的受控 `Flow.loadOnDemand` probe。
-- 完整 Flow-client-triggered generated/lazy `Flow.loadOnDemand` path、
+- v1.9 已把 generated/lazy `Flow.loadOnDemand` blocker 从 direct staged import probe
+  收敛到明确的 API / registry / integration 层：trace 记录
+  `generatedLazyLoadOnDemandContractVersion=flow-ipc-loadondemand-v1_9`、
+  API owner、install source、requested chunk、registry/mapping source、
+  resolved artifact path、`blockerVersion=flow-ipc-loadondemand-v1_9`、
+  `failureLayer=loadondemand-api-installed-by-generated-imports-not-flow-client-triggered`、
+  `frontendArtifactGeneratedLazyDiagnosticBridge=true` 和
+  `frontendArtifactGeneratedLazyFlowClientTriggered=false`。真实 dev-bundle
+  generated/lazy artifact 仍会执行；它仍不是最终 Flow-client-engine-triggered 成功。
+- 完整 Flow-client-engine-triggered generated/lazy `Flow.loadOnDemand` path、
   production bundle execution 和 dev-mode/Vite
   execution 仍是明确 blocker，不计入完成。
 
@@ -168,10 +178,11 @@ v0/v1 runtime 切片走向可产品化桌面框架的最终完成状态。
 
 以下项目仍需要后续阶段推进：
 
-- 基于 v1.8 的 generated/lazy relative dependency resolver 结果，继续把完整
-  Flow-client-triggered `Flow.loadOnDemand`、production bundle execution 和
+- 基于 v1.9 的 `Flow.loadOnDemand` API / registry / integration blocker 结果，继续把
+  完整 Flow-client-engine-triggered generated/lazy path、production bundle execution 和
   dev-mode/Vite execution 从 partial/blocker 推进到真实可执行路径。
-- 完整 generated/lazy `Flow.loadOnDemand` execution，不再依赖 direct staged import probe。
+- 完整 generated/lazy `Flow.loadOnDemand` execution，不再依赖 diagnostic bridge 或 direct
+  staged import 来安装/触发 API。
 - Production bundle chunk execution 和 packaging-time staging。
 - Dev-mode/Vite graph execution 或可靠替代模式。
 - Broader Vaadin component parity，尤其是 Grid/VirtualList、ComboBox、DatePicker、
@@ -199,8 +210,8 @@ v0/v1 runtime 切片走向可产品化桌面框架的最终完成状态。
 
 当前建议的下一阶段应从以下方向中选一个可评审切片：
 
-- 完整 Flow-client-triggered generated/lazy `Flow.loadOnDemand` contract，把 v1.8 的
-  direct staged import probe 替换为真实 Flow lazy path 或受支持 SPI。
+- 完整 Flow-client-engine-triggered generated/lazy `Flow.loadOnDemand` contract，把 v1.9
+  的 diagnostic bridge / API registry blocker 替换为真实 Flow lazy path 或受支持 SPI。
 - Production bundle execution / packaging-time staging，从 `stats.json` verified-only
   进入更真实的 executable bundle graph。
 - Dev-mode/Vite execution 或可靠替代模式。

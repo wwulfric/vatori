@@ -242,3 +242,19 @@ bash bin/flow-ipc-trace-inspect --require-flow-ipc-v1_3-framework .build/vaadin-
 - 不要求把 compatibility HTTP mode 设为默认或用它作为 Flow IPC 成功证据。
 
 这些仍保留在 `docs/goal.md` 的长期未完成账本中。
+
+## 完成记录
+
+本阶段以“blocker 前移”形式完成：v1.8 的 direct staged import 仍负责执行真实
+`generated-flow-imports-VW7hRaNw.js` 和 `markdown-helpers-31I0A-hg.js`，但 v1.9 trace
+不再把 direct import 当成最终 lazy-loading 成功。新增 metadata 和 gate 记录：
+
+- `generatedLazyLoadOnDemandContractVersion=flow-ipc-loadondemand-v1_9`
+- API owner / install source / requested chunk / registry source / mapping source / resolved artifact path
+- `frontendArtifactGeneratedLazyDiagnosticBridge=true`
+- `frontendArtifactGeneratedLazyFlowClientTriggered=false`
+- `blockerVersion=flow-ipc-loadondemand-v1_9`
+- `failureLayer=loadondemand-api-installed-by-generated-imports-not-flow-client-triggered`
+
+`--require-flow-ipc-v1_9-loadondemand` 是本阶段 delta gate；
+`--require-flow-ipc-v1_9` 是 v1.8 baseline + v1.9 delta 的 cumulative gate。

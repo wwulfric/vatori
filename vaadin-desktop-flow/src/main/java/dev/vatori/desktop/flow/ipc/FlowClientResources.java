@@ -81,12 +81,26 @@ final class FlowClientResources {
             "stable-relative-import-rewrite-generated-lazy-v1_8";
     private static final String GENERATED_LAZY_GRAPH_PROBE =
             "direct-generated-flow-imports-dev-bundle-chunk-v1_8";
-    private static final String GENERATED_LAZY_BLOCKER_VERSION = "flow-ipc-generated-lazy-v1_8";
+    private static final String GENERATED_LAZY_LOAD_ON_DEMAND_CONTRACT_VERSION =
+            "flow-ipc-loadondemand-v1_9";
+    private static final String GENERATED_LAZY_LOAD_ON_DEMAND_TRIGGER_SOURCE =
+            "diagnostic-preflight-and-direct-staged-import";
+    private static final String GENERATED_LAZY_LOAD_ON_DEMAND_API_OWNER =
+            "window.Vaadin.Flow.loadOnDemand";
+    private static final String GENERATED_LAZY_LOAD_ON_DEMAND_API_INSTALL_SOURCE =
+            "generated-flow-imports-dev-bundle-after-direct-staged-import";
+    private static final String GENERATED_LAZY_LOAD_ON_DEMAND_REQUESTED_CHUNK =
+            "vatori-flow-ipc-generated-lazy-v1_9-probe";
+    private static final String GENERATED_LAZY_LOAD_ON_DEMAND_REGISTRY_SOURCE =
+            "no-bootstrap-lazy-registry-observed";
+    private static final String GENERATED_LAZY_LOAD_ON_DEMAND_MAPPING_SOURCE =
+            "component-frontend-manifest-generated-lazy-v1_9";
+    private static final String GENERATED_LAZY_BLOCKER_VERSION = "flow-ipc-loadondemand-v1_9";
     private static final String GENERATED_LAZY_RELATIVE_IMPORT_SPECIFIER = "./markdown-helpers-31I0A-hg.js";
     private static final String GENERATED_LAZY_FAILURE_LAYER =
-            "relative-dependency-resolved-flow-loadondemand-boundary";
+            "loadondemand-api-installed-by-generated-imports-not-flow-client-triggered";
     private static final String GENERATED_LAZY_NEXT_RESOLUTION_STEP =
-            "replace the direct staged import probe with a Flow client triggered loadOnDemand path or supported Vaadin lazy-loading SPI";
+            "discover the Flow client bootstrap lazy registry or supported Vaadin SPI that maps real lazy keys to generated-lazy artifacts without direct staged import";
     private static final String FLOW_CLIENT_IPC_BRIDGE_NEEDLE = """
             j.sendEventMessage=mI(function(a,b,c){var d=i.a.Z();d.Ab(a,b,c)});j.initializing=false;\
             """;
@@ -438,6 +452,18 @@ final class FlowClientResources {
         manifest.put("generatedLazyExecutionVersion", GENERATED_LAZY_EXECUTION_VERSION);
         manifest.put("generatedLazyImportResolutionStrategy", GENERATED_LAZY_IMPORT_RESOLUTION_STRATEGY);
         manifest.put("generatedLazyGraphProbe", GENERATED_LAZY_GRAPH_PROBE);
+        manifest.put("generatedLazyLoadOnDemandContractVersion",
+                GENERATED_LAZY_LOAD_ON_DEMAND_CONTRACT_VERSION);
+        manifest.put("generatedLazyTriggerSource", GENERATED_LAZY_LOAD_ON_DEMAND_TRIGGER_SOURCE);
+        manifest.put("generatedLazyApiOwner", GENERATED_LAZY_LOAD_ON_DEMAND_API_OWNER);
+        manifest.put("generatedLazyApiInstallSource",
+                GENERATED_LAZY_LOAD_ON_DEMAND_API_INSTALL_SOURCE);
+        manifest.put("generatedLazyRequestedChunk", GENERATED_LAZY_LOAD_ON_DEMAND_REQUESTED_CHUNK);
+        manifest.put("generatedLazyRegistrySource", GENERATED_LAZY_LOAD_ON_DEMAND_REGISTRY_SOURCE);
+        manifest.put("generatedLazyMappingSource", GENERATED_LAZY_LOAD_ON_DEMAND_MAPPING_SOURCE);
+        manifest.put("generatedLazyResolvedArtifactPath", DEV_BUNDLE_GENERATED_FLOW_IMPORTS_JS);
+        manifest.put("generatedLazyFlowClientTriggered", false);
+        manifest.put("generatedLazyDiagnosticBridge", true);
         manifest.put("generatedLazyBlockerVersion", GENERATED_LAZY_BLOCKER_VERSION);
         manifest.put("generatedLazyRelativeImportSpecifier", GENERATED_LAZY_RELATIVE_IMPORT_SPECIFIER);
         manifest.put("generatedLazyResolvedDependencyPath", DEV_BUNDLE_MARKDOWN_HELPERS_JS);
@@ -459,15 +485,15 @@ final class FlowClientResources {
                 artifactFamilyStatus("production-bundle", "partial", "production-bundle-stats-verified"),
                 artifactFamilyStatus("dev-mode-bundle", "partial", "dev-mode-package-lock-verified"),
                 artifactFamilyStatus("generated-lazy", "partial",
-                        "generated-lazy-relative-dependency-resolved-v1_8")));
+                        "generated-lazy-loadondemand-contract-narrowed-v1_9")));
         manifest.put("dependencyGraph", Map.of("declared", true,
                 "resolver", COMPONENT_RESOLVER_V1_4,
                 "resourceCount", entries.size()));
         manifest.put("strictBlockers", List.of(
                 strictBlocker("dev-mode-bundle", "dev-mode-bundle-execution-unmapped",
                         "dev-mode package-lock dependency graph is verified over IPC, but Vite/dev-server module execution is not yet mapped into the no-localhost resolver"),
-                strictBlocker("generated-lazy", "generated-lazy-loadondemand-api-boundary-v1_8",
-                        "generated-flow-imports relative dependencies are resolved by the no-localhost staging resolver, but full Flow.loadOnDemand integration is still a controlled probe")));
+                strictBlocker("generated-lazy", "generated-lazy-loadondemand-api-boundary-v1_9",
+                        "generated-flow-imports relative dependencies execute through the no-localhost staging resolver, but the real Flow.loadOnDemand API is still installed by the direct staged generated-flow-imports artifact rather than triggered by the Flow client engine")));
         manifest.put("transport", "flow-ipc");
         manifest.put("resourceLoading", "ipc-resource-request");
         manifest.put("componentClass", "com.vaadin.flow.component.textfield.BigDecimalField");
@@ -816,6 +842,17 @@ final class FlowClientResources {
         attributes.put("blockedReason",
                 "verified generated Flow imports resource; full loadOnDemand execution remains unmapped");
         attributes.put("lookupKind", "Generated-flow-imports-resource-v1_4");
+        attributes.put("generatedLazyLoadOnDemandContractVersion",
+                GENERATED_LAZY_LOAD_ON_DEMAND_CONTRACT_VERSION);
+        attributes.put("generatedLazyTriggerSource", "repository-fixture-verified-only");
+        attributes.put("generatedLazyApiOwner", "repository-local generated Flow fixture");
+        attributes.put("generatedLazyApiInstallSource", "repository-generated-flow-imports-fixture");
+        attributes.put("generatedLazyRequestedChunk", GENERATED_LAZY_LOAD_ON_DEMAND_REQUESTED_CHUNK);
+        attributes.put("generatedLazyRegistrySource", "repository-fixture-static-map");
+        attributes.put("generatedLazyMappingSource", "repository-generated-flow-imports-fixture");
+        attributes.put("generatedLazyResolvedArtifactPath", GENERATED_FLOW_IMPORTS_JS);
+        attributes.put("generatedLazyFlowClientTriggered", false);
+        attributes.put("generatedLazyDiagnosticBridge", false);
         return attributes;
     }
 
@@ -830,6 +867,21 @@ final class FlowClientResources {
         attributes.put("generatedLazyExecutionVersion", GENERATED_LAZY_EXECUTION_VERSION);
         attributes.put("generatedLazyImportResolutionStrategy", GENERATED_LAZY_IMPORT_RESOLUTION_STRATEGY);
         attributes.put("generatedLazyGraphProbe", GENERATED_LAZY_GRAPH_PROBE);
+        attributes.put("generatedLazyLoadOnDemandContractVersion",
+                GENERATED_LAZY_LOAD_ON_DEMAND_CONTRACT_VERSION);
+        attributes.put("generatedLazyTriggerSource",
+                primary ? GENERATED_LAZY_LOAD_ON_DEMAND_TRIGGER_SOURCE
+                        : "generated-lazy-stable-relative-dependency");
+        attributes.put("generatedLazyApiOwner", GENERATED_LAZY_LOAD_ON_DEMAND_API_OWNER);
+        attributes.put("generatedLazyApiInstallSource",
+                primary ? GENERATED_LAZY_LOAD_ON_DEMAND_API_INSTALL_SOURCE
+                        : "dependency-staged-for-generated-flow-imports");
+        attributes.put("generatedLazyRequestedChunk", GENERATED_LAZY_LOAD_ON_DEMAND_REQUESTED_CHUNK);
+        attributes.put("generatedLazyRegistrySource", GENERATED_LAZY_LOAD_ON_DEMAND_REGISTRY_SOURCE);
+        attributes.put("generatedLazyMappingSource", GENERATED_LAZY_LOAD_ON_DEMAND_MAPPING_SOURCE);
+        attributes.put("generatedLazyResolvedArtifactPath", path);
+        attributes.put("generatedLazyFlowClientTriggered", false);
+        attributes.put("generatedLazyDiagnosticBridge", primary);
         attributes.put("generatedLazyBlockerVersion", GENERATED_LAZY_BLOCKER_VERSION);
         attributes.put("generatedLazyRelativeImportSpecifier", GENERATED_LAZY_RELATIVE_IMPORT_SPECIFIER);
         attributes.put("generatedLazyResolvedDependencyPath", DEV_BUNDLE_MARKDOWN_HELPERS_JS);
@@ -850,11 +902,11 @@ final class FlowClientResources {
         attributes.put("artifactStatus", "partial");
         attributes.put("requestedBy", "component-frontend-manifest-v1_4");
         attributes.put("failureClassification",
-                primary ? "generated-lazy-relative-import-resolved-v1_8"
+                primary ? "generated-lazy-loadondemand-contract-narrowed-v1_9"
                         : "generated-lazy-dependency-module-resolved-v1_8");
         attributes.put("blockedReason",
                 primary
-                        ? "Vaadin dev-bundle generated-flow-imports chunk is staged with relative imports rewritten to stable module identities; full Flow.loadOnDemand integration remains partial"
+                        ? "Vaadin dev-bundle generated-flow-imports chunk executes with relative imports rewritten to stable module identities; Flow.loadOnDemand remains a diagnostic call installed by that direct import instead of a Flow-client-triggered lazy request"
                         : "generated-flow-imports dependency chunk is available as a stable staged module identity for the v1.8 generated/lazy resolver");
         attributes.put("lookupKind", lookupKind);
         attributes.put("blockerVersion", GENERATED_LAZY_BLOCKER_VERSION);

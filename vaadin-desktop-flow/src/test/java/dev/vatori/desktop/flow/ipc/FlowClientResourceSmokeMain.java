@@ -167,7 +167,7 @@ public final class FlowClientResourceSmokeMain {
                 "Component artifact families");
         requireNoStrictBlocker(componentManifest, "npm-frontend");
         requireStrictBlocker(componentManifest, "dev-mode-bundle", "dev-mode-bundle-execution-unmapped");
-        requireStrictBlocker(componentManifest, "generated-lazy", "generated-lazy-loadondemand-api-boundary-v1_8");
+        requireStrictBlocker(componentManifest, "generated-lazy", "generated-lazy-loadondemand-api-boundary-v1_9");
         requireEquals("flow-ipc-generated-lazy-resolver-v1_8",
                 componentManifest.get("generatedLazyResolverVersion"),
                 "Generated/lazy resolver version");
@@ -183,6 +183,40 @@ public final class FlowClientResourceSmokeMain {
         requireEquals("vaadin-dev-bundle/webapp/VAADIN/build/markdown-helpers-31I0A-hg.js",
                 componentManifest.get("generatedLazyResolvedDependencyPath"),
                 "Generated/lazy resolved dependency path");
+        requireEquals("flow-ipc-loadondemand-v1_9",
+                componentManifest.get("generatedLazyLoadOnDemandContractVersion"),
+                "Generated/lazy loadOnDemand contract version");
+        requireEquals("diagnostic-preflight-and-direct-staged-import",
+                componentManifest.get("generatedLazyTriggerSource"),
+                "Generated/lazy trigger source");
+        requireEquals("window.Vaadin.Flow.loadOnDemand",
+                componentManifest.get("generatedLazyApiOwner"),
+                "Generated/lazy API owner");
+        requireEquals("generated-flow-imports-dev-bundle-after-direct-staged-import",
+                componentManifest.get("generatedLazyApiInstallSource"),
+                "Generated/lazy API install source");
+        requireEquals("vatori-flow-ipc-generated-lazy-v1_9-probe",
+                componentManifest.get("generatedLazyRequestedChunk"),
+                "Generated/lazy requested chunk");
+        requireEquals("no-bootstrap-lazy-registry-observed",
+                componentManifest.get("generatedLazyRegistrySource"),
+                "Generated/lazy registry source");
+        requireEquals("component-frontend-manifest-generated-lazy-v1_9",
+                componentManifest.get("generatedLazyMappingSource"),
+                "Generated/lazy mapping source");
+        requireEquals("vaadin-dev-bundle/webapp/VAADIN/build/generated-flow-imports-VW7hRaNw.js",
+                componentManifest.get("generatedLazyResolvedArtifactPath"),
+                "Generated/lazy resolved artifact path");
+        requireEquals(Boolean.FALSE, componentManifest.get("generatedLazyFlowClientTriggered"),
+                "Generated/lazy Flow-client trigger flag");
+        requireEquals(Boolean.TRUE, componentManifest.get("generatedLazyDiagnosticBridge"),
+                "Generated/lazy diagnostic bridge flag");
+        requireEquals("flow-ipc-loadondemand-v1_9",
+                componentManifest.get("generatedLazyBlockerVersion"),
+                "Generated/lazy blocker version");
+        requireEquals("loadondemand-api-installed-by-generated-imports-not-flow-client-triggered",
+                componentManifest.get("generatedLazyFailureLayer"),
+                "Generated/lazy failure layer");
         requireComponentResourceMetadata(componentResources);
         String checkboxDevBundlePath = "META-INF/vatori/dev-bundle-entry/vaadin-checkbox.js";
         String selectDevBundlePath = "META-INF/vatori/dev-bundle-entry/vaadin-select.js";
@@ -451,8 +485,30 @@ public final class FlowClientResourceSmokeMain {
                         "./markdown-helpers-31I0A-hg.js")
                 || !Objects.equals(generatedFlowImportsDevBundleResponse.get("generatedLazyResolvedDependencyPath"),
                         generatedFlowImportsMarkdownHelperPath)
+                || !Objects.equals(generatedFlowImportsDevBundleResponse.get("generatedLazyLoadOnDemandContractVersion"),
+                        "flow-ipc-loadondemand-v1_9")
+                || !Objects.equals(generatedFlowImportsDevBundleResponse.get("generatedLazyTriggerSource"),
+                        "diagnostic-preflight-and-direct-staged-import")
+                || !Objects.equals(generatedFlowImportsDevBundleResponse.get("generatedLazyApiOwner"),
+                        "window.Vaadin.Flow.loadOnDemand")
+                || !Objects.equals(generatedFlowImportsDevBundleResponse.get("generatedLazyApiInstallSource"),
+                        "generated-flow-imports-dev-bundle-after-direct-staged-import")
+                || !Objects.equals(generatedFlowImportsDevBundleResponse.get("generatedLazyRequestedChunk"),
+                        "vatori-flow-ipc-generated-lazy-v1_9-probe")
+                || !Objects.equals(generatedFlowImportsDevBundleResponse.get("generatedLazyRegistrySource"),
+                        "no-bootstrap-lazy-registry-observed")
+                || !Objects.equals(generatedFlowImportsDevBundleResponse.get("generatedLazyMappingSource"),
+                        "component-frontend-manifest-generated-lazy-v1_9")
+                || !Objects.equals(generatedFlowImportsDevBundleResponse.get("generatedLazyResolvedArtifactPath"),
+                        generatedFlowImportsDevBundlePath)
+                || !Objects.equals(generatedFlowImportsDevBundleResponse.get("generatedLazyBlockerVersion"),
+                        "flow-ipc-loadondemand-v1_9")
+                || !Objects.equals(generatedFlowImportsDevBundleResponse.get("failureLayer"),
+                        "loadondemand-api-installed-by-generated-imports-not-flow-client-triggered")
+                || !Boolean.FALSE.equals(generatedFlowImportsDevBundleResponse.get("generatedLazyFlowClientTriggered"))
+                || !Boolean.TRUE.equals(generatedFlowImportsDevBundleResponse.get("generatedLazyDiagnosticBridge"))
                 || !Boolean.FALSE.equals(generatedFlowImportsDevBundleResponse.get("shim"))) {
-            throw new IllegalStateException("Generated Flow imports dev-bundle chunk is missing v1.8 metadata");
+            throw new IllegalStateException("Generated Flow imports dev-bundle chunk is missing v1.9 metadata");
         }
         Object generatedFlowImportsDevBundleBody = generatedFlowImportsDevBundleResponse.get("body");
         if (!(generatedFlowImportsDevBundleBody instanceof String generatedFlowImportsDevBundleText)
@@ -486,8 +542,18 @@ public final class FlowClientResourceSmokeMain {
                         "flow-ipc-generated-lazy-v1_8")
                 || !Objects.equals(generatedFlowImportsMarkdownHelperResponse.get("generatedLazyImportResolutionStrategy"),
                         "stable-relative-import-rewrite-generated-lazy-v1_8")
+                || !Objects.equals(generatedFlowImportsMarkdownHelperResponse.get("generatedLazyLoadOnDemandContractVersion"),
+                        "flow-ipc-loadondemand-v1_9")
+                || !Objects.equals(generatedFlowImportsMarkdownHelperResponse.get("generatedLazyApiOwner"),
+                        "window.Vaadin.Flow.loadOnDemand")
+                || !Objects.equals(generatedFlowImportsMarkdownHelperResponse.get("generatedLazyResolvedArtifactPath"),
+                        generatedFlowImportsMarkdownHelperPath)
+                || !Objects.equals(generatedFlowImportsMarkdownHelperResponse.get("generatedLazyBlockerVersion"),
+                        "flow-ipc-loadondemand-v1_9")
+                || !Boolean.FALSE.equals(generatedFlowImportsMarkdownHelperResponse.get("generatedLazyFlowClientTriggered"))
+                || !Boolean.FALSE.equals(generatedFlowImportsMarkdownHelperResponse.get("generatedLazyDiagnosticBridge"))
                 || !Boolean.FALSE.equals(generatedFlowImportsMarkdownHelperResponse.get("shim"))) {
-            throw new IllegalStateException("Generated Flow imports markdown helper is missing v1.8 metadata");
+            throw new IllegalStateException("Generated Flow imports markdown helper is missing v1.9 metadata");
         }
         Object generatedFlowImportsMarkdownHelperBody = generatedFlowImportsMarkdownHelperResponse.get("body");
         if (!(generatedFlowImportsMarkdownHelperBody instanceof String markdownHelperText)
@@ -665,7 +731,13 @@ public final class FlowClientResourceSmokeMain {
                     && "partial".equals(metadata.get("artifactStatus"))
                     && Boolean.TRUE.equals(metadata.get("generatedLazyBundleChunk"))
                     && "vaadin-dev-bundle".equals(metadata.get("origin"))
-                    && "flow-ipc-generated-lazy-resolver-v1_8".equals(metadata.get("generatedLazyResolverVersion"));
+                    && "flow-ipc-generated-lazy-resolver-v1_8".equals(metadata.get("generatedLazyResolverVersion"))
+                    && "flow-ipc-loadondemand-v1_9".equals(
+                            metadata.get("generatedLazyLoadOnDemandContractVersion"))
+                    && "diagnostic-preflight-and-direct-staged-import".equals(
+                            metadata.get("generatedLazyTriggerSource"))
+                    && Boolean.FALSE.equals(metadata.get("generatedLazyFlowClientTriggered"))
+                    && Boolean.TRUE.equals(metadata.get("generatedLazyDiagnosticBridge"));
             devModePackageGraphObserved = devModePackageGraphObserved
                     || "dev-mode-bundle".equals(artifactFamily)
                     && "verified-only-intentionally-not-executed".equals(executionPolicy)

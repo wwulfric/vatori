@@ -480,8 +480,16 @@ public final class FlowClientResourceSmokeMain {
                 || !Objects.equals(productionBundleStatsResponse.get("productionBundleRuntimeSelectedArtifact"),
                         devBundleIndexHtmlPath)
                 || !Objects.equals(productionBundleStatsResponse.get("productionBundleRuntimeBlockerVersion"),
-                        "flow-ipc-production-runtime-v1_10")) {
-            throw new IllegalStateException("Production bundle stats graph is missing v1.10 runtime registry metadata");
+                        "flow-ipc-production-runtime-v1_10")
+                || !Objects.equals(productionBundleStatsResponse.get("productionBundleRuntimeOwnerVersion"),
+                        "flow-ipc-production-owner-v1_13")
+                || !Objects.equals(productionBundleStatsResponse.get("productionBundleRuntimeOwner"),
+                        "flow-ipc-production-bundle-runtime")
+                || !Objects.equals(productionBundleStatsResponse.get("productionBundleRuntimeEntryArtifact"),
+                        devBundleIndexHtmlPath)
+                || !Objects.equals(productionBundleStatsResponse.get("productionBundleRuntimeOwnerFailureLayer"),
+                        "production-owner-runtime-contract-missing")) {
+            throw new IllegalStateException("Production bundle stats graph is missing runtime owner metadata");
         }
         Map<String, Object> productionRuntimeResponse = resources.response(devBundleIndexHtmlPath);
         if (!Boolean.TRUE.equals(productionRuntimeResponse.get("productionBundleRuntimeArtifact"))
@@ -498,8 +506,21 @@ public final class FlowClientResourceSmokeMain {
                 || !Objects.equals(productionRuntimeResponse.get("productionBundleRuntimeBlockerVersion"),
                         "flow-ipc-production-runtime-v1_10")
                 || !Objects.equals(productionRuntimeResponse.get("productionBundleRuntimeExecutionPolicy"),
-                        "stage-execution-attempt-production-bundle-runtime-v1_10")) {
-            throw new IllegalStateException("Production bundle runtime artifact is missing v1.10 metadata");
+                        "stage-execution-attempt-production-bundle-runtime-v1_10")
+                || !Objects.equals(productionRuntimeResponse.get("productionBundleRuntimeOwnerVersion"),
+                        "flow-ipc-production-owner-v1_13")
+                || !Objects.equals(productionRuntimeResponse.get("productionBundleRuntimeOwner"),
+                        "flow-ipc-production-bundle-runtime")
+                || !Objects.equals(productionRuntimeResponse.get("productionBundleRuntimeOwnerModuleIdentity"),
+                        "production-owner-v1_13:" + devBundleIndexHtmlPath)
+                || !Objects.equals(productionRuntimeResponse.get("productionBundleRuntimeOwnerExecutionPolicy"),
+                        "stage-owner-contract-production-bundle-runtime-v1_13")
+                || !Objects.equals(productionRuntimeResponse.get("productionBundleRuntimeOwnerBlockerVersion"),
+                        "flow-ipc-production-owner-v1_13")
+                || !Objects.equals(productionRuntimeResponse.get("productionBundleRuntimeOwnerFailureLayer"),
+                        "production-owner-runtime-contract-missing")
+                || !Boolean.FALSE.equals(productionRuntimeResponse.get("componentProductionOwnerReused"))) {
+            throw new IllegalStateException("Production bundle runtime artifact is missing runtime owner metadata");
         }
         if (!resources.contains(checkboxDevBundlePath)) {
             throw new IllegalStateException("Component frontend manifest is missing the checkbox dev-bundle module");
@@ -867,6 +888,7 @@ public final class FlowClientResourceSmokeMain {
         boolean devModePackageGraphObserved = false;
         boolean flowLazyDependencyObserved = false;
         boolean productionRuntimeArtifactObserved = false;
+        boolean productionRuntimeOwnerObserved = false;
         for (Object entry : componentResources) {
             if (!(entry instanceof Map<?, ?> metadata)) {
                 throw new IllegalStateException("Component frontend resource manifest contains a non-object entry");
@@ -961,12 +983,24 @@ public final class FlowClientResourceSmokeMain {
                             metadata.get("productionBundleRuntimeVersion"))
                     && "stage-execution-attempt-production-bundle-runtime-v1_10".equals(
                             metadata.get("productionBundleRuntimeExecutionPolicy"));
+            productionRuntimeOwnerObserved = productionRuntimeOwnerObserved
+                    || "production-bundle".equals(artifactFamily)
+                    && Boolean.TRUE.equals(metadata.get("productionBundleRuntimeArtifact"))
+                    && "flow-ipc-production-owner-v1_13".equals(
+                            metadata.get("productionBundleRuntimeOwnerVersion"))
+                    && "flow-ipc-production-bundle-runtime".equals(
+                            metadata.get("productionBundleRuntimeOwner"))
+                    && "stage-owner-contract-production-bundle-runtime-v1_13".equals(
+                            metadata.get("productionBundleRuntimeOwnerExecutionPolicy"))
+                    && "production-owner-runtime-contract-missing".equals(
+                            metadata.get("productionBundleRuntimeOwnerFailureLayer"))
+                    && Boolean.FALSE.equals(metadata.get("componentProductionOwnerReused"));
         }
         if (!classpathResourceObserved || !legacyShimFallbackObserved || !devBundleEntryObserved
                 || !devBundleDependencyObserved || !productionBundleStatsObserved || !themeStaticResourceObserved
                 || !generatedLazyResourceObserved || !generatedLazyBundleChunkObserved || !devModePackageGraphObserved
                 || !generatedLoadOnDemandChunkObserved || !flowLazyDependencyObserved
-                || !productionRuntimeArtifactObserved) {
+                || !productionRuntimeArtifactObserved || !productionRuntimeOwnerObserved) {
             throw new IllegalStateException("Component frontend resource manifest is missing a v1.4 artifact family");
         }
     }

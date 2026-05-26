@@ -56,6 +56,8 @@ public final class DesktopTraceInspector {
         FLOW_IPC_V1_11("--require-flow-ipc-v1_11"),
         FLOW_IPC_V1_12_LOADONDEMAND_CHUNK_FILE("--require-flow-ipc-v1_12-loadondemand-chunk-file"),
         FLOW_IPC_V1_12("--require-flow-ipc-v1_12"),
+        FLOW_IPC_V1_13_PRODUCTION_OWNER("--require-flow-ipc-v1_13-production-owner"),
+        FLOW_IPC_V1_13("--require-flow-ipc-v1_13"),
         FLOW_IPC_V1_3_FRAMEWORK("--require-flow-ipc-v1_3-framework");
 
         private final String option;
@@ -127,6 +129,14 @@ public final class DesktopTraceInspector {
                         FLOW_IPC_V1_10_LAZY_DEPENDENCY, FLOW_IPC_V1_10_PRODUCTION_RUNTIME,
                         FLOW_IPC_V1_10, FLOW_IPC_V1_11_LOADONDEMAND_CHUNK, FLOW_IPC_V1_11,
                         FLOW_IPC_V1_12_LOADONDEMAND_CHUNK_FILE, FLOW_IPC_V1_12);
+                case FLOW_IPC_V1_13_PRODUCTION_OWNER -> EnumSet.of(FLOW_IPC_V1_13_PRODUCTION_OWNER);
+                case FLOW_IPC_V1_13 -> EnumSet.of(FLOW_IPC_V1, FLOW_IPC_V1_1, FLOW_IPC_V1_2,
+                        FLOW_IPC_V1_3, FLOW_IPC_V1_4, FLOW_IPC_V1_5, FLOW_IPC_V1_7,
+                        FLOW_IPC_V1_8, FLOW_IPC_V1_9_LOADONDEMAND, FLOW_IPC_V1_9,
+                        FLOW_IPC_V1_10_LAZY_DEPENDENCY, FLOW_IPC_V1_10_PRODUCTION_RUNTIME,
+                        FLOW_IPC_V1_10, FLOW_IPC_V1_11_LOADONDEMAND_CHUNK, FLOW_IPC_V1_11,
+                        FLOW_IPC_V1_12_LOADONDEMAND_CHUNK_FILE, FLOW_IPC_V1_12,
+                        FLOW_IPC_V1_13_PRODUCTION_OWNER, FLOW_IPC_V1_13);
                 case FLOW_IPC_V1_3_FRAMEWORK -> EnumSet.of(FLOW_IPC_V1_3_FRAMEWORK);
             };
         }
@@ -152,6 +162,9 @@ public final class DesktopTraceInspector {
                 case FLOW_IPC_V1_12_LOADONDEMAND_CHUNK_FILE ->
                     summary.hasRequiredFlowIpcV1_12LoadOnDemandChunkFileTypes();
                 case FLOW_IPC_V1_12 -> summary.hasRequiredFlowIpcV1_12Types();
+                case FLOW_IPC_V1_13_PRODUCTION_OWNER ->
+                    summary.hasRequiredFlowIpcV1_13ProductionOwnerTypes();
+                case FLOW_IPC_V1_13 -> summary.hasRequiredFlowIpcV1_13Types();
                 case FLOW_IPC_V1_3_FRAMEWORK -> summary.hasRequiredFlowIpcV1_3FrameworkTypes();
             };
         }
@@ -722,6 +735,28 @@ public final class DesktopTraceInspector {
                 summary.generatedLoadOnDemandChunkFileV112ManifestObserved = true;
             }
             if (line.contains("\"type\":\"bootstrapResponse\"")
+                    && line.contains("\"componentFrontendResources\"")
+                    && containsStringField(line, "productionBundleRuntimeOwnerVersion",
+                            "flow-ipc-production-owner-v1_13")
+                    && containsStringField(line, "productionBundleRuntimeOwner",
+                            "flow-ipc-production-bundle-runtime")
+                    && containsStringField(line, "productionBundleRuntimeEntryArtifact",
+                            "vaadin-dev-bundle/webapp/VAADIN/build/indexhtml-BfYYZi8S.js")
+                    && containsStringField(line, "productionBundleRuntimeSource",
+                            "vaadin-dev-bundle-stats")
+                    && containsStringField(line, "productionBundleRuntimeSelectedBy",
+                            "stats-entrypoint-or-focused-production-entry")
+                    && containsStringField(line, "productionBundleRuntimeOwnerModuleIdentity",
+                            "production-owner-v1_13:vaadin-dev-bundle/webapp/VAADIN/build/indexhtml-BfYYZi8S.js")
+                    && containsStringField(line, "productionBundleRuntimeOwnerExecutionPolicy",
+                            "stage-owner-contract-production-bundle-runtime-v1_13")
+                    && containsStringField(line, "productionBundleRuntimeOwnerBlockerVersion",
+                            "flow-ipc-production-owner-v1_13")
+                    && containsProductionOwnerFailureLayer(line, "productionBundleRuntimeOwnerFailureLayer")
+                    && containsLiteralField(line, "componentProductionOwnerReused", "false")) {
+                summary.productionRuntimeOwnerV113ManifestObserved = true;
+            }
+            if (line.contains("\"type\":\"bootstrapResponse\"")
                     && line.contains("\"artifactFamilies\"")
                     && line.contains("flow-client-classpath")
                     && line.contains("vaadin-component-classpath-frontend")
@@ -1126,6 +1161,26 @@ public final class DesktopTraceInspector {
                 summary.productionRuntimeV110RequestObserved = true;
             }
             if (line.contains("\"type\":\"resourceRequest\"")
+                    && line.contains("\"purpose\":\"vaadin-web-component-resource-probe\"")
+                    && containsPath(line, "vaadin-dev-bundle/webapp/VAADIN/build/indexhtml-BfYYZi8S.js")
+                    && containsLiteralField(line, "productionBundleRuntimeArtifact", "true")
+                    && containsStringField(line, "productionBundleRuntimeOwnerVersion",
+                            "flow-ipc-production-owner-v1_13")
+                    && containsStringField(line, "productionBundleRuntimeOwner",
+                            "flow-ipc-production-bundle-runtime")
+                    && containsStringField(line, "productionBundleRuntimeEntryArtifact",
+                            "vaadin-dev-bundle/webapp/VAADIN/build/indexhtml-BfYYZi8S.js")
+                    && containsStringField(line, "productionBundleRuntimeOwnerModuleIdentity",
+                            "production-owner-v1_13:vaadin-dev-bundle/webapp/VAADIN/build/indexhtml-BfYYZi8S.js")
+                    && containsStringField(line, "productionBundleRuntimeOwnerExecutionPolicy",
+                            "stage-owner-contract-production-bundle-runtime-v1_13")
+                    && containsStringField(line, "productionBundleRuntimeOwnerBlockerVersion",
+                            "flow-ipc-production-owner-v1_13")
+                    && containsProductionOwnerFailureLayer(line, "productionBundleRuntimeOwnerFailureLayer")
+                    && containsLiteralField(line, "componentProductionOwnerReused", "false")) {
+                summary.productionRuntimeOwnerV113RequestObserved = true;
+            }
+            if (line.contains("\"type\":\"resourceRequest\"")
                     && line.contains("\"purpose\":\"generated-loadondemand-chunk-v1_11\"")
                     && line.contains("\"lookupKind\":\"Generated-flow-imports-dev-bundle-chunk-v1_4\"")
                     && containsPath(line, "vaadin-dev-bundle/webapp/VAADIN/build/generated-flow-imports-VW7hRaNw.js")
@@ -1241,6 +1296,34 @@ public final class DesktopTraceInspector {
                             || line.contains("\"executionStatus\":\"executed\"")
                             || line.contains("\"executionStatus\":\"execution-failed\""))) {
                 summary.productionRuntimeV110StageObserved = true;
+            }
+            if (line.contains("\"type\":\"resourceStage\"")
+                    && containsStringField(line, "owner", "production-bundle-runtime")
+                    && line.contains("\"artifactFamily\":\"production-bundle\"")
+                    && containsPath(line, "vaadin-dev-bundle/webapp/VAADIN/build/indexhtml-BfYYZi8S.js")
+                    && containsLiteralField(line, "productionBundleRuntimeArtifact", "true")
+                    && containsStringField(line, "productionBundleRuntimeOwnerVersion",
+                            "flow-ipc-production-owner-v1_13")
+                    && containsStringField(line, "productionBundleRuntimeOwner",
+                            "flow-ipc-production-bundle-runtime")
+                    && containsStringField(line, "productionBundleRuntimeEntryArtifact",
+                            "vaadin-dev-bundle/webapp/VAADIN/build/indexhtml-BfYYZi8S.js")
+                    && containsStringField(line, "productionBundleRuntimeOwnerModuleIdentity",
+                            "production-owner-v1_13:vaadin-dev-bundle/webapp/VAADIN/build/indexhtml-BfYYZi8S.js")
+                    && containsStringField(line, "productionBundleRuntimeOwnerExecutionPolicy",
+                            "stage-owner-contract-production-bundle-runtime-v1_13")
+                    && containsStringField(line, "productionBundleRuntimeOwnerBlockerVersion",
+                            "flow-ipc-production-owner-v1_13")
+                    && containsProductionOwnerFailureLayer(line, "productionBundleRuntimeOwnerFailureLayer")
+                    && containsStringFieldPrefix(line, "productionBundleRuntimeOwnerExecutionResult",
+                            "strict-blocker:")
+                    && containsStringField(line, "moduleIdentityKey",
+                            "production-owner-v1_13:vaadin-dev-bundle/webapp/VAADIN/build/indexhtml-BfYYZi8S.js")
+                    && containsLiteralField(line, "componentProductionOwnerReused", "false")
+                    && (line.contains("\"executionStatus\":\"execution-attempt\"")
+                            || line.contains("\"executionStatus\":\"strict-blocker\"")
+                            || line.contains("\"executionStatus\":\"execution-failed\""))) {
+                summary.productionRuntimeOwnerV113StageObserved = true;
             }
             if (line.contains("\"type\":\"resourceStage\"")
                     && line.contains("\"artifactFamily\":\"generated-lazy\"")
@@ -1442,6 +1525,34 @@ public final class DesktopTraceInspector {
                             "production-runtime-ownership-not-yet-separated-from-focused-component-entry-imports")
                     && line.contains("execution-attempt:vaadin-dev-bundle/webapp/VAADIN/build/indexhtml-BfYYZi8S.js")) {
                 summary.productionRuntimeV110DomObserved = true;
+            }
+            if (line.contains("\"type\":\"webview.dom\"")
+                    && containsLiteralField(line, "frontendArtifactProductionBundleRuntimeOwnerObserved", "true")
+                    && containsLiteralField(line, "frontendArtifactProductionBundleRuntimeOwnerStageObserved", "true")
+                    && containsLiteralField(line, "frontendArtifactProductionBundleRuntimeOwnerImported", "false")
+                    && containsLiteralField(line, "frontendArtifactProductionBundleRuntimeOwnerBlocker", "true")
+                    && containsStringField(line, "frontendArtifactProductionBundleRuntimeOwnerVersion",
+                            "flow-ipc-production-owner-v1_13")
+                    && containsStringField(line, "frontendArtifactProductionBundleRuntimeOwner",
+                            "flow-ipc-production-bundle-runtime")
+                    && containsStringField(line, "frontendArtifactProductionBundleRuntimeOwnerEntryArtifact",
+                            "vaadin-dev-bundle/webapp/VAADIN/build/indexhtml-BfYYZi8S.js")
+                    && containsStringField(line, "frontendArtifactProductionBundleRuntimeOwnerModuleIdentity",
+                            "production-owner-v1_13:vaadin-dev-bundle/webapp/VAADIN/build/indexhtml-BfYYZi8S.js")
+                    && containsStringField(line, "frontendArtifactProductionBundleRuntimeOwnerExecutionPolicy",
+                            "stage-owner-contract-production-bundle-runtime-v1_13")
+                    && containsStringField(line, "frontendArtifactProductionBundleRuntimeOwnerBlockerVersion",
+                            "flow-ipc-production-owner-v1_13")
+                    && containsProductionOwnerFailureLayer(line,
+                            "frontendArtifactProductionBundleRuntimeOwnerFailureLayer")
+                    && containsStringFieldPrefix(line,
+                            "frontendArtifactProductionBundleRuntimeOwnerExecutionResult",
+                            "strict-blocker:")
+                    && containsStringFieldPrefix(line,
+                            "frontendArtifactProductionBundleRuntimeOwnerSideEffectProof",
+                            "owner-stage-resolved")
+                    && containsLiteralField(line, "componentProductionOwnerReused", "false")) {
+                summary.productionRuntimeOwnerV113DomObserved = true;
             }
             if (line.contains("\"type\":\"webview.dom\"")
                     && containsLiteralField(line, "generatedLazyChunkUidlExpressionObserved", "true")
@@ -2015,6 +2126,14 @@ public final class DesktopTraceInspector {
                 || line.contains("\\\"" + field + "\\\":\\\"" + slashEscapedValuePrefix);
     }
 
+    private static boolean containsProductionOwnerFailureLayer(String line, String field) {
+        return containsStringField(line, field, "production-owner-duplicate-custom-element")
+                || containsStringField(line, field, "production-owner-browser-import-failed")
+                || containsStringField(line, field, "production-owner-side-effect-unobservable")
+                || containsStringField(line, field, "production-owner-global-collision")
+                || containsStringField(line, field, "production-owner-runtime-contract-missing");
+    }
+
     private static boolean containsPath(String line, String path) {
         return line.contains(path) || line.contains(path.replace("/", "\\/"));
     }
@@ -2230,6 +2349,10 @@ public final class DesktopTraceInspector {
         private boolean generatedLoadOnDemandChunkFileV112RequestObserved;
         private boolean generatedLoadOnDemandChunkFileV112StageObserved;
         private boolean generatedLoadOnDemandChunkFileV112DomObserved;
+        private boolean productionRuntimeOwnerV113ManifestObserved;
+        private boolean productionRuntimeOwnerV113RequestObserved;
+        private boolean productionRuntimeOwnerV113StageObserved;
+        private boolean productionRuntimeOwnerV113DomObserved;
 
         public boolean hasRequiredFlowIpcTypes() {
             return types.keySet().containsAll(FLOW_IPC_REQUIRED_TYPES)
@@ -2443,6 +2566,18 @@ public final class DesktopTraceInspector {
         public boolean hasRequiredFlowIpcV1_12Types() {
             return hasRequiredFlowIpcV1_11Types()
                     && hasRequiredFlowIpcV1_12LoadOnDemandChunkFileTypes();
+        }
+
+        public boolean hasRequiredFlowIpcV1_13ProductionOwnerTypes() {
+            return productionRuntimeOwnerV113ManifestObserved
+                    && productionRuntimeOwnerV113RequestObserved
+                    && productionRuntimeOwnerV113StageObserved
+                    && productionRuntimeOwnerV113DomObserved;
+        }
+
+        public boolean hasRequiredFlowIpcV1_13Types() {
+            return hasRequiredFlowIpcV1_12Types()
+                    && hasRequiredFlowIpcV1_13ProductionOwnerTypes();
         }
 
         public boolean hasRequiredFlowIpcV1_3FrameworkTypes() {
@@ -2746,6 +2881,14 @@ public final class DesktopTraceInspector {
                     + generatedLoadOnDemandChunkFileV112StageObserved);
             System.out.println("Flow IPC v1.12 loadOnDemand chunk-file DOM observed: "
                     + generatedLoadOnDemandChunkFileV112DomObserved);
+            System.out.println("Flow IPC v1.13 production owner manifest observed: "
+                    + productionRuntimeOwnerV113ManifestObserved);
+            System.out.println("Flow IPC v1.13 production owner request observed: "
+                    + productionRuntimeOwnerV113RequestObserved);
+            System.out.println("Flow IPC v1.13 production owner stage observed: "
+                    + productionRuntimeOwnerV113StageObserved);
+            System.out.println("Flow IPC v1.13 production owner DOM observed: "
+                    + productionRuntimeOwnerV113DomObserved);
             System.out.println("Flow IPC v1.6 TextField graph manifest observed: "
                     + frontendTextFieldV16ManifestObserved);
             System.out.println("Flow IPC v1.6 TextField graph request observed: "

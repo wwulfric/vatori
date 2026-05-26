@@ -1540,6 +1540,36 @@ final class WebViewHost: NSObject, NSApplicationDelegate, NSWindowDelegate, WKNa
           frontendArtifactProductionBundleRuntimeFailureLayer: window.VaadinDesktopIpcDiagnostics ? window.VaadinDesktopIpcDiagnostics.frontendArtifactProductionBundleRuntimeFailureLayer : "",
           frontendArtifactProductionBundleRuntimeBrowserError: window.VaadinDesktopIpcDiagnostics ? window.VaadinDesktopIpcDiagnostics.frontendArtifactProductionBundleRuntimeBrowserError : "",
           frontendArtifactProductionBundleRuntimeNextResolutionStep: window.VaadinDesktopIpcDiagnostics ? window.VaadinDesktopIpcDiagnostics.frontendArtifactProductionBundleRuntimeNextResolutionStep : "",
+          frontendArtifactProductionBundleRuntimeOwnerObserved: !!(window.VaadinDesktopIpcDiagnostics && window.VaadinDesktopIpcDiagnostics.frontendArtifactProductionBundleRuntimeOwnerObserved),
+          frontendArtifactProductionBundleRuntimeOwnerStageObserved: !!(window.VaadinDesktopIpcDiagnostics && window.VaadinDesktopIpcDiagnostics.frontendArtifactProductionBundleRuntimeOwnerStageObserved),
+          frontendArtifactProductionBundleRuntimeOwnerImported: !!(window.VaadinDesktopIpcDiagnostics && window.VaadinDesktopIpcDiagnostics.frontendArtifactProductionBundleRuntimeOwnerImported),
+          frontendArtifactProductionBundleRuntimeOwnerBlocker: !!(window.VaadinDesktopIpcDiagnostics && window.VaadinDesktopIpcDiagnostics.frontendArtifactProductionBundleRuntimeOwnerBlocker),
+          frontendArtifactProductionBundleRuntimeOwnerVersion: window.VaadinDesktopIpcDiagnostics ? window.VaadinDesktopIpcDiagnostics.frontendArtifactProductionBundleRuntimeOwnerVersion : "",
+          frontendArtifactProductionBundleRuntimeOwner: window.VaadinDesktopIpcDiagnostics ? window.VaadinDesktopIpcDiagnostics.frontendArtifactProductionBundleRuntimeOwner : "",
+          frontendArtifactProductionBundleRuntimeOwnerEntryArtifact: window.VaadinDesktopIpcDiagnostics ? window.VaadinDesktopIpcDiagnostics.frontendArtifactProductionBundleRuntimeOwnerEntryArtifact : "",
+          frontendArtifactProductionBundleRuntimeOwnerSource: window.VaadinDesktopIpcDiagnostics ? window.VaadinDesktopIpcDiagnostics.frontendArtifactProductionBundleRuntimeOwnerSource : "",
+          frontendArtifactProductionBundleRuntimeOwnerSelectedBy: window.VaadinDesktopIpcDiagnostics ? window.VaadinDesktopIpcDiagnostics.frontendArtifactProductionBundleRuntimeOwnerSelectedBy : "",
+          frontendArtifactProductionBundleRuntimeOwnerModuleIdentity: window.VaadinDesktopIpcDiagnostics ? window.VaadinDesktopIpcDiagnostics.frontendArtifactProductionBundleRuntimeOwnerModuleIdentity : "",
+          frontendArtifactProductionBundleRuntimeOwnerLifecycle: window.VaadinDesktopIpcDiagnostics ? window.VaadinDesktopIpcDiagnostics.frontendArtifactProductionBundleRuntimeOwnerLifecycle : "",
+          frontendArtifactProductionBundleRuntimeOwnerExecutionPolicy: window.VaadinDesktopIpcDiagnostics ? window.VaadinDesktopIpcDiagnostics.frontendArtifactProductionBundleRuntimeOwnerExecutionPolicy : "",
+          frontendArtifactProductionBundleRuntimeOwnerStageUrlPolicy: window.VaadinDesktopIpcDiagnostics ? window.VaadinDesktopIpcDiagnostics.frontendArtifactProductionBundleRuntimeOwnerStageUrlPolicy : "",
+          frontendArtifactProductionBundleRuntimeOwnerCachePolicy: window.VaadinDesktopIpcDiagnostics ? window.VaadinDesktopIpcDiagnostics.frontendArtifactProductionBundleRuntimeOwnerCachePolicy : "",
+          frontendArtifactProductionBundleRuntimeOwnerCacheStatus: window.VaadinDesktopIpcDiagnostics ? window.VaadinDesktopIpcDiagnostics.frontendArtifactProductionBundleRuntimeOwnerCacheStatus : "",
+          frontendArtifactProductionBundleRuntimeOwnerCleanupStrategy: window.VaadinDesktopIpcDiagnostics ? window.VaadinDesktopIpcDiagnostics.frontendArtifactProductionBundleRuntimeOwnerCleanupStrategy : "",
+          frontendArtifactProductionBundleRuntimeOwnerExecutionResult: window.VaadinDesktopIpcDiagnostics ? window.VaadinDesktopIpcDiagnostics.frontendArtifactProductionBundleRuntimeOwnerExecutionResult : "",
+          frontendArtifactProductionBundleRuntimeOwnerSideEffectProof: window.VaadinDesktopIpcDiagnostics ? window.VaadinDesktopIpcDiagnostics.frontendArtifactProductionBundleRuntimeOwnerSideEffectProof : "",
+          frontendArtifactProductionBundleRuntimeOwnerFailureLayer: window.VaadinDesktopIpcDiagnostics ? window.VaadinDesktopIpcDiagnostics.frontendArtifactProductionBundleRuntimeOwnerFailureLayer : "",
+          frontendArtifactProductionBundleRuntimeOwnerBrowserError: window.VaadinDesktopIpcDiagnostics ? window.VaadinDesktopIpcDiagnostics.frontendArtifactProductionBundleRuntimeOwnerBrowserError : "",
+          frontendArtifactProductionBundleRuntimeOwnerBlockerVersion: window.VaadinDesktopIpcDiagnostics ? window.VaadinDesktopIpcDiagnostics.frontendArtifactProductionBundleRuntimeOwnerBlockerVersion : "",
+          frontendArtifactProductionBundleRuntimeOwnerNextResolutionStep: window.VaadinDesktopIpcDiagnostics ? window.VaadinDesktopIpcDiagnostics.frontendArtifactProductionBundleRuntimeOwnerNextResolutionStep : "",
+          frontendArtifactProductionBundleRuntimeOwnerRegistryBefore: window.VaadinDesktopIpcDiagnostics ? window.VaadinDesktopIpcDiagnostics.frontendArtifactProductionBundleRuntimeOwnerRegistryBefore : "",
+          frontendArtifactProductionBundleRuntimeOwnerRegistryAfter: window.VaadinDesktopIpcDiagnostics ? window.VaadinDesktopIpcDiagnostics.frontendArtifactProductionBundleRuntimeOwnerRegistryAfter : "",
+          frontendArtifactProductionBundleRuntimeOwnerDuplicateTag: window.VaadinDesktopIpcDiagnostics ? window.VaadinDesktopIpcDiagnostics.frontendArtifactProductionBundleRuntimeOwnerDuplicateTag : "",
+          frontendArtifactProductionBundleRuntimeOwnerFirstDefinitionOwner: window.VaadinDesktopIpcDiagnostics ? window.VaadinDesktopIpcDiagnostics.frontendArtifactProductionBundleRuntimeOwnerFirstDefinitionOwner : "",
+          frontendArtifactProductionBundleRuntimeOwnerSecondDefinitionOwner: window.VaadinDesktopIpcDiagnostics ? window.VaadinDesktopIpcDiagnostics.frontendArtifactProductionBundleRuntimeOwnerSecondDefinitionOwner : "",
+          componentProductionOwnerReused: !!(window.VaadinDesktopIpcDiagnostics && window.VaadinDesktopIpcDiagnostics.componentProductionOwnerReused),
+          componentProductionOwnerReuseReason: window.VaadinDesktopIpcDiagnostics ? window.VaadinDesktopIpcDiagnostics.componentProductionOwnerReuseReason : "",
+          componentProductionOwnerDependencyPaths: window.VaadinDesktopIpcDiagnostics ? window.VaadinDesktopIpcDiagnostics.componentProductionOwnerDependencyPaths : "",
           frontendArtifactGeneratedLazyStagedDependencyGraph: window.VaadinDesktopIpcDiagnostics ? window.VaadinDesktopIpcDiagnostics.frontendArtifactGeneratedLazyStagedDependencyGraph : "",
           frontendArtifactDevModeVerified: !!(window.VaadinDesktopIpcDiagnostics && window.VaadinDesktopIpcDiagnostics.frontendArtifactDevModeVerified),
           frontendArtifactDevModePath: window.VaadinDesktopIpcDiagnostics ? window.VaadinDesktopIpcDiagnostics.frontendArtifactDevModePath : "",
@@ -2158,6 +2188,7 @@ let flowIpcShell = #"""
       const frontendStagedResourceFamilies = new Set();
       const frontendStagedResourceUrls = new Map();
       const frontendModuleIdentityUrlCache = new Map();
+      const frontendProductionOwnerUrlCache = new Map();
       const frontendModuleIdentityResourcePaths = new Set();
       const frontendStagedResourceCacheHitPaths = new Set();
       const frontendStagedResourceCacheMissPaths = new Set();
@@ -2380,6 +2411,36 @@ let flowIpcShell = #"""
         frontendArtifactProductionBundleRuntimeFailureLayer: '',
         frontendArtifactProductionBundleRuntimeBrowserError: '',
         frontendArtifactProductionBundleRuntimeNextResolutionStep: '',
+        frontendArtifactProductionBundleRuntimeOwnerObserved: false,
+        frontendArtifactProductionBundleRuntimeOwnerStageObserved: false,
+        frontendArtifactProductionBundleRuntimeOwnerImported: false,
+        frontendArtifactProductionBundleRuntimeOwnerBlocker: false,
+        frontendArtifactProductionBundleRuntimeOwnerVersion: '',
+        frontendArtifactProductionBundleRuntimeOwner: '',
+        frontendArtifactProductionBundleRuntimeOwnerEntryArtifact: '',
+        frontendArtifactProductionBundleRuntimeOwnerSource: '',
+        frontendArtifactProductionBundleRuntimeOwnerSelectedBy: '',
+        frontendArtifactProductionBundleRuntimeOwnerModuleIdentity: '',
+        frontendArtifactProductionBundleRuntimeOwnerLifecycle: '',
+        frontendArtifactProductionBundleRuntimeOwnerExecutionPolicy: '',
+        frontendArtifactProductionBundleRuntimeOwnerStageUrlPolicy: '',
+        frontendArtifactProductionBundleRuntimeOwnerCachePolicy: '',
+        frontendArtifactProductionBundleRuntimeOwnerCacheStatus: '',
+        frontendArtifactProductionBundleRuntimeOwnerCleanupStrategy: '',
+        frontendArtifactProductionBundleRuntimeOwnerExecutionResult: '',
+        frontendArtifactProductionBundleRuntimeOwnerSideEffectProof: '',
+        frontendArtifactProductionBundleRuntimeOwnerFailureLayer: '',
+        frontendArtifactProductionBundleRuntimeOwnerBrowserError: '',
+        frontendArtifactProductionBundleRuntimeOwnerBlockerVersion: '',
+        frontendArtifactProductionBundleRuntimeOwnerNextResolutionStep: '',
+        frontendArtifactProductionBundleRuntimeOwnerRegistryBefore: '',
+        frontendArtifactProductionBundleRuntimeOwnerRegistryAfter: '',
+        frontendArtifactProductionBundleRuntimeOwnerDuplicateTag: '',
+        frontendArtifactProductionBundleRuntimeOwnerFirstDefinitionOwner: '',
+        frontendArtifactProductionBundleRuntimeOwnerSecondDefinitionOwner: '',
+        componentProductionOwnerReused: false,
+        componentProductionOwnerReuseReason: '',
+        componentProductionOwnerDependencyPaths: '',
         frontendArtifactDevModeVerified: false,
         frontendArtifactDevModePath: '',
         frontendArtifactDevModePackageGraphResult: '',
@@ -4354,6 +4415,60 @@ let flowIpcShell = #"""
             manifest.productionBundleRuntimeNextResolutionStep
             || runtime.productionBundleRuntimeNextResolutionStep
             || '';
+          window.VaadinDesktopIpcDiagnostics.frontendArtifactProductionBundleRuntimeOwnerObserved = true;
+          window.VaadinDesktopIpcDiagnostics.frontendArtifactProductionBundleRuntimeOwnerVersion =
+            manifest.productionBundleRuntimeOwnerVersion || runtime.productionBundleRuntimeOwnerVersion || '';
+          window.VaadinDesktopIpcDiagnostics.frontendArtifactProductionBundleRuntimeOwner =
+            manifest.productionBundleRuntimeOwner || runtime.productionBundleRuntimeOwner || '';
+          window.VaadinDesktopIpcDiagnostics.frontendArtifactProductionBundleRuntimeOwnerEntryArtifact =
+            manifest.productionBundleRuntimeEntryArtifact || runtime.productionBundleRuntimeEntryArtifact
+            || runtime.path;
+          window.VaadinDesktopIpcDiagnostics.frontendArtifactProductionBundleRuntimeOwnerSource =
+            manifest.productionBundleRuntimeSource || runtime.productionBundleRuntimeSource || '';
+          window.VaadinDesktopIpcDiagnostics.frontendArtifactProductionBundleRuntimeOwnerSelectedBy =
+            manifest.productionBundleRuntimeSelectedBy || runtime.productionBundleRuntimeSelectedBy || '';
+          window.VaadinDesktopIpcDiagnostics.frontendArtifactProductionBundleRuntimeOwnerModuleIdentity =
+            manifest.productionBundleRuntimeOwnerModuleIdentity
+            || runtime.productionBundleRuntimeOwnerModuleIdentity
+            || '';
+          window.VaadinDesktopIpcDiagnostics.frontendArtifactProductionBundleRuntimeOwnerLifecycle =
+            manifest.productionBundleRuntimeOwnerLifecycle
+            || runtime.productionBundleRuntimeOwnerLifecycle
+            || '';
+          window.VaadinDesktopIpcDiagnostics.frontendArtifactProductionBundleRuntimeOwnerExecutionPolicy =
+            manifest.productionBundleRuntimeOwnerExecutionPolicy
+            || runtime.productionBundleRuntimeOwnerExecutionPolicy
+            || '';
+          window.VaadinDesktopIpcDiagnostics.frontendArtifactProductionBundleRuntimeOwnerStageUrlPolicy =
+            manifest.productionBundleRuntimeOwnerStageUrlPolicy
+            || runtime.productionBundleRuntimeOwnerStageUrlPolicy
+            || '';
+          window.VaadinDesktopIpcDiagnostics.frontendArtifactProductionBundleRuntimeOwnerCachePolicy =
+            manifest.productionBundleRuntimeOwnerCachePolicy
+            || runtime.productionBundleRuntimeOwnerCachePolicy
+            || '';
+          window.VaadinDesktopIpcDiagnostics.frontendArtifactProductionBundleRuntimeOwnerCleanupStrategy =
+            manifest.productionBundleRuntimeOwnerCleanupStrategy
+            || runtime.productionBundleRuntimeOwnerCleanupStrategy
+            || '';
+          window.VaadinDesktopIpcDiagnostics.frontendArtifactProductionBundleRuntimeOwnerFailureLayer =
+            manifest.productionBundleRuntimeOwnerFailureLayer
+            || runtime.productionBundleRuntimeOwnerFailureLayer
+            || '';
+          window.VaadinDesktopIpcDiagnostics.frontendArtifactProductionBundleRuntimeOwnerBlockerVersion =
+            manifest.productionBundleRuntimeOwnerBlockerVersion
+            || runtime.productionBundleRuntimeOwnerBlockerVersion
+            || '';
+          window.VaadinDesktopIpcDiagnostics.frontendArtifactProductionBundleRuntimeOwnerNextResolutionStep =
+            manifest.productionBundleRuntimeOwnerNextResolutionStep
+            || runtime.productionBundleRuntimeOwnerNextResolutionStep
+            || '';
+          window.VaadinDesktopIpcDiagnostics.componentProductionOwnerReused =
+            manifest.componentProductionOwnerReused === true || runtime.componentProductionOwnerReused === true;
+          window.VaadinDesktopIpcDiagnostics.componentProductionOwnerReuseReason =
+            manifest.componentProductionOwnerReuseReason || runtime.componentProductionOwnerReuseReason || '';
+          window.VaadinDesktopIpcDiagnostics.componentProductionOwnerDependencyPaths =
+            manifest.componentProductionOwnerDependencyPaths || runtime.componentProductionOwnerDependencyPaths || '';
         }
         const devModeResources = resources.filter((entry) => entry
           && entry.artifactFamily === 'dev-mode-bundle'
@@ -4513,6 +4628,27 @@ let flowIpcShell = #"""
           productionBundleRuntimeBlockerVersion: resource.productionBundleRuntimeBlockerVersion || '',
           productionBundleRuntimeFailureLayer: resource.productionBundleRuntimeFailureLayer || '',
           productionBundleRuntimeNextResolutionStep: resource.productionBundleRuntimeNextResolutionStep || '',
+          productionBundleRuntimeOwnerVersion: resource.productionBundleRuntimeOwnerVersion || '',
+          productionBundleRuntimeOwner: resource.productionBundleRuntimeOwner || '',
+          productionBundleRuntimeEntryArtifact: resource.productionBundleRuntimeEntryArtifact || '',
+          productionBundleRuntimeSource: resource.productionBundleRuntimeSource || '',
+          productionBundleRuntimeSelectedBy: resource.productionBundleRuntimeSelectedBy || '',
+          productionBundleRuntimeOwnerModuleIdentity: resource.productionBundleRuntimeOwnerModuleIdentity || '',
+          productionBundleRuntimeOwnerLifecycle: resource.productionBundleRuntimeOwnerLifecycle || '',
+          productionBundleRuntimeOwnerExecutionPolicy: resource.productionBundleRuntimeOwnerExecutionPolicy || '',
+          productionBundleRuntimeOwnerStageUrlPolicy: resource.productionBundleRuntimeOwnerStageUrlPolicy || '',
+          productionBundleRuntimeOwnerCachePolicy: resource.productionBundleRuntimeOwnerCachePolicy || '',
+          productionBundleRuntimeOwnerCleanupStrategy: resource.productionBundleRuntimeOwnerCleanupStrategy || '',
+          productionBundleRuntimeOwnerBlockerVersion: resource.productionBundleRuntimeOwnerBlockerVersion || '',
+          productionBundleRuntimeOwnerFailureLayer: resource.productionBundleRuntimeOwnerFailureLayer || '',
+          productionBundleRuntimeOwnerSideEffectProof: resource.productionBundleRuntimeOwnerSideEffectProof || '',
+          productionBundleRuntimeOwnerBrowserError: resource.productionBundleRuntimeOwnerBrowserError || '',
+          productionBundleRuntimeOwnerNextResolutionStep: resource.productionBundleRuntimeOwnerNextResolutionStep || '',
+          productionBundleRuntimeOwnerExpectedSideEffect: resource.productionBundleRuntimeOwnerExpectedSideEffect || '',
+          productionBundleRuntimeOwnerCustomElementTags: resource.productionBundleRuntimeOwnerCustomElementTags || '',
+          componentProductionOwnerReused: resource.componentProductionOwnerReused === true,
+          componentProductionOwnerReuseReason: resource.componentProductionOwnerReuseReason || '',
+          componentProductionOwnerDependencyPaths: resource.componentProductionOwnerDependencyPaths || '',
           legacyShimSuccessPath: resource.legacyShimSuccessPath === true
         };
       }
@@ -4560,6 +4696,13 @@ let flowIpcShell = #"""
         const bytes = Number.isFinite(resource.bytes) ? resource.bytes : (body ? new Blob([body]).size : 0);
         const family = resource.artifactFamily || '';
         const scheme = stagedUrlScheme(stagedUrl);
+        const stageOwner = extra && extra.owner
+          ? extra.owner
+          : (resource.productionBundleRuntimeArtifact === true
+            ? 'production-bundle-runtime'
+            : (resource.componentFrontendResource === true && resource.artifactFamily === 'production-bundle'
+              ? 'component-focused-entry'
+              : ''));
         frontendStagedResourcePaths.add(sourcePath);
         if (family) {
           frontendStagedResourceFamilies.add(family);
@@ -4585,6 +4728,7 @@ let flowIpcShell = #"""
           stagedUrl,
           stagedUrlScheme: scheme,
           stagedPath: '',
+          owner: stageOwner,
           artifactFamily: family,
           moduleSpecifier: resource.moduleSpecifier || '',
           sha256: resource.sha256 || '',
@@ -4978,6 +5122,85 @@ let flowIpcShell = #"""
           productionBundleRuntimeNextResolutionStep: extra && extra.productionBundleRuntimeNextResolutionStep
             ? extra.productionBundleRuntimeNextResolutionStep
             : (resource.productionBundleRuntimeNextResolutionStep || ''),
+          productionBundleRuntimeOwnerVersion: extra && extra.productionBundleRuntimeOwnerVersion
+            ? extra.productionBundleRuntimeOwnerVersion
+            : (resource.productionBundleRuntimeOwnerVersion || ''),
+          productionBundleRuntimeOwner: extra && extra.productionBundleRuntimeOwner
+            ? extra.productionBundleRuntimeOwner
+            : (resource.productionBundleRuntimeOwner || ''),
+          productionBundleRuntimeEntryArtifact: extra && extra.productionBundleRuntimeEntryArtifact
+            ? extra.productionBundleRuntimeEntryArtifact
+            : (resource.productionBundleRuntimeEntryArtifact || ''),
+          productionBundleRuntimeSource: extra && extra.productionBundleRuntimeSource
+            ? extra.productionBundleRuntimeSource
+            : (resource.productionBundleRuntimeSource || ''),
+          productionBundleRuntimeSelectedBy: extra && extra.productionBundleRuntimeSelectedBy
+            ? extra.productionBundleRuntimeSelectedBy
+            : (resource.productionBundleRuntimeSelectedBy || ''),
+          productionBundleRuntimeOwnerModuleIdentity: extra && extra.productionBundleRuntimeOwnerModuleIdentity
+            ? extra.productionBundleRuntimeOwnerModuleIdentity
+            : (resource.productionBundleRuntimeOwnerModuleIdentity || ''),
+          productionBundleRuntimeOwnerLifecycle: extra && extra.productionBundleRuntimeOwnerLifecycle
+            ? extra.productionBundleRuntimeOwnerLifecycle
+            : (resource.productionBundleRuntimeOwnerLifecycle || ''),
+          productionBundleRuntimeOwnerExecutionPolicy: extra && extra.productionBundleRuntimeOwnerExecutionPolicy
+            ? extra.productionBundleRuntimeOwnerExecutionPolicy
+            : (resource.productionBundleRuntimeOwnerExecutionPolicy || ''),
+          productionBundleRuntimeOwnerStageUrlPolicy: extra && extra.productionBundleRuntimeOwnerStageUrlPolicy
+            ? extra.productionBundleRuntimeOwnerStageUrlPolicy
+            : (resource.productionBundleRuntimeOwnerStageUrlPolicy || ''),
+          productionBundleRuntimeOwnerCachePolicy: extra && extra.productionBundleRuntimeOwnerCachePolicy
+            ? extra.productionBundleRuntimeOwnerCachePolicy
+            : (resource.productionBundleRuntimeOwnerCachePolicy || ''),
+          productionBundleRuntimeOwnerCacheStatus: extra && extra.productionBundleRuntimeOwnerCacheStatus
+            ? extra.productionBundleRuntimeOwnerCacheStatus
+            : (cacheStatus || ''),
+          productionBundleRuntimeOwnerCleanupStrategy: extra && extra.productionBundleRuntimeOwnerCleanupStrategy
+            ? extra.productionBundleRuntimeOwnerCleanupStrategy
+            : (resource.productionBundleRuntimeOwnerCleanupStrategy || ''),
+          productionBundleRuntimeOwnerExecutionResult: extra && extra.productionBundleRuntimeOwnerExecutionResult
+            ? extra.productionBundleRuntimeOwnerExecutionResult
+            : '',
+          productionBundleRuntimeOwnerSideEffectProof: extra && extra.productionBundleRuntimeOwnerSideEffectProof
+            ? extra.productionBundleRuntimeOwnerSideEffectProof
+            : (resource.productionBundleRuntimeOwnerSideEffectProof || ''),
+          productionBundleRuntimeOwnerFailureLayer: extra && extra.productionBundleRuntimeOwnerFailureLayer
+            ? extra.productionBundleRuntimeOwnerFailureLayer
+            : (resource.productionBundleRuntimeOwnerFailureLayer || ''),
+          productionBundleRuntimeOwnerBrowserError: extra && extra.productionBundleRuntimeOwnerBrowserError
+            ? extra.productionBundleRuntimeOwnerBrowserError
+            : (resource.productionBundleRuntimeOwnerBrowserError || ''),
+          productionBundleRuntimeOwnerBlockerVersion: extra && extra.productionBundleRuntimeOwnerBlockerVersion
+            ? extra.productionBundleRuntimeOwnerBlockerVersion
+            : (resource.productionBundleRuntimeOwnerBlockerVersion || ''),
+          productionBundleRuntimeOwnerNextResolutionStep: extra && extra.productionBundleRuntimeOwnerNextResolutionStep
+            ? extra.productionBundleRuntimeOwnerNextResolutionStep
+            : (resource.productionBundleRuntimeOwnerNextResolutionStep || ''),
+          productionBundleRuntimeOwnerRegistryBefore: extra && extra.productionBundleRuntimeOwnerRegistryBefore
+            ? extra.productionBundleRuntimeOwnerRegistryBefore
+            : '',
+          productionBundleRuntimeOwnerRegistryAfter: extra && extra.productionBundleRuntimeOwnerRegistryAfter
+            ? extra.productionBundleRuntimeOwnerRegistryAfter
+            : '',
+          productionBundleRuntimeOwnerDuplicateTag: extra && extra.productionBundleRuntimeOwnerDuplicateTag
+            ? extra.productionBundleRuntimeOwnerDuplicateTag
+            : '',
+          productionBundleRuntimeOwnerFirstDefinitionOwner: extra && extra.productionBundleRuntimeOwnerFirstDefinitionOwner
+            ? extra.productionBundleRuntimeOwnerFirstDefinitionOwner
+            : '',
+          productionBundleRuntimeOwnerSecondDefinitionOwner: extra && extra.productionBundleRuntimeOwnerSecondDefinitionOwner
+            ? extra.productionBundleRuntimeOwnerSecondDefinitionOwner
+            : '',
+          componentProductionOwnerReused: extra
+            && typeof extra.componentProductionOwnerReused === 'boolean'
+            ? extra.componentProductionOwnerReused
+            : resource.componentProductionOwnerReused === true,
+          componentProductionOwnerReuseReason: extra && extra.componentProductionOwnerReuseReason
+            ? extra.componentProductionOwnerReuseReason
+            : (resource.componentProductionOwnerReuseReason || ''),
+          componentProductionOwnerDependencyPaths: extra && extra.componentProductionOwnerDependencyPaths
+            ? extra.componentProductionOwnerDependencyPaths
+            : (resource.componentProductionOwnerDependencyPaths || ''),
           moduleIdentityKey: extra && extra.moduleIdentityKey ? extra.moduleIdentityKey : sourcePath
         });
       }
@@ -6155,6 +6378,57 @@ let flowIpcShell = #"""
               window.VaadinDesktopIpcDiagnostics.frontendArtifactProductionBundleRuntimeModuleIdentity =
                 payload.productionBundleRuntimeModuleIdentity
                 || window.VaadinDesktopIpcDiagnostics.frontendArtifactProductionBundleRuntimeModuleIdentity;
+              window.VaadinDesktopIpcDiagnostics.frontendArtifactProductionBundleRuntimeOwnerObserved = true;
+              window.VaadinDesktopIpcDiagnostics.frontendArtifactProductionBundleRuntimeOwnerVersion =
+                payload.productionBundleRuntimeOwnerVersion
+                || window.VaadinDesktopIpcDiagnostics.frontendArtifactProductionBundleRuntimeOwnerVersion;
+              window.VaadinDesktopIpcDiagnostics.frontendArtifactProductionBundleRuntimeOwner =
+                payload.productionBundleRuntimeOwner
+                || window.VaadinDesktopIpcDiagnostics.frontendArtifactProductionBundleRuntimeOwner;
+              window.VaadinDesktopIpcDiagnostics.frontendArtifactProductionBundleRuntimeOwnerEntryArtifact =
+                payload.productionBundleRuntimeEntryArtifact || resourcePath;
+              window.VaadinDesktopIpcDiagnostics.frontendArtifactProductionBundleRuntimeOwnerSource =
+                payload.productionBundleRuntimeSource
+                || window.VaadinDesktopIpcDiagnostics.frontendArtifactProductionBundleRuntimeOwnerSource;
+              window.VaadinDesktopIpcDiagnostics.frontendArtifactProductionBundleRuntimeOwnerSelectedBy =
+                payload.productionBundleRuntimeSelectedBy
+                || window.VaadinDesktopIpcDiagnostics.frontendArtifactProductionBundleRuntimeOwnerSelectedBy;
+              window.VaadinDesktopIpcDiagnostics.frontendArtifactProductionBundleRuntimeOwnerModuleIdentity =
+                payload.productionBundleRuntimeOwnerModuleIdentity
+                || window.VaadinDesktopIpcDiagnostics.frontendArtifactProductionBundleRuntimeOwnerModuleIdentity;
+              window.VaadinDesktopIpcDiagnostics.frontendArtifactProductionBundleRuntimeOwnerLifecycle =
+                payload.productionBundleRuntimeOwnerLifecycle
+                || window.VaadinDesktopIpcDiagnostics.frontendArtifactProductionBundleRuntimeOwnerLifecycle;
+              window.VaadinDesktopIpcDiagnostics.frontendArtifactProductionBundleRuntimeOwnerExecutionPolicy =
+                payload.productionBundleRuntimeOwnerExecutionPolicy
+                || window.VaadinDesktopIpcDiagnostics.frontendArtifactProductionBundleRuntimeOwnerExecutionPolicy;
+              window.VaadinDesktopIpcDiagnostics.frontendArtifactProductionBundleRuntimeOwnerStageUrlPolicy =
+                payload.productionBundleRuntimeOwnerStageUrlPolicy
+                || window.VaadinDesktopIpcDiagnostics.frontendArtifactProductionBundleRuntimeOwnerStageUrlPolicy;
+              window.VaadinDesktopIpcDiagnostics.frontendArtifactProductionBundleRuntimeOwnerCachePolicy =
+                payload.productionBundleRuntimeOwnerCachePolicy
+                || window.VaadinDesktopIpcDiagnostics.frontendArtifactProductionBundleRuntimeOwnerCachePolicy;
+              window.VaadinDesktopIpcDiagnostics.frontendArtifactProductionBundleRuntimeOwnerCleanupStrategy =
+                payload.productionBundleRuntimeOwnerCleanupStrategy
+                || window.VaadinDesktopIpcDiagnostics.frontendArtifactProductionBundleRuntimeOwnerCleanupStrategy;
+              window.VaadinDesktopIpcDiagnostics.frontendArtifactProductionBundleRuntimeOwnerFailureLayer =
+                payload.productionBundleRuntimeOwnerFailureLayer
+                || window.VaadinDesktopIpcDiagnostics.frontendArtifactProductionBundleRuntimeOwnerFailureLayer;
+              window.VaadinDesktopIpcDiagnostics.frontendArtifactProductionBundleRuntimeOwnerBlockerVersion =
+                payload.productionBundleRuntimeOwnerBlockerVersion
+                || window.VaadinDesktopIpcDiagnostics.frontendArtifactProductionBundleRuntimeOwnerBlockerVersion;
+              window.VaadinDesktopIpcDiagnostics.frontendArtifactProductionBundleRuntimeOwnerNextResolutionStep =
+                payload.productionBundleRuntimeOwnerNextResolutionStep
+                || window.VaadinDesktopIpcDiagnostics.frontendArtifactProductionBundleRuntimeOwnerNextResolutionStep;
+              window.VaadinDesktopIpcDiagnostics.componentProductionOwnerReused =
+                payload.componentProductionOwnerReused === true
+                || window.VaadinDesktopIpcDiagnostics.componentProductionOwnerReused;
+              window.VaadinDesktopIpcDiagnostics.componentProductionOwnerReuseReason =
+                payload.componentProductionOwnerReuseReason
+                || window.VaadinDesktopIpcDiagnostics.componentProductionOwnerReuseReason;
+              window.VaadinDesktopIpcDiagnostics.componentProductionOwnerDependencyPaths =
+                payload.componentProductionOwnerDependencyPaths
+                || window.VaadinDesktopIpcDiagnostics.componentProductionOwnerDependencyPaths;
             } else if (payload.artifactFamily === 'dev-mode-bundle') {
               window.VaadinDesktopIpcDiagnostics.frontendArtifactDevModeVerified = true;
               window.VaadinDesktopIpcDiagnostics.frontendArtifactDevModePath =
@@ -7309,7 +7583,18 @@ let flowIpcShell = #"""
           return;
         }
         productionBundleRuntimeStageAttempted = true;
+        const ownerIdentity = resource.productionBundleRuntimeOwnerModuleIdentity
+          || ('production-owner-v1_13:' + resource.path);
+        const registryBefore = vaadinCustomElementRegistrySnapshot();
+        const ownerFailureLayer = resource.productionBundleRuntimeOwnerFailureLayer
+          || 'production-owner-runtime-contract-missing';
+        const ownerBlockerVersion = resource.productionBundleRuntimeOwnerBlockerVersion
+          || 'flow-ipc-production-owner-v1_13';
+        const ownerExecutionResult = 'strict-blocker:' + ownerFailureLayer + ':' + resource.path;
+        const ownerReuseReason = resource.componentProductionOwnerReuseReason
+          || 'production owner import disabled until production indexhtml side effects can be owned without duplicate custom element definitions';
         const stageExtra = {
+          owner: 'production-bundle-runtime',
           cleanupPolicy: resource.productionBundleRuntimeCleanupPolicy
             || 'retain-for-window-lifetime-module-identity-v1_7',
           runtimeResolverContractVersion: resource.runtimeResolverContractVersion
@@ -7334,7 +7619,45 @@ let flowIpcShell = #"""
             || 'flow-ipc-production-runtime-v1_10',
           productionBundleRuntimeFailureLayer: resource.productionBundleRuntimeFailureLayer
             || 'production-runtime-ownership-not-yet-separated-from-focused-component-entry-imports',
-          productionBundleRuntimeNextResolutionStep: resource.productionBundleRuntimeNextResolutionStep || ''
+          productionBundleRuntimeNextResolutionStep: resource.productionBundleRuntimeNextResolutionStep || '',
+          productionBundleRuntimeOwnerVersion: resource.productionBundleRuntimeOwnerVersion
+            || 'flow-ipc-production-owner-v1_13',
+          productionBundleRuntimeOwner: resource.productionBundleRuntimeOwner
+            || 'flow-ipc-production-bundle-runtime',
+          productionBundleRuntimeEntryArtifact: resource.productionBundleRuntimeEntryArtifact || resource.path,
+          productionBundleRuntimeSource: resource.productionBundleRuntimeSource || 'vaadin-dev-bundle-stats',
+          productionBundleRuntimeSelectedBy: resource.productionBundleRuntimeSelectedBy
+            || 'stats-entrypoint-or-focused-production-entry',
+          productionBundleRuntimeOwnerModuleIdentity: ownerIdentity,
+          productionBundleRuntimeOwnerLifecycle: resource.productionBundleRuntimeOwnerLifecycle
+            || 'created,staged,import-skipped,side-effect-unobservable,not-reused,cleanup-owned',
+          productionBundleRuntimeOwnerExecutionPolicy: resource.productionBundleRuntimeOwnerExecutionPolicy
+            || 'stage-owner-contract-production-bundle-runtime-v1_13',
+          productionBundleRuntimeOwnerStageUrlPolicy: resource.productionBundleRuntimeOwnerStageUrlPolicy
+            || 'temporary-blob-module-url-owner-namespace-v1_13',
+          productionBundleRuntimeOwnerCachePolicy: resource.productionBundleRuntimeOwnerCachePolicy
+            || 'retain-per-owner-module-identity',
+          productionBundleRuntimeOwnerCacheStatus: frontendProductionOwnerUrlCache.has(resource.path) ? 'hit' : 'miss',
+          productionBundleRuntimeOwnerCleanupStrategy: resource.productionBundleRuntimeOwnerCleanupStrategy
+            || 'cleanup-owned-window-lifetime-module-identity',
+          productionBundleRuntimeOwnerExecutionResult: ownerExecutionResult,
+          productionBundleRuntimeOwnerSideEffectProof: resource.productionBundleRuntimeOwnerSideEffectProof
+            || 'owner-stage-resolved-import-intentionally-disabled-until-production-runtime-contract-can-own-indexhtml-side-effects',
+          productionBundleRuntimeOwnerFailureLayer: ownerFailureLayer,
+          productionBundleRuntimeOwnerBrowserError: resource.productionBundleRuntimeOwnerBrowserError || '',
+          productionBundleRuntimeOwnerBlockerVersion: ownerBlockerVersion,
+          productionBundleRuntimeOwnerNextResolutionStep: resource.productionBundleRuntimeOwnerNextResolutionStep || '',
+          productionBundleRuntimeOwnerRegistryBefore: registryBefore,
+          productionBundleRuntimeOwnerRegistryAfter: registryBefore,
+          productionBundleRuntimeOwnerDuplicateTag: '',
+          productionBundleRuntimeOwnerFirstDefinitionOwner: '',
+          productionBundleRuntimeOwnerSecondDefinitionOwner: '',
+          componentProductionOwnerReused: resource.componentProductionOwnerReused === true,
+          componentProductionOwnerReuseReason: ownerReuseReason,
+          componentProductionOwnerDependencyPaths: resource.componentProductionOwnerDependencyPaths || resource.path,
+          moduleIdentityStrategy: 'production-owner-module-identity-v1_13',
+          moduleIdentityKey: ownerIdentity,
+          blockerClassification: ownerBlockerVersion
         };
         window.VaadinDesktopIpcDiagnostics.frontendArtifactProductionBundleRuntimeObserved = true;
         window.VaadinDesktopIpcDiagnostics.frontendArtifactProductionBundleRuntimeStageAttempted = true;
@@ -7354,7 +7677,64 @@ let flowIpcShell = #"""
           stageExtra.productionBundleRuntimeFailureLayer;
         window.VaadinDesktopIpcDiagnostics.frontendArtifactProductionBundleRuntimeNextResolutionStep =
           stageExtra.productionBundleRuntimeNextResolutionStep;
-        const stagedUrl = componentModuleBlobUrl(resource.path, [], new Map(), 'execution-attempt', stageExtra);
+        window.VaadinDesktopIpcDiagnostics.frontendArtifactProductionBundleRuntimeOwnerObserved = true;
+        window.VaadinDesktopIpcDiagnostics.frontendArtifactProductionBundleRuntimeOwnerStageObserved = true;
+        window.VaadinDesktopIpcDiagnostics.frontendArtifactProductionBundleRuntimeOwnerImported = false;
+        window.VaadinDesktopIpcDiagnostics.frontendArtifactProductionBundleRuntimeOwnerBlocker = true;
+        window.VaadinDesktopIpcDiagnostics.frontendArtifactProductionBundleRuntimeOwnerVersion =
+          stageExtra.productionBundleRuntimeOwnerVersion;
+        window.VaadinDesktopIpcDiagnostics.frontendArtifactProductionBundleRuntimeOwner =
+          stageExtra.productionBundleRuntimeOwner;
+        window.VaadinDesktopIpcDiagnostics.frontendArtifactProductionBundleRuntimeOwnerEntryArtifact =
+          stageExtra.productionBundleRuntimeEntryArtifact;
+        window.VaadinDesktopIpcDiagnostics.frontendArtifactProductionBundleRuntimeOwnerSource =
+          stageExtra.productionBundleRuntimeSource;
+        window.VaadinDesktopIpcDiagnostics.frontendArtifactProductionBundleRuntimeOwnerSelectedBy =
+          stageExtra.productionBundleRuntimeSelectedBy;
+        window.VaadinDesktopIpcDiagnostics.frontendArtifactProductionBundleRuntimeOwnerModuleIdentity =
+          stageExtra.productionBundleRuntimeOwnerModuleIdentity;
+        window.VaadinDesktopIpcDiagnostics.frontendArtifactProductionBundleRuntimeOwnerLifecycle =
+          stageExtra.productionBundleRuntimeOwnerLifecycle;
+        window.VaadinDesktopIpcDiagnostics.frontendArtifactProductionBundleRuntimeOwnerExecutionPolicy =
+          stageExtra.productionBundleRuntimeOwnerExecutionPolicy;
+        window.VaadinDesktopIpcDiagnostics.frontendArtifactProductionBundleRuntimeOwnerStageUrlPolicy =
+          stageExtra.productionBundleRuntimeOwnerStageUrlPolicy;
+        window.VaadinDesktopIpcDiagnostics.frontendArtifactProductionBundleRuntimeOwnerCachePolicy =
+          stageExtra.productionBundleRuntimeOwnerCachePolicy;
+        window.VaadinDesktopIpcDiagnostics.frontendArtifactProductionBundleRuntimeOwnerCacheStatus =
+          stageExtra.productionBundleRuntimeOwnerCacheStatus;
+        window.VaadinDesktopIpcDiagnostics.frontendArtifactProductionBundleRuntimeOwnerCleanupStrategy =
+          stageExtra.productionBundleRuntimeOwnerCleanupStrategy;
+        window.VaadinDesktopIpcDiagnostics.frontendArtifactProductionBundleRuntimeOwnerExecutionResult =
+          stageExtra.productionBundleRuntimeOwnerExecutionResult;
+        window.VaadinDesktopIpcDiagnostics.frontendArtifactProductionBundleRuntimeOwnerSideEffectProof =
+          stageExtra.productionBundleRuntimeOwnerSideEffectProof;
+        window.VaadinDesktopIpcDiagnostics.frontendArtifactProductionBundleRuntimeOwnerFailureLayer =
+          stageExtra.productionBundleRuntimeOwnerFailureLayer;
+        window.VaadinDesktopIpcDiagnostics.frontendArtifactProductionBundleRuntimeOwnerBrowserError =
+          stageExtra.productionBundleRuntimeOwnerBrowserError;
+        window.VaadinDesktopIpcDiagnostics.frontendArtifactProductionBundleRuntimeOwnerBlockerVersion =
+          stageExtra.productionBundleRuntimeOwnerBlockerVersion;
+        window.VaadinDesktopIpcDiagnostics.frontendArtifactProductionBundleRuntimeOwnerNextResolutionStep =
+          stageExtra.productionBundleRuntimeOwnerNextResolutionStep;
+        window.VaadinDesktopIpcDiagnostics.frontendArtifactProductionBundleRuntimeOwnerRegistryBefore =
+          stageExtra.productionBundleRuntimeOwnerRegistryBefore;
+        window.VaadinDesktopIpcDiagnostics.frontendArtifactProductionBundleRuntimeOwnerRegistryAfter =
+          stageExtra.productionBundleRuntimeOwnerRegistryAfter;
+        window.VaadinDesktopIpcDiagnostics.frontendArtifactProductionBundleRuntimeOwnerDuplicateTag =
+          stageExtra.productionBundleRuntimeOwnerDuplicateTag;
+        window.VaadinDesktopIpcDiagnostics.frontendArtifactProductionBundleRuntimeOwnerFirstDefinitionOwner =
+          stageExtra.productionBundleRuntimeOwnerFirstDefinitionOwner;
+        window.VaadinDesktopIpcDiagnostics.frontendArtifactProductionBundleRuntimeOwnerSecondDefinitionOwner =
+          stageExtra.productionBundleRuntimeOwnerSecondDefinitionOwner;
+        window.VaadinDesktopIpcDiagnostics.componentProductionOwnerReused =
+          stageExtra.componentProductionOwnerReused === true;
+        window.VaadinDesktopIpcDiagnostics.componentProductionOwnerReuseReason =
+          stageExtra.componentProductionOwnerReuseReason;
+        window.VaadinDesktopIpcDiagnostics.componentProductionOwnerDependencyPaths =
+          stageExtra.componentProductionOwnerDependencyPaths;
+        const stagedUrl = stageFrontendArtifact(resource, source, 'execution-attempt',
+          null, frontendProductionOwnerUrlCache, stageExtra);
         if (!stagedUrl) {
           window.VaadinDesktopIpcDiagnostics.frontendArtifactProductionBundleRuntimeExecutionResult =
             'execution-failed:' + resource.path;
@@ -7362,7 +7742,14 @@ let flowIpcShell = #"""
             window.VaadinDesktopIpcDiagnostics.vaadinWebComponentResourceExecutionError
             || 'production-runtime-stage-url-missing';
           window.VaadinDesktopIpcDiagnostics.frontendArtifactProductionBundleRuntimeBlocker = true;
+          window.VaadinDesktopIpcDiagnostics.frontendArtifactProductionBundleRuntimeOwnerExecutionResult =
+            'execution-failed:' + resource.path;
+          window.VaadinDesktopIpcDiagnostics.frontendArtifactProductionBundleRuntimeOwnerBrowserError =
+            window.VaadinDesktopIpcDiagnostics.frontendArtifactProductionBundleRuntimeBrowserError;
           recordFrontendStageOutcome(resource, '', 'execution-failed', Object.assign({}, stageExtra, {
+            productionBundleRuntimeOwnerExecutionResult: 'execution-failed:' + resource.path,
+            productionBundleRuntimeOwnerBrowserError:
+              window.VaadinDesktopIpcDiagnostics.frontendArtifactProductionBundleRuntimeBrowserError,
             browserError: window.VaadinDesktopIpcDiagnostics.frontendArtifactProductionBundleRuntimeBrowserError
           }));
           return;
@@ -7371,11 +7758,18 @@ let flowIpcShell = #"""
           'execution-attempt:' + resource.path;
         window.VaadinDesktopIpcDiagnostics.frontendArtifactProductionBundleRuntimeBlocker = true;
         window.VaadinDesktopIpcDiagnostics.frontendArtifactProductionBundleRuntimeBrowserError = '';
+        recordFrontendStageOutcome(resource, stagedUrl, 'execution-attempt', stageExtra);
       }
 
       function customElementRegistrySnapshot(tag) {
         const defined = !!customElements.get(tag);
         return tag + ':defined=' + defined;
+      }
+
+      function vaadinCustomElementRegistrySnapshot() {
+        return ['vaadin-text-field', 'vaadin-checkbox', 'vaadin-select']
+          .map((tag) => customElementRegistrySnapshot(tag))
+          .join(';');
       }
 
       function markStagedDependenciesStrictBlocker(urlCache, browserError, extra) {

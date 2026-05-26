@@ -18,9 +18,9 @@ v0/v1 runtime 切片走向可产品化桌面框架的最终完成状态。
 - `docs/goal-1_10.md`：Flow lazy dependency and production bundle runtime slice，已完成。
 - `docs/goal-1_11.md`：Generated `Flow.loadOnDemand` chunk runtime path，已完成。
 - `docs/goal-1_12.md`：Generated LoadOnDemand chunk file registry and side-effect proof，已完成。
-- `docs/goal-1_13.md`：Production Bundle Owned Runtime Boundary，已规划但尚未执行。
+- `docs/goal-1_13.md`：Production Bundle Owned Runtime Boundary，已完成。
 
-当前已规划但尚未执行的阶段目标：`docs/goal-1_13.md`。
+当前没有已指定但尚未完成的短期阶段目标。
 
 后续阶段应继续以 `docs/goal-1_13.md`、`docs/goal-1_14.md` 等文件拆分，
 每个阶段只拿走本长期目标中的一个可评审切片。不要把本文件改写成短期任务清单；
@@ -44,7 +44,7 @@ v0/v1 runtime 切片走向可产品化桌面框架的最终完成状态。
 
 ## 当前基线
 
-截至 goal 1.12，仓库已经证明：
+截至 goal 1.13，仓库已经证明：
 
 - `dev-ipc` 可以启动 no-localhost Flow IPC runtime。
 - 真实 macOS Swift/AppKit/WKWebView 窗口可以运行 Flow IPC smoke app 和 framework
@@ -128,8 +128,20 @@ v0/v1 runtime 切片走向可产品化桌面框架的最终完成状态。
   `loadOnDemandChunkFileCallbackResolved=true` 和
   `loadOnDemandChunkFileFailureLayer=chunk-file-not-generated`。这证明了当前 app/build 没有
   真实 generated lazy chunk file；它不是完整 generated chunk-file execution 成功。
-- 完整 generated/lazy chunk file registry、production bundle owned execution 和 dev-mode/Vite
-  execution 仍是明确 blocker，不计入最终完成。
+- v1.13 已把 v1.10 的宽泛 production runtime staged attempt 推进成明确的
+  production bundle runtime owner 边界：Java manifest / resource response 声明
+  `productionBundleRuntimeOwnerVersion=flow-ipc-production-owner-v1_13`、
+  `productionBundleRuntimeOwner=flow-ipc-production-bundle-runtime`、entry artifact、
+  stats source、selection rule、dependency chain、owner module identity、cache/cleanup
+  strategy 和 component reuse 语义；Swift host 使用独立 owner namespace stage 真实
+  `vaadin-dev-bundle/webapp/VAADIN/build/indexhtml-BfYYZi8S.js` artifact，并在
+  `resourceStage` / `webview.dom` 记录 `owner=production-bundle-runtime`、registry
+  before/after、side-effect proof、component owner reuse=false 和更精确 blocker
+  `production-owner-runtime-contract-missing`。这不是完整 production bundle import
+  success；它是 owner contract evidence，避免把 focused component import 成功继续算作
+  production owner 成功。
+- 完整 generated/lazy chunk file execution、production owner import/side-effect execution
+  和 dev-mode/Vite execution 仍是明确 blocker，不计入最终完成。
 
 ## 最终完成标准
 

@@ -1,6 +1,6 @@
 # Goal 1.13: Production Bundle Owned Runtime Boundary
 
-状态：已规划，尚未执行。
+状态：已完成。
 
 `docs/goal.md` 是长期愿景和完成度账本。v1.12 已经把 generated
 `Flow.loadOnDemand(chunkId)` 的 chunk-file 方向收敛清楚：当前真实 Vaadin

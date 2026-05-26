@@ -171,6 +171,28 @@ final class FlowClientResources {
             "flow-ipc-production-runtime-v1_10";
     private static final String PRODUCTION_RUNTIME_NEXT_STEP =
             "promote the stats-selected production bundle entry from staged execution-attempt to an owned module runtime that can execute side effects without relying on focused component entry imports";
+    private static final String PRODUCTION_RUNTIME_OWNER_VERSION =
+            "flow-ipc-production-owner-v1_13";
+    private static final String PRODUCTION_RUNTIME_OWNER =
+            "flow-ipc-production-bundle-runtime";
+    private static final String PRODUCTION_RUNTIME_OWNER_SOURCE =
+            "vaadin-dev-bundle-stats";
+    private static final String PRODUCTION_RUNTIME_OWNER_SELECTED_BY =
+            "stats-entrypoint-or-focused-production-entry";
+    private static final String PRODUCTION_RUNTIME_OWNER_MODULE_IDENTITY =
+            "production-owner-v1_13:" + DEV_BUNDLE_INDEX_HTML_JS;
+    private static final String PRODUCTION_RUNTIME_OWNER_LIFECYCLE =
+            "created,staged,import-skipped,side-effect-unobservable,not-reused,cleanup-owned";
+    private static final String PRODUCTION_RUNTIME_OWNER_EXECUTION_POLICY =
+            "stage-owner-contract-production-bundle-runtime-v1_13";
+    private static final String PRODUCTION_RUNTIME_OWNER_BLOCKER =
+            "flow-ipc-production-owner-v1_13";
+    private static final String PRODUCTION_RUNTIME_OWNER_FAILURE_LAYER =
+            "production-owner-runtime-contract-missing";
+    private static final String PRODUCTION_RUNTIME_OWNER_SIDE_EFFECT_PROOF =
+            "owner-stage-resolved-import-intentionally-disabled-until-production-runtime-contract-can-own-indexhtml-side-effects";
+    private static final String PRODUCTION_RUNTIME_OWNER_NEXT_STEP =
+            "unify the production owner module identity with component focused dependency imports or move the owner to a custom-scheme/file-backed runtime before enabling indexhtml side effects";
     private static final String FLOW_CLIENT_IPC_BRIDGE_NEEDLE = """
             j.sendEventMessage=mI(function(a,b,c){var d=i.a.Z();d.Ab(a,b,c)});j.initializing=false;\
             """;
@@ -580,6 +602,7 @@ final class FlowClientResources {
         manifest.put("productionBundleRuntimeModuleIdentity", PRODUCTION_RUNTIME_MODULE_IDENTITY);
         manifest.put("productionBundleRuntimeBlockerVersion", PRODUCTION_RUNTIME_BLOCKER);
         manifest.put("productionBundleRuntimeNextResolutionStep", PRODUCTION_RUNTIME_NEXT_STEP);
+        manifest.putAll(productionRuntimeOwnerAttributes());
         manifest.put("artifactFamilies", List.of("flow-client-classpath",
                 "vaadin-component-classpath-frontend",
                 "npm-frontend",
@@ -595,7 +618,7 @@ final class FlowClientResources {
                 artifactFamilyStatus("npm-frontend", "partial", "real-textfield-production-graph-executed-v1_7"),
                 artifactFamilyStatus("theme-static", "available", "theme-static-classpath-resource"),
                 artifactFamilyStatus("production-bundle", "partial",
-                        "production-bundle-runtime-registry-v1_10"),
+                        "production-bundle-runtime-owner-v1_13"),
                 artifactFamilyStatus("dev-mode-bundle", "partial", "dev-mode-package-lock-verified"),
                 artifactFamilyStatus("generated-lazy", "partial",
                         "generated-lazy-loadondemand-chunk-mapped-v1_11"),
@@ -614,7 +637,9 @@ final class FlowClientResources {
                 strictBlocker("generated-lazy", GENERATED_LAZY_CHUNK_FILE_BLOCKER_VERSION,
                         "generated-flow-imports has been parsed for chunk-file branches; this Vaadin dev bundle exposes a real no-op Promise.resolve(0) loadOnDemand table, so there is no generated ./chunks/chunk-*.js file to stage yet"),
                 strictBlocker("production-bundle", "flow-ipc-production-runtime-v1_10",
-                        "production bundle stats now selects an executable runtime artifact and stages it through stable module identity, but full production runtime ownership is still blocked until side effects can be executed without relying on focused component entry imports")));
+                        "production bundle stats now selects an executable runtime artifact and stages it through stable module identity, but full production runtime ownership is still blocked until side effects can be executed without relying on focused component entry imports"),
+                strictBlocker("production-bundle", PRODUCTION_RUNTIME_OWNER_BLOCKER,
+                        "production bundle owner is now explicit and independently staged, but import remains blocked until the owner can safely execute indexhtml side effects without colliding with focused component entry imports")));
         manifest.put("transport", "flow-ipc");
         manifest.put("resourceLoading", "ipc-resource-request");
         manifest.put("componentClass", "com.vaadin.flow.component.textfield.BigDecimalField");
@@ -851,6 +876,10 @@ final class FlowClientResources {
         attributes.put("blockedReason", DEV_BUNDLE_COMPONENT_REASON);
         attributes.put("failureClassification", "dev-bundle-resource-graph-partial");
         attributes.put("lookupKind", lookupKind);
+        attributes.put("componentProductionOwnerReused", false);
+        attributes.put("componentProductionOwnerReuseReason",
+                "production owner stage identity is tracked separately in v1.13; focused component imports keep their existing stable resource-path identity until the owner import contract is enabled");
+        attributes.put("componentProductionOwnerDependencyPaths", DEV_BUNDLE_INDEX_HTML_JS);
         if (primary) {
             attributes.put("componentPrimary", true);
         } else {
@@ -882,6 +911,7 @@ final class FlowClientResources {
             attributes.put("productionBundleRuntimeFailureLayer",
                     "production-runtime-ownership-not-yet-separated-from-focused-component-entry-imports");
             attributes.put("productionBundleRuntimeNextResolutionStep", PRODUCTION_RUNTIME_NEXT_STEP);
+            attributes.putAll(productionRuntimeOwnerAttributes());
         }
         return attributes;
     }
@@ -981,6 +1011,47 @@ final class FlowClientResources {
         attributes.put("productionBundleRuntimeModuleIdentity", PRODUCTION_RUNTIME_MODULE_IDENTITY);
         attributes.put("productionBundleRuntimeBlockerVersion", PRODUCTION_RUNTIME_BLOCKER);
         attributes.put("productionBundleRuntimeNextResolutionStep", PRODUCTION_RUNTIME_NEXT_STEP);
+        attributes.putAll(productionRuntimeOwnerAttributes());
+        return attributes;
+    }
+
+    private static Map<String, Object> productionRuntimeOwnerAttributes() {
+        Map<String, Object> attributes = new LinkedHashMap<>();
+        attributes.put("productionBundleRuntimeOwnerVersion", PRODUCTION_RUNTIME_OWNER_VERSION);
+        attributes.put("productionBundleRuntimeOwner", PRODUCTION_RUNTIME_OWNER);
+        attributes.put("productionBundleRuntimeEntryArtifact", DEV_BUNDLE_INDEX_HTML_JS);
+        attributes.put("productionBundleRuntimeDependencyChain", PRODUCTION_RUNTIME_DEPENDENCY_CHAIN);
+        attributes.put("productionBundleRuntimeSource", PRODUCTION_RUNTIME_OWNER_SOURCE);
+        attributes.put("productionBundleRuntimeSelectedBy", PRODUCTION_RUNTIME_OWNER_SELECTED_BY);
+        attributes.put("productionBundleRuntimeOwnerModuleIdentity",
+                PRODUCTION_RUNTIME_OWNER_MODULE_IDENTITY);
+        attributes.put("productionBundleRuntimeOwnerLifecycle",
+                PRODUCTION_RUNTIME_OWNER_LIFECYCLE);
+        attributes.put("productionBundleRuntimeOwnerExecutionPolicy",
+                PRODUCTION_RUNTIME_OWNER_EXECUTION_POLICY);
+        attributes.put("productionBundleRuntimeOwnerStageUrlPolicy",
+                "temporary-blob-module-url-owner-namespace-v1_13");
+        attributes.put("productionBundleRuntimeOwnerCachePolicy",
+                "retain-per-owner-module-identity");
+        attributes.put("productionBundleRuntimeOwnerCleanupStrategy",
+                "cleanup-owned-window-lifetime-module-identity");
+        attributes.put("productionBundleRuntimeOwnerBlockerVersion",
+                PRODUCTION_RUNTIME_OWNER_BLOCKER);
+        attributes.put("productionBundleRuntimeOwnerFailureLayer",
+                PRODUCTION_RUNTIME_OWNER_FAILURE_LAYER);
+        attributes.put("productionBundleRuntimeOwnerSideEffectProof",
+                PRODUCTION_RUNTIME_OWNER_SIDE_EFFECT_PROOF);
+        attributes.put("productionBundleRuntimeOwnerBrowserError", "");
+        attributes.put("productionBundleRuntimeOwnerNextResolutionStep",
+                PRODUCTION_RUNTIME_OWNER_NEXT_STEP);
+        attributes.put("productionBundleRuntimeOwnerExpectedSideEffect",
+                "own production indexhtml custom element and Flow global side effects before component imports reuse them");
+        attributes.put("productionBundleRuntimeOwnerCustomElementTags",
+                "vaadin-text-field,vaadin-checkbox,vaadin-select");
+        attributes.put("componentProductionOwnerReused", false);
+        attributes.put("componentProductionOwnerReuseReason",
+                "owner import disabled until production indexhtml side effects can be owned without duplicate custom element definitions");
+        attributes.put("componentProductionOwnerDependencyPaths", DEV_BUNDLE_INDEX_HTML_JS);
         return attributes;
     }
 

@@ -1482,6 +1482,31 @@ final class WebViewHost: NSObject, NSApplicationDelegate, NSWindowDelegate, WKNa
           loadOnDemandChunkBrowserError: window.VaadinDesktopIpcDiagnostics ? window.VaadinDesktopIpcDiagnostics.loadOnDemandChunkBrowserError : "",
           loadOnDemandChunkBlockerVersion: window.VaadinDesktopIpcDiagnostics ? window.VaadinDesktopIpcDiagnostics.loadOnDemandChunkBlockerVersion : "",
           loadOnDemandChunkNextResolutionStep: window.VaadinDesktopIpcDiagnostics ? window.VaadinDesktopIpcDiagnostics.loadOnDemandChunkNextResolutionStep : "",
+          generatedLoadOnDemandChunkFileRegistryVersion: window.VaadinDesktopIpcDiagnostics ? window.VaadinDesktopIpcDiagnostics.generatedLoadOnDemandChunkFileRegistryVersion : "",
+          generatedLoadOnDemandChunkFileRegistrySource: window.VaadinDesktopIpcDiagnostics ? window.VaadinDesktopIpcDiagnostics.generatedLoadOnDemandChunkFileRegistrySource : "",
+          generatedLoadOnDemandChunkFileMappingSource: window.VaadinDesktopIpcDiagnostics ? window.VaadinDesktopIpcDiagnostics.generatedLoadOnDemandChunkFileMappingSource : "",
+          generatedLoadOnDemandGeneratedImportsArtifact: window.VaadinDesktopIpcDiagnostics ? window.VaadinDesktopIpcDiagnostics.generatedLoadOnDemandGeneratedImportsArtifact : "",
+          generatedLoadOnDemandSourceBuildMode: window.VaadinDesktopIpcDiagnostics ? window.VaadinDesktopIpcDiagnostics.generatedLoadOnDemandSourceBuildMode : "",
+          generatedLoadOnDemandSourceArtifactFamily: window.VaadinDesktopIpcDiagnostics ? window.VaadinDesktopIpcDiagnostics.generatedLoadOnDemandSourceArtifactFamily : "",
+          generatedLoadOnDemandNoOpLoadOnDemand: !!(window.VaadinDesktopIpcDiagnostics && window.VaadinDesktopIpcDiagnostics.generatedLoadOnDemandNoOpLoadOnDemand),
+          loadOnDemandTableShape: window.VaadinDesktopIpcDiagnostics ? window.VaadinDesktopIpcDiagnostics.loadOnDemandTableShape : "",
+          chunkImportSpecifier: window.VaadinDesktopIpcDiagnostics ? window.VaadinDesktopIpcDiagnostics.chunkImportSpecifier : "",
+          chunkArtifactPath: window.VaadinDesktopIpcDiagnostics ? window.VaadinDesktopIpcDiagnostics.chunkArtifactPath : "",
+          chunkFileResolver: window.VaadinDesktopIpcDiagnostics ? window.VaadinDesktopIpcDiagnostics.chunkFileResolver : "",
+          chunkFileStatus: window.VaadinDesktopIpcDiagnostics ? window.VaadinDesktopIpcDiagnostics.chunkFileStatus : "",
+          chunkFileBytes: window.VaadinDesktopIpcDiagnostics ? window.VaadinDesktopIpcDiagnostics.chunkFileBytes : 0,
+          chunkFileSha256: window.VaadinDesktopIpcDiagnostics ? window.VaadinDesktopIpcDiagnostics.chunkFileSha256 : "",
+          noChunkGeneratedReason: window.VaadinDesktopIpcDiagnostics ? window.VaadinDesktopIpcDiagnostics.noChunkGeneratedReason : "",
+          loadOnDemandChunkFileTriggeredByFlowClient: !!(window.VaadinDesktopIpcDiagnostics && window.VaadinDesktopIpcDiagnostics.loadOnDemandChunkFileTriggeredByFlowClient),
+          loadOnDemandChunkFileStageObserved: !!(window.VaadinDesktopIpcDiagnostics && window.VaadinDesktopIpcDiagnostics.loadOnDemandChunkFileStageObserved),
+          loadOnDemandChunkFileExecuted: !!(window.VaadinDesktopIpcDiagnostics && window.VaadinDesktopIpcDiagnostics.loadOnDemandChunkFileExecuted),
+          loadOnDemandChunkFileCallbackResolved: !!(window.VaadinDesktopIpcDiagnostics && window.VaadinDesktopIpcDiagnostics.loadOnDemandChunkFileCallbackResolved),
+          loadOnDemandChunkFileExecutionResult: window.VaadinDesktopIpcDiagnostics ? window.VaadinDesktopIpcDiagnostics.loadOnDemandChunkFileExecutionResult : "",
+          loadOnDemandChunkFileSideEffectProof: window.VaadinDesktopIpcDiagnostics ? window.VaadinDesktopIpcDiagnostics.loadOnDemandChunkFileSideEffectProof : "",
+          loadOnDemandChunkFileFailureLayer: window.VaadinDesktopIpcDiagnostics ? window.VaadinDesktopIpcDiagnostics.loadOnDemandChunkFileFailureLayer : "",
+          loadOnDemandChunkFileBrowserError: window.VaadinDesktopIpcDiagnostics ? window.VaadinDesktopIpcDiagnostics.loadOnDemandChunkFileBrowserError : "",
+          loadOnDemandChunkFileBlockerVersion: window.VaadinDesktopIpcDiagnostics ? window.VaadinDesktopIpcDiagnostics.loadOnDemandChunkFileBlockerVersion : "",
+          loadOnDemandChunkFileNextResolutionStep: window.VaadinDesktopIpcDiagnostics ? window.VaadinDesktopIpcDiagnostics.loadOnDemandChunkFileNextResolutionStep : "",
           frontendRuntimeResolverContractVersion: window.VaadinDesktopIpcDiagnostics ? window.VaadinDesktopIpcDiagnostics.frontendRuntimeResolverContractVersion : "",
           frontendRuntimeResolverLogicalRequestIds: window.VaadinDesktopIpcDiagnostics ? window.VaadinDesktopIpcDiagnostics.frontendRuntimeResolverLogicalRequestIds : "",
           frontendRuntimeResolverPathMappings: window.VaadinDesktopIpcDiagnostics ? window.VaadinDesktopIpcDiagnostics.frontendRuntimeResolverPathMappings : "",
@@ -2300,6 +2325,31 @@ let flowIpcShell = #"""
         loadOnDemandChunkBrowserError: '',
         loadOnDemandChunkBlockerVersion: '',
         loadOnDemandChunkNextResolutionStep: '',
+        generatedLoadOnDemandChunkFileRegistryVersion: '',
+        generatedLoadOnDemandChunkFileRegistrySource: '',
+        generatedLoadOnDemandChunkFileMappingSource: '',
+        generatedLoadOnDemandGeneratedImportsArtifact: '',
+        generatedLoadOnDemandSourceBuildMode: '',
+        generatedLoadOnDemandSourceArtifactFamily: '',
+        generatedLoadOnDemandNoOpLoadOnDemand: false,
+        loadOnDemandTableShape: '',
+        chunkImportSpecifier: '',
+        chunkArtifactPath: '',
+        chunkFileResolver: '',
+        chunkFileStatus: '',
+        chunkFileBytes: 0,
+        chunkFileSha256: '',
+        noChunkGeneratedReason: '',
+        loadOnDemandChunkFileTriggeredByFlowClient: false,
+        loadOnDemandChunkFileStageObserved: false,
+        loadOnDemandChunkFileExecuted: false,
+        loadOnDemandChunkFileCallbackResolved: false,
+        loadOnDemandChunkFileExecutionResult: '',
+        loadOnDemandChunkFileSideEffectProof: '',
+        loadOnDemandChunkFileFailureLayer: '',
+        loadOnDemandChunkFileBrowserError: '',
+        loadOnDemandChunkFileBlockerVersion: '',
+        loadOnDemandChunkFileNextResolutionStep: '',
         flowLazyDependencyObserved: false,
         flowLazyDependencyRequested: false,
         flowLazyDependencyResponse: false,
@@ -4190,6 +4240,55 @@ let flowIpcShell = #"""
             manifest.loadOnDemandChunkBlockerVersion || window.VaadinDesktopIpcDiagnostics.loadOnDemandChunkBlockerVersion;
           window.VaadinDesktopIpcDiagnostics.loadOnDemandChunkNextResolutionStep =
             manifest.loadOnDemandChunkNextResolutionStep || window.VaadinDesktopIpcDiagnostics.loadOnDemandChunkNextResolutionStep;
+          window.VaadinDesktopIpcDiagnostics.generatedLoadOnDemandChunkFileRegistryVersion =
+            manifest.generatedLoadOnDemandChunkFileRegistryVersion
+            || window.VaadinDesktopIpcDiagnostics.generatedLoadOnDemandChunkFileRegistryVersion;
+          window.VaadinDesktopIpcDiagnostics.generatedLoadOnDemandChunkFileRegistrySource =
+            manifest.generatedLoadOnDemandChunkFileRegistrySource
+            || window.VaadinDesktopIpcDiagnostics.generatedLoadOnDemandChunkFileRegistrySource;
+          window.VaadinDesktopIpcDiagnostics.generatedLoadOnDemandChunkFileMappingSource =
+            manifest.generatedLoadOnDemandChunkFileMappingSource
+            || window.VaadinDesktopIpcDiagnostics.generatedLoadOnDemandChunkFileMappingSource;
+          window.VaadinDesktopIpcDiagnostics.generatedLoadOnDemandGeneratedImportsArtifact =
+            manifest.generatedLoadOnDemandGeneratedImportsArtifact
+            || window.VaadinDesktopIpcDiagnostics.generatedLoadOnDemandGeneratedImportsArtifact;
+          window.VaadinDesktopIpcDiagnostics.generatedLoadOnDemandSourceBuildMode =
+            manifest.generatedLoadOnDemandSourceBuildMode
+            || window.VaadinDesktopIpcDiagnostics.generatedLoadOnDemandSourceBuildMode;
+          window.VaadinDesktopIpcDiagnostics.generatedLoadOnDemandSourceArtifactFamily =
+            manifest.generatedLoadOnDemandSourceArtifactFamily
+            || window.VaadinDesktopIpcDiagnostics.generatedLoadOnDemandSourceArtifactFamily;
+          window.VaadinDesktopIpcDiagnostics.generatedLoadOnDemandNoOpLoadOnDemand =
+            manifest.generatedLoadOnDemandNoOpLoadOnDemand === true;
+          window.VaadinDesktopIpcDiagnostics.loadOnDemandTableShape =
+            manifest.loadOnDemandTableShape || window.VaadinDesktopIpcDiagnostics.loadOnDemandTableShape;
+          window.VaadinDesktopIpcDiagnostics.chunkImportSpecifier =
+            manifest.chunkImportSpecifier || window.VaadinDesktopIpcDiagnostics.chunkImportSpecifier;
+          window.VaadinDesktopIpcDiagnostics.chunkArtifactPath =
+            manifest.chunkArtifactPath || window.VaadinDesktopIpcDiagnostics.chunkArtifactPath;
+          window.VaadinDesktopIpcDiagnostics.chunkFileResolver =
+            manifest.chunkFileResolver || window.VaadinDesktopIpcDiagnostics.chunkFileResolver;
+          window.VaadinDesktopIpcDiagnostics.chunkFileStatus =
+            manifest.chunkFileStatus || window.VaadinDesktopIpcDiagnostics.chunkFileStatus;
+          window.VaadinDesktopIpcDiagnostics.chunkFileBytes =
+            Number.isFinite(manifest.chunkFileBytes) ? manifest.chunkFileBytes
+              : window.VaadinDesktopIpcDiagnostics.chunkFileBytes;
+          window.VaadinDesktopIpcDiagnostics.chunkFileSha256 =
+            manifest.chunkFileSha256 || window.VaadinDesktopIpcDiagnostics.chunkFileSha256;
+          window.VaadinDesktopIpcDiagnostics.noChunkGeneratedReason =
+            manifest.noChunkGeneratedReason || window.VaadinDesktopIpcDiagnostics.noChunkGeneratedReason;
+          window.VaadinDesktopIpcDiagnostics.loadOnDemandChunkFileFailureLayer =
+            manifest.loadOnDemandChunkFileFailureLayer
+            || window.VaadinDesktopIpcDiagnostics.loadOnDemandChunkFileFailureLayer;
+          window.VaadinDesktopIpcDiagnostics.loadOnDemandChunkFileBlockerVersion =
+            manifest.loadOnDemandChunkFileBlockerVersion
+            || window.VaadinDesktopIpcDiagnostics.loadOnDemandChunkFileBlockerVersion;
+          window.VaadinDesktopIpcDiagnostics.loadOnDemandChunkFileNextResolutionStep =
+            manifest.loadOnDemandChunkFileNextResolutionStep
+            || window.VaadinDesktopIpcDiagnostics.loadOnDemandChunkFileNextResolutionStep;
+          window.VaadinDesktopIpcDiagnostics.loadOnDemandChunkFileSideEffectProof =
+            manifest.loadOnDemandChunkFileSideEffectProof
+            || window.VaadinDesktopIpcDiagnostics.loadOnDemandChunkFileSideEffectProof;
         }
         if (typeof manifest.runtimeResolverContractVersion === 'string') {
           window.VaadinDesktopIpcDiagnostics.frontendRuntimeResolverContractVersion =
@@ -4353,6 +4452,39 @@ let flowIpcShell = #"""
           loadOnDemandChunkFailureLayer: resource.loadOnDemandChunkFailureLayer || '',
           loadOnDemandChunkBlockerVersion: resource.loadOnDemandChunkBlockerVersion || '',
           loadOnDemandChunkNextResolutionStep: resource.loadOnDemandChunkNextResolutionStep || '',
+          generatedLoadOnDemandChunkFileRegistryVersion: resource.generatedLoadOnDemandChunkFileRegistryVersion || '',
+          generatedLoadOnDemandChunkFileRegistrySource: resource.generatedLoadOnDemandChunkFileRegistrySource || '',
+          generatedLoadOnDemandChunkFileMappingSource: resource.generatedLoadOnDemandChunkFileMappingSource || '',
+          generatedLoadOnDemandGeneratedImportsArtifact: resource.generatedLoadOnDemandGeneratedImportsArtifact || '',
+          generatedLoadOnDemandSourceBuildMode: resource.generatedLoadOnDemandSourceBuildMode || '',
+          generatedLoadOnDemandSourceArtifactFamily: resource.generatedLoadOnDemandSourceArtifactFamily || '',
+          generatedLoadOnDemandNoOpLoadOnDemand: resource.generatedLoadOnDemandNoOpLoadOnDemand === true,
+          loadOnDemandTableShape: resource.loadOnDemandTableShape || '',
+          chunkId: resource.chunkId || '',
+          chunkImportSpecifier: resource.chunkImportSpecifier || '',
+          chunkArtifactPath: resource.chunkArtifactPath || '',
+          chunkContentHash: resource.chunkContentHash || '',
+          chunkFileResolver: resource.chunkFileResolver || '',
+          chunkFileStatus: resource.chunkFileStatus || '',
+          chunkFileBytes: Number.isFinite(resource.chunkFileBytes) ? resource.chunkFileBytes : 0,
+          chunkFileSha256: resource.chunkFileSha256 || '',
+          noChunkGeneratedReason: resource.noChunkGeneratedReason || '',
+          loadOnDemandChunkFileRegistryVersion: resource.loadOnDemandChunkFileRegistryVersion || '',
+          loadOnDemandChunkFileRegistrySource: resource.loadOnDemandChunkFileRegistrySource || '',
+          loadOnDemandChunkFileMappingSource: resource.loadOnDemandChunkFileMappingSource || '',
+          loadOnDemandChunkFileGeneratedImportsArtifact: resource.loadOnDemandChunkFileGeneratedImportsArtifact || '',
+          loadOnDemandChunkFileNoOpLoadOnDemand: resource.loadOnDemandChunkFileNoOpLoadOnDemand === true,
+          loadOnDemandChunkFileTableShape: resource.loadOnDemandChunkFileTableShape || '',
+          loadOnDemandChunkFileResolver: resource.loadOnDemandChunkFileResolver || '',
+          loadOnDemandChunkFileStatus: resource.loadOnDemandChunkFileStatus || '',
+          loadOnDemandChunkFileBytes: Number.isFinite(resource.loadOnDemandChunkFileBytes)
+            ? resource.loadOnDemandChunkFileBytes
+            : 0,
+          loadOnDemandChunkFileSha256: resource.loadOnDemandChunkFileSha256 || '',
+          loadOnDemandChunkFileFailureLayer: resource.loadOnDemandChunkFileFailureLayer || '',
+          loadOnDemandChunkFileBlockerVersion: resource.loadOnDemandChunkFileBlockerVersion || '',
+          loadOnDemandChunkFileNextResolutionStep: resource.loadOnDemandChunkFileNextResolutionStep || '',
+          loadOnDemandChunkFileSideEffectProof: resource.loadOnDemandChunkFileSideEffectProof || '',
           runtimeResolverContractVersion: resource.runtimeResolverContractVersion || '',
           logicalRequestId: resource.logicalRequestId || '',
           pathMapping: resource.pathMapping || '',
@@ -4671,6 +4803,110 @@ let flowIpcShell = #"""
           loadOnDemandChunkNextResolutionStep: extra && extra.loadOnDemandChunkNextResolutionStep
             ? extra.loadOnDemandChunkNextResolutionStep
             : (resource.loadOnDemandChunkNextResolutionStep || ''),
+          generatedLoadOnDemandChunkFileRegistryVersion: extra && extra.generatedLoadOnDemandChunkFileRegistryVersion
+            ? extra.generatedLoadOnDemandChunkFileRegistryVersion
+            : (resource.generatedLoadOnDemandChunkFileRegistryVersion || ''),
+          generatedLoadOnDemandChunkFileRegistrySource: extra && extra.generatedLoadOnDemandChunkFileRegistrySource
+            ? extra.generatedLoadOnDemandChunkFileRegistrySource
+            : (resource.generatedLoadOnDemandChunkFileRegistrySource || ''),
+          generatedLoadOnDemandChunkFileMappingSource: extra && extra.generatedLoadOnDemandChunkFileMappingSource
+            ? extra.generatedLoadOnDemandChunkFileMappingSource
+            : (resource.generatedLoadOnDemandChunkFileMappingSource || ''),
+          generatedLoadOnDemandGeneratedImportsArtifact: extra && extra.generatedLoadOnDemandGeneratedImportsArtifact
+            ? extra.generatedLoadOnDemandGeneratedImportsArtifact
+            : (resource.generatedLoadOnDemandGeneratedImportsArtifact || ''),
+          generatedLoadOnDemandSourceBuildMode: extra && extra.generatedLoadOnDemandSourceBuildMode
+            ? extra.generatedLoadOnDemandSourceBuildMode
+            : (resource.generatedLoadOnDemandSourceBuildMode || ''),
+          generatedLoadOnDemandSourceArtifactFamily: extra && extra.generatedLoadOnDemandSourceArtifactFamily
+            ? extra.generatedLoadOnDemandSourceArtifactFamily
+            : (resource.generatedLoadOnDemandSourceArtifactFamily || ''),
+          generatedLoadOnDemandNoOpLoadOnDemand: extra
+            && typeof extra.generatedLoadOnDemandNoOpLoadOnDemand === 'boolean'
+            ? extra.generatedLoadOnDemandNoOpLoadOnDemand
+            : resource.generatedLoadOnDemandNoOpLoadOnDemand === true,
+          loadOnDemandTableShape: extra && extra.loadOnDemandTableShape
+            ? extra.loadOnDemandTableShape
+            : (resource.loadOnDemandTableShape || ''),
+          chunkId: extra && extra.chunkId ? extra.chunkId : (resource.chunkId || ''),
+          chunkImportSpecifier: extra && extra.chunkImportSpecifier
+            ? extra.chunkImportSpecifier
+            : (resource.chunkImportSpecifier || ''),
+          chunkArtifactPath: extra && extra.chunkArtifactPath ? extra.chunkArtifactPath : (resource.chunkArtifactPath || ''),
+          chunkContentHash: extra && extra.chunkContentHash ? extra.chunkContentHash : (resource.chunkContentHash || ''),
+          chunkFileResolver: extra && extra.chunkFileResolver ? extra.chunkFileResolver : (resource.chunkFileResolver || ''),
+          chunkFileStatus: extra && extra.chunkFileStatus ? extra.chunkFileStatus : (resource.chunkFileStatus || ''),
+          chunkFileBytes: extra && Number.isFinite(extra.chunkFileBytes)
+            ? extra.chunkFileBytes
+            : (Number.isFinite(resource.chunkFileBytes) ? resource.chunkFileBytes : 0),
+          chunkFileSha256: extra && extra.chunkFileSha256 ? extra.chunkFileSha256 : (resource.chunkFileSha256 || ''),
+          noChunkGeneratedReason: extra && extra.noChunkGeneratedReason
+            ? extra.noChunkGeneratedReason
+            : (resource.noChunkGeneratedReason || ''),
+          loadOnDemandChunkFileRegistryVersion: extra && extra.loadOnDemandChunkFileRegistryVersion
+            ? extra.loadOnDemandChunkFileRegistryVersion
+            : (resource.loadOnDemandChunkFileRegistryVersion || ''),
+          loadOnDemandChunkFileRegistrySource: extra && extra.loadOnDemandChunkFileRegistrySource
+            ? extra.loadOnDemandChunkFileRegistrySource
+            : (resource.loadOnDemandChunkFileRegistrySource || ''),
+          loadOnDemandChunkFileMappingSource: extra && extra.loadOnDemandChunkFileMappingSource
+            ? extra.loadOnDemandChunkFileMappingSource
+            : (resource.loadOnDemandChunkFileMappingSource || ''),
+          loadOnDemandChunkFileGeneratedImportsArtifact: extra && extra.loadOnDemandChunkFileGeneratedImportsArtifact
+            ? extra.loadOnDemandChunkFileGeneratedImportsArtifact
+            : (resource.loadOnDemandChunkFileGeneratedImportsArtifact || ''),
+          loadOnDemandChunkFileNoOpLoadOnDemand: extra
+            && typeof extra.loadOnDemandChunkFileNoOpLoadOnDemand === 'boolean'
+            ? extra.loadOnDemandChunkFileNoOpLoadOnDemand
+            : resource.loadOnDemandChunkFileNoOpLoadOnDemand === true,
+          loadOnDemandChunkFileTableShape: extra && extra.loadOnDemandChunkFileTableShape
+            ? extra.loadOnDemandChunkFileTableShape
+            : (resource.loadOnDemandChunkFileTableShape || ''),
+          loadOnDemandChunkFileResolver: extra && extra.loadOnDemandChunkFileResolver
+            ? extra.loadOnDemandChunkFileResolver
+            : (resource.loadOnDemandChunkFileResolver || ''),
+          loadOnDemandChunkFileStatus: extra && extra.loadOnDemandChunkFileStatus
+            ? extra.loadOnDemandChunkFileStatus
+            : (resource.loadOnDemandChunkFileStatus || ''),
+          loadOnDemandChunkFileBytes: extra && Number.isFinite(extra.loadOnDemandChunkFileBytes)
+            ? extra.loadOnDemandChunkFileBytes
+            : (Number.isFinite(resource.loadOnDemandChunkFileBytes) ? resource.loadOnDemandChunkFileBytes : 0),
+          loadOnDemandChunkFileSha256: extra && extra.loadOnDemandChunkFileSha256
+            ? extra.loadOnDemandChunkFileSha256
+            : (resource.loadOnDemandChunkFileSha256 || ''),
+          loadOnDemandChunkFileTriggeredByFlowClient: extra
+            && typeof extra.loadOnDemandChunkFileTriggeredByFlowClient === 'boolean'
+            ? extra.loadOnDemandChunkFileTriggeredByFlowClient
+            : false,
+          loadOnDemandChunkFileStageObserved: extra
+            && typeof extra.loadOnDemandChunkFileStageObserved === 'boolean'
+            ? extra.loadOnDemandChunkFileStageObserved
+            : false,
+          loadOnDemandChunkFileExecuted: extra && typeof extra.loadOnDemandChunkFileExecuted === 'boolean'
+            ? extra.loadOnDemandChunkFileExecuted
+            : false,
+          loadOnDemandChunkFileCallbackResolved: extra
+            && typeof extra.loadOnDemandChunkFileCallbackResolved === 'boolean'
+            ? extra.loadOnDemandChunkFileCallbackResolved
+            : false,
+          loadOnDemandChunkFileExecutionResult: extra && extra.loadOnDemandChunkFileExecutionResult
+            ? extra.loadOnDemandChunkFileExecutionResult
+            : '',
+          loadOnDemandChunkFileSideEffectProof: extra && extra.loadOnDemandChunkFileSideEffectProof
+            ? extra.loadOnDemandChunkFileSideEffectProof
+            : (resource.loadOnDemandChunkFileSideEffectProof || ''),
+          loadOnDemandChunkFileFailureLayer: extra && extra.loadOnDemandChunkFileFailureLayer
+            ? extra.loadOnDemandChunkFileFailureLayer
+            : (resource.loadOnDemandChunkFileFailureLayer || ''),
+          loadOnDemandChunkFileBrowserError: extra && extra.loadOnDemandChunkFileBrowserError
+            ? extra.loadOnDemandChunkFileBrowserError
+            : '',
+          loadOnDemandChunkFileBlockerVersion: extra && extra.loadOnDemandChunkFileBlockerVersion
+            ? extra.loadOnDemandChunkFileBlockerVersion
+            : (resource.loadOnDemandChunkFileBlockerVersion || ''),
+          loadOnDemandChunkFileNextResolutionStep: extra && extra.loadOnDemandChunkFileNextResolutionStep
+            ? extra.loadOnDemandChunkFileNextResolutionStep
+            : (resource.loadOnDemandChunkFileNextResolutionStep || ''),
           generatedLazySourceArtifact: extra && extra.generatedLazySourceArtifact
             ? extra.generatedLazySourceArtifact
             : '',
@@ -6513,6 +6749,67 @@ let flowIpcShell = #"""
           loadOnDemandChunkBlockerVersion: resource.loadOnDemandChunkBlockerVersion
             || 'flow-ipc-loadondemand-chunk-v1_11',
           loadOnDemandChunkNextResolutionStep: resource.loadOnDemandChunkNextResolutionStep || '',
+          generatedLoadOnDemandChunkFileRegistryVersion: resource.generatedLoadOnDemandChunkFileRegistryVersion
+            || 'flow-ipc-loadondemand-chunk-file-v1_12',
+          generatedLoadOnDemandChunkFileRegistrySource: resource.generatedLoadOnDemandChunkFileRegistrySource
+            || 'generated-flow-imports-body-parser-v1_12',
+          generatedLoadOnDemandChunkFileMappingSource: resource.generatedLoadOnDemandChunkFileMappingSource
+            || 'real-generated-flow-imports-loadondemand-table-v1_12',
+          generatedLoadOnDemandGeneratedImportsArtifact:
+            resource.generatedLoadOnDemandGeneratedImportsArtifact || resource.path,
+          generatedLoadOnDemandSourceBuildMode: resource.generatedLoadOnDemandSourceBuildMode || '',
+          generatedLoadOnDemandSourceArtifactFamily: resource.generatedLoadOnDemandSourceArtifactFamily
+            || 'generated-lazy',
+          generatedLoadOnDemandNoOpLoadOnDemand: resource.generatedLoadOnDemandNoOpLoadOnDemand === true,
+          loadOnDemandTableShape: resource.loadOnDemandTableShape || '',
+          chunkId: resource.chunkId || '',
+          chunkImportSpecifier: resource.chunkImportSpecifier || '',
+          chunkArtifactPath: resource.chunkArtifactPath || '',
+          chunkContentHash: resource.chunkContentHash || '',
+          chunkFileResolver: resource.chunkFileResolver
+            || 'generated-flow-imports-relative-chunk-file-resolver-v1_12',
+          chunkFileStatus: resource.chunkFileStatus || '',
+          chunkFileBytes: Number.isFinite(resource.chunkFileBytes) ? resource.chunkFileBytes : 0,
+          chunkFileSha256: resource.chunkFileSha256 || '',
+          noChunkGeneratedReason: resource.noChunkGeneratedReason || '',
+          loadOnDemandChunkFileRegistryVersion: resource.loadOnDemandChunkFileRegistryVersion
+            || 'flow-ipc-loadondemand-chunk-file-v1_12',
+          loadOnDemandChunkFileRegistrySource: resource.loadOnDemandChunkFileRegistrySource
+            || resource.generatedLoadOnDemandChunkFileRegistrySource
+            || 'generated-flow-imports-body-parser-v1_12',
+          loadOnDemandChunkFileMappingSource: resource.loadOnDemandChunkFileMappingSource
+            || resource.generatedLoadOnDemandChunkFileMappingSource
+            || 'real-generated-flow-imports-loadondemand-table-v1_12',
+          loadOnDemandChunkFileGeneratedImportsArtifact:
+            resource.loadOnDemandChunkFileGeneratedImportsArtifact
+            || resource.generatedLoadOnDemandGeneratedImportsArtifact
+            || resource.path,
+          loadOnDemandChunkFileNoOpLoadOnDemand:
+            resource.loadOnDemandChunkFileNoOpLoadOnDemand === true
+            || resource.generatedLoadOnDemandNoOpLoadOnDemand === true,
+          loadOnDemandChunkFileTableShape: resource.loadOnDemandChunkFileTableShape
+            || resource.loadOnDemandTableShape
+            || '',
+          loadOnDemandChunkFileResolver: resource.loadOnDemandChunkFileResolver
+            || resource.chunkFileResolver
+            || 'generated-flow-imports-relative-chunk-file-resolver-v1_12',
+          loadOnDemandChunkFileStatus: resource.loadOnDemandChunkFileStatus || resource.chunkFileStatus || '',
+          loadOnDemandChunkFileBytes: Number.isFinite(resource.loadOnDemandChunkFileBytes)
+            ? resource.loadOnDemandChunkFileBytes
+            : (Number.isFinite(resource.chunkFileBytes) ? resource.chunkFileBytes : 0),
+          loadOnDemandChunkFileSha256: resource.loadOnDemandChunkFileSha256 || resource.chunkFileSha256 || '',
+          loadOnDemandChunkFileTriggeredByFlowClient: true,
+          loadOnDemandChunkFileStageObserved: resource.chunkFileStatus === 'available',
+          loadOnDemandChunkFileExecuted: false,
+          loadOnDemandChunkFileCallbackResolved: false,
+          loadOnDemandChunkFileExecutionResult: '',
+          loadOnDemandChunkFileSideEffectProof: resource.loadOnDemandChunkFileSideEffectProof || '',
+          loadOnDemandChunkFileFailureLayer: resource.loadOnDemandChunkFileFailureLayer
+            || (resource.chunkFileStatus === 'not-generated' ? 'chunk-file-not-generated' : ''),
+          loadOnDemandChunkFileBrowserError: '',
+          loadOnDemandChunkFileBlockerVersion: resource.loadOnDemandChunkFileBlockerVersion
+            || 'flow-ipc-loadondemand-chunk-file-v1_12',
+          loadOnDemandChunkFileNextResolutionStep: resource.loadOnDemandChunkFileNextResolutionStep || '',
           blockerClassification: resource.loadOnDemandChunkBlockerVersion
             || 'flow-ipc-loadondemand-chunk-v1_11',
           moduleIdentityStrategy: usesStableModuleIdentity(resource)
@@ -6557,6 +6854,47 @@ let flowIpcShell = #"""
           stageExtra.loadOnDemandChunkBlockerVersion;
         window.VaadinDesktopIpcDiagnostics.loadOnDemandChunkNextResolutionStep =
           stageExtra.loadOnDemandChunkNextResolutionStep;
+        window.VaadinDesktopIpcDiagnostics.generatedLoadOnDemandChunkFileRegistryVersion =
+          stageExtra.generatedLoadOnDemandChunkFileRegistryVersion;
+        window.VaadinDesktopIpcDiagnostics.generatedLoadOnDemandChunkFileRegistrySource =
+          stageExtra.generatedLoadOnDemandChunkFileRegistrySource;
+        window.VaadinDesktopIpcDiagnostics.generatedLoadOnDemandChunkFileMappingSource =
+          stageExtra.generatedLoadOnDemandChunkFileMappingSource;
+        window.VaadinDesktopIpcDiagnostics.generatedLoadOnDemandGeneratedImportsArtifact =
+          stageExtra.generatedLoadOnDemandGeneratedImportsArtifact;
+        window.VaadinDesktopIpcDiagnostics.generatedLoadOnDemandSourceBuildMode =
+          stageExtra.generatedLoadOnDemandSourceBuildMode;
+        window.VaadinDesktopIpcDiagnostics.generatedLoadOnDemandSourceArtifactFamily =
+          stageExtra.generatedLoadOnDemandSourceArtifactFamily;
+        window.VaadinDesktopIpcDiagnostics.generatedLoadOnDemandNoOpLoadOnDemand =
+          stageExtra.generatedLoadOnDemandNoOpLoadOnDemand === true;
+        window.VaadinDesktopIpcDiagnostics.loadOnDemandTableShape =
+          stageExtra.loadOnDemandTableShape;
+        window.VaadinDesktopIpcDiagnostics.chunkImportSpecifier =
+          stageExtra.chunkImportSpecifier;
+        window.VaadinDesktopIpcDiagnostics.chunkArtifactPath =
+          stageExtra.chunkArtifactPath;
+        window.VaadinDesktopIpcDiagnostics.chunkFileResolver =
+          stageExtra.chunkFileResolver;
+        window.VaadinDesktopIpcDiagnostics.chunkFileStatus =
+          stageExtra.chunkFileStatus;
+        window.VaadinDesktopIpcDiagnostics.chunkFileBytes =
+          stageExtra.chunkFileBytes;
+        window.VaadinDesktopIpcDiagnostics.chunkFileSha256 =
+          stageExtra.chunkFileSha256;
+        window.VaadinDesktopIpcDiagnostics.noChunkGeneratedReason =
+          stageExtra.noChunkGeneratedReason;
+        window.VaadinDesktopIpcDiagnostics.loadOnDemandChunkFileTriggeredByFlowClient = true;
+        window.VaadinDesktopIpcDiagnostics.loadOnDemandChunkFileStageObserved =
+          stageExtra.loadOnDemandChunkFileStageObserved === true;
+        window.VaadinDesktopIpcDiagnostics.loadOnDemandChunkFileFailureLayer =
+          stageExtra.loadOnDemandChunkFileFailureLayer;
+        window.VaadinDesktopIpcDiagnostics.loadOnDemandChunkFileBlockerVersion =
+          stageExtra.loadOnDemandChunkFileBlockerVersion;
+        window.VaadinDesktopIpcDiagnostics.loadOnDemandChunkFileNextResolutionStep =
+          stageExtra.loadOnDemandChunkFileNextResolutionStep;
+        window.VaadinDesktopIpcDiagnostics.loadOnDemandChunkFileSideEffectProof =
+          stageExtra.loadOnDemandChunkFileSideEffectProof;
         requestComponentFrontendResource(resource.path, resource.kind || '',
           'generated-loadondemand-chunk-v1_11', stageExtra);
       }
@@ -6653,10 +6991,15 @@ let flowIpcShell = #"""
           const stageExtra = generatedLoadOnDemandChunkStageExtra(resource, normalizedChunkId, expression, {
             loadOnDemandChunkExecutionResult: 'execution-attempt:' + resource.path
           });
+          const noGeneratedChunkFile = stageExtra.chunkFileStatus === 'not-generated'
+            && stageExtra.loadOnDemandChunkFileNoOpLoadOnDemand === true;
           try {
             installOpaqueOriginStorageFallbacks();
             installVaadinDevBundleGlobals();
             window.VaadinDesktopIpcDiagnostics.loadOnDemandChunkStageObserved = true;
+            window.VaadinDesktopIpcDiagnostics.loadOnDemandChunkFileTriggeredByFlowClient = true;
+            window.VaadinDesktopIpcDiagnostics.loadOnDemandChunkFileStageObserved =
+              stageExtra.loadOnDemandChunkFileStageObserved === true;
             stagedUrl = componentModuleBlobUrl(resource.path, urlsToRevoke, urlCache,
               'execution-attempt', stageExtra);
             if (!stagedUrl) {
@@ -6686,10 +7029,37 @@ let flowIpcShell = #"""
               stageExtra.loadOnDemandChunkFailureLayer;
             window.VaadinDesktopIpcDiagnostics.generatedLazyChunkFailureLayer =
               stageExtra.generatedLazyChunkFailureLayer;
+            window.VaadinDesktopIpcDiagnostics.loadOnDemandChunkFileExecuted = false;
+            window.VaadinDesktopIpcDiagnostics.loadOnDemandChunkFileCallbackResolved = true;
+            window.VaadinDesktopIpcDiagnostics.loadOnDemandChunkFileExecutionResult =
+              noGeneratedChunkFile
+                ? 'strict-blocker:chunk-file-not-generated;' + delegateResult
+                : 'strict-blocker:' + (stageExtra.chunkFileStatus || 'chunk-file-unresolved');
+            window.VaadinDesktopIpcDiagnostics.loadOnDemandChunkFileBrowserError = '';
+            window.VaadinDesktopIpcDiagnostics.loadOnDemandChunkFileFailureLayer =
+              stageExtra.loadOnDemandChunkFileFailureLayer
+              || (noGeneratedChunkFile ? 'chunk-file-not-generated' : 'chunk-file-unresolved');
+            window.VaadinDesktopIpcDiagnostics.loadOnDemandChunkFileSideEffectProof =
+              stageExtra.loadOnDemandChunkFileSideEffectProof
+              || (noGeneratedChunkFile
+                ? 'no-chunk-generated-by-real-generated-flow-imports-no-op-table'
+                : 'generated-flow-imports-import-resolved-without-chunk-file-side-effect');
             recordFrontendStageOutcome(resource, stagedUrl, 'executed',
               generatedLoadOnDemandChunkStageExtra(resource, normalizedChunkId, expression, {
                 loadOnDemandChunkExecutionResult:
-                  window.VaadinDesktopIpcDiagnostics.loadOnDemandChunkExecutionResult
+                  window.VaadinDesktopIpcDiagnostics.loadOnDemandChunkExecutionResult,
+                loadOnDemandChunkFileStageObserved:
+                  window.VaadinDesktopIpcDiagnostics.loadOnDemandChunkFileStageObserved,
+                loadOnDemandChunkFileExecuted:
+                  window.VaadinDesktopIpcDiagnostics.loadOnDemandChunkFileExecuted,
+                loadOnDemandChunkFileCallbackResolved:
+                  window.VaadinDesktopIpcDiagnostics.loadOnDemandChunkFileCallbackResolved,
+                loadOnDemandChunkFileExecutionResult:
+                  window.VaadinDesktopIpcDiagnostics.loadOnDemandChunkFileExecutionResult,
+                loadOnDemandChunkFileSideEffectProof:
+                  window.VaadinDesktopIpcDiagnostics.loadOnDemandChunkFileSideEffectProof,
+                loadOnDemandChunkFileFailureLayer:
+                  window.VaadinDesktopIpcDiagnostics.loadOnDemandChunkFileFailureLayer
               }));
             installGeneratedLoadOnDemandChunkBridge(generatedDelegate);
           } catch (error) {
@@ -6700,12 +7070,28 @@ let flowIpcShell = #"""
             window.VaadinDesktopIpcDiagnostics.loadOnDemandChunkBrowserError = message;
             window.VaadinDesktopIpcDiagnostics.loadOnDemandChunkFailureLayer =
               stageExtra.loadOnDemandChunkFailureLayer || 'generated-loadondemand-chunk-browser-execution';
+            window.VaadinDesktopIpcDiagnostics.loadOnDemandChunkFileExecuted = false;
+            window.VaadinDesktopIpcDiagnostics.loadOnDemandChunkFileCallbackResolved = false;
+            window.VaadinDesktopIpcDiagnostics.loadOnDemandChunkFileExecutionResult =
+              'strict-blocker:' + (stageExtra.chunkFileStatus || 'chunk-file-import-failed');
+            window.VaadinDesktopIpcDiagnostics.loadOnDemandChunkFileBrowserError = message;
+            window.VaadinDesktopIpcDiagnostics.loadOnDemandChunkFileFailureLayer =
+              stageExtra.loadOnDemandChunkFileFailureLayer || 'chunk-file-import-failed';
             recordFrontendStageOutcome(resource, stagedUrl, 'strict-blocker',
               generatedLoadOnDemandChunkStageExtra(resource, normalizedChunkId, expression, {
                 browserError: message,
                 loadOnDemandChunkBrowserError: message,
                 loadOnDemandChunkExecutionResult:
-                  window.VaadinDesktopIpcDiagnostics.loadOnDemandChunkExecutionResult
+                  window.VaadinDesktopIpcDiagnostics.loadOnDemandChunkExecutionResult,
+                loadOnDemandChunkFileStageObserved:
+                  window.VaadinDesktopIpcDiagnostics.loadOnDemandChunkFileStageObserved,
+                loadOnDemandChunkFileExecuted: false,
+                loadOnDemandChunkFileCallbackResolved: false,
+                loadOnDemandChunkFileBrowserError: message,
+                loadOnDemandChunkFileExecutionResult:
+                  window.VaadinDesktopIpcDiagnostics.loadOnDemandChunkFileExecutionResult,
+                loadOnDemandChunkFileFailureLayer:
+                  window.VaadinDesktopIpcDiagnostics.loadOnDemandChunkFileFailureLayer
               }));
           } finally {
             refreshFrontendStagingDiagnostics();

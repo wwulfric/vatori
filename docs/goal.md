@@ -17,10 +17,9 @@ v0/v1 runtime 切片走向可产品化桌面框架的最终完成状态。
 - `docs/goal-1_9.md`：Flow-client-triggered generated/lazy loading contract，已完成。
 - `docs/goal-1_10.md`：Flow lazy dependency and production bundle runtime slice，已完成。
 - `docs/goal-1_11.md`：Generated `Flow.loadOnDemand` chunk runtime path，已完成。
+- `docs/goal-1_12.md`：Generated LoadOnDemand chunk file registry and side-effect proof，已完成。
 
-当前已规划但尚未执行的阶段目标：
-
-- `docs/goal-1_12.md`：Generated LoadOnDemand chunk file registry and side-effect proof，待执行。
+当前已规划但尚未执行的阶段目标：暂无。
 
 后续阶段应继续以 `docs/goal-1_13.md`、`docs/goal-1_14.md` 等文件拆分，
 每个阶段只拿走本长期目标中的一个可评审切片。不要把本文件改写成短期任务清单；
@@ -44,7 +43,7 @@ v0/v1 runtime 切片走向可产品化桌面框架的最终完成状态。
 
 ## 当前基线
 
-截至 goal 1.11，仓库已经证明：
+截至 goal 1.12，仓库已经证明：
 
 - `dev-ipc` 可以启动 no-localhost Flow IPC runtime。
 - 真实 macOS Swift/AppKit/WKWebView 窗口可以运行 Flow IPC smoke app 和 framework
@@ -117,6 +116,17 @@ v0/v1 runtime 切片走向可产品化桌面框架的最终完成状态。
   `failureLayer=dev-bundle-generated-imports-loadondemand-no-op-no-chunk-file`。这已经越过
   v1.9 diagnostic bridge 和 v1.10 ordinary `LoadMode.LAZY` 层，但还不是完整 chunk-id ->
   real chunk file / side-effect ownership parity。
+- v1.12 已把 v1.11 的 generic generated-flow-imports no-op blocker 收敛到真实
+  generated-flow-imports body parser 证据：parser 读取
+  `vaadin-dev-bundle/webapp/VAADIN/build/generated-flow-imports-VW7hRaNw.js`，识别当前
+  Vaadin 输出的 `loadOnDemand` table 是 `Promise.resolve(0)` no-op，没有
+  `./chunks/chunk-*.js` branch。trace 记录
+  `flow-ipc-loadondemand-chunk-file-v1_12`、
+  `generatedLoadOnDemandChunkFileRegistrySource=generated-flow-imports-body-parser-v1_12`、
+  `loadOnDemandTableShape=no-op-promise-resolve-0`、`chunkFileStatus=not-generated`、
+  `loadOnDemandChunkFileCallbackResolved=true` 和
+  `loadOnDemandChunkFileFailureLayer=chunk-file-not-generated`。这证明了当前 app/build 没有
+  真实 generated lazy chunk file；它不是完整 generated chunk-file execution 成功。
 - 完整 generated/lazy chunk file registry、production bundle owned execution 和 dev-mode/Vite
   execution 仍是明确 blocker，不计入最终完成。
 
@@ -211,9 +221,9 @@ v0/v1 runtime 切片走向可产品化桌面框架的最终完成状态。
 
 以下项目仍需要后续阶段推进：
 
-- 基于 v1.11 的真实 UIDL `Flow.loadOnDemand(chunkId)` 结果，继续把 generated/lazy chunk id
-  映射到真实 chunk file、callback/side-effect ownership、production bundle owned execution
-  和 dev-mode/Vite execution 从 partial/blocker 推进到真实可执行路径。
+- 基于 v1.12 的真实 generated-flow-imports no-op table 证据，继续让当前 app/build 产生真实
+  generated lazy chunk file，接入受支持 Vaadin lazy chunk SPI，或把 production bundle owned
+  execution 和 dev-mode/Vite execution 从 partial/blocker 推进到真实可执行路径。
 - 完整 generated/lazy `Flow.loadOnDemand` execution，不再停在 staged generated-flow-imports
   no-op / missing chunk file blocker。
 - Production bundle owned runtime execution、chunk side-effect ownership 和 packaging-time
@@ -244,8 +254,8 @@ v0/v1 runtime 切片走向可产品化桌面框架的最终完成状态。
 
 当前建议的下一阶段应从以下方向中选一个可评审切片：
 
-- Generated `Flow.loadOnDemand(chunkId)` chunk file registry / side-effect proof，把 v1.11
-  的 generated-flow-imports no-op blocker 拆到真实 chunk artifact 或受支持 SPI。
+- 让当前 smoke/framework build 产生真实 generated lazy chunk file，或评估受支持 Vaadin lazy
+  chunk SPI，越过 v1.12 的 `chunk-file-not-generated` blocker。
 - Production bundle owned runtime execution / packaging-time staging，把 v1.10 的
   staged execution attempt 推进到可运行 side-effect ownership。
 - Dev-mode/Vite execution 或可靠替代模式。

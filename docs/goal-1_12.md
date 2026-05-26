@@ -1,5 +1,12 @@
 # Goal 1.12: Generated LoadOnDemand Chunk File Registry and Side-Effect Proof
 
+状态：已完成。当前 Vaadin smoke build 的真实 generated-flow-imports body 没有生成
+`./chunks/chunk-*.js` branch；v1.12 以 precise blocker 形式完成，记录
+`chunkFileStatus=not-generated`、`loadOnDemandTableShape=no-op-promise-resolve-0`、
+`loadOnDemandChunkFileCallbackResolved=true` 和
+`loadOnDemandChunkFileFailureLayer=chunk-file-not-generated`。这不是完整 generated
+chunk-file execution。
+
 `docs/goal.md` 是长期愿景和完成度账本。v1.11 已经把 generated
 `Flow.loadOnDemand(chunkId)` 从 v1.9 diagnostic bridge 推进到真实 UIDL lazy expression
 和可见 Flow client trigger：host 能捕获

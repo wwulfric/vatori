@@ -13,6 +13,8 @@ import java.util.List;
 import java.util.Map;
 import java.util.Objects;
 import java.util.Properties;
+import java.util.regex.Matcher;
+import java.util.regex.Pattern;
 
 final class FlowClientResources {
     private static final String COMPILE_PROPERTIES =
@@ -119,6 +121,24 @@ final class FlowClientResources {
     private static final String GENERATED_LAZY_CHUNK_BLOCKER_VERSION = "flow-ipc-loadondemand-chunk-v1_11";
     private static final String GENERATED_LAZY_CHUNK_NEXT_RESOLUTION_STEP =
             "derive chunk-id-to-file mapping from generated-flow-imports or stats.json instead of staging only the generated imports module";
+    private static final String GENERATED_LAZY_CHUNK_FILE_REGISTRY_VERSION =
+            "flow-ipc-loadondemand-chunk-file-v1_12";
+    private static final String GENERATED_LAZY_CHUNK_FILE_REGISTRY_SOURCE =
+            "generated-flow-imports-body-parser-v1_12";
+    private static final String GENERATED_LAZY_CHUNK_FILE_MAPPING_SOURCE =
+            "real-generated-flow-imports-loadondemand-table-v1_12";
+    private static final String GENERATED_LAZY_CHUNK_FILE_RESOLVER =
+            "generated-flow-imports-relative-chunk-file-resolver-v1_12";
+    private static final String GENERATED_LAZY_CHUNK_FILE_BLOCKER_VERSION =
+            "flow-ipc-loadondemand-chunk-file-v1_12";
+    private static final String GENERATED_LAZY_CHUNK_FILE_NOT_GENERATED_REASON =
+            "real generated-flow-imports loadOnDemand table is a Promise.resolve(0) no-op; this Vaadin build did not generate a ./chunks/chunk-*.js branch for the current app";
+    private static final String GENERATED_LAZY_CHUNK_FILE_NEXT_RESOLUTION_STEP =
+            "make the smoke app produce a real Vaadin generated lazy chunk or route the next build's ./chunks/chunk-*.js branch through this resolver";
+    private static final Pattern GENERATED_LAZY_CHUNK_IMPORT =
+            Pattern.compile("key\\s*={2,3}\\s*['\"]([^'\"]+)['\"][\\s\\S]*?pending\\.push\\(import\\(['\"](\\./chunks/[^'\"]+\\.js)['\"]\\)\\)");
+    private static final Pattern GENERATED_LAZY_NOOP_LOAD_ON_DEMAND =
+            Pattern.compile("const\\s+loadOnDemand\\s*=\\s*\\([^)]*\\)\\s*=>\\s*\\{\\s*return\\s+Promise\\.resolve\\(0\\);?\\s*\\}");
     private static final String FLOW_LAZY_DEPENDENCY_VERSION = "flow-ipc-lazy-dependency-v1_10";
     private static final String FLOW_LAZY_DEPENDENCY_SOURCE =
             "flow-uidl-dependencyloader-loadmode-lazy-v1_10";
@@ -541,6 +561,7 @@ final class FlowClientResources {
         manifest.put("loadOnDemandChunkFailureLayer", GENERATED_LAZY_CHUNK_FAILURE_LAYER);
         manifest.put("loadOnDemandChunkBlockerVersion", GENERATED_LAZY_CHUNK_BLOCKER_VERSION);
         manifest.put("loadOnDemandChunkNextResolutionStep", GENERATED_LAZY_CHUNK_NEXT_RESOLUTION_STEP);
+        manifest.putAll(generatedLoadOnDemandChunkFileRegistryAttributes(DEV_BUNDLE_GENERATED_FLOW_IMPORTS_JS));
         manifest.put("runtimeResolverContractVersion", RUNTIME_RESOLVER_CONTRACT_VERSION);
         manifest.put("flowLazyDependencyVersion", FLOW_LAZY_DEPENDENCY_VERSION);
         manifest.put("flowLazyDependencySource", FLOW_LAZY_DEPENDENCY_SOURCE);
@@ -590,6 +611,8 @@ final class FlowClientResources {
                         "generated-flow-imports relative dependencies execute through the no-localhost staging resolver, but the real Flow.loadOnDemand API is still installed by the direct staged generated-flow-imports artifact rather than triggered by the Flow client engine"),
                 strictBlocker("generated-lazy", GENERATED_LAZY_CHUNK_BLOCKER_VERSION,
                         "real UIDL Flow.loadOnDemand expressions are observed and mapped to the generated-flow-imports artifact, but this dev bundle exposes a no-op loadOnDemand table without chunk-file resolution"),
+                strictBlocker("generated-lazy", GENERATED_LAZY_CHUNK_FILE_BLOCKER_VERSION,
+                        "generated-flow-imports has been parsed for chunk-file branches; this Vaadin dev bundle exposes a real no-op Promise.resolve(0) loadOnDemand table, so there is no generated ./chunks/chunk-*.js file to stage yet"),
                 strictBlocker("production-bundle", "flow-ipc-production-runtime-v1_10",
                         "production bundle stats now selects an executable runtime artifact and stages it through stable module identity, but full production runtime ownership is still blocked until side effects can be executed without relying on focused component entry imports")));
         manifest.put("transport", "flow-ipc");
@@ -1090,6 +1113,9 @@ final class FlowClientResources {
         attributes.put("loadOnDemandChunkFailureLayer", GENERATED_LAZY_CHUNK_FAILURE_LAYER);
         attributes.put("loadOnDemandChunkBlockerVersion", GENERATED_LAZY_CHUNK_BLOCKER_VERSION);
         attributes.put("loadOnDemandChunkNextResolutionStep", GENERATED_LAZY_CHUNK_NEXT_RESOLUTION_STEP);
+        if (primary) {
+            attributes.putAll(generatedLoadOnDemandChunkFileRegistryAttributes(path));
+        }
         attributes.put("devBundleResource", true);
         attributes.put("productionBundleResource", true);
         attributes.put("moduleSpecifier", path);
@@ -1126,6 +1152,61 @@ final class FlowClientResources {
                     "vaadin-dev-bundle/webapp/VAADIN/build/markdown-helpers-31I0A-hg.js"));
         }
         return attributes;
+    }
+
+    private static Map<String, Object> generatedLoadOnDemandChunkFileRegistryAttributes(String generatedImportsPath) {
+        GeneratedLoadOnDemandChunkFileRegistry registry =
+                GeneratedLoadOnDemandChunkFileRegistry.parse(generatedImportsPath,
+                        classpathResourceText(generatedImportsPath));
+        Map<String, Object> attributes = new LinkedHashMap<>();
+        attributes.put("generatedLoadOnDemandChunkFileRegistryVersion",
+                GENERATED_LAZY_CHUNK_FILE_REGISTRY_VERSION);
+        attributes.put("generatedLoadOnDemandChunkFileRegistrySource", registry.registrySource());
+        attributes.put("generatedLoadOnDemandChunkFileMappingSource", registry.mappingSource());
+        attributes.put("generatedLoadOnDemandGeneratedImportsArtifact", registry.generatedImportsArtifact());
+        attributes.put("generatedLoadOnDemandSourceBuildMode", registry.sourceBuildMode());
+        attributes.put("generatedLoadOnDemandSourceArtifactFamily", registry.sourceArtifactFamily());
+        attributes.put("generatedLoadOnDemandNoOpLoadOnDemand", registry.noOpLoadOnDemand());
+        attributes.put("loadOnDemandTableShape", registry.loadOnDemandTableShape());
+        attributes.put("chunkId", registry.chunkId());
+        attributes.put("chunkImportSpecifier", registry.chunkImportSpecifier());
+        attributes.put("chunkArtifactPath", registry.chunkArtifactPath());
+        attributes.put("chunkContentHash", registry.chunkContentHash());
+        attributes.put("chunkFileResolver", registry.chunkFileResolver());
+        attributes.put("chunkFileStatus", registry.chunkFileStatus());
+        attributes.put("chunkFileBytes", registry.chunkFileBytes());
+        attributes.put("chunkFileSha256", registry.chunkFileSha256());
+        attributes.put("noChunkGeneratedReason", registry.noChunkGeneratedReason());
+        attributes.put("loadOnDemandChunkFileRegistryVersion", GENERATED_LAZY_CHUNK_FILE_REGISTRY_VERSION);
+        attributes.put("loadOnDemandChunkFileRegistrySource", registry.registrySource());
+        attributes.put("loadOnDemandChunkFileMappingSource", registry.mappingSource());
+        attributes.put("loadOnDemandChunkFileGeneratedImportsArtifact", registry.generatedImportsArtifact());
+        attributes.put("loadOnDemandChunkFileNoOpLoadOnDemand", registry.noOpLoadOnDemand());
+        attributes.put("loadOnDemandChunkFileTableShape", registry.loadOnDemandTableShape());
+        attributes.put("loadOnDemandChunkFileResolver", registry.chunkFileResolver());
+        attributes.put("loadOnDemandChunkFileStatus", registry.chunkFileStatus());
+        attributes.put("loadOnDemandChunkFileBytes", registry.chunkFileBytes());
+        attributes.put("loadOnDemandChunkFileSha256", registry.chunkFileSha256());
+        attributes.put("loadOnDemandChunkFileFailureLayer", registry.failureLayer());
+        attributes.put("loadOnDemandChunkFileBlockerVersion", GENERATED_LAZY_CHUNK_FILE_BLOCKER_VERSION);
+        attributes.put("loadOnDemandChunkFileNextResolutionStep", registry.nextResolutionStep());
+        attributes.put("loadOnDemandChunkFileSideEffectProof", registry.sideEffectProof());
+        return attributes;
+    }
+
+    private static String classpathResourceText(String path) {
+        ClassLoader loader = Thread.currentThread().getContextClassLoader();
+        if (loader == null) {
+            loader = FlowClientResources.class.getClassLoader();
+        }
+        try (InputStream stream = loader.getResourceAsStream(path)) {
+            if (stream == null) {
+                return "";
+            }
+            return new String(stream.readAllBytes(), StandardCharsets.UTF_8);
+        } catch (IOException error) {
+            throw new IllegalStateException("Unable to read Flow client resource " + path, error);
+        }
     }
 
     private static Map<String, Object> devModePackageLockAttributes() {
@@ -1242,6 +1323,137 @@ final class FlowClientResources {
                 "strictBlocker", true,
                 "failureClassification", classification,
                 "blockedReason", reason);
+    }
+
+    private record GeneratedLoadOnDemandChunkFileRegistry(
+            String chunkId,
+            String chunkImportSpecifier,
+            String chunkArtifactPath,
+            String chunkContentHash,
+            String registrySource,
+            String mappingSource,
+            String generatedImportsArtifact,
+            boolean noOpLoadOnDemand,
+            String noChunkGeneratedReason,
+            String sourceBuildMode,
+            String sourceArtifactFamily,
+            String loadOnDemandTableShape,
+            String chunkFileResolver,
+            String chunkFileStatus,
+            int chunkFileBytes,
+            String chunkFileSha256,
+            String failureLayer,
+            String nextResolutionStep,
+            String sideEffectProof) {
+
+        static GeneratedLoadOnDemandChunkFileRegistry parse(String generatedImportsArtifact, String body) {
+            String sourceBuildMode = sourceBuildMode(generatedImportsArtifact);
+            String sourceArtifactFamily = "generated-lazy";
+            String safeBody = body == null ? "" : body;
+            Matcher chunkMatcher = GENERATED_LAZY_CHUNK_IMPORT.matcher(safeBody);
+            if (chunkMatcher.find()) {
+                String chunkId = chunkMatcher.group(1);
+                String chunkImportSpecifier = chunkMatcher.group(2);
+                String chunkArtifactPath = resolveRelativeChunkPath(generatedImportsArtifact, chunkImportSpecifier);
+                byte[] chunkBody = classpathResourceBytes(chunkArtifactPath);
+                if (chunkBody.length > 0) {
+                    String sha256 = Resource.sha256(chunkBody);
+                    return new GeneratedLoadOnDemandChunkFileRegistry(chunkId,
+                            chunkImportSpecifier,
+                            chunkArtifactPath,
+                            sha256,
+                            GENERATED_LAZY_CHUNK_FILE_REGISTRY_SOURCE,
+                            GENERATED_LAZY_CHUNK_FILE_MAPPING_SOURCE,
+                            generatedImportsArtifact,
+                            false,
+                            "",
+                            sourceBuildMode,
+                            sourceArtifactFamily,
+                            "branch-table-dynamic-import",
+                            GENERATED_LAZY_CHUNK_FILE_RESOLVER,
+                            "available",
+                            chunkBody.length,
+                            sha256,
+                            "",
+                            "",
+                            "chunk-file-body-available-for-staged-import");
+                }
+                return new GeneratedLoadOnDemandChunkFileRegistry(chunkId,
+                        chunkImportSpecifier,
+                        chunkArtifactPath,
+                        "",
+                        GENERATED_LAZY_CHUNK_FILE_REGISTRY_SOURCE,
+                        GENERATED_LAZY_CHUNK_FILE_MAPPING_SOURCE,
+                        generatedImportsArtifact,
+                        false,
+                        "",
+                        sourceBuildMode,
+                        sourceArtifactFamily,
+                        "branch-table-dynamic-import",
+                        GENERATED_LAZY_CHUNK_FILE_RESOLVER,
+                        "not-found",
+                        0,
+                        "",
+                        "chunk-file-not-found",
+                        "add the generated chunk artifact to the no-localhost resolver classpath or staging source",
+                        "chunk-branch-observed-but-artifact-body-missing");
+            }
+            boolean noOp = GENERATED_LAZY_NOOP_LOAD_ON_DEMAND.matcher(safeBody).find();
+            return new GeneratedLoadOnDemandChunkFileRegistry("",
+                    "",
+                    "",
+                    "",
+                    GENERATED_LAZY_CHUNK_FILE_REGISTRY_SOURCE,
+                    GENERATED_LAZY_CHUNK_FILE_MAPPING_SOURCE,
+                    generatedImportsArtifact,
+                    noOp,
+                    noOp ? GENERATED_LAZY_CHUNK_FILE_NOT_GENERATED_REASON
+                            : "generated-flow-imports did not match a supported loadOnDemand chunk table shape",
+                    sourceBuildMode,
+                    sourceArtifactFamily,
+                    noOp ? "no-op-promise-resolve-0" : "unrecognized",
+                    GENERATED_LAZY_CHUNK_FILE_RESOLVER,
+                    noOp ? "not-generated" : "unrecognized",
+                    0,
+                    "",
+                    noOp ? "chunk-file-not-generated" : "chunk-registry-unrecognized",
+                    noOp ? GENERATED_LAZY_CHUNK_FILE_NEXT_RESOLUTION_STEP
+                            : "extend the parser for the generated-flow-imports table shape emitted by this Vaadin version",
+                    noOp ? "no-chunk-generated-by-real-generated-flow-imports-no-op-table"
+                            : "loadondemand-table-shape-unrecognized");
+        }
+
+        private static String sourceBuildMode(String path) {
+            if (path.startsWith("vaadin-dev-bundle/")) {
+                return "vaadin-dev-bundle-production-build";
+            }
+            if (path.startsWith("META-INF/vatori/generated/")) {
+                return "repository-generated-flow-fixture";
+            }
+            return "classpath-resource";
+        }
+
+        private static String resolveRelativeChunkPath(String generatedImportsArtifact, String specifier) {
+            int lastSlash = generatedImportsArtifact.lastIndexOf('/');
+            String parent = lastSlash < 0 ? "" : generatedImportsArtifact.substring(0, lastSlash + 1);
+            String relative = specifier.startsWith("./") ? specifier.substring(2) : specifier;
+            return parent + relative;
+        }
+
+        private static byte[] classpathResourceBytes(String path) {
+            if (path == null || path.isBlank()) {
+                return new byte[0];
+            }
+            ClassLoader loader = Thread.currentThread().getContextClassLoader();
+            if (loader == null) {
+                loader = FlowClientResources.class.getClassLoader();
+            }
+            try (InputStream stream = loader.getResourceAsStream(path)) {
+                return stream == null ? new byte[0] : stream.readAllBytes();
+            } catch (IOException error) {
+                throw new IllegalStateException("Unable to read generated loadOnDemand chunk " + path, error);
+            }
+        }
     }
 
     private record Resource(String path, String kind, byte[] bytes, boolean text, boolean ipcAugmented,

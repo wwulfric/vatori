@@ -171,6 +171,7 @@ public final class FlowClientResourceSmokeMain {
         requireStrictBlocker(componentManifest, "dev-mode-bundle", "dev-mode-bundle-execution-unmapped");
         requireStrictBlocker(componentManifest, "generated-lazy", "generated-lazy-loadondemand-api-boundary-v1_9");
         requireStrictBlocker(componentManifest, "generated-lazy", "flow-ipc-loadondemand-chunk-v1_11");
+        requireStrictBlocker(componentManifest, "generated-lazy", "flow-ipc-loadondemand-chunk-file-v1_12");
         requireStrictBlocker(componentManifest, "production-bundle", "flow-ipc-production-runtime-v1_10");
         requireEquals("flow-ipc-frontend-runtime-resolver-v1_10",
                 componentManifest.get("runtimeResolverContractVersion"),
@@ -243,6 +244,29 @@ public final class FlowClientResourceSmokeMain {
         requireEquals("dev-bundle-generated-imports-loadondemand-no-op-no-chunk-file",
                 componentManifest.get("loadOnDemandChunkFailureLayer"),
                 "Generated/lazy real UIDL loadOnDemand blocker layer");
+        requireEquals("flow-ipc-loadondemand-chunk-file-v1_12",
+                componentManifest.get("generatedLoadOnDemandChunkFileRegistryVersion"),
+                "Generated/lazy loadOnDemand chunk-file registry version");
+        requireEquals("generated-flow-imports-body-parser-v1_12",
+                componentManifest.get("generatedLoadOnDemandChunkFileRegistrySource"),
+                "Generated/lazy loadOnDemand chunk-file registry source");
+        requireEquals("real-generated-flow-imports-loadondemand-table-v1_12",
+                componentManifest.get("generatedLoadOnDemandChunkFileMappingSource"),
+                "Generated/lazy loadOnDemand chunk-file mapping source");
+        requireEquals("vaadin-dev-bundle/webapp/VAADIN/build/generated-flow-imports-VW7hRaNw.js",
+                componentManifest.get("generatedLoadOnDemandGeneratedImportsArtifact"),
+                "Generated/lazy loadOnDemand generated imports artifact");
+        requireEquals(Boolean.TRUE, componentManifest.get("generatedLoadOnDemandNoOpLoadOnDemand"),
+                "Generated/lazy loadOnDemand no-op table flag");
+        requireEquals("no-op-promise-resolve-0", componentManifest.get("loadOnDemandTableShape"),
+                "Generated/lazy loadOnDemand table shape");
+        requireEquals("generated-flow-imports-relative-chunk-file-resolver-v1_12",
+                componentManifest.get("chunkFileResolver"),
+                "Generated/lazy loadOnDemand chunk-file resolver");
+        requireEquals("not-generated", componentManifest.get("chunkFileStatus"),
+                "Generated/lazy loadOnDemand chunk-file status");
+        requireEquals("chunk-file-not-generated", componentManifest.get("loadOnDemandChunkFileFailureLayer"),
+                "Generated/lazy loadOnDemand chunk-file failure layer");
         requireEquals("flow-ipc-lazy-dependency-v1_10",
                 componentManifest.get("flowLazyDependencyVersion"),
                 "Flow lazy dependency version");
@@ -599,6 +623,35 @@ public final class FlowClientResourceSmokeMain {
                         "flow-ipc-loadondemand-chunk-v1_11")
                 || !Objects.equals(generatedFlowImportsDevBundleResponse.get("loadOnDemandChunkFailureLayer"),
                         "dev-bundle-generated-imports-loadondemand-no-op-no-chunk-file")
+                || !Objects.equals(generatedFlowImportsDevBundleResponse.get("generatedLoadOnDemandChunkFileRegistryVersion"),
+                        "flow-ipc-loadondemand-chunk-file-v1_12")
+                || !Objects.equals(generatedFlowImportsDevBundleResponse.get("generatedLoadOnDemandChunkFileRegistrySource"),
+                        "generated-flow-imports-body-parser-v1_12")
+                || !Objects.equals(generatedFlowImportsDevBundleResponse.get("generatedLoadOnDemandChunkFileMappingSource"),
+                        "real-generated-flow-imports-loadondemand-table-v1_12")
+                || !Objects.equals(generatedFlowImportsDevBundleResponse.get("generatedLoadOnDemandGeneratedImportsArtifact"),
+                        generatedFlowImportsDevBundlePath)
+                || !Objects.equals(generatedFlowImportsDevBundleResponse.get("generatedLoadOnDemandSourceBuildMode"),
+                        "vaadin-dev-bundle-production-build")
+                || !Objects.equals(generatedFlowImportsDevBundleResponse.get("generatedLoadOnDemandSourceArtifactFamily"),
+                        "generated-lazy")
+                || !Boolean.TRUE.equals(generatedFlowImportsDevBundleResponse.get("generatedLoadOnDemandNoOpLoadOnDemand"))
+                || !Objects.equals(generatedFlowImportsDevBundleResponse.get("loadOnDemandTableShape"),
+                        "no-op-promise-resolve-0")
+                || !Objects.equals(generatedFlowImportsDevBundleResponse.get("chunkFileResolver"),
+                        "generated-flow-imports-relative-chunk-file-resolver-v1_12")
+                || !Objects.equals(generatedFlowImportsDevBundleResponse.get("chunkFileStatus"),
+                        "not-generated")
+                || !Objects.equals(generatedFlowImportsDevBundleResponse.get("chunkFileBytes"), 0)
+                || !Objects.equals(generatedFlowImportsDevBundleResponse.get("loadOnDemandChunkFileFailureLayer"),
+                        "chunk-file-not-generated")
+                || !Objects.equals(generatedFlowImportsDevBundleResponse.get("loadOnDemandChunkFileBlockerVersion"),
+                        "flow-ipc-loadondemand-chunk-file-v1_12")
+                || !(generatedFlowImportsDevBundleResponse.get("noChunkGeneratedReason") instanceof String noChunkReason
+                        && noChunkReason.contains("Promise.resolve(0)"))
+                || !(generatedFlowImportsDevBundleResponse.get("loadOnDemandChunkFileNextResolutionStep")
+                        instanceof String chunkFileNextStep
+                        && chunkFileNextStep.contains("./chunks/chunk-*.js"))
                 || !Boolean.FALSE.equals(
                         generatedFlowImportsDevBundleResponse.get("generatedLazyChunkDiagnosticBridgeUsed"))
                 || !Boolean.FALSE.equals(

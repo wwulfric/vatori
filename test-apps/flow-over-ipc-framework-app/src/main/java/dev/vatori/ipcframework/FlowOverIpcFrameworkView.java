@@ -14,6 +14,9 @@ import tools.jackson.databind.JsonNode;
 import java.math.BigDecimal;
 
 @Route("")
+@com.vaadin.flow.component.dependency.JavaScript(
+        value = "context://vatori-flow-ipc-lazy-v1_10.js",
+        loadMode = com.vaadin.flow.shared.ui.LoadMode.LAZY)
 public class FlowOverIpcFrameworkView extends VerticalLayout {
     private final VerticalLayout updateList = new VerticalLayout();
     private int revision;

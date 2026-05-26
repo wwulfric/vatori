@@ -1453,6 +1453,39 @@ final class WebViewHost: NSObject, NSApplicationDelegate, NSWindowDelegate, WKNa
           frontendArtifactGeneratedLazyNextResolutionStep: window.VaadinDesktopIpcDiagnostics ? window.VaadinDesktopIpcDiagnostics.frontendArtifactGeneratedLazyNextResolutionStep : "",
           frontendArtifactGeneratedLazyModuleIdentityStrategy: window.VaadinDesktopIpcDiagnostics ? window.VaadinDesktopIpcDiagnostics.frontendArtifactGeneratedLazyModuleIdentityStrategy : "",
           frontendArtifactGeneratedLazyModuleIdentityKey: window.VaadinDesktopIpcDiagnostics ? window.VaadinDesktopIpcDiagnostics.frontendArtifactGeneratedLazyModuleIdentityKey : "",
+          frontendRuntimeResolverContractVersion: window.VaadinDesktopIpcDiagnostics ? window.VaadinDesktopIpcDiagnostics.frontendRuntimeResolverContractVersion : "",
+          frontendRuntimeResolverLogicalRequestIds: window.VaadinDesktopIpcDiagnostics ? window.VaadinDesktopIpcDiagnostics.frontendRuntimeResolverLogicalRequestIds : "",
+          frontendRuntimeResolverPathMappings: window.VaadinDesktopIpcDiagnostics ? window.VaadinDesktopIpcDiagnostics.frontendRuntimeResolverPathMappings : "",
+          flowLazyDependencyObserved: !!(window.VaadinDesktopIpcDiagnostics && window.VaadinDesktopIpcDiagnostics.flowLazyDependencyObserved),
+          flowLazyDependencyRequested: !!(window.VaadinDesktopIpcDiagnostics && window.VaadinDesktopIpcDiagnostics.flowLazyDependencyRequested),
+          flowLazyDependencyResponse: !!(window.VaadinDesktopIpcDiagnostics && window.VaadinDesktopIpcDiagnostics.flowLazyDependencyResponse),
+          flowLazyDependencyStageObserved: !!(window.VaadinDesktopIpcDiagnostics && window.VaadinDesktopIpcDiagnostics.flowLazyDependencyStageObserved),
+          flowLazyDependencyExecuted: !!(window.VaadinDesktopIpcDiagnostics && window.VaadinDesktopIpcDiagnostics.flowLazyDependencyExecuted),
+          flowLazyDependencyVersion: window.VaadinDesktopIpcDiagnostics ? window.VaadinDesktopIpcDiagnostics.flowLazyDependencyVersion : "",
+          flowLazyDependencySource: window.VaadinDesktopIpcDiagnostics ? window.VaadinDesktopIpcDiagnostics.flowLazyDependencySource : "",
+          flowLazyDependencyMode: window.VaadinDesktopIpcDiagnostics ? window.VaadinDesktopIpcDiagnostics.flowLazyDependencyMode : "",
+          flowLazyDependencyExpression: window.VaadinDesktopIpcDiagnostics ? window.VaadinDesktopIpcDiagnostics.flowLazyDependencyExpression : "",
+          flowLazyDependencyChunkId: window.VaadinDesktopIpcDiagnostics ? window.VaadinDesktopIpcDiagnostics.flowLazyDependencyChunkId : "",
+          flowLazyDependencyResolvedPath: window.VaadinDesktopIpcDiagnostics ? window.VaadinDesktopIpcDiagnostics.flowLazyDependencyResolvedPath : "",
+          flowLazyDependencyTriggerOwner: window.VaadinDesktopIpcDiagnostics ? window.VaadinDesktopIpcDiagnostics.flowLazyDependencyTriggerOwner : "",
+          flowLazyDependencyTriggeredByFlowClient: !!(window.VaadinDesktopIpcDiagnostics && window.VaadinDesktopIpcDiagnostics.flowLazyDependencyTriggeredByFlowClient),
+          flowLazyDependencyExecutionResult: window.VaadinDesktopIpcDiagnostics ? window.VaadinDesktopIpcDiagnostics.flowLazyDependencyExecutionResult : "",
+          flowLazyDependencyFailureLayer: window.VaadinDesktopIpcDiagnostics ? window.VaadinDesktopIpcDiagnostics.flowLazyDependencyFailureLayer : "",
+          flowLazyDependencyBrowserError: window.VaadinDesktopIpcDiagnostics ? window.VaadinDesktopIpcDiagnostics.flowLazyDependencyBrowserError : "",
+          frontendArtifactProductionBundleRuntimeObserved: !!(window.VaadinDesktopIpcDiagnostics && window.VaadinDesktopIpcDiagnostics.frontendArtifactProductionBundleRuntimeObserved),
+          frontendArtifactProductionBundleRuntimeStageAttempted: !!(window.VaadinDesktopIpcDiagnostics && window.VaadinDesktopIpcDiagnostics.frontendArtifactProductionBundleRuntimeStageAttempted),
+          frontendArtifactProductionBundleRuntimeExecuted: !!(window.VaadinDesktopIpcDiagnostics && window.VaadinDesktopIpcDiagnostics.frontendArtifactProductionBundleRuntimeExecuted),
+          frontendArtifactProductionBundleRuntimeBlocker: !!(window.VaadinDesktopIpcDiagnostics && window.VaadinDesktopIpcDiagnostics.frontendArtifactProductionBundleRuntimeBlocker),
+          frontendArtifactProductionBundleRuntimeVersion: window.VaadinDesktopIpcDiagnostics ? window.VaadinDesktopIpcDiagnostics.frontendArtifactProductionBundleRuntimeVersion : "",
+          frontendArtifactProductionBundleRuntimeRegistrySource: window.VaadinDesktopIpcDiagnostics ? window.VaadinDesktopIpcDiagnostics.frontendArtifactProductionBundleRuntimeRegistrySource : "",
+          frontendArtifactProductionBundleRuntimeStatsSource: window.VaadinDesktopIpcDiagnostics ? window.VaadinDesktopIpcDiagnostics.frontendArtifactProductionBundleRuntimeStatsSource : "",
+          frontendArtifactProductionBundleRuntimeSelectedArtifact: window.VaadinDesktopIpcDiagnostics ? window.VaadinDesktopIpcDiagnostics.frontendArtifactProductionBundleRuntimeSelectedArtifact : "",
+          frontendArtifactProductionBundleRuntimeDependencyChain: window.VaadinDesktopIpcDiagnostics ? window.VaadinDesktopIpcDiagnostics.frontendArtifactProductionBundleRuntimeDependencyChain : "",
+          frontendArtifactProductionBundleRuntimeModuleIdentity: window.VaadinDesktopIpcDiagnostics ? window.VaadinDesktopIpcDiagnostics.frontendArtifactProductionBundleRuntimeModuleIdentity : "",
+          frontendArtifactProductionBundleRuntimeExecutionResult: window.VaadinDesktopIpcDiagnostics ? window.VaadinDesktopIpcDiagnostics.frontendArtifactProductionBundleRuntimeExecutionResult : "",
+          frontendArtifactProductionBundleRuntimeFailureLayer: window.VaadinDesktopIpcDiagnostics ? window.VaadinDesktopIpcDiagnostics.frontendArtifactProductionBundleRuntimeFailureLayer : "",
+          frontendArtifactProductionBundleRuntimeBrowserError: window.VaadinDesktopIpcDiagnostics ? window.VaadinDesktopIpcDiagnostics.frontendArtifactProductionBundleRuntimeBrowserError : "",
+          frontendArtifactProductionBundleRuntimeNextResolutionStep: window.VaadinDesktopIpcDiagnostics ? window.VaadinDesktopIpcDiagnostics.frontendArtifactProductionBundleRuntimeNextResolutionStep : "",
           frontendArtifactGeneratedLazyStagedDependencyGraph: window.VaadinDesktopIpcDiagnostics ? window.VaadinDesktopIpcDiagnostics.frontendArtifactGeneratedLazyStagedDependencyGraph : "",
           frontendArtifactDevModeVerified: !!(window.VaadinDesktopIpcDiagnostics && window.VaadinDesktopIpcDiagnostics.frontendArtifactDevModeVerified),
           frontendArtifactDevModePath: window.VaadinDesktopIpcDiagnostics ? window.VaadinDesktopIpcDiagnostics.frontendArtifactDevModePath : "",
@@ -2078,7 +2111,10 @@ let flowIpcShell = #"""
       const frontendStagedResourceFailedPaths = new Set();
       const frontendStageResourceByUrl = new Map();
       let generatedLazyBundleExecutionAttempted = false;
+      let flowLazyDependencyExecutionAttempted = false;
+      let productionBundleRuntimeStageAttempted = false;
       let textFieldDevBundleStageAttempted = false;
+      const flowLazyDependencyPendingElements = new Map();
       const pendingFlowClientXhrRequests = new Map();
       const queuedFlowClientEngineMessages = [];
       const queuedFlowClientEngineMessageOrder = [];
@@ -2202,6 +2238,39 @@ let flowIpcShell = #"""
         frontendArtifactGeneratedLazyModuleIdentityStrategy: '',
         frontendArtifactGeneratedLazyModuleIdentityKey: '',
         frontendArtifactGeneratedLazyStagedDependencyGraph: '',
+        frontendRuntimeResolverContractVersion: '',
+        frontendRuntimeResolverLogicalRequestIds: '',
+        frontendRuntimeResolverPathMappings: '',
+        flowLazyDependencyObserved: false,
+        flowLazyDependencyRequested: false,
+        flowLazyDependencyResponse: false,
+        flowLazyDependencyStageObserved: false,
+        flowLazyDependencyExecuted: false,
+        flowLazyDependencyVersion: '',
+        flowLazyDependencySource: '',
+        flowLazyDependencyMode: '',
+        flowLazyDependencyExpression: '',
+        flowLazyDependencyChunkId: '',
+        flowLazyDependencyResolvedPath: '',
+        flowLazyDependencyTriggerOwner: '',
+        flowLazyDependencyTriggeredByFlowClient: false,
+        flowLazyDependencyExecutionResult: '',
+        flowLazyDependencyFailureLayer: '',
+        flowLazyDependencyBrowserError: '',
+        frontendArtifactProductionBundleRuntimeObserved: false,
+        frontendArtifactProductionBundleRuntimeStageAttempted: false,
+        frontendArtifactProductionBundleRuntimeExecuted: false,
+        frontendArtifactProductionBundleRuntimeBlocker: false,
+        frontendArtifactProductionBundleRuntimeVersion: '',
+        frontendArtifactProductionBundleRuntimeRegistrySource: '',
+        frontendArtifactProductionBundleRuntimeStatsSource: '',
+        frontendArtifactProductionBundleRuntimeSelectedArtifact: '',
+        frontendArtifactProductionBundleRuntimeDependencyChain: '',
+        frontendArtifactProductionBundleRuntimeModuleIdentity: '',
+        frontendArtifactProductionBundleRuntimeExecutionResult: '',
+        frontendArtifactProductionBundleRuntimeFailureLayer: '',
+        frontendArtifactProductionBundleRuntimeBrowserError: '',
+        frontendArtifactProductionBundleRuntimeNextResolutionStep: '',
         frontendArtifactDevModeVerified: false,
         frontendArtifactDevModePath: '',
         frontendArtifactDevModePackageGraphResult: '',
@@ -4023,6 +4092,71 @@ let flowIpcShell = #"""
           window.VaadinDesktopIpcDiagnostics.frontendArtifactGeneratedLazyNextResolutionStep =
             manifest.generatedLazyNextResolutionStep || window.VaadinDesktopIpcDiagnostics.frontendArtifactGeneratedLazyNextResolutionStep;
         }
+        if (typeof manifest.runtimeResolverContractVersion === 'string') {
+          window.VaadinDesktopIpcDiagnostics.frontendRuntimeResolverContractVersion =
+            manifest.runtimeResolverContractVersion;
+        }
+        const runtimeResolverResources = resources.filter((entry) => entry
+          && typeof entry.runtimeResolverContractVersion === 'string'
+          && entry.runtimeResolverContractVersion);
+        if (runtimeResolverResources.length > 0) {
+          window.VaadinDesktopIpcDiagnostics.frontendRuntimeResolverLogicalRequestIds =
+            mergeCsv(window.VaadinDesktopIpcDiagnostics.frontendRuntimeResolverLogicalRequestIds,
+              runtimeResolverResources.map((entry) => entry.logicalRequestId));
+          window.VaadinDesktopIpcDiagnostics.frontendRuntimeResolverPathMappings =
+            mergeCsv(window.VaadinDesktopIpcDiagnostics.frontendRuntimeResolverPathMappings,
+              runtimeResolverResources.map((entry) => entry.pathMapping));
+        }
+        const flowLazyResources = resources.filter((entry) => entry
+          && entry.flowLazyDependencyResource === true
+          && typeof entry.path === 'string'
+          && entry.path);
+        if (flowLazyResources.length > 0) {
+          const lazy = flowLazyResources[0];
+          window.VaadinDesktopIpcDiagnostics.flowLazyDependencyObserved = true;
+          window.VaadinDesktopIpcDiagnostics.flowLazyDependencyVersion =
+            manifest.flowLazyDependencyVersion || lazy.lazyDependencyVersion || '';
+          window.VaadinDesktopIpcDiagnostics.flowLazyDependencySource =
+            manifest.flowLazyDependencySource || lazy.lazyDependencySource || '';
+          window.VaadinDesktopIpcDiagnostics.flowLazyDependencyMode =
+            manifest.flowLazyDependencyMode || lazy.lazyDependencyMode || '';
+          window.VaadinDesktopIpcDiagnostics.flowLazyDependencyExpression =
+            manifest.flowLazyDependencyExpression || lazy.lazyDependencyExpression || '';
+          window.VaadinDesktopIpcDiagnostics.flowLazyDependencyChunkId =
+            manifest.flowLazyDependencyChunkId || lazy.lazyDependencyChunkId || '';
+          window.VaadinDesktopIpcDiagnostics.flowLazyDependencyResolvedPath =
+            manifest.flowLazyDependencyResolvedPath || lazy.lazyDependencyResolvedPath || lazy.path;
+          window.VaadinDesktopIpcDiagnostics.flowLazyDependencyTriggerOwner =
+            manifest.flowLazyDependencyTriggerOwner || lazy.lazyDependencyTriggerOwner || '';
+          window.VaadinDesktopIpcDiagnostics.flowLazyDependencyTriggeredByFlowClient =
+            manifest.flowLazyDependencyTriggeredByFlowClient === true
+            || lazy.lazyDependencyTriggeredByFlowClient === true;
+        }
+        const productionRuntimeResources = resources.filter((entry) => entry
+          && entry.productionBundleRuntimeArtifact === true
+          && typeof entry.path === 'string'
+          && entry.path);
+        if (productionRuntimeResources.length > 0) {
+          const runtime = productionRuntimeResources[0];
+          window.VaadinDesktopIpcDiagnostics.frontendArtifactProductionBundleRuntimeObserved = true;
+          window.VaadinDesktopIpcDiagnostics.frontendArtifactProductionBundleRuntimeVersion =
+            manifest.productionBundleRuntimeVersion || runtime.productionBundleRuntimeVersion || '';
+          window.VaadinDesktopIpcDiagnostics.frontendArtifactProductionBundleRuntimeRegistrySource =
+            manifest.productionBundleRuntimeRegistrySource || runtime.productionBundleRuntimeRegistrySource || '';
+          window.VaadinDesktopIpcDiagnostics.frontendArtifactProductionBundleRuntimeStatsSource =
+            manifest.productionBundleRuntimeStatsSource || runtime.productionBundleRuntimeStatsSource || '';
+          window.VaadinDesktopIpcDiagnostics.frontendArtifactProductionBundleRuntimeSelectedArtifact =
+            manifest.productionBundleRuntimeSelectedArtifact || runtime.productionBundleRuntimeSelectedArtifact
+            || runtime.path;
+          window.VaadinDesktopIpcDiagnostics.frontendArtifactProductionBundleRuntimeDependencyChain =
+            manifest.productionBundleRuntimeDependencyChain || runtime.productionBundleRuntimeDependencyChain || '';
+          window.VaadinDesktopIpcDiagnostics.frontendArtifactProductionBundleRuntimeModuleIdentity =
+            manifest.productionBundleRuntimeModuleIdentity || runtime.productionBundleRuntimeModuleIdentity || '';
+          window.VaadinDesktopIpcDiagnostics.frontendArtifactProductionBundleRuntimeNextResolutionStep =
+            manifest.productionBundleRuntimeNextResolutionStep
+            || runtime.productionBundleRuntimeNextResolutionStep
+            || '';
+        }
         const devModeResources = resources.filter((entry) => entry
           && entry.artifactFamily === 'dev-mode-bundle'
           && entry.artifactStatus === 'available'
@@ -4102,6 +4236,34 @@ let flowIpcShell = #"""
           generatedLazyResolvedDependencyPath: resource.generatedLazyResolvedDependencyPath || '',
           generatedLazyGraphProbe: resource.generatedLazyGraphProbe || '',
           generatedLazyBlockerVersion: resource.generatedLazyBlockerVersion || '',
+          runtimeResolverContractVersion: resource.runtimeResolverContractVersion || '',
+          logicalRequestId: resource.logicalRequestId || '',
+          pathMapping: resource.pathMapping || '',
+          stageUrlPolicy: resource.stageUrlPolicy || '',
+          cachePolicy: resource.cachePolicy || '',
+          cleanupOwnership: resource.cleanupOwnership || '',
+          blockerClassification: resource.blockerClassification || '',
+          flowLazyDependencyResource: resource.flowLazyDependencyResource === true,
+          lazyDependencyVersion: resource.lazyDependencyVersion || '',
+          lazyDependencySource: resource.lazyDependencySource || '',
+          lazyDependencyMode: resource.lazyDependencyMode || '',
+          lazyDependencyExpression: resource.lazyDependencyExpression || '',
+          lazyDependencyChunkId: resource.lazyDependencyChunkId || '',
+          lazyDependencyResolvedPath: resource.lazyDependencyResolvedPath || '',
+          lazyDependencyTriggerOwner: resource.lazyDependencyTriggerOwner || '',
+          lazyDependencyTriggeredByFlowClient: resource.lazyDependencyTriggeredByFlowClient === true,
+          lazyDependencyResolver: resource.lazyDependencyResolver || '',
+          productionBundleRuntimeArtifact: resource.productionBundleRuntimeArtifact === true,
+          productionBundleRuntimeVersion: resource.productionBundleRuntimeVersion || '',
+          productionBundleRuntimeRegistrySource: resource.productionBundleRuntimeRegistrySource || '',
+          productionBundleRuntimeStatsSource: resource.productionBundleRuntimeStatsSource || '',
+          productionBundleRuntimeSelectedArtifact: resource.productionBundleRuntimeSelectedArtifact || '',
+          productionBundleRuntimeDependencyChain: resource.productionBundleRuntimeDependencyChain || '',
+          productionBundleRuntimeModuleIdentity: resource.productionBundleRuntimeModuleIdentity || '',
+          productionBundleRuntimeExecutionPolicy: resource.productionBundleRuntimeExecutionPolicy || '',
+          productionBundleRuntimeBlockerVersion: resource.productionBundleRuntimeBlockerVersion || '',
+          productionBundleRuntimeFailureLayer: resource.productionBundleRuntimeFailureLayer || '',
+          productionBundleRuntimeNextResolutionStep: resource.productionBundleRuntimeNextResolutionStep || '',
           legacyShimSuccessPath: resource.legacyShimSuccessPath === true
         };
       }
@@ -4317,6 +4479,74 @@ let flowIpcShell = #"""
           generatedLazySourceArtifact: extra && extra.generatedLazySourceArtifact
             ? extra.generatedLazySourceArtifact
             : '',
+          runtimeResolverContractVersion: extra && extra.runtimeResolverContractVersion
+            ? extra.runtimeResolverContractVersion
+            : (resource.runtimeResolverContractVersion || ''),
+          logicalRequestId: extra && extra.logicalRequestId ? extra.logicalRequestId : (resource.logicalRequestId || ''),
+          pathMapping: extra && extra.pathMapping ? extra.pathMapping : (resource.pathMapping || ''),
+          stageUrlPolicy: extra && extra.stageUrlPolicy ? extra.stageUrlPolicy : (resource.stageUrlPolicy || ''),
+          cachePolicy: extra && extra.cachePolicy ? extra.cachePolicy : (resource.cachePolicy || ''),
+          cleanupOwnership: extra && extra.cleanupOwnership ? extra.cleanupOwnership : (resource.cleanupOwnership || ''),
+          blockerClassification: extra && extra.blockerClassification
+            ? extra.blockerClassification
+            : (resource.blockerClassification || ''),
+          flowLazyDependencyResource: resource.flowLazyDependencyResource === true,
+          lazyDependencyVersion: extra && extra.lazyDependencyVersion
+            ? extra.lazyDependencyVersion
+            : (resource.lazyDependencyVersion || ''),
+          lazyDependencySource: extra && extra.lazyDependencySource
+            ? extra.lazyDependencySource
+            : (resource.lazyDependencySource || ''),
+          lazyDependencyMode: extra && extra.lazyDependencyMode
+            ? extra.lazyDependencyMode
+            : (resource.lazyDependencyMode || ''),
+          lazyDependencyExpression: extra && extra.lazyDependencyExpression
+            ? extra.lazyDependencyExpression
+            : (resource.lazyDependencyExpression || ''),
+          lazyDependencyChunkId: extra && extra.lazyDependencyChunkId
+            ? extra.lazyDependencyChunkId
+            : (resource.lazyDependencyChunkId || ''),
+          lazyDependencyResolvedPath: extra && extra.lazyDependencyResolvedPath
+            ? extra.lazyDependencyResolvedPath
+            : (resource.lazyDependencyResolvedPath || ''),
+          lazyDependencyTriggerOwner: extra && extra.lazyDependencyTriggerOwner
+            ? extra.lazyDependencyTriggerOwner
+            : (resource.lazyDependencyTriggerOwner || ''),
+          lazyDependencyTriggeredByFlowClient: extra
+            && typeof extra.lazyDependencyTriggeredByFlowClient === 'boolean'
+            ? extra.lazyDependencyTriggeredByFlowClient
+            : resource.lazyDependencyTriggeredByFlowClient === true,
+          productionBundleRuntimeArtifact: resource.productionBundleRuntimeArtifact === true,
+          productionBundleRuntimeVersion: extra && extra.productionBundleRuntimeVersion
+            ? extra.productionBundleRuntimeVersion
+            : (resource.productionBundleRuntimeVersion || ''),
+          productionBundleRuntimeRegistrySource: extra && extra.productionBundleRuntimeRegistrySource
+            ? extra.productionBundleRuntimeRegistrySource
+            : (resource.productionBundleRuntimeRegistrySource || ''),
+          productionBundleRuntimeStatsSource: extra && extra.productionBundleRuntimeStatsSource
+            ? extra.productionBundleRuntimeStatsSource
+            : (resource.productionBundleRuntimeStatsSource || ''),
+          productionBundleRuntimeSelectedArtifact: extra && extra.productionBundleRuntimeSelectedArtifact
+            ? extra.productionBundleRuntimeSelectedArtifact
+            : (resource.productionBundleRuntimeSelectedArtifact || ''),
+          productionBundleRuntimeDependencyChain: extra && extra.productionBundleRuntimeDependencyChain
+            ? extra.productionBundleRuntimeDependencyChain
+            : (resource.productionBundleRuntimeDependencyChain || ''),
+          productionBundleRuntimeModuleIdentity: extra && extra.productionBundleRuntimeModuleIdentity
+            ? extra.productionBundleRuntimeModuleIdentity
+            : (resource.productionBundleRuntimeModuleIdentity || ''),
+          productionBundleRuntimeExecutionPolicy: extra && extra.productionBundleRuntimeExecutionPolicy
+            ? extra.productionBundleRuntimeExecutionPolicy
+            : (resource.productionBundleRuntimeExecutionPolicy || ''),
+          productionBundleRuntimeBlockerVersion: extra && extra.productionBundleRuntimeBlockerVersion
+            ? extra.productionBundleRuntimeBlockerVersion
+            : (resource.productionBundleRuntimeBlockerVersion || ''),
+          productionBundleRuntimeFailureLayer: extra && extra.productionBundleRuntimeFailureLayer
+            ? extra.productionBundleRuntimeFailureLayer
+            : (resource.productionBundleRuntimeFailureLayer || ''),
+          productionBundleRuntimeNextResolutionStep: extra && extra.productionBundleRuntimeNextResolutionStep
+            ? extra.productionBundleRuntimeNextResolutionStep
+            : (resource.productionBundleRuntimeNextResolutionStep || ''),
           moduleIdentityKey: extra && extra.moduleIdentityKey ? extra.moduleIdentityKey : sourcePath
         });
       }
@@ -4389,6 +4619,9 @@ let flowIpcShell = #"""
         if (resource.generatedLazyBundleChunk === true || resource.generatedLazyBundleDependency === true) {
           return 90;
         }
+        if (resource.flowLazyDependencyResource === true) {
+          return 85;
+        }
         if (resource.artifactFamily === 'generated-lazy' || resource.devModeBundleResource === true) {
           return 80;
         }
@@ -4434,6 +4667,9 @@ let flowIpcShell = #"""
             continue;
           }
           if (isDeferredComponentFrontendResource(resource)) {
+            continue;
+          }
+          if (resource.flowLazyDependencyResource === true) {
             continue;
           }
           requestComponentFrontendResource(resource.path, resource.kind || '', 'vaadin-web-component-resource-probe');
@@ -5252,6 +5488,7 @@ let flowIpcShell = #"""
           }
           ensureFlowClientContainer();
           installFlowIpcXhrBridge();
+          installFlowIpcDependencyLoaderBridge();
           module.init();
           refreshFlowClientEngineDiagnostics();
           setTimeout(refreshFlowClientEngineDiagnostics, 250);
@@ -5359,6 +5596,44 @@ let flowIpcShell = #"""
                 mergeCsv(window.VaadinDesktopIpcDiagnostics.frontendArtifactProductionBundleStatsPath, [resourcePath]);
               window.VaadinDesktopIpcDiagnostics.frontendArtifactProductionBundleStatsResult =
                 'verified:' + resourcePath;
+            } else if (payload.flowLazyDependencyResource === true) {
+              window.VaadinDesktopIpcDiagnostics.flowLazyDependencyResponse = true;
+              window.VaadinDesktopIpcDiagnostics.flowLazyDependencyVersion =
+                payload.lazyDependencyVersion || window.VaadinDesktopIpcDiagnostics.flowLazyDependencyVersion;
+              window.VaadinDesktopIpcDiagnostics.flowLazyDependencySource =
+                payload.lazyDependencySource || window.VaadinDesktopIpcDiagnostics.flowLazyDependencySource;
+              window.VaadinDesktopIpcDiagnostics.flowLazyDependencyMode =
+                payload.lazyDependencyMode || window.VaadinDesktopIpcDiagnostics.flowLazyDependencyMode;
+              window.VaadinDesktopIpcDiagnostics.flowLazyDependencyExpression =
+                payload.lazyDependencyExpression || window.VaadinDesktopIpcDiagnostics.flowLazyDependencyExpression;
+              window.VaadinDesktopIpcDiagnostics.flowLazyDependencyChunkId =
+                payload.lazyDependencyChunkId || window.VaadinDesktopIpcDiagnostics.flowLazyDependencyChunkId;
+              window.VaadinDesktopIpcDiagnostics.flowLazyDependencyResolvedPath =
+                payload.lazyDependencyResolvedPath || resourcePath;
+              window.VaadinDesktopIpcDiagnostics.flowLazyDependencyTriggerOwner =
+                payload.lazyDependencyTriggerOwner || window.VaadinDesktopIpcDiagnostics.flowLazyDependencyTriggerOwner;
+              window.VaadinDesktopIpcDiagnostics.flowLazyDependencyTriggeredByFlowClient =
+                payload.lazyDependencyTriggeredByFlowClient === true
+                || window.VaadinDesktopIpcDiagnostics.flowLazyDependencyTriggeredByFlowClient;
+            } else if (payload.productionBundleRuntimeArtifact === true) {
+              window.VaadinDesktopIpcDiagnostics.frontendArtifactProductionBundleRuntimeObserved = true;
+              window.VaadinDesktopIpcDiagnostics.frontendArtifactProductionBundleRuntimeVersion =
+                payload.productionBundleRuntimeVersion
+                || window.VaadinDesktopIpcDiagnostics.frontendArtifactProductionBundleRuntimeVersion;
+              window.VaadinDesktopIpcDiagnostics.frontendArtifactProductionBundleRuntimeRegistrySource =
+                payload.productionBundleRuntimeRegistrySource
+                || window.VaadinDesktopIpcDiagnostics.frontendArtifactProductionBundleRuntimeRegistrySource;
+              window.VaadinDesktopIpcDiagnostics.frontendArtifactProductionBundleRuntimeStatsSource =
+                payload.productionBundleRuntimeStatsSource
+                || window.VaadinDesktopIpcDiagnostics.frontendArtifactProductionBundleRuntimeStatsSource;
+              window.VaadinDesktopIpcDiagnostics.frontendArtifactProductionBundleRuntimeSelectedArtifact =
+                payload.productionBundleRuntimeSelectedArtifact || resourcePath;
+              window.VaadinDesktopIpcDiagnostics.frontendArtifactProductionBundleRuntimeDependencyChain =
+                payload.productionBundleRuntimeDependencyChain
+                || window.VaadinDesktopIpcDiagnostics.frontendArtifactProductionBundleRuntimeDependencyChain;
+              window.VaadinDesktopIpcDiagnostics.frontendArtifactProductionBundleRuntimeModuleIdentity =
+                payload.productionBundleRuntimeModuleIdentity
+                || window.VaadinDesktopIpcDiagnostics.frontendArtifactProductionBundleRuntimeModuleIdentity;
             } else if (payload.artifactFamily === 'dev-mode-bundle') {
               window.VaadinDesktopIpcDiagnostics.frontendArtifactDevModeVerified = true;
               window.VaadinDesktopIpcDiagnostics.frontendArtifactDevModePath =
@@ -5386,6 +5661,26 @@ let flowIpcShell = #"""
             payload.shimmedImports.join(',');
         }
         refreshComponentFrontendResourceDiagnostics();
+        try {
+          await maybeStageProductionBundleRuntimeResource();
+        } catch (error) {
+          window.VaadinDesktopIpcDiagnostics.frontendArtifactProductionBundleRuntimeStageAttempted = true;
+          window.VaadinDesktopIpcDiagnostics.frontendArtifactProductionBundleRuntimeExecutionResult =
+            'execution-failed:stage-dispatch';
+          window.VaadinDesktopIpcDiagnostics.frontendArtifactProductionBundleRuntimeBrowserError =
+            error && error.message ? error.message : String(error);
+          window.VaadinDesktopIpcDiagnostics.frontendArtifactProductionBundleRuntimeBlocker = true;
+        }
+        try {
+          await maybeExecuteFlowLazyDependencyResource();
+        } catch (error) {
+          window.VaadinDesktopIpcDiagnostics.flowLazyDependencyExecutionResult =
+            'execution-failed:dispatch';
+          window.VaadinDesktopIpcDiagnostics.flowLazyDependencyBrowserError =
+            error && error.message ? error.message : String(error);
+          window.VaadinDesktopIpcDiagnostics.flowLazyDependencyFailureLayer =
+            'flow-lazy-dependency-execution-dispatch';
+        }
         try {
           await maybeExecuteVaadinWebComponentResource();
         } catch (error) {
@@ -5837,6 +6132,260 @@ let flowIpcShell = #"""
           && entry.lookupKind === 'TextField-dev-bundle-resource-v1_4'
           && typeof entry.path === 'string')
           || null;
+      }
+
+      function flowLazyDependencyResource() {
+        return componentFrontendResources.find((entry) => entry
+          && entry.flowLazyDependencyResource === true
+          && typeof entry.path === 'string')
+          || null;
+      }
+
+      function productionBundleRuntimeResource() {
+        return componentFrontendResources.find((entry) => entry
+          && entry.productionBundleRuntimeArtifact === true
+          && typeof entry.path === 'string')
+          || null;
+      }
+
+      function flowLazyDependencyPathFromUrl(url) {
+        const resource = flowLazyDependencyResource();
+        if (!resource || typeof url !== 'string' || !url) {
+          return '';
+        }
+        const expression = typeof resource.lazyDependencyExpression === 'string'
+          ? resource.lazyDependencyExpression
+          : '';
+        const expressionPath = expression.startsWith('context://')
+          ? expression.substring('context://'.length)
+          : expression;
+        if (url.includes(resource.path) || (expressionPath && url.includes(expressionPath))) {
+          return resource.path;
+        }
+        return '';
+      }
+
+      function installFlowIpcDependencyLoaderBridge() {
+        if (window.__vatoriFlowIpcDependencyLoaderBridgeInstalled) {
+          return;
+        }
+        window.__vatoriFlowIpcDependencyLoaderBridgeInstalled = true;
+        const originalAppendChild = Node.prototype.appendChild;
+        Node.prototype.appendChild = function(child) {
+          const tagName = child && child.tagName ? String(child.tagName).toLowerCase() : '';
+          if (tagName === 'script' || tagName === 'link') {
+            const url = tagName === 'script' ? (child.src || '') : (child.href || '');
+            const path = flowLazyDependencyPathFromUrl(url);
+            if (path) {
+              requestFlowLazyDependencyResourceFromElement(path, child, url);
+              return child;
+            }
+          }
+          return originalAppendChild.call(this, child);
+        };
+      }
+
+      function requestFlowLazyDependencyResourceFromElement(path, element, requestedUrl) {
+        const resource = componentFrontendResourceByPath(path);
+        if (!resource) {
+          return;
+        }
+        let pending = flowLazyDependencyPendingElements.get(path);
+        if (!pending) {
+          pending = { elements: [], requestedUrls: [] };
+          flowLazyDependencyPendingElements.set(path, pending);
+        }
+        pending.elements.push(element);
+        pending.requestedUrls.push(requestedUrl || '');
+        window.VaadinDesktopIpcDiagnostics.flowLazyDependencyObserved = true;
+        window.VaadinDesktopIpcDiagnostics.flowLazyDependencyRequested = true;
+        window.VaadinDesktopIpcDiagnostics.flowLazyDependencyVersion =
+          resource.lazyDependencyVersion || window.VaadinDesktopIpcDiagnostics.flowLazyDependencyVersion;
+        window.VaadinDesktopIpcDiagnostics.flowLazyDependencySource =
+          resource.lazyDependencySource || window.VaadinDesktopIpcDiagnostics.flowLazyDependencySource;
+        window.VaadinDesktopIpcDiagnostics.flowLazyDependencyMode =
+          resource.lazyDependencyMode || window.VaadinDesktopIpcDiagnostics.flowLazyDependencyMode;
+        window.VaadinDesktopIpcDiagnostics.flowLazyDependencyExpression =
+          resource.lazyDependencyExpression || requestedUrl || '';
+        window.VaadinDesktopIpcDiagnostics.flowLazyDependencyChunkId =
+          resource.lazyDependencyChunkId || window.VaadinDesktopIpcDiagnostics.flowLazyDependencyChunkId;
+        window.VaadinDesktopIpcDiagnostics.flowLazyDependencyResolvedPath =
+          resource.lazyDependencyResolvedPath || path;
+        window.VaadinDesktopIpcDiagnostics.flowLazyDependencyTriggerOwner =
+          resource.lazyDependencyTriggerOwner || 'visible-flow-client-dependencyloader';
+        window.VaadinDesktopIpcDiagnostics.flowLazyDependencyTriggeredByFlowClient =
+          resource.lazyDependencyTriggeredByFlowClient === true;
+        if (componentFrontendResourceBodies.has(path)) {
+          setTimeout(maybeExecuteFlowLazyDependencyResource, 0);
+          return;
+        }
+        requestComponentFrontendResource(path, resource.kind || '', 'flow-lazy-dependency-loader');
+      }
+
+      function dispatchFlowLazyDependencyElement(path, type) {
+        const pending = flowLazyDependencyPendingElements.get(path);
+        if (!pending || !Array.isArray(pending.elements)) {
+          return;
+        }
+        for (const element of pending.elements) {
+          try {
+            element.dispatchEvent(new Event(type));
+          } catch (error) {
+            // The Flow ResourceLoader listener is best-effort here; diagnostics
+            // below still records whether the IPC-resolved module executed.
+          }
+        }
+      }
+
+      async function maybeExecuteFlowLazyDependencyResource() {
+        if (flowLazyDependencyExecutionAttempted) {
+          return;
+        }
+        const resource = flowLazyDependencyResource();
+        if (!resource || !flowLazyDependencyPendingElements.has(resource.path)) {
+          return;
+        }
+        const source = componentFrontendResourceBodies.get(resource.path) || '';
+        if (!source) {
+          return;
+        }
+        flowLazyDependencyExecutionAttempted = true;
+        const urlsToRevoke = [];
+        let stagedUrl = '';
+        const stageExtra = {
+          cleanupPolicy: resource.cleanupOwnership || 'revoke-after-lazy-dependency-load',
+          runtimeResolverContractVersion: resource.runtimeResolverContractVersion || 'flow-ipc-frontend-runtime-resolver-v1_10',
+          logicalRequestId: resource.logicalRequestId || 'flow-lazy-dependency:v1_10',
+          pathMapping: resource.pathMapping || 'context-url-to-ipc-resource-path',
+          stageUrlPolicy: resource.stageUrlPolicy || 'blob-module-url',
+          cachePolicy: resource.cachePolicy || 'single-trigger-per-resource-path',
+          cleanupOwnership: resource.cleanupOwnership || 'revoke-after-lazy-dependency-load',
+          blockerClassification: resource.blockerClassification || 'none',
+          lazyDependencyVersion: resource.lazyDependencyVersion || 'flow-ipc-lazy-dependency-v1_10',
+          lazyDependencySource: resource.lazyDependencySource || 'flow-uidl-dependencyloader-loadmode-lazy-v1_10',
+          lazyDependencyMode: resource.lazyDependencyMode || 'LoadMode.LAZY',
+          lazyDependencyExpression: resource.lazyDependencyExpression || '',
+          lazyDependencyChunkId: resource.lazyDependencyChunkId || '',
+          lazyDependencyResolvedPath: resource.lazyDependencyResolvedPath || resource.path,
+          lazyDependencyTriggerOwner: resource.lazyDependencyTriggerOwner || 'visible-flow-client-dependencyloader',
+          lazyDependencyTriggeredByFlowClient: resource.lazyDependencyTriggeredByFlowClient === true,
+          failureLayer: ''
+        };
+        try {
+          window.VaadinDesktopIpcDiagnostics.flowLazyDependencyStageObserved = true;
+          stagedUrl = stageFrontendArtifact(resource, source, 'execution-attempt', urlsToRevoke, null, stageExtra);
+          if (!stagedUrl) {
+            throw new Error('flow-lazy-dependency-staging-failed');
+          }
+          await import(stagedUrl);
+          const marker = window.VaadinDesktopIpcLazyDependencyProbe || {};
+          if (marker.executed !== true) {
+            throw new Error('flow-lazy-dependency-marker-missing');
+          }
+          window.VaadinDesktopIpcDiagnostics.flowLazyDependencyExecuted = true;
+          window.VaadinDesktopIpcDiagnostics.flowLazyDependencyExecutionResult =
+            'executed:' + resource.path;
+          window.VaadinDesktopIpcDiagnostics.flowLazyDependencyBrowserError = '';
+          window.VaadinDesktopIpcDiagnostics.flowLazyDependencyFailureLayer = '';
+          recordFrontendStageOutcome(resource, stagedUrl, 'executed', stageExtra);
+          dispatchFlowLazyDependencyElement(resource.path, 'load');
+        } catch (error) {
+          const message = error && error.message ? error.message : String(error);
+          window.VaadinDesktopIpcDiagnostics.flowLazyDependencyExecuted = false;
+          window.VaadinDesktopIpcDiagnostics.flowLazyDependencyExecutionResult =
+            'execution-failed:' + resource.path;
+          window.VaadinDesktopIpcDiagnostics.flowLazyDependencyBrowserError = message;
+          window.VaadinDesktopIpcDiagnostics.flowLazyDependencyFailureLayer =
+            'flow-lazy-dependency-browser-execution';
+          recordFrontendStageOutcome(resource, stagedUrl, 'execution-failed', Object.assign({}, stageExtra, {
+            failureLayer: 'flow-lazy-dependency-browser-execution',
+            browserError: message,
+            blockerClassification: 'flow-ipc-lazy-dependency-v1_10'
+          }));
+          dispatchFlowLazyDependencyElement(resource.path, 'error');
+        } finally {
+          refreshFrontendStagingDiagnostics();
+          for (const url of urlsToRevoke) {
+            URL.revokeObjectURL(url);
+          }
+        }
+      }
+
+      async function maybeStageProductionBundleRuntimeResource() {
+        if (productionBundleRuntimeStageAttempted) {
+          return;
+        }
+        const resource = productionBundleRuntimeResource();
+        if (!resource) {
+          return;
+        }
+        const source = componentFrontendResourceBodies.get(resource.path) || '';
+        if (!source) {
+          return;
+        }
+        productionBundleRuntimeStageAttempted = true;
+        const stageExtra = {
+          cleanupPolicy: resource.productionBundleRuntimeCleanupPolicy
+            || 'retain-for-window-lifetime-module-identity-v1_7',
+          runtimeResolverContractVersion: resource.runtimeResolverContractVersion
+            || 'flow-ipc-frontend-runtime-resolver-v1_10',
+          logicalRequestId: resource.logicalRequestId || 'production-runtime:indexhtml:v1_10',
+          pathMapping: resource.pathMapping || 'stats-bundle-import-to-dev-bundle-artifact',
+          stageUrlPolicy: resource.stageUrlPolicy || 'stable-module-identity-blob-url',
+          cachePolicy: resource.cachePolicy || 'retain-per-resource-path',
+          cleanupOwnership: resource.cleanupOwnership || 'window-lifetime-module-identity-cache',
+          blockerClassification: resource.blockerClassification || 'flow-ipc-production-runtime-v1_10',
+          productionBundleRuntimeVersion: resource.productionBundleRuntimeVersion
+            || 'flow-ipc-production-runtime-v1_10',
+          productionBundleRuntimeRegistrySource: resource.productionBundleRuntimeRegistrySource
+            || 'vaadin-dev-bundle-stats-runtime-registry-v1_10',
+          productionBundleRuntimeStatsSource: resource.productionBundleRuntimeStatsSource || '',
+          productionBundleRuntimeSelectedArtifact: resource.productionBundleRuntimeSelectedArtifact || resource.path,
+          productionBundleRuntimeDependencyChain: resource.productionBundleRuntimeDependencyChain || '',
+          productionBundleRuntimeModuleIdentity: resource.productionBundleRuntimeModuleIdentity || resource.path,
+          productionBundleRuntimeExecutionPolicy: resource.productionBundleRuntimeExecutionPolicy
+            || 'stage-execution-attempt-production-bundle-runtime-v1_10',
+          productionBundleRuntimeBlockerVersion: resource.productionBundleRuntimeBlockerVersion
+            || 'flow-ipc-production-runtime-v1_10',
+          productionBundleRuntimeFailureLayer: resource.productionBundleRuntimeFailureLayer
+            || 'production-runtime-ownership-not-yet-separated-from-focused-component-entry-imports',
+          productionBundleRuntimeNextResolutionStep: resource.productionBundleRuntimeNextResolutionStep || ''
+        };
+        window.VaadinDesktopIpcDiagnostics.frontendArtifactProductionBundleRuntimeObserved = true;
+        window.VaadinDesktopIpcDiagnostics.frontendArtifactProductionBundleRuntimeStageAttempted = true;
+        window.VaadinDesktopIpcDiagnostics.frontendArtifactProductionBundleRuntimeVersion =
+          stageExtra.productionBundleRuntimeVersion;
+        window.VaadinDesktopIpcDiagnostics.frontendArtifactProductionBundleRuntimeRegistrySource =
+          stageExtra.productionBundleRuntimeRegistrySource;
+        window.VaadinDesktopIpcDiagnostics.frontendArtifactProductionBundleRuntimeStatsSource =
+          stageExtra.productionBundleRuntimeStatsSource;
+        window.VaadinDesktopIpcDiagnostics.frontendArtifactProductionBundleRuntimeSelectedArtifact =
+          stageExtra.productionBundleRuntimeSelectedArtifact;
+        window.VaadinDesktopIpcDiagnostics.frontendArtifactProductionBundleRuntimeDependencyChain =
+          stageExtra.productionBundleRuntimeDependencyChain;
+        window.VaadinDesktopIpcDiagnostics.frontendArtifactProductionBundleRuntimeModuleIdentity =
+          stageExtra.productionBundleRuntimeModuleIdentity;
+        window.VaadinDesktopIpcDiagnostics.frontendArtifactProductionBundleRuntimeFailureLayer =
+          stageExtra.productionBundleRuntimeFailureLayer;
+        window.VaadinDesktopIpcDiagnostics.frontendArtifactProductionBundleRuntimeNextResolutionStep =
+          stageExtra.productionBundleRuntimeNextResolutionStep;
+        const stagedUrl = componentModuleBlobUrl(resource.path, [], new Map(), 'execution-attempt', stageExtra);
+        if (!stagedUrl) {
+          window.VaadinDesktopIpcDiagnostics.frontendArtifactProductionBundleRuntimeExecutionResult =
+            'execution-failed:' + resource.path;
+          window.VaadinDesktopIpcDiagnostics.frontendArtifactProductionBundleRuntimeBrowserError =
+            window.VaadinDesktopIpcDiagnostics.vaadinWebComponentResourceExecutionError
+            || 'production-runtime-stage-url-missing';
+          window.VaadinDesktopIpcDiagnostics.frontendArtifactProductionBundleRuntimeBlocker = true;
+          recordFrontendStageOutcome(resource, '', 'execution-failed', Object.assign({}, stageExtra, {
+            browserError: window.VaadinDesktopIpcDiagnostics.frontendArtifactProductionBundleRuntimeBrowserError
+          }));
+          return;
+        }
+        window.VaadinDesktopIpcDiagnostics.frontendArtifactProductionBundleRuntimeExecutionResult =
+          'execution-attempt:' + resource.path;
+        window.VaadinDesktopIpcDiagnostics.frontendArtifactProductionBundleRuntimeBlocker = true;
+        window.VaadinDesktopIpcDiagnostics.frontendArtifactProductionBundleRuntimeBrowserError = '';
       }
 
       function customElementRegistrySnapshot(tag) {

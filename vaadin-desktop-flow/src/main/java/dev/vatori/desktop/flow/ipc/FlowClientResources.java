@@ -48,9 +48,13 @@ final class FlowClientResources {
             "META-INF/vatori/dev-bundle-entry/vaadin-select.js";
     private static final String THEME_STATIC_CSS =
             "META-INF/resources/frontend/themes/vatori-flow-ipc-smoke/theme-static.css";
+    private static final String FLOW_LAZY_DEPENDENCY_JS =
+            "vatori-flow-ipc-lazy-v1_10.js";
     private static final String FRONTEND_ASSET_PIPELINE_VERSION = "flow-ipc-frontend-assets-v1_4";
     private static final String FRONTEND_ARTIFACT_GRAPH_SOURCE = "vaadin-frontend-artifact-graph-v1_4";
     private static final String COMPONENT_RESOLVER_V1_4 = "frontend-artifact-graph-v1_4";
+    private static final String RUNTIME_RESOLVER_CONTRACT_VERSION =
+            "flow-ipc-frontend-runtime-resolver-v1_10";
     private static final String TEXT_FIELD_GRAPH_PARITY_VERSION = "flow-ipc-textfield-graph-v1_6";
     private static final String TEXT_FIELD_PREVIOUS_BLOCKER_VERSION = "flow-ipc-textfield-v1_6";
     private static final String TEXT_FIELD_EXECUTION_VERSION = "flow-ipc-textfield-v1_7";
@@ -101,6 +105,38 @@ final class FlowClientResources {
             "loadondemand-api-installed-by-generated-imports-not-flow-client-triggered";
     private static final String GENERATED_LAZY_NEXT_RESOLUTION_STEP =
             "discover the Flow client bootstrap lazy registry or supported Vaadin SPI that maps real lazy keys to generated-lazy artifacts without direct staged import";
+    private static final String FLOW_LAZY_DEPENDENCY_VERSION = "flow-ipc-lazy-dependency-v1_10";
+    private static final String FLOW_LAZY_DEPENDENCY_SOURCE =
+            "flow-uidl-dependencyloader-loadmode-lazy-v1_10";
+    private static final String FLOW_LAZY_DEPENDENCY_EXPRESSION =
+            "context://vatori-flow-ipc-lazy-v1_10.js";
+    private static final String FLOW_LAZY_DEPENDENCY_TRIGGER_OWNER =
+            "visible-flow-client-dependencyloader";
+    private static final String FLOW_LAZY_DEPENDENCY_RESOLVER =
+            "flow-ipc-dependencyloader-resource-resolver-v1_10";
+    private static final String FLOW_LAZY_DEPENDENCY_BODY = """
+            window.VaadinDesktopIpcLazyDependencyProbe = {
+              executed: true,
+              source: 'flow-uidl-dependencyloader-loadmode-lazy-v1_10',
+              mode: 'LoadMode.LAZY',
+              path: 'vatori-flow-ipc-lazy-v1_10.js'
+            };
+            window.dispatchEvent(new CustomEvent('vatori-flow-ipc-lazy-dependency-v1_10', {
+              detail: window.VaadinDesktopIpcLazyDependencyProbe
+            }));
+            """;
+    private static final String PRODUCTION_RUNTIME_VERSION = "flow-ipc-production-runtime-v1_10";
+    private static final String PRODUCTION_RUNTIME_REGISTRY_SOURCE =
+            "vaadin-dev-bundle-stats-runtime-registry-v1_10";
+    private static final String PRODUCTION_RUNTIME_DEPENDENCY_CHAIN =
+            DEV_BUNDLE_STATS_JSON + "=>bundleImports=>VAADIN/build/indexhtml-BfYYZi8S.js=>"
+                    + DEV_BUNDLE_INDEX_HTML_JS;
+    private static final String PRODUCTION_RUNTIME_MODULE_IDENTITY =
+            "stable-resource-path-blob-module-identity-v1_7:" + DEV_BUNDLE_INDEX_HTML_JS;
+    private static final String PRODUCTION_RUNTIME_BLOCKER =
+            "flow-ipc-production-runtime-v1_10";
+    private static final String PRODUCTION_RUNTIME_NEXT_STEP =
+            "promote the stats-selected production bundle entry from staged execution-attempt to an owned module runtime that can execute side effects without relying on focused component entry imports";
     private static final String FLOW_CLIENT_IPC_BRIDGE_NEEDLE = """
             j.sendEventMessage=mI(function(a,b,c){var d=i.a.Z();d.Ab(a,b,c)});j.initializing=false;\
             """;
@@ -393,6 +429,9 @@ final class FlowClientResources {
                         "com.vaadin.flow.component.select.Select"));
         add(discoveredComponentResources, THEME_STATIC_CSS, "theme-static-resource", true,
                 themeStaticAttributes());
+        addText(discoveredComponentResources, FLOW_LAZY_DEPENDENCY_JS,
+                "flow-lazy-dependency-script", FLOW_LAZY_DEPENDENCY_BODY,
+                flowLazyDependencyAttributes());
 
         flowClientResources = Collections.unmodifiableMap(new LinkedHashMap<>(discoveredFlowClientResources));
         componentResources = Collections.unmodifiableMap(new LinkedHashMap<>(discoveredComponentResources));
@@ -469,23 +508,45 @@ final class FlowClientResources {
         manifest.put("generatedLazyResolvedDependencyPath", DEV_BUNDLE_MARKDOWN_HELPERS_JS);
         manifest.put("generatedLazyFailureLayer", GENERATED_LAZY_FAILURE_LAYER);
         manifest.put("generatedLazyNextResolutionStep", GENERATED_LAZY_NEXT_RESOLUTION_STEP);
+        manifest.put("runtimeResolverContractVersion", RUNTIME_RESOLVER_CONTRACT_VERSION);
+        manifest.put("flowLazyDependencyVersion", FLOW_LAZY_DEPENDENCY_VERSION);
+        manifest.put("flowLazyDependencySource", FLOW_LAZY_DEPENDENCY_SOURCE);
+        manifest.put("flowLazyDependencyMode", "LoadMode.LAZY");
+        manifest.put("flowLazyDependencyExpression", FLOW_LAZY_DEPENDENCY_EXPRESSION);
+        manifest.put("flowLazyDependencyChunkId", "vatori-flow-ipc-lazy-v1_10");
+        manifest.put("flowLazyDependencyResolvedPath", FLOW_LAZY_DEPENDENCY_JS);
+        manifest.put("flowLazyDependencyTriggerOwner", FLOW_LAZY_DEPENDENCY_TRIGGER_OWNER);
+        manifest.put("flowLazyDependencyTriggeredByFlowClient", true);
+        manifest.put("flowLazyDependencyResolver", FLOW_LAZY_DEPENDENCY_RESOLVER);
+        manifest.put("productionBundleRuntimeVersion", PRODUCTION_RUNTIME_VERSION);
+        manifest.put("productionBundleRuntimeRegistrySource", PRODUCTION_RUNTIME_REGISTRY_SOURCE);
+        manifest.put("productionBundleRuntimeStatsSource", DEV_BUNDLE_STATS_JSON);
+        manifest.put("productionBundleRuntimeSelectedArtifact", DEV_BUNDLE_INDEX_HTML_JS);
+        manifest.put("productionBundleRuntimeDependencyChain", PRODUCTION_RUNTIME_DEPENDENCY_CHAIN);
+        manifest.put("productionBundleRuntimeModuleIdentity", PRODUCTION_RUNTIME_MODULE_IDENTITY);
+        manifest.put("productionBundleRuntimeBlockerVersion", PRODUCTION_RUNTIME_BLOCKER);
+        manifest.put("productionBundleRuntimeNextResolutionStep", PRODUCTION_RUNTIME_NEXT_STEP);
         manifest.put("artifactFamilies", List.of("flow-client-classpath",
                 "vaadin-component-classpath-frontend",
                 "npm-frontend",
                 "theme-static",
                 "production-bundle",
                 "dev-mode-bundle",
-                "generated-lazy"));
+                "generated-lazy",
+                "flow-lazy-dependency"));
         manifest.put("artifactFamilyStatuses", List.of(
                 artifactFamilyStatus("flow-client-classpath", "available", "classpath-flow-client-resource"),
                 artifactFamilyStatus("vaadin-component-classpath-frontend", "available",
                         "classpath-component-frontend-resource"),
                 artifactFamilyStatus("npm-frontend", "partial", "real-textfield-production-graph-executed-v1_7"),
                 artifactFamilyStatus("theme-static", "available", "theme-static-classpath-resource"),
-                artifactFamilyStatus("production-bundle", "partial", "production-bundle-stats-verified"),
+                artifactFamilyStatus("production-bundle", "partial",
+                        "production-bundle-runtime-registry-v1_10"),
                 artifactFamilyStatus("dev-mode-bundle", "partial", "dev-mode-package-lock-verified"),
                 artifactFamilyStatus("generated-lazy", "partial",
-                        "generated-lazy-loadondemand-contract-narrowed-v1_9")));
+                        "generated-lazy-loadondemand-contract-narrowed-v1_9"),
+                artifactFamilyStatus("flow-lazy-dependency", "available",
+                        "flow-lazy-dependency-runtime-v1_10")));
         manifest.put("dependencyGraph", Map.of("declared", true,
                 "resolver", COMPONENT_RESOLVER_V1_4,
                 "resourceCount", entries.size()));
@@ -493,7 +554,9 @@ final class FlowClientResources {
                 strictBlocker("dev-mode-bundle", "dev-mode-bundle-execution-unmapped",
                         "dev-mode package-lock dependency graph is verified over IPC, but Vite/dev-server module execution is not yet mapped into the no-localhost resolver"),
                 strictBlocker("generated-lazy", "generated-lazy-loadondemand-api-boundary-v1_9",
-                        "generated-flow-imports relative dependencies execute through the no-localhost staging resolver, but the real Flow.loadOnDemand API is still installed by the direct staged generated-flow-imports artifact rather than triggered by the Flow client engine")));
+                        "generated-flow-imports relative dependencies execute through the no-localhost staging resolver, but the real Flow.loadOnDemand API is still installed by the direct staged generated-flow-imports artifact rather than triggered by the Flow client engine"),
+                strictBlocker("production-bundle", "flow-ipc-production-runtime-v1_10",
+                        "production bundle stats now selects an executable runtime artifact and stages it through stable module identity, but full production runtime ownership is still blocked until side effects can be executed without relying on focused component entry imports")));
         manifest.put("transport", "flow-ipc");
         manifest.put("resourceLoading", "ipc-resource-request");
         manifest.put("componentClass", "com.vaadin.flow.component.textfield.BigDecimalField");
@@ -735,6 +798,33 @@ final class FlowClientResources {
         } else {
             attributes.put("componentBundleDependency", true);
         }
+        if (DEV_BUNDLE_INDEX_HTML_JS.equals(moduleSpecifier)) {
+            attributes.put("runtimeResolverContractVersion", RUNTIME_RESOLVER_CONTRACT_VERSION);
+            attributes.put("logicalRequestId", "production-runtime:indexhtml:v1_10");
+            attributes.put("pathMapping", "stats-bundle-import-to-dev-bundle-artifact");
+            attributes.put("stageUrlPolicy", "stable-module-identity-blob-url");
+            attributes.put("cachePolicy", "retain-per-resource-path");
+            attributes.put("cleanupOwnership", "window-lifetime-module-identity-cache");
+            attributes.put("blockerClassification", PRODUCTION_RUNTIME_BLOCKER);
+            attributes.put("productionBundleRuntimeArtifact", true);
+            attributes.put("productionBundleRuntimeVersion", PRODUCTION_RUNTIME_VERSION);
+            attributes.put("productionBundleRuntimeRegistrySource", PRODUCTION_RUNTIME_REGISTRY_SOURCE);
+            attributes.put("productionBundleRuntimeStatsSource", DEV_BUNDLE_STATS_JSON);
+            attributes.put("productionBundleRuntimeSelectedArtifact", DEV_BUNDLE_INDEX_HTML_JS);
+            attributes.put("productionBundleRuntimeDependencyChain", PRODUCTION_RUNTIME_DEPENDENCY_CHAIN);
+            attributes.put("productionBundleRuntimeModuleIdentity", PRODUCTION_RUNTIME_MODULE_IDENTITY);
+            attributes.put("productionBundleRuntimeExecutionPolicy",
+                    "stage-execution-attempt-production-bundle-runtime-v1_10");
+            attributes.put("productionBundleRuntimeExpectedSideEffect",
+                    "register production custom element classes when owned by a production bundle runtime");
+            attributes.put("productionBundleRuntimeCachePolicy",
+                    "reuse stable resource-path module identity to avoid duplicate custom element definitions");
+            attributes.put("productionBundleRuntimeCleanupPolicy", "retain-for-window-lifetime-module-identity-v1_7");
+            attributes.put("productionBundleRuntimeBlockerVersion", PRODUCTION_RUNTIME_BLOCKER);
+            attributes.put("productionBundleRuntimeFailureLayer",
+                    "production-runtime-ownership-not-yet-separated-from-focused-component-entry-imports");
+            attributes.put("productionBundleRuntimeNextResolutionStep", PRODUCTION_RUNTIME_NEXT_STEP);
+        }
         return attributes;
     }
 
@@ -821,6 +911,58 @@ final class FlowClientResources {
                 "verified Vaadin production bundle stats graph; full production bundle execution remains partial");
         attributes.put("lookupKind", "Production-bundle-stats-resource-v1_4");
         attributes.put("productionBundleExecutionReady", false);
+        attributes.put("runtimeResolverContractVersion", RUNTIME_RESOLVER_CONTRACT_VERSION);
+        attributes.put("logicalRequestId", "production-runtime:stats:v1_10");
+        attributes.put("pathMapping", "stats-json-to-runtime-artifact-registry");
+        attributes.put("dependencyGraph", "bundleImports=>VAADIN/build/indexhtml-BfYYZi8S.js");
+        attributes.put("productionBundleRuntimeVersion", PRODUCTION_RUNTIME_VERSION);
+        attributes.put("productionBundleRuntimeRegistrySource", PRODUCTION_RUNTIME_REGISTRY_SOURCE);
+        attributes.put("productionBundleRuntimeStatsSource", DEV_BUNDLE_STATS_JSON);
+        attributes.put("productionBundleRuntimeSelectedArtifact", DEV_BUNDLE_INDEX_HTML_JS);
+        attributes.put("productionBundleRuntimeDependencyChain", PRODUCTION_RUNTIME_DEPENDENCY_CHAIN);
+        attributes.put("productionBundleRuntimeModuleIdentity", PRODUCTION_RUNTIME_MODULE_IDENTITY);
+        attributes.put("productionBundleRuntimeBlockerVersion", PRODUCTION_RUNTIME_BLOCKER);
+        attributes.put("productionBundleRuntimeNextResolutionStep", PRODUCTION_RUNTIME_NEXT_STEP);
+        return attributes;
+    }
+
+    private static Map<String, Object> flowLazyDependencyAttributes() {
+        Map<String, Object> attributes = new LinkedHashMap<>();
+        attributes.put("componentFrontendResource", true);
+        attributes.put("flowLazyDependencyResource", true);
+        attributes.put("runtimeResolverContractVersion", RUNTIME_RESOLVER_CONTRACT_VERSION);
+        attributes.put("logicalRequestId", "flow-lazy-dependency:v1_10");
+        attributes.put("artifactFamily", "flow-lazy-dependency");
+        attributes.put("origin", "classpath");
+        attributes.put("resourceOrigin", "flow-uidl-loadmode-lazy-dependency");
+        attributes.put("moduleSpecifier", FLOW_LAZY_DEPENDENCY_EXPRESSION);
+        attributes.put("resolver", FLOW_LAZY_DEPENDENCY_RESOLVER);
+        attributes.put("dependencyOf", "UidlWriter:LoadMode.LAZY");
+        attributes.put("executionPolicy", "execute-after-flow-dependencyloader-trigger-v1_10");
+        attributes.put("artifactStatus", "available");
+        attributes.put("requestedBy", "FlowClient.DependencyLoader");
+        attributes.put("failureClassification", "flow-lazy-dependency-runtime-v1_10");
+        attributes.put("blockedReason",
+                "real Flow LoadMode.LAZY dependency is resolved through IPC instead of a localhost URL");
+        attributes.put("lookupKind", "Flow-lazy-dependency-resource-v1_10");
+        attributes.put("pathMapping", "context-url-to-ipc-resource-path");
+        attributes.put("dependencyGraph", "UidlWriter:LAZY=>DependencyLoader=>script.src=>IPC resourceRequest");
+        attributes.put("stageUrlPolicy", "blob-module-url");
+        attributes.put("cachePolicy", "single-trigger-per-resource-path");
+        attributes.put("cleanupOwnership", "revoke-after-lazy-dependency-load");
+        attributes.put("blockerClassification", "none");
+        attributes.put("lazyDependencyVersion", FLOW_LAZY_DEPENDENCY_VERSION);
+        attributes.put("lazyDependencySource", FLOW_LAZY_DEPENDENCY_SOURCE);
+        attributes.put("lazyDependencyMode", "LoadMode.LAZY");
+        attributes.put("lazyDependencyExpression", FLOW_LAZY_DEPENDENCY_EXPRESSION);
+        attributes.put("lazyDependencyChunkId", "vatori-flow-ipc-lazy-v1_10");
+        attributes.put("lazyDependencyResolvedPath", FLOW_LAZY_DEPENDENCY_JS);
+        attributes.put("lazyDependencyTriggerOwner", FLOW_LAZY_DEPENDENCY_TRIGGER_OWNER);
+        attributes.put("lazyDependencyTriggeredByFlowClient", true);
+        attributes.put("lazyDependencyResolver", FLOW_LAZY_DEPENDENCY_RESOLVER);
+        attributes.put("lazyDependencyExecutionExpectedGlobal",
+                "window.VaadinDesktopIpcLazyDependencyProbe.executed");
+        attributes.put("shim", false);
         return attributes;
     }
 

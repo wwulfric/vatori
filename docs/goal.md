@@ -16,7 +16,11 @@ v0/v1 runtime 切片走向可产品化桌面框架的最终完成状态。
 - `docs/goal-1_8.md`：Generated/lazy frontend execution boundary，已完成。
 - `docs/goal-1_9.md`：Flow-client-triggered generated/lazy loading contract，已完成。
 
-后续阶段应继续以 `docs/goal-1_9.md`、`docs/goal-1_10.md` 等文件拆分，
+当前已规划但尚未执行的阶段目标：
+
+- `docs/goal-1_10.md`：Flow lazy dependency and production bundle runtime slice，待执行。
+
+后续阶段应继续以 `docs/goal-1_10.md`、`docs/goal-1_11.md` 等文件拆分，
 每个阶段只拿走本长期目标中的一个可评审切片。不要把本文件改写成短期任务清单；
 它是长期北极星和完成度账本。
 

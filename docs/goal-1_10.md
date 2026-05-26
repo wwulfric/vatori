@@ -298,3 +298,35 @@ v1.10 只有在以下条件同时满足时才算完成：
 - 真实窗口 smoke app 和 framework app 回归继续通过，且使用 `VAADIN_DESKTOP_HOST_NO_ACTIVATE=1`。
 - `docs/traces/flow-ipc-v1_10.ndjson` 已生成并可通过 v1.10 gates。
 - 相关文档同步更新，且 `docs/goal.md` 的长期未完成账本正确反映 v1.10 后仍未完成的边界。
+
+## 完成记录
+
+本阶段已按“两条边界同时推进”的形式完成：
+
+- Flow lazy dependency runtime path：smoke app 和 framework app 都通过普通 Flow
+  `@JavaScript(..., loadMode = LoadMode.LAZY)` 声明
+  `context://vatori-flow-ipc-lazy-v1_10.js`。可见 Flow `DependencyLoader` 触发 lazy
+  script 后，host/WebView bridge 将请求转为 IPC `resourceRequest`，Java sidecar 返回真实
+  resource body，WebView stage 为 Blob module URL 并执行。trace 记录
+  `flow-ipc-lazy-dependency-v1_10`、`flowLazyDependencyTriggeredByFlowClient=true`、
+  `flowLazyDependencyExecuted=true` 和
+  `flowLazyDependencyExecutionResult=executed:vatori-flow-ipc-lazy-v1_10.js`。
+- Production bundle runtime path：`vaadin-dev-bundle/config/stats.json` 不再只是
+  verified-only evidence；它被作为 runtime registry source，选择
+  `vaadin-dev-bundle/webapp/VAADIN/build/indexhtml-BfYYZi8S.js`，并通过 stable
+  resource-path module identity 记录 staged `execution-attempt`。完整 production runtime
+  ownership 仍是 blocker，版本为 `flow-ipc-production-runtime-v1_10`，failure layer 为
+  `production-runtime-ownership-not-yet-separated-from-focused-component-entry-imports`。
+- Inspector 已新增三个 gate：
+  `--require-flow-ipc-v1_10-lazy-dependency`、
+  `--require-flow-ipc-v1_10-production-runtime` 和 `--require-flow-ipc-v1_10`。
+- `docs/traces/flow-ipc-v1_10.ndjson` 已由真实窗口 smoke run 生成，并通过 v1.10 delta /
+  cumulative gates。
+
+仍未完成的长期边界：
+
+- v1.9 的 generated `Flow.loadOnDemand` path 仍是 diagnostic bridge / API registry
+  blocker，不应被 v1.10 的普通 `LoadMode.LAZY` dependency 成功混淆。
+- Production bundle 只达到 staged execution attempt；还未拥有完整 side-effect runtime。
+- Dev-mode/Vite execution、broader component parity 和 durable push/reconnect 仍属于后续
+  goal。

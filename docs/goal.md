@@ -15,12 +15,13 @@ v0/v1 runtime 切片走向可产品化桌面框架的最终完成状态。
 - `docs/goal-1_7.md`：TextField production chunk side-effect split，已完成。
 - `docs/goal-1_8.md`：Generated/lazy frontend execution boundary，已完成。
 - `docs/goal-1_9.md`：Flow-client-triggered generated/lazy loading contract，已完成。
+- `docs/goal-1_10.md`：Flow lazy dependency and production bundle runtime slice，已完成。
 
 当前已规划但尚未执行的阶段目标：
 
-- `docs/goal-1_10.md`：Flow lazy dependency and production bundle runtime slice，待执行。
+- 暂无。下一阶段应基于本文件的长期未完成账本另行制定。
 
-后续阶段应继续以 `docs/goal-1_10.md`、`docs/goal-1_11.md` 等文件拆分，
+后续阶段应继续以 `docs/goal-1_11.md`、`docs/goal-1_12.md` 等文件拆分，
 每个阶段只拿走本长期目标中的一个可评审切片。不要把本文件改写成短期任务清单；
 它是长期北极星和完成度账本。
 
@@ -42,7 +43,7 @@ v0/v1 runtime 切片走向可产品化桌面框架的最终完成状态。
 
 ## 当前基线
 
-截至 goal 1.9，仓库已经证明：
+截至 goal 1.10，仓库已经证明：
 
 - `dev-ipc` 可以启动 no-localhost Flow IPC runtime。
 - 真实 macOS Swift/AppKit/WKWebView 窗口可以运行 Flow IPC smoke app 和 framework
@@ -87,9 +88,23 @@ v0/v1 runtime 切片走向可产品化桌面框架的最终完成状态。
   `frontendArtifactGeneratedLazyDiagnosticBridge=true` 和
   `frontendArtifactGeneratedLazyFlowClientTriggered=false`。真实 dev-bundle
   generated/lazy artifact 仍会执行；它仍不是最终 Flow-client-engine-triggered 成功。
-- 完整 Flow-client-engine-triggered generated/lazy `Flow.loadOnDemand` path、
-  production bundle execution 和 dev-mode/Vite
-  execution 仍是明确 blocker，不计入完成。
+- v1.10 已增加真实 Flow `LoadMode.LAZY` dependency runtime path：smoke app 和 framework app
+  都通过普通 `@JavaScript(..., loadMode = LoadMode.LAZY)` 声明
+  `context://vatori-flow-ipc-lazy-v1_10.js`；可见 Flow client / DependencyLoader 创建的
+  lazy script 会被 WebView bridge 拦截为 IPC `resourceRequest`，Java 通过 no-localhost
+  resolver 返回真实 lazy body，host 将其 stage 为 Blob module URL 并执行。trace 记录
+  `flow-ipc-lazy-dependency-v1_10`、`flowLazyDependencyTriggeredByFlowClient=true`、
+  `flowLazyDependencyExecuted=true` 和
+  `flowLazyDependencyExecutionResult=executed:vatori-flow-ipc-lazy-v1_10.js`。
+- v1.10 也把 production bundle 从 `stats.json` verified-only 推进到 runtime registry /
+  staged execution attempt：`vaadin-dev-bundle/config/stats.json` 选择
+  `vaadin-dev-bundle/webapp/VAADIN/build/indexhtml-BfYYZi8S.js`，trace 记录
+  `flow-ipc-production-runtime-v1_10`、stats source、selected artifact、dependency chain、
+  stable module identity 和 `execution-attempt`。完整 production runtime ownership 仍是
+  blocker，failure layer 是
+  `production-runtime-ownership-not-yet-separated-from-focused-component-entry-imports`。
+- 完整 Flow-client-engine-triggered generated/lazy `Flow.loadOnDemand` path、production
+  bundle owned execution 和 dev-mode/Vite execution 仍是明确 blocker，不计入完成。
 
 ## 最终完成标准
 
@@ -182,12 +197,13 @@ v0/v1 runtime 切片走向可产品化桌面框架的最终完成状态。
 
 以下项目仍需要后续阶段推进：
 
-- 基于 v1.9 的 `Flow.loadOnDemand` API / registry / integration blocker 结果，继续把
-  完整 Flow-client-engine-triggered generated/lazy path、production bundle execution 和
-  dev-mode/Vite execution 从 partial/blocker 推进到真实可执行路径。
+- 基于 v1.9/v1.10 的 lazy/runtime blocker 结果，继续把完整
+  Flow-client-engine-triggered generated/lazy `Flow.loadOnDemand` path、production bundle
+  owned execution 和 dev-mode/Vite execution 从 partial/blocker 推进到真实可执行路径。
 - 完整 generated/lazy `Flow.loadOnDemand` execution，不再依赖 diagnostic bridge 或 direct
   staged import 来安装/触发 API。
-- Production bundle chunk execution 和 packaging-time staging。
+- Production bundle owned runtime execution、chunk side-effect ownership 和 packaging-time
+  staging。
 - Dev-mode/Vite graph execution 或可靠替代模式。
 - Broader Vaadin component parity，尤其是 Grid/VirtualList、ComboBox、DatePicker、
   Dialog、Upload。
@@ -216,8 +232,8 @@ v0/v1 runtime 切片走向可产品化桌面框架的最终完成状态。
 
 - 完整 Flow-client-engine-triggered generated/lazy `Flow.loadOnDemand` contract，把 v1.9
   的 diagnostic bridge / API registry blocker 替换为真实 Flow lazy path 或受支持 SPI。
-- Production bundle execution / packaging-time staging，从 `stats.json` verified-only
-  进入更真实的 executable bundle graph。
+- Production bundle owned runtime execution / packaging-time staging，把 v1.10 的
+  staged execution attempt 推进到可运行 side-effect ownership。
 - Dev-mode/Vite execution 或可靠替代模式。
 - Swift host tests / default-host readiness。
 - Broader component parity、durable push / reconnect / resync、打包和更新。

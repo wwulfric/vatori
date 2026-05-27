@@ -72,8 +72,8 @@ Java manifest / resource response 增加 v1.20 metadata：
 - `productionBundleRuntimeOwnerOwnedRuntimeExpectedGlobals=window.Vaadin,window.Vaadin.Flow,window.Vaadin.Flow.loadOnDemand`
 - `productionBundleRuntimeOwnerOwnedRuntimeNoBlobFallback=true`
 - `productionBundleRuntimeOwnerOwnedRuntimeAcceptableFailures=production-owner-owned-side-effect-unobservable,production-owner-owned-duplicate-custom-element,production-owner-owned-missing-real-artifact,production-owner-owned-browser-import-failed,production-owner-owned-unsupported-vaadin-contract`
-- `componentProductionOwnerReusePolicyVersion=flow-ipc-component-owner-reuse-policy-v1_20`
-- `componentProductionOwnerReusePolicy=owner-first-then-focused-fallback-v1_20`
+- `componentProductionOwnerReusePolicyVersionV1_20=flow-ipc-component-owner-reuse-policy-v1_20`
+- `componentProductionOwnerReusePolicyV1_20=owner-first-then-focused-fallback-v1_20`
 
 验收要求：
 
@@ -112,8 +112,8 @@ runtime attempt：
 
 TextField / Checkbox / Select focused resolver 增加 v1.20 reuse decision：
 
-- `componentProductionOwnerReusePolicyVersion=flow-ipc-component-owner-reuse-policy-v1_20`
-- `componentProductionOwnerReusePolicy=owner-first-then-focused-fallback-v1_20`
+- `componentProductionOwnerReusePolicyVersionV1_20=flow-ipc-component-owner-reuse-policy-v1_20`
+- `componentProductionOwnerReusePolicyV1_20=owner-first-then-focused-fallback-v1_20`
 - `componentProductionOwnerReuseDecision=owner-reused` 或
   `focused-fallback-after-owner-owned-runtime-attempt`
 - `componentProductionOwnerReuseDecisionReason=...`

@@ -314,6 +314,18 @@ final class FlowClientResources {
             "flow-ipc-component-owner-reuse-decision-v1_19";
     private static final String COMPONENT_PRODUCTION_OWNER_REUSE_DECISION_SOURCE =
             "production-owner-custom-scheme-side-effect-v1_19";
+    private static final String PRODUCTION_RUNTIME_OWNER_OWNED_RUNTIME_VERSION =
+            "flow-ipc-production-owner-owned-runtime-v1_20";
+    private static final String PRODUCTION_RUNTIME_OWNER_OWNED_RUNTIME_POLICY =
+            "owner-first-custom-scheme-runtime-reuse-v1_20";
+    private static final String PRODUCTION_RUNTIME_OWNER_OWNED_RUNTIME_PHASE =
+            "before-component-imports";
+    private static final String PRODUCTION_RUNTIME_OWNER_OWNED_RUNTIME_ACCEPTABLE_FAILURES =
+            "production-owner-owned-side-effect-unobservable,production-owner-owned-duplicate-custom-element,production-owner-owned-missing-real-artifact,production-owner-owned-browser-import-failed,production-owner-owned-unsupported-vaadin-contract";
+    private static final String COMPONENT_PRODUCTION_OWNER_REUSE_POLICY_VERSION_V1_20 =
+            "flow-ipc-component-owner-reuse-policy-v1_20";
+    private static final String COMPONENT_PRODUCTION_OWNER_REUSE_POLICY_V1_20 =
+            "owner-first-then-focused-fallback-v1_20";
     private static final List<String> PRODUCTION_RUNTIME_OWNER_DEPENDENCY_ARTIFACTS = List.of(
             DEV_BUNDLE_COMMONJS_JS,
             DEV_BUNDLE_INDEX_HTML_JS,
@@ -1391,6 +1403,33 @@ final class FlowClientResources {
                 "production owner custom-scheme import side effects must be checked before focused component resolver can reuse owner-owned tags");
         attributes.put("componentProductionOwnerReuseDecisionTags",
                 PRODUCTION_RUNTIME_OWNER_SIDE_EFFECT_EXPECTED_TAGS);
+        putProductionOwnerOwnedRuntimeAttributes(attributes);
+    }
+
+    private static void putProductionOwnerOwnedRuntimeAttributes(Map<String, Object> attributes) {
+        attributes.put("productionBundleRuntimeOwnerOwnedRuntimeVersion",
+                PRODUCTION_RUNTIME_OWNER_OWNED_RUNTIME_VERSION);
+        attributes.put("productionBundleRuntimeOwnerOwnedRuntimePolicy",
+                PRODUCTION_RUNTIME_OWNER_OWNED_RUNTIME_POLICY);
+        attributes.put("productionBundleRuntimeOwnerOwnedRuntimePhase",
+                PRODUCTION_RUNTIME_OWNER_OWNED_RUNTIME_PHASE);
+        attributes.put("productionBundleRuntimeOwnerOwnedRuntimeExpectedTags",
+                PRODUCTION_RUNTIME_OWNER_SIDE_EFFECT_EXPECTED_TAGS);
+        attributes.put("productionBundleRuntimeOwnerOwnedRuntimeExpectedGlobals",
+                PRODUCTION_RUNTIME_OWNER_SIDE_EFFECT_EXPECTED_GLOBALS);
+        attributes.put("productionBundleRuntimeOwnerOwnedRuntimeNoBlobFallback", true);
+        attributes.put("productionBundleRuntimeOwnerOwnedRuntimeAcceptableFailures",
+                PRODUCTION_RUNTIME_OWNER_OWNED_RUNTIME_ACCEPTABLE_FAILURES);
+        attributes.put("productionBundleRuntimeOwnerOwnedRuntimeAttempted", false);
+        attributes.put("productionBundleRuntimeOwnerOwnedRuntimeSatisfied", false);
+        attributes.put("productionBundleRuntimeOwnerOwnedRuntimeFailureLayer",
+                "pending-owner-first-custom-scheme-runtime-reuse-v1_20");
+        attributes.put("componentProductionOwnerReusePolicyVersionV1_20",
+                COMPONENT_PRODUCTION_OWNER_REUSE_POLICY_VERSION_V1_20);
+        attributes.put("componentProductionOwnerReusePolicyV1_20",
+                COMPONENT_PRODUCTION_OWNER_REUSE_POLICY_V1_20);
+        attributes.put("componentProductionOwnerReuseDecisionPhase",
+                PRODUCTION_RUNTIME_OWNER_OWNED_RUNTIME_PHASE);
     }
 
     private static Map<String, Object> flowLazyDependencyAttributes() {

@@ -1079,6 +1079,45 @@ public final class FlowClientResourceSmokeMain {
         requireStringContains(metadata.get("componentProductionOwnerReuseDecisionTags"),
                 "vaadin-text-field",
                 label + " component reuse decision tags");
+        requireEquals("flow-ipc-production-owner-owned-runtime-v1_20",
+                metadata.get("productionBundleRuntimeOwnerOwnedRuntimeVersion"),
+                label + " owner-owned runtime version");
+        requireEquals("owner-first-custom-scheme-runtime-reuse-v1_20",
+                metadata.get("productionBundleRuntimeOwnerOwnedRuntimePolicy"),
+                label + " owner-owned runtime policy");
+        requireEquals("before-component-imports",
+                metadata.get("productionBundleRuntimeOwnerOwnedRuntimePhase"),
+                label + " owner-owned runtime phase");
+        requireEquals("vaadin-text-field,vaadin-checkbox,vaadin-select",
+                metadata.get("productionBundleRuntimeOwnerOwnedRuntimeExpectedTags"),
+                label + " owner-owned runtime expected tags");
+        requireEquals("window.Vaadin,window.Vaadin.Flow,window.Vaadin.Flow.loadOnDemand",
+                metadata.get("productionBundleRuntimeOwnerOwnedRuntimeExpectedGlobals"),
+                label + " owner-owned runtime expected globals");
+        requireEquals(Boolean.TRUE,
+                metadata.get("productionBundleRuntimeOwnerOwnedRuntimeNoBlobFallback"),
+                label + " owner-owned runtime no-blob fallback flag");
+        requireStringContains(metadata.get("productionBundleRuntimeOwnerOwnedRuntimeAcceptableFailures"),
+                "production-owner-owned-side-effect-unobservable",
+                label + " owner-owned runtime acceptable failures");
+        requireEquals(Boolean.FALSE,
+                metadata.get("productionBundleRuntimeOwnerOwnedRuntimeAttempted"),
+                label + " owner-owned runtime attempted default");
+        requireEquals(Boolean.FALSE,
+                metadata.get("productionBundleRuntimeOwnerOwnedRuntimeSatisfied"),
+                label + " owner-owned runtime satisfied default");
+        requireEquals("pending-owner-first-custom-scheme-runtime-reuse-v1_20",
+                metadata.get("productionBundleRuntimeOwnerOwnedRuntimeFailureLayer"),
+                label + " owner-owned runtime pending layer");
+        requireEquals("flow-ipc-component-owner-reuse-policy-v1_20",
+                metadata.get("componentProductionOwnerReusePolicyVersionV1_20"),
+                label + " component reuse policy version");
+        requireEquals("owner-first-then-focused-fallback-v1_20",
+                metadata.get("componentProductionOwnerReusePolicyV1_20"),
+                label + " component reuse policy");
+        requireEquals("before-component-imports",
+                metadata.get("componentProductionOwnerReuseDecisionPhase"),
+                label + " component reuse decision phase");
     }
 
     private static void requireEquals(Object expected, Object actual, String label) {

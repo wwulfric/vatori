@@ -32,15 +32,18 @@ v0/v1 runtime 切片走向可产品化桌面框架的最终完成状态。
 - `docs/goal-1_24.md`：Frontend Pipeline Closure Decision Contract，已完成。
 - `docs/goal-1_25.md`：Packaging-Time Staged Frontend Baseline，已完成。
 - `docs/goal-1_26.md`：Generated Lazy Source Boundary，已完成。
+- `docs/goal-1_27.md`：Generated Lazy Real Build Probe，已完成。
 
-当前已完成到 `docs/goal-1_26.md`。v1.26 已把真实 generated lazy chunk
-blocker 从“当前 build 没有 chunk file”推进成可审计的 Vaadin source boundary：
-trace 记录 `AbstractUpdateImports` / `FrontendDependencies` 生成机制、lazy route /
-`DependencyTrigger` 输入边界、当前 smoke dev-bundle no-op table 证据，以及
-`build-spi-required-before-real-app-chunk-parity` 的下一步决策。真实 generated chunk、
-production owner owned runtime 和 dev-mode/Vite parity 仍作为真实 app/build blocker 保留。
+当前已完成到 `docs/goal-1_27.md`。v1.27 已把 v1.26 的 generated lazy source
+boundary 推进成真实 app/build probe：smoke app 中新增普通 Flow `@Route` +
+`@JavaScript(loadMode = LoadMode.LAZY)` 输入，trace 记录 route/class/dependency
+observed evidence、scanner observed、lazy JavaScript observed、真实
+`generated-flow-imports-VW7hRaNw.js` table shape，以及当前
+`scanner-output-not-connected-to-dev-bundle-generated-imports` failure layer。真实
+generated chunk、production owner owned runtime 和 dev-mode/Vite parity 仍作为真实
+app/build blocker 保留。
 
-后续阶段应继续以 `docs/goal-1_26.md` 等文件拆分，
+后续阶段应继续以 `docs/goal-1_27.md` 等文件拆分，
 每个阶段只拿走本长期目标中的一个可评审切片。不要把本文件改写成短期任务清单；
 它是长期北极星和完成度账本。
 
@@ -62,7 +65,7 @@ production owner owned runtime 和 dev-mode/Vite parity 仍作为真实 app/buil
 
 ## 当前基线
 
-截至 goal 1.26，仓库已经证明：
+截至 goal 1.27，仓库已经证明：
 
 - `dev-ipc` 可以启动 no-localhost Flow IPC runtime。
 - 真实 macOS Swift/AppKit/WKWebView 窗口可以运行 Flow IPC smoke app 和 framework
@@ -322,6 +325,21 @@ production owner owned runtime 和 dev-mode/Vite parity 仍作为真实 app/buil
   `generatedLazySourceCurrentBuildChunkStatus=not-generated` 证据。v1.26 明确下一步是
   让 app build 产生非空 lazyJavascript/lazyCss `ChunkInfo`，或接入受支持 Vaadin
   lazy chunk SPI；它不是当前 app/build 真实 generated chunk parity。
+- v1.27 已把 v1.26 的 source/build boundary 推进到真实 app/build probe：
+  smoke app 新增普通 Flow `@Route("flow-ipc-lazy-probe-v1_27")` 类
+  `dev.vatori.ipcsmoke.FlowIpcGeneratedLazyProbeView`，并通过
+  `@JavaScript(value = "context://vatori-flow-ipc-real-build-probe-v1_27.js",
+  loadMode = LoadMode.LAZY)` 声明真实 lazy JavaScript 输入。Java manifest /
+  resource response、Swift `resourceRequest` / `resourceResponse` / `resourceStage` /
+  `webview.dom` 和 inspector gate 统一记录
+  `generatedLazyRealBuildProbeVersion=flow-ipc-generated-lazy-real-build-probe-v1_27`、
+  manifest observed、route/class/dependency observed、route matches、scanner observed、
+  lazy JavaScript observed、真实 generated-flow-imports artifact、table shape
+  `no-op-promise-resolve-0`、chunk status `not-generated`、`fixtureSubstituted=false`、
+  `generatedLazyRealBuildNoLocalhost=true` 和更窄 failure layer
+  `scanner-output-not-connected-to-dev-bundle-generated-imports`。v1.27 不是 generated
+  chunk parity；它证明真实输入 probe 存在，并把下一步收敛到 Vaadin build lifecycle /
+  generated imports output 连接层。
 - 当前 app/build 的真实 generated/lazy chunk file parity、production owner import/side-effect success
   和 dev-mode/Vite execution 仍是明确 blocker，不计入最终完成。
 
@@ -418,10 +436,10 @@ production owner owned runtime 和 dev-mode/Vite parity 仍作为真实 app/buil
 
 - 基于 v1.22 generated lazy chunk-file positive fixture、v1.23 production owner positive
   runtime fixture、v1.24 closure decision contract、v1.25 packaged frontend baseline 和
-  v1.26 generated lazy source boundary，
-  继续让当前 app/build 产生真实 generated lazy chunk file，接入受支持 Vaadin lazy
-  chunk SPI，或把真实 production bundle owned execution / dev-mode/Vite execution
-  从 partial/blocker 推进到真实可执行路径。
+  v1.26 generated lazy source boundary、v1.27 generated lazy real build probe，
+  继续让当前 app/build 产生真实 generated lazy chunk file，连接 scanner output 到
+  generated-flow-imports 输出，接入受支持 Vaadin lazy chunk SPI，或把真实 production
+  bundle owned execution / dev-mode/Vite execution 从 partial/blocker 推进到真实可执行路径。
 - 真实 app/build 的 generated/lazy `Flow.loadOnDemand` chunk-file parity，不再停在真实
   generated-flow-imports no-op / missing chunk file blocker，也不只依赖 repository fixture。
 - Production bundle owner import/side-effect success、chunk side-effect ownership、
@@ -452,8 +470,8 @@ production owner owned runtime 和 dev-mode/Vite parity 仍作为真实 app/buil
 
 ## 当前建议的下一阶段
 
-v1.26 已完成 Generated Lazy Source Boundary。下一阶段建议优先把 v1.26 的 source
-boundary 变成真实 app/build 试验路径，不再只做新的汇总合同：
+v1.27 已完成 Generated Lazy Real Build Probe。下一阶段建议优先把 v1.27 的真实
+probe 输入连接到 Vaadin build lifecycle / generated imports 输出，不再只做新的汇总合同：
 
 - 让当前 smoke/framework build 产生真实 generated lazy chunk file，或接入/评估受支持
   Vaadin lazy chunk SPI，把 v1.22 fixture path 推进为真实 app/build path。

@@ -1417,6 +1417,50 @@ final class WebViewHost: NSObject, NSApplicationDelegate, NSWindowDelegate, WKNa
             payload["packagedFrontendRealBuildStatus"] as? String ?? ""
         let packagedFrontendRemainingBlockers =
             payload["packagedFrontendRemainingBlockers"] as? String ?? ""
+        let generatedLazyRealBuildProbeVersion =
+            payload["generatedLazyRealBuildProbeVersion"] as? String ?? ""
+        let generatedLazyRealBuildProbeManifest =
+            payload["generatedLazyRealBuildProbeManifest"] as? String ?? ""
+        let generatedLazyRealBuildProbeManifestObserved =
+            payload["generatedLazyRealBuildProbeManifestObserved"] as? Bool ?? false
+        let generatedLazyRealBuildInputRoute =
+            payload["generatedLazyRealBuildInputRoute"] as? String ?? ""
+        let generatedLazyRealBuildInputRouteClass =
+            payload["generatedLazyRealBuildInputRouteClass"] as? String ?? ""
+        let generatedLazyRealBuildInputTrigger =
+            payload["generatedLazyRealBuildInputTrigger"] as? String ?? ""
+        let generatedLazyRealBuildInputDependency =
+            payload["generatedLazyRealBuildInputDependency"] as? String ?? ""
+        let generatedLazyRealBuildInputEager =
+            payload["generatedLazyRealBuildInputEager"] as? Bool ?? false
+        let generatedLazyRealBuildInputRouteObserved =
+            payload["generatedLazyRealBuildInputRouteObserved"] as? Bool ?? false
+        let generatedLazyRealBuildInputRouteMatches =
+            payload["generatedLazyRealBuildInputRouteMatches"] as? Bool ?? false
+        let generatedLazyRealBuildScannerSource =
+            payload["generatedLazyRealBuildScannerSource"] as? String ?? ""
+        let generatedLazyRealBuildScannerObserved =
+            payload["generatedLazyRealBuildScannerObserved"] as? Bool ?? false
+        let generatedLazyRealBuildLazyJavascriptObserved =
+            payload["generatedLazyRealBuildLazyJavascriptObserved"] as? Bool ?? false
+        let generatedLazyRealBuildGeneratedImportsArtifact =
+            payload["generatedLazyRealBuildGeneratedImportsArtifact"] as? String ?? ""
+        let generatedLazyRealBuildGeneratedImportsTableShape =
+            payload["generatedLazyRealBuildGeneratedImportsTableShape"] as? String ?? ""
+        let generatedLazyRealBuildNoOpLoadOnDemand =
+            payload["generatedLazyRealBuildNoOpLoadOnDemand"] as? Bool ?? false
+        let generatedLazyRealBuildChunkStatus =
+            payload["generatedLazyRealBuildChunkStatus"] as? String ?? ""
+        let generatedLazyRealBuildChunkArtifact =
+            payload["generatedLazyRealBuildChunkArtifact"] as? String ?? ""
+        let generatedLazyRealBuildFailureLayer =
+            payload["generatedLazyRealBuildFailureLayer"] as? String ?? ""
+        let generatedLazyRealBuildNextResolutionStep =
+            payload["generatedLazyRealBuildNextResolutionStep"] as? String ?? ""
+        let generatedLazyRealBuildFixtureSubstituted =
+            payload["generatedLazyRealBuildFixtureSubstituted"] as? Bool ?? false
+        let generatedLazyRealBuildNoLocalhost =
+            payload["generatedLazyRealBuildNoLocalhost"] as? Bool ?? false
         let data = Data(body.utf8)
         let cacheKey = "\(sourcePath)#\(sha256)#\(data.count)"
         let cacheStatus = hostResourceStageCache.contains(cacheKey) ? "hit" : "miss"
@@ -1488,7 +1532,29 @@ final class WebViewHost: NSObject, NSApplicationDelegate, NSWindowDelegate, WKNa
             "packagedFrontendIntegrity": packagedFrontendIntegrity,
             "packagedFrontendCleanupPolicy": packagedFrontendCleanupPolicy,
             "packagedFrontendRealBuildStatus": packagedFrontendRealBuildStatus,
-            "packagedFrontendRemainingBlockers": packagedFrontendRemainingBlockers
+            "packagedFrontendRemainingBlockers": packagedFrontendRemainingBlockers,
+            "generatedLazyRealBuildProbeVersion": generatedLazyRealBuildProbeVersion,
+            "generatedLazyRealBuildProbeManifest": generatedLazyRealBuildProbeManifest,
+            "generatedLazyRealBuildProbeManifestObserved": generatedLazyRealBuildProbeManifestObserved,
+            "generatedLazyRealBuildInputRoute": generatedLazyRealBuildInputRoute,
+            "generatedLazyRealBuildInputRouteClass": generatedLazyRealBuildInputRouteClass,
+            "generatedLazyRealBuildInputTrigger": generatedLazyRealBuildInputTrigger,
+            "generatedLazyRealBuildInputDependency": generatedLazyRealBuildInputDependency,
+            "generatedLazyRealBuildInputEager": generatedLazyRealBuildInputEager,
+            "generatedLazyRealBuildInputRouteObserved": generatedLazyRealBuildInputRouteObserved,
+            "generatedLazyRealBuildInputRouteMatches": generatedLazyRealBuildInputRouteMatches,
+            "generatedLazyRealBuildScannerSource": generatedLazyRealBuildScannerSource,
+            "generatedLazyRealBuildScannerObserved": generatedLazyRealBuildScannerObserved,
+            "generatedLazyRealBuildLazyJavascriptObserved": generatedLazyRealBuildLazyJavascriptObserved,
+            "generatedLazyRealBuildGeneratedImportsArtifact": generatedLazyRealBuildGeneratedImportsArtifact,
+            "generatedLazyRealBuildGeneratedImportsTableShape": generatedLazyRealBuildGeneratedImportsTableShape,
+            "generatedLazyRealBuildNoOpLoadOnDemand": generatedLazyRealBuildNoOpLoadOnDemand,
+            "generatedLazyRealBuildChunkStatus": generatedLazyRealBuildChunkStatus,
+            "generatedLazyRealBuildChunkArtifact": generatedLazyRealBuildChunkArtifact,
+            "generatedLazyRealBuildFailureLayer": generatedLazyRealBuildFailureLayer,
+            "generatedLazyRealBuildNextResolutionStep": generatedLazyRealBuildNextResolutionStep,
+            "generatedLazyRealBuildFixtureSubstituted": generatedLazyRealBuildFixtureSubstituted,
+            "generatedLazyRealBuildNoLocalhost": generatedLazyRealBuildNoLocalhost
         ]
 
         var stageRequestTrace: [String: Any] = [
@@ -2036,6 +2102,29 @@ final class WebViewHost: NSObject, NSApplicationDelegate, NSWindowDelegate, WKNa
           generatedLazySourceRemainingBlocker: window.VaadinDesktopIpcDiagnostics ? window.VaadinDesktopIpcDiagnostics.generatedLazySourceRemainingBlocker : "",
           generatedLazySourceNextResolutionStep: window.VaadinDesktopIpcDiagnostics ? window.VaadinDesktopIpcDiagnostics.generatedLazySourceNextResolutionStep : "",
           generatedLazySourceNoLocalhost: !!(window.VaadinDesktopIpcDiagnostics && window.VaadinDesktopIpcDiagnostics.generatedLazySourceNoLocalhost),
+          generatedLazyRealBuildProbeObserved: !!(window.VaadinDesktopIpcDiagnostics && window.VaadinDesktopIpcDiagnostics.generatedLazyRealBuildProbeObserved),
+          generatedLazyRealBuildProbeVersion: window.VaadinDesktopIpcDiagnostics ? window.VaadinDesktopIpcDiagnostics.generatedLazyRealBuildProbeVersion : "",
+          generatedLazyRealBuildProbeManifest: window.VaadinDesktopIpcDiagnostics ? window.VaadinDesktopIpcDiagnostics.generatedLazyRealBuildProbeManifest : "",
+          generatedLazyRealBuildProbeManifestObserved: !!(window.VaadinDesktopIpcDiagnostics && window.VaadinDesktopIpcDiagnostics.generatedLazyRealBuildProbeManifestObserved),
+          generatedLazyRealBuildInputRoute: window.VaadinDesktopIpcDiagnostics ? window.VaadinDesktopIpcDiagnostics.generatedLazyRealBuildInputRoute : "",
+          generatedLazyRealBuildInputRouteClass: window.VaadinDesktopIpcDiagnostics ? window.VaadinDesktopIpcDiagnostics.generatedLazyRealBuildInputRouteClass : "",
+          generatedLazyRealBuildInputTrigger: window.VaadinDesktopIpcDiagnostics ? window.VaadinDesktopIpcDiagnostics.generatedLazyRealBuildInputTrigger : "",
+          generatedLazyRealBuildInputDependency: window.VaadinDesktopIpcDiagnostics ? window.VaadinDesktopIpcDiagnostics.generatedLazyRealBuildInputDependency : "",
+          generatedLazyRealBuildInputEager: !!(window.VaadinDesktopIpcDiagnostics && window.VaadinDesktopIpcDiagnostics.generatedLazyRealBuildInputEager),
+          generatedLazyRealBuildInputRouteObserved: !!(window.VaadinDesktopIpcDiagnostics && window.VaadinDesktopIpcDiagnostics.generatedLazyRealBuildInputRouteObserved),
+          generatedLazyRealBuildInputRouteMatches: !!(window.VaadinDesktopIpcDiagnostics && window.VaadinDesktopIpcDiagnostics.generatedLazyRealBuildInputRouteMatches),
+          generatedLazyRealBuildScannerSource: window.VaadinDesktopIpcDiagnostics ? window.VaadinDesktopIpcDiagnostics.generatedLazyRealBuildScannerSource : "",
+          generatedLazyRealBuildScannerObserved: !!(window.VaadinDesktopIpcDiagnostics && window.VaadinDesktopIpcDiagnostics.generatedLazyRealBuildScannerObserved),
+          generatedLazyRealBuildLazyJavascriptObserved: !!(window.VaadinDesktopIpcDiagnostics && window.VaadinDesktopIpcDiagnostics.generatedLazyRealBuildLazyJavascriptObserved),
+          generatedLazyRealBuildGeneratedImportsArtifact: window.VaadinDesktopIpcDiagnostics ? window.VaadinDesktopIpcDiagnostics.generatedLazyRealBuildGeneratedImportsArtifact : "",
+          generatedLazyRealBuildGeneratedImportsTableShape: window.VaadinDesktopIpcDiagnostics ? window.VaadinDesktopIpcDiagnostics.generatedLazyRealBuildGeneratedImportsTableShape : "",
+          generatedLazyRealBuildNoOpLoadOnDemand: !!(window.VaadinDesktopIpcDiagnostics && window.VaadinDesktopIpcDiagnostics.generatedLazyRealBuildNoOpLoadOnDemand),
+          generatedLazyRealBuildChunkStatus: window.VaadinDesktopIpcDiagnostics ? window.VaadinDesktopIpcDiagnostics.generatedLazyRealBuildChunkStatus : "",
+          generatedLazyRealBuildChunkArtifact: window.VaadinDesktopIpcDiagnostics ? window.VaadinDesktopIpcDiagnostics.generatedLazyRealBuildChunkArtifact : "",
+          generatedLazyRealBuildFailureLayer: window.VaadinDesktopIpcDiagnostics ? window.VaadinDesktopIpcDiagnostics.generatedLazyRealBuildFailureLayer : "",
+          generatedLazyRealBuildNextResolutionStep: window.VaadinDesktopIpcDiagnostics ? window.VaadinDesktopIpcDiagnostics.generatedLazyRealBuildNextResolutionStep : "",
+          generatedLazyRealBuildFixtureSubstituted: !!(window.VaadinDesktopIpcDiagnostics && window.VaadinDesktopIpcDiagnostics.generatedLazyRealBuildFixtureSubstituted),
+          generatedLazyRealBuildNoLocalhost: !!(window.VaadinDesktopIpcDiagnostics && window.VaadinDesktopIpcDiagnostics.generatedLazyRealBuildNoLocalhost),
           frontendArtifactShimFallback: !!(window.VaadinDesktopIpcDiagnostics && window.VaadinDesktopIpcDiagnostics.frontendArtifactShimFallback),
           frontendArtifactProductionBundlePartial: !!(window.VaadinDesktopIpcDiagnostics && window.VaadinDesktopIpcDiagnostics.frontendArtifactProductionBundlePartial),
           frontendArtifactProductionBundleStatsVerified: !!(window.VaadinDesktopIpcDiagnostics && window.VaadinDesktopIpcDiagnostics.frontendArtifactProductionBundleStatsVerified),
@@ -3176,6 +3265,29 @@ let flowIpcShell = #"""
         generatedLazySourceRemainingBlocker: '',
         generatedLazySourceNextResolutionStep: '',
         generatedLazySourceNoLocalhost: false,
+        generatedLazyRealBuildProbeObserved: false,
+        generatedLazyRealBuildProbeVersion: '',
+        generatedLazyRealBuildProbeManifest: '',
+        generatedLazyRealBuildProbeManifestObserved: false,
+        generatedLazyRealBuildInputRoute: '',
+        generatedLazyRealBuildInputRouteClass: '',
+        generatedLazyRealBuildInputTrigger: '',
+        generatedLazyRealBuildInputDependency: '',
+        generatedLazyRealBuildInputEager: false,
+        generatedLazyRealBuildInputRouteObserved: false,
+        generatedLazyRealBuildInputRouteMatches: false,
+        generatedLazyRealBuildScannerSource: '',
+        generatedLazyRealBuildScannerObserved: false,
+        generatedLazyRealBuildLazyJavascriptObserved: false,
+        generatedLazyRealBuildGeneratedImportsArtifact: '',
+        generatedLazyRealBuildGeneratedImportsTableShape: '',
+        generatedLazyRealBuildNoOpLoadOnDemand: false,
+        generatedLazyRealBuildChunkStatus: '',
+        generatedLazyRealBuildChunkArtifact: '',
+        generatedLazyRealBuildFailureLayer: '',
+        generatedLazyRealBuildNextResolutionStep: '',
+        generatedLazyRealBuildFixtureSubstituted: false,
+        generatedLazyRealBuildNoLocalhost: false,
         frontendArtifactShimFallback: false,
         frontendArtifactProductionBundlePartial: false,
         frontendArtifactProductionBundleStatsVerified: false,
@@ -5260,6 +5372,45 @@ let flowIpcShell = #"""
         if (source.generatedLazySourceNoLocalhost === true) {
           window.VaadinDesktopIpcDiagnostics.generatedLazySourceNoLocalhost = true;
         }
+        if (typeof source.generatedLazyRealBuildProbeVersion === 'string'
+            && source.generatedLazyRealBuildProbeVersion) {
+          window.VaadinDesktopIpcDiagnostics.generatedLazyRealBuildProbeObserved = true;
+          window.VaadinDesktopIpcDiagnostics.generatedLazyRealBuildProbeVersion =
+            source.generatedLazyRealBuildProbeVersion;
+        }
+        for (const [sourceKey, diagnosticKey] of [
+          ['generatedLazyRealBuildProbeManifest', 'generatedLazyRealBuildProbeManifest'],
+          ['generatedLazyRealBuildInputRoute', 'generatedLazyRealBuildInputRoute'],
+          ['generatedLazyRealBuildInputRouteClass', 'generatedLazyRealBuildInputRouteClass'],
+          ['generatedLazyRealBuildInputTrigger', 'generatedLazyRealBuildInputTrigger'],
+          ['generatedLazyRealBuildInputDependency', 'generatedLazyRealBuildInputDependency'],
+          ['generatedLazyRealBuildScannerSource', 'generatedLazyRealBuildScannerSource'],
+          ['generatedLazyRealBuildGeneratedImportsArtifact', 'generatedLazyRealBuildGeneratedImportsArtifact'],
+          ['generatedLazyRealBuildGeneratedImportsTableShape', 'generatedLazyRealBuildGeneratedImportsTableShape'],
+          ['generatedLazyRealBuildChunkStatus', 'generatedLazyRealBuildChunkStatus'],
+          ['generatedLazyRealBuildChunkArtifact', 'generatedLazyRealBuildChunkArtifact'],
+          ['generatedLazyRealBuildFailureLayer', 'generatedLazyRealBuildFailureLayer'],
+          ['generatedLazyRealBuildNextResolutionStep', 'generatedLazyRealBuildNextResolutionStep']
+        ]) {
+          if (typeof source[sourceKey] === 'string' && source[sourceKey]) {
+            window.VaadinDesktopIpcDiagnostics[diagnosticKey] = source[sourceKey];
+          }
+        }
+        for (const [sourceKey, diagnosticKey] of [
+          ['generatedLazyRealBuildProbeManifestObserved', 'generatedLazyRealBuildProbeManifestObserved'],
+          ['generatedLazyRealBuildInputEager', 'generatedLazyRealBuildInputEager'],
+          ['generatedLazyRealBuildInputRouteObserved', 'generatedLazyRealBuildInputRouteObserved'],
+          ['generatedLazyRealBuildInputRouteMatches', 'generatedLazyRealBuildInputRouteMatches'],
+          ['generatedLazyRealBuildScannerObserved', 'generatedLazyRealBuildScannerObserved'],
+          ['generatedLazyRealBuildLazyJavascriptObserved', 'generatedLazyRealBuildLazyJavascriptObserved'],
+          ['generatedLazyRealBuildNoOpLoadOnDemand', 'generatedLazyRealBuildNoOpLoadOnDemand'],
+          ['generatedLazyRealBuildFixtureSubstituted', 'generatedLazyRealBuildFixtureSubstituted'],
+          ['generatedLazyRealBuildNoLocalhost', 'generatedLazyRealBuildNoLocalhost']
+        ]) {
+          if (source[sourceKey] === true) {
+            window.VaadinDesktopIpcDiagnostics[diagnosticKey] = true;
+          }
+        }
         addFrontendResolverCsv(frontendResolverFamiliesObserved, source.frontendResolverFamiliesCovered || '');
         addFrontendResolverCsv(frontendResolverAcceptedGapFamilies, source.frontendResolverAcceptableGaps || '');
       }
@@ -6102,6 +6253,38 @@ let flowIpcShell = #"""
           generatedLazySourceRemainingBlocker: resource.generatedLazySourceRemainingBlocker || '',
           generatedLazySourceNextResolutionStep: resource.generatedLazySourceNextResolutionStep || '',
           generatedLazySourceNoLocalhost: resource.generatedLazySourceNoLocalhost === true,
+          generatedLazyRealBuildProbeVersion: resource.generatedLazyRealBuildProbeVersion || '',
+          generatedLazyRealBuildProbeManifest: resource.generatedLazyRealBuildProbeManifest || '',
+          generatedLazyRealBuildProbeManifestObserved:
+            resource.generatedLazyRealBuildProbeManifestObserved === true,
+          generatedLazyRealBuildInputRoute: resource.generatedLazyRealBuildInputRoute || '',
+          generatedLazyRealBuildInputRouteClass: resource.generatedLazyRealBuildInputRouteClass || '',
+          generatedLazyRealBuildInputTrigger: resource.generatedLazyRealBuildInputTrigger || '',
+          generatedLazyRealBuildInputDependency: resource.generatedLazyRealBuildInputDependency || '',
+          generatedLazyRealBuildInputEager: resource.generatedLazyRealBuildInputEager === true,
+          generatedLazyRealBuildInputRouteObserved:
+            resource.generatedLazyRealBuildInputRouteObserved === true,
+          generatedLazyRealBuildInputRouteMatches:
+            resource.generatedLazyRealBuildInputRouteMatches === true,
+          generatedLazyRealBuildScannerSource: resource.generatedLazyRealBuildScannerSource || '',
+          generatedLazyRealBuildScannerObserved:
+            resource.generatedLazyRealBuildScannerObserved === true,
+          generatedLazyRealBuildLazyJavascriptObserved:
+            resource.generatedLazyRealBuildLazyJavascriptObserved === true,
+          generatedLazyRealBuildGeneratedImportsArtifact:
+            resource.generatedLazyRealBuildGeneratedImportsArtifact || '',
+          generatedLazyRealBuildGeneratedImportsTableShape:
+            resource.generatedLazyRealBuildGeneratedImportsTableShape || '',
+          generatedLazyRealBuildNoOpLoadOnDemand:
+            resource.generatedLazyRealBuildNoOpLoadOnDemand === true,
+          generatedLazyRealBuildChunkStatus: resource.generatedLazyRealBuildChunkStatus || '',
+          generatedLazyRealBuildChunkArtifact: resource.generatedLazyRealBuildChunkArtifact || '',
+          generatedLazyRealBuildFailureLayer: resource.generatedLazyRealBuildFailureLayer || '',
+          generatedLazyRealBuildNextResolutionStep:
+            resource.generatedLazyRealBuildNextResolutionStep || '',
+          generatedLazyRealBuildFixtureSubstituted:
+            resource.generatedLazyRealBuildFixtureSubstituted === true,
+          generatedLazyRealBuildNoLocalhost: resource.generatedLazyRealBuildNoLocalhost === true,
           lookupKind: resource.lookupKind || '',
           textfieldGraphParityVersion: resource.textfieldGraphParityVersion || '',
           blockerVersion: resource.blockerVersion || '',
@@ -6666,6 +6849,38 @@ let flowIpcShell = #"""
           generatedLazySourceRemainingBlocker: resource.generatedLazySourceRemainingBlocker || '',
           generatedLazySourceNextResolutionStep: resource.generatedLazySourceNextResolutionStep || '',
           generatedLazySourceNoLocalhost: resource.generatedLazySourceNoLocalhost === true,
+          generatedLazyRealBuildProbeVersion: resource.generatedLazyRealBuildProbeVersion || '',
+          generatedLazyRealBuildProbeManifest: resource.generatedLazyRealBuildProbeManifest || '',
+          generatedLazyRealBuildProbeManifestObserved:
+            resource.generatedLazyRealBuildProbeManifestObserved === true,
+          generatedLazyRealBuildInputRoute: resource.generatedLazyRealBuildInputRoute || '',
+          generatedLazyRealBuildInputRouteClass: resource.generatedLazyRealBuildInputRouteClass || '',
+          generatedLazyRealBuildInputTrigger: resource.generatedLazyRealBuildInputTrigger || '',
+          generatedLazyRealBuildInputDependency: resource.generatedLazyRealBuildInputDependency || '',
+          generatedLazyRealBuildInputEager: resource.generatedLazyRealBuildInputEager === true,
+          generatedLazyRealBuildInputRouteObserved:
+            resource.generatedLazyRealBuildInputRouteObserved === true,
+          generatedLazyRealBuildInputRouteMatches:
+            resource.generatedLazyRealBuildInputRouteMatches === true,
+          generatedLazyRealBuildScannerSource: resource.generatedLazyRealBuildScannerSource || '',
+          generatedLazyRealBuildScannerObserved:
+            resource.generatedLazyRealBuildScannerObserved === true,
+          generatedLazyRealBuildLazyJavascriptObserved:
+            resource.generatedLazyRealBuildLazyJavascriptObserved === true,
+          generatedLazyRealBuildGeneratedImportsArtifact:
+            resource.generatedLazyRealBuildGeneratedImportsArtifact || '',
+          generatedLazyRealBuildGeneratedImportsTableShape:
+            resource.generatedLazyRealBuildGeneratedImportsTableShape || '',
+          generatedLazyRealBuildNoOpLoadOnDemand:
+            resource.generatedLazyRealBuildNoOpLoadOnDemand === true,
+          generatedLazyRealBuildChunkStatus: resource.generatedLazyRealBuildChunkStatus || '',
+          generatedLazyRealBuildChunkArtifact: resource.generatedLazyRealBuildChunkArtifact || '',
+          generatedLazyRealBuildFailureLayer: resource.generatedLazyRealBuildFailureLayer || '',
+          generatedLazyRealBuildNextResolutionStep:
+            resource.generatedLazyRealBuildNextResolutionStep || '',
+          generatedLazyRealBuildFixtureSubstituted:
+            resource.generatedLazyRealBuildFixtureSubstituted === true,
+          generatedLazyRealBuildNoLocalhost: resource.generatedLazyRealBuildNoLocalhost === true,
           stagedPath: '',
           owner: stageOwner,
           artifactFamily: family,
@@ -7822,7 +8037,39 @@ let flowIpcShell = #"""
             generatedLazySourceDecision: resource.generatedLazySourceDecision || '',
             generatedLazySourceRemainingBlocker: resource.generatedLazySourceRemainingBlocker || '',
             generatedLazySourceNextResolutionStep: resource.generatedLazySourceNextResolutionStep || '',
-            generatedLazySourceNoLocalhost: resource.generatedLazySourceNoLocalhost === true
+            generatedLazySourceNoLocalhost: resource.generatedLazySourceNoLocalhost === true,
+            generatedLazyRealBuildProbeVersion: resource.generatedLazyRealBuildProbeVersion || '',
+            generatedLazyRealBuildProbeManifest: resource.generatedLazyRealBuildProbeManifest || '',
+            generatedLazyRealBuildProbeManifestObserved:
+              resource.generatedLazyRealBuildProbeManifestObserved === true,
+            generatedLazyRealBuildInputRoute: resource.generatedLazyRealBuildInputRoute || '',
+            generatedLazyRealBuildInputRouteClass: resource.generatedLazyRealBuildInputRouteClass || '',
+            generatedLazyRealBuildInputTrigger: resource.generatedLazyRealBuildInputTrigger || '',
+            generatedLazyRealBuildInputDependency: resource.generatedLazyRealBuildInputDependency || '',
+            generatedLazyRealBuildInputEager: resource.generatedLazyRealBuildInputEager === true,
+            generatedLazyRealBuildInputRouteObserved:
+              resource.generatedLazyRealBuildInputRouteObserved === true,
+            generatedLazyRealBuildInputRouteMatches:
+              resource.generatedLazyRealBuildInputRouteMatches === true,
+            generatedLazyRealBuildScannerSource: resource.generatedLazyRealBuildScannerSource || '',
+            generatedLazyRealBuildScannerObserved:
+              resource.generatedLazyRealBuildScannerObserved === true,
+            generatedLazyRealBuildLazyJavascriptObserved:
+              resource.generatedLazyRealBuildLazyJavascriptObserved === true,
+            generatedLazyRealBuildGeneratedImportsArtifact:
+              resource.generatedLazyRealBuildGeneratedImportsArtifact || '',
+            generatedLazyRealBuildGeneratedImportsTableShape:
+              resource.generatedLazyRealBuildGeneratedImportsTableShape || '',
+            generatedLazyRealBuildNoOpLoadOnDemand:
+              resource.generatedLazyRealBuildNoOpLoadOnDemand === true,
+            generatedLazyRealBuildChunkStatus: resource.generatedLazyRealBuildChunkStatus || '',
+            generatedLazyRealBuildChunkArtifact: resource.generatedLazyRealBuildChunkArtifact || '',
+            generatedLazyRealBuildFailureLayer: resource.generatedLazyRealBuildFailureLayer || '',
+            generatedLazyRealBuildNextResolutionStep:
+              resource.generatedLazyRealBuildNextResolutionStep || '',
+            generatedLazyRealBuildFixtureSubstituted:
+              resource.generatedLazyRealBuildFixtureSubstituted === true,
+            generatedLazyRealBuildNoLocalhost: resource.generatedLazyRealBuildNoLocalhost === true
           });
           hostExtra.frontendResourceSchemeVersion =
             response.frontendResourceSchemeVersion || 'flow-ipc-resource-scheme-v1_17';
@@ -7965,6 +8212,65 @@ let flowIpcShell = #"""
           hostExtra.generatedLazySourceNoLocalhost =
             response.generatedLazySourceNoLocalhost === true
             || resource.generatedLazySourceNoLocalhost === true;
+          hostExtra.generatedLazyRealBuildProbeVersion =
+            response.generatedLazyRealBuildProbeVersion || resource.generatedLazyRealBuildProbeVersion || '';
+          hostExtra.generatedLazyRealBuildProbeManifest =
+            response.generatedLazyRealBuildProbeManifest || resource.generatedLazyRealBuildProbeManifest || '';
+          hostExtra.generatedLazyRealBuildProbeManifestObserved =
+            response.generatedLazyRealBuildProbeManifestObserved === true
+            || resource.generatedLazyRealBuildProbeManifestObserved === true;
+          hostExtra.generatedLazyRealBuildInputRoute =
+            response.generatedLazyRealBuildInputRoute || resource.generatedLazyRealBuildInputRoute || '';
+          hostExtra.generatedLazyRealBuildInputRouteClass =
+            response.generatedLazyRealBuildInputRouteClass || resource.generatedLazyRealBuildInputRouteClass || '';
+          hostExtra.generatedLazyRealBuildInputTrigger =
+            response.generatedLazyRealBuildInputTrigger || resource.generatedLazyRealBuildInputTrigger || '';
+          hostExtra.generatedLazyRealBuildInputDependency =
+            response.generatedLazyRealBuildInputDependency || resource.generatedLazyRealBuildInputDependency || '';
+          hostExtra.generatedLazyRealBuildInputEager =
+            response.generatedLazyRealBuildInputEager === true
+            || resource.generatedLazyRealBuildInputEager === true;
+          hostExtra.generatedLazyRealBuildInputRouteObserved =
+            response.generatedLazyRealBuildInputRouteObserved === true
+            || resource.generatedLazyRealBuildInputRouteObserved === true;
+          hostExtra.generatedLazyRealBuildInputRouteMatches =
+            response.generatedLazyRealBuildInputRouteMatches === true
+            || resource.generatedLazyRealBuildInputRouteMatches === true;
+          hostExtra.generatedLazyRealBuildScannerSource =
+            response.generatedLazyRealBuildScannerSource || resource.generatedLazyRealBuildScannerSource || '';
+          hostExtra.generatedLazyRealBuildScannerObserved =
+            response.generatedLazyRealBuildScannerObserved === true
+            || resource.generatedLazyRealBuildScannerObserved === true;
+          hostExtra.generatedLazyRealBuildLazyJavascriptObserved =
+            response.generatedLazyRealBuildLazyJavascriptObserved === true
+            || resource.generatedLazyRealBuildLazyJavascriptObserved === true;
+          hostExtra.generatedLazyRealBuildGeneratedImportsArtifact =
+            response.generatedLazyRealBuildGeneratedImportsArtifact
+            || resource.generatedLazyRealBuildGeneratedImportsArtifact
+            || '';
+          hostExtra.generatedLazyRealBuildGeneratedImportsTableShape =
+            response.generatedLazyRealBuildGeneratedImportsTableShape
+            || resource.generatedLazyRealBuildGeneratedImportsTableShape
+            || '';
+          hostExtra.generatedLazyRealBuildNoOpLoadOnDemand =
+            response.generatedLazyRealBuildNoOpLoadOnDemand === true
+            || resource.generatedLazyRealBuildNoOpLoadOnDemand === true;
+          hostExtra.generatedLazyRealBuildChunkStatus =
+            response.generatedLazyRealBuildChunkStatus || resource.generatedLazyRealBuildChunkStatus || '';
+          hostExtra.generatedLazyRealBuildChunkArtifact =
+            response.generatedLazyRealBuildChunkArtifact || resource.generatedLazyRealBuildChunkArtifact || '';
+          hostExtra.generatedLazyRealBuildFailureLayer =
+            response.generatedLazyRealBuildFailureLayer || resource.generatedLazyRealBuildFailureLayer || '';
+          hostExtra.generatedLazyRealBuildNextResolutionStep =
+            response.generatedLazyRealBuildNextResolutionStep
+            || resource.generatedLazyRealBuildNextResolutionStep
+            || '';
+          hostExtra.generatedLazyRealBuildFixtureSubstituted =
+            response.generatedLazyRealBuildFixtureSubstituted === true
+            || resource.generatedLazyRealBuildFixtureSubstituted === true;
+          hostExtra.generatedLazyRealBuildNoLocalhost =
+            response.generatedLazyRealBuildNoLocalhost === true
+            || resource.generatedLazyRealBuildNoLocalhost === true;
           const stagedUrl = response.stagedUrl || '';
           if (!stagedUrl) {
             return '';

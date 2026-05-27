@@ -1,5 +1,8 @@
 package dev.vatori.desktop.flow.ipc;
 
+import com.vaadin.flow.component.dependency.JavaScript;
+import com.vaadin.flow.router.Route;
+
 import java.io.IOException;
 import java.io.InputStream;
 import java.nio.charset.StandardCharsets;
@@ -438,6 +441,24 @@ final class FlowClientResources {
             "real-app-generated-chunk-file-not-produced-by-current-build";
     private static final String GENERATED_LAZY_SOURCE_NEXT_STEP =
             "make the app build produce a non-empty lazyJavascript/lazyCss ChunkInfo or add a supported Vaadin lazy chunk SPI before replacing the v1.22 fixture with real app/build chunk parity";
+    private static final String GENERATED_LAZY_REAL_BUILD_PROBE_VERSION =
+            "flow-ipc-generated-lazy-real-build-probe-v1_27";
+    private static final String GENERATED_LAZY_REAL_BUILD_PROBE_PROPERTIES =
+            "META-INF/vatori/generated-lazy-real-build-probe-v1_27.properties";
+    private static final String GENERATED_LAZY_REAL_BUILD_DEFAULT_ROUTE_CLASS =
+            "dev.vatori.ipcsmoke.FlowIpcGeneratedLazyProbeView";
+    private static final String GENERATED_LAZY_REAL_BUILD_DEFAULT_ROUTE =
+            "flow-ipc-lazy-probe-v1_27";
+    private static final String GENERATED_LAZY_REAL_BUILD_DEFAULT_DEPENDENCY =
+            "context://vatori-flow-ipc-real-build-probe-v1_27.js";
+    private static final String GENERATED_LAZY_REAL_BUILD_DEFAULT_TRIGGER =
+            GENERATED_LAZY_REAL_BUILD_DEFAULT_ROUTE_CLASS;
+    private static final String GENERATED_LAZY_REAL_BUILD_SCANNER_SOURCE =
+            "route-annotation-classpath-probe-v1_27";
+    private static final String GENERATED_LAZY_REAL_BUILD_FAILURE_LAYER =
+            "scanner-output-not-connected-to-dev-bundle-generated-imports";
+    private static final String GENERATED_LAZY_REAL_BUILD_NEXT_STEP =
+            "run a Vaadin frontend build/update-imports path that includes the non-eager v1.27 route input and compare generated-flow-imports output";
     private static final List<String> PRODUCTION_RUNTIME_OWNER_DEPENDENCY_ARTIFACTS = List.of(
             DEV_BUNDLE_COMMONJS_JS,
             DEV_BUNDLE_INDEX_HTML_JS,
@@ -888,6 +909,7 @@ final class FlowClientResources {
         manifest.put("loadOnDemandChunkNextResolutionStep", GENERATED_LAZY_CHUNK_NEXT_RESOLUTION_STEP);
         manifest.putAll(generatedLoadOnDemandChunkFileRegistryAttributes(DEV_BUNDLE_GENERATED_FLOW_IMPORTS_JS));
         manifest.putAll(generatedLazySourceBoundaryAttributes());
+        manifest.putAll(generatedLazyRealBuildProbeAttributes());
         manifest.put("generatedLazyChunkFileExecutionVersion", GENERATED_LAZY_CHUNK_FILE_EXECUTION_VERSION);
         manifest.put("generatedLazyChunkFileFixtureSource", GENERATED_LAZY_CHUNK_FILE_FIXTURE_SOURCE);
         manifest.put("generatedLazyChunkFileFixtureImportsArtifact", GENERATED_FLOW_IMPORTS_V1_22_JS);
@@ -1944,6 +1966,7 @@ final class FlowClientResources {
         if (primary) {
             attributes.putAll(generatedLoadOnDemandChunkFileRegistryAttributes(path));
             attributes.putAll(generatedLazySourceBoundaryAttributes());
+            attributes.putAll(generatedLazyRealBuildProbeAttributes());
         }
         attributes.put("devBundleResource", true);
         attributes.put("productionBundleResource", true);
@@ -2009,6 +2032,108 @@ final class FlowClientResources {
         attributes.put("generatedLazySourceNextResolutionStep", GENERATED_LAZY_SOURCE_NEXT_STEP);
         attributes.put("generatedLazySourceNoLocalhost", true);
         return attributes;
+    }
+
+    private static Map<String, Object> generatedLazyRealBuildProbeAttributes() {
+        Properties properties = generatedLazyRealBuildProbeProperties();
+        boolean probeManifestObserved = !properties.isEmpty();
+        String routeClass = propertyOrDefault(properties, "routeClass",
+                GENERATED_LAZY_REAL_BUILD_DEFAULT_ROUTE_CLASS);
+        String expectedRoute = propertyOrDefault(properties, "route",
+                GENERATED_LAZY_REAL_BUILD_DEFAULT_ROUTE);
+        String expectedTrigger = propertyOrDefault(properties, "trigger",
+                GENERATED_LAZY_REAL_BUILD_DEFAULT_TRIGGER);
+        String expectedDependency = propertyOrDefault(properties, "dependency",
+                GENERATED_LAZY_REAL_BUILD_DEFAULT_DEPENDENCY);
+
+        Class<?> probeClass = loadOptionalClass(routeClass);
+        Route route = probeClass == null ? null : probeClass.getAnnotation(Route.class);
+        JavaScript[] scripts = probeClass == null ? new JavaScript[0]
+                : probeClass.getAnnotationsByType(JavaScript.class);
+        boolean routeObserved = route != null;
+        boolean routeMatches = routeObserved && expectedRoute.equals(route.value());
+        boolean lazyJavascriptObserved = false;
+        for (JavaScript script : scripts) {
+            if ("LAZY".equals(script.loadMode().name())
+                    && expectedDependency.equals(script.value())) {
+                lazyJavascriptObserved = true;
+                break;
+            }
+        }
+        boolean scannerObserved = routeMatches && lazyJavascriptObserved;
+
+        GeneratedLoadOnDemandChunkFileRegistry registry =
+                GeneratedLoadOnDemandChunkFileRegistry.parse(DEV_BUNDLE_GENERATED_FLOW_IMPORTS_JS,
+                        classpathResourceText(DEV_BUNDLE_GENERATED_FLOW_IMPORTS_JS));
+        boolean branchTable = "branch-table-dynamic-import".equals(registry.loadOnDemandTableShape());
+        String failureLayer;
+        if (branchTable) {
+            failureLayer = "pending-real-generated-chunk-stage";
+        } else if (!probeManifestObserved) {
+            failureLayer = "lazy-route-probe-metadata-not-on-classpath";
+        } else if (!routeObserved) {
+            failureLayer = "lazy-route-input-class-not-on-classpath";
+        } else if (!lazyJavascriptObserved) {
+            failureLayer = "lazy-route-input-no-lazy-javascript";
+        } else {
+            failureLayer = GENERATED_LAZY_REAL_BUILD_FAILURE_LAYER;
+        }
+
+        Map<String, Object> attributes = new LinkedHashMap<>();
+        attributes.put("generatedLazyRealBuildProbeVersion", GENERATED_LAZY_REAL_BUILD_PROBE_VERSION);
+        attributes.put("generatedLazyRealBuildProbeManifest", GENERATED_LAZY_REAL_BUILD_PROBE_PROPERTIES);
+        attributes.put("generatedLazyRealBuildProbeManifestObserved", probeManifestObserved);
+        attributes.put("generatedLazyRealBuildInputRoute", expectedRoute);
+        attributes.put("generatedLazyRealBuildInputRouteClass", routeClass);
+        attributes.put("generatedLazyRealBuildInputTrigger", expectedTrigger);
+        attributes.put("generatedLazyRealBuildInputDependency", expectedDependency);
+        attributes.put("generatedLazyRealBuildInputEager", false);
+        attributes.put("generatedLazyRealBuildInputRouteObserved", routeObserved);
+        attributes.put("generatedLazyRealBuildInputRouteMatches", routeMatches);
+        attributes.put("generatedLazyRealBuildScannerSource", GENERATED_LAZY_REAL_BUILD_SCANNER_SOURCE);
+        attributes.put("generatedLazyRealBuildScannerObserved", scannerObserved);
+        attributes.put("generatedLazyRealBuildLazyJavascriptObserved", lazyJavascriptObserved);
+        attributes.put("generatedLazyRealBuildGeneratedImportsArtifact", DEV_BUNDLE_GENERATED_FLOW_IMPORTS_JS);
+        attributes.put("generatedLazyRealBuildGeneratedImportsTableShape", registry.loadOnDemandTableShape());
+        attributes.put("generatedLazyRealBuildNoOpLoadOnDemand", registry.noOpLoadOnDemand());
+        attributes.put("generatedLazyRealBuildChunkStatus", registry.chunkFileStatus());
+        attributes.put("generatedLazyRealBuildChunkArtifact", registry.chunkArtifactPath());
+        attributes.put("generatedLazyRealBuildFailureLayer", failureLayer);
+        attributes.put("generatedLazyRealBuildNextResolutionStep", GENERATED_LAZY_REAL_BUILD_NEXT_STEP);
+        attributes.put("generatedLazyRealBuildFixtureSubstituted", false);
+        attributes.put("generatedLazyRealBuildNoLocalhost", true);
+        return attributes;
+    }
+
+    private static Properties generatedLazyRealBuildProbeProperties() {
+        Properties properties = new Properties();
+        String text = classpathResourceText(GENERATED_LAZY_REAL_BUILD_PROBE_PROPERTIES);
+        if (text.isBlank()) {
+            return properties;
+        }
+        try {
+            properties.load(new java.io.ByteArrayInputStream(text.getBytes(StandardCharsets.UTF_8)));
+            return properties;
+        } catch (IOException error) {
+            throw new IllegalStateException("Unable to read generated lazy real build probe metadata", error);
+        }
+    }
+
+    private static String propertyOrDefault(Properties properties, String key, String defaultValue) {
+        String value = properties.getProperty(key);
+        return value == null || value.isBlank() ? defaultValue : value.trim();
+    }
+
+    private static Class<?> loadOptionalClass(String className) {
+        ClassLoader loader = Thread.currentThread().getContextClassLoader();
+        if (loader == null) {
+            loader = FlowClientResources.class.getClassLoader();
+        }
+        try {
+            return Class.forName(className, false, loader);
+        } catch (ClassNotFoundException ignored) {
+            return null;
+        }
     }
 
     private static Map<String, Object> generatedLoadOnDemandChunkFileRegistryAttributes(String generatedImportsPath) {

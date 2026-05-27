@@ -1,6 +1,6 @@
 # Goal 1.27: Generated Lazy Real Build Probe
 
-状态：待执行
+状态：已完成
 
 `docs/goal.md` 是长期愿景和完成度账本。v1.26 已完成
 `flow-ipc-generated-lazy-source-boundary-v1_26`：它证明 Vaadin 只有在
@@ -142,3 +142,29 @@ bash bin/flow-ipc-trace-inspect --require-flow-ipc-v1_26 docs/traces/flow-ipc-v1
 ```text
 feat: add generated lazy real build probe
 ```
+
+## 完成记录
+
+已新增真实 app/build 输入 probe：
+
+- `test-apps/flow-over-ipc-smoke-app` 中增加普通 Flow `@Route`
+  `FlowIpcGeneratedLazyProbeView`，并以
+  `@JavaScript(loadMode = LoadMode.LAZY)` 声明
+  `context://vatori-flow-ipc-real-build-probe-v1_27.js`。
+- `FlowClientResources` 会读取
+  `META-INF/vatori/generated-lazy-real-build-probe-v1_27.properties`，反射检查 route
+  class、`@Route` 和 lazy JavaScript dependency，并解析当前真实
+  `generated-flow-imports-VW7hRaNw.js`。
+- Java/Swift/inspector trace contract 统一记录
+  `flow-ipc-generated-lazy-real-build-probe-v1_27`、route/class/dependency observed
+  evidence、scanner observed、lazy JavaScript observed、真实 generated-flow-imports table
+  shape、chunk status 和 failure layer。
+- 当前真实 smoke trace 证明 probe 输入已被观察到，但 generated-flow-imports 仍是
+  `no-op-promise-resolve-0`，chunk status 仍是 `not-generated`，剩余 blocker 收敛为
+  `scanner-output-not-connected-to-dev-bundle-generated-imports`。
+- 固定 trace 已保存到 `docs/traces/flow-ipc-v1_27.ndjson`，并通过
+  `--require-flow-ipc-v1_27-generated-lazy-real-build-probe` 与
+  `--require-flow-ipc-v1_27` gate。
+
+这不是 generated lazy parity 完成；它把 v1.26 的 source boundary 推进成真实
+app/build probe，并把下一步收窄到 Vaadin build lifecycle / generated imports 输出连接层。

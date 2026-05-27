@@ -178,6 +178,8 @@ public final class FlowClientResourceSmokeMain {
         requireStrictBlocker(componentManifest, "generated-lazy", "generated-lazy-loadondemand-api-boundary-v1_9");
         requireStrictBlocker(componentManifest, "generated-lazy", "flow-ipc-loadondemand-chunk-v1_11");
         requireStrictBlocker(componentManifest, "generated-lazy", "flow-ipc-loadondemand-chunk-file-v1_12");
+        requireStrictBlocker(componentManifest, "generated-lazy",
+                "flow-ipc-generated-lazy-build-lifecycle-v1_28");
         requireStrictBlocker(componentManifest, "production-bundle", "flow-ipc-production-runtime-v1_10");
         requireStrictBlocker(componentManifest, "production-bundle", "flow-ipc-production-owner-deps-v1_15");
         requireEquals("flow-ipc-frontend-runtime-resolver-v1_10",
@@ -278,6 +280,8 @@ public final class FlowClientResourceSmokeMain {
                 "Component frontend manifest generated lazy source boundary");
         requireGeneratedLazyRealBuildProbeMetadata(componentManifest,
                 "Component frontend manifest generated lazy real build probe");
+        requireGeneratedLazyBuildLifecycleMetadata(componentManifest,
+                "Component frontend manifest generated lazy build lifecycle");
         requireProductionOwnerPositiveFixtureMetadata(componentManifest,
                 "Component frontend manifest production owner positive fixture");
         requireEquals("flow-ipc-lazy-dependency-v1_10",
@@ -1013,6 +1017,8 @@ public final class FlowClientResourceSmokeMain {
                 "Generated-flow-imports dev-bundle source boundary response");
         requireGeneratedLazyRealBuildProbeMetadata(generatedFlowImportsDevBundleResponse,
                 "Generated-flow-imports dev-bundle real build probe response");
+        requireGeneratedLazyBuildLifecycleMetadata(generatedFlowImportsDevBundleResponse,
+                "Generated-flow-imports dev-bundle build lifecycle response");
         Object generatedFlowImportsDevBundleBody = generatedFlowImportsDevBundleResponse.get("body");
         if (!(generatedFlowImportsDevBundleBody instanceof String generatedFlowImportsDevBundleText)
                 || !generatedFlowImportsDevBundleText.contains("from \"./indexhtml-BfYYZi8S.js\"")
@@ -1377,6 +1383,90 @@ public final class FlowClientResourceSmokeMain {
                 label + " no-localhost flag");
     }
 
+    private static void requireGeneratedLazyBuildLifecycleMetadata(Map<?, ?> metadata, String label) {
+        requireEquals("flow-ipc-generated-lazy-build-lifecycle-v1_28",
+                metadata.get("generatedLazyBuildLifecycleVersion"),
+                label + " version");
+        requireEquals("flow-ipc-lazy-probe-v1_27",
+                metadata.get("generatedLazyBuildLifecycleInputRoute"),
+                label + " input route");
+        requireEquals("dev.vatori.ipcsmoke.FlowIpcGeneratedLazyProbeView",
+                metadata.get("generatedLazyBuildLifecycleInputRouteClass"),
+                label + " input route class");
+        requireEquals("context://vatori-flow-ipc-real-build-probe-v1_27.js",
+                metadata.get("generatedLazyBuildLifecycleInputDependency"),
+                label + " input dependency");
+        requireEquals(Boolean.FALSE,
+                metadata.get("generatedLazyBuildLifecycleInputEager"),
+                label + " eager flag");
+        requireEquals("route-annotation-classpath-probe-plus-vaadin-FrontendDependencies-contract-v1_28",
+                metadata.get("generatedLazyBuildLifecycleScannerSource"),
+                label + " scanner source");
+        Object scannerStatus = metadata.get("generatedLazyBuildLifecycleScannerStatus");
+        if (!Objects.equals(scannerStatus, "observed") && !Objects.equals(scannerStatus, "missing")) {
+            throw new IllegalStateException(label + " scanner status has unexpected value: " + scannerStatus);
+        }
+        boolean scannerObserved = Objects.equals(scannerStatus, "observed");
+        requireEquals(scannerObserved,
+                metadata.get("generatedLazyBuildLifecycleScannerObserved"),
+                label + " scanner observed flag");
+        requireEquals(scannerObserved,
+                metadata.get("generatedLazyBuildLifecycleLazyJavascriptObserved"),
+                label + " lazy JavaScript observed flag");
+        requireStringContains(metadata.get("generatedLazyBuildLifecycleLazyRouteChunkInput"),
+                "ChunkInfo(type=ROUTE,eager=false",
+                label + " lazy route chunk input");
+        requireEquals("dev-ipc-runtime-classpath-resource-resolver-v1_28",
+                metadata.get("generatedLazyBuildLifecycleBuildTaskSource"),
+                label + " build task source");
+        requireEquals(Boolean.FALSE,
+                metadata.get("generatedLazyBuildLifecycleUpdateImportsObserved"),
+                label + " update imports observed flag");
+        requireEquals("static-dev-bundle",
+                metadata.get("generatedLazyBuildLifecycleGeneratedImportsSource"),
+                label + " generated imports source");
+        requireStringContains(metadata.get("generatedLazyBuildLifecycleGeneratedImportsRuntimePath"),
+                "vaadin-dev-bundle",
+                label + " generated imports runtime path");
+        requireEquals("jar",
+                metadata.get("generatedLazyBuildLifecycleGeneratedImportsProtocol"),
+                label + " generated imports protocol");
+        requirePresentString(metadata.get("generatedLazyBuildLifecycleGeneratedImportsSha256"),
+                label + " generated imports sha256");
+        requireEquals("no-op-promise-resolve-0",
+                metadata.get("generatedLazyBuildLifecycleGeneratedImportsTableShape"),
+                label + " table shape");
+        requireEquals(Boolean.TRUE,
+                metadata.get("generatedLazyBuildLifecycleGeneratedImportsNoOpLoadOnDemand"),
+                label + " no-op flag");
+        requireEquals(Boolean.FALSE,
+                metadata.get("generatedLazyBuildLifecycleWriteTargetObserved"),
+                label + " write target observed flag");
+        requireEquals(Boolean.TRUE,
+                metadata.get("generatedLazyBuildLifecycleRuntimeUsesStaticDevBundle"),
+                label + " static dev-bundle flag");
+        requireEquals(scannerObserved,
+                metadata.get("generatedLazyBuildLifecycleRuntimeProbeMismatch"),
+                label + " probe mismatch flag");
+        requireEquals("not-generated",
+                metadata.get("generatedLazyBuildLifecycleChunkStatus"),
+                label + " chunk status");
+        Object failureLayer = metadata.get("generatedLazyBuildLifecycleFailureLayer");
+        if (!Objects.equals(failureLayer, "lazy-route-probe-metadata-not-on-classpath")
+                && !Objects.equals(failureLayer, "runtime-using-stale-packaged-dev-bundle")) {
+            throw new IllegalStateException(label + " failure layer has unexpected value: " + failureLayer);
+        }
+        requireStringContains(metadata.get("generatedLazyBuildLifecycleNextResolutionStep"),
+                "update-imports",
+                label + " next resolution step");
+        requireEquals(Boolean.FALSE,
+                metadata.get("generatedLazyBuildLifecycleFixtureSubstituted"),
+                label + " fixture substitution flag");
+        requireEquals(Boolean.TRUE,
+                metadata.get("generatedLazyBuildLifecycleNoLocalhost"),
+                label + " no-localhost flag");
+    }
+
     private static void requireProductionOwnerResourceLoaderMetadata(Map<String, Object> metadata,
             boolean rootArtifact, String label) {
         requireEquals("flow-ipc-production-owner-resource-loader-v1_18",
@@ -1674,6 +1764,7 @@ public final class FlowClientResourceSmokeMain {
         boolean generatedLoadOnDemandChunkObserved = false;
         boolean generatedLazySourceBoundaryObserved = false;
         boolean generatedLazyRealBuildProbeObserved = false;
+        boolean generatedLazyBuildLifecycleObserved = false;
         boolean devModePackageGraphObserved = false;
         boolean flowLazyDependencyObserved = false;
         boolean productionRuntimeArtifactObserved = false;
@@ -1766,6 +1857,18 @@ public final class FlowClientResourceSmokeMain {
                             metadata.get("generatedLazyRealBuildProbeVersion"))
                     && Boolean.TRUE.equals(metadata.get("generatedLazyRealBuildNoLocalhost"))
                     && Boolean.FALSE.equals(metadata.get("generatedLazyRealBuildFixtureSubstituted"));
+            generatedLazyBuildLifecycleObserved = generatedLazyBuildLifecycleObserved
+                    || "generated-lazy".equals(artifactFamily)
+                    && "stage-and-import-generated-lazy-chunk-v1_8".equals(executionPolicy)
+                    && "flow-ipc-generated-lazy-build-lifecycle-v1_28".equals(
+                            metadata.get("generatedLazyBuildLifecycleVersion"))
+                    && "static-dev-bundle".equals(
+                            metadata.get("generatedLazyBuildLifecycleGeneratedImportsSource"))
+                    && ("runtime-using-stale-packaged-dev-bundle".equals(
+                            metadata.get("generatedLazyBuildLifecycleFailureLayer"))
+                            || "lazy-route-probe-metadata-not-on-classpath".equals(
+                                    metadata.get("generatedLazyBuildLifecycleFailureLayer")))
+                    && Boolean.TRUE.equals(metadata.get("generatedLazyBuildLifecycleNoLocalhost"));
             devModePackageGraphObserved = devModePackageGraphObserved
                     || "dev-mode-bundle".equals(artifactFamily)
                     && "verified-only-intentionally-not-executed".equals(executionPolicy)
@@ -1830,6 +1933,7 @@ public final class FlowClientResourceSmokeMain {
                 || !generatedLazyResourceObserved || !generatedLazyBundleChunkObserved || !devModePackageGraphObserved
                 || !generatedLoadOnDemandChunkObserved || !generatedLazySourceBoundaryObserved
                 || !generatedLazyRealBuildProbeObserved
+                || !generatedLazyBuildLifecycleObserved
                 || !flowLazyDependencyObserved
                 || !productionRuntimeArtifactObserved || !productionRuntimeOwnerObserved
                 || !productionRuntimeOwnerImportObserved || !productionRuntimeOwnerDependencyObserved) {

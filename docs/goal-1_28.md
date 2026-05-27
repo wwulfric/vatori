@@ -1,6 +1,6 @@
 # Goal 1.28: Generated Lazy Build Lifecycle Trace
 
-状态：待执行
+状态：已完成
 
 `docs/goal.md` 是长期愿景和完成度账本。v1.27 已完成
 `flow-ipc-generated-lazy-real-build-probe-v1_27`：仓库内已经有一个普通 Flow
@@ -145,4 +145,36 @@ bash bin/flow-ipc-trace-inspect --require-flow-ipc-v1_27 docs/traces/flow-ipc-v1
 
 ```text
 feat: add generated lazy build lifecycle trace
+```
+
+## 完成记录
+
+本阶段已实现 `flow-ipc-generated-lazy-build-lifecycle-v1_28` contract。Java
+manifest / resource response、Swift `resourceRequest` / `resourceResponse` /
+`resourceStage` / `webview.dom` 和 trace inspector gate 现在都会记录：
+
+- v1.27 probe route/class/lazy JavaScript dependency 的 scanner observation。
+- build task source、`updateImportsObserved=false`、write target、mtime 和 runtime
+  artifact evidence。
+- generated-flow-imports runtime source `static-dev-bundle`、redacted jar path、protocol
+  `jar`、mtime、byte count、sha256 和 table shape `no-op-promise-resolve-0`。
+- failure layer `runtime-using-stale-packaged-dev-bundle`，说明当前 no-localhost runtime
+  仍使用 packaged Vaadin dev-bundle artifact，而不是当前 app 的 update-imports/build 输出。
+
+验收通过：
+
+```bash
+git diff --check
+bash -n bin/vaadin-desktop
+swiftc -parse vaadin-desktop-host-swift/Sources/VaadinDesktopHost/main.swift
+source /Users/bytedance/.sdkman/bin/sdkman-init.sh
+mvn -q -o -Dmaven.repo.local=/Users/bytedance/IdeaProjects/vatori/.m2/repository -pl vaadin-desktop-devtools -am -DskipTests compile
+bash bin/flow-client-resource-smoke
+VAADIN_DESKTOP_MAVEN_OFFLINE=1 VAADIN_DESKTOP_HOST_NO_ACTIVATE=1 VAADIN_DESKTOP_FLOW_IPC_AUTO_CLICK=1 VAADIN_DESKTOP_FLOW_IPC_AUTO_VAADIN_TEXT_FIELD_REAL=1 VAADIN_DESKTOP_FLOW_IPC_AUTO_RESYNC=1 VAADIN_DESKTOP_FLOW_IPC_AUTO_ERROR=1 VAADIN_DESKTOP_FLOW_IPC_AUTO_FILE_DIALOG_CANCEL=1 VAADIN_DESKTOP_FLOW_IPC_AUTO_SHUTDOWN=1 bash bin/vaadin-desktop dev-ipc test-apps/flow-over-ipc-smoke-app
+bash bin/flow-ipc-trace-inspect --require-flow-ipc-v1_28-generated-lazy-build-lifecycle .build/vaadin-desktop-host-swift/host.out.log
+bash bin/flow-ipc-trace-inspect --require-flow-ipc-v1_28 .build/vaadin-desktop-host-swift/host.out.log
+cp .build/vaadin-desktop-host-swift/host.out.log docs/traces/flow-ipc-v1_28.ndjson
+bash bin/flow-ipc-trace-inspect --require-flow-ipc-v1_28-generated-lazy-build-lifecycle docs/traces/flow-ipc-v1_28.ndjson
+bash bin/flow-ipc-trace-inspect --require-flow-ipc-v1_28 docs/traces/flow-ipc-v1_28.ndjson
+bash bin/flow-ipc-trace-inspect --require-flow-ipc-v1_27 docs/traces/flow-ipc-v1_27.ndjson
 ```

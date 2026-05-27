@@ -98,6 +98,9 @@ public final class DesktopTraceInspector {
         FLOW_IPC_V1_27_GENERATED_LAZY_REAL_BUILD_PROBE(
                 "--require-flow-ipc-v1_27-generated-lazy-real-build-probe"),
         FLOW_IPC_V1_27("--require-flow-ipc-v1_27"),
+        FLOW_IPC_V1_28_GENERATED_LAZY_BUILD_LIFECYCLE(
+                "--require-flow-ipc-v1_28-generated-lazy-build-lifecycle"),
+        FLOW_IPC_V1_28("--require-flow-ipc-v1_28"),
         FLOW_IPC_V1_3_FRAMEWORK("--require-flow-ipc-v1_3-framework");
 
         private final String option;
@@ -407,6 +410,30 @@ public final class DesktopTraceInspector {
                         FLOW_IPC_V1_25_PACKAGED_FRONTEND_BASELINE, FLOW_IPC_V1_25,
                         FLOW_IPC_V1_26_GENERATED_LAZY_SOURCE_BOUNDARY, FLOW_IPC_V1_26,
                         FLOW_IPC_V1_27_GENERATED_LAZY_REAL_BUILD_PROBE, FLOW_IPC_V1_27);
+                case FLOW_IPC_V1_28_GENERATED_LAZY_BUILD_LIFECYCLE ->
+                    EnumSet.of(FLOW_IPC_V1_28_GENERATED_LAZY_BUILD_LIFECYCLE);
+                case FLOW_IPC_V1_28 -> EnumSet.of(FLOW_IPC_V1, FLOW_IPC_V1_1, FLOW_IPC_V1_2,
+                        FLOW_IPC_V1_3, FLOW_IPC_V1_4, FLOW_IPC_V1_5, FLOW_IPC_V1_7,
+                        FLOW_IPC_V1_8, FLOW_IPC_V1_9_LOADONDEMAND, FLOW_IPC_V1_9,
+                        FLOW_IPC_V1_10_LAZY_DEPENDENCY, FLOW_IPC_V1_10_PRODUCTION_RUNTIME,
+                        FLOW_IPC_V1_10, FLOW_IPC_V1_11_LOADONDEMAND_CHUNK, FLOW_IPC_V1_11,
+                        FLOW_IPC_V1_12_LOADONDEMAND_CHUNK_FILE, FLOW_IPC_V1_12,
+                        FLOW_IPC_V1_13_PRODUCTION_OWNER, FLOW_IPC_V1_13,
+                        FLOW_IPC_V1_14_PRODUCTION_OWNER_IMPORT, FLOW_IPC_V1_14,
+                        FLOW_IPC_V1_15_PRODUCTION_OWNER_DEPENDENCIES, FLOW_IPC_V1_15,
+                        FLOW_IPC_V1_16_PRODUCTION_OWNER_ORDERING, FLOW_IPC_V1_16,
+                        FLOW_IPC_V1_17_RESOURCE_SCHEME, FLOW_IPC_V1_17,
+                        FLOW_IPC_V1_18_PRODUCTION_OWNER_RESOURCE_SCHEME, FLOW_IPC_V1_18,
+                        FLOW_IPC_V1_19_PRODUCTION_OWNER_SIDE_EFFECT, FLOW_IPC_V1_19,
+                        FLOW_IPC_V1_20_PRODUCTION_OWNER_OWNED_RUNTIME, FLOW_IPC_V1_20,
+                        FLOW_IPC_V1_21_FRONTEND_RESOLVER_CONTRACT, FLOW_IPC_V1_21,
+                        FLOW_IPC_V1_22_GENERATED_CHUNK_FIXTURE, FLOW_IPC_V1_22,
+                        FLOW_IPC_V1_23_PRODUCTION_OWNER_POSITIVE_FIXTURE, FLOW_IPC_V1_23,
+                        FLOW_IPC_V1_24_FRONTEND_PIPELINE_CLOSURE, FLOW_IPC_V1_24,
+                        FLOW_IPC_V1_25_PACKAGED_FRONTEND_BASELINE, FLOW_IPC_V1_25,
+                        FLOW_IPC_V1_26_GENERATED_LAZY_SOURCE_BOUNDARY, FLOW_IPC_V1_26,
+                        FLOW_IPC_V1_27_GENERATED_LAZY_REAL_BUILD_PROBE, FLOW_IPC_V1_27,
+                        FLOW_IPC_V1_28_GENERATED_LAZY_BUILD_LIFECYCLE, FLOW_IPC_V1_28);
                 case FLOW_IPC_V1_3_FRAMEWORK -> EnumSet.of(FLOW_IPC_V1_3_FRAMEWORK);
             };
         }
@@ -477,6 +504,9 @@ public final class DesktopTraceInspector {
                 case FLOW_IPC_V1_27_GENERATED_LAZY_REAL_BUILD_PROBE ->
                     summary.hasRequiredFlowIpcV1_27GeneratedLazyRealBuildProbeTypes();
                 case FLOW_IPC_V1_27 -> summary.hasRequiredFlowIpcV1_27Types();
+                case FLOW_IPC_V1_28_GENERATED_LAZY_BUILD_LIFECYCLE ->
+                    summary.hasRequiredFlowIpcV1_28GeneratedLazyBuildLifecycleTypes();
+                case FLOW_IPC_V1_28 -> summary.hasRequiredFlowIpcV1_28Types();
                 case FLOW_IPC_V1_3_FRAMEWORK -> summary.hasRequiredFlowIpcV1_3FrameworkTypes();
             };
         }
@@ -1095,6 +1125,11 @@ public final class DesktopTraceInspector {
                     && line.contains("\"componentFrontendResources\"")
                     && containsGeneratedLazyRealBuildProbeV127Fields(line)) {
                 summary.generatedLazyRealBuildProbeV127ManifestObserved = true;
+            }
+            if (line.contains("\"type\":\"bootstrapResponse\"")
+                    && line.contains("\"componentFrontendResources\"")
+                    && containsGeneratedLazyBuildLifecycleV128Fields(line)) {
+                summary.generatedLazyBuildLifecycleV128ManifestObserved = true;
             }
             if (line.contains("\"type\":\"bootstrapResponse\"")
                     && line.contains("\"componentFrontendResources\"")
@@ -1947,6 +1982,17 @@ public final class DesktopTraceInspector {
                 summary.generatedLazyRealBuildProbeV127ResponseObserved = true;
             }
             if (line.contains("\"type\":\"resourceRequest\"")
+                    && containsPath(line, "vaadin-dev-bundle/webapp/VAADIN/build/generated-flow-imports-VW7hRaNw.js")
+                    && containsGeneratedLazyBuildLifecycleV128Fields(line)) {
+                summary.generatedLazyBuildLifecycleV128RequestObserved = true;
+            }
+            if (line.contains("\"type\":\"resourceResponse\"")
+                    && containsPath(line, "vaadin-dev-bundle/webapp/VAADIN/build/generated-flow-imports-VW7hRaNw.js")
+                    && containsGeneratedLazyBuildLifecycleV128Fields(line)
+                    && line.contains("\"bodyRedacted\":true")) {
+                summary.generatedLazyBuildLifecycleV128ResponseObserved = true;
+            }
+            if (line.contains("\"type\":\"resourceRequest\"")
                     && line.contains("\"purpose\":\"generated-loadondemand-chunk-v1_11\"")
                     && line.contains("\"lookupKind\":\"Generated-flow-imports-dev-bundle-chunk-v1_4\"")
                     && containsPath(line, "vaadin-dev-bundle/webapp/VAADIN/build/generated-flow-imports-VW7hRaNw.js")
@@ -2586,6 +2632,14 @@ public final class DesktopTraceInspector {
                             || line.contains("\"executionStatus\":\"strict-blocker\"")
                             || line.contains("\"executionStatus\":\"staged\""))) {
                 summary.generatedLazyRealBuildProbeV127StageObserved = true;
+            }
+            if (line.contains("\"type\":\"resourceStage\"")
+                    && containsPath(line, "vaadin-dev-bundle/webapp/VAADIN/build/generated-flow-imports-VW7hRaNw.js")
+                    && containsGeneratedLazyBuildLifecycleV128Fields(line)
+                    && (line.contains("\"executionStatus\":\"executed\"")
+                            || line.contains("\"executionStatus\":\"strict-blocker\"")
+                            || line.contains("\"executionStatus\":\"staged\""))) {
+                summary.generatedLazyBuildLifecycleV128StageObserved = true;
             }
             if (line.contains("\"type\":\"webview.dom\"")
                     && containsStringField(line, "frontendStagingResolverVersion", "flow-ipc-resource-staging-v1_5")
@@ -3293,6 +3347,11 @@ public final class DesktopTraceInspector {
                 summary.generatedLazyRealBuildProbeV127DomObserved = true;
             }
             if (line.contains("\"type\":\"webview.dom\"")
+                    && containsLiteralField(line, "generatedLazyBuildLifecycleObserved", "true")
+                    && containsGeneratedLazyBuildLifecycleV128Fields(line)) {
+                summary.generatedLazyBuildLifecycleV128DomObserved = true;
+            }
+            if (line.contains("\"type\":\"webview.dom\"")
                     && containsLiteralField(line, "generatedLazySourceCurrentBuildNoOpConfirmed", "true")
                     && containsStringField(line, "generatedLazySourceCurrentBuildTableShape",
                             "no-op-promise-resolve-0")
@@ -3316,6 +3375,28 @@ public final class DesktopTraceInspector {
                     && containsStringField(line, "loadOnDemandChunkFileFailureLayer",
                             "chunk-file-not-generated")) {
                 summary.generatedLazyRealBuildProbeV127CurrentBuildBlockerObserved = true;
+            }
+            if (line.contains("\"type\":\"webview.dom\"")
+                    && containsLiteralField(line, "generatedLazyBuildLifecycleScannerObserved", "true")
+                    && containsLiteralField(line, "generatedLazyBuildLifecycleLazyJavascriptObserved", "true")
+                    && containsStringField(line, "generatedLazyBuildLifecycleGeneratedImportsSource",
+                            "static-dev-bundle")
+                    && containsStringField(line, "generatedLazyBuildLifecycleGeneratedImportsProtocol",
+                            "jar")
+                    && containsStringField(line, "generatedLazyBuildLifecycleGeneratedImportsTableShape",
+                            "no-op-promise-resolve-0")
+                    && containsLiteralField(line,
+                            "generatedLazyBuildLifecycleGeneratedImportsNoOpLoadOnDemand", "true")
+                    && containsLiteralField(line, "generatedLazyBuildLifecycleUpdateImportsObserved", "false")
+                    && containsLiteralField(line, "generatedLazyBuildLifecycleWriteTargetObserved", "false")
+                    && containsLiteralField(line,
+                            "generatedLazyBuildLifecycleRuntimeUsesStaticDevBundle", "true")
+                    && containsLiteralField(line, "generatedLazyBuildLifecycleRuntimeProbeMismatch", "true")
+                    && containsStringField(line, "generatedLazyBuildLifecycleFailureLayer",
+                            "runtime-using-stale-packaged-dev-bundle")
+                    && containsStringField(line, "loadOnDemandChunkFileFailureLayer",
+                            "chunk-file-not-generated")) {
+                summary.generatedLazyBuildLifecycleV128CurrentBuildBlockerObserved = true;
             }
             if (line.contains("\"type\":\"resourceRequest\"")
                     && line.contains("\"purpose\":\"vaadin-web-component-resource-probe\"")
@@ -3945,6 +4026,50 @@ public final class DesktopTraceInspector {
                 && containsLiteralField(line, "generatedLazyRealBuildNoLocalhost", "true");
     }
 
+    private static boolean containsGeneratedLazyBuildLifecycleV128Fields(String line) {
+        return containsStringField(line, "generatedLazyBuildLifecycleVersion",
+                "flow-ipc-generated-lazy-build-lifecycle-v1_28")
+                && containsStringField(line, "generatedLazyBuildLifecycleInputRoute",
+                        "flow-ipc-lazy-probe-v1_27")
+                && containsStringField(line, "generatedLazyBuildLifecycleInputRouteClass",
+                        "dev.vatori.ipcsmoke.FlowIpcGeneratedLazyProbeView")
+                && containsStringField(line, "generatedLazyBuildLifecycleInputDependency",
+                        "context://vatori-flow-ipc-real-build-probe-v1_27.js")
+                && containsLiteralField(line, "generatedLazyBuildLifecycleInputEager", "false")
+                && containsStringField(line, "generatedLazyBuildLifecycleScannerSource",
+                        "route-annotation-classpath-probe-plus-vaadin-FrontendDependencies-contract-v1_28")
+                && containsStringField(line, "generatedLazyBuildLifecycleScannerStatus", "observed")
+                && containsLiteralField(line, "generatedLazyBuildLifecycleScannerObserved", "true")
+                && containsLiteralField(line, "generatedLazyBuildLifecycleLazyJavascriptObserved", "true")
+                && line.contains("ChunkInfo(type=ROUTE,eager=false")
+                && containsStringField(line, "generatedLazyBuildLifecycleBuildTaskSource",
+                        "dev-ipc-runtime-classpath-resource-resolver-v1_28")
+                && containsLiteralField(line, "generatedLazyBuildLifecycleUpdateImportsObserved", "false")
+                && containsStringField(line, "generatedLazyBuildLifecycleGeneratedImportsSource",
+                        "static-dev-bundle")
+                && line.contains("generatedLazyBuildLifecycleGeneratedImportsRuntimePath")
+                && containsStringField(line, "generatedLazyBuildLifecycleGeneratedImportsProtocol", "jar")
+                && line.contains("generatedLazyBuildLifecycleGeneratedImportsMtimeMillis")
+                && line.contains("generatedLazyBuildLifecycleGeneratedImportsSha256")
+                && line.contains("generatedLazyBuildLifecycleGeneratedImportsBytes")
+                && containsStringField(line, "generatedLazyBuildLifecycleGeneratedImportsTableShape",
+                        "no-op-promise-resolve-0")
+                && containsLiteralField(line,
+                        "generatedLazyBuildLifecycleGeneratedImportsNoOpLoadOnDemand", "true")
+                && line.contains("generatedLazyBuildLifecycleWriteTarget")
+                && containsLiteralField(line, "generatedLazyBuildLifecycleWriteTargetObserved", "false")
+                && line.contains("generatedLazyBuildLifecycleWriteTargetMtimeMillis")
+                && containsLiteralField(line,
+                        "generatedLazyBuildLifecycleRuntimeUsesStaticDevBundle", "true")
+                && containsLiteralField(line, "generatedLazyBuildLifecycleRuntimeProbeMismatch", "true")
+                && containsStringField(line, "generatedLazyBuildLifecycleChunkStatus", "not-generated")
+                && containsStringField(line, "generatedLazyBuildLifecycleFailureLayer",
+                        "runtime-using-stale-packaged-dev-bundle")
+                && line.contains("update-imports")
+                && containsLiteralField(line, "generatedLazyBuildLifecycleFixtureSubstituted", "false")
+                && containsLiteralField(line, "generatedLazyBuildLifecycleNoLocalhost", "true");
+    }
+
     private static boolean containsProductionOwnerFailureLayer(String line, String field) {
         return containsStringField(line, field, "production-owner-duplicate-custom-element")
                 || containsStringField(line, field, "production-owner-relative-import-unresolved")
@@ -4403,6 +4528,12 @@ public final class DesktopTraceInspector {
         private boolean generatedLazyRealBuildProbeV127StageObserved;
         private boolean generatedLazyRealBuildProbeV127DomObserved;
         private boolean generatedLazyRealBuildProbeV127CurrentBuildBlockerObserved;
+        private boolean generatedLazyBuildLifecycleV128ManifestObserved;
+        private boolean generatedLazyBuildLifecycleV128RequestObserved;
+        private boolean generatedLazyBuildLifecycleV128ResponseObserved;
+        private boolean generatedLazyBuildLifecycleV128StageObserved;
+        private boolean generatedLazyBuildLifecycleV128DomObserved;
+        private boolean generatedLazyBuildLifecycleV128CurrentBuildBlockerObserved;
 
         public boolean hasRequiredFlowIpcTypes() {
             return types.keySet().containsAll(FLOW_IPC_REQUIRED_TYPES)
@@ -4839,6 +4970,20 @@ public final class DesktopTraceInspector {
         public boolean hasRequiredFlowIpcV1_27Types() {
             return hasRequiredFlowIpcV1_26Types()
                     && hasRequiredFlowIpcV1_27GeneratedLazyRealBuildProbeTypes();
+        }
+
+        public boolean hasRequiredFlowIpcV1_28GeneratedLazyBuildLifecycleTypes() {
+            return generatedLazyBuildLifecycleV128ManifestObserved
+                    && generatedLazyBuildLifecycleV128RequestObserved
+                    && generatedLazyBuildLifecycleV128ResponseObserved
+                    && generatedLazyBuildLifecycleV128StageObserved
+                    && generatedLazyBuildLifecycleV128DomObserved
+                    && generatedLazyBuildLifecycleV128CurrentBuildBlockerObserved;
+        }
+
+        public boolean hasRequiredFlowIpcV1_28Types() {
+            return hasRequiredFlowIpcV1_27Types()
+                    && hasRequiredFlowIpcV1_28GeneratedLazyBuildLifecycleTypes();
         }
 
         public boolean hasRequiredFlowIpcV1_3FrameworkTypes() {
@@ -5295,6 +5440,15 @@ public final class DesktopTraceInspector {
                     + generatedLazyRealBuildProbeV127StageObserved + "/"
                     + generatedLazyRealBuildProbeV127DomObserved + "/"
                     + generatedLazyRealBuildProbeV127CurrentBuildBlockerObserved);
+            System.out.println("Flow IPC v1.28 generated lazy build lifecycle manifest observed: "
+                    + generatedLazyBuildLifecycleV128ManifestObserved);
+            System.out.println("Flow IPC v1.28 generated lazy build lifecycle request/response observed: "
+                    + generatedLazyBuildLifecycleV128RequestObserved + "/"
+                    + generatedLazyBuildLifecycleV128ResponseObserved);
+            System.out.println("Flow IPC v1.28 generated lazy build lifecycle stage/DOM/current blocker observed: "
+                    + generatedLazyBuildLifecycleV128StageObserved + "/"
+                    + generatedLazyBuildLifecycleV128DomObserved + "/"
+                    + generatedLazyBuildLifecycleV128CurrentBuildBlockerObserved);
             System.out.println("Flow IPC v1.6 TextField graph manifest observed: "
                     + frontendTextFieldV16ManifestObserved);
             System.out.println("Flow IPC v1.6 TextField graph request observed: "

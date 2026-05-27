@@ -1461,6 +1461,68 @@ final class WebViewHost: NSObject, NSApplicationDelegate, NSWindowDelegate, WKNa
             payload["generatedLazyRealBuildFixtureSubstituted"] as? Bool ?? false
         let generatedLazyRealBuildNoLocalhost =
             payload["generatedLazyRealBuildNoLocalhost"] as? Bool ?? false
+        let generatedLazyBuildLifecycleVersion =
+            payload["generatedLazyBuildLifecycleVersion"] as? String ?? ""
+        let generatedLazyBuildLifecycleInputRoute =
+            payload["generatedLazyBuildLifecycleInputRoute"] as? String ?? ""
+        let generatedLazyBuildLifecycleInputRouteClass =
+            payload["generatedLazyBuildLifecycleInputRouteClass"] as? String ?? ""
+        let generatedLazyBuildLifecycleInputDependency =
+            payload["generatedLazyBuildLifecycleInputDependency"] as? String ?? ""
+        let generatedLazyBuildLifecycleInputEager =
+            payload["generatedLazyBuildLifecycleInputEager"] as? Bool ?? false
+        let generatedLazyBuildLifecycleScannerSource =
+            payload["generatedLazyBuildLifecycleScannerSource"] as? String ?? ""
+        let generatedLazyBuildLifecycleScannerStatus =
+            payload["generatedLazyBuildLifecycleScannerStatus"] as? String ?? ""
+        let generatedLazyBuildLifecycleScannerObserved =
+            payload["generatedLazyBuildLifecycleScannerObserved"] as? Bool ?? false
+        let generatedLazyBuildLifecycleLazyJavascriptObserved =
+            payload["generatedLazyBuildLifecycleLazyJavascriptObserved"] as? Bool ?? false
+        let generatedLazyBuildLifecycleLazyRouteChunkInput =
+            payload["generatedLazyBuildLifecycleLazyRouteChunkInput"] as? String ?? ""
+        let generatedLazyBuildLifecycleBuildTaskSource =
+            payload["generatedLazyBuildLifecycleBuildTaskSource"] as? String ?? ""
+        let generatedLazyBuildLifecycleUpdateImportsObserved =
+            payload["generatedLazyBuildLifecycleUpdateImportsObserved"] as? Bool ?? false
+        let generatedLazyBuildLifecycleGeneratedImportsSource =
+            payload["generatedLazyBuildLifecycleGeneratedImportsSource"] as? String ?? ""
+        let generatedLazyBuildLifecycleGeneratedImportsRuntimePath =
+            payload["generatedLazyBuildLifecycleGeneratedImportsRuntimePath"] as? String ?? ""
+        let generatedLazyBuildLifecycleGeneratedImportsProtocol =
+            payload["generatedLazyBuildLifecycleGeneratedImportsProtocol"] as? String ?? ""
+        let generatedLazyBuildLifecycleGeneratedImportsSha256 =
+            payload["generatedLazyBuildLifecycleGeneratedImportsSha256"] as? String ?? ""
+        let generatedLazyBuildLifecycleGeneratedImportsMtimeMillis =
+            payload["generatedLazyBuildLifecycleGeneratedImportsMtimeMillis"] as? Int64 ?? 0
+        let generatedLazyBuildLifecycleGeneratedImportsBytes =
+            payload["generatedLazyBuildLifecycleGeneratedImportsBytes"] as? Int ?? 0
+        let generatedLazyBuildLifecycleGeneratedImportsTableShape =
+            payload["generatedLazyBuildLifecycleGeneratedImportsTableShape"] as? String ?? ""
+        let generatedLazyBuildLifecycleGeneratedImportsNoOpLoadOnDemand =
+            payload["generatedLazyBuildLifecycleGeneratedImportsNoOpLoadOnDemand"] as? Bool ?? false
+        let generatedLazyBuildLifecycleWriteTarget =
+            payload["generatedLazyBuildLifecycleWriteTarget"] as? String ?? ""
+        let generatedLazyBuildLifecycleWriteTargetObserved =
+            payload["generatedLazyBuildLifecycleWriteTargetObserved"] as? Bool ?? false
+        let generatedLazyBuildLifecycleWriteTargetMtimeMillis =
+            payload["generatedLazyBuildLifecycleWriteTargetMtimeMillis"] as? Int64 ?? 0
+        let generatedLazyBuildLifecycleRuntimeUsesStaticDevBundle =
+            payload["generatedLazyBuildLifecycleRuntimeUsesStaticDevBundle"] as? Bool ?? false
+        let generatedLazyBuildLifecycleRuntimeProbeMismatch =
+            payload["generatedLazyBuildLifecycleRuntimeProbeMismatch"] as? Bool ?? false
+        let generatedLazyBuildLifecycleChunkStatus =
+            payload["generatedLazyBuildLifecycleChunkStatus"] as? String ?? ""
+        let generatedLazyBuildLifecycleChunkArtifact =
+            payload["generatedLazyBuildLifecycleChunkArtifact"] as? String ?? ""
+        let generatedLazyBuildLifecycleFailureLayer =
+            payload["generatedLazyBuildLifecycleFailureLayer"] as? String ?? ""
+        let generatedLazyBuildLifecycleNextResolutionStep =
+            payload["generatedLazyBuildLifecycleNextResolutionStep"] as? String ?? ""
+        let generatedLazyBuildLifecycleFixtureSubstituted =
+            payload["generatedLazyBuildLifecycleFixtureSubstituted"] as? Bool ?? false
+        let generatedLazyBuildLifecycleNoLocalhost =
+            payload["generatedLazyBuildLifecycleNoLocalhost"] as? Bool ?? false
         let data = Data(body.utf8)
         let cacheKey = "\(sourcePath)#\(sha256)#\(data.count)"
         let cacheStatus = hostResourceStageCache.contains(cacheKey) ? "hit" : "miss"
@@ -1554,7 +1616,38 @@ final class WebViewHost: NSObject, NSApplicationDelegate, NSWindowDelegate, WKNa
             "generatedLazyRealBuildFailureLayer": generatedLazyRealBuildFailureLayer,
             "generatedLazyRealBuildNextResolutionStep": generatedLazyRealBuildNextResolutionStep,
             "generatedLazyRealBuildFixtureSubstituted": generatedLazyRealBuildFixtureSubstituted,
-            "generatedLazyRealBuildNoLocalhost": generatedLazyRealBuildNoLocalhost
+            "generatedLazyRealBuildNoLocalhost": generatedLazyRealBuildNoLocalhost,
+            "generatedLazyBuildLifecycleVersion": generatedLazyBuildLifecycleVersion,
+            "generatedLazyBuildLifecycleInputRoute": generatedLazyBuildLifecycleInputRoute,
+            "generatedLazyBuildLifecycleInputRouteClass": generatedLazyBuildLifecycleInputRouteClass,
+            "generatedLazyBuildLifecycleInputDependency": generatedLazyBuildLifecycleInputDependency,
+            "generatedLazyBuildLifecycleInputEager": generatedLazyBuildLifecycleInputEager,
+            "generatedLazyBuildLifecycleScannerSource": generatedLazyBuildLifecycleScannerSource,
+            "generatedLazyBuildLifecycleScannerStatus": generatedLazyBuildLifecycleScannerStatus,
+            "generatedLazyBuildLifecycleScannerObserved": generatedLazyBuildLifecycleScannerObserved,
+            "generatedLazyBuildLifecycleLazyJavascriptObserved": generatedLazyBuildLifecycleLazyJavascriptObserved,
+            "generatedLazyBuildLifecycleLazyRouteChunkInput": generatedLazyBuildLifecycleLazyRouteChunkInput,
+            "generatedLazyBuildLifecycleBuildTaskSource": generatedLazyBuildLifecycleBuildTaskSource,
+            "generatedLazyBuildLifecycleUpdateImportsObserved": generatedLazyBuildLifecycleUpdateImportsObserved,
+            "generatedLazyBuildLifecycleGeneratedImportsSource": generatedLazyBuildLifecycleGeneratedImportsSource,
+            "generatedLazyBuildLifecycleGeneratedImportsRuntimePath": generatedLazyBuildLifecycleGeneratedImportsRuntimePath,
+            "generatedLazyBuildLifecycleGeneratedImportsProtocol": generatedLazyBuildLifecycleGeneratedImportsProtocol,
+            "generatedLazyBuildLifecycleGeneratedImportsSha256": generatedLazyBuildLifecycleGeneratedImportsSha256,
+            "generatedLazyBuildLifecycleGeneratedImportsMtimeMillis": generatedLazyBuildLifecycleGeneratedImportsMtimeMillis,
+            "generatedLazyBuildLifecycleGeneratedImportsBytes": generatedLazyBuildLifecycleGeneratedImportsBytes,
+            "generatedLazyBuildLifecycleGeneratedImportsTableShape": generatedLazyBuildLifecycleGeneratedImportsTableShape,
+            "generatedLazyBuildLifecycleGeneratedImportsNoOpLoadOnDemand": generatedLazyBuildLifecycleGeneratedImportsNoOpLoadOnDemand,
+            "generatedLazyBuildLifecycleWriteTarget": generatedLazyBuildLifecycleWriteTarget,
+            "generatedLazyBuildLifecycleWriteTargetObserved": generatedLazyBuildLifecycleWriteTargetObserved,
+            "generatedLazyBuildLifecycleWriteTargetMtimeMillis": generatedLazyBuildLifecycleWriteTargetMtimeMillis,
+            "generatedLazyBuildLifecycleRuntimeUsesStaticDevBundle": generatedLazyBuildLifecycleRuntimeUsesStaticDevBundle,
+            "generatedLazyBuildLifecycleRuntimeProbeMismatch": generatedLazyBuildLifecycleRuntimeProbeMismatch,
+            "generatedLazyBuildLifecycleChunkStatus": generatedLazyBuildLifecycleChunkStatus,
+            "generatedLazyBuildLifecycleChunkArtifact": generatedLazyBuildLifecycleChunkArtifact,
+            "generatedLazyBuildLifecycleFailureLayer": generatedLazyBuildLifecycleFailureLayer,
+            "generatedLazyBuildLifecycleNextResolutionStep": generatedLazyBuildLifecycleNextResolutionStep,
+            "generatedLazyBuildLifecycleFixtureSubstituted": generatedLazyBuildLifecycleFixtureSubstituted,
+            "generatedLazyBuildLifecycleNoLocalhost": generatedLazyBuildLifecycleNoLocalhost
         ]
 
         var stageRequestTrace: [String: Any] = [
@@ -2125,6 +2218,38 @@ final class WebViewHost: NSObject, NSApplicationDelegate, NSWindowDelegate, WKNa
           generatedLazyRealBuildNextResolutionStep: window.VaadinDesktopIpcDiagnostics ? window.VaadinDesktopIpcDiagnostics.generatedLazyRealBuildNextResolutionStep : "",
           generatedLazyRealBuildFixtureSubstituted: !!(window.VaadinDesktopIpcDiagnostics && window.VaadinDesktopIpcDiagnostics.generatedLazyRealBuildFixtureSubstituted),
           generatedLazyRealBuildNoLocalhost: !!(window.VaadinDesktopIpcDiagnostics && window.VaadinDesktopIpcDiagnostics.generatedLazyRealBuildNoLocalhost),
+          generatedLazyBuildLifecycleObserved: !!(window.VaadinDesktopIpcDiagnostics && window.VaadinDesktopIpcDiagnostics.generatedLazyBuildLifecycleObserved),
+          generatedLazyBuildLifecycleVersion: window.VaadinDesktopIpcDiagnostics ? window.VaadinDesktopIpcDiagnostics.generatedLazyBuildLifecycleVersion : "",
+          generatedLazyBuildLifecycleInputRoute: window.VaadinDesktopIpcDiagnostics ? window.VaadinDesktopIpcDiagnostics.generatedLazyBuildLifecycleInputRoute : "",
+          generatedLazyBuildLifecycleInputRouteClass: window.VaadinDesktopIpcDiagnostics ? window.VaadinDesktopIpcDiagnostics.generatedLazyBuildLifecycleInputRouteClass : "",
+          generatedLazyBuildLifecycleInputDependency: window.VaadinDesktopIpcDiagnostics ? window.VaadinDesktopIpcDiagnostics.generatedLazyBuildLifecycleInputDependency : "",
+          generatedLazyBuildLifecycleInputEager: !!(window.VaadinDesktopIpcDiagnostics && window.VaadinDesktopIpcDiagnostics.generatedLazyBuildLifecycleInputEager),
+          generatedLazyBuildLifecycleScannerSource: window.VaadinDesktopIpcDiagnostics ? window.VaadinDesktopIpcDiagnostics.generatedLazyBuildLifecycleScannerSource : "",
+          generatedLazyBuildLifecycleScannerStatus: window.VaadinDesktopIpcDiagnostics ? window.VaadinDesktopIpcDiagnostics.generatedLazyBuildLifecycleScannerStatus : "",
+          generatedLazyBuildLifecycleScannerObserved: !!(window.VaadinDesktopIpcDiagnostics && window.VaadinDesktopIpcDiagnostics.generatedLazyBuildLifecycleScannerObserved),
+          generatedLazyBuildLifecycleLazyJavascriptObserved: !!(window.VaadinDesktopIpcDiagnostics && window.VaadinDesktopIpcDiagnostics.generatedLazyBuildLifecycleLazyJavascriptObserved),
+          generatedLazyBuildLifecycleLazyRouteChunkInput: window.VaadinDesktopIpcDiagnostics ? window.VaadinDesktopIpcDiagnostics.generatedLazyBuildLifecycleLazyRouteChunkInput : "",
+          generatedLazyBuildLifecycleBuildTaskSource: window.VaadinDesktopIpcDiagnostics ? window.VaadinDesktopIpcDiagnostics.generatedLazyBuildLifecycleBuildTaskSource : "",
+          generatedLazyBuildLifecycleUpdateImportsObserved: !!(window.VaadinDesktopIpcDiagnostics && window.VaadinDesktopIpcDiagnostics.generatedLazyBuildLifecycleUpdateImportsObserved),
+          generatedLazyBuildLifecycleGeneratedImportsSource: window.VaadinDesktopIpcDiagnostics ? window.VaadinDesktopIpcDiagnostics.generatedLazyBuildLifecycleGeneratedImportsSource : "",
+          generatedLazyBuildLifecycleGeneratedImportsRuntimePath: window.VaadinDesktopIpcDiagnostics ? window.VaadinDesktopIpcDiagnostics.generatedLazyBuildLifecycleGeneratedImportsRuntimePath : "",
+          generatedLazyBuildLifecycleGeneratedImportsProtocol: window.VaadinDesktopIpcDiagnostics ? window.VaadinDesktopIpcDiagnostics.generatedLazyBuildLifecycleGeneratedImportsProtocol : "",
+          generatedLazyBuildLifecycleGeneratedImportsSha256: window.VaadinDesktopIpcDiagnostics ? window.VaadinDesktopIpcDiagnostics.generatedLazyBuildLifecycleGeneratedImportsSha256 : "",
+          generatedLazyBuildLifecycleGeneratedImportsMtimeMillis: window.VaadinDesktopIpcDiagnostics ? window.VaadinDesktopIpcDiagnostics.generatedLazyBuildLifecycleGeneratedImportsMtimeMillis : 0,
+          generatedLazyBuildLifecycleGeneratedImportsBytes: window.VaadinDesktopIpcDiagnostics ? window.VaadinDesktopIpcDiagnostics.generatedLazyBuildLifecycleGeneratedImportsBytes : 0,
+          generatedLazyBuildLifecycleGeneratedImportsTableShape: window.VaadinDesktopIpcDiagnostics ? window.VaadinDesktopIpcDiagnostics.generatedLazyBuildLifecycleGeneratedImportsTableShape : "",
+          generatedLazyBuildLifecycleGeneratedImportsNoOpLoadOnDemand: !!(window.VaadinDesktopIpcDiagnostics && window.VaadinDesktopIpcDiagnostics.generatedLazyBuildLifecycleGeneratedImportsNoOpLoadOnDemand),
+          generatedLazyBuildLifecycleWriteTarget: window.VaadinDesktopIpcDiagnostics ? window.VaadinDesktopIpcDiagnostics.generatedLazyBuildLifecycleWriteTarget : "",
+          generatedLazyBuildLifecycleWriteTargetObserved: !!(window.VaadinDesktopIpcDiagnostics && window.VaadinDesktopIpcDiagnostics.generatedLazyBuildLifecycleWriteTargetObserved),
+          generatedLazyBuildLifecycleWriteTargetMtimeMillis: window.VaadinDesktopIpcDiagnostics ? window.VaadinDesktopIpcDiagnostics.generatedLazyBuildLifecycleWriteTargetMtimeMillis : 0,
+          generatedLazyBuildLifecycleRuntimeUsesStaticDevBundle: !!(window.VaadinDesktopIpcDiagnostics && window.VaadinDesktopIpcDiagnostics.generatedLazyBuildLifecycleRuntimeUsesStaticDevBundle),
+          generatedLazyBuildLifecycleRuntimeProbeMismatch: !!(window.VaadinDesktopIpcDiagnostics && window.VaadinDesktopIpcDiagnostics.generatedLazyBuildLifecycleRuntimeProbeMismatch),
+          generatedLazyBuildLifecycleChunkStatus: window.VaadinDesktopIpcDiagnostics ? window.VaadinDesktopIpcDiagnostics.generatedLazyBuildLifecycleChunkStatus : "",
+          generatedLazyBuildLifecycleChunkArtifact: window.VaadinDesktopIpcDiagnostics ? window.VaadinDesktopIpcDiagnostics.generatedLazyBuildLifecycleChunkArtifact : "",
+          generatedLazyBuildLifecycleFailureLayer: window.VaadinDesktopIpcDiagnostics ? window.VaadinDesktopIpcDiagnostics.generatedLazyBuildLifecycleFailureLayer : "",
+          generatedLazyBuildLifecycleNextResolutionStep: window.VaadinDesktopIpcDiagnostics ? window.VaadinDesktopIpcDiagnostics.generatedLazyBuildLifecycleNextResolutionStep : "",
+          generatedLazyBuildLifecycleFixtureSubstituted: !!(window.VaadinDesktopIpcDiagnostics && window.VaadinDesktopIpcDiagnostics.generatedLazyBuildLifecycleFixtureSubstituted),
+          generatedLazyBuildLifecycleNoLocalhost: !!(window.VaadinDesktopIpcDiagnostics && window.VaadinDesktopIpcDiagnostics.generatedLazyBuildLifecycleNoLocalhost),
           frontendArtifactShimFallback: !!(window.VaadinDesktopIpcDiagnostics && window.VaadinDesktopIpcDiagnostics.frontendArtifactShimFallback),
           frontendArtifactProductionBundlePartial: !!(window.VaadinDesktopIpcDiagnostics && window.VaadinDesktopIpcDiagnostics.frontendArtifactProductionBundlePartial),
           frontendArtifactProductionBundleStatsVerified: !!(window.VaadinDesktopIpcDiagnostics && window.VaadinDesktopIpcDiagnostics.frontendArtifactProductionBundleStatsVerified),
@@ -3288,6 +3413,38 @@ let flowIpcShell = #"""
         generatedLazyRealBuildNextResolutionStep: '',
         generatedLazyRealBuildFixtureSubstituted: false,
         generatedLazyRealBuildNoLocalhost: false,
+        generatedLazyBuildLifecycleObserved: false,
+        generatedLazyBuildLifecycleVersion: '',
+        generatedLazyBuildLifecycleInputRoute: '',
+        generatedLazyBuildLifecycleInputRouteClass: '',
+        generatedLazyBuildLifecycleInputDependency: '',
+        generatedLazyBuildLifecycleInputEager: false,
+        generatedLazyBuildLifecycleScannerSource: '',
+        generatedLazyBuildLifecycleScannerStatus: '',
+        generatedLazyBuildLifecycleScannerObserved: false,
+        generatedLazyBuildLifecycleLazyJavascriptObserved: false,
+        generatedLazyBuildLifecycleLazyRouteChunkInput: '',
+        generatedLazyBuildLifecycleBuildTaskSource: '',
+        generatedLazyBuildLifecycleUpdateImportsObserved: false,
+        generatedLazyBuildLifecycleGeneratedImportsSource: '',
+        generatedLazyBuildLifecycleGeneratedImportsRuntimePath: '',
+        generatedLazyBuildLifecycleGeneratedImportsProtocol: '',
+        generatedLazyBuildLifecycleGeneratedImportsSha256: '',
+        generatedLazyBuildLifecycleGeneratedImportsMtimeMillis: 0,
+        generatedLazyBuildLifecycleGeneratedImportsBytes: 0,
+        generatedLazyBuildLifecycleGeneratedImportsTableShape: '',
+        generatedLazyBuildLifecycleGeneratedImportsNoOpLoadOnDemand: false,
+        generatedLazyBuildLifecycleWriteTarget: '',
+        generatedLazyBuildLifecycleWriteTargetObserved: false,
+        generatedLazyBuildLifecycleWriteTargetMtimeMillis: 0,
+        generatedLazyBuildLifecycleRuntimeUsesStaticDevBundle: false,
+        generatedLazyBuildLifecycleRuntimeProbeMismatch: false,
+        generatedLazyBuildLifecycleChunkStatus: '',
+        generatedLazyBuildLifecycleChunkArtifact: '',
+        generatedLazyBuildLifecycleFailureLayer: '',
+        generatedLazyBuildLifecycleNextResolutionStep: '',
+        generatedLazyBuildLifecycleFixtureSubstituted: false,
+        generatedLazyBuildLifecycleNoLocalhost: false,
         frontendArtifactShimFallback: false,
         frontendArtifactProductionBundlePartial: false,
         frontendArtifactProductionBundleStatsVerified: false,
@@ -5411,6 +5568,60 @@ let flowIpcShell = #"""
             window.VaadinDesktopIpcDiagnostics[diagnosticKey] = true;
           }
         }
+        if (typeof source.generatedLazyBuildLifecycleVersion === 'string'
+            && source.generatedLazyBuildLifecycleVersion) {
+          window.VaadinDesktopIpcDiagnostics.generatedLazyBuildLifecycleObserved = true;
+          window.VaadinDesktopIpcDiagnostics.generatedLazyBuildLifecycleVersion =
+            source.generatedLazyBuildLifecycleVersion;
+        }
+        for (const [sourceKey, diagnosticKey] of [
+          ['generatedLazyBuildLifecycleInputRoute', 'generatedLazyBuildLifecycleInputRoute'],
+          ['generatedLazyBuildLifecycleInputRouteClass', 'generatedLazyBuildLifecycleInputRouteClass'],
+          ['generatedLazyBuildLifecycleInputDependency', 'generatedLazyBuildLifecycleInputDependency'],
+          ['generatedLazyBuildLifecycleScannerSource', 'generatedLazyBuildLifecycleScannerSource'],
+          ['generatedLazyBuildLifecycleScannerStatus', 'generatedLazyBuildLifecycleScannerStatus'],
+          ['generatedLazyBuildLifecycleLazyRouteChunkInput', 'generatedLazyBuildLifecycleLazyRouteChunkInput'],
+          ['generatedLazyBuildLifecycleBuildTaskSource', 'generatedLazyBuildLifecycleBuildTaskSource'],
+          ['generatedLazyBuildLifecycleGeneratedImportsSource', 'generatedLazyBuildLifecycleGeneratedImportsSource'],
+          ['generatedLazyBuildLifecycleGeneratedImportsRuntimePath', 'generatedLazyBuildLifecycleGeneratedImportsRuntimePath'],
+          ['generatedLazyBuildLifecycleGeneratedImportsProtocol', 'generatedLazyBuildLifecycleGeneratedImportsProtocol'],
+          ['generatedLazyBuildLifecycleGeneratedImportsSha256', 'generatedLazyBuildLifecycleGeneratedImportsSha256'],
+          ['generatedLazyBuildLifecycleGeneratedImportsTableShape', 'generatedLazyBuildLifecycleGeneratedImportsTableShape'],
+          ['generatedLazyBuildLifecycleWriteTarget', 'generatedLazyBuildLifecycleWriteTarget'],
+          ['generatedLazyBuildLifecycleChunkStatus', 'generatedLazyBuildLifecycleChunkStatus'],
+          ['generatedLazyBuildLifecycleChunkArtifact', 'generatedLazyBuildLifecycleChunkArtifact'],
+          ['generatedLazyBuildLifecycleFailureLayer', 'generatedLazyBuildLifecycleFailureLayer'],
+          ['generatedLazyBuildLifecycleNextResolutionStep', 'generatedLazyBuildLifecycleNextResolutionStep']
+        ]) {
+          if (typeof source[sourceKey] === 'string' && source[sourceKey]) {
+            window.VaadinDesktopIpcDiagnostics[diagnosticKey] = source[sourceKey];
+          }
+        }
+        for (const [sourceKey, diagnosticKey] of [
+          ['generatedLazyBuildLifecycleInputEager', 'generatedLazyBuildLifecycleInputEager'],
+          ['generatedLazyBuildLifecycleScannerObserved', 'generatedLazyBuildLifecycleScannerObserved'],
+          ['generatedLazyBuildLifecycleLazyJavascriptObserved', 'generatedLazyBuildLifecycleLazyJavascriptObserved'],
+          ['generatedLazyBuildLifecycleUpdateImportsObserved', 'generatedLazyBuildLifecycleUpdateImportsObserved'],
+          ['generatedLazyBuildLifecycleGeneratedImportsNoOpLoadOnDemand', 'generatedLazyBuildLifecycleGeneratedImportsNoOpLoadOnDemand'],
+          ['generatedLazyBuildLifecycleWriteTargetObserved', 'generatedLazyBuildLifecycleWriteTargetObserved'],
+          ['generatedLazyBuildLifecycleRuntimeUsesStaticDevBundle', 'generatedLazyBuildLifecycleRuntimeUsesStaticDevBundle'],
+          ['generatedLazyBuildLifecycleRuntimeProbeMismatch', 'generatedLazyBuildLifecycleRuntimeProbeMismatch'],
+          ['generatedLazyBuildLifecycleFixtureSubstituted', 'generatedLazyBuildLifecycleFixtureSubstituted'],
+          ['generatedLazyBuildLifecycleNoLocalhost', 'generatedLazyBuildLifecycleNoLocalhost']
+        ]) {
+          if (source[sourceKey] === true) {
+            window.VaadinDesktopIpcDiagnostics[diagnosticKey] = true;
+          }
+        }
+        for (const [sourceKey, diagnosticKey] of [
+          ['generatedLazyBuildLifecycleGeneratedImportsMtimeMillis', 'generatedLazyBuildLifecycleGeneratedImportsMtimeMillis'],
+          ['generatedLazyBuildLifecycleGeneratedImportsBytes', 'generatedLazyBuildLifecycleGeneratedImportsBytes'],
+          ['generatedLazyBuildLifecycleWriteTargetMtimeMillis', 'generatedLazyBuildLifecycleWriteTargetMtimeMillis']
+        ]) {
+          if (Number.isFinite(source[sourceKey])) {
+            window.VaadinDesktopIpcDiagnostics[diagnosticKey] = source[sourceKey];
+          }
+        }
         addFrontendResolverCsv(frontendResolverFamiliesObserved, source.frontendResolverFamiliesCovered || '');
         addFrontendResolverCsv(frontendResolverAcceptedGapFamilies, source.frontendResolverAcceptableGaps || '');
       }
@@ -6285,6 +6496,72 @@ let flowIpcShell = #"""
           generatedLazyRealBuildFixtureSubstituted:
             resource.generatedLazyRealBuildFixtureSubstituted === true,
           generatedLazyRealBuildNoLocalhost: resource.generatedLazyRealBuildNoLocalhost === true,
+          generatedLazyBuildLifecycleVersion: resource.generatedLazyBuildLifecycleVersion || '',
+          generatedLazyBuildLifecycleInputRoute: resource.generatedLazyBuildLifecycleInputRoute || '',
+          generatedLazyBuildLifecycleInputRouteClass:
+            resource.generatedLazyBuildLifecycleInputRouteClass || '',
+          generatedLazyBuildLifecycleInputDependency:
+            resource.generatedLazyBuildLifecycleInputDependency || '',
+          generatedLazyBuildLifecycleInputEager:
+            resource.generatedLazyBuildLifecycleInputEager === true,
+          generatedLazyBuildLifecycleScannerSource:
+            resource.generatedLazyBuildLifecycleScannerSource || '',
+          generatedLazyBuildLifecycleScannerStatus:
+            resource.generatedLazyBuildLifecycleScannerStatus || '',
+          generatedLazyBuildLifecycleScannerObserved:
+            resource.generatedLazyBuildLifecycleScannerObserved === true,
+          generatedLazyBuildLifecycleLazyJavascriptObserved:
+            resource.generatedLazyBuildLifecycleLazyJavascriptObserved === true,
+          generatedLazyBuildLifecycleLazyRouteChunkInput:
+            resource.generatedLazyBuildLifecycleLazyRouteChunkInput || '',
+          generatedLazyBuildLifecycleBuildTaskSource:
+            resource.generatedLazyBuildLifecycleBuildTaskSource || '',
+          generatedLazyBuildLifecycleUpdateImportsObserved:
+            resource.generatedLazyBuildLifecycleUpdateImportsObserved === true,
+          generatedLazyBuildLifecycleGeneratedImportsSource:
+            resource.generatedLazyBuildLifecycleGeneratedImportsSource || '',
+          generatedLazyBuildLifecycleGeneratedImportsRuntimePath:
+            resource.generatedLazyBuildLifecycleGeneratedImportsRuntimePath || '',
+          generatedLazyBuildLifecycleGeneratedImportsProtocol:
+            resource.generatedLazyBuildLifecycleGeneratedImportsProtocol || '',
+          generatedLazyBuildLifecycleGeneratedImportsSha256:
+            resource.generatedLazyBuildLifecycleGeneratedImportsSha256 || '',
+          generatedLazyBuildLifecycleGeneratedImportsMtimeMillis:
+            Number.isFinite(resource.generatedLazyBuildLifecycleGeneratedImportsMtimeMillis)
+              ? resource.generatedLazyBuildLifecycleGeneratedImportsMtimeMillis
+              : 0,
+          generatedLazyBuildLifecycleGeneratedImportsBytes:
+            Number.isFinite(resource.generatedLazyBuildLifecycleGeneratedImportsBytes)
+              ? resource.generatedLazyBuildLifecycleGeneratedImportsBytes
+              : 0,
+          generatedLazyBuildLifecycleGeneratedImportsTableShape:
+            resource.generatedLazyBuildLifecycleGeneratedImportsTableShape || '',
+          generatedLazyBuildLifecycleGeneratedImportsNoOpLoadOnDemand:
+            resource.generatedLazyBuildLifecycleGeneratedImportsNoOpLoadOnDemand === true,
+          generatedLazyBuildLifecycleWriteTarget:
+            resource.generatedLazyBuildLifecycleWriteTarget || '',
+          generatedLazyBuildLifecycleWriteTargetObserved:
+            resource.generatedLazyBuildLifecycleWriteTargetObserved === true,
+          generatedLazyBuildLifecycleWriteTargetMtimeMillis:
+            Number.isFinite(resource.generatedLazyBuildLifecycleWriteTargetMtimeMillis)
+              ? resource.generatedLazyBuildLifecycleWriteTargetMtimeMillis
+              : 0,
+          generatedLazyBuildLifecycleRuntimeUsesStaticDevBundle:
+            resource.generatedLazyBuildLifecycleRuntimeUsesStaticDevBundle === true,
+          generatedLazyBuildLifecycleRuntimeProbeMismatch:
+            resource.generatedLazyBuildLifecycleRuntimeProbeMismatch === true,
+          generatedLazyBuildLifecycleChunkStatus:
+            resource.generatedLazyBuildLifecycleChunkStatus || '',
+          generatedLazyBuildLifecycleChunkArtifact:
+            resource.generatedLazyBuildLifecycleChunkArtifact || '',
+          generatedLazyBuildLifecycleFailureLayer:
+            resource.generatedLazyBuildLifecycleFailureLayer || '',
+          generatedLazyBuildLifecycleNextResolutionStep:
+            resource.generatedLazyBuildLifecycleNextResolutionStep || '',
+          generatedLazyBuildLifecycleFixtureSubstituted:
+            resource.generatedLazyBuildLifecycleFixtureSubstituted === true,
+          generatedLazyBuildLifecycleNoLocalhost:
+            resource.generatedLazyBuildLifecycleNoLocalhost === true,
           lookupKind: resource.lookupKind || '',
           textfieldGraphParityVersion: resource.textfieldGraphParityVersion || '',
           blockerVersion: resource.blockerVersion || '',
@@ -6881,6 +7158,72 @@ let flowIpcShell = #"""
           generatedLazyRealBuildFixtureSubstituted:
             resource.generatedLazyRealBuildFixtureSubstituted === true,
           generatedLazyRealBuildNoLocalhost: resource.generatedLazyRealBuildNoLocalhost === true,
+          generatedLazyBuildLifecycleVersion: resource.generatedLazyBuildLifecycleVersion || '',
+          generatedLazyBuildLifecycleInputRoute: resource.generatedLazyBuildLifecycleInputRoute || '',
+          generatedLazyBuildLifecycleInputRouteClass:
+            resource.generatedLazyBuildLifecycleInputRouteClass || '',
+          generatedLazyBuildLifecycleInputDependency:
+            resource.generatedLazyBuildLifecycleInputDependency || '',
+          generatedLazyBuildLifecycleInputEager:
+            resource.generatedLazyBuildLifecycleInputEager === true,
+          generatedLazyBuildLifecycleScannerSource:
+            resource.generatedLazyBuildLifecycleScannerSource || '',
+          generatedLazyBuildLifecycleScannerStatus:
+            resource.generatedLazyBuildLifecycleScannerStatus || '',
+          generatedLazyBuildLifecycleScannerObserved:
+            resource.generatedLazyBuildLifecycleScannerObserved === true,
+          generatedLazyBuildLifecycleLazyJavascriptObserved:
+            resource.generatedLazyBuildLifecycleLazyJavascriptObserved === true,
+          generatedLazyBuildLifecycleLazyRouteChunkInput:
+            resource.generatedLazyBuildLifecycleLazyRouteChunkInput || '',
+          generatedLazyBuildLifecycleBuildTaskSource:
+            resource.generatedLazyBuildLifecycleBuildTaskSource || '',
+          generatedLazyBuildLifecycleUpdateImportsObserved:
+            resource.generatedLazyBuildLifecycleUpdateImportsObserved === true,
+          generatedLazyBuildLifecycleGeneratedImportsSource:
+            resource.generatedLazyBuildLifecycleGeneratedImportsSource || '',
+          generatedLazyBuildLifecycleGeneratedImportsRuntimePath:
+            resource.generatedLazyBuildLifecycleGeneratedImportsRuntimePath || '',
+          generatedLazyBuildLifecycleGeneratedImportsProtocol:
+            resource.generatedLazyBuildLifecycleGeneratedImportsProtocol || '',
+          generatedLazyBuildLifecycleGeneratedImportsSha256:
+            resource.generatedLazyBuildLifecycleGeneratedImportsSha256 || '',
+          generatedLazyBuildLifecycleGeneratedImportsMtimeMillis:
+            Number.isFinite(resource.generatedLazyBuildLifecycleGeneratedImportsMtimeMillis)
+              ? resource.generatedLazyBuildLifecycleGeneratedImportsMtimeMillis
+              : 0,
+          generatedLazyBuildLifecycleGeneratedImportsBytes:
+            Number.isFinite(resource.generatedLazyBuildLifecycleGeneratedImportsBytes)
+              ? resource.generatedLazyBuildLifecycleGeneratedImportsBytes
+              : 0,
+          generatedLazyBuildLifecycleGeneratedImportsTableShape:
+            resource.generatedLazyBuildLifecycleGeneratedImportsTableShape || '',
+          generatedLazyBuildLifecycleGeneratedImportsNoOpLoadOnDemand:
+            resource.generatedLazyBuildLifecycleGeneratedImportsNoOpLoadOnDemand === true,
+          generatedLazyBuildLifecycleWriteTarget:
+            resource.generatedLazyBuildLifecycleWriteTarget || '',
+          generatedLazyBuildLifecycleWriteTargetObserved:
+            resource.generatedLazyBuildLifecycleWriteTargetObserved === true,
+          generatedLazyBuildLifecycleWriteTargetMtimeMillis:
+            Number.isFinite(resource.generatedLazyBuildLifecycleWriteTargetMtimeMillis)
+              ? resource.generatedLazyBuildLifecycleWriteTargetMtimeMillis
+              : 0,
+          generatedLazyBuildLifecycleRuntimeUsesStaticDevBundle:
+            resource.generatedLazyBuildLifecycleRuntimeUsesStaticDevBundle === true,
+          generatedLazyBuildLifecycleRuntimeProbeMismatch:
+            resource.generatedLazyBuildLifecycleRuntimeProbeMismatch === true,
+          generatedLazyBuildLifecycleChunkStatus:
+            resource.generatedLazyBuildLifecycleChunkStatus || '',
+          generatedLazyBuildLifecycleChunkArtifact:
+            resource.generatedLazyBuildLifecycleChunkArtifact || '',
+          generatedLazyBuildLifecycleFailureLayer:
+            resource.generatedLazyBuildLifecycleFailureLayer || '',
+          generatedLazyBuildLifecycleNextResolutionStep:
+            resource.generatedLazyBuildLifecycleNextResolutionStep || '',
+          generatedLazyBuildLifecycleFixtureSubstituted:
+            resource.generatedLazyBuildLifecycleFixtureSubstituted === true,
+          generatedLazyBuildLifecycleNoLocalhost:
+            resource.generatedLazyBuildLifecycleNoLocalhost === true,
           stagedPath: '',
           owner: stageOwner,
           artifactFamily: family,
@@ -8069,7 +8412,73 @@ let flowIpcShell = #"""
               resource.generatedLazyRealBuildNextResolutionStep || '',
             generatedLazyRealBuildFixtureSubstituted:
               resource.generatedLazyRealBuildFixtureSubstituted === true,
-            generatedLazyRealBuildNoLocalhost: resource.generatedLazyRealBuildNoLocalhost === true
+            generatedLazyRealBuildNoLocalhost: resource.generatedLazyRealBuildNoLocalhost === true,
+            generatedLazyBuildLifecycleVersion: resource.generatedLazyBuildLifecycleVersion || '',
+            generatedLazyBuildLifecycleInputRoute: resource.generatedLazyBuildLifecycleInputRoute || '',
+            generatedLazyBuildLifecycleInputRouteClass:
+              resource.generatedLazyBuildLifecycleInputRouteClass || '',
+            generatedLazyBuildLifecycleInputDependency:
+              resource.generatedLazyBuildLifecycleInputDependency || '',
+            generatedLazyBuildLifecycleInputEager:
+              resource.generatedLazyBuildLifecycleInputEager === true,
+            generatedLazyBuildLifecycleScannerSource:
+              resource.generatedLazyBuildLifecycleScannerSource || '',
+            generatedLazyBuildLifecycleScannerStatus:
+              resource.generatedLazyBuildLifecycleScannerStatus || '',
+            generatedLazyBuildLifecycleScannerObserved:
+              resource.generatedLazyBuildLifecycleScannerObserved === true,
+            generatedLazyBuildLifecycleLazyJavascriptObserved:
+              resource.generatedLazyBuildLifecycleLazyJavascriptObserved === true,
+            generatedLazyBuildLifecycleLazyRouteChunkInput:
+              resource.generatedLazyBuildLifecycleLazyRouteChunkInput || '',
+            generatedLazyBuildLifecycleBuildTaskSource:
+              resource.generatedLazyBuildLifecycleBuildTaskSource || '',
+            generatedLazyBuildLifecycleUpdateImportsObserved:
+              resource.generatedLazyBuildLifecycleUpdateImportsObserved === true,
+            generatedLazyBuildLifecycleGeneratedImportsSource:
+              resource.generatedLazyBuildLifecycleGeneratedImportsSource || '',
+            generatedLazyBuildLifecycleGeneratedImportsRuntimePath:
+              resource.generatedLazyBuildLifecycleGeneratedImportsRuntimePath || '',
+            generatedLazyBuildLifecycleGeneratedImportsProtocol:
+              resource.generatedLazyBuildLifecycleGeneratedImportsProtocol || '',
+            generatedLazyBuildLifecycleGeneratedImportsSha256:
+              resource.generatedLazyBuildLifecycleGeneratedImportsSha256 || '',
+            generatedLazyBuildLifecycleGeneratedImportsMtimeMillis:
+              Number.isFinite(resource.generatedLazyBuildLifecycleGeneratedImportsMtimeMillis)
+                ? resource.generatedLazyBuildLifecycleGeneratedImportsMtimeMillis
+                : 0,
+            generatedLazyBuildLifecycleGeneratedImportsBytes:
+              Number.isFinite(resource.generatedLazyBuildLifecycleGeneratedImportsBytes)
+                ? resource.generatedLazyBuildLifecycleGeneratedImportsBytes
+                : 0,
+            generatedLazyBuildLifecycleGeneratedImportsTableShape:
+              resource.generatedLazyBuildLifecycleGeneratedImportsTableShape || '',
+            generatedLazyBuildLifecycleGeneratedImportsNoOpLoadOnDemand:
+              resource.generatedLazyBuildLifecycleGeneratedImportsNoOpLoadOnDemand === true,
+            generatedLazyBuildLifecycleWriteTarget:
+              resource.generatedLazyBuildLifecycleWriteTarget || '',
+            generatedLazyBuildLifecycleWriteTargetObserved:
+              resource.generatedLazyBuildLifecycleWriteTargetObserved === true,
+            generatedLazyBuildLifecycleWriteTargetMtimeMillis:
+              Number.isFinite(resource.generatedLazyBuildLifecycleWriteTargetMtimeMillis)
+                ? resource.generatedLazyBuildLifecycleWriteTargetMtimeMillis
+                : 0,
+            generatedLazyBuildLifecycleRuntimeUsesStaticDevBundle:
+              resource.generatedLazyBuildLifecycleRuntimeUsesStaticDevBundle === true,
+            generatedLazyBuildLifecycleRuntimeProbeMismatch:
+              resource.generatedLazyBuildLifecycleRuntimeProbeMismatch === true,
+            generatedLazyBuildLifecycleChunkStatus:
+              resource.generatedLazyBuildLifecycleChunkStatus || '',
+            generatedLazyBuildLifecycleChunkArtifact:
+              resource.generatedLazyBuildLifecycleChunkArtifact || '',
+            generatedLazyBuildLifecycleFailureLayer:
+              resource.generatedLazyBuildLifecycleFailureLayer || '',
+            generatedLazyBuildLifecycleNextResolutionStep:
+              resource.generatedLazyBuildLifecycleNextResolutionStep || '',
+            generatedLazyBuildLifecycleFixtureSubstituted:
+              resource.generatedLazyBuildLifecycleFixtureSubstituted === true,
+            generatedLazyBuildLifecycleNoLocalhost:
+              resource.generatedLazyBuildLifecycleNoLocalhost === true
           });
           hostExtra.frontendResourceSchemeVersion =
             response.frontendResourceSchemeVersion || 'flow-ipc-resource-scheme-v1_17';
@@ -8271,6 +8680,122 @@ let flowIpcShell = #"""
           hostExtra.generatedLazyRealBuildNoLocalhost =
             response.generatedLazyRealBuildNoLocalhost === true
             || resource.generatedLazyRealBuildNoLocalhost === true;
+          hostExtra.generatedLazyBuildLifecycleVersion =
+            response.generatedLazyBuildLifecycleVersion || resource.generatedLazyBuildLifecycleVersion || '';
+          hostExtra.generatedLazyBuildLifecycleInputRoute =
+            response.generatedLazyBuildLifecycleInputRoute || resource.generatedLazyBuildLifecycleInputRoute || '';
+          hostExtra.generatedLazyBuildLifecycleInputRouteClass =
+            response.generatedLazyBuildLifecycleInputRouteClass
+            || resource.generatedLazyBuildLifecycleInputRouteClass
+            || '';
+          hostExtra.generatedLazyBuildLifecycleInputDependency =
+            response.generatedLazyBuildLifecycleInputDependency
+            || resource.generatedLazyBuildLifecycleInputDependency
+            || '';
+          hostExtra.generatedLazyBuildLifecycleInputEager =
+            response.generatedLazyBuildLifecycleInputEager === true
+            || resource.generatedLazyBuildLifecycleInputEager === true;
+          hostExtra.generatedLazyBuildLifecycleScannerSource =
+            response.generatedLazyBuildLifecycleScannerSource
+            || resource.generatedLazyBuildLifecycleScannerSource
+            || '';
+          hostExtra.generatedLazyBuildLifecycleScannerStatus =
+            response.generatedLazyBuildLifecycleScannerStatus
+            || resource.generatedLazyBuildLifecycleScannerStatus
+            || '';
+          hostExtra.generatedLazyBuildLifecycleScannerObserved =
+            response.generatedLazyBuildLifecycleScannerObserved === true
+            || resource.generatedLazyBuildLifecycleScannerObserved === true;
+          hostExtra.generatedLazyBuildLifecycleLazyJavascriptObserved =
+            response.generatedLazyBuildLifecycleLazyJavascriptObserved === true
+            || resource.generatedLazyBuildLifecycleLazyJavascriptObserved === true;
+          hostExtra.generatedLazyBuildLifecycleLazyRouteChunkInput =
+            response.generatedLazyBuildLifecycleLazyRouteChunkInput
+            || resource.generatedLazyBuildLifecycleLazyRouteChunkInput
+            || '';
+          hostExtra.generatedLazyBuildLifecycleBuildTaskSource =
+            response.generatedLazyBuildLifecycleBuildTaskSource
+            || resource.generatedLazyBuildLifecycleBuildTaskSource
+            || '';
+          hostExtra.generatedLazyBuildLifecycleUpdateImportsObserved =
+            response.generatedLazyBuildLifecycleUpdateImportsObserved === true
+            || resource.generatedLazyBuildLifecycleUpdateImportsObserved === true;
+          hostExtra.generatedLazyBuildLifecycleGeneratedImportsSource =
+            response.generatedLazyBuildLifecycleGeneratedImportsSource
+            || resource.generatedLazyBuildLifecycleGeneratedImportsSource
+            || '';
+          hostExtra.generatedLazyBuildLifecycleGeneratedImportsRuntimePath =
+            response.generatedLazyBuildLifecycleGeneratedImportsRuntimePath
+            || resource.generatedLazyBuildLifecycleGeneratedImportsRuntimePath
+            || '';
+          hostExtra.generatedLazyBuildLifecycleGeneratedImportsProtocol =
+            response.generatedLazyBuildLifecycleGeneratedImportsProtocol
+            || resource.generatedLazyBuildLifecycleGeneratedImportsProtocol
+            || '';
+          hostExtra.generatedLazyBuildLifecycleGeneratedImportsSha256 =
+            response.generatedLazyBuildLifecycleGeneratedImportsSha256
+            || resource.generatedLazyBuildLifecycleGeneratedImportsSha256
+            || '';
+          hostExtra.generatedLazyBuildLifecycleGeneratedImportsMtimeMillis =
+            Number.isFinite(response.generatedLazyBuildLifecycleGeneratedImportsMtimeMillis)
+              ? response.generatedLazyBuildLifecycleGeneratedImportsMtimeMillis
+              : (Number.isFinite(resource.generatedLazyBuildLifecycleGeneratedImportsMtimeMillis)
+                ? resource.generatedLazyBuildLifecycleGeneratedImportsMtimeMillis
+                : 0);
+          hostExtra.generatedLazyBuildLifecycleGeneratedImportsBytes =
+            Number.isFinite(response.generatedLazyBuildLifecycleGeneratedImportsBytes)
+              ? response.generatedLazyBuildLifecycleGeneratedImportsBytes
+              : (Number.isFinite(resource.generatedLazyBuildLifecycleGeneratedImportsBytes)
+                ? resource.generatedLazyBuildLifecycleGeneratedImportsBytes
+                : 0);
+          hostExtra.generatedLazyBuildLifecycleGeneratedImportsTableShape =
+            response.generatedLazyBuildLifecycleGeneratedImportsTableShape
+            || resource.generatedLazyBuildLifecycleGeneratedImportsTableShape
+            || '';
+          hostExtra.generatedLazyBuildLifecycleGeneratedImportsNoOpLoadOnDemand =
+            response.generatedLazyBuildLifecycleGeneratedImportsNoOpLoadOnDemand === true
+            || resource.generatedLazyBuildLifecycleGeneratedImportsNoOpLoadOnDemand === true;
+          hostExtra.generatedLazyBuildLifecycleWriteTarget =
+            response.generatedLazyBuildLifecycleWriteTarget
+            || resource.generatedLazyBuildLifecycleWriteTarget
+            || '';
+          hostExtra.generatedLazyBuildLifecycleWriteTargetObserved =
+            response.generatedLazyBuildLifecycleWriteTargetObserved === true
+            || resource.generatedLazyBuildLifecycleWriteTargetObserved === true;
+          hostExtra.generatedLazyBuildLifecycleWriteTargetMtimeMillis =
+            Number.isFinite(response.generatedLazyBuildLifecycleWriteTargetMtimeMillis)
+              ? response.generatedLazyBuildLifecycleWriteTargetMtimeMillis
+              : (Number.isFinite(resource.generatedLazyBuildLifecycleWriteTargetMtimeMillis)
+                ? resource.generatedLazyBuildLifecycleWriteTargetMtimeMillis
+                : 0);
+          hostExtra.generatedLazyBuildLifecycleRuntimeUsesStaticDevBundle =
+            response.generatedLazyBuildLifecycleRuntimeUsesStaticDevBundle === true
+            || resource.generatedLazyBuildLifecycleRuntimeUsesStaticDevBundle === true;
+          hostExtra.generatedLazyBuildLifecycleRuntimeProbeMismatch =
+            response.generatedLazyBuildLifecycleRuntimeProbeMismatch === true
+            || resource.generatedLazyBuildLifecycleRuntimeProbeMismatch === true;
+          hostExtra.generatedLazyBuildLifecycleChunkStatus =
+            response.generatedLazyBuildLifecycleChunkStatus
+            || resource.generatedLazyBuildLifecycleChunkStatus
+            || '';
+          hostExtra.generatedLazyBuildLifecycleChunkArtifact =
+            response.generatedLazyBuildLifecycleChunkArtifact
+            || resource.generatedLazyBuildLifecycleChunkArtifact
+            || '';
+          hostExtra.generatedLazyBuildLifecycleFailureLayer =
+            response.generatedLazyBuildLifecycleFailureLayer
+            || resource.generatedLazyBuildLifecycleFailureLayer
+            || '';
+          hostExtra.generatedLazyBuildLifecycleNextResolutionStep =
+            response.generatedLazyBuildLifecycleNextResolutionStep
+            || resource.generatedLazyBuildLifecycleNextResolutionStep
+            || '';
+          hostExtra.generatedLazyBuildLifecycleFixtureSubstituted =
+            response.generatedLazyBuildLifecycleFixtureSubstituted === true
+            || resource.generatedLazyBuildLifecycleFixtureSubstituted === true;
+          hostExtra.generatedLazyBuildLifecycleNoLocalhost =
+            response.generatedLazyBuildLifecycleNoLocalhost === true
+            || resource.generatedLazyBuildLifecycleNoLocalhost === true;
           const stagedUrl = response.stagedUrl || '';
           if (!stagedUrl) {
             return '';

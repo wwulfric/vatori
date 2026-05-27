@@ -5,6 +5,10 @@ import com.vaadin.flow.router.Route;
 
 import java.io.IOException;
 import java.io.InputStream;
+import java.net.URISyntaxException;
+import java.net.URL;
+import java.nio.file.Files;
+import java.nio.file.Path;
 import java.nio.charset.StandardCharsets;
 import java.security.MessageDigest;
 import java.security.NoSuchAlgorithmException;
@@ -459,6 +463,16 @@ final class FlowClientResources {
             "scanner-output-not-connected-to-dev-bundle-generated-imports";
     private static final String GENERATED_LAZY_REAL_BUILD_NEXT_STEP =
             "run a Vaadin frontend build/update-imports path that includes the non-eager v1.27 route input and compare generated-flow-imports output";
+    private static final String GENERATED_LAZY_BUILD_LIFECYCLE_VERSION =
+            "flow-ipc-generated-lazy-build-lifecycle-v1_28";
+    private static final String GENERATED_LAZY_BUILD_LIFECYCLE_SCANNER_SOURCE =
+            "route-annotation-classpath-probe-plus-vaadin-FrontendDependencies-contract-v1_28";
+    private static final String GENERATED_LAZY_BUILD_LIFECYCLE_BUILD_TASK_SOURCE =
+            "dev-ipc-runtime-classpath-resource-resolver-v1_28";
+    private static final String GENERATED_LAZY_BUILD_LIFECYCLE_FAILURE_LAYER =
+            "runtime-using-stale-packaged-dev-bundle";
+    private static final String GENERATED_LAZY_BUILD_LIFECYCLE_NEXT_STEP =
+            "connect dev-ipc resource resolution to a Vaadin prepare-frontend/update-imports output for the v1.27 route, or replace the static dev-bundle artifact with a supported generated lazy chunk build SPI";
     private static final List<String> PRODUCTION_RUNTIME_OWNER_DEPENDENCY_ARTIFACTS = List.of(
             DEV_BUNDLE_COMMONJS_JS,
             DEV_BUNDLE_INDEX_HTML_JS,
@@ -910,6 +924,7 @@ final class FlowClientResources {
         manifest.putAll(generatedLoadOnDemandChunkFileRegistryAttributes(DEV_BUNDLE_GENERATED_FLOW_IMPORTS_JS));
         manifest.putAll(generatedLazySourceBoundaryAttributes());
         manifest.putAll(generatedLazyRealBuildProbeAttributes());
+        manifest.putAll(generatedLazyBuildLifecycleAttributes());
         manifest.put("generatedLazyChunkFileExecutionVersion", GENERATED_LAZY_CHUNK_FILE_EXECUTION_VERSION);
         manifest.put("generatedLazyChunkFileFixtureSource", GENERATED_LAZY_CHUNK_FILE_FIXTURE_SOURCE);
         manifest.put("generatedLazyChunkFileFixtureImportsArtifact", GENERATED_FLOW_IMPORTS_V1_22_JS);
@@ -987,6 +1002,8 @@ final class FlowClientResources {
                         "real UIDL Flow.loadOnDemand expressions are observed and mapped to the generated-flow-imports artifact, but this dev bundle exposes a no-op loadOnDemand table without chunk-file resolution"),
                 strictBlocker("generated-lazy", GENERATED_LAZY_CHUNK_FILE_BLOCKER_VERSION,
                         "generated-flow-imports has been parsed for chunk-file branches; this Vaadin dev bundle exposes a real no-op Promise.resolve(0) loadOnDemand table, so there is no generated ./chunks/chunk-*.js file to stage yet"),
+                strictBlocker("generated-lazy", GENERATED_LAZY_BUILD_LIFECYCLE_VERSION,
+                        "the v1.27 route/lazy JavaScript probe is visible on the app classpath, but the no-localhost runtime still resolves generated-flow-imports from the static packaged Vaadin dev-bundle instead of an app update-imports output"),
                 strictBlocker("production-bundle", "flow-ipc-production-runtime-v1_10",
                         "production bundle stats now selects an executable runtime artifact and stages it through stable module identity, but full production runtime ownership is still blocked until side effects can be executed without relying on focused component entry imports"),
                 strictBlocker("production-bundle", PRODUCTION_RUNTIME_OWNER_BLOCKER,
@@ -1967,6 +1984,7 @@ final class FlowClientResources {
             attributes.putAll(generatedLoadOnDemandChunkFileRegistryAttributes(path));
             attributes.putAll(generatedLazySourceBoundaryAttributes());
             attributes.putAll(generatedLazyRealBuildProbeAttributes());
+            attributes.putAll(generatedLazyBuildLifecycleAttributes());
         }
         attributes.put("devBundleResource", true);
         attributes.put("productionBundleResource", true);
@@ -2119,6 +2137,113 @@ final class FlowClientResources {
         }
     }
 
+    private static Map<String, Object> generatedLazyBuildLifecycleAttributes() {
+        Properties properties = generatedLazyRealBuildProbeProperties();
+        boolean probeManifestObserved = !properties.isEmpty();
+        String routeClass = propertyOrDefault(properties, "routeClass",
+                GENERATED_LAZY_REAL_BUILD_DEFAULT_ROUTE_CLASS);
+        String expectedRoute = propertyOrDefault(properties, "route",
+                GENERATED_LAZY_REAL_BUILD_DEFAULT_ROUTE);
+        String expectedDependency = propertyOrDefault(properties, "dependency",
+                GENERATED_LAZY_REAL_BUILD_DEFAULT_DEPENDENCY);
+
+        Class<?> probeClass = loadOptionalClass(routeClass);
+        Route route = probeClass == null ? null : probeClass.getAnnotation(Route.class);
+        JavaScript[] scripts = probeClass == null ? new JavaScript[0]
+                : probeClass.getAnnotationsByType(JavaScript.class);
+        boolean routeObserved = route != null;
+        boolean routeMatches = routeObserved && expectedRoute.equals(route.value());
+        boolean lazyJavascriptObserved = false;
+        for (JavaScript script : scripts) {
+            if ("LAZY".equals(script.loadMode().name())
+                    && expectedDependency.equals(script.value())) {
+                lazyJavascriptObserved = true;
+                break;
+            }
+        }
+        boolean scannerObserved = probeManifestObserved && routeMatches && lazyJavascriptObserved;
+
+        byte[] generatedImportsBytes = classpathResourceBytes(DEV_BUNDLE_GENERATED_FLOW_IMPORTS_JS);
+        String generatedImportsBody = new String(generatedImportsBytes, StandardCharsets.UTF_8);
+        GeneratedLoadOnDemandChunkFileRegistry registry =
+                GeneratedLoadOnDemandChunkFileRegistry.parse(DEV_BUNDLE_GENERATED_FLOW_IMPORTS_JS,
+                        generatedImportsBody);
+        ClasspathArtifactEvidence generatedImportsEvidence =
+                classpathArtifactEvidence(DEV_BUNDLE_GENERATED_FLOW_IMPORTS_JS);
+        WriteTargetEvidence writeTarget =
+                writeTargetEvidence(DEV_BUNDLE_GENERATED_FLOW_IMPORTS_JS);
+        boolean branchTable = "branch-table-dynamic-import".equals(registry.loadOnDemandTableShape());
+        boolean updateImportsObserved = writeTarget.observed()
+                && "current-build".equals(generatedImportsEvidence.source());
+
+        String failureLayer;
+        if (!probeManifestObserved) {
+            failureLayer = "lazy-route-probe-metadata-not-on-classpath";
+        } else if (!routeObserved) {
+            failureLayer = "lazy-route-not-in-route-registry";
+        } else if (!lazyJavascriptObserved) {
+            failureLayer = "lazy-route-input-no-lazy-javascript";
+        } else if ("static-dev-bundle".equals(generatedImportsEvidence.source())) {
+            failureLayer = GENERATED_LAZY_BUILD_LIFECYCLE_FAILURE_LAYER;
+        } else if (!updateImportsObserved) {
+            failureLayer = "update-imports-not-run-for-ipc-runtime";
+        } else if (!branchTable) {
+            failureLayer = "vaadin-build-does-not-emit-chunk-for-loadmode-lazy-route-probe";
+        } else {
+            failureLayer = "pending-real-generated-chunk-stage";
+        }
+
+        Map<String, Object> attributes = new LinkedHashMap<>();
+        attributes.put("generatedLazyBuildLifecycleVersion", GENERATED_LAZY_BUILD_LIFECYCLE_VERSION);
+        attributes.put("generatedLazyBuildLifecycleInputRoute", expectedRoute);
+        attributes.put("generatedLazyBuildLifecycleInputRouteClass", routeClass);
+        attributes.put("generatedLazyBuildLifecycleInputDependency", expectedDependency);
+        attributes.put("generatedLazyBuildLifecycleInputEager", false);
+        attributes.put("generatedLazyBuildLifecycleScannerSource",
+                GENERATED_LAZY_BUILD_LIFECYCLE_SCANNER_SOURCE);
+        attributes.put("generatedLazyBuildLifecycleScannerStatus",
+                scannerObserved ? "observed" : "missing");
+        attributes.put("generatedLazyBuildLifecycleScannerObserved", scannerObserved);
+        attributes.put("generatedLazyBuildLifecycleLazyJavascriptObserved", lazyJavascriptObserved);
+        attributes.put("generatedLazyBuildLifecycleLazyRouteChunkInput",
+                "ChunkInfo(type=ROUTE,eager=false,trigger=" + routeClass + ",scripts=1)");
+        attributes.put("generatedLazyBuildLifecycleBuildTaskSource",
+                GENERATED_LAZY_BUILD_LIFECYCLE_BUILD_TASK_SOURCE);
+        attributes.put("generatedLazyBuildLifecycleUpdateImportsObserved", updateImportsObserved);
+        attributes.put("generatedLazyBuildLifecycleGeneratedImportsSource",
+                generatedImportsEvidence.source());
+        attributes.put("generatedLazyBuildLifecycleGeneratedImportsRuntimePath",
+                generatedImportsEvidence.runtimePath());
+        attributes.put("generatedLazyBuildLifecycleGeneratedImportsProtocol",
+                generatedImportsEvidence.protocol());
+        attributes.put("generatedLazyBuildLifecycleGeneratedImportsMtimeMillis",
+                generatedImportsEvidence.lastModifiedMillis());
+        attributes.put("generatedLazyBuildLifecycleGeneratedImportsSha256",
+                Resource.sha256(generatedImportsBytes));
+        attributes.put("generatedLazyBuildLifecycleGeneratedImportsBytes",
+                generatedImportsBytes.length);
+        attributes.put("generatedLazyBuildLifecycleGeneratedImportsTableShape",
+                registry.loadOnDemandTableShape());
+        attributes.put("generatedLazyBuildLifecycleGeneratedImportsNoOpLoadOnDemand",
+                registry.noOpLoadOnDemand());
+        attributes.put("generatedLazyBuildLifecycleWriteTarget", writeTarget.path());
+        attributes.put("generatedLazyBuildLifecycleWriteTargetObserved", writeTarget.observed());
+        attributes.put("generatedLazyBuildLifecycleWriteTargetMtimeMillis",
+                writeTarget.lastModifiedMillis());
+        attributes.put("generatedLazyBuildLifecycleRuntimeUsesStaticDevBundle",
+                "static-dev-bundle".equals(generatedImportsEvidence.source()));
+        attributes.put("generatedLazyBuildLifecycleRuntimeProbeMismatch",
+                scannerObserved && "static-dev-bundle".equals(generatedImportsEvidence.source()));
+        attributes.put("generatedLazyBuildLifecycleChunkStatus", registry.chunkFileStatus());
+        attributes.put("generatedLazyBuildLifecycleChunkArtifact", registry.chunkArtifactPath());
+        attributes.put("generatedLazyBuildLifecycleFailureLayer", failureLayer);
+        attributes.put("generatedLazyBuildLifecycleNextResolutionStep",
+                GENERATED_LAZY_BUILD_LIFECYCLE_NEXT_STEP);
+        attributes.put("generatedLazyBuildLifecycleFixtureSubstituted", false);
+        attributes.put("generatedLazyBuildLifecycleNoLocalhost", true);
+        return attributes;
+    }
+
     private static String propertyOrDefault(Properties properties, String key, String defaultValue) {
         String value = properties.getProperty(key);
         return value == null || value.isBlank() ? defaultValue : value.trim();
@@ -2134,6 +2259,95 @@ final class FlowClientResources {
         } catch (ClassNotFoundException ignored) {
             return null;
         }
+    }
+
+    private static ClasspathArtifactEvidence classpathArtifactEvidence(String path) {
+        URL url = classpathResourceUrl(path);
+        if (url == null) {
+            return new ClasspathArtifactEvidence("missing", "", "", 0L);
+        }
+        String location = url.toExternalForm();
+        return new ClasspathArtifactEvidence(classpathArtifactSource(location),
+                redactLocation(location),
+                url.getProtocol(),
+                classpathArtifactLastModified(url));
+    }
+
+    private static URL classpathResourceUrl(String path) {
+        ClassLoader loader = Thread.currentThread().getContextClassLoader();
+        if (loader == null) {
+            loader = FlowClientResources.class.getClassLoader();
+        }
+        return loader.getResource(path);
+    }
+
+    private static String classpathArtifactSource(String location) {
+        if (location.contains("/com/vaadin/vaadin-dev-bundle/")
+                || (location.contains("vaadin-dev-bundle-") && location.contains(".jar!"))) {
+            return "static-dev-bundle";
+        }
+        if (location.contains("/target/classes/") && location.contains("/vaadin-dev-bundle/")) {
+            return "copied";
+        }
+        if (location.contains("/target/")) {
+            return "current-build";
+        }
+        return "unknown";
+    }
+
+    private static long classpathArtifactLastModified(URL url) {
+        try {
+            if ("file".equals(url.getProtocol())) {
+                return Files.getLastModifiedTime(Path.of(url.toURI())).toMillis();
+            }
+            if ("jar".equals(url.getProtocol())) {
+                String text = url.toExternalForm();
+                int separator = text.indexOf("!/");
+                if (text.startsWith("jar:") && separator > 4) {
+                    URL jarUrl = new URL(text.substring(4, separator));
+                    if ("file".equals(jarUrl.getProtocol())) {
+                        return Files.getLastModifiedTime(Path.of(jarUrl.toURI())).toMillis();
+                    }
+                }
+            }
+            return 0L;
+        } catch (IOException | URISyntaxException | IllegalArgumentException error) {
+            return 0L;
+        }
+    }
+
+    private static WriteTargetEvidence writeTargetEvidence(String relativePath) {
+        Path target = Path.of("").toAbsolutePath().normalize()
+                .resolve("target")
+                .resolve("classes")
+                .resolve(relativePath)
+                .normalize();
+        boolean observed = Files.isRegularFile(target);
+        long lastModified = 0L;
+        if (observed) {
+            try {
+                lastModified = Files.getLastModifiedTime(target).toMillis();
+            } catch (IOException ignored) {
+                lastModified = 0L;
+            }
+        }
+        return new WriteTargetEvidence(redactLocation(target.toString()), observed, lastModified);
+    }
+
+    private static String redactLocation(String location) {
+        if (location == null || location.isBlank()) {
+            return "";
+        }
+        String redacted = location;
+        String userDir = Path.of("").toAbsolutePath().normalize().toString();
+        if (!userDir.isBlank()) {
+            redacted = redacted.replace(userDir, "$APP");
+        }
+        String home = System.getProperty("user.home", "");
+        if (!home.isBlank()) {
+            redacted = redacted.replace(home, "$HOME");
+        }
+        return redacted;
     }
 
     private static Map<String, Object> generatedLoadOnDemandChunkFileRegistryAttributes(String generatedImportsPath) {
@@ -2367,6 +2581,19 @@ final class FlowClientResources {
                 "strictBlocker", true,
                 "failureClassification", classification,
                 "blockedReason", reason);
+    }
+
+    private record ClasspathArtifactEvidence(
+            String source,
+            String runtimePath,
+            String protocol,
+            long lastModifiedMillis) {
+    }
+
+    private record WriteTargetEvidence(
+            String path,
+            boolean observed,
+            long lastModifiedMillis) {
     }
 
     private record GeneratedLoadOnDemandChunkFileRegistry(

@@ -274,6 +274,8 @@ public final class FlowClientResourceSmokeMain {
                 "Generated/lazy loadOnDemand chunk-file status");
         requireEquals("chunk-file-not-generated", componentManifest.get("loadOnDemandChunkFileFailureLayer"),
                 "Generated/lazy loadOnDemand chunk-file failure layer");
+        requireGeneratedLazySourceBoundaryMetadata(componentManifest,
+                "Component frontend manifest generated lazy source boundary");
         requireProductionOwnerPositiveFixtureMetadata(componentManifest,
                 "Component frontend manifest production owner positive fixture");
         requireEquals("flow-ipc-lazy-dependency-v1_10",
@@ -981,6 +983,12 @@ public final class FlowClientResourceSmokeMain {
                         "chunk-file-not-generated")
                 || !Objects.equals(generatedFlowImportsDevBundleResponse.get("loadOnDemandChunkFileBlockerVersion"),
                         "flow-ipc-loadondemand-chunk-file-v1_12")
+                || !Objects.equals(generatedFlowImportsDevBundleResponse.get("generatedLazySourceBoundaryVersion"),
+                        "flow-ipc-generated-lazy-source-boundary-v1_26")
+                || !Objects.equals(generatedFlowImportsDevBundleResponse.get("generatedLazySourceDecision"),
+                        "build-spi-required-before-real-app-chunk-parity")
+                || !Boolean.TRUE.equals(
+                        generatedFlowImportsDevBundleResponse.get("generatedLazySourceCurrentBuildNoOpConfirmed"))
                 || !(generatedFlowImportsDevBundleResponse.get("noChunkGeneratedReason") instanceof String noChunkReason
                         && noChunkReason.contains("Promise.resolve(0)"))
                 || !(generatedFlowImportsDevBundleResponse.get("loadOnDemandChunkFileNextResolutionStep")
@@ -997,6 +1005,8 @@ public final class FlowClientResourceSmokeMain {
                 || !Boolean.FALSE.equals(generatedFlowImportsDevBundleResponse.get("shim"))) {
             throw new IllegalStateException("Generated Flow imports dev-bundle chunk is missing v1.9 metadata");
         }
+        requireGeneratedLazySourceBoundaryMetadata(generatedFlowImportsDevBundleResponse,
+                "Generated-flow-imports dev-bundle source boundary response");
         Object generatedFlowImportsDevBundleBody = generatedFlowImportsDevBundleResponse.get("body");
         if (!(generatedFlowImportsDevBundleBody instanceof String generatedFlowImportsDevBundleText)
                 || !generatedFlowImportsDevBundleText.contains("from \"./indexhtml-BfYYZi8S.js\"")
@@ -1246,6 +1256,66 @@ public final class FlowClientResourceSmokeMain {
         requireEquals("real-generated-lazy-chunk-file-not-generated,real-production-owner-owned-runtime-missing-real-artifact,dev-mode-vite-execution-unmapped",
                 metadata.get("packagedFrontendRemainingBlockers"),
                 label + " packaged frontend remaining blockers");
+    }
+
+    private static void requireGeneratedLazySourceBoundaryMetadata(Map<?, ?> metadata, String label) {
+        requireEquals("flow-ipc-generated-lazy-source-boundary-v1_26",
+                metadata.get("generatedLazySourceBoundaryVersion"),
+                label + " version");
+        requireEquals("vaadin-AbstractUpdateImports-generateLazyLoadedChunks",
+                metadata.get("generatedLazySourceMechanism"),
+                label + " mechanism");
+        requireEquals("com.vaadin.flow.server.frontend.AbstractUpdateImports",
+                metadata.get("generatedLazySourceArtifact"),
+                label + " source artifact");
+        requireEquals("com.vaadin.flow.server.frontend.scanner.FrontendDependencies",
+                metadata.get("generatedLazySourceScanner"),
+                label + " scanner");
+        requireEquals("ChunkInfo(type=ROUTE,eager=false)",
+                metadata.get("generatedLazySourceLazyRouteRule"),
+                label + " lazy route rule");
+        requireEquals("branch-table-dynamic-import",
+                metadata.get("generatedLazySourcePositiveTableShape"),
+                label + " positive table shape");
+        requireStringContains(metadata.get("generatedLazySourcePositiveImportPattern"),
+                "./chunks/chunk-<content-hash>.js",
+                label + " positive import pattern");
+        requireEquals("Promise.resolve(0)",
+                metadata.get("generatedLazySourceNoChunkFallback"),
+                label + " no chunk fallback");
+        requireEquals("vaadin-dev-bundle/webapp/VAADIN/build/generated-flow-imports-VW7hRaNw.js",
+                metadata.get("generatedLazySourceCurrentBuildArtifact"),
+                label + " current build artifact");
+        requireEquals("no-real-generated-lazy-chunk-produced",
+                metadata.get("generatedLazySourceCurrentBuildStatus"),
+                label + " current build status");
+        requireEquals("no-op-promise-resolve-0",
+                metadata.get("generatedLazySourceCurrentBuildTableShape"),
+                label + " current build table shape");
+        requireEquals("not-generated",
+                metadata.get("generatedLazySourceCurrentBuildChunkStatus"),
+                label + " current build chunk status");
+        requireEquals(Boolean.TRUE,
+                metadata.get("generatedLazySourceCurrentBuildNoOpConfirmed"),
+                label + " current build no-op flag");
+        requireEquals("current-smoke-dev-bundle-has-no-lazy-javascript-or-css-chunk-input",
+                metadata.get("generatedLazySourceBuildInputStatus"),
+                label + " build input status");
+        requireEquals("run-vaadin-update-imports-with-non-eager-route-dependency-or-supported-lazy-chunk-spi",
+                metadata.get("generatedLazySourceSupportedBuildPath"),
+                label + " supported build path");
+        requireEquals("build-spi-required-before-real-app-chunk-parity",
+                metadata.get("generatedLazySourceDecision"),
+                label + " decision");
+        requireEquals("real-app-generated-chunk-file-not-produced-by-current-build",
+                metadata.get("generatedLazySourceRemainingBlocker"),
+                label + " remaining blocker");
+        requireStringContains(metadata.get("generatedLazySourceNextResolutionStep"),
+                "v1.22 fixture",
+                label + " next resolution step");
+        requireEquals(Boolean.TRUE,
+                metadata.get("generatedLazySourceNoLocalhost"),
+                label + " no-localhost flag");
     }
 
     private static void requireProductionOwnerResourceLoaderMetadata(Map<String, Object> metadata,
@@ -1543,6 +1613,7 @@ public final class FlowClientResourceSmokeMain {
         boolean generatedLazyResourceObserved = false;
         boolean generatedLazyBundleChunkObserved = false;
         boolean generatedLoadOnDemandChunkObserved = false;
+        boolean generatedLazySourceBoundaryObserved = false;
         boolean devModePackageGraphObserved = false;
         boolean flowLazyDependencyObserved = false;
         boolean productionRuntimeArtifactObserved = false;
@@ -1620,6 +1691,14 @@ public final class FlowClientResourceSmokeMain {
                             metadata.get("loadOnDemandChunkBlockerVersion"))
                     && Boolean.FALSE.equals(metadata.get("generatedLazyChunkDiagnosticBridgeUsed"))
                     && Boolean.FALSE.equals(metadata.get("generatedLazyChunkDirectImportProbeUsed"));
+            generatedLazySourceBoundaryObserved = generatedLazySourceBoundaryObserved
+                    || "generated-lazy".equals(artifactFamily)
+                    && "stage-and-import-generated-lazy-chunk-v1_8".equals(executionPolicy)
+                    && "flow-ipc-generated-lazy-source-boundary-v1_26".equals(
+                            metadata.get("generatedLazySourceBoundaryVersion"))
+                    && "build-spi-required-before-real-app-chunk-parity".equals(
+                            metadata.get("generatedLazySourceDecision"))
+                    && Boolean.TRUE.equals(metadata.get("generatedLazySourceCurrentBuildNoOpConfirmed"));
             devModePackageGraphObserved = devModePackageGraphObserved
                     || "dev-mode-bundle".equals(artifactFamily)
                     && "verified-only-intentionally-not-executed".equals(executionPolicy)
@@ -1682,7 +1761,8 @@ public final class FlowClientResourceSmokeMain {
         if (!classpathResourceObserved || !legacyShimFallbackObserved || !devBundleEntryObserved
                 || !devBundleDependencyObserved || !productionBundleStatsObserved || !themeStaticResourceObserved
                 || !generatedLazyResourceObserved || !generatedLazyBundleChunkObserved || !devModePackageGraphObserved
-                || !generatedLoadOnDemandChunkObserved || !flowLazyDependencyObserved
+                || !generatedLoadOnDemandChunkObserved || !generatedLazySourceBoundaryObserved
+                || !flowLazyDependencyObserved
                 || !productionRuntimeArtifactObserved || !productionRuntimeOwnerObserved
                 || !productionRuntimeOwnerImportObserved || !productionRuntimeOwnerDependencyObserved) {
             throw new IllegalStateException("Component frontend resource manifest is missing a v1.4 artifact family");

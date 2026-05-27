@@ -92,6 +92,9 @@ public final class DesktopTraceInspector {
         FLOW_IPC_V1_25_PACKAGED_FRONTEND_BASELINE(
                 "--require-flow-ipc-v1_25-packaged-frontend-baseline"),
         FLOW_IPC_V1_25("--require-flow-ipc-v1_25"),
+        FLOW_IPC_V1_26_GENERATED_LAZY_SOURCE_BOUNDARY(
+                "--require-flow-ipc-v1_26-generated-lazy-source-boundary"),
+        FLOW_IPC_V1_26("--require-flow-ipc-v1_26"),
         FLOW_IPC_V1_3_FRAMEWORK("--require-flow-ipc-v1_3-framework");
 
         private final String option;
@@ -356,6 +359,28 @@ public final class DesktopTraceInspector {
                         FLOW_IPC_V1_23_PRODUCTION_OWNER_POSITIVE_FIXTURE, FLOW_IPC_V1_23,
                         FLOW_IPC_V1_24_FRONTEND_PIPELINE_CLOSURE, FLOW_IPC_V1_24,
                         FLOW_IPC_V1_25_PACKAGED_FRONTEND_BASELINE, FLOW_IPC_V1_25);
+                case FLOW_IPC_V1_26_GENERATED_LAZY_SOURCE_BOUNDARY ->
+                    EnumSet.of(FLOW_IPC_V1_26_GENERATED_LAZY_SOURCE_BOUNDARY);
+                case FLOW_IPC_V1_26 -> EnumSet.of(FLOW_IPC_V1, FLOW_IPC_V1_1, FLOW_IPC_V1_2,
+                        FLOW_IPC_V1_3, FLOW_IPC_V1_4, FLOW_IPC_V1_5, FLOW_IPC_V1_7,
+                        FLOW_IPC_V1_8, FLOW_IPC_V1_9_LOADONDEMAND, FLOW_IPC_V1_9,
+                        FLOW_IPC_V1_10_LAZY_DEPENDENCY, FLOW_IPC_V1_10_PRODUCTION_RUNTIME,
+                        FLOW_IPC_V1_10, FLOW_IPC_V1_11_LOADONDEMAND_CHUNK, FLOW_IPC_V1_11,
+                        FLOW_IPC_V1_12_LOADONDEMAND_CHUNK_FILE, FLOW_IPC_V1_12,
+                        FLOW_IPC_V1_13_PRODUCTION_OWNER, FLOW_IPC_V1_13,
+                        FLOW_IPC_V1_14_PRODUCTION_OWNER_IMPORT, FLOW_IPC_V1_14,
+                        FLOW_IPC_V1_15_PRODUCTION_OWNER_DEPENDENCIES, FLOW_IPC_V1_15,
+                        FLOW_IPC_V1_16_PRODUCTION_OWNER_ORDERING, FLOW_IPC_V1_16,
+                        FLOW_IPC_V1_17_RESOURCE_SCHEME, FLOW_IPC_V1_17,
+                        FLOW_IPC_V1_18_PRODUCTION_OWNER_RESOURCE_SCHEME, FLOW_IPC_V1_18,
+                        FLOW_IPC_V1_19_PRODUCTION_OWNER_SIDE_EFFECT, FLOW_IPC_V1_19,
+                        FLOW_IPC_V1_20_PRODUCTION_OWNER_OWNED_RUNTIME, FLOW_IPC_V1_20,
+                        FLOW_IPC_V1_21_FRONTEND_RESOLVER_CONTRACT, FLOW_IPC_V1_21,
+                        FLOW_IPC_V1_22_GENERATED_CHUNK_FIXTURE, FLOW_IPC_V1_22,
+                        FLOW_IPC_V1_23_PRODUCTION_OWNER_POSITIVE_FIXTURE, FLOW_IPC_V1_23,
+                        FLOW_IPC_V1_24_FRONTEND_PIPELINE_CLOSURE, FLOW_IPC_V1_24,
+                        FLOW_IPC_V1_25_PACKAGED_FRONTEND_BASELINE, FLOW_IPC_V1_25,
+                        FLOW_IPC_V1_26_GENERATED_LAZY_SOURCE_BOUNDARY, FLOW_IPC_V1_26);
                 case FLOW_IPC_V1_3_FRAMEWORK -> EnumSet.of(FLOW_IPC_V1_3_FRAMEWORK);
             };
         }
@@ -420,6 +445,9 @@ public final class DesktopTraceInspector {
                 case FLOW_IPC_V1_25_PACKAGED_FRONTEND_BASELINE ->
                     summary.hasRequiredFlowIpcV1_25PackagedFrontendBaselineTypes();
                 case FLOW_IPC_V1_25 -> summary.hasRequiredFlowIpcV1_25Types();
+                case FLOW_IPC_V1_26_GENERATED_LAZY_SOURCE_BOUNDARY ->
+                    summary.hasRequiredFlowIpcV1_26GeneratedLazySourceBoundaryTypes();
+                case FLOW_IPC_V1_26 -> summary.hasRequiredFlowIpcV1_26Types();
                 case FLOW_IPC_V1_3_FRAMEWORK -> summary.hasRequiredFlowIpcV1_3FrameworkTypes();
             };
         }
@@ -1028,6 +1056,11 @@ public final class DesktopTraceInspector {
                     && line.contains("\"componentFrontendResources\"")
                     && containsPackagedFrontendBaselineV125Fields(line)) {
                 summary.packagedFrontendBaselineV125ManifestObserved = true;
+            }
+            if (line.contains("\"type\":\"bootstrapResponse\"")
+                    && line.contains("\"componentFrontendResources\"")
+                    && containsGeneratedLazySourceBoundaryV126Fields(line)) {
+                summary.generatedLazySourceBoundaryV126ManifestObserved = true;
             }
             if (line.contains("\"type\":\"bootstrapResponse\"")
                     && line.contains("\"componentFrontendResources\"")
@@ -1858,6 +1891,17 @@ public final class DesktopTraceInspector {
                 summary.packagedFrontendBaselineV125ResponseObserved = true;
             }
             if (line.contains("\"type\":\"resourceRequest\"")
+                    && containsPath(line, "vaadin-dev-bundle/webapp/VAADIN/build/generated-flow-imports-VW7hRaNw.js")
+                    && containsGeneratedLazySourceBoundaryV126Fields(line)) {
+                summary.generatedLazySourceBoundaryV126RequestObserved = true;
+            }
+            if (line.contains("\"type\":\"resourceResponse\"")
+                    && containsPath(line, "vaadin-dev-bundle/webapp/VAADIN/build/generated-flow-imports-VW7hRaNw.js")
+                    && containsGeneratedLazySourceBoundaryV126Fields(line)
+                    && line.contains("\"bodyRedacted\":true")) {
+                summary.generatedLazySourceBoundaryV126ResponseObserved = true;
+            }
+            if (line.contains("\"type\":\"resourceRequest\"")
                     && line.contains("\"purpose\":\"generated-loadondemand-chunk-v1_11\"")
                     && line.contains("\"lookupKind\":\"Generated-flow-imports-dev-bundle-chunk-v1_4\"")
                     && containsPath(line, "vaadin-dev-bundle/webapp/VAADIN/build/generated-flow-imports-VW7hRaNw.js")
@@ -2481,6 +2525,14 @@ public final class DesktopTraceInspector {
                     && containsStringField(line, "packagedFrontendAllowedFallback",
                             "diagnostic-blob-only")) {
                 summary.packagedFrontendBaselineV125DiagnosticBlobFallbackObserved = true;
+            }
+            if (line.contains("\"type\":\"resourceStage\"")
+                    && containsPath(line, "vaadin-dev-bundle/webapp/VAADIN/build/generated-flow-imports-VW7hRaNw.js")
+                    && containsGeneratedLazySourceBoundaryV126Fields(line)
+                    && (line.contains("\"executionStatus\":\"executed\"")
+                            || line.contains("\"executionStatus\":\"strict-blocker\"")
+                            || line.contains("\"executionStatus\":\"staged\""))) {
+                summary.generatedLazySourceBoundaryV126StageObserved = true;
             }
             if (line.contains("\"type\":\"webview.dom\"")
                     && containsStringField(line, "frontendStagingResolverVersion", "flow-ipc-resource-staging-v1_5")
@@ -3177,6 +3229,23 @@ public final class DesktopTraceInspector {
                             "real-generated-lazy-chunk-file-not-generated,real-production-owner-owned-runtime-missing-real-artifact,dev-mode-vite-execution-unmapped")) {
                 summary.packagedFrontendBaselineV125RealBlockersObserved = true;
             }
+            if (line.contains("\"type\":\"webview.dom\"")
+                    && containsLiteralField(line, "generatedLazySourceBoundaryObserved", "true")
+                    && containsGeneratedLazySourceBoundaryV126Fields(line)) {
+                summary.generatedLazySourceBoundaryV126DomObserved = true;
+            }
+            if (line.contains("\"type\":\"webview.dom\"")
+                    && containsLiteralField(line, "generatedLazySourceCurrentBuildNoOpConfirmed", "true")
+                    && containsStringField(line, "generatedLazySourceCurrentBuildTableShape",
+                            "no-op-promise-resolve-0")
+                    && containsStringField(line, "generatedLazySourceCurrentBuildChunkStatus",
+                            "not-generated")
+                    && containsStringField(line, "generatedLazySourceRemainingBlocker",
+                            "real-app-generated-chunk-file-not-produced-by-current-build")
+                    && containsStringField(line, "loadOnDemandChunkFileFailureLayer",
+                            "chunk-file-not-generated")) {
+                summary.generatedLazySourceBoundaryV126CurrentBuildBlockerObserved = true;
+            }
             if (line.contains("\"type\":\"resourceRequest\"")
                     && line.contains("\"purpose\":\"vaadin-web-component-resource-probe\"")
                     && line.contains("\"lookupKind\":\"BigDecimalField-minimum-component-resource\"")
@@ -3733,6 +3802,44 @@ public final class DesktopTraceInspector {
                         "real-generated-lazy-chunk-file-not-generated,real-production-owner-owned-runtime-missing-real-artifact,dev-mode-vite-execution-unmapped");
     }
 
+    private static boolean containsGeneratedLazySourceBoundaryV126Fields(String line) {
+        return containsStringField(line, "generatedLazySourceBoundaryVersion",
+                "flow-ipc-generated-lazy-source-boundary-v1_26")
+                && containsStringField(line, "generatedLazySourceMechanism",
+                        "vaadin-AbstractUpdateImports-generateLazyLoadedChunks")
+                && line.contains("generatedLazySourceArtifact")
+                && containsStringField(line, "generatedLazySourceScanner",
+                        "com.vaadin.flow.server.frontend.scanner.FrontendDependencies")
+                && containsStringField(line, "generatedLazySourceLazyRouteRule",
+                        "ChunkInfo(type=ROUTE,eager=false)")
+                && containsStringField(line, "generatedLazySourceChunkTriggerInput",
+                        "DependencyTrigger classes plus lazyJavascript/lazyCss")
+                && containsStringField(line, "generatedLazySourcePositiveTableShape",
+                        "branch-table-dynamic-import")
+                && line.contains("pending.push(import('./chunks/chunk-<content-hash>.js'))")
+                && containsStringField(line, "generatedLazySourceNoChunkFallback",
+                        "Promise.resolve(0)")
+                && containsStringField(line, "generatedLazySourceCurrentBuildArtifact",
+                        "vaadin-dev-bundle/webapp/VAADIN/build/generated-flow-imports-VW7hRaNw.js")
+                && containsStringField(line, "generatedLazySourceCurrentBuildStatus",
+                        "no-real-generated-lazy-chunk-produced")
+                && containsStringField(line, "generatedLazySourceCurrentBuildTableShape",
+                        "no-op-promise-resolve-0")
+                && containsStringField(line, "generatedLazySourceCurrentBuildChunkStatus",
+                        "not-generated")
+                && containsLiteralField(line, "generatedLazySourceCurrentBuildNoOpConfirmed", "true")
+                && containsStringField(line, "generatedLazySourceBuildInputStatus",
+                        "current-smoke-dev-bundle-has-no-lazy-javascript-or-css-chunk-input")
+                && containsStringField(line, "generatedLazySourceSupportedBuildPath",
+                        "run-vaadin-update-imports-with-non-eager-route-dependency-or-supported-lazy-chunk-spi")
+                && containsStringField(line, "generatedLazySourceDecision",
+                        "build-spi-required-before-real-app-chunk-parity")
+                && containsStringField(line, "generatedLazySourceRemainingBlocker",
+                        "real-app-generated-chunk-file-not-produced-by-current-build")
+                && line.contains("v1.22 fixture")
+                && containsLiteralField(line, "generatedLazySourceNoLocalhost", "true");
+    }
+
     private static boolean containsProductionOwnerFailureLayer(String line, String field) {
         return containsStringField(line, field, "production-owner-duplicate-custom-element")
                 || containsStringField(line, field, "production-owner-relative-import-unresolved")
@@ -4179,6 +4286,12 @@ public final class DesktopTraceInspector {
         private boolean packagedFrontendBaselineV125CustomSchemeDomObserved;
         private boolean packagedFrontendBaselineV125DiagnosticBlobFallbackDomObserved;
         private boolean packagedFrontendBaselineV125RealBlockersObserved;
+        private boolean generatedLazySourceBoundaryV126ManifestObserved;
+        private boolean generatedLazySourceBoundaryV126RequestObserved;
+        private boolean generatedLazySourceBoundaryV126ResponseObserved;
+        private boolean generatedLazySourceBoundaryV126StageObserved;
+        private boolean generatedLazySourceBoundaryV126DomObserved;
+        private boolean generatedLazySourceBoundaryV126CurrentBuildBlockerObserved;
 
         public boolean hasRequiredFlowIpcTypes() {
             return types.keySet().containsAll(FLOW_IPC_REQUIRED_TYPES)
@@ -4587,6 +4700,20 @@ public final class DesktopTraceInspector {
         public boolean hasRequiredFlowIpcV1_25Types() {
             return hasRequiredFlowIpcV1_24Types()
                     && hasRequiredFlowIpcV1_25PackagedFrontendBaselineTypes();
+        }
+
+        public boolean hasRequiredFlowIpcV1_26GeneratedLazySourceBoundaryTypes() {
+            return generatedLazySourceBoundaryV126ManifestObserved
+                    && generatedLazySourceBoundaryV126RequestObserved
+                    && generatedLazySourceBoundaryV126ResponseObserved
+                    && generatedLazySourceBoundaryV126StageObserved
+                    && generatedLazySourceBoundaryV126DomObserved
+                    && generatedLazySourceBoundaryV126CurrentBuildBlockerObserved;
+        }
+
+        public boolean hasRequiredFlowIpcV1_26Types() {
+            return hasRequiredFlowIpcV1_25Types()
+                    && hasRequiredFlowIpcV1_26GeneratedLazySourceBoundaryTypes();
         }
 
         public boolean hasRequiredFlowIpcV1_3FrameworkTypes() {
@@ -5025,6 +5152,15 @@ public final class DesktopTraceInspector {
                     + packagedFrontendBaselineV125CustomSchemeDomObserved + "/"
                     + packagedFrontendBaselineV125DiagnosticBlobFallbackDomObserved + "/"
                     + packagedFrontendBaselineV125RealBlockersObserved);
+            System.out.println("Flow IPC v1.26 generated lazy source boundary manifest observed: "
+                    + generatedLazySourceBoundaryV126ManifestObserved);
+            System.out.println("Flow IPC v1.26 generated lazy source boundary request/response observed: "
+                    + generatedLazySourceBoundaryV126RequestObserved + "/"
+                    + generatedLazySourceBoundaryV126ResponseObserved);
+            System.out.println("Flow IPC v1.26 generated lazy source boundary stage/DOM/current blocker observed: "
+                    + generatedLazySourceBoundaryV126StageObserved + "/"
+                    + generatedLazySourceBoundaryV126DomObserved + "/"
+                    + generatedLazySourceBoundaryV126CurrentBuildBlockerObserved);
             System.out.println("Flow IPC v1.6 TextField graph manifest observed: "
                     + frontendTextFieldV16ManifestObserved);
             System.out.println("Flow IPC v1.6 TextField graph request observed: "

@@ -2014,6 +2014,28 @@ final class WebViewHost: NSObject, NSApplicationDelegate, NSWindowDelegate, WKNa
           packagedFrontendCustomSchemeObserved: !!(window.VaadinDesktopIpcDiagnostics && window.VaadinDesktopIpcDiagnostics.packagedFrontendCustomSchemeObserved),
           packagedFrontendDiagnosticBlobFallbackObserved: !!(window.VaadinDesktopIpcDiagnostics && window.VaadinDesktopIpcDiagnostics.packagedFrontendDiagnosticBlobFallbackObserved),
           packagedFrontendRealBlockersObserved: !!(window.VaadinDesktopIpcDiagnostics && window.VaadinDesktopIpcDiagnostics.packagedFrontendRealBlockersObserved),
+          generatedLazySourceBoundaryObserved: !!(window.VaadinDesktopIpcDiagnostics && window.VaadinDesktopIpcDiagnostics.generatedLazySourceBoundaryObserved),
+          generatedLazySourceBoundaryVersion: window.VaadinDesktopIpcDiagnostics ? window.VaadinDesktopIpcDiagnostics.generatedLazySourceBoundaryVersion : "",
+          generatedLazySourceMechanism: window.VaadinDesktopIpcDiagnostics ? window.VaadinDesktopIpcDiagnostics.generatedLazySourceMechanism : "",
+          generatedLazySourceArtifact: window.VaadinDesktopIpcDiagnostics ? window.VaadinDesktopIpcDiagnostics.generatedLazySourceArtifact : "",
+          generatedLazySourceScanner: window.VaadinDesktopIpcDiagnostics ? window.VaadinDesktopIpcDiagnostics.generatedLazySourceScanner : "",
+          generatedLazySourceLazyRouteRule: window.VaadinDesktopIpcDiagnostics ? window.VaadinDesktopIpcDiagnostics.generatedLazySourceLazyRouteRule : "",
+          generatedLazySourceChunkTriggerInput: window.VaadinDesktopIpcDiagnostics ? window.VaadinDesktopIpcDiagnostics.generatedLazySourceChunkTriggerInput : "",
+          generatedLazySourcePositiveTableShape: window.VaadinDesktopIpcDiagnostics ? window.VaadinDesktopIpcDiagnostics.generatedLazySourcePositiveTableShape : "",
+          generatedLazySourcePositiveImportPattern: window.VaadinDesktopIpcDiagnostics ? window.VaadinDesktopIpcDiagnostics.generatedLazySourcePositiveImportPattern : "",
+          generatedLazySourceNoChunkFallback: window.VaadinDesktopIpcDiagnostics ? window.VaadinDesktopIpcDiagnostics.generatedLazySourceNoChunkFallback : "",
+          generatedLazySourceCurrentBuildArtifact: window.VaadinDesktopIpcDiagnostics ? window.VaadinDesktopIpcDiagnostics.generatedLazySourceCurrentBuildArtifact : "",
+          generatedLazySourceCurrentBuildStatus: window.VaadinDesktopIpcDiagnostics ? window.VaadinDesktopIpcDiagnostics.generatedLazySourceCurrentBuildStatus : "",
+          generatedLazySourceCurrentBuildTableShape: window.VaadinDesktopIpcDiagnostics ? window.VaadinDesktopIpcDiagnostics.generatedLazySourceCurrentBuildTableShape : "",
+          generatedLazySourceCurrentBuildChunkStatus: window.VaadinDesktopIpcDiagnostics ? window.VaadinDesktopIpcDiagnostics.generatedLazySourceCurrentBuildChunkStatus : "",
+          generatedLazySourceCurrentBuildNoOpConfirmed: !!(window.VaadinDesktopIpcDiagnostics && window.VaadinDesktopIpcDiagnostics.generatedLazySourceCurrentBuildNoOpConfirmed),
+          generatedLazySourceCurrentBuildChunkArtifact: window.VaadinDesktopIpcDiagnostics ? window.VaadinDesktopIpcDiagnostics.generatedLazySourceCurrentBuildChunkArtifact : "",
+          generatedLazySourceBuildInputStatus: window.VaadinDesktopIpcDiagnostics ? window.VaadinDesktopIpcDiagnostics.generatedLazySourceBuildInputStatus : "",
+          generatedLazySourceSupportedBuildPath: window.VaadinDesktopIpcDiagnostics ? window.VaadinDesktopIpcDiagnostics.generatedLazySourceSupportedBuildPath : "",
+          generatedLazySourceDecision: window.VaadinDesktopIpcDiagnostics ? window.VaadinDesktopIpcDiagnostics.generatedLazySourceDecision : "",
+          generatedLazySourceRemainingBlocker: window.VaadinDesktopIpcDiagnostics ? window.VaadinDesktopIpcDiagnostics.generatedLazySourceRemainingBlocker : "",
+          generatedLazySourceNextResolutionStep: window.VaadinDesktopIpcDiagnostics ? window.VaadinDesktopIpcDiagnostics.generatedLazySourceNextResolutionStep : "",
+          generatedLazySourceNoLocalhost: !!(window.VaadinDesktopIpcDiagnostics && window.VaadinDesktopIpcDiagnostics.generatedLazySourceNoLocalhost),
           frontendArtifactShimFallback: !!(window.VaadinDesktopIpcDiagnostics && window.VaadinDesktopIpcDiagnostics.frontendArtifactShimFallback),
           frontendArtifactProductionBundlePartial: !!(window.VaadinDesktopIpcDiagnostics && window.VaadinDesktopIpcDiagnostics.frontendArtifactProductionBundlePartial),
           frontendArtifactProductionBundleStatsVerified: !!(window.VaadinDesktopIpcDiagnostics && window.VaadinDesktopIpcDiagnostics.frontendArtifactProductionBundleStatsVerified),
@@ -3132,6 +3154,28 @@ let flowIpcShell = #"""
         packagedFrontendCustomSchemeObserved: false,
         packagedFrontendDiagnosticBlobFallbackObserved: false,
         packagedFrontendRealBlockersObserved: false,
+        generatedLazySourceBoundaryObserved: false,
+        generatedLazySourceBoundaryVersion: '',
+        generatedLazySourceMechanism: '',
+        generatedLazySourceArtifact: '',
+        generatedLazySourceScanner: '',
+        generatedLazySourceLazyRouteRule: '',
+        generatedLazySourceChunkTriggerInput: '',
+        generatedLazySourcePositiveTableShape: '',
+        generatedLazySourcePositiveImportPattern: '',
+        generatedLazySourceNoChunkFallback: '',
+        generatedLazySourceCurrentBuildArtifact: '',
+        generatedLazySourceCurrentBuildStatus: '',
+        generatedLazySourceCurrentBuildTableShape: '',
+        generatedLazySourceCurrentBuildChunkStatus: '',
+        generatedLazySourceCurrentBuildNoOpConfirmed: false,
+        generatedLazySourceCurrentBuildChunkArtifact: '',
+        generatedLazySourceBuildInputStatus: '',
+        generatedLazySourceSupportedBuildPath: '',
+        generatedLazySourceDecision: '',
+        generatedLazySourceRemainingBlocker: '',
+        generatedLazySourceNextResolutionStep: '',
+        generatedLazySourceNoLocalhost: false,
         frontendArtifactShimFallback: false,
         frontendArtifactProductionBundlePartial: false,
         frontendArtifactProductionBundleStatsVerified: false,
@@ -5180,6 +5224,42 @@ let flowIpcShell = #"""
             window.VaadinDesktopIpcDiagnostics[diagnosticKey] = source[sourceKey];
           }
         }
+        if (typeof source.generatedLazySourceBoundaryVersion === 'string'
+            && source.generatedLazySourceBoundaryVersion) {
+          window.VaadinDesktopIpcDiagnostics.generatedLazySourceBoundaryObserved = true;
+          window.VaadinDesktopIpcDiagnostics.generatedLazySourceBoundaryVersion =
+            source.generatedLazySourceBoundaryVersion;
+        }
+        for (const [sourceKey, diagnosticKey] of [
+          ['generatedLazySourceMechanism', 'generatedLazySourceMechanism'],
+          ['generatedLazySourceArtifact', 'generatedLazySourceArtifact'],
+          ['generatedLazySourceScanner', 'generatedLazySourceScanner'],
+          ['generatedLazySourceLazyRouteRule', 'generatedLazySourceLazyRouteRule'],
+          ['generatedLazySourceChunkTriggerInput', 'generatedLazySourceChunkTriggerInput'],
+          ['generatedLazySourcePositiveTableShape', 'generatedLazySourcePositiveTableShape'],
+          ['generatedLazySourcePositiveImportPattern', 'generatedLazySourcePositiveImportPattern'],
+          ['generatedLazySourceNoChunkFallback', 'generatedLazySourceNoChunkFallback'],
+          ['generatedLazySourceCurrentBuildArtifact', 'generatedLazySourceCurrentBuildArtifact'],
+          ['generatedLazySourceCurrentBuildStatus', 'generatedLazySourceCurrentBuildStatus'],
+          ['generatedLazySourceCurrentBuildTableShape', 'generatedLazySourceCurrentBuildTableShape'],
+          ['generatedLazySourceCurrentBuildChunkStatus', 'generatedLazySourceCurrentBuildChunkStatus'],
+          ['generatedLazySourceCurrentBuildChunkArtifact', 'generatedLazySourceCurrentBuildChunkArtifact'],
+          ['generatedLazySourceBuildInputStatus', 'generatedLazySourceBuildInputStatus'],
+          ['generatedLazySourceSupportedBuildPath', 'generatedLazySourceSupportedBuildPath'],
+          ['generatedLazySourceDecision', 'generatedLazySourceDecision'],
+          ['generatedLazySourceRemainingBlocker', 'generatedLazySourceRemainingBlocker'],
+          ['generatedLazySourceNextResolutionStep', 'generatedLazySourceNextResolutionStep']
+        ]) {
+          if (typeof source[sourceKey] === 'string' && source[sourceKey]) {
+            window.VaadinDesktopIpcDiagnostics[diagnosticKey] = source[sourceKey];
+          }
+        }
+        if (source.generatedLazySourceCurrentBuildNoOpConfirmed === true) {
+          window.VaadinDesktopIpcDiagnostics.generatedLazySourceCurrentBuildNoOpConfirmed = true;
+        }
+        if (source.generatedLazySourceNoLocalhost === true) {
+          window.VaadinDesktopIpcDiagnostics.generatedLazySourceNoLocalhost = true;
+        }
         addFrontendResolverCsv(frontendResolverFamiliesObserved, source.frontendResolverFamiliesCovered || '');
         addFrontendResolverCsv(frontendResolverAcceptedGapFamilies, source.frontendResolverAcceptableGaps || '');
       }
@@ -5999,6 +6079,29 @@ let flowIpcShell = #"""
           packagedFrontendCleanupPolicy: resource.packagedFrontendCleanupPolicy || '',
           packagedFrontendRealBuildStatus: resource.packagedFrontendRealBuildStatus || '',
           packagedFrontendRemainingBlockers: resource.packagedFrontendRemainingBlockers || '',
+          generatedLazySourceBoundaryVersion: resource.generatedLazySourceBoundaryVersion || '',
+          generatedLazySourceMechanism: resource.generatedLazySourceMechanism || '',
+          generatedLazySourceArtifact: resource.generatedLazySourceArtifact || '',
+          generatedLazySourceScanner: resource.generatedLazySourceScanner || '',
+          generatedLazySourceLazyRouteRule: resource.generatedLazySourceLazyRouteRule || '',
+          generatedLazySourceChunkTriggerInput: resource.generatedLazySourceChunkTriggerInput || '',
+          generatedLazySourcePositiveTableShape: resource.generatedLazySourcePositiveTableShape || '',
+          generatedLazySourcePositiveImportPattern: resource.generatedLazySourcePositiveImportPattern || '',
+          generatedLazySourceNoChunkFallback: resource.generatedLazySourceNoChunkFallback || '',
+          generatedLazySourceCurrentBuildArtifact: resource.generatedLazySourceCurrentBuildArtifact || '',
+          generatedLazySourceCurrentBuildStatus: resource.generatedLazySourceCurrentBuildStatus || '',
+          generatedLazySourceCurrentBuildTableShape: resource.generatedLazySourceCurrentBuildTableShape || '',
+          generatedLazySourceCurrentBuildChunkStatus: resource.generatedLazySourceCurrentBuildChunkStatus || '',
+          generatedLazySourceCurrentBuildNoOpConfirmed:
+            resource.generatedLazySourceCurrentBuildNoOpConfirmed === true,
+          generatedLazySourceCurrentBuildChunkArtifact:
+            resource.generatedLazySourceCurrentBuildChunkArtifact || '',
+          generatedLazySourceBuildInputStatus: resource.generatedLazySourceBuildInputStatus || '',
+          generatedLazySourceSupportedBuildPath: resource.generatedLazySourceSupportedBuildPath || '',
+          generatedLazySourceDecision: resource.generatedLazySourceDecision || '',
+          generatedLazySourceRemainingBlocker: resource.generatedLazySourceRemainingBlocker || '',
+          generatedLazySourceNextResolutionStep: resource.generatedLazySourceNextResolutionStep || '',
+          generatedLazySourceNoLocalhost: resource.generatedLazySourceNoLocalhost === true,
           lookupKind: resource.lookupKind || '',
           textfieldGraphParityVersion: resource.textfieldGraphParityVersion || '',
           blockerVersion: resource.blockerVersion || '',
@@ -6540,6 +6643,29 @@ let flowIpcShell = #"""
           packagedFrontendCleanupPolicy: resource.packagedFrontendCleanupPolicy || '',
           packagedFrontendRealBuildStatus: resource.packagedFrontendRealBuildStatus || '',
           packagedFrontendRemainingBlockers: resource.packagedFrontendRemainingBlockers || '',
+          generatedLazySourceBoundaryVersion: resource.generatedLazySourceBoundaryVersion || '',
+          generatedLazySourceMechanism: resource.generatedLazySourceMechanism || '',
+          generatedLazySourceArtifact: resource.generatedLazySourceArtifact || '',
+          generatedLazySourceScanner: resource.generatedLazySourceScanner || '',
+          generatedLazySourceLazyRouteRule: resource.generatedLazySourceLazyRouteRule || '',
+          generatedLazySourceChunkTriggerInput: resource.generatedLazySourceChunkTriggerInput || '',
+          generatedLazySourcePositiveTableShape: resource.generatedLazySourcePositiveTableShape || '',
+          generatedLazySourcePositiveImportPattern: resource.generatedLazySourcePositiveImportPattern || '',
+          generatedLazySourceNoChunkFallback: resource.generatedLazySourceNoChunkFallback || '',
+          generatedLazySourceCurrentBuildArtifact: resource.generatedLazySourceCurrentBuildArtifact || '',
+          generatedLazySourceCurrentBuildStatus: resource.generatedLazySourceCurrentBuildStatus || '',
+          generatedLazySourceCurrentBuildTableShape: resource.generatedLazySourceCurrentBuildTableShape || '',
+          generatedLazySourceCurrentBuildChunkStatus: resource.generatedLazySourceCurrentBuildChunkStatus || '',
+          generatedLazySourceCurrentBuildNoOpConfirmed:
+            resource.generatedLazySourceCurrentBuildNoOpConfirmed === true,
+          generatedLazySourceCurrentBuildChunkArtifact:
+            resource.generatedLazySourceCurrentBuildChunkArtifact || '',
+          generatedLazySourceBuildInputStatus: resource.generatedLazySourceBuildInputStatus || '',
+          generatedLazySourceSupportedBuildPath: resource.generatedLazySourceSupportedBuildPath || '',
+          generatedLazySourceDecision: resource.generatedLazySourceDecision || '',
+          generatedLazySourceRemainingBlocker: resource.generatedLazySourceRemainingBlocker || '',
+          generatedLazySourceNextResolutionStep: resource.generatedLazySourceNextResolutionStep || '',
+          generatedLazySourceNoLocalhost: resource.generatedLazySourceNoLocalhost === true,
           stagedPath: '',
           owner: stageOwner,
           artifactFamily: family,
@@ -7673,7 +7799,30 @@ let flowIpcShell = #"""
             packagedFrontendIntegrity: resource.packagedFrontendIntegrity || '',
             packagedFrontendCleanupPolicy: resource.packagedFrontendCleanupPolicy || '',
             packagedFrontendRealBuildStatus: resource.packagedFrontendRealBuildStatus || '',
-            packagedFrontendRemainingBlockers: resource.packagedFrontendRemainingBlockers || ''
+            packagedFrontendRemainingBlockers: resource.packagedFrontendRemainingBlockers || '',
+            generatedLazySourceBoundaryVersion: resource.generatedLazySourceBoundaryVersion || '',
+            generatedLazySourceMechanism: resource.generatedLazySourceMechanism || '',
+            generatedLazySourceArtifact: resource.generatedLazySourceArtifact || '',
+            generatedLazySourceScanner: resource.generatedLazySourceScanner || '',
+            generatedLazySourceLazyRouteRule: resource.generatedLazySourceLazyRouteRule || '',
+            generatedLazySourceChunkTriggerInput: resource.generatedLazySourceChunkTriggerInput || '',
+            generatedLazySourcePositiveTableShape: resource.generatedLazySourcePositiveTableShape || '',
+            generatedLazySourcePositiveImportPattern: resource.generatedLazySourcePositiveImportPattern || '',
+            generatedLazySourceNoChunkFallback: resource.generatedLazySourceNoChunkFallback || '',
+            generatedLazySourceCurrentBuildArtifact: resource.generatedLazySourceCurrentBuildArtifact || '',
+            generatedLazySourceCurrentBuildStatus: resource.generatedLazySourceCurrentBuildStatus || '',
+            generatedLazySourceCurrentBuildTableShape: resource.generatedLazySourceCurrentBuildTableShape || '',
+            generatedLazySourceCurrentBuildChunkStatus: resource.generatedLazySourceCurrentBuildChunkStatus || '',
+            generatedLazySourceCurrentBuildNoOpConfirmed:
+              resource.generatedLazySourceCurrentBuildNoOpConfirmed === true,
+            generatedLazySourceCurrentBuildChunkArtifact:
+              resource.generatedLazySourceCurrentBuildChunkArtifact || '',
+            generatedLazySourceBuildInputStatus: resource.generatedLazySourceBuildInputStatus || '',
+            generatedLazySourceSupportedBuildPath: resource.generatedLazySourceSupportedBuildPath || '',
+            generatedLazySourceDecision: resource.generatedLazySourceDecision || '',
+            generatedLazySourceRemainingBlocker: resource.generatedLazySourceRemainingBlocker || '',
+            generatedLazySourceNextResolutionStep: resource.generatedLazySourceNextResolutionStep || '',
+            generatedLazySourceNoLocalhost: resource.generatedLazySourceNoLocalhost === true
           });
           hostExtra.frontendResourceSchemeVersion =
             response.frontendResourceSchemeVersion || 'flow-ipc-resource-scheme-v1_17';
@@ -7766,6 +7915,56 @@ let flowIpcShell = #"""
             response.packagedFrontendRealBuildStatus || resource.packagedFrontendRealBuildStatus || '';
           hostExtra.packagedFrontendRemainingBlockers =
             response.packagedFrontendRemainingBlockers || resource.packagedFrontendRemainingBlockers || '';
+          hostExtra.generatedLazySourceBoundaryVersion =
+            response.generatedLazySourceBoundaryVersion || resource.generatedLazySourceBoundaryVersion || '';
+          hostExtra.generatedLazySourceMechanism =
+            response.generatedLazySourceMechanism || resource.generatedLazySourceMechanism || '';
+          hostExtra.generatedLazySourceArtifact =
+            response.generatedLazySourceArtifact || resource.generatedLazySourceArtifact || '';
+          hostExtra.generatedLazySourceScanner =
+            response.generatedLazySourceScanner || resource.generatedLazySourceScanner || '';
+          hostExtra.generatedLazySourceLazyRouteRule =
+            response.generatedLazySourceLazyRouteRule || resource.generatedLazySourceLazyRouteRule || '';
+          hostExtra.generatedLazySourceChunkTriggerInput =
+            response.generatedLazySourceChunkTriggerInput || resource.generatedLazySourceChunkTriggerInput || '';
+          hostExtra.generatedLazySourcePositiveTableShape =
+            response.generatedLazySourcePositiveTableShape || resource.generatedLazySourcePositiveTableShape || '';
+          hostExtra.generatedLazySourcePositiveImportPattern =
+            response.generatedLazySourcePositiveImportPattern || resource.generatedLazySourcePositiveImportPattern || '';
+          hostExtra.generatedLazySourceNoChunkFallback =
+            response.generatedLazySourceNoChunkFallback || resource.generatedLazySourceNoChunkFallback || '';
+          hostExtra.generatedLazySourceCurrentBuildArtifact =
+            response.generatedLazySourceCurrentBuildArtifact || resource.generatedLazySourceCurrentBuildArtifact || '';
+          hostExtra.generatedLazySourceCurrentBuildStatus =
+            response.generatedLazySourceCurrentBuildStatus || resource.generatedLazySourceCurrentBuildStatus || '';
+          hostExtra.generatedLazySourceCurrentBuildTableShape =
+            response.generatedLazySourceCurrentBuildTableShape
+            || resource.generatedLazySourceCurrentBuildTableShape
+            || '';
+          hostExtra.generatedLazySourceCurrentBuildChunkStatus =
+            response.generatedLazySourceCurrentBuildChunkStatus
+            || resource.generatedLazySourceCurrentBuildChunkStatus
+            || '';
+          hostExtra.generatedLazySourceCurrentBuildNoOpConfirmed =
+            response.generatedLazySourceCurrentBuildNoOpConfirmed === true
+            || resource.generatedLazySourceCurrentBuildNoOpConfirmed === true;
+          hostExtra.generatedLazySourceCurrentBuildChunkArtifact =
+            response.generatedLazySourceCurrentBuildChunkArtifact
+            || resource.generatedLazySourceCurrentBuildChunkArtifact
+            || '';
+          hostExtra.generatedLazySourceBuildInputStatus =
+            response.generatedLazySourceBuildInputStatus || resource.generatedLazySourceBuildInputStatus || '';
+          hostExtra.generatedLazySourceSupportedBuildPath =
+            response.generatedLazySourceSupportedBuildPath || resource.generatedLazySourceSupportedBuildPath || '';
+          hostExtra.generatedLazySourceDecision =
+            response.generatedLazySourceDecision || resource.generatedLazySourceDecision || '';
+          hostExtra.generatedLazySourceRemainingBlocker =
+            response.generatedLazySourceRemainingBlocker || resource.generatedLazySourceRemainingBlocker || '';
+          hostExtra.generatedLazySourceNextResolutionStep =
+            response.generatedLazySourceNextResolutionStep || resource.generatedLazySourceNextResolutionStep || '';
+          hostExtra.generatedLazySourceNoLocalhost =
+            response.generatedLazySourceNoLocalhost === true
+            || resource.generatedLazySourceNoLocalhost === true;
           const stagedUrl = response.stagedUrl || '';
           if (!stagedUrl) {
             return '';

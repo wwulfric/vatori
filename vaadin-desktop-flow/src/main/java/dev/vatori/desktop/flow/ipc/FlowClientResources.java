@@ -408,6 +408,36 @@ final class FlowClientResources {
             "product-parity-pending";
     private static final String PACKAGED_FRONTEND_REMAINING_BLOCKERS =
             FRONTEND_PIPELINE_CLOSURE_REMAINING_BLOCKERS;
+    private static final String GENERATED_LAZY_SOURCE_BOUNDARY_VERSION =
+            "flow-ipc-generated-lazy-source-boundary-v1_26";
+    private static final String GENERATED_LAZY_SOURCE_MECHANISM =
+            "vaadin-AbstractUpdateImports-generateLazyLoadedChunks";
+    private static final String GENERATED_LAZY_SOURCE_ARTIFACT =
+            "com.vaadin.flow.server.frontend.AbstractUpdateImports";
+    private static final String GENERATED_LAZY_SOURCE_SCANNER =
+            "com.vaadin.flow.server.frontend.scanner.FrontendDependencies";
+    private static final String GENERATED_LAZY_SOURCE_LAZY_ROUTE_RULE =
+            "ChunkInfo(type=ROUTE,eager=false)";
+    private static final String GENERATED_LAZY_SOURCE_CHUNK_TRIGGER_INPUT =
+            "DependencyTrigger classes plus lazyJavascript/lazyCss";
+    private static final String GENERATED_LAZY_SOURCE_POSITIVE_TABLE_SHAPE =
+            "branch-table-dynamic-import";
+    private static final String GENERATED_LAZY_SOURCE_POSITIVE_IMPORT_PATTERN =
+            "pending.push(import('./chunks/chunk-<content-hash>.js'))";
+    private static final String GENERATED_LAZY_SOURCE_NO_CHUNK_FALLBACK =
+            "Promise.resolve(0)";
+    private static final String GENERATED_LAZY_SOURCE_CURRENT_BUILD_STATUS =
+            "no-real-generated-lazy-chunk-produced";
+    private static final String GENERATED_LAZY_SOURCE_BUILD_INPUT_STATUS =
+            "current-smoke-dev-bundle-has-no-lazy-javascript-or-css-chunk-input";
+    private static final String GENERATED_LAZY_SOURCE_SUPPORTED_BUILD_PATH =
+            "run-vaadin-update-imports-with-non-eager-route-dependency-or-supported-lazy-chunk-spi";
+    private static final String GENERATED_LAZY_SOURCE_DECISION =
+            "build-spi-required-before-real-app-chunk-parity";
+    private static final String GENERATED_LAZY_SOURCE_REMAINING_BLOCKER =
+            "real-app-generated-chunk-file-not-produced-by-current-build";
+    private static final String GENERATED_LAZY_SOURCE_NEXT_STEP =
+            "make the app build produce a non-empty lazyJavascript/lazyCss ChunkInfo or add a supported Vaadin lazy chunk SPI before replacing the v1.22 fixture with real app/build chunk parity";
     private static final List<String> PRODUCTION_RUNTIME_OWNER_DEPENDENCY_ARTIFACTS = List.of(
             DEV_BUNDLE_COMMONJS_JS,
             DEV_BUNDLE_INDEX_HTML_JS,
@@ -857,6 +887,7 @@ final class FlowClientResources {
         manifest.put("loadOnDemandChunkBlockerVersion", GENERATED_LAZY_CHUNK_BLOCKER_VERSION);
         manifest.put("loadOnDemandChunkNextResolutionStep", GENERATED_LAZY_CHUNK_NEXT_RESOLUTION_STEP);
         manifest.putAll(generatedLoadOnDemandChunkFileRegistryAttributes(DEV_BUNDLE_GENERATED_FLOW_IMPORTS_JS));
+        manifest.putAll(generatedLazySourceBoundaryAttributes());
         manifest.put("generatedLazyChunkFileExecutionVersion", GENERATED_LAZY_CHUNK_FILE_EXECUTION_VERSION);
         manifest.put("generatedLazyChunkFileFixtureSource", GENERATED_LAZY_CHUNK_FILE_FIXTURE_SOURCE);
         manifest.put("generatedLazyChunkFileFixtureImportsArtifact", GENERATED_FLOW_IMPORTS_V1_22_JS);
@@ -1912,6 +1943,7 @@ final class FlowClientResources {
         attributes.put("loadOnDemandChunkNextResolutionStep", GENERATED_LAZY_CHUNK_NEXT_RESOLUTION_STEP);
         if (primary) {
             attributes.putAll(generatedLoadOnDemandChunkFileRegistryAttributes(path));
+            attributes.putAll(generatedLazySourceBoundaryAttributes());
         }
         attributes.put("devBundleResource", true);
         attributes.put("productionBundleResource", true);
@@ -1950,6 +1982,32 @@ final class FlowClientResources {
                     "vaadin-dev-bundle/webapp/VAADIN/build/commonjsHelpers-CUmg6egw.js",
                     "vaadin-dev-bundle/webapp/VAADIN/build/markdown-helpers-31I0A-hg.js"));
         }
+        return attributes;
+    }
+
+    private static Map<String, Object> generatedLazySourceBoundaryAttributes() {
+        Map<String, Object> attributes = new LinkedHashMap<>();
+        attributes.put("generatedLazySourceBoundaryVersion", GENERATED_LAZY_SOURCE_BOUNDARY_VERSION);
+        attributes.put("generatedLazySourceMechanism", GENERATED_LAZY_SOURCE_MECHANISM);
+        attributes.put("generatedLazySourceArtifact", GENERATED_LAZY_SOURCE_ARTIFACT);
+        attributes.put("generatedLazySourceScanner", GENERATED_LAZY_SOURCE_SCANNER);
+        attributes.put("generatedLazySourceLazyRouteRule", GENERATED_LAZY_SOURCE_LAZY_ROUTE_RULE);
+        attributes.put("generatedLazySourceChunkTriggerInput", GENERATED_LAZY_SOURCE_CHUNK_TRIGGER_INPUT);
+        attributes.put("generatedLazySourcePositiveTableShape", GENERATED_LAZY_SOURCE_POSITIVE_TABLE_SHAPE);
+        attributes.put("generatedLazySourcePositiveImportPattern", GENERATED_LAZY_SOURCE_POSITIVE_IMPORT_PATTERN);
+        attributes.put("generatedLazySourceNoChunkFallback", GENERATED_LAZY_SOURCE_NO_CHUNK_FALLBACK);
+        attributes.put("generatedLazySourceCurrentBuildArtifact", DEV_BUNDLE_GENERATED_FLOW_IMPORTS_JS);
+        attributes.put("generatedLazySourceCurrentBuildStatus", GENERATED_LAZY_SOURCE_CURRENT_BUILD_STATUS);
+        attributes.put("generatedLazySourceCurrentBuildTableShape", "no-op-promise-resolve-0");
+        attributes.put("generatedLazySourceCurrentBuildChunkStatus", "not-generated");
+        attributes.put("generatedLazySourceCurrentBuildNoOpConfirmed", true);
+        attributes.put("generatedLazySourceCurrentBuildChunkArtifact", "");
+        attributes.put("generatedLazySourceBuildInputStatus", GENERATED_LAZY_SOURCE_BUILD_INPUT_STATUS);
+        attributes.put("generatedLazySourceSupportedBuildPath", GENERATED_LAZY_SOURCE_SUPPORTED_BUILD_PATH);
+        attributes.put("generatedLazySourceDecision", GENERATED_LAZY_SOURCE_DECISION);
+        attributes.put("generatedLazySourceRemainingBlocker", GENERATED_LAZY_SOURCE_REMAINING_BLOCKER);
+        attributes.put("generatedLazySourceNextResolutionStep", GENERATED_LAZY_SOURCE_NEXT_STEP);
+        attributes.put("generatedLazySourceNoLocalhost", true);
         return attributes;
     }
 

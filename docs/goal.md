@@ -31,14 +31,16 @@ v0/v1 runtime 切片走向可产品化桌面框架的最终完成状态。
 - `docs/goal-1_23.md`：Production Owner Positive Runtime Fixture Boundary，已完成。
 - `docs/goal-1_24.md`：Frontend Pipeline Closure Decision Contract，已完成。
 - `docs/goal-1_25.md`：Packaging-Time Staged Frontend Baseline，已完成。
+- `docs/goal-1_26.md`：Generated Lazy Source Boundary，已完成。
 
-当前已完成到 `docs/goal-1_25.md`。v1.25 已选择并验证
-packaging-time staged frontend baseline：从 closure decision contract 推进到
-host-owned inventory、custom-scheme/file-backed staging、integrity metadata、
-cleanup policy 和产品化 resource path。真实 generated chunk、production owner owned
-runtime 和 dev-mode/Vite parity 仍作为真实 app/build blocker 保留。
+当前已完成到 `docs/goal-1_26.md`。v1.26 已把真实 generated lazy chunk
+blocker 从“当前 build 没有 chunk file”推进成可审计的 Vaadin source boundary：
+trace 记录 `AbstractUpdateImports` / `FrontendDependencies` 生成机制、lazy route /
+`DependencyTrigger` 输入边界、当前 smoke dev-bundle no-op table 证据，以及
+`build-spi-required-before-real-app-chunk-parity` 的下一步决策。真实 generated chunk、
+production owner owned runtime 和 dev-mode/Vite parity 仍作为真实 app/build blocker 保留。
 
-后续阶段应继续以 `docs/goal-1_25.md` 等文件拆分，
+后续阶段应继续以 `docs/goal-1_26.md` 等文件拆分，
 每个阶段只拿走本长期目标中的一个可评审切片。不要把本文件改写成短期任务清单；
 它是长期北极星和完成度账本。
 
@@ -60,7 +62,7 @@ runtime 和 dev-mode/Vite parity 仍作为真实 app/build blocker 保留。
 
 ## 当前基线
 
-截至 goal 1.24，仓库已经证明：
+截至 goal 1.26，仓库已经证明：
 
 - `dev-ipc` 可以启动 no-localhost Flow IPC runtime。
 - 真实 macOS Swift/AppKit/WKWebView 窗口可以运行 Flow IPC smoke app 和 framework
@@ -305,6 +307,21 @@ runtime 和 dev-mode/Vite parity 仍作为真实 app/build blocker 保留。
   policy 和 real-build blocker preservation。v1.25 证明当前 runtime 已有可审计的
   packaging-time staged frontend baseline；它不是完整 jpackage/installer，也不是
   真实 production bundle、真实 generated chunk file 或 dev-mode/Vite parity。
+- v1.26 已把 generated lazy chunk 的真实 app/build blocker 收敛到 Vaadin 生成源边界：
+  Java manifest / resource response、Swift `resourceRequest` / `resourceResponse` /
+  `resourceStage` / `webview.dom` 和 inspector gate 统一记录
+  `generatedLazySourceBoundaryVersion=flow-ipc-generated-lazy-source-boundary-v1_26`、
+  `generatedLazySourceMechanism=vaadin-AbstractUpdateImports-generateLazyLoadedChunks`、
+  `generatedLazySourceArtifact=com.vaadin.flow.server.frontend.AbstractUpdateImports`、
+  `generatedLazySourceScanner=com.vaadin.flow.server.frontend.scanner.FrontendDependencies`、
+  `generatedLazySourceLazyRouteRule=ChunkInfo(type=ROUTE,eager=false)`、
+  `generatedLazySourcePositiveTableShape=branch-table-dynamic-import`、
+  `generatedLazySourceNoChunkFallback=Promise.resolve(0)` 和当前真实
+  `generated-flow-imports-VW7hRaNw.js` 的
+  `generatedLazySourceCurrentBuildTableShape=no-op-promise-resolve-0` /
+  `generatedLazySourceCurrentBuildChunkStatus=not-generated` 证据。v1.26 明确下一步是
+  让 app build 产生非空 lazyJavascript/lazyCss `ChunkInfo`，或接入受支持 Vaadin
+  lazy chunk SPI；它不是当前 app/build 真实 generated chunk parity。
 - 当前 app/build 的真实 generated/lazy chunk file parity、production owner import/side-effect success
   和 dev-mode/Vite execution 仍是明确 blocker，不计入最终完成。
 
@@ -400,7 +417,8 @@ runtime 和 dev-mode/Vite parity 仍作为真实 app/build blocker 保留。
 以下项目仍需要后续阶段推进：
 
 - 基于 v1.22 generated lazy chunk-file positive fixture、v1.23 production owner positive
-  runtime fixture、v1.24 closure decision contract 和 v1.25 packaged frontend baseline，
+  runtime fixture、v1.24 closure decision contract、v1.25 packaged frontend baseline 和
+  v1.26 generated lazy source boundary，
   继续让当前 app/build 产生真实 generated lazy chunk file，接入受支持 Vaadin lazy
   chunk SPI，或把真实 production bundle owned execution / dev-mode/Vite execution
   从 partial/blocker 推进到真实可执行路径。
@@ -434,12 +452,11 @@ runtime 和 dev-mode/Vite parity 仍作为真实 app/build blocker 保留。
 
 ## 当前建议的下一阶段
 
-v1.25 已完成 Packaging-Time Staged Frontend Baseline。下一阶段建议优先从
-frontend/resource pipeline 的真实 app/build parity blocker 中选择一个，不再只做新的
-汇总合同：
+v1.26 已完成 Generated Lazy Source Boundary。下一阶段建议优先把 v1.26 的 source
+boundary 变成真实 app/build 试验路径，不再只做新的汇总合同：
 
-- 让当前 smoke/framework build 产生真实 generated lazy chunk file，或评估受支持 Vaadin
-  lazy chunk SPI，把 v1.22 fixture path 推进为真实 app/build path。
+- 让当前 smoke/framework build 产生真实 generated lazy chunk file，或接入/评估受支持
+  Vaadin lazy chunk SPI，把 v1.22 fixture path 推进为真实 app/build path。
 - 真实 production owner side-effect / owner-owned runtime reuse success。
 - Dev-mode/Vite graph execution 或可靠替代模式。
 - Broader Vaadin component parity，尤其是 Grid/VirtualList、ComboBox、DatePicker、

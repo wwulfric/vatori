@@ -30,13 +30,13 @@ v0/v1 runtime 切片走向可产品化桌面框架的最终完成状态。
 - `docs/goal-1_22.md`：Generated Lazy Chunk File Positive Execution Boundary，已完成。
 - `docs/goal-1_23.md`：Production Owner Positive Runtime Fixture Boundary，已完成。
 - `docs/goal-1_24.md`：Frontend Pipeline Closure Decision Contract，已完成。
-- `docs/goal-1_25.md`：Packaging-Time Staged Frontend Baseline，待实施。
+- `docs/goal-1_25.md`：Packaging-Time Staged Frontend Baseline，已完成。
 
-当前已完成到 `docs/goal-1_24.md`。下一阶段 `docs/goal-1_25.md` 已选择
-packaging-time staged frontend baseline：从 closure decision contract 继续推进到
-host-owned inventory、custom-scheme/file-backed staging 和产品化 resource path。真实
-generated chunk、production owner owned runtime 和 dev-mode/Vite parity 仍作为真实
-app/build blocker 保留。
+当前已完成到 `docs/goal-1_25.md`。v1.25 已选择并验证
+packaging-time staged frontend baseline：从 closure decision contract 推进到
+host-owned inventory、custom-scheme/file-backed staging、integrity metadata、
+cleanup policy 和产品化 resource path。真实 generated chunk、production owner owned
+runtime 和 dev-mode/Vite parity 仍作为真实 app/build blocker 保留。
 
 后续阶段应继续以 `docs/goal-1_25.md` 等文件拆分，
 每个阶段只拿走本长期目标中的一个可评审切片。不要把本文件改写成短期任务清单；
@@ -295,6 +295,16 @@ app/build blocker 保留。
   satisfied proofs、remaining blockers、no-localhost proof 和产品路径决策
   `packaging-time-staged-frontend-or-supported-vaadin-build-spi`。这表示代表性 fixture
   基础设施已经闭合、真实 app/build 差距已分类；它不是完整 production/dev-mode parity。
+- v1.25 已把 v1.24 的产品路径决策落成 packaging-time staged frontend baseline：
+  Java manifest / resource response、Swift `resourceRequest` / `resourceResponse` /
+  `resourceStage` / `resourceLoad` / `webview.dom` 和 inspector gate 统一记录
+  `packagedFrontendBaselineVersion=flow-ipc-packaged-frontend-baseline-v1_25`、
+  `packagedFrontendProductPath=packaging-time-staged-frontend-baseline`、
+  host-owned inventory scope、preferred loader `custom-scheme-file-backed`、
+  diagnostic Blob fallback、sha256/byte-count integrity、window-lifetime cleanup
+  policy 和 real-build blocker preservation。v1.25 证明当前 runtime 已有可审计的
+  packaging-time staged frontend baseline；它不是完整 jpackage/installer，也不是
+  真实 production bundle、真实 generated chunk file 或 dev-mode/Vite parity。
 - 当前 app/build 的真实 generated/lazy chunk file parity、production owner import/side-effect success
   和 dev-mode/Vite execution 仍是明确 blocker，不计入最终完成。
 
@@ -390,8 +400,9 @@ app/build blocker 保留。
 以下项目仍需要后续阶段推进：
 
 - 基于 v1.22 generated lazy chunk-file positive fixture、v1.23 production owner positive
-  runtime fixture 和 v1.24 closure decision contract，继续让当前 app/build 产生真实 generated lazy chunk file，接入受支持
-  Vaadin lazy chunk SPI，或把真实 production bundle owned execution / dev-mode/Vite execution
+  runtime fixture、v1.24 closure decision contract 和 v1.25 packaged frontend baseline，
+  继续让当前 app/build 产生真实 generated lazy chunk file，接入受支持 Vaadin lazy
+  chunk SPI，或把真实 production bundle owned execution / dev-mode/Vite execution
   从 partial/blocker 推进到真实可执行路径。
 - 真实 app/build 的 generated/lazy `Flow.loadOnDemand` chunk-file parity，不再停在真实
   generated-flow-imports no-op / missing chunk file blocker，也不只依赖 repository fixture。
@@ -423,12 +434,9 @@ app/build blocker 保留。
 
 ## 当前建议的下一阶段
 
-`docs/goal-1_25.md` 已制定为 Packaging-Time Staged Frontend Baseline。它选择
-packaging-time staged frontend 作为 v0/v1 可落地产品路径，把 v1.24 的 closure decision
-推进到 host-owned inventory、custom-scheme/file-backed staging、integrity metadata、
-cleanup policy 和 real-build blocker preservation。
-
-v1.25 完成后可继续从以下方向选择：
+v1.25 已完成 Packaging-Time Staged Frontend Baseline。下一阶段建议优先从
+frontend/resource pipeline 的真实 app/build parity blocker 中选择一个，不再只做新的
+汇总合同：
 
 - 让当前 smoke/framework build 产生真实 generated lazy chunk file，或评估受支持 Vaadin
   lazy chunk SPI，把 v1.22 fixture path 推进为真实 app/build path。

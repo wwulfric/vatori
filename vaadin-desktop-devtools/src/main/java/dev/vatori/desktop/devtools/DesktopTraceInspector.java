@@ -89,6 +89,9 @@ public final class DesktopTraceInspector {
         FLOW_IPC_V1_24_FRONTEND_PIPELINE_CLOSURE(
                 "--require-flow-ipc-v1_24-frontend-pipeline-closure"),
         FLOW_IPC_V1_24("--require-flow-ipc-v1_24"),
+        FLOW_IPC_V1_25_PACKAGED_FRONTEND_BASELINE(
+                "--require-flow-ipc-v1_25-packaged-frontend-baseline"),
+        FLOW_IPC_V1_25("--require-flow-ipc-v1_25"),
         FLOW_IPC_V1_3_FRAMEWORK("--require-flow-ipc-v1_3-framework");
 
         private final String option;
@@ -332,6 +335,27 @@ public final class DesktopTraceInspector {
                         FLOW_IPC_V1_22_GENERATED_CHUNK_FIXTURE, FLOW_IPC_V1_22,
                         FLOW_IPC_V1_23_PRODUCTION_OWNER_POSITIVE_FIXTURE, FLOW_IPC_V1_23,
                         FLOW_IPC_V1_24_FRONTEND_PIPELINE_CLOSURE, FLOW_IPC_V1_24);
+                case FLOW_IPC_V1_25_PACKAGED_FRONTEND_BASELINE ->
+                    EnumSet.of(FLOW_IPC_V1_25_PACKAGED_FRONTEND_BASELINE);
+                case FLOW_IPC_V1_25 -> EnumSet.of(FLOW_IPC_V1, FLOW_IPC_V1_1, FLOW_IPC_V1_2,
+                        FLOW_IPC_V1_3, FLOW_IPC_V1_4, FLOW_IPC_V1_5, FLOW_IPC_V1_7,
+                        FLOW_IPC_V1_8, FLOW_IPC_V1_9_LOADONDEMAND, FLOW_IPC_V1_9,
+                        FLOW_IPC_V1_10_LAZY_DEPENDENCY, FLOW_IPC_V1_10_PRODUCTION_RUNTIME,
+                        FLOW_IPC_V1_10, FLOW_IPC_V1_11_LOADONDEMAND_CHUNK, FLOW_IPC_V1_11,
+                        FLOW_IPC_V1_12_LOADONDEMAND_CHUNK_FILE, FLOW_IPC_V1_12,
+                        FLOW_IPC_V1_13_PRODUCTION_OWNER, FLOW_IPC_V1_13,
+                        FLOW_IPC_V1_14_PRODUCTION_OWNER_IMPORT, FLOW_IPC_V1_14,
+                        FLOW_IPC_V1_15_PRODUCTION_OWNER_DEPENDENCIES, FLOW_IPC_V1_15,
+                        FLOW_IPC_V1_16_PRODUCTION_OWNER_ORDERING, FLOW_IPC_V1_16,
+                        FLOW_IPC_V1_17_RESOURCE_SCHEME, FLOW_IPC_V1_17,
+                        FLOW_IPC_V1_18_PRODUCTION_OWNER_RESOURCE_SCHEME, FLOW_IPC_V1_18,
+                        FLOW_IPC_V1_19_PRODUCTION_OWNER_SIDE_EFFECT, FLOW_IPC_V1_19,
+                        FLOW_IPC_V1_20_PRODUCTION_OWNER_OWNED_RUNTIME, FLOW_IPC_V1_20,
+                        FLOW_IPC_V1_21_FRONTEND_RESOLVER_CONTRACT, FLOW_IPC_V1_21,
+                        FLOW_IPC_V1_22_GENERATED_CHUNK_FIXTURE, FLOW_IPC_V1_22,
+                        FLOW_IPC_V1_23_PRODUCTION_OWNER_POSITIVE_FIXTURE, FLOW_IPC_V1_23,
+                        FLOW_IPC_V1_24_FRONTEND_PIPELINE_CLOSURE, FLOW_IPC_V1_24,
+                        FLOW_IPC_V1_25_PACKAGED_FRONTEND_BASELINE, FLOW_IPC_V1_25);
                 case FLOW_IPC_V1_3_FRAMEWORK -> EnumSet.of(FLOW_IPC_V1_3_FRAMEWORK);
             };
         }
@@ -393,6 +417,9 @@ public final class DesktopTraceInspector {
                 case FLOW_IPC_V1_24_FRONTEND_PIPELINE_CLOSURE ->
                     summary.hasRequiredFlowIpcV1_24FrontendPipelineClosureTypes();
                 case FLOW_IPC_V1_24 -> summary.hasRequiredFlowIpcV1_24Types();
+                case FLOW_IPC_V1_25_PACKAGED_FRONTEND_BASELINE ->
+                    summary.hasRequiredFlowIpcV1_25PackagedFrontendBaselineTypes();
+                case FLOW_IPC_V1_25 -> summary.hasRequiredFlowIpcV1_25Types();
                 case FLOW_IPC_V1_3_FRAMEWORK -> summary.hasRequiredFlowIpcV1_3FrameworkTypes();
             };
         }
@@ -996,6 +1023,11 @@ public final class DesktopTraceInspector {
                     && line.contains("\"componentFrontendResources\"")
                     && containsFrontendPipelineClosureV124Fields(line)) {
                 summary.frontendPipelineClosureV124ManifestObserved = true;
+            }
+            if (line.contains("\"type\":\"bootstrapResponse\"")
+                    && line.contains("\"componentFrontendResources\"")
+                    && containsPackagedFrontendBaselineV125Fields(line)) {
+                summary.packagedFrontendBaselineV125ManifestObserved = true;
             }
             if (line.contains("\"type\":\"bootstrapResponse\"")
                     && line.contains("\"componentFrontendResources\"")
@@ -1818,6 +1850,14 @@ public final class DesktopTraceInspector {
                 summary.frontendPipelineClosureV124ResponseObserved = true;
             }
             if (line.contains("\"type\":\"resourceRequest\"")
+                    && containsPackagedFrontendBaselineV125Fields(line)) {
+                summary.packagedFrontendBaselineV125RequestObserved = true;
+            }
+            if (line.contains("\"type\":\"resourceResponse\"")
+                    && containsPackagedFrontendBaselineV125Fields(line)) {
+                summary.packagedFrontendBaselineV125ResponseObserved = true;
+            }
+            if (line.contains("\"type\":\"resourceRequest\"")
                     && line.contains("\"purpose\":\"generated-loadondemand-chunk-v1_11\"")
                     && line.contains("\"lookupKind\":\"Generated-flow-imports-dev-bundle-chunk-v1_4\"")
                     && containsPath(line, "vaadin-dev-bundle/webapp/VAADIN/build/generated-flow-imports-VW7hRaNw.js")
@@ -2421,6 +2461,26 @@ public final class DesktopTraceInspector {
                     && (line.contains("\"executionStatus\":\"executed\"")
                             || line.contains("\"executionStatus\":\"strict-blocker\""))) {
                 summary.frontendPipelineClosureV124StageObserved = true;
+            }
+            if (line.contains("\"type\":\"resourceStage\"")
+                    && containsPackagedFrontendBaselineV125Fields(line)
+                    && (line.contains("\"executionStatus\":\"executed\"")
+                            || line.contains("\"executionStatus\":\"strict-blocker\"")
+                            || line.contains("\"executionStatus\":\"execution-attempt\""))) {
+                summary.packagedFrontendBaselineV125StageObserved = true;
+            }
+            if (line.contains("\"type\":\"resourceStage\"")
+                    && containsPackagedFrontendBaselineV125Fields(line)
+                    && containsStringField(line, "stagedUrlScheme", "vatori-resource")
+                    && containsStringField(line, "stagingMode", "custom-scheme")) {
+                summary.packagedFrontendBaselineV125CustomSchemeStageObserved = true;
+            }
+            if (line.contains("\"type\":\"resourceStage\"")
+                    && containsPackagedFrontendBaselineV125Fields(line)
+                    && containsStringField(line, "stagedUrlScheme", "blob")
+                    && containsStringField(line, "packagedFrontendAllowedFallback",
+                            "diagnostic-blob-only")) {
+                summary.packagedFrontendBaselineV125DiagnosticBlobFallbackObserved = true;
             }
             if (line.contains("\"type\":\"webview.dom\"")
                     && containsStringField(line, "frontendStagingResolverVersion", "flow-ipc-resource-staging-v1_5")
@@ -3075,6 +3135,22 @@ public final class DesktopTraceInspector {
                 summary.frontendPipelineClosureV124DomObserved = true;
             }
             if (line.contains("\"type\":\"webview.dom\"")
+                    && containsLiteralField(line, "packagedFrontendBaselineObserved", "true")
+                    && containsPackagedFrontendBaselineV125Fields(line)) {
+                summary.packagedFrontendBaselineV125DomObserved = true;
+            }
+            if (line.contains("\"type\":\"webview.dom\"")
+                    && containsLiteralField(line, "packagedFrontendCustomSchemeObserved", "true")
+                    && line.contains("packagedFrontendHostOwnedStagedPaths")
+                    && line.contains("packagedFrontendHostOwnedExecutedPaths")) {
+                summary.packagedFrontendBaselineV125CustomSchemeDomObserved = true;
+            }
+            if (line.contains("\"type\":\"webview.dom\"")
+                    && containsLiteralField(line, "packagedFrontendDiagnosticBlobFallbackObserved", "true")
+                    && line.contains("packagedFrontendDiagnosticBlobFallbackPaths")) {
+                summary.packagedFrontendBaselineV125DiagnosticBlobFallbackDomObserved = true;
+            }
+            if (line.contains("\"type\":\"webview.dom\"")
                     && containsLiteralField(line, "generatedLazyChunkFileFixtureSideEffectSatisfied", "true")
                     && containsLiteralField(line,
                             "productionBundleRuntimeOwnerPositiveFixtureSideEffectSatisfied", "true")
@@ -3092,6 +3168,14 @@ public final class DesktopTraceInspector {
                             || containsStringField(line, "componentProductionOwnerReuseDecision",
                                     "focused-fallback-after-owner-owned-runtime-attempt"))) {
                 summary.frontendPipelineClosureV124RealBlockersObserved = true;
+            }
+            if (line.contains("\"type\":\"webview.dom\"")
+                    && containsLiteralField(line, "packagedFrontendRealBlockersObserved", "true")
+                    && containsStringField(line, "packagedFrontendRealBuildStatus",
+                            "product-parity-pending")
+                    && containsStringField(line, "packagedFrontendRemainingBlockers",
+                            "real-generated-lazy-chunk-file-not-generated,real-production-owner-owned-runtime-missing-real-artifact,dev-mode-vite-execution-unmapped")) {
+                summary.packagedFrontendBaselineV125RealBlockersObserved = true;
             }
             if (line.contains("\"type\":\"resourceRequest\"")
                     && line.contains("\"purpose\":\"vaadin-web-component-resource-probe\"")
@@ -3628,6 +3712,27 @@ public final class DesktopTraceInspector {
                 && containsLiteralField(line, "frontendPipelineClosureNoLocalhost", "true");
     }
 
+    private static boolean containsPackagedFrontendBaselineV125Fields(String line) {
+        return containsStringField(line, "packagedFrontendBaselineVersion",
+                "flow-ipc-packaged-frontend-baseline-v1_25")
+                && containsStringField(line, "packagedFrontendProductPath",
+                        "packaging-time-staged-frontend-baseline")
+                && containsStringField(line, "packagedFrontendInventoryScope",
+                        "flow-client,component-frontend,theme-static,generated-lazy,flow-lazy-dependency,production-owner,dev-mode")
+                && containsStringField(line, "packagedFrontendPreferredLoader",
+                        "custom-scheme-file-backed")
+                && containsStringField(line, "packagedFrontendAllowedFallback",
+                        "diagnostic-blob-only")
+                && containsStringField(line, "packagedFrontendIntegrity",
+                        "sha256-and-byte-count")
+                && containsStringField(line, "packagedFrontendCleanupPolicy",
+                        "window-lifetime-cache-cleanup")
+                && containsStringField(line, "packagedFrontendRealBuildStatus",
+                        "product-parity-pending")
+                && containsStringField(line, "packagedFrontendRemainingBlockers",
+                        "real-generated-lazy-chunk-file-not-generated,real-production-owner-owned-runtime-missing-real-artifact,dev-mode-vite-execution-unmapped");
+    }
+
     private static boolean containsProductionOwnerFailureLayer(String line, String field) {
         return containsStringField(line, field, "production-owner-duplicate-custom-element")
                 || containsStringField(line, field, "production-owner-relative-import-unresolved")
@@ -4064,6 +4169,16 @@ public final class DesktopTraceInspector {
         private boolean frontendPipelineClosureV124DomObserved;
         private boolean frontendPipelineClosureV124FixtureProofsObserved;
         private boolean frontendPipelineClosureV124RealBlockersObserved;
+        private boolean packagedFrontendBaselineV125ManifestObserved;
+        private boolean packagedFrontendBaselineV125RequestObserved;
+        private boolean packagedFrontendBaselineV125ResponseObserved;
+        private boolean packagedFrontendBaselineV125StageObserved;
+        private boolean packagedFrontendBaselineV125CustomSchemeStageObserved;
+        private boolean packagedFrontendBaselineV125DiagnosticBlobFallbackObserved;
+        private boolean packagedFrontendBaselineV125DomObserved;
+        private boolean packagedFrontendBaselineV125CustomSchemeDomObserved;
+        private boolean packagedFrontendBaselineV125DiagnosticBlobFallbackDomObserved;
+        private boolean packagedFrontendBaselineV125RealBlockersObserved;
 
         public boolean hasRequiredFlowIpcTypes() {
             return types.keySet().containsAll(FLOW_IPC_REQUIRED_TYPES)
@@ -4454,6 +4569,24 @@ public final class DesktopTraceInspector {
         public boolean hasRequiredFlowIpcV1_24Types() {
             return hasRequiredFlowIpcV1_23Types()
                     && hasRequiredFlowIpcV1_24FrontendPipelineClosureTypes();
+        }
+
+        public boolean hasRequiredFlowIpcV1_25PackagedFrontendBaselineTypes() {
+            return packagedFrontendBaselineV125ManifestObserved
+                    && packagedFrontendBaselineV125RequestObserved
+                    && packagedFrontendBaselineV125ResponseObserved
+                    && packagedFrontendBaselineV125StageObserved
+                    && packagedFrontendBaselineV125CustomSchemeStageObserved
+                    && packagedFrontendBaselineV125DiagnosticBlobFallbackObserved
+                    && packagedFrontendBaselineV125DomObserved
+                    && packagedFrontendBaselineV125CustomSchemeDomObserved
+                    && packagedFrontendBaselineV125DiagnosticBlobFallbackDomObserved
+                    && packagedFrontendBaselineV125RealBlockersObserved;
+        }
+
+        public boolean hasRequiredFlowIpcV1_25Types() {
+            return hasRequiredFlowIpcV1_24Types()
+                    && hasRequiredFlowIpcV1_25PackagedFrontendBaselineTypes();
         }
 
         public boolean hasRequiredFlowIpcV1_3FrameworkTypes() {
@@ -4878,6 +5011,20 @@ public final class DesktopTraceInspector {
             System.out.println("Flow IPC v1.24 frontend pipeline closure fixture proofs/real blockers observed: "
                     + frontendPipelineClosureV124FixtureProofsObserved + "/"
                     + frontendPipelineClosureV124RealBlockersObserved);
+            System.out.println("Flow IPC v1.25 packaged frontend baseline manifest observed: "
+                    + packagedFrontendBaselineV125ManifestObserved);
+            System.out.println("Flow IPC v1.25 packaged frontend baseline request/response observed: "
+                    + packagedFrontendBaselineV125RequestObserved + "/"
+                    + packagedFrontendBaselineV125ResponseObserved);
+            System.out.println("Flow IPC v1.25 packaged frontend baseline stage/custom-scheme/fallback observed: "
+                    + packagedFrontendBaselineV125StageObserved + "/"
+                    + packagedFrontendBaselineV125CustomSchemeStageObserved + "/"
+                    + packagedFrontendBaselineV125DiagnosticBlobFallbackObserved);
+            System.out.println("Flow IPC v1.25 packaged frontend baseline DOM/custom-scheme/fallback/real blockers observed: "
+                    + packagedFrontendBaselineV125DomObserved + "/"
+                    + packagedFrontendBaselineV125CustomSchemeDomObserved + "/"
+                    + packagedFrontendBaselineV125DiagnosticBlobFallbackDomObserved + "/"
+                    + packagedFrontendBaselineV125RealBlockersObserved);
             System.out.println("Flow IPC v1.6 TextField graph manifest observed: "
                     + frontendTextFieldV16ManifestObserved);
             System.out.println("Flow IPC v1.6 TextField graph request observed: "

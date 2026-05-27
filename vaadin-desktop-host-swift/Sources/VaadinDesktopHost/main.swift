@@ -1399,6 +1399,24 @@ final class WebViewHost: NSObject, NSApplicationDelegate, NSWindowDelegate, WKNa
             payload["frontendPipelineClosureNextProductPath"] as? String ?? ""
         let frontendPipelineClosureNoLocalhost =
             payload["frontendPipelineClosureNoLocalhost"] as? Bool ?? false
+        let packagedFrontendBaselineVersion =
+            payload["packagedFrontendBaselineVersion"] as? String ?? ""
+        let packagedFrontendProductPath =
+            payload["packagedFrontendProductPath"] as? String ?? ""
+        let packagedFrontendInventoryScope =
+            payload["packagedFrontendInventoryScope"] as? String ?? ""
+        let packagedFrontendPreferredLoader =
+            payload["packagedFrontendPreferredLoader"] as? String ?? ""
+        let packagedFrontendAllowedFallback =
+            payload["packagedFrontendAllowedFallback"] as? String ?? ""
+        let packagedFrontendIntegrity =
+            payload["packagedFrontendIntegrity"] as? String ?? ""
+        let packagedFrontendCleanupPolicy =
+            payload["packagedFrontendCleanupPolicy"] as? String ?? ""
+        let packagedFrontendRealBuildStatus =
+            payload["packagedFrontendRealBuildStatus"] as? String ?? ""
+        let packagedFrontendRemainingBlockers =
+            payload["packagedFrontendRemainingBlockers"] as? String ?? ""
         let data = Data(body.utf8)
         let cacheKey = "\(sourcePath)#\(sha256)#\(data.count)"
         let cacheStatus = hostResourceStageCache.contains(cacheKey) ? "hit" : "miss"
@@ -1461,7 +1479,16 @@ final class WebViewHost: NSObject, NSApplicationDelegate, NSWindowDelegate, WKNa
             "frontendPipelineClosureRemainingBlockers": frontendPipelineClosureRemainingBlockers,
             "frontendPipelineClosureDecision": frontendPipelineClosureDecision,
             "frontendPipelineClosureNextProductPath": frontendPipelineClosureNextProductPath,
-            "frontendPipelineClosureNoLocalhost": frontendPipelineClosureNoLocalhost
+            "frontendPipelineClosureNoLocalhost": frontendPipelineClosureNoLocalhost,
+            "packagedFrontendBaselineVersion": packagedFrontendBaselineVersion,
+            "packagedFrontendProductPath": packagedFrontendProductPath,
+            "packagedFrontendInventoryScope": packagedFrontendInventoryScope,
+            "packagedFrontendPreferredLoader": packagedFrontendPreferredLoader,
+            "packagedFrontendAllowedFallback": packagedFrontendAllowedFallback,
+            "packagedFrontendIntegrity": packagedFrontendIntegrity,
+            "packagedFrontendCleanupPolicy": packagedFrontendCleanupPolicy,
+            "packagedFrontendRealBuildStatus": packagedFrontendRealBuildStatus,
+            "packagedFrontendRemainingBlockers": packagedFrontendRemainingBlockers
         ]
 
         var stageRequestTrace: [String: Any] = [
@@ -1970,6 +1997,23 @@ final class WebViewHost: NSObject, NSApplicationDelegate, NSWindowDelegate, WKNa
           frontendPipelineClosureDecision: window.VaadinDesktopIpcDiagnostics ? window.VaadinDesktopIpcDiagnostics.frontendPipelineClosureDecision : "",
           frontendPipelineClosureNextProductPath: window.VaadinDesktopIpcDiagnostics ? window.VaadinDesktopIpcDiagnostics.frontendPipelineClosureNextProductPath : "",
           frontendPipelineClosureNoLocalhost: !!(window.VaadinDesktopIpcDiagnostics && window.VaadinDesktopIpcDiagnostics.frontendPipelineClosureNoLocalhost),
+          packagedFrontendBaselineObserved: !!(window.VaadinDesktopIpcDiagnostics && window.VaadinDesktopIpcDiagnostics.packagedFrontendBaselineObserved),
+          packagedFrontendBaselineVersion: window.VaadinDesktopIpcDiagnostics ? window.VaadinDesktopIpcDiagnostics.packagedFrontendBaselineVersion : "",
+          packagedFrontendProductPath: window.VaadinDesktopIpcDiagnostics ? window.VaadinDesktopIpcDiagnostics.packagedFrontendProductPath : "",
+          packagedFrontendInventoryScope: window.VaadinDesktopIpcDiagnostics ? window.VaadinDesktopIpcDiagnostics.packagedFrontendInventoryScope : "",
+          packagedFrontendPreferredLoader: window.VaadinDesktopIpcDiagnostics ? window.VaadinDesktopIpcDiagnostics.packagedFrontendPreferredLoader : "",
+          packagedFrontendAllowedFallback: window.VaadinDesktopIpcDiagnostics ? window.VaadinDesktopIpcDiagnostics.packagedFrontendAllowedFallback : "",
+          packagedFrontendIntegrity: window.VaadinDesktopIpcDiagnostics ? window.VaadinDesktopIpcDiagnostics.packagedFrontendIntegrity : "",
+          packagedFrontendCleanupPolicy: window.VaadinDesktopIpcDiagnostics ? window.VaadinDesktopIpcDiagnostics.packagedFrontendCleanupPolicy : "",
+          packagedFrontendRealBuildStatus: window.VaadinDesktopIpcDiagnostics ? window.VaadinDesktopIpcDiagnostics.packagedFrontendRealBuildStatus : "",
+          packagedFrontendRemainingBlockers: window.VaadinDesktopIpcDiagnostics ? window.VaadinDesktopIpcDiagnostics.packagedFrontendRemainingBlockers : "",
+          packagedFrontendInventoryFamiliesObserved: window.VaadinDesktopIpcDiagnostics ? window.VaadinDesktopIpcDiagnostics.packagedFrontendInventoryFamiliesObserved : "",
+          packagedFrontendHostOwnedStagedPaths: window.VaadinDesktopIpcDiagnostics ? window.VaadinDesktopIpcDiagnostics.packagedFrontendHostOwnedStagedPaths : "",
+          packagedFrontendHostOwnedExecutedPaths: window.VaadinDesktopIpcDiagnostics ? window.VaadinDesktopIpcDiagnostics.packagedFrontendHostOwnedExecutedPaths : "",
+          packagedFrontendDiagnosticBlobFallbackPaths: window.VaadinDesktopIpcDiagnostics ? window.VaadinDesktopIpcDiagnostics.packagedFrontendDiagnosticBlobFallbackPaths : "",
+          packagedFrontendCustomSchemeObserved: !!(window.VaadinDesktopIpcDiagnostics && window.VaadinDesktopIpcDiagnostics.packagedFrontendCustomSchemeObserved),
+          packagedFrontendDiagnosticBlobFallbackObserved: !!(window.VaadinDesktopIpcDiagnostics && window.VaadinDesktopIpcDiagnostics.packagedFrontendDiagnosticBlobFallbackObserved),
+          packagedFrontendRealBlockersObserved: !!(window.VaadinDesktopIpcDiagnostics && window.VaadinDesktopIpcDiagnostics.packagedFrontendRealBlockersObserved),
           frontendArtifactShimFallback: !!(window.VaadinDesktopIpcDiagnostics && window.VaadinDesktopIpcDiagnostics.frontendArtifactShimFallback),
           frontendArtifactProductionBundlePartial: !!(window.VaadinDesktopIpcDiagnostics && window.VaadinDesktopIpcDiagnostics.frontendArtifactProductionBundlePartial),
           frontendArtifactProductionBundleStatsVerified: !!(window.VaadinDesktopIpcDiagnostics && window.VaadinDesktopIpcDiagnostics.frontendArtifactProductionBundleStatsVerified),
@@ -3071,6 +3115,23 @@ let flowIpcShell = #"""
         frontendPipelineClosureDecision: '',
         frontendPipelineClosureNextProductPath: '',
         frontendPipelineClosureNoLocalhost: false,
+        packagedFrontendBaselineObserved: false,
+        packagedFrontendBaselineVersion: '',
+        packagedFrontendProductPath: '',
+        packagedFrontendInventoryScope: '',
+        packagedFrontendPreferredLoader: '',
+        packagedFrontendAllowedFallback: '',
+        packagedFrontendIntegrity: '',
+        packagedFrontendCleanupPolicy: '',
+        packagedFrontendRealBuildStatus: '',
+        packagedFrontendRemainingBlockers: '',
+        packagedFrontendInventoryFamiliesObserved: '',
+        packagedFrontendHostOwnedStagedPaths: '',
+        packagedFrontendHostOwnedExecutedPaths: '',
+        packagedFrontendDiagnosticBlobFallbackPaths: '',
+        packagedFrontendCustomSchemeObserved: false,
+        packagedFrontendDiagnosticBlobFallbackObserved: false,
+        packagedFrontendRealBlockersObserved: false,
         frontendArtifactShimFallback: false,
         frontendArtifactProductionBundlePartial: false,
         frontendArtifactProductionBundleStatsVerified: false,
@@ -5099,6 +5160,26 @@ let flowIpcShell = #"""
         if (source.frontendPipelineClosureNoLocalhost === true) {
           window.VaadinDesktopIpcDiagnostics.frontendPipelineClosureNoLocalhost = true;
         }
+        if (typeof source.packagedFrontendBaselineVersion === 'string'
+            && source.packagedFrontendBaselineVersion) {
+          window.VaadinDesktopIpcDiagnostics.packagedFrontendBaselineObserved = true;
+          window.VaadinDesktopIpcDiagnostics.packagedFrontendBaselineVersion =
+            source.packagedFrontendBaselineVersion;
+        }
+        for (const [sourceKey, diagnosticKey] of [
+          ['packagedFrontendProductPath', 'packagedFrontendProductPath'],
+          ['packagedFrontendInventoryScope', 'packagedFrontendInventoryScope'],
+          ['packagedFrontendPreferredLoader', 'packagedFrontendPreferredLoader'],
+          ['packagedFrontendAllowedFallback', 'packagedFrontendAllowedFallback'],
+          ['packagedFrontendIntegrity', 'packagedFrontendIntegrity'],
+          ['packagedFrontendCleanupPolicy', 'packagedFrontendCleanupPolicy'],
+          ['packagedFrontendRealBuildStatus', 'packagedFrontendRealBuildStatus'],
+          ['packagedFrontendRemainingBlockers', 'packagedFrontendRemainingBlockers']
+        ]) {
+          if (typeof source[sourceKey] === 'string' && source[sourceKey]) {
+            window.VaadinDesktopIpcDiagnostics[diagnosticKey] = source[sourceKey];
+          }
+        }
         addFrontendResolverCsv(frontendResolverFamiliesObserved, source.frontendResolverFamiliesCovered || '');
         addFrontendResolverCsv(frontendResolverAcceptedGapFamilies, source.frontendResolverAcceptableGaps || '');
       }
@@ -5171,6 +5252,21 @@ let flowIpcShell = #"""
           Array.from(frontendResolverStrictBlockerFamilies).filter((entry) => entry).join(',');
         d.frontendResolverAcceptedGapFamilies =
           Array.from(frontendResolverAcceptedGapFamilies).filter((entry) => entry).join(',');
+        if (d.packagedFrontendBaselineObserved) {
+          d.packagedFrontendInventoryFamiliesObserved = d.frontendResolverFamiliesObserved;
+          d.packagedFrontendCustomSchemeObserved =
+            frontendResolverSchemesObserved.has('vatori-resource')
+            && frontendResolverCustomSchemeFamilies.size > 0;
+          d.packagedFrontendDiagnosticBlobFallbackObserved =
+            frontendResolverSchemesObserved.has('blob')
+            && frontendResolverBlobFamilies.size > 0;
+          d.packagedFrontendRealBlockersObserved =
+            d.packagedFrontendRealBuildStatus === 'product-parity-pending'
+            && typeof d.packagedFrontendRemainingBlockers === 'string'
+            && d.packagedFrontendRemainingBlockers.includes('real-generated-lazy-chunk-file-not-generated')
+            && d.packagedFrontendRemainingBlockers.includes('real-production-owner-owned-runtime-missing-real-artifact')
+            && d.packagedFrontendRemainingBlockers.includes('dev-mode-vite-execution-unmapped');
+        }
         const missingFamilies = frontendResolverExpectedFamilies.filter((family) =>
           !frontendResolverFamiliesObserved.has(family));
         const missingIntegrity = frontendResolverExpectedFamilies.filter((family) =>
@@ -5894,6 +5990,15 @@ let flowIpcShell = #"""
           frontendPipelineClosureDecision: resource.frontendPipelineClosureDecision || '',
           frontendPipelineClosureNextProductPath: resource.frontendPipelineClosureNextProductPath || '',
           frontendPipelineClosureNoLocalhost: resource.frontendPipelineClosureNoLocalhost === true,
+          packagedFrontendBaselineVersion: resource.packagedFrontendBaselineVersion || '',
+          packagedFrontendProductPath: resource.packagedFrontendProductPath || '',
+          packagedFrontendInventoryScope: resource.packagedFrontendInventoryScope || '',
+          packagedFrontendPreferredLoader: resource.packagedFrontendPreferredLoader || '',
+          packagedFrontendAllowedFallback: resource.packagedFrontendAllowedFallback || '',
+          packagedFrontendIntegrity: resource.packagedFrontendIntegrity || '',
+          packagedFrontendCleanupPolicy: resource.packagedFrontendCleanupPolicy || '',
+          packagedFrontendRealBuildStatus: resource.packagedFrontendRealBuildStatus || '',
+          packagedFrontendRemainingBlockers: resource.packagedFrontendRemainingBlockers || '',
           lookupKind: resource.lookupKind || '',
           textfieldGraphParityVersion: resource.textfieldGraphParityVersion || '',
           blockerVersion: resource.blockerVersion || '',
@@ -6222,6 +6327,19 @@ let flowIpcShell = #"""
           frontendHostResourceLoaderFallbackPaths.size > 0;
         window.VaadinDesktopIpcDiagnostics.frontendResourceBlobFallbackPaths =
           Array.from(frontendHostResourceLoaderFallbackPaths).join(',');
+        if (window.VaadinDesktopIpcDiagnostics.packagedFrontendBaselineObserved) {
+          window.VaadinDesktopIpcDiagnostics.packagedFrontendHostOwnedStagedPaths =
+            Array.from(frontendHostResourceLoaderPaths).join(',');
+          window.VaadinDesktopIpcDiagnostics.packagedFrontendHostOwnedExecutedPaths =
+            Array.from(frontendHostResourceLoaderExecutedPaths).join(',');
+          window.VaadinDesktopIpcDiagnostics.packagedFrontendDiagnosticBlobFallbackPaths =
+            Array.from(frontendResolverBlobFamilies).filter((entry) => entry).join(',');
+          window.VaadinDesktopIpcDiagnostics.packagedFrontendCustomSchemeObserved =
+            frontendHostResourceLoaderPaths.size > 0
+            && frontendResolverSchemesObserved.has('vatori-resource');
+          window.VaadinDesktopIpcDiagnostics.packagedFrontendDiagnosticBlobFallbackObserved =
+            frontendResolverBlobFamilies.size > 0;
+        }
         window.VaadinDesktopIpcDiagnostics.frontendArtifactTextFieldModuleIdentityPaths =
           Array.from(frontendModuleIdentityResourcePaths).join(',');
       }
@@ -6413,6 +6531,15 @@ let flowIpcShell = #"""
           frontendPipelineClosureDecision: resource.frontendPipelineClosureDecision || '',
           frontendPipelineClosureNextProductPath: resource.frontendPipelineClosureNextProductPath || '',
           frontendPipelineClosureNoLocalhost: resource.frontendPipelineClosureNoLocalhost === true,
+          packagedFrontendBaselineVersion: resource.packagedFrontendBaselineVersion || '',
+          packagedFrontendProductPath: resource.packagedFrontendProductPath || '',
+          packagedFrontendInventoryScope: resource.packagedFrontendInventoryScope || '',
+          packagedFrontendPreferredLoader: resource.packagedFrontendPreferredLoader || '',
+          packagedFrontendAllowedFallback: resource.packagedFrontendAllowedFallback || '',
+          packagedFrontendIntegrity: resource.packagedFrontendIntegrity || '',
+          packagedFrontendCleanupPolicy: resource.packagedFrontendCleanupPolicy || '',
+          packagedFrontendRealBuildStatus: resource.packagedFrontendRealBuildStatus || '',
+          packagedFrontendRemainingBlockers: resource.packagedFrontendRemainingBlockers || '',
           stagedPath: '',
           owner: stageOwner,
           artifactFamily: family,
@@ -7537,7 +7664,16 @@ let flowIpcShell = #"""
             frontendResolverAllowedSchemes: resource.frontendResolverAllowedSchemes || '',
             frontendResolverNoLocalhost: resource.frontendResolverNoLocalhost === true,
             frontendResolverFamiliesCovered: resource.frontendResolverFamiliesCovered || '',
-            frontendResolverAcceptableGaps: resource.frontendResolverAcceptableGaps || ''
+            frontendResolverAcceptableGaps: resource.frontendResolverAcceptableGaps || '',
+            packagedFrontendBaselineVersion: resource.packagedFrontendBaselineVersion || '',
+            packagedFrontendProductPath: resource.packagedFrontendProductPath || '',
+            packagedFrontendInventoryScope: resource.packagedFrontendInventoryScope || '',
+            packagedFrontendPreferredLoader: resource.packagedFrontendPreferredLoader || '',
+            packagedFrontendAllowedFallback: resource.packagedFrontendAllowedFallback || '',
+            packagedFrontendIntegrity: resource.packagedFrontendIntegrity || '',
+            packagedFrontendCleanupPolicy: resource.packagedFrontendCleanupPolicy || '',
+            packagedFrontendRealBuildStatus: resource.packagedFrontendRealBuildStatus || '',
+            packagedFrontendRemainingBlockers: resource.packagedFrontendRemainingBlockers || ''
           });
           hostExtra.frontendResourceSchemeVersion =
             response.frontendResourceSchemeVersion || 'flow-ipc-resource-scheme-v1_17';
@@ -7612,6 +7748,24 @@ let flowIpcShell = #"""
             || '';
           hostExtra.productionBundleRuntimeOwnerResourceUrlPath =
             response.productionBundleRuntimeOwnerResourceUrlPath || '';
+          hostExtra.packagedFrontendBaselineVersion =
+            response.packagedFrontendBaselineVersion || resource.packagedFrontendBaselineVersion || '';
+          hostExtra.packagedFrontendProductPath =
+            response.packagedFrontendProductPath || resource.packagedFrontendProductPath || '';
+          hostExtra.packagedFrontendInventoryScope =
+            response.packagedFrontendInventoryScope || resource.packagedFrontendInventoryScope || '';
+          hostExtra.packagedFrontendPreferredLoader =
+            response.packagedFrontendPreferredLoader || resource.packagedFrontendPreferredLoader || '';
+          hostExtra.packagedFrontendAllowedFallback =
+            response.packagedFrontendAllowedFallback || resource.packagedFrontendAllowedFallback || '';
+          hostExtra.packagedFrontendIntegrity =
+            response.packagedFrontendIntegrity || resource.packagedFrontendIntegrity || '';
+          hostExtra.packagedFrontendCleanupPolicy =
+            response.packagedFrontendCleanupPolicy || resource.packagedFrontendCleanupPolicy || '';
+          hostExtra.packagedFrontendRealBuildStatus =
+            response.packagedFrontendRealBuildStatus || resource.packagedFrontendRealBuildStatus || '';
+          hostExtra.packagedFrontendRemainingBlockers =
+            response.packagedFrontendRemainingBlockers || resource.packagedFrontendRemainingBlockers || '';
           const stagedUrl = response.stagedUrl || '';
           if (!stagedUrl) {
             return '';

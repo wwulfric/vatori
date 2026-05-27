@@ -1182,6 +1182,7 @@ public final class FlowClientResourceSmokeMain {
                 "production-owner-owned-missing-real-artifact",
                 label + " frontend resolver acceptable gaps");
         requireFrontendPipelineClosureMetadata(metadata, label);
+        requirePackagedFrontendBaselineMetadata(metadata, label);
     }
 
     private static void requireFrontendPipelineClosureMetadata(Map<?, ?> metadata, String label) {
@@ -1215,6 +1216,36 @@ public final class FlowClientResourceSmokeMain {
         requireEquals(Boolean.TRUE,
                 metadata.get("frontendPipelineClosureNoLocalhost"),
                 label + " frontend pipeline closure no-localhost flag");
+    }
+
+    private static void requirePackagedFrontendBaselineMetadata(Map<?, ?> metadata, String label) {
+        requireEquals("flow-ipc-packaged-frontend-baseline-v1_25",
+                metadata.get("packagedFrontendBaselineVersion"),
+                label + " packaged frontend baseline version");
+        requireEquals("packaging-time-staged-frontend-baseline",
+                metadata.get("packagedFrontendProductPath"),
+                label + " packaged frontend product path");
+        requireEquals("flow-client,component-frontend,theme-static,generated-lazy,flow-lazy-dependency,production-owner,dev-mode",
+                metadata.get("packagedFrontendInventoryScope"),
+                label + " packaged frontend inventory scope");
+        requireEquals("custom-scheme-file-backed",
+                metadata.get("packagedFrontendPreferredLoader"),
+                label + " packaged frontend preferred loader");
+        requireEquals("diagnostic-blob-only",
+                metadata.get("packagedFrontendAllowedFallback"),
+                label + " packaged frontend allowed fallback");
+        requireEquals("sha256-and-byte-count",
+                metadata.get("packagedFrontendIntegrity"),
+                label + " packaged frontend integrity policy");
+        requireEquals("window-lifetime-cache-cleanup",
+                metadata.get("packagedFrontendCleanupPolicy"),
+                label + " packaged frontend cleanup policy");
+        requireEquals("product-parity-pending",
+                metadata.get("packagedFrontendRealBuildStatus"),
+                label + " packaged frontend real build status");
+        requireEquals("real-generated-lazy-chunk-file-not-generated,real-production-owner-owned-runtime-missing-real-artifact,dev-mode-vite-execution-unmapped",
+                metadata.get("packagedFrontendRemainingBlockers"),
+                label + " packaged frontend remaining blockers");
     }
 
     private static void requireProductionOwnerResourceLoaderMetadata(Map<String, Object> metadata,

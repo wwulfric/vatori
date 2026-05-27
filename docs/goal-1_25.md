@@ -1,6 +1,6 @@
 # Goal 1.25: Packaging-Time Staged Frontend Baseline
 
-状态：待实施
+状态：已完成
 
 `docs/goal.md` 是长期愿景和完成度账本。v1.24 已完成
 `flow-ipc-frontend-pipeline-closure-v1_24`，证明 no-localhost frontend/resource
@@ -134,3 +134,34 @@ bash bin/flow-ipc-trace-inspect --require-flow-ipc-v1_24 docs/traces/flow-ipc-v1
 ```text
 feat: add packaged frontend baseline gate
 ```
+
+## 完成记录
+
+v1.25 已实现 `flow-ipc-packaged-frontend-baseline-v1_25` contract：
+
+- `FlowClientResources` 在 bootstrap manifest 和代表性 resource response 中声明
+  packaged frontend baseline metadata。
+- Swift host 将 v1.25 inventory、preferred loader、diagnostic Blob fallback、
+  integrity、cleanup 和 real-build blocker 字段传播到 request/response/stage/load/DOM
+  diagnostics。
+- `DesktopTraceInspector` 新增
+  `--require-flow-ipc-v1_25-packaged-frontend-baseline` delta gate 和
+  `--require-flow-ipc-v1_25` cumulative gate。
+- 固定 trace 已保存为 `docs/traces/flow-ipc-v1_25.ndjson`。
+
+已通过验收：
+
+```bash
+git diff --check
+bash -n bin/vaadin-desktop
+swiftc -parse vaadin-desktop-host-swift/Sources/VaadinDesktopHost/main.swift
+mvn -q -o -Dmaven.repo.local=/Users/bytedance/IdeaProjects/vatori/.m2/repository -pl vaadin-desktop-devtools -am -DskipTests compile
+bash bin/flow-client-resource-smoke
+bash bin/flow-ipc-trace-inspect --require-flow-ipc-v1_25-packaged-frontend-baseline docs/traces/flow-ipc-v1_25.ndjson
+bash bin/flow-ipc-trace-inspect --require-flow-ipc-v1_25 docs/traces/flow-ipc-v1_25.ndjson
+bash bin/flow-ipc-trace-inspect --require-flow-ipc-v1_24 docs/traces/flow-ipc-v1_24.ndjson
+```
+
+v1.25 的边界仍然明确：它证明 packaging-time staged frontend baseline 已经可审计，
+但不声明完整 packaging system、真实 generated chunk file parity、真实 production owner
+owned runtime parity 或 dev-mode/Vite parity 已完成。

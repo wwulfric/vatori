@@ -390,6 +390,24 @@ final class FlowClientResources {
             "basic-pipeline-infrastructure-closed-real-build-parity-pending";
     private static final String FRONTEND_PIPELINE_CLOSURE_NEXT_PRODUCT_PATH =
             "packaging-time-staged-frontend-or-supported-vaadin-build-spi";
+    private static final String PACKAGED_FRONTEND_BASELINE_VERSION =
+            "flow-ipc-packaged-frontend-baseline-v1_25";
+    private static final String PACKAGED_FRONTEND_PRODUCT_PATH =
+            "packaging-time-staged-frontend-baseline";
+    private static final String PACKAGED_FRONTEND_INVENTORY_SCOPE =
+            FRONTEND_RESOLVER_CONTRACT_SCOPE;
+    private static final String PACKAGED_FRONTEND_PREFERRED_LOADER =
+            "custom-scheme-file-backed";
+    private static final String PACKAGED_FRONTEND_ALLOWED_FALLBACK =
+            "diagnostic-blob-only";
+    private static final String PACKAGED_FRONTEND_INTEGRITY =
+            "sha256-and-byte-count";
+    private static final String PACKAGED_FRONTEND_CLEANUP_POLICY =
+            "window-lifetime-cache-cleanup";
+    private static final String PACKAGED_FRONTEND_REAL_BUILD_STATUS =
+            "product-parity-pending";
+    private static final String PACKAGED_FRONTEND_REMAINING_BLOCKERS =
+            FRONTEND_PIPELINE_CLOSURE_REMAINING_BLOCKERS;
     private static final List<String> PRODUCTION_RUNTIME_OWNER_DEPENDENCY_ARTIFACTS = List.of(
             DEV_BUNDLE_COMMONJS_JS,
             DEV_BUNDLE_INDEX_HTML_JS,
@@ -2097,6 +2115,7 @@ final class FlowClientResources {
         attributes.put("frontendResolverFamiliesCovered", FRONTEND_RESOLVER_FAMILIES_COVERED);
         attributes.put("frontendResolverAcceptableGaps", FRONTEND_RESOLVER_ACCEPTABLE_GAPS);
         attributes.putAll(frontendPipelineClosureAttributes());
+        attributes.putAll(packagedFrontendBaselineAttributes());
         return attributes;
     }
 
@@ -2117,6 +2136,20 @@ final class FlowClientResources {
         attributes.put("frontendPipelineClosureNextProductPath",
                 FRONTEND_PIPELINE_CLOSURE_NEXT_PRODUCT_PATH);
         attributes.put("frontendPipelineClosureNoLocalhost", true);
+        return attributes;
+    }
+
+    private static Map<String, Object> packagedFrontendBaselineAttributes() {
+        Map<String, Object> attributes = new LinkedHashMap<>();
+        attributes.put("packagedFrontendBaselineVersion", PACKAGED_FRONTEND_BASELINE_VERSION);
+        attributes.put("packagedFrontendProductPath", PACKAGED_FRONTEND_PRODUCT_PATH);
+        attributes.put("packagedFrontendInventoryScope", PACKAGED_FRONTEND_INVENTORY_SCOPE);
+        attributes.put("packagedFrontendPreferredLoader", PACKAGED_FRONTEND_PREFERRED_LOADER);
+        attributes.put("packagedFrontendAllowedFallback", PACKAGED_FRONTEND_ALLOWED_FALLBACK);
+        attributes.put("packagedFrontendIntegrity", PACKAGED_FRONTEND_INTEGRITY);
+        attributes.put("packagedFrontendCleanupPolicy", PACKAGED_FRONTEND_CLEANUP_POLICY);
+        attributes.put("packagedFrontendRealBuildStatus", PACKAGED_FRONTEND_REAL_BUILD_STATUS);
+        attributes.put("packagedFrontendRemainingBlockers", PACKAGED_FRONTEND_REMAINING_BLOCKERS);
         return attributes;
     }
 

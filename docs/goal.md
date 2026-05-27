@@ -21,10 +21,12 @@ v0/v1 runtime 切片走向可产品化桌面框架的最终完成状态。
 - `docs/goal-1_13.md`：Production Bundle Owned Runtime Boundary，已完成。
 - `docs/goal-1_14.md`：Production Owner Import and Side-Effect Boundary，已完成。
 - `docs/goal-1_15.md`：Production Owner Dependency Resolver Closure，已规划但尚未执行。
+- `docs/goal-1_16.md`：Production Owner Import Ordering and Component Reuse，已规划但尚未执行。
 
-当前建议的短期阶段目标已规划为 `docs/goal-1_15.md`，后续阶段应从长期未完成账本中继续拆分。
+当前建议的短期阶段目标已规划到 `docs/goal-1_16.md`。执行顺序上应先完成
+`docs/goal-1_15.md`，再启动 `docs/goal-1_16.md`；后续阶段应从长期未完成账本中继续拆分。
 
-后续阶段应继续以 `docs/goal-1_16.md` 等文件拆分，
+后续阶段应继续以 `docs/goal-1_17.md` 等文件拆分，
 每个阶段只拿走本长期目标中的一个可评审切片。不要把本文件改写成短期任务清单；
 它是长期北极星和完成度账本。
 
@@ -280,7 +282,7 @@ v0/v1 runtime 切片走向可产品化桌面框架的最终完成状态。
 
 ## 当前建议的下一阶段
 
-`docs/goal-1_15.md` 已规划为下一阶段：它承接 v1.14 的真实 production owner import
+`docs/goal-1_15.md` 已规划为下一执行阶段：它承接 v1.14 的真实 production owner import
 attempt，不再满足于证明 owner 可以对
 `vaadin-dev-bundle/webapp/VAADIN/build/indexhtml-BfYYZi8S.js` 发起 import，而是要求把
 owner-scoped relative dependency resolver 推进到可审计的 graph closure。Preferred 是
@@ -293,6 +295,15 @@ element、browser import failure、global collision 或 side-effect-unobservable
 `production-owner-relative-import-unresolved` 拆成 owner dependency graph 证据，为后续
 custom element ordering、custom-scheme/file-backed resolver、production owner side-effect
 ownership 或更宽组件覆盖铺路。
+
+`docs/goal-1_16.md` 已作为再下一阶段提前规划：它只应在 v1.15 完成后执行，目标是把
+production owner 从 after-component diagnostic probe 推进到 owner-first 或 isolated import
+path，并让 TextField / Checkbox / Select component resolver 明确复用或拒绝复用 owner-owned
+module identity / side effects。Preferred 是 owner-first import 成功、component focused imports
+不再重复定义已有 Vaadin custom elements，并记录 `componentProductionOwnerReused=true`。
+Acceptable 是真实 owner-first / isolated import 之后，blocker 收敛到 custom element ordering、
+global collision、side-effect ownership 或 unsupported Vaadin production owner contract 的具体
+失败层。
 
 后续阶段可继续从以下方向选择：
 

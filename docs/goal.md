@@ -23,11 +23,11 @@ v0/v1 runtime 切片走向可产品化桌面框架的最终完成状态。
 - `docs/goal-1_15.md`：Production Owner Dependency Resolver Closure，已完成。
 - `docs/goal-1_16.md`：Production Owner Import Ordering and Component Reuse，已完成。
 - `docs/goal-1_17.md`：Host-Owned Frontend Resource Scheme，已完成。
-- `docs/goal-1_18.md`：Production Owner Custom-Scheme Resource Graph，已规划但尚未执行。
+- `docs/goal-1_18.md`：Production Owner Custom-Scheme Resource Graph，已完成。
 
-当前已完成到 `docs/goal-1_17.md`。建议下一个阶段先推进
-`docs/goal-1_18.md`，把 v1.17 证明过的 host-owned resource loader 用到 production
-owner root/dependency graph，而不是继续停留在 Blob fallback。
+当前已完成到 `docs/goal-1_18.md`。建议下一个阶段继续从 production owner
+custom-scheme graph 往真实 owner import / side-effect execution、generated chunk-file
+execution 或 dev-mode/Vite execution 推进，而不是停留在 resource loader 证明层。
 
 后续阶段应继续以 `docs/goal-1_19.md` 等文件拆分，
 每个阶段只拿走本长期目标中的一个可评审切片。不要把本文件改写成短期任务清单；
@@ -51,7 +51,7 @@ owner root/dependency graph，而不是继续停留在 Blob fallback。
 
 ## 当前基线
 
-截至 goal 1.17，仓库已经证明：
+截至 goal 1.18，仓库已经证明：
 
 - `dev-ipc` 可以启动 no-localhost Flow IPC runtime。
 - 真实 macOS Swift/AppKit/WKWebView 窗口可以运行 Flow IPC smoke app 和 framework
@@ -196,6 +196,21 @@ owner root/dependency graph，而不是继续停留在 Blob fallback。
   sha256、redacted file path、relative import base、cleanup policy、no-localhost proof 和
   executed status。production owner root/dependency graph 仍保留显式 Blob fallback，
   并记录 fallback reason、blocked layer 和下一步 custom-scheme owner graph work。
+- v1.18 已把 v1.17 的 host-owned resource loader 用到 production owner root/dependency
+  graph：Java manifest / resource response 声明
+  `productionBundleRuntimeOwnerResourceLoaderVersion=flow-ipc-production-owner-resource-loader-v1_18`、
+  `productionBundleRuntimeOwnerResourceLoaderMode=custom-scheme-file-backed`、
+  `productionBundleRuntimeOwnerResourceScheme=vatori-resource`、
+  `productionBundleRuntimeOwnerResourceGraphMode=owner-root-and-resolved-dependencies`、
+  stable source-path base policy 和 root Blob fallback disabled；Swift host 将真实
+  stats-selected `vaadin-dev-bundle/webapp/VAADIN/build/indexhtml-BfYYZi8S.js` root artifact
+  及已解析 owner dependencies stage 为
+  `vatori-resource://flow-ipc/production-owner/...` file-backed custom-scheme URL，并记录
+  root/dependency `resourceLoad` request/response、byte count、sha256、redacted file path、
+  resource base URL、relative import base、cache/cleanup policy、no-localhost proof、owner-first
+  import over custom scheme、component reuse decision 和 custom-scheme graph layer blocker。
+  v1.18 不复用 v1.17 Flow lazy dependency 证据作为 owner graph 成功，也不允许 production
+  owner root Blob fallback 作为 v1.18 通过条件。
 - 完整 generated/lazy chunk file execution、production owner import/side-effect success
   和 dev-mode/Vite execution 仍是明确 blocker，不计入最终完成。
 
@@ -295,8 +310,9 @@ owner root/dependency graph，而不是继续停留在 Blob fallback。
   execution 和 dev-mode/Vite execution 从 partial/blocker 推进到真实可执行路径。
 - 完整 generated/lazy `Flow.loadOnDemand` execution，不再停在 staged generated-flow-imports
   no-op / missing chunk file blocker。
-- Production bundle owner import ordering、component reuse、import success、chunk side-effect
-  ownership、host-owned resource scheme / file-backed loader 和 packaging-time staging。
+- Production bundle owner import/side-effect success、chunk side-effect ownership、
+  packaging-time staging，以及把 v1.18 custom-scheme owner graph 从可审计 import attempt
+  推进到可复用 owner-owned runtime path。
 - Dev-mode/Vite graph execution 或可靠替代模式。
 - Broader Vaadin component parity，尤其是 Grid/VirtualList、ComboBox、DatePicker、
   Dialog、Upload。
@@ -321,29 +337,22 @@ owner root/dependency graph，而不是继续停留在 Blob fallback。
 
 ## 当前建议的下一阶段
 
-`docs/goal-1_16.md` 已作为下一执行阶段提前规划：它只应在 v1.15 完成后执行，目标是把
-production owner 从 after-component diagnostic probe 推进到 owner-first 或 isolated import
-path，并让 TextField / Checkbox / Select component resolver 明确复用或拒绝复用 owner-owned
-module identity / side effects。Preferred 是 owner-first import 成功、component focused imports
-不再重复定义已有 Vaadin custom elements，并记录 `componentProductionOwnerReused=true`。
-Acceptable 是真实 owner-first / isolated import 之后，blocker 收敛到 custom element ordering、
-global collision、side-effect ownership 或 unsupported Vaadin production owner contract 的具体
-失败层。
-
-`docs/goal-1_17.md` 已作为 v1.16 之后的阶段提前规划：它把 no-localhost frontend resource
-loading 从 WebView JS 内部 Blob module URL staging 推进到 host-owned custom scheme 或
-file-backed loader boundary。Preferred 是 Flow client resources、当前 component frontend
-entries、generated/lazy artifact 和 production owner graph 都通过 host-owned URL layer 执行；
-Acceptable 是至少一条真实 executed artifact path 从 Blob 迁移到 scheme/file loader，并记录
-Blob fallback 的 artifact、reason、blocked layer 和下一步拆解。
+`docs/goal-1_19.md` 应该基于 v1.18 的 production owner custom-scheme graph 证据继续推进，
+不要重复证明 `vatori-resource` handler 是否可用。合理方向是让 owner root import 之后的
+runtime side effect / component reuse 进入可审计闭环：preferred 是 production owner 通过
+custom-scheme URL 成为可复用 owner-owned runtime path，focused TextField / Checkbox / Select
+resolver 能明确复用 owner side effects；acceptable 是 import 已经由 custom-scheme graph 负责，
+但 blocker 被进一步收敛到具体 downstream Vaadin runtime side-effect、custom element registry、
+global initialization 或 unsupported production owner contract 层，并给出下一步工程切口。
 
 后续阶段可继续从以下方向选择：
 
 - 让当前 smoke/framework build 产生真实 generated lazy chunk file，或评估受支持 Vaadin lazy
   chunk SPI，越过 v1.12 的 `chunk-file-not-generated` blocker。
 - Dev-mode/Vite graph execution 或可靠替代模式。
+- 统一 component/generated/theme/production owner resource graph 的 resolver、cache、cleanup
+  和 integrity 策略。
 - Broader Vaadin component parity，尤其是 Grid/VirtualList、ComboBox、DatePicker、Dialog、
   Upload。
-- Dev-mode/Vite execution 或可靠替代模式。
 - Swift host tests / default-host readiness。
 - Broader component parity、durable push / reconnect / resync、打包和更新。

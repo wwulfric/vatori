@@ -285,6 +285,21 @@ final class FlowClientResources {
             "custom-scheme-file-backed";
     private static final String FRONTEND_RESOURCE_LOADER_ACCEPTABLE_FALLBACKS =
             "production-owner-blob-fallback,generated-lazy-blob-fallback,component-complex-graph-blob-fallback";
+    private static final String PRODUCTION_RUNTIME_OWNER_RESOURCE_LOADER_VERSION =
+            "flow-ipc-production-owner-resource-loader-v1_18";
+    private static final String PRODUCTION_RUNTIME_OWNER_RESOURCE_LOADER_MODE =
+            "custom-scheme-file-backed";
+    private static final String PRODUCTION_RUNTIME_OWNER_RESOURCE_SCHEME = "vatori-resource";
+    private static final String PRODUCTION_RUNTIME_OWNER_RESOURCE_GRAPH_MODE =
+            "owner-root-and-resolved-dependencies";
+    private static final String PRODUCTION_RUNTIME_OWNER_RESOURCE_BASE_POLICY =
+            "stable-owner-resource-path-base-v1_18";
+    private static final String PRODUCTION_RUNTIME_OWNER_DEPENDENCY_BLOB_FALLBACK_POLICY =
+            "explicit-classified-only";
+    private static final String PRODUCTION_RUNTIME_OWNER_RESOURCE_LOADER_ACCEPTABLE_FAILURES =
+            "production-owner-custom-scheme-missing-real-artifact,production-owner-custom-scheme-duplicate-custom-element,production-owner-custom-scheme-runtime-side-effect-blocked,production-owner-custom-scheme-browser-import-failed";
+    private static final String PRODUCTION_RUNTIME_OWNER_RESOURCE_LOADER_NAMESPACE =
+            "production-owner";
     private static final List<String> PRODUCTION_RUNTIME_OWNER_DEPENDENCY_ARTIFACTS = List.of(
             DEV_BUNDLE_COMMONJS_JS,
             DEV_BUNDLE_INDEX_HTML_JS,
@@ -1250,6 +1265,7 @@ final class FlowClientResources {
         attributes.put("componentProductionOwnerDependencyPaths", DEV_BUNDLE_INDEX_HTML_JS);
         attributes.put("componentProductionOwnerImportOrder",
                 "owner-first-or-component-focused-fallback-v1_16");
+        putProductionOwnerResourceLoaderAttributes(attributes, DEV_BUNDLE_INDEX_HTML_JS, true);
         return attributes;
     }
 
@@ -1274,6 +1290,7 @@ final class FlowClientResources {
         attributes.put("productionBundleResource", true);
         attributes.put("productionOwnerDependencyResource", true);
         putProductionOwnerDependencyResolverAttributes(attributes, path);
+        putProductionOwnerResourceLoaderAttributes(attributes, path, false);
         return attributes;
     }
 
@@ -1295,6 +1312,41 @@ final class FlowClientResources {
         attributes.put("productionBundleRuntimeOwnerDependencyResolverArtifact", path);
         attributes.put("productionBundleRuntimeOwnerDependencyResolverClassification",
                 "resolved-existing-artifact");
+    }
+
+    private static void putProductionOwnerResourceLoaderAttributes(Map<String, Object> attributes, String path,
+            boolean rootArtifact) {
+        attributes.put("productionBundleRuntimeOwnerResourceLoaderVersion",
+                PRODUCTION_RUNTIME_OWNER_RESOURCE_LOADER_VERSION);
+        attributes.put("productionBundleRuntimeOwnerResourceLoaderMode",
+                PRODUCTION_RUNTIME_OWNER_RESOURCE_LOADER_MODE);
+        attributes.put("productionBundleRuntimeOwnerResourceScheme",
+                PRODUCTION_RUNTIME_OWNER_RESOURCE_SCHEME);
+        attributes.put("productionBundleRuntimeOwnerResourceGraphMode",
+                PRODUCTION_RUNTIME_OWNER_RESOURCE_GRAPH_MODE);
+        attributes.put("productionBundleRuntimeOwnerResourceBasePolicy",
+                PRODUCTION_RUNTIME_OWNER_RESOURCE_BASE_POLICY);
+        attributes.put("productionBundleRuntimeOwnerResourceLoaderNamespace",
+                PRODUCTION_RUNTIME_OWNER_RESOURCE_LOADER_NAMESPACE);
+        attributes.put("productionBundleRuntimeOwnerResourceLoaderRootArtifact",
+                DEV_BUNDLE_INDEX_HTML_JS);
+        attributes.put("productionBundleRuntimeOwnerResourceLoaderArtifact", path);
+        attributes.put("productionBundleRuntimeOwnerResourceLoaderArtifactRole",
+                rootArtifact ? "root" : "dependency");
+        attributes.put("productionBundleRuntimeOwnerBlobFallbackAllowed", false);
+        attributes.put("productionBundleRuntimeOwnerDependencyBlobFallbackPolicy",
+                PRODUCTION_RUNTIME_OWNER_DEPENDENCY_BLOB_FALLBACK_POLICY);
+        attributes.put("productionBundleRuntimeOwnerResourceLoaderAcceptableFailures",
+                PRODUCTION_RUNTIME_OWNER_RESOURCE_LOADER_ACCEPTABLE_FAILURES);
+        attributes.put("productionBundleRuntimeOwnerResourceLoaderExpectedArtifacts",
+                DEV_BUNDLE_INDEX_HTML_JS + "," + PRODUCTION_RUNTIME_OWNER_DEPENDENCY_RESOLVER_EXPECTED_ARTIFACTS);
+        attributes.put("productionBundleRuntimeOwnerResourceLoaderNoLocalhost", true);
+        attributes.put("productionBundleRuntimeOwnerResourceLoaderRelativeImportBase",
+                rootArtifact ? DEV_BUNDLE_INDEX_HTML_JS : path);
+        attributes.put("productionBundleRuntimeOwnerResourceLoaderStageUrlPolicy",
+                "host-owned-custom-scheme-stable-source-path-v1_18");
+        attributes.put("productionBundleRuntimeOwnerResourceLoaderCleanupPolicy",
+                "cleanup-owned-window-lifetime-file-backed-production-owner-v1_18");
     }
 
     private static Map<String, Object> flowLazyDependencyAttributes() {

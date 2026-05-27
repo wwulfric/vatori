@@ -340,6 +340,8 @@ public final class FlowClientResourceSmokeMain {
         requireStringContains(componentManifest.get("componentProductionOwnerReuseAcceptableFailures"),
                 "owner-import-failed-before-component-import",
                 "Component owner reuse acceptable failures");
+        requireProductionOwnerResourceLoaderMetadata(componentManifest, true,
+                "Component frontend manifest production owner resource loader");
         requireComponentResourceMetadata(componentResources);
         String checkboxDevBundlePath = "META-INF/vatori/dev-bundle-entry/vaadin-checkbox.js";
         String selectDevBundlePath = "META-INF/vatori/dev-bundle-entry/vaadin-select.js";
@@ -576,6 +578,8 @@ public final class FlowClientResourceSmokeMain {
                         "reuse-owner-owned-custom-elements-before-focused-imports-v1_16")) {
             throw new IllegalStateException("Production bundle stats graph is missing runtime owner metadata");
         }
+        requireProductionOwnerResourceLoaderMetadata(productionBundleStatsResponse, true,
+                "Production bundle stats owner resource loader");
         requireStringContains(
                 productionBundleStatsResponse.get("productionBundleRuntimeOwnerDependencyResolverExpectedArtifacts"),
                 "copilot-log-plugin-h3VQq9-2-BlujgixT.js",
@@ -651,6 +655,8 @@ public final class FlowClientResourceSmokeMain {
                 || !Boolean.FALSE.equals(productionRuntimeResponse.get("componentProductionOwnerReused"))) {
             throw new IllegalStateException("Production bundle runtime artifact is missing runtime owner metadata");
         }
+        requireProductionOwnerResourceLoaderMetadata(productionRuntimeResponse, true,
+                "Production runtime owner resource loader");
         requireStringContains(
                 productionRuntimeResponse.get("productionBundleRuntimeOwnerDependencyResolverExpectedArtifacts"),
                 "FlowClient-RTzSA_ve.js",
@@ -675,6 +681,8 @@ public final class FlowClientResourceSmokeMain {
                         "resolved-existing-artifact")) {
             throw new IllegalStateException("Production owner dependency resource is missing v1.15 metadata");
         }
+        requireProductionOwnerResourceLoaderMetadata(ownerDependencyResponse, false,
+                "Production owner dependency resource loader");
         if (!resources.contains(checkboxDevBundlePath)) {
             throw new IllegalStateException("Component frontend manifest is missing the checkbox dev-bundle module");
         }
@@ -984,6 +992,52 @@ public final class FlowClientResourceSmokeMain {
         requireStringContains(metadata.get("frontendResourceLoaderAcceptableFallbacks"),
                 "production-owner-blob-fallback",
                 label + " frontend resource loader acceptable fallbacks");
+    }
+
+    private static void requireProductionOwnerResourceLoaderMetadata(Map<String, Object> metadata,
+            boolean rootArtifact, String label) {
+        requireEquals("flow-ipc-production-owner-resource-loader-v1_18",
+                metadata.get("productionBundleRuntimeOwnerResourceLoaderVersion"),
+                label + " version");
+        requireEquals("custom-scheme-file-backed",
+                metadata.get("productionBundleRuntimeOwnerResourceLoaderMode"),
+                label + " mode");
+        requireEquals("vatori-resource",
+                metadata.get("productionBundleRuntimeOwnerResourceScheme"),
+                label + " scheme");
+        requireEquals("owner-root-and-resolved-dependencies",
+                metadata.get("productionBundleRuntimeOwnerResourceGraphMode"),
+                label + " graph mode");
+        requireEquals("stable-owner-resource-path-base-v1_18",
+                metadata.get("productionBundleRuntimeOwnerResourceBasePolicy"),
+                label + " base policy");
+        requireEquals("production-owner",
+                metadata.get("productionBundleRuntimeOwnerResourceLoaderNamespace"),
+                label + " namespace");
+        requireEquals("vaadin-dev-bundle/webapp/VAADIN/build/indexhtml-BfYYZi8S.js",
+                metadata.get("productionBundleRuntimeOwnerResourceLoaderRootArtifact"),
+                label + " root artifact");
+        requireEquals(rootArtifact ? "root" : "dependency",
+                metadata.get("productionBundleRuntimeOwnerResourceLoaderArtifactRole"),
+                label + " artifact role");
+        requireEquals(Boolean.FALSE,
+                metadata.get("productionBundleRuntimeOwnerBlobFallbackAllowed"),
+                label + " root blob fallback flag");
+        requireEquals("explicit-classified-only",
+                metadata.get("productionBundleRuntimeOwnerDependencyBlobFallbackPolicy"),
+                label + " dependency blob fallback policy");
+        requireEquals(Boolean.TRUE,
+                metadata.get("productionBundleRuntimeOwnerResourceLoaderNoLocalhost"),
+                label + " no-localhost flag");
+        requireEquals("host-owned-custom-scheme-stable-source-path-v1_18",
+                metadata.get("productionBundleRuntimeOwnerResourceLoaderStageUrlPolicy"),
+                label + " stage URL policy");
+        requireStringContains(metadata.get("productionBundleRuntimeOwnerResourceLoaderAcceptableFailures"),
+                "production-owner-custom-scheme-missing-real-artifact",
+                label + " acceptable failures");
+        requireStringContains(metadata.get("productionBundleRuntimeOwnerResourceLoaderExpectedArtifacts"),
+                "copilot-log-plugin-h3VQq9-2-BlujgixT.js",
+                label + " expected artifacts");
     }
 
     private static void requireEquals(Object expected, Object actual, String label) {

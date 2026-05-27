@@ -1,6 +1,6 @@
 # Goal 1.18: Production Owner Custom-Scheme Resource Graph
 
-状态：已规划，尚未执行。
+状态：已完成。
 
 `docs/goal.md` 是长期愿景和完成度账本。v1.17 已把 Flow `LoadMode.LAZY`
 dependency 的一条真实执行路径从 Blob-only staging 推进到 Swift host-owned

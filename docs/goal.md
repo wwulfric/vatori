@@ -22,10 +22,9 @@ v0/v1 runtime 切片走向可产品化桌面框架的最终完成状态。
 - `docs/goal-1_14.md`：Production Owner Import and Side-Effect Boundary，已完成。
 - `docs/goal-1_15.md`：Production Owner Dependency Resolver Closure，已完成。
 - `docs/goal-1_16.md`：Production Owner Import Ordering and Component Reuse，已完成。
-- `docs/goal-1_17.md`：Host-Owned Frontend Resource Scheme，已规划但尚未执行。
+- `docs/goal-1_17.md`：Host-Owned Frontend Resource Scheme，已完成。
 
-当前建议的短期阶段目标已规划到 `docs/goal-1_17.md`。执行顺序上应先推进
-`docs/goal-1_17.md`；后续阶段应从长期未完成账本中继续拆分。
+当前已完成到 `docs/goal-1_17.md`。后续阶段应从长期未完成账本中继续拆分。
 
 后续阶段应继续以 `docs/goal-1_18.md` 等文件拆分，
 每个阶段只拿走本长期目标中的一个可评审切片。不要把本文件改写成短期任务清单；
@@ -49,7 +48,7 @@ v0/v1 runtime 切片走向可产品化桌面框架的最终完成状态。
 
 ## 当前基线
 
-截至 goal 1.16，仓库已经证明：
+截至 goal 1.17，仓库已经证明：
 
 - `dev-ipc` 可以启动 no-localhost Flow IPC runtime。
 - 真实 macOS Swift/AppKit/WKWebView 窗口可以运行 Flow IPC smoke app 和 framework
@@ -181,6 +180,19 @@ v0/v1 runtime 切片走向可产品化桌面框架的最终完成状态。
   blocker，component resolver 明确拒绝复用 owner side effects，最终层收敛到
   `production-owner-duplicate-custom-element` / component reuse contract，而不是回退到
   dependency resolver 或 runtime contract missing。
+- v1.17 已把 frontend resource loading 从纯 WebView Blob staging 推进到 host-owned
+  custom-scheme/file-backed loader 边界：Java manifest / resource response 声明
+  `frontendResourceLoaderVersion=flow-ipc-resource-scheme-v1_17`、
+  `frontendResourceLoaderModes=custom-scheme,file-backed,blob-fallback`、
+  `frontendResourceLoaderPreferredMode=custom-scheme-file-backed` 和 no-localhost contract；
+  Swift host 安装 `vatori-resource` `WKURLSchemeHandler`，将真实 Flow
+  `LoadMode.LAZY` dependency body 写入
+  `.build/vaadin-desktop-host-swift/flow-ipc-resources`，再通过
+  `vatori-resource://...` 导入执行。Trace 在 `resourceLoad` / `resourceStage` /
+  `webview.dom` 中记录 scheme handler install、request/response、MIME、byte count、
+  sha256、redacted file path、relative import base、cleanup policy、no-localhost proof 和
+  executed status。production owner root/dependency graph 仍保留显式 Blob fallback，
+  并记录 fallback reason、blocked layer 和下一步 custom-scheme owner graph work。
 - 完整 generated/lazy chunk file execution、production owner import/side-effect success
   和 dev-mode/Vite execution 仍是明确 blocker，不计入最终完成。
 

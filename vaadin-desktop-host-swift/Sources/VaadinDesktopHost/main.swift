@@ -245,6 +245,141 @@ func redactedJavaStdoutLine(_ line: String) -> String {
     return "VFIPC1 \(text)"
 }
 
+struct FlowIpcHostResourceEntry {
+    let sourcePath: String
+    let fileURL: URL
+    let mimeType: String
+    let sha256: String
+    let bytes: Int
+    let cacheStatus: String
+    let relativeImportBase: String
+}
+
+final class FlowIpcResourceSchemeHandler: NSObject, WKURLSchemeHandler {
+    static let schemeName = "vatori-resource"
+    private let queue = DispatchQueue(label: "dev.vatori.desktop.flow-ipc-resource-scheme")
+    private var resources: [String: FlowIpcHostResourceEntry] = [:]
+
+    func register(urlPath: String, entry: FlowIpcHostResourceEntry) {
+        queue.sync {
+            resources[urlPath] = entry
+        }
+    }
+
+    func webView(_ webView: WKWebView, start urlSchemeTask: WKURLSchemeTask) {
+        guard let url = urlSchemeTask.request.url else {
+            urlSchemeTask.didFailWithError(NSError(domain: "dev.vatori.desktop.resource-scheme",
+                                                   code: 400,
+                                                   userInfo: [NSLocalizedDescriptionKey: "missing resource URL"]))
+            return
+        }
+        let urlPath = url.path
+        let entry = queue.sync { resources[urlPath] }
+        trace("recv", "resourceLoad", [
+            "frontendResourceSchemeVersion": "flow-ipc-resource-scheme-v1_17",
+            "frontendResourceSchemeName": Self.schemeName,
+            "frontendResourceLoaderMode": "custom-scheme-file-backed",
+            "stagingMode": "custom-scheme",
+            "frontendResourceSchemeHandlerInstalled": true,
+            "frontendResourceSchemeRequestObserved": true,
+            "frontendResourceSchemeResponseObserved": false,
+            "frontendResourceLoaderNoLocalhost": true,
+            "resourceUrl": url.absoluteString,
+            "resourceUrlPath": urlPath,
+            "sourcePath": entry?.sourcePath ?? "",
+            "mimeType": entry?.mimeType ?? "",
+            "sha256": entry?.sha256 ?? "",
+            "bytes": entry?.bytes ?? 0,
+            "cacheStatus": entry?.cacheStatus ?? "missing",
+            "relativeImportBase": entry?.relativeImportBase ?? "",
+            "cleanupPolicy": "cleanup-owned-window-lifetime-file-backed-v1_17"
+        ])
+
+        guard let entry else {
+            let response = URLResponse(url: url,
+                                       mimeType: "text/plain",
+                                       expectedContentLength: 0,
+                                       textEncodingName: "utf-8")
+            urlSchemeTask.didReceive(response)
+            urlSchemeTask.didFailWithError(NSError(domain: "dev.vatori.desktop.resource-scheme",
+                                                   code: 404,
+                                                   userInfo: [NSLocalizedDescriptionKey: "resource not registered"]))
+            return
+        }
+
+        do {
+            let data = try Data(contentsOf: entry.fileURL)
+            let headers = [
+                "Content-Type": entry.mimeType,
+                "Content-Length": String(data.count),
+                "Cache-Control": "no-store",
+                "Access-Control-Allow-Origin": "*",
+                "Cross-Origin-Resource-Policy": "cross-origin"
+            ]
+            if let response = HTTPURLResponse(url: url,
+                                              statusCode: 200,
+                                              httpVersion: "HTTP/1.1",
+                                              headerFields: headers) {
+                urlSchemeTask.didReceive(response)
+            } else {
+                let response = URLResponse(url: url,
+                                           mimeType: entry.mimeType,
+                                           expectedContentLength: data.count,
+                                           textEncodingName: "utf-8")
+                urlSchemeTask.didReceive(response)
+            }
+            urlSchemeTask.didReceive(data)
+            urlSchemeTask.didFinish()
+            trace("send", "resourceLoad", [
+                "frontendResourceSchemeVersion": "flow-ipc-resource-scheme-v1_17",
+                "frontendResourceSchemeName": Self.schemeName,
+                "frontendResourceLoaderMode": "custom-scheme-file-backed",
+                "stagingMode": "custom-scheme",
+                "frontendResourceSchemeHandlerInstalled": true,
+                "frontendResourceSchemeRequestObserved": true,
+                "frontendResourceSchemeResponseObserved": true,
+                "frontendResourceLoaderNoLocalhost": true,
+                "resourceUrl": url.absoluteString,
+                "resourceUrlPath": urlPath,
+                "sourcePath": entry.sourcePath,
+                "mimeType": entry.mimeType,
+                "sha256": entry.sha256,
+                "bytes": data.count,
+                "cacheStatus": entry.cacheStatus,
+                "relativeImportBase": entry.relativeImportBase,
+                "cleanupPolicy": "cleanup-owned-window-lifetime-file-backed-v1_17",
+                "executionStatus": "served"
+            ])
+        } catch {
+            urlSchemeTask.didFailWithError(error)
+            trace("send", "resourceLoad", [
+                "frontendResourceSchemeVersion": "flow-ipc-resource-scheme-v1_17",
+                "frontendResourceSchemeName": Self.schemeName,
+                "frontendResourceLoaderMode": "custom-scheme-file-backed",
+                "stagingMode": "custom-scheme",
+                "frontendResourceSchemeHandlerInstalled": true,
+                "frontendResourceSchemeRequestObserved": true,
+                "frontendResourceSchemeResponseObserved": false,
+                "frontendResourceLoaderNoLocalhost": true,
+                "resourceUrl": url.absoluteString,
+                "resourceUrlPath": urlPath,
+                "sourcePath": entry.sourcePath,
+                "mimeType": entry.mimeType,
+                "sha256": entry.sha256,
+                "bytes": entry.bytes,
+                "cacheStatus": entry.cacheStatus,
+                "relativeImportBase": entry.relativeImportBase,
+                "cleanupPolicy": "cleanup-owned-window-lifetime-file-backed-v1_17",
+                "browserError": error.localizedDescription,
+                "executionStatus": "serve-failed"
+            ])
+        }
+    }
+
+    func webView(_ webView: WKWebView, stop urlSchemeTask: WKURLSchemeTask) {
+    }
+}
+
 final class LineReader {
     private var buffer = Data()
     private let onLine: (String) -> Void
@@ -461,12 +596,14 @@ final class JavaSidecar {
 final class WebViewHost: NSObject, NSApplicationDelegate, NSWindowDelegate, WKNavigationDelegate, WKScriptMessageHandler {
     private let config: HostConfig
     private let capabilityManifest: CapabilityManifest
+    private let resourceSchemeHandler = FlowIpcResourceSchemeHandler()
     private var sidecar: JavaSidecar?
     private var window: NSWindow?
     private var webView: WKWebView?
     private var didOpenWindow = false
     private var fileDialogInFlight = false
     private var fileTransferPanelInFlight = false
+    private var hostResourceStageCache: Set<String> = []
 
     init(config: HostConfig) {
         self.config = config
@@ -586,9 +723,22 @@ final class WebViewHost: NSObject, NSApplicationDelegate, NSWindowDelegate, WKNa
         }
         userContentController.add(self, name: "flowIpc")
 
+        prepareFlowIpcResourceStagingDirectory()
         let configuration = WKWebViewConfiguration()
         configuration.userContentController = userContentController
+        configuration.setURLSchemeHandler(resourceSchemeHandler,
+                                          forURLScheme: FlowIpcResourceSchemeHandler.schemeName)
         configuration.preferences.javaScriptCanOpenWindowsAutomatically = true
+        trace("recv", "resourceLoad", [
+            "frontendResourceSchemeVersion": "flow-ipc-resource-scheme-v1_17",
+            "frontendResourceSchemeName": FlowIpcResourceSchemeHandler.schemeName,
+            "frontendResourceLoaderMode": "custom-scheme-file-backed",
+            "stagingMode": "custom-scheme",
+            "frontendResourceSchemeHandlerInstalled": true,
+            "frontendResourceLoaderNoLocalhost": true,
+            "cleanupPolicy": "cleanup-owned-window-lifetime-file-backed-v1_17",
+            "fileDirectoryRedacted": "$REPO/.build/vaadin-desktop-host-swift/flow-ipc-resources"
+        ])
         let webView = WKWebView(frame: contentRect, configuration: configuration)
         webView.navigationDelegate = self
         webView.autoresizingMask = [.width, .height]
@@ -1141,6 +1291,219 @@ final class WebViewHost: NSObject, NSApplicationDelegate, NSWindowDelegate, WKNa
         return payload
     }
 
+    private var flowIpcResourceStagingDirectory: URL {
+        URL(fileURLWithPath: config.repoRoot)
+            .appendingPathComponent(".build")
+            .appendingPathComponent("vaadin-desktop-host-swift")
+            .appendingPathComponent("flow-ipc-resources")
+    }
+
+    private func prepareFlowIpcResourceStagingDirectory() {
+        let directory = flowIpcResourceStagingDirectory
+        try? FileManager.default.removeItem(at: directory)
+        do {
+            try FileManager.default.createDirectory(at: directory,
+                                                    withIntermediateDirectories: true)
+        } catch {
+            trace("send", "resourceLoad", [
+                "frontendResourceSchemeVersion": "flow-ipc-resource-scheme-v1_17",
+                "frontendResourceLoaderMode": "custom-scheme-file-backed",
+                "stagingMode": "custom-scheme",
+                "frontendResourceLoaderNoLocalhost": true,
+                "error": error.localizedDescription,
+                "fileDirectoryRedacted": "$REPO/.build/vaadin-desktop-host-swift/flow-ipc-resources"
+            ])
+        }
+    }
+
+    private func handleHostResourceStageRequest(_ payload: [String: Any]) {
+        let requestId = payload["requestId"] as? String ?? ""
+        let sourcePath = payload["sourcePath"] as? String ?? ""
+        let body = payload["body"] as? String ?? ""
+        let sha256 = payload["sha256"] as? String ?? ""
+        let artifactFamily = payload["artifactFamily"] as? String ?? ""
+        let relativeImportBase = payload["relativeImportBase"] as? String ?? sourcePath
+        let mimeType = payload["mimeType"] as? String ?? mimeTypeForFrontendResource(path: sourcePath)
+        let data = Data(body.utf8)
+        let cacheKey = "\(sourcePath)#\(sha256)#\(data.count)"
+        let cacheStatus = hostResourceStageCache.contains(cacheKey) ? "hit" : "miss"
+        hostResourceStageCache.insert(cacheKey)
+
+        let resourceKey = sanitizedResourceKey(sourcePath: sourcePath, sha256: sha256, requestId: requestId)
+        let fileName = sanitizedResourceFileName(sourcePath)
+        let directory = flowIpcResourceStagingDirectory.appendingPathComponent(resourceKey)
+        let fileURL = directory.appendingPathComponent(fileName)
+        let urlPath = "/\(resourceKey)/\(fileName)"
+        let stagedUrl = "\(FlowIpcResourceSchemeHandler.schemeName)://flow-ipc\(urlPath)"
+        let filePathRedacted = "$REPO/.build/vaadin-desktop-host-swift/flow-ipc-resources/\(resourceKey)/\(fileName)"
+        let fileDirectoryRedacted = "$REPO/.build/vaadin-desktop-host-swift/flow-ipc-resources"
+
+        trace("recv", "resourceLoad", [
+            "frontendResourceSchemeVersion": "flow-ipc-resource-scheme-v1_17",
+            "frontendResourceSchemeName": FlowIpcResourceSchemeHandler.schemeName,
+            "frontendResourceLoaderMode": "custom-scheme-file-backed",
+            "stagingMode": "custom-scheme",
+            "frontendResourceSchemeHandlerInstalled": true,
+            "frontendResourceSchemeRequestObserved": false,
+            "frontendResourceSchemeResponseObserved": false,
+            "frontendResourceLoaderNoLocalhost": true,
+            "frontendResourceFileBacked": true,
+            "requestId": requestId,
+            "sourcePath": sourcePath,
+            "artifactFamily": artifactFamily,
+            "mimeType": mimeType,
+            "bytes": data.count,
+            "sha256": sha256,
+            "cacheStatus": cacheStatus,
+            "relativeImportBase": relativeImportBase,
+            "resourceBaseUrl": stagedUrl,
+            "cleanupPolicy": "cleanup-owned-window-lifetime-file-backed-v1_17",
+            "filePathRedacted": filePathRedacted,
+            "fileDirectoryRedacted": fileDirectoryRedacted
+        ])
+
+        do {
+            try FileManager.default.createDirectory(at: directory, withIntermediateDirectories: true)
+            try data.write(to: fileURL, options: [.atomic])
+            resourceSchemeHandler.register(urlPath: urlPath,
+                                           entry: FlowIpcHostResourceEntry(sourcePath: sourcePath,
+                                                                          fileURL: fileURL,
+                                                                          mimeType: mimeType,
+                                                                          sha256: sha256,
+                                                                          bytes: data.count,
+                                                                          cacheStatus: cacheStatus,
+                                                                          relativeImportBase: relativeImportBase))
+            sendHostResourceStageResponse([
+                "requestId": requestId,
+                "success": true,
+                "frontendResourceSchemeVersion": "flow-ipc-resource-scheme-v1_17",
+                "frontendResourceSchemeName": FlowIpcResourceSchemeHandler.schemeName,
+                "frontendResourceLoaderMode": "custom-scheme-file-backed",
+                "stagingMode": "custom-scheme",
+                "frontendResourceSchemeHandlerInstalled": true,
+                "frontendResourceSchemeRequestObserved": false,
+                "frontendResourceSchemeResponseObserved": false,
+                "frontendResourceLoaderNoLocalhost": true,
+                "frontendResourceFileBacked": true,
+                "stagedUrl": stagedUrl,
+                "resourceBaseUrl": stagedUrl,
+                "relativeImportBase": relativeImportBase,
+                "relativeImportResolutionMode": "scheme-url-native-relative-base-v1_17",
+                "resolvedRelativeImportPaths": "",
+                "missingRelativeImportPaths": "",
+                "sourcePath": sourcePath,
+                "artifactFamily": artifactFamily,
+                "mimeType": mimeType,
+                "bytes": data.count,
+                "sha256": sha256,
+                "cacheStatus": cacheStatus,
+                "cleanupPolicy": "cleanup-owned-window-lifetime-file-backed-v1_17",
+                "filePathRedacted": filePathRedacted,
+                "fileDirectoryRedacted": fileDirectoryRedacted,
+                "noLocalhostProof": "custom-scheme-served-by-wkurlschemehandler-no-http-v1_17"
+            ])
+            trace("send", "resourceLoad", [
+                "frontendResourceSchemeVersion": "flow-ipc-resource-scheme-v1_17",
+                "frontendResourceSchemeName": FlowIpcResourceSchemeHandler.schemeName,
+                "frontendResourceLoaderMode": "custom-scheme-file-backed",
+                "stagingMode": "custom-scheme",
+                "frontendResourceSchemeHandlerInstalled": true,
+                "frontendResourceSchemeRequestObserved": false,
+                "frontendResourceSchemeResponseObserved": false,
+                "frontendResourceLoaderNoLocalhost": true,
+                "frontendResourceFileBacked": true,
+                "requestId": requestId,
+                "stagedUrl": stagedUrl,
+                "sourcePath": sourcePath,
+                "artifactFamily": artifactFamily,
+                "mimeType": mimeType,
+                "bytes": data.count,
+                "sha256": sha256,
+                "cacheStatus": cacheStatus,
+                "relativeImportBase": relativeImportBase,
+                "resourceBaseUrl": stagedUrl,
+                "cleanupPolicy": "cleanup-owned-window-lifetime-file-backed-v1_17",
+                "filePathRedacted": filePathRedacted,
+                "fileDirectoryRedacted": fileDirectoryRedacted
+            ])
+        } catch {
+            sendHostResourceStageResponse([
+                "requestId": requestId,
+                "success": false,
+                "frontendResourceSchemeVersion": "flow-ipc-resource-scheme-v1_17",
+                "frontendResourceLoaderMode": "custom-scheme-file-backed",
+                "stagingMode": "custom-scheme",
+                "frontendResourceLoaderNoLocalhost": true,
+                "sourcePath": sourcePath,
+                "artifactFamily": artifactFamily,
+                "mimeType": mimeType,
+                "bytes": data.count,
+                "sha256": sha256,
+                "cacheStatus": cacheStatus,
+                "error": error.localizedDescription,
+                "fileDirectoryRedacted": fileDirectoryRedacted
+            ])
+        }
+    }
+
+    private func sendHostResourceStageResponse(_ response: [String: Any]) {
+        guard let data = try? JSONSerialization.data(withJSONObject: response),
+              let json = String(data: data, encoding: .utf8) else {
+            trace("send", "resourceLoad", [
+                "frontendResourceSchemeVersion": "flow-ipc-resource-scheme-v1_17",
+                "frontendResourceLoaderMode": "custom-scheme-file-backed",
+                "stagingMode": "custom-scheme",
+                "frontendResourceLoaderNoLocalhost": true,
+                "error": "host-resource-stage-response-serialize-failed"
+            ])
+            return
+        }
+        webView?.evaluateJavaScript("window.VaadinDesktopIpcHostResourceStageResponse && window.VaadinDesktopIpcHostResourceStageResponse(\(json));")
+    }
+
+    private func sanitizedResourceKey(sourcePath: String, sha256: String, requestId: String) -> String {
+        let hashPrefix = sha256.isEmpty ? sanitizedPathComponent(requestId) : String(sha256.prefix(16))
+        let name = sanitizedPathComponent(sourcePath)
+        let suffix = name.isEmpty ? "resource" : String(name.prefix(80))
+        return "\(hashPrefix)-\(suffix)"
+    }
+
+    private func sanitizedResourceFileName(_ sourcePath: String) -> String {
+        let last = URL(fileURLWithPath: sourcePath).lastPathComponent
+        let candidate = last.isBlank ? "resource.js" : last
+        let sanitized = sanitizedPathComponent(candidate)
+        if sanitized.contains(".") {
+            return sanitized
+        }
+        return "\(sanitized).js"
+    }
+
+    private func sanitizedPathComponent(_ value: String) -> String {
+        let allowed = CharacterSet.alphanumerics.union(CharacterSet(charactersIn: "._-"))
+        var result = ""
+        for scalar in value.unicodeScalars {
+            if allowed.contains(scalar) {
+                result.append(String(scalar))
+            } else {
+                result.append("-")
+            }
+        }
+        return result.trimmingCharacters(in: CharacterSet(charactersIn: "-"))
+    }
+
+    private func mimeTypeForFrontendResource(path: String) -> String {
+        if path.hasSuffix(".css") {
+            return "text/css; charset=utf-8"
+        }
+        if path.hasSuffix(".json") {
+            return "application/json; charset=utf-8"
+        }
+        if path.hasSuffix(".js") || path.hasSuffix(".mjs") || path.isBlank {
+            return "text/javascript; charset=utf-8"
+        }
+        return "application/octet-stream"
+    }
+
     private func deliverFlowIpcEnvelope(_ object: [String: Any], type: String) {
         guard let data = try? JSONSerialization.data(withJSONObject: object),
               let json = String(data: data, encoding: .utf8) else {
@@ -1182,6 +1545,10 @@ final class WebViewHost: NSObject, NSApplicationDelegate, NSWindowDelegate, WKNa
             return
         }
         let messageType = object["type"] as? String ?? "unknown"
+        if messageType == "hostResourceStageRequest" {
+            handleHostResourceStageRequest(object["payload"] as? [String: Any] ?? [:])
+            return
+        }
         if messageType == "webview.firstMeaningfulPaint" {
             trace("recv", messageType, object["payload"] as? [String: Any] ?? [:])
             return
@@ -1637,6 +2004,29 @@ final class WebViewHost: NSObject, NSApplicationDelegate, NSWindowDelegate, WKNa
           frontendStagedResourceExecutedPaths: window.VaadinDesktopIpcDiagnostics ? window.VaadinDesktopIpcDiagnostics.frontendStagedResourceExecutedPaths : "",
           frontendStagedResourceFailedCount: window.VaadinDesktopIpcDiagnostics ? window.VaadinDesktopIpcDiagnostics.frontendStagedResourceFailedCount : 0,
           frontendStagedResourceFailedPaths: window.VaadinDesktopIpcDiagnostics ? window.VaadinDesktopIpcDiagnostics.frontendStagedResourceFailedPaths : "",
+          frontendResourceSchemeVersion: window.VaadinDesktopIpcDiagnostics ? window.VaadinDesktopIpcDiagnostics.frontendResourceSchemeVersion : "",
+          frontendResourceLoaderMode: window.VaadinDesktopIpcDiagnostics ? window.VaadinDesktopIpcDiagnostics.frontendResourceLoaderMode : "",
+          frontendResourceSchemeName: window.VaadinDesktopIpcDiagnostics ? window.VaadinDesktopIpcDiagnostics.frontendResourceSchemeName : "",
+          frontendResourceSchemeHandlerInstalled: !!(window.VaadinDesktopIpcDiagnostics && window.VaadinDesktopIpcDiagnostics.frontendResourceSchemeHandlerInstalled),
+          frontendResourceSchemeRequestObserved: !!(window.VaadinDesktopIpcDiagnostics && window.VaadinDesktopIpcDiagnostics.frontendResourceSchemeRequestObserved),
+          frontendResourceSchemeResponseObserved: !!(window.VaadinDesktopIpcDiagnostics && window.VaadinDesktopIpcDiagnostics.frontendResourceSchemeResponseObserved),
+          frontendResourceLoaderNoLocalhost: !!(window.VaadinDesktopIpcDiagnostics && window.VaadinDesktopIpcDiagnostics.frontendResourceLoaderNoLocalhost),
+          frontendResourceFileBacked: !!(window.VaadinDesktopIpcDiagnostics && window.VaadinDesktopIpcDiagnostics.frontendResourceFileBacked),
+          frontendResourceLoaderObserved: !!(window.VaadinDesktopIpcDiagnostics && window.VaadinDesktopIpcDiagnostics.frontendResourceLoaderObserved),
+          frontendResourceLoaderObservedPaths: window.VaadinDesktopIpcDiagnostics ? window.VaadinDesktopIpcDiagnostics.frontendResourceLoaderObservedPaths : "",
+          frontendResourceLoaderExecuted: !!(window.VaadinDesktopIpcDiagnostics && window.VaadinDesktopIpcDiagnostics.frontendResourceLoaderExecuted),
+          frontendResourceLoaderExecutedPaths: window.VaadinDesktopIpcDiagnostics ? window.VaadinDesktopIpcDiagnostics.frontendResourceLoaderExecutedPaths : "",
+          frontendResourceBlobFallbackObserved: !!(window.VaadinDesktopIpcDiagnostics && window.VaadinDesktopIpcDiagnostics.frontendResourceBlobFallbackObserved),
+          frontendResourceBlobFallbackPaths: window.VaadinDesktopIpcDiagnostics ? window.VaadinDesktopIpcDiagnostics.frontendResourceBlobFallbackPaths : "",
+          frontendResourceMimeType: window.VaadinDesktopIpcDiagnostics ? window.VaadinDesktopIpcDiagnostics.frontendResourceMimeType : "",
+          frontendResourceFilePathRedacted: window.VaadinDesktopIpcDiagnostics ? window.VaadinDesktopIpcDiagnostics.frontendResourceFilePathRedacted : "",
+          frontendResourceFileDirectoryRedacted: window.VaadinDesktopIpcDiagnostics ? window.VaadinDesktopIpcDiagnostics.frontendResourceFileDirectoryRedacted : "",
+          frontendResourceBaseUrl: window.VaadinDesktopIpcDiagnostics ? window.VaadinDesktopIpcDiagnostics.frontendResourceBaseUrl : "",
+          frontendResourceRelativeImportBase: window.VaadinDesktopIpcDiagnostics ? window.VaadinDesktopIpcDiagnostics.frontendResourceRelativeImportBase : "",
+          frontendResourceRelativeImportResolutionMode: window.VaadinDesktopIpcDiagnostics ? window.VaadinDesktopIpcDiagnostics.frontendResourceRelativeImportResolutionMode : "",
+          frontendResourceResolvedRelativeImportPaths: window.VaadinDesktopIpcDiagnostics ? window.VaadinDesktopIpcDiagnostics.frontendResourceResolvedRelativeImportPaths : "",
+          frontendResourceMissingRelativeImportPaths: window.VaadinDesktopIpcDiagnostics ? window.VaadinDesktopIpcDiagnostics.frontendResourceMissingRelativeImportPaths : "",
+          frontendResourceNoLocalhostProof: window.VaadinDesktopIpcDiagnostics ? window.VaadinDesktopIpcDiagnostics.frontendResourceNoLocalhostProof : "",
           frontendArtifactTextFieldStagedBlocker: !!(window.VaadinDesktopIpcDiagnostics && window.VaadinDesktopIpcDiagnostics.frontendArtifactTextFieldStagedBlocker),
           frontendArtifactTextFieldStagedBlockerPath: window.VaadinDesktopIpcDiagnostics ? window.VaadinDesktopIpcDiagnostics.frontendArtifactTextFieldStagedBlockerPath : "",
           frontendArtifactTextFieldStagedBlockerReason: window.VaadinDesktopIpcDiagnostics ? window.VaadinDesktopIpcDiagnostics.frontendArtifactTextFieldStagedBlockerReason : "",
@@ -2245,6 +2635,11 @@ let flowIpcShell = #"""
       const frontendStagedResourceExecutedPaths = new Set();
       const frontendStagedResourceFailedPaths = new Set();
       const frontendStageResourceByUrl = new Map();
+      const frontendHostResourceLoaderPaths = new Set();
+      const frontendHostResourceLoaderExecutedPaths = new Set();
+      const frontendHostResourceLoaderFallbackPaths = new Set();
+      const hostResourceStagePromises = new Map();
+      let hostResourceStageSequence = 0;
       let generatedLazyBundleExecutionAttempted = false;
       const generatedLoadOnDemandChunkPromises = new Map();
       let flowLazyDependencyExecutionAttempted = false;
@@ -2559,6 +2954,29 @@ let flowIpcShell = #"""
         frontendStagedResourceExecutedPaths: '',
         frontendStagedResourceFailedCount: 0,
         frontendStagedResourceFailedPaths: '',
+        frontendResourceSchemeVersion: '',
+        frontendResourceLoaderMode: '',
+        frontendResourceSchemeName: '',
+        frontendResourceSchemeHandlerInstalled: false,
+        frontendResourceSchemeRequestObserved: false,
+        frontendResourceSchemeResponseObserved: false,
+        frontendResourceLoaderNoLocalhost: false,
+        frontendResourceFileBacked: false,
+        frontendResourceLoaderObserved: false,
+        frontendResourceLoaderObservedPaths: '',
+        frontendResourceLoaderExecuted: false,
+        frontendResourceLoaderExecutedPaths: '',
+        frontendResourceBlobFallbackObserved: false,
+        frontendResourceBlobFallbackPaths: '',
+        frontendResourceMimeType: '',
+        frontendResourceFilePathRedacted: '',
+        frontendResourceFileDirectoryRedacted: '',
+        frontendResourceBaseUrl: '',
+        frontendResourceRelativeImportBase: '',
+        frontendResourceRelativeImportResolutionMode: '',
+        frontendResourceResolvedRelativeImportPaths: '',
+        frontendResourceMissingRelativeImportPaths: '',
+        frontendResourceNoLocalhostProof: '',
         frontendArtifactTextFieldStagedBlocker: false,
         frontendArtifactTextFieldStagedBlockerPath: '',
         frontendArtifactTextFieldStagedBlockerReason: '',
@@ -4946,6 +5364,18 @@ let flowIpcShell = #"""
           frontendStagedResourceFailedPaths.size;
         window.VaadinDesktopIpcDiagnostics.frontendStagedResourceFailedPaths =
           Array.from(frontendStagedResourceFailedPaths).join(',');
+        window.VaadinDesktopIpcDiagnostics.frontendResourceLoaderObserved =
+          frontendHostResourceLoaderPaths.size > 0;
+        window.VaadinDesktopIpcDiagnostics.frontendResourceLoaderObservedPaths =
+          Array.from(frontendHostResourceLoaderPaths).join(',');
+        window.VaadinDesktopIpcDiagnostics.frontendResourceLoaderExecuted =
+          frontendHostResourceLoaderExecutedPaths.size > 0;
+        window.VaadinDesktopIpcDiagnostics.frontendResourceLoaderExecutedPaths =
+          Array.from(frontendHostResourceLoaderExecutedPaths).join(',');
+        window.VaadinDesktopIpcDiagnostics.frontendResourceBlobFallbackObserved =
+          frontendHostResourceLoaderFallbackPaths.size > 0;
+        window.VaadinDesktopIpcDiagnostics.frontendResourceBlobFallbackPaths =
+          Array.from(frontendHostResourceLoaderFallbackPaths).join(',');
         window.VaadinDesktopIpcDiagnostics.frontendArtifactTextFieldModuleIdentityPaths =
           Array.from(frontendModuleIdentityResourcePaths).join(',');
       }
@@ -4984,9 +5414,103 @@ let flowIpcShell = #"""
         } else if (executionStatus === 'strict-blocker' || executionStatus === 'execution-failed') {
           frontendStagedResourceFailedPaths.add(sourcePath);
         }
+        if (extra && extra.frontendResourceSchemeVersion === 'flow-ipc-resource-scheme-v1_17') {
+          frontendHostResourceLoaderPaths.add(sourcePath);
+          if (executionStatus === 'executed') {
+            frontendHostResourceLoaderExecutedPaths.add(sourcePath);
+          }
+          if (extra.stagingMode === 'blob-fallback') {
+            frontendHostResourceLoaderFallbackPaths.add(sourcePath);
+          }
+          window.VaadinDesktopIpcDiagnostics.frontendResourceSchemeVersion =
+            extra.frontendResourceSchemeVersion;
+          window.VaadinDesktopIpcDiagnostics.frontendResourceLoaderMode =
+            extra.frontendResourceLoaderMode || '';
+          window.VaadinDesktopIpcDiagnostics.frontendResourceSchemeName =
+            extra.frontendResourceSchemeName || '';
+          window.VaadinDesktopIpcDiagnostics.frontendResourceSchemeHandlerInstalled =
+            extra.frontendResourceSchemeHandlerInstalled === true;
+          window.VaadinDesktopIpcDiagnostics.frontendResourceSchemeRequestObserved =
+            extra.frontendResourceSchemeRequestObserved === true
+            || window.VaadinDesktopIpcDiagnostics.frontendResourceSchemeRequestObserved;
+          window.VaadinDesktopIpcDiagnostics.frontendResourceSchemeResponseObserved =
+            extra.frontendResourceSchemeResponseObserved === true
+            || window.VaadinDesktopIpcDiagnostics.frontendResourceSchemeResponseObserved;
+          window.VaadinDesktopIpcDiagnostics.frontendResourceLoaderNoLocalhost =
+            extra.frontendResourceLoaderNoLocalhost === true;
+          window.VaadinDesktopIpcDiagnostics.frontendResourceFileBacked =
+            extra.frontendResourceFileBacked === true;
+          window.VaadinDesktopIpcDiagnostics.frontendResourceMimeType = extra.mimeType || '';
+          window.VaadinDesktopIpcDiagnostics.frontendResourceFilePathRedacted =
+            extra.filePathRedacted || '';
+          window.VaadinDesktopIpcDiagnostics.frontendResourceFileDirectoryRedacted =
+            extra.fileDirectoryRedacted || '';
+          window.VaadinDesktopIpcDiagnostics.frontendResourceBaseUrl =
+            extra.resourceBaseUrl || stagedUrl || '';
+          window.VaadinDesktopIpcDiagnostics.frontendResourceRelativeImportBase =
+            extra.relativeImportBase || '';
+          window.VaadinDesktopIpcDiagnostics.frontendResourceRelativeImportResolutionMode =
+            extra.relativeImportResolutionMode || '';
+          window.VaadinDesktopIpcDiagnostics.frontendResourceResolvedRelativeImportPaths =
+            extra.resolvedRelativeImportPaths || '';
+          window.VaadinDesktopIpcDiagnostics.frontendResourceMissingRelativeImportPaths =
+            extra.missingRelativeImportPaths || '';
+          window.VaadinDesktopIpcDiagnostics.frontendResourceNoLocalhostProof =
+            extra.noLocalhostProof || '';
+        }
         refreshFrontendStagingDiagnostics();
         sendHostTrace('resourceStage', {
           stagingResolverVersion: 'flow-ipc-resource-staging-v1_5',
+          frontendResourceSchemeVersion: extra && extra.frontendResourceSchemeVersion
+            ? extra.frontendResourceSchemeVersion
+            : '',
+          frontendResourceLoaderMode: extra && extra.frontendResourceLoaderMode
+            ? extra.frontendResourceLoaderMode
+            : '',
+          frontendResourceSchemeName: extra && extra.frontendResourceSchemeName
+            ? extra.frontendResourceSchemeName
+            : '',
+          frontendResourceSchemeHandlerInstalled: extra
+            && typeof extra.frontendResourceSchemeHandlerInstalled === 'boolean'
+            ? extra.frontendResourceSchemeHandlerInstalled
+            : false,
+          frontendResourceSchemeRequestObserved: extra
+            && typeof extra.frontendResourceSchemeRequestObserved === 'boolean'
+            ? extra.frontendResourceSchemeRequestObserved
+            : false,
+          frontendResourceSchemeResponseObserved: extra
+            && typeof extra.frontendResourceSchemeResponseObserved === 'boolean'
+            ? extra.frontendResourceSchemeResponseObserved
+            : false,
+          frontendResourceLoaderNoLocalhost: extra
+            && typeof extra.frontendResourceLoaderNoLocalhost === 'boolean'
+            ? extra.frontendResourceLoaderNoLocalhost
+            : false,
+          frontendResourceFileBacked: extra
+            && typeof extra.frontendResourceFileBacked === 'boolean'
+            ? extra.frontendResourceFileBacked
+            : false,
+          stagingMode: extra && extra.stagingMode ? extra.stagingMode : 'blob-fallback',
+          resourceBaseUrl: extra && extra.resourceBaseUrl ? extra.resourceBaseUrl : stagedUrl,
+          relativeImportBase: extra && extra.relativeImportBase ? extra.relativeImportBase : '',
+          relativeImportResolutionMode: extra && extra.relativeImportResolutionMode
+            ? extra.relativeImportResolutionMode
+            : '',
+          resolvedRelativeImportPaths: extra && extra.resolvedRelativeImportPaths
+            ? extra.resolvedRelativeImportPaths
+            : '',
+          missingRelativeImportPaths: extra && extra.missingRelativeImportPaths
+            ? extra.missingRelativeImportPaths
+            : '',
+          mimeType: extra && extra.mimeType ? extra.mimeType : 'text/javascript; charset=utf-8',
+          filePathRedacted: extra && extra.filePathRedacted ? extra.filePathRedacted : '',
+          fileDirectoryRedacted: extra && extra.fileDirectoryRedacted ? extra.fileDirectoryRedacted : '',
+          noLocalhostProof: extra && extra.noLocalhostProof ? extra.noLocalhostProof : '',
+          blobFallbackReason: extra && extra.blobFallbackReason ? extra.blobFallbackReason : '',
+          blobFallbackBlockedLayer: extra && extra.blobFallbackBlockedLayer ? extra.blobFallbackBlockedLayer : '',
+          blobFallbackNextResolutionStep: extra && extra.blobFallbackNextResolutionStep
+            ? extra.blobFallbackNextResolutionStep
+            : '',
           sourcePath,
           stagedUrl,
           stagedUrlScheme: scheme,
@@ -5678,6 +6202,103 @@ let flowIpcShell = #"""
         recordFrontendStage(resource, url, executionStatus || 'staged', 'miss',
           Object.assign({ body }, extra || {}));
         return url;
+      }
+
+      window.VaadinDesktopIpcHostResourceStageResponse = function(response) {
+        const requestId = response && typeof response.requestId === 'string' ? response.requestId : '';
+        const pending = requestId ? hostResourceStagePromises.get(requestId) : null;
+        if (!pending) {
+          return;
+        }
+        hostResourceStagePromises.delete(requestId);
+        clearTimeout(pending.timeout);
+        if (response && response.success === true) {
+          pending.resolve(response);
+        } else {
+          pending.reject(new Error((response && response.error) || 'host-resource-stage-failed'));
+        }
+      };
+
+      function requestHostResourceStage(payload) {
+        return new Promise((resolve, reject) => {
+          if (!window.webkit || !window.webkit.messageHandlers || !window.webkit.messageHandlers.flowIpc) {
+            reject(new Error('host-resource-stage-bridge-unavailable'));
+            return;
+          }
+          const requestId = 'host-resource-stage-' + (++hostResourceStageSequence);
+          const timeout = setTimeout(() => {
+            hostResourceStagePromises.delete(requestId);
+            reject(new Error('host-resource-stage-timeout'));
+          }, 5000);
+          hostResourceStagePromises.set(requestId, { resolve, reject, timeout });
+          window.webkit.messageHandlers.flowIpc.postMessage({
+            type: 'hostResourceStageRequest',
+            payload: Object.assign({}, payload || {}, { requestId })
+          });
+        });
+      }
+
+      async function stageHostOwnedFrontendArtifact(resource, body, executionStatus, extra) {
+        if (!resource || typeof resource.path !== 'string' || !resource.path || typeof body !== 'string') {
+          return '';
+        }
+        const hostExtra = extra || {};
+        try {
+          const response = await requestHostResourceStage({
+            sourcePath: resource.path,
+            body,
+            sha256: resource.sha256 || '',
+            artifactFamily: resource.artifactFamily || '',
+            mimeType: hostExtra.mimeType || 'text/javascript; charset=utf-8',
+            relativeImportBase: hostExtra.relativeImportBase || resource.path
+          });
+          hostExtra.frontendResourceSchemeVersion =
+            response.frontendResourceSchemeVersion || 'flow-ipc-resource-scheme-v1_17';
+          hostExtra.frontendResourceLoaderMode =
+            response.frontendResourceLoaderMode || 'custom-scheme-file-backed';
+          hostExtra.frontendResourceSchemeName = response.frontendResourceSchemeName || 'vatori-resource';
+          hostExtra.frontendResourceSchemeHandlerInstalled =
+            response.frontendResourceSchemeHandlerInstalled === true;
+          hostExtra.frontendResourceSchemeRequestObserved =
+            response.frontendResourceSchemeRequestObserved === true;
+          hostExtra.frontendResourceSchemeResponseObserved =
+            response.frontendResourceSchemeResponseObserved === true;
+          hostExtra.frontendResourceLoaderNoLocalhost =
+            response.frontendResourceLoaderNoLocalhost === true;
+          hostExtra.frontendResourceFileBacked = response.frontendResourceFileBacked === true;
+          hostExtra.stagingMode = response.stagingMode || 'custom-scheme';
+          hostExtra.resourceBaseUrl = response.resourceBaseUrl || response.stagedUrl || '';
+          hostExtra.relativeImportBase = response.relativeImportBase || resource.path;
+          hostExtra.relativeImportResolutionMode =
+            response.relativeImportResolutionMode || 'scheme-url-native-relative-base-v1_17';
+          hostExtra.resolvedRelativeImportPaths = response.resolvedRelativeImportPaths || '';
+          hostExtra.missingRelativeImportPaths = response.missingRelativeImportPaths || '';
+          hostExtra.mimeType = response.mimeType || 'text/javascript; charset=utf-8';
+          hostExtra.filePathRedacted = response.filePathRedacted || '';
+          hostExtra.fileDirectoryRedacted = response.fileDirectoryRedacted || '';
+          hostExtra.noLocalhostProof =
+            response.noLocalhostProof || 'custom-scheme-served-by-wkurlschemehandler-no-http-v1_17';
+          const stagedUrl = response.stagedUrl || '';
+          if (!stagedUrl) {
+            return '';
+          }
+          recordFrontendStage(resource, stagedUrl, executionStatus || 'staged',
+            response.cacheStatus || 'miss', Object.assign({ body }, hostExtra));
+          return stagedUrl;
+        } catch (error) {
+          hostExtra.frontendResourceSchemeVersion = 'flow-ipc-resource-scheme-v1_17';
+          hostExtra.frontendResourceLoaderMode = 'custom-scheme-file-backed';
+          hostExtra.frontendResourceSchemeName = 'vatori-resource';
+          hostExtra.frontendResourceSchemeHandlerInstalled = true;
+          hostExtra.frontendResourceLoaderNoLocalhost = true;
+          hostExtra.frontendResourceFileBacked = true;
+          hostExtra.stagingMode = 'blob-fallback';
+          hostExtra.blobFallbackReason = error && error.message ? error.message : String(error);
+          hostExtra.blobFallbackBlockedLayer = 'host-owned-resource-stage';
+          hostExtra.blobFallbackNextResolutionStep =
+            'keep using Blob fallback only for this artifact until the host-owned resource stage request succeeds';
+          return '';
+        }
       }
 
       function recordFrontendStageOutcome(resource, stagedUrl, executionStatus, extra) {
@@ -8139,9 +8760,9 @@ let flowIpcShell = #"""
           runtimeResolverContractVersion: resource.runtimeResolverContractVersion || 'flow-ipc-frontend-runtime-resolver-v1_10',
           logicalRequestId: resource.logicalRequestId || 'flow-lazy-dependency:v1_10',
           pathMapping: resource.pathMapping || 'context-url-to-ipc-resource-path',
-          stageUrlPolicy: resource.stageUrlPolicy || 'blob-module-url',
+          stageUrlPolicy: 'host-owned-resource-scheme-file-backed-v1_17',
           cachePolicy: resource.cachePolicy || 'single-trigger-per-resource-path',
-          cleanupOwnership: resource.cleanupOwnership || 'revoke-after-lazy-dependency-load',
+          cleanupOwnership: 'cleanup-owned-window-lifetime-file-backed-v1_17',
           blockerClassification: resource.blockerClassification || 'none',
           lazyDependencyVersion: resource.lazyDependencyVersion || 'flow-ipc-lazy-dependency-v1_10',
           lazyDependencySource: resource.lazyDependencySource || 'flow-uidl-dependencyloader-loadmode-lazy-v1_10',
@@ -8151,15 +8772,40 @@ let flowIpcShell = #"""
           lazyDependencyResolvedPath: resource.lazyDependencyResolvedPath || resource.path,
           lazyDependencyTriggerOwner: resource.lazyDependencyTriggerOwner || 'visible-flow-client-dependencyloader',
           lazyDependencyTriggeredByFlowClient: resource.lazyDependencyTriggeredByFlowClient === true,
+          frontendResourceSchemeVersion: 'flow-ipc-resource-scheme-v1_17',
+          frontendResourceLoaderMode: 'custom-scheme-file-backed',
+          frontendResourceSchemeName: 'vatori-resource',
+          frontendResourceSchemeHandlerInstalled: true,
+          frontendResourceLoaderNoLocalhost: true,
+          frontendResourceFileBacked: true,
+          stagingMode: 'custom-scheme',
+          relativeImportBase: resource.path,
+          relativeImportResolutionMode: 'scheme-url-native-relative-base-v1_17',
+          resolvedRelativeImportPaths: '',
+          missingRelativeImportPaths: '',
+          mimeType: 'text/javascript; charset=utf-8',
+          noLocalhostProof: 'custom-scheme-served-by-wkurlschemehandler-no-http-v1_17',
           failureLayer: ''
         };
         try {
           window.VaadinDesktopIpcDiagnostics.flowLazyDependencyStageObserved = true;
-          stagedUrl = stageFrontendArtifact(resource, source, 'execution-attempt', urlsToRevoke, null, stageExtra);
+          stagedUrl = await stageHostOwnedFrontendArtifact(resource, source, 'execution-attempt', stageExtra);
           if (!stagedUrl) {
-            throw new Error('flow-lazy-dependency-staging-failed');
+            stageExtra.stagingMode = 'blob-fallback';
+            stageExtra.blobFallbackReason = stageExtra.blobFallbackReason || 'host-owned-resource-stage-empty-url';
+            stageExtra.blobFallbackBlockedLayer = 'host-owned-resource-stage';
+            stageExtra.blobFallbackNextResolutionStep =
+              'keep the Flow lazy dependency Blob fallback until the host-owned resource scheme returns a module URL';
+            stagedUrl = stageFrontendArtifact(resource, source, 'execution-attempt', urlsToRevoke, null, stageExtra);
+            if (!stagedUrl) {
+              throw new Error('flow-lazy-dependency-staging-failed');
+            }
           }
           await import(stagedUrl);
+          if (stagedUrl.startsWith('vatori-resource:')) {
+            stageExtra.frontendResourceSchemeRequestObserved = true;
+            stageExtra.frontendResourceSchemeResponseObserved = true;
+          }
           const marker = window.VaadinDesktopIpcLazyDependencyProbe || {};
           if (marker.executed !== true) {
             throw new Error('flow-lazy-dependency-marker-missing');
@@ -8776,6 +9422,16 @@ let flowIpcShell = #"""
           cachePolicy: 'retain-per-owner-import-module-identity',
           cleanupOwnership: 'window-lifetime-owner-ordering-preflight-cache',
           blockerClassification: 'flow-ipc-production-owner-ordering-v1_16',
+          frontendResourceSchemeVersion: 'flow-ipc-resource-scheme-v1_17',
+          frontendResourceLoaderMode: 'blob-fallback',
+          frontendResourceSchemeName: 'vatori-resource',
+          frontendResourceSchemeHandlerInstalled: true,
+          frontendResourceLoaderNoLocalhost: true,
+          frontendResourceFileBacked: false,
+          stagingMode: 'blob-fallback',
+          blobFallbackReason: 'production-owner-root-keeps-blob-import-until-custom-scheme-owner-graph-can-own-indexhtml-side-effects',
+          blobFallbackBlockedLayer: 'production-owner-import-runtime',
+          blobFallbackNextResolutionStep: 'migrate the production owner root and dependency graph to the v1.17 host-owned scheme after the lazy dependency proves custom-scheme execution',
           productionBundleRuntimeVersion: resource.productionBundleRuntimeVersion
             || 'flow-ipc-production-runtime-v1_10',
           productionBundleRuntimeRegistrySource: resource.productionBundleRuntimeRegistrySource

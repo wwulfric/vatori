@@ -277,6 +277,14 @@ final class FlowClientResources {
             "reuse-owner-owned-custom-elements-before-focused-imports-v1_16";
     private static final String COMPONENT_PRODUCTION_OWNER_REUSE_ACCEPTABLE_FAILURES =
             "owner-import-failed-before-component-import,owner-import-succeeded-but-component-class-export-unreachable,owner-side-effects-global-but-focused-entry-still-required,vaadin-production-artifact-does-not-expose-reusable-owner-contract,blob-module-identity-cannot-safely-merge-owner-and-component-lifetime";
+    private static final String FRONTEND_RESOURCE_LOADER_VERSION =
+            "flow-ipc-resource-scheme-v1_17";
+    private static final String FRONTEND_RESOURCE_LOADER_MODES =
+            "custom-scheme,file-backed,blob-fallback";
+    private static final String FRONTEND_RESOURCE_LOADER_PREFERRED_MODE =
+            "custom-scheme-file-backed";
+    private static final String FRONTEND_RESOURCE_LOADER_ACCEPTABLE_FALLBACKS =
+            "production-owner-blob-fallback,generated-lazy-blob-fallback,component-complex-graph-blob-fallback";
     private static final List<String> PRODUCTION_RUNTIME_OWNER_DEPENDENCY_ARTIFACTS = List.of(
             DEV_BUNDLE_COMMONJS_JS,
             DEV_BUNDLE_INDEX_HTML_JS,
@@ -627,6 +635,7 @@ final class FlowClientResources {
         manifest.put("resolverStrategy", COMPONENT_RESOLVER_V1_4);
         manifest.put("transport", "flow-ipc");
         manifest.put("resourceLoading", "ipc-resource-request");
+        manifest.putAll(frontendResourceLoaderAttributes());
         manifest.put("classpath", true);
         manifest.put("count", entries.size());
         manifest.put("resources", entries);
@@ -702,6 +711,7 @@ final class FlowClientResources {
         manifest.put("loadOnDemandChunkNextResolutionStep", GENERATED_LAZY_CHUNK_NEXT_RESOLUTION_STEP);
         manifest.putAll(generatedLoadOnDemandChunkFileRegistryAttributes(DEV_BUNDLE_GENERATED_FLOW_IMPORTS_JS));
         manifest.put("runtimeResolverContractVersion", RUNTIME_RESOLVER_CONTRACT_VERSION);
+        manifest.putAll(frontendResourceLoaderAttributes());
         manifest.put("flowLazyDependencyVersion", FLOW_LAZY_DEPENDENCY_VERSION);
         manifest.put("flowLazyDependencySource", FLOW_LAZY_DEPENDENCY_SOURCE);
         manifest.put("flowLazyDependencyMode", "LoadMode.LAZY");
@@ -1308,10 +1318,14 @@ final class FlowClientResources {
         attributes.put("lookupKind", "Flow-lazy-dependency-resource-v1_10");
         attributes.put("pathMapping", "context-url-to-ipc-resource-path");
         attributes.put("dependencyGraph", "UidlWriter:LAZY=>DependencyLoader=>script.src=>IPC resourceRequest");
-        attributes.put("stageUrlPolicy", "blob-module-url");
+        attributes.put("stageUrlPolicy", "host-owned-resource-scheme-file-backed-v1_17");
         attributes.put("cachePolicy", "single-trigger-per-resource-path");
-        attributes.put("cleanupOwnership", "revoke-after-lazy-dependency-load");
+        attributes.put("cleanupOwnership", "cleanup-owned-window-lifetime-file-backed-v1_17");
         attributes.put("blockerClassification", "none");
+        attributes.put("frontendResourceLoaderExecutionSlice", "flow-lazy-dependency-v1_17");
+        attributes.put("frontendResourceLoaderExpectedStagingMode", "custom-scheme");
+        attributes.put("frontendResourceLoaderRelativeImportBase", FLOW_LAZY_DEPENDENCY_JS);
+        attributes.put("frontendResourceLoaderMimeType", "text/javascript; charset=utf-8");
         attributes.put("lazyDependencyVersion", FLOW_LAZY_DEPENDENCY_VERSION);
         attributes.put("lazyDependencySource", FLOW_LAZY_DEPENDENCY_SOURCE);
         attributes.put("lazyDependencyMode", "LoadMode.LAZY");
@@ -1597,6 +1611,17 @@ final class FlowClientResources {
         return attributes;
     }
 
+    private static Map<String, Object> frontendResourceLoaderAttributes() {
+        Map<String, Object> attributes = new LinkedHashMap<>();
+        attributes.put("frontendResourceLoaderVersion", FRONTEND_RESOURCE_LOADER_VERSION);
+        attributes.put("frontendResourceLoaderModes", FRONTEND_RESOURCE_LOADER_MODES);
+        attributes.put("frontendResourceLoaderPreferredMode", FRONTEND_RESOURCE_LOADER_PREFERRED_MODE);
+        attributes.put("frontendResourceLoaderNoLocalhost", true);
+        attributes.put("frontendResourceLoaderAcceptableFallbacks",
+                FRONTEND_RESOURCE_LOADER_ACCEPTABLE_FALLBACKS);
+        return attributes;
+    }
+
     private static String flowClientExecutionPolicy(String kind) {
         if ("flow-bootstrap-module".equals(kind) || "flow-client-module".equals(kind)) {
             return "execute-primary-module";
@@ -1778,6 +1803,7 @@ final class FlowClientResources {
             metadata.put("sha256", sha256(bytes));
             metadata.put("text", text);
             metadata.put("ipcAugmented", ipcAugmented);
+            metadata.putAll(frontendResourceLoaderAttributes());
             metadata.putAll(attributes);
             return metadata;
         }

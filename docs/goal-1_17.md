@@ -1,6 +1,28 @@
 # Goal 1.17: Host-Owned Frontend Resource Scheme
 
-状态：已规划，尚未执行。
+状态：已完成。
+
+完成摘要：
+
+- Swift/AppKit/WKWebView `dev-ipc` host 已安装 `vatori-resource`
+  `WKURLSchemeHandler`，并把 host-owned frontend resource staging 目录固定到
+  `.build/vaadin-desktop-host-swift/flow-ipc-resources`。
+- Java `FlowClientResources` 已在 manifest 和 resource response 中声明
+  `frontendResourceLoaderVersion=flow-ipc-resource-scheme-v1_17`、
+  `frontendResourceLoaderModes=custom-scheme,file-backed,blob-fallback`、
+  `frontendResourceLoaderPreferredMode=custom-scheme-file-backed` 和 no-localhost contract；
+  `flow-client-resource-smoke` 已断言这些 metadata。
+- 真实 Flow `LoadMode.LAZY` dependency `vatori-flow-ipc-lazy-v1_10.js` 已从 Blob-only
+  staging 迁移到 Swift host file-backed `vatori-resource://...` import execution path；
+  `resourceLoad` / `resourceStage` / `webview.dom` 记录 handler install、request/response、
+  MIME、byte count、sha256、redacted file path、relative import base、cleanup policy、
+  no-localhost proof 和 executed status。
+- Production owner root/dependency graph 仍保留显式 Blob fallback；trace 记录 fallback
+  reason、blocked layer 和下一步 custom-scheme owner graph work，因此 v1.17 不是完整
+  production bundle parity。
+- 新增 `--require-flow-ipc-v1_17-resource-scheme` delta gate、
+  `--require-flow-ipc-v1_17` cumulative gate 和
+  `docs/traces/flow-ipc-v1_17.ndjson` fixture。
 
 `docs/goal.md` 是长期愿景和完成度账本。v1.15 已完成 production owner dependency
 resolver closure，v1.16 已完成 production owner import ordering / component reuse。v1.17
@@ -303,3 +325,27 @@ v1.17 可以用两种方式完成：
 
 无论采用哪种方式，都必须新增 v1.17 trace fixture、strict inspector gate、文档更新和真实窗口
 验证结果。
+
+## 验证结果
+
+本阶段采用完成判定 2：真实 Flow `LoadMode.LAZY` dependency 已迁移到 host-owned
+custom-scheme/file-backed loader；production owner root 和部分复杂 graph 仍保留明确 Blob
+fallback。
+
+已通过：
+
+```bash
+git diff --check
+bash -n bin/vaadin-desktop
+source /Users/bytedance/.sdkman/bin/sdkman-init.sh && mvn -o -Dmaven.repo.local=/Users/bytedance/IdeaProjects/vatori/.m2/repository -DskipTests compile
+swiftc -parse vaadin-desktop-host-swift/Sources/VaadinDesktopHost/main.swift
+bash bin/flow-client-resource-smoke
+bash bin/uidl-adapter-smoke
+bash bin/uidl-rpc-smoke
+bash bin/flow-ipc-scope-smoke
+bash bin/flow-ipc-trace-inspect --require-flow-ipc-v1_17-resource-scheme docs/traces/flow-ipc-v1_17.ndjson
+bash bin/flow-ipc-trace-inspect --require-flow-ipc-v1_17 docs/traces/flow-ipc-v1_17.ndjson
+VAADIN_DESKTOP_MAVEN_OFFLINE=1 VAADIN_DESKTOP_HOST_NO_ACTIVATE=1 VAADIN_DESKTOP_FLOW_IPC_AUTO_CLICK=1 VAADIN_DESKTOP_FLOW_IPC_AUTO_VAADIN_TEXT_FIELD_REAL=1 VAADIN_DESKTOP_FLOW_IPC_AUTO_RESYNC=1 VAADIN_DESKTOP_FLOW_IPC_AUTO_ERROR=1 VAADIN_DESKTOP_FLOW_IPC_AUTO_FILE_DIALOG_CANCEL=1 VAADIN_DESKTOP_FLOW_IPC_AUTO_SHUTDOWN=1 bash bin/vaadin-desktop dev-ipc test-apps/flow-over-ipc-smoke-app
+VAADIN_DESKTOP_MAVEN_OFFLINE=1 VAADIN_DESKTOP_HOST_NO_ACTIVATE=1 VAADIN_DESKTOP_FLOW_IPC_AUTO_FRAMEWORK_UPDATE=1 VAADIN_DESKTOP_FLOW_IPC_AUTO_SHUTDOWN=1 bash bin/vaadin-desktop dev-ipc test-apps/flow-over-ipc-framework-app
+bash bin/flow-ipc-trace-inspect --require-flow-ipc-v1_3-framework .build/vaadin-desktop-host-swift/host.out.log
+```

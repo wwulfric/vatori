@@ -22,6 +22,7 @@ public final class FlowClientResourceSmokeMain {
                 "Flow client frontend asset pipeline version");
         requireEquals("vaadin-frontend-artifact-graph-v1_4", manifest.get("artifactGraphSource"),
                 "Flow client artifact graph source");
+        requireFrontendResourceLoaderMetadata(manifest, "Flow client manifest");
         requireListContains(manifest.get("artifactFamilies"), "flow-client-classpath",
                 "Flow client artifact families");
         if (!resources.contains("META-INF/frontend/FlowBootstrap.js")) {
@@ -120,6 +121,7 @@ public final class FlowClientResourceSmokeMain {
                 "Component frontend asset pipeline version");
         requireEquals("vaadin-frontend-artifact-graph-v1_4", componentManifest.get("artifactGraphSource"),
                 "Component artifact graph source");
+        requireFrontendResourceLoaderMetadata(componentManifest, "Component frontend manifest");
         requireEquals("flow-ipc-textfield-graph-v1_6", componentManifest.get("textfieldGraphParityVersion"),
                 "TextField graph parity version");
         requireEquals("flow-ipc-textfield-v1_6", componentManifest.get("textfieldPreviousBlockerVersion"),
@@ -891,6 +893,7 @@ public final class FlowClientResourceSmokeMain {
             throw new IllegalStateException("Component frontend manifest is missing the v1.10 Flow lazy dependency");
         }
         Map<String, Object> flowLazyDependencyResponse = resources.response(flowLazyDependencyPath);
+        requireFrontendResourceLoaderMetadata(flowLazyDependencyResponse, "Flow lazy dependency response");
         if (!Objects.equals(flowLazyDependencyResponse.get("lookupKind"),
                 "Flow-lazy-dependency-resource-v1_10")
                 || !Boolean.TRUE.equals(flowLazyDependencyResponse.get("flowLazyDependencyResource"))
@@ -910,6 +913,16 @@ public final class FlowClientResourceSmokeMain {
                         flowLazyDependencyPath)
                 || !Objects.equals(flowLazyDependencyResponse.get("lazyDependencyTriggerOwner"),
                         "visible-flow-client-dependencyloader")
+                || !Objects.equals(flowLazyDependencyResponse.get("stageUrlPolicy"),
+                        "host-owned-resource-scheme-file-backed-v1_17")
+                || !Objects.equals(flowLazyDependencyResponse.get("cleanupOwnership"),
+                        "cleanup-owned-window-lifetime-file-backed-v1_17")
+                || !Objects.equals(flowLazyDependencyResponse.get("frontendResourceLoaderExecutionSlice"),
+                        "flow-lazy-dependency-v1_17")
+                || !Objects.equals(flowLazyDependencyResponse.get("frontendResourceLoaderExpectedStagingMode"),
+                        "custom-scheme")
+                || !Objects.equals(flowLazyDependencyResponse.get("frontendResourceLoaderMimeType"),
+                        "text/javascript; charset=utf-8")
                 || !Boolean.TRUE.equals(flowLazyDependencyResponse.get("lazyDependencyTriggeredByFlowClient"))
                 || !Boolean.FALSE.equals(flowLazyDependencyResponse.get("shim"))) {
             throw new IllegalStateException("Flow lazy dependency resource is missing v1.10 metadata");
@@ -953,6 +966,24 @@ public final class FlowClientResourceSmokeMain {
         System.out.println("FlowBootstrap.js bytes: " + bootstrapResponse.get("bytes"));
         System.out.println("FlowClient.js bytes: " + clientResponse.get("bytes"));
         System.out.println("FlowClient.js IPC bridge: " + clientResponse.get("ipcAugmented"));
+    }
+
+    private static void requireFrontendResourceLoaderMetadata(Map<String, Object> metadata, String label) {
+        requireEquals("flow-ipc-resource-scheme-v1_17",
+                metadata.get("frontendResourceLoaderVersion"),
+                label + " frontend resource loader version");
+        requireEquals("custom-scheme,file-backed,blob-fallback",
+                metadata.get("frontendResourceLoaderModes"),
+                label + " frontend resource loader modes");
+        requireEquals("custom-scheme-file-backed",
+                metadata.get("frontendResourceLoaderPreferredMode"),
+                label + " frontend resource loader preferred mode");
+        requireEquals(Boolean.TRUE,
+                metadata.get("frontendResourceLoaderNoLocalhost"),
+                label + " frontend resource loader no-localhost flag");
+        requireStringContains(metadata.get("frontendResourceLoaderAcceptableFallbacks"),
+                "production-owner-blob-fallback",
+                label + " frontend resource loader acceptable fallbacks");
     }
 
     private static void requireEquals(Object expected, Object actual, String label) {

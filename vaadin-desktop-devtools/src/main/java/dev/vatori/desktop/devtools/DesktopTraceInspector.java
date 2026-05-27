@@ -66,6 +66,8 @@ public final class DesktopTraceInspector {
         FLOW_IPC_V1_16_PRODUCTION_OWNER_ORDERING(
                 "--require-flow-ipc-v1_16-production-owner-ordering"),
         FLOW_IPC_V1_16("--require-flow-ipc-v1_16"),
+        FLOW_IPC_V1_17_RESOURCE_SCHEME("--require-flow-ipc-v1_17-resource-scheme"),
+        FLOW_IPC_V1_17("--require-flow-ipc-v1_17"),
         FLOW_IPC_V1_3_FRAMEWORK("--require-flow-ipc-v1_3-framework");
 
         private final String option;
@@ -178,6 +180,18 @@ public final class DesktopTraceInspector {
                         FLOW_IPC_V1_14_PRODUCTION_OWNER_IMPORT, FLOW_IPC_V1_14,
                         FLOW_IPC_V1_15_PRODUCTION_OWNER_DEPENDENCIES, FLOW_IPC_V1_15,
                         FLOW_IPC_V1_16_PRODUCTION_OWNER_ORDERING, FLOW_IPC_V1_16);
+                case FLOW_IPC_V1_17_RESOURCE_SCHEME -> EnumSet.of(FLOW_IPC_V1_17_RESOURCE_SCHEME);
+                case FLOW_IPC_V1_17 -> EnumSet.of(FLOW_IPC_V1, FLOW_IPC_V1_1, FLOW_IPC_V1_2,
+                        FLOW_IPC_V1_3, FLOW_IPC_V1_4, FLOW_IPC_V1_5, FLOW_IPC_V1_7,
+                        FLOW_IPC_V1_8, FLOW_IPC_V1_9_LOADONDEMAND, FLOW_IPC_V1_9,
+                        FLOW_IPC_V1_10_LAZY_DEPENDENCY, FLOW_IPC_V1_10_PRODUCTION_RUNTIME,
+                        FLOW_IPC_V1_10, FLOW_IPC_V1_11_LOADONDEMAND_CHUNK, FLOW_IPC_V1_11,
+                        FLOW_IPC_V1_12_LOADONDEMAND_CHUNK_FILE, FLOW_IPC_V1_12,
+                        FLOW_IPC_V1_13_PRODUCTION_OWNER, FLOW_IPC_V1_13,
+                        FLOW_IPC_V1_14_PRODUCTION_OWNER_IMPORT, FLOW_IPC_V1_14,
+                        FLOW_IPC_V1_15_PRODUCTION_OWNER_DEPENDENCIES, FLOW_IPC_V1_15,
+                        FLOW_IPC_V1_16_PRODUCTION_OWNER_ORDERING, FLOW_IPC_V1_16,
+                        FLOW_IPC_V1_17_RESOURCE_SCHEME, FLOW_IPC_V1_17);
                 case FLOW_IPC_V1_3_FRAMEWORK -> EnumSet.of(FLOW_IPC_V1_3_FRAMEWORK);
             };
         }
@@ -215,6 +229,9 @@ public final class DesktopTraceInspector {
                 case FLOW_IPC_V1_16_PRODUCTION_OWNER_ORDERING ->
                     summary.hasRequiredFlowIpcV1_16ProductionOwnerOrderingTypes();
                 case FLOW_IPC_V1_16 -> summary.hasRequiredFlowIpcV1_16Types();
+                case FLOW_IPC_V1_17_RESOURCE_SCHEME ->
+                    summary.hasRequiredFlowIpcV1_17ResourceSchemeTypes();
+                case FLOW_IPC_V1_17 -> summary.hasRequiredFlowIpcV1_17Types();
                 case FLOW_IPC_V1_3_FRAMEWORK -> summary.hasRequiredFlowIpcV1_3FrameworkTypes();
             };
         }
@@ -725,6 +742,19 @@ public final class DesktopTraceInspector {
                             "vatori-flow-ipc-lazy-v1_10.js")
                     && containsLiteralField(line, "flowLazyDependencyTriggeredByFlowClient", "true")) {
                 summary.flowLazyDependencyV110ManifestObserved = true;
+            }
+            if (line.contains("\"type\":\"bootstrapResponse\"")
+                    && line.contains("\"componentFrontendResources\"")
+                    && containsStringField(line, "frontendResourceLoaderVersion",
+                            "flow-ipc-resource-scheme-v1_17")
+                    && containsStringField(line, "frontendResourceLoaderModes",
+                            "custom-scheme,file-backed,blob-fallback")
+                    && containsStringField(line, "frontendResourceLoaderPreferredMode",
+                            "custom-scheme-file-backed")
+                    && containsLiteralField(line, "frontendResourceLoaderNoLocalhost", "true")
+                    && line.contains("frontendResourceLoaderAcceptableFallbacks")
+                    && line.contains("production-owner-blob-fallback")) {
+                summary.frontendResourceSchemeV117ManifestObserved = true;
             }
             if (line.contains("\"type\":\"bootstrapResponse\"")
                     && line.contains("\"componentFrontendResources\"")
@@ -1444,6 +1474,60 @@ public final class DesktopTraceInspector {
                     && line.contains("\"executionStatus\":\"executed\"")) {
                 summary.flowLazyDependencyV110StageObserved = true;
             }
+            if (line.contains("\"type\":\"resourceLoad\"")
+                    && containsStringField(line, "frontendResourceSchemeVersion",
+                            "flow-ipc-resource-scheme-v1_17")
+                    && containsStringField(line, "frontendResourceLoaderMode",
+                            "custom-scheme-file-backed")
+                    && containsStringField(line, "frontendResourceSchemeName", "vatori-resource")
+                    && containsLiteralField(line, "frontendResourceSchemeHandlerInstalled", "true")
+                    && containsLiteralField(line, "frontendResourceLoaderNoLocalhost", "true")) {
+                summary.frontendResourceSchemeV117HostInstallObserved = true;
+            }
+            if (line.contains("\"type\":\"resourceStage\"")
+                    && containsStringField(line, "frontendResourceSchemeVersion",
+                            "flow-ipc-resource-scheme-v1_17")
+                    && containsStringField(line, "frontendResourceLoaderMode",
+                            "custom-scheme-file-backed")
+                    && containsStringField(line, "frontendResourceSchemeName", "vatori-resource")
+                    && containsLiteralField(line, "frontendResourceSchemeHandlerInstalled", "true")
+                    && containsLiteralField(line, "frontendResourceLoaderNoLocalhost", "true")
+                    && containsLiteralField(line, "frontendResourceFileBacked", "true")
+                    && containsStringField(line, "stagingMode", "custom-scheme")
+                    && containsStringField(line, "mimeType", "text/javascript; charset=utf-8")
+                    && line.contains("filePathRedacted")
+                    && line.contains("$REPO/.build/vaadin-desktop-host-swift/flow-ipc-resources")
+                    && line.contains("resourceBaseUrl")
+                    && line.contains("vatori-resource://")
+                    && containsPath(line, "vatori-flow-ipc-lazy-v1_10.js")) {
+                summary.frontendResourceSchemeV117StageObserved = true;
+                if (line.contains("\"executionStatus\":\"executed\"")) {
+                    summary.frontendResourceSchemeV117ExecutedObserved = true;
+                }
+            }
+            if (line.contains("\"type\":\"resourceLoad\"")
+                    && containsStringField(line, "frontendResourceSchemeVersion",
+                            "flow-ipc-resource-scheme-v1_17")
+                    && containsStringField(line, "frontendResourceLoaderMode",
+                            "custom-scheme-file-backed")
+                    && containsLiteralField(line, "frontendResourceSchemeRequestObserved", "true")
+                    && containsLiteralField(line, "frontendResourceLoaderNoLocalhost", "true")
+                    && containsPath(line, "vatori-flow-ipc-lazy-v1_10.js")) {
+                summary.frontendResourceSchemeV117HandlerRequestObserved = true;
+                if (containsLiteralField(line, "frontendResourceSchemeResponseObserved", "true")
+                        && containsStringField(line, "executionStatus", "served")) {
+                    summary.frontendResourceSchemeV117HandlerResponseObserved = true;
+                }
+            }
+            if (line.contains("\"type\":\"resourceStage\"")
+                    && containsStringField(line, "frontendResourceSchemeVersion",
+                            "flow-ipc-resource-scheme-v1_17")
+                    && containsStringField(line, "stagingMode", "blob-fallback")
+                    && line.contains("blobFallbackReason")
+                    && line.contains("blobFallbackBlockedLayer")
+                    && line.contains("blobFallbackNextResolutionStep")) {
+                summary.frontendResourceSchemeV117FallbackClassifiedObserved = true;
+            }
             if (line.contains("\"type\":\"resourceStage\"")
                     && line.contains("\"artifactFamily\":\"production-bundle\"")
                     && containsPath(line, "vaadin-dev-bundle/webapp/VAADIN/build/indexhtml-BfYYZi8S.js")
@@ -1948,6 +2032,27 @@ public final class DesktopTraceInspector {
                             "frontendArtifactProductionBundleRuntimeOwnerFailureLayer",
                             "production-owner-relative-import-unresolved")) {
                 summary.productionRuntimeOwnerOrderingV116DomObserved = true;
+            }
+            if (line.contains("\"type\":\"webview.dom\"")
+                    && containsStringField(line, "frontendResourceSchemeVersion",
+                            "flow-ipc-resource-scheme-v1_17")
+                    && containsStringField(line, "frontendResourceLoaderMode",
+                            "custom-scheme-file-backed")
+                    && containsStringField(line, "frontendResourceSchemeName", "vatori-resource")
+                    && containsLiteralField(line, "frontendResourceSchemeHandlerInstalled", "true")
+                    && containsLiteralField(line, "frontendResourceSchemeRequestObserved", "true")
+                    && containsLiteralField(line, "frontendResourceSchemeResponseObserved", "true")
+                    && containsLiteralField(line, "frontendResourceLoaderNoLocalhost", "true")
+                    && containsLiteralField(line, "frontendResourceFileBacked", "true")
+                    && containsLiteralField(line, "frontendResourceLoaderObserved", "true")
+                    && containsLiteralField(line, "frontendResourceLoaderExecuted", "true")
+                    && containsPath(line, "vatori-flow-ipc-lazy-v1_10.js")
+                    && line.contains("frontendResourceFilePathRedacted")
+                    && line.contains("$REPO/.build/vaadin-desktop-host-swift/flow-ipc-resources")
+                    && line.contains("frontendResourceRelativeImportResolutionMode")
+                    && line.contains("scheme-url-native-relative-base-v1_17")
+                    && line.contains("custom-scheme-served-by-wkurlschemehandler-no-http-v1_17")) {
+                summary.frontendResourceSchemeV117DomObserved = true;
             }
             if (line.contains("\"type\":\"webview.dom\"")
                     && containsLiteralField(line, "generatedLazyChunkUidlExpressionObserved", "true")
@@ -2852,6 +2957,14 @@ public final class DesktopTraceInspector {
         private boolean productionRuntimeOwnerOrderingV116RequestObserved;
         private boolean productionRuntimeOwnerOrderingV116StageObserved;
         private boolean productionRuntimeOwnerOrderingV116DomObserved;
+        private boolean frontendResourceSchemeV117ManifestObserved;
+        private boolean frontendResourceSchemeV117HostInstallObserved;
+        private boolean frontendResourceSchemeV117StageObserved;
+        private boolean frontendResourceSchemeV117HandlerRequestObserved;
+        private boolean frontendResourceSchemeV117HandlerResponseObserved;
+        private boolean frontendResourceSchemeV117ExecutedObserved;
+        private boolean frontendResourceSchemeV117DomObserved;
+        private boolean frontendResourceSchemeV117FallbackClassifiedObserved;
 
         public boolean hasRequiredFlowIpcTypes() {
             return types.keySet().containsAll(FLOW_IPC_REQUIRED_TYPES)
@@ -3113,6 +3226,21 @@ public final class DesktopTraceInspector {
         public boolean hasRequiredFlowIpcV1_16Types() {
             return hasRequiredFlowIpcV1_15Types()
                     && hasRequiredFlowIpcV1_16ProductionOwnerOrderingTypes();
+        }
+
+        public boolean hasRequiredFlowIpcV1_17ResourceSchemeTypes() {
+            return frontendResourceSchemeV117ManifestObserved
+                    && frontendResourceSchemeV117HostInstallObserved
+                    && frontendResourceSchemeV117StageObserved
+                    && frontendResourceSchemeV117HandlerRequestObserved
+                    && frontendResourceSchemeV117HandlerResponseObserved
+                    && frontendResourceSchemeV117ExecutedObserved
+                    && frontendResourceSchemeV117DomObserved;
+        }
+
+        public boolean hasRequiredFlowIpcV1_17Types() {
+            return hasRequiredFlowIpcV1_16Types()
+                    && hasRequiredFlowIpcV1_17ResourceSchemeTypes();
         }
 
         public boolean hasRequiredFlowIpcV1_3FrameworkTypes() {
@@ -3448,6 +3576,20 @@ public final class DesktopTraceInspector {
                     + productionRuntimeOwnerOrderingV116StageObserved);
             System.out.println("Flow IPC v1.16 production owner ordering DOM observed: "
                     + productionRuntimeOwnerOrderingV116DomObserved);
+            System.out.println("Flow IPC v1.17 resource scheme manifest observed: "
+                    + frontendResourceSchemeV117ManifestObserved);
+            System.out.println("Flow IPC v1.17 resource scheme host install observed: "
+                    + frontendResourceSchemeV117HostInstallObserved);
+            System.out.println("Flow IPC v1.17 resource scheme stage observed: "
+                    + frontendResourceSchemeV117StageObserved);
+            System.out.println("Flow IPC v1.17 resource scheme handler request/response observed: "
+                    + frontendResourceSchemeV117HandlerRequestObserved + "/"
+                    + frontendResourceSchemeV117HandlerResponseObserved);
+            System.out.println("Flow IPC v1.17 resource scheme executed DOM observed: "
+                    + frontendResourceSchemeV117ExecutedObserved + "/"
+                    + frontendResourceSchemeV117DomObserved);
+            System.out.println("Flow IPC v1.17 resource scheme fallback classification observed: "
+                    + frontendResourceSchemeV117FallbackClassifiedObserved);
             System.out.println("Flow IPC v1.6 TextField graph manifest observed: "
                     + frontendTextFieldV16ManifestObserved);
             System.out.println("Flow IPC v1.6 TextField graph request observed: "

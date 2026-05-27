@@ -357,6 +357,9 @@ public final class FlowClientResourceSmokeMain {
         String bigDecimalPath = "META-INF/resources/frontend/vaadin-big-decimal-field.js";
         String themeStaticPath = "META-INF/resources/frontend/themes/vatori-flow-ipc-smoke/theme-static.css";
         String generatedFlowImportsPath = "META-INF/vatori/generated/flow/generated-flow-imports.js";
+        String generatedFlowImportsV122Path = "META-INF/vatori/generated/flow/generated-flow-imports-v1_22.js";
+        String generatedFlowImportsChunkV122Path =
+                "META-INF/vatori/generated/flow/chunks/chunk-v1_22.js";
         String generatedFlowImportsDevBundlePath =
                 "vaadin-dev-bundle/webapp/VAADIN/build/generated-flow-imports-VW7hRaNw.js";
         String generatedFlowImportsMarkdownHelperPath =
@@ -760,6 +763,78 @@ public final class FlowClientResourceSmokeMain {
                 || !generatedFlowImportsText.contains("@vaadin/button/src/vaadin-button.js")
                 || !generatedFlowImportsText.contains("window.Vaadin.Flow.loadOnDemand")) {
             throw new IllegalStateException("Generated Flow imports resource body is missing Vaadin generated imports");
+        }
+        if (!resources.contains(generatedFlowImportsV122Path)) {
+            throw new IllegalStateException("Component frontend manifest is missing the v1.22 generated Flow imports fixture");
+        }
+        Map<String, Object> generatedFlowImportsV122Response = resources.response(generatedFlowImportsV122Path);
+        if (!Objects.equals(generatedFlowImportsV122Response.get("lookupKind"),
+                "Generated-flow-imports-positive-fixture-v1_22")
+                || !Boolean.TRUE.equals(generatedFlowImportsV122Response.get("generatedLazyResource"))
+                || !Boolean.TRUE.equals(generatedFlowImportsV122Response.get("generatedLazyChunkFileFixture"))
+                || !Objects.equals(generatedFlowImportsV122Response.get("generatedLazyChunkFileFixtureRole"),
+                        "imports")
+                || !Objects.equals(generatedFlowImportsV122Response.get("generatedLazyChunkFileExecutionVersion"),
+                        "flow-ipc-loadondemand-chunk-file-execution-v1_22")
+                || !Objects.equals(generatedFlowImportsV122Response.get("generatedLazyChunkFileFixtureSource"),
+                        "repository-vaadin-shaped-generated-flow-imports-v1_22")
+                || !Objects.equals(generatedFlowImportsV122Response.get("generatedLazyChunkFileFixtureImportsArtifact"),
+                        generatedFlowImportsV122Path)
+                || !Objects.equals(generatedFlowImportsV122Response.get("generatedLazyChunkFileFixtureChunkArtifact"),
+                        generatedFlowImportsChunkV122Path)
+                || !Objects.equals(generatedFlowImportsV122Response.get("generatedLazyChunkFileFixtureChunkId"),
+                        "vatori-flow-ipc-generated-lazy-chunk-v1_22")
+                || !Objects.equals(generatedFlowImportsV122Response.get("loadOnDemandTableShape"),
+                        "branch-table-dynamic-import")
+                || !Objects.equals(generatedFlowImportsV122Response.get("chunkFileStatus"), "available")
+                || !Objects.equals(generatedFlowImportsV122Response.get("chunkArtifactPath"),
+                        generatedFlowImportsChunkV122Path)
+                || !Objects.equals(generatedFlowImportsV122Response.get("chunkImportSpecifier"),
+                        "./chunks/chunk-v1_22.js")
+                || !Objects.equals(generatedFlowImportsV122Response.get("loadOnDemandChunkFileSideEffectProof"),
+                        "chunk-file-body-available-for-staged-import")
+                || !Objects.equals(generatedFlowImportsV122Response.get("executionPolicy"),
+                        "stage-and-import-generated-lazy-chunk-file-fixture-v1_22")
+                || !Objects.equals(generatedFlowImportsV122Response.get("artifactStatus"), "available")
+                || !Boolean.FALSE.equals(generatedFlowImportsV122Response.get("shim"))) {
+            throw new IllegalStateException("Generated Flow imports v1.22 fixture is missing chunk-file metadata");
+        }
+        Object generatedFlowImportsV122Body = generatedFlowImportsV122Response.get("body");
+        if (!(generatedFlowImportsV122Body instanceof String generatedFlowImportsV122Text)
+                || !generatedFlowImportsV122Text.contains("pending.push(import('./chunks/chunk-v1_22.js'))")
+                || !generatedFlowImportsV122Text.contains("vatori-flow-ipc-generated-lazy-chunk-v1_22")) {
+            throw new IllegalStateException("Generated Flow imports v1.22 fixture body is missing chunk table");
+        }
+        if (!resources.contains(generatedFlowImportsChunkV122Path)) {
+            throw new IllegalStateException("Component frontend manifest is missing the v1.22 generated lazy chunk fixture");
+        }
+        Map<String, Object> generatedFlowImportsChunkV122Response =
+                resources.response(generatedFlowImportsChunkV122Path);
+        if (!Objects.equals(generatedFlowImportsChunkV122Response.get("lookupKind"),
+                "Generated-flow-imports-positive-fixture-chunk-v1_22")
+                || !Boolean.TRUE.equals(generatedFlowImportsChunkV122Response.get("generatedLazyChunkFileFixture"))
+                || !Objects.equals(generatedFlowImportsChunkV122Response.get("generatedLazyChunkFileFixtureRole"),
+                        "chunk")
+                || !Objects.equals(generatedFlowImportsChunkV122Response.get("generatedLazyChunkFileExecutionVersion"),
+                        "flow-ipc-loadondemand-chunk-file-execution-v1_22")
+                || !Objects.equals(generatedFlowImportsChunkV122Response.get("chunkFileStatus"), "available")
+                || !Objects.equals(generatedFlowImportsChunkV122Response.get("loadOnDemandChunkFileStatus"),
+                        "available")
+                || !(generatedFlowImportsChunkV122Response.get("chunkFileBytes") instanceof Integer chunkBytes
+                        && chunkBytes > 0)
+                || !(generatedFlowImportsChunkV122Response.get("chunkFileSha256") instanceof String chunkSha256
+                        && !chunkSha256.isBlank())
+                || !Objects.equals(generatedFlowImportsChunkV122Response.get("loadOnDemandChunkFileSideEffectProof"),
+                        "chunk-file-body-available-for-staged-import")
+                || !Objects.equals(generatedFlowImportsChunkV122Response.get("artifactStatus"), "available")
+                || !Boolean.FALSE.equals(generatedFlowImportsChunkV122Response.get("shim"))) {
+            throw new IllegalStateException("Generated Flow imports v1.22 chunk fixture is missing metadata");
+        }
+        Object generatedFlowImportsChunkV122Body = generatedFlowImportsChunkV122Response.get("body");
+        if (!(generatedFlowImportsChunkV122Body instanceof String generatedFlowImportsChunkV122Text)
+                || !generatedFlowImportsChunkV122Text.contains("VaadinDesktopGeneratedLazyChunkV122")
+                || !generatedFlowImportsChunkV122Text.contains("flow-ipc-loadondemand-chunk-file-execution-v1_22")) {
+            throw new IllegalStateException("Generated Flow imports v1.22 chunk body is missing side-effect probe");
         }
         if (!resources.contains(generatedFlowImportsDevBundlePath)) {
             throw new IllegalStateException("Component frontend manifest is missing the dev-bundle generated Flow imports chunk");

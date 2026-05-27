@@ -80,6 +80,9 @@ public final class DesktopTraceInspector {
         FLOW_IPC_V1_21_FRONTEND_RESOLVER_CONTRACT(
                 "--require-flow-ipc-v1_21-frontend-resolver-contract"),
         FLOW_IPC_V1_21("--require-flow-ipc-v1_21"),
+        FLOW_IPC_V1_22_GENERATED_CHUNK_FIXTURE(
+                "--require-flow-ipc-v1_22-generated-chunk-fixture"),
+        FLOW_IPC_V1_22("--require-flow-ipc-v1_22"),
         FLOW_IPC_V1_3_FRAMEWORK("--require-flow-ipc-v1_3-framework");
 
         private final String option;
@@ -266,6 +269,24 @@ public final class DesktopTraceInspector {
                         FLOW_IPC_V1_19_PRODUCTION_OWNER_SIDE_EFFECT, FLOW_IPC_V1_19,
                         FLOW_IPC_V1_20_PRODUCTION_OWNER_OWNED_RUNTIME, FLOW_IPC_V1_20,
                         FLOW_IPC_V1_21_FRONTEND_RESOLVER_CONTRACT, FLOW_IPC_V1_21);
+                case FLOW_IPC_V1_22_GENERATED_CHUNK_FIXTURE ->
+                    EnumSet.of(FLOW_IPC_V1_22_GENERATED_CHUNK_FIXTURE);
+                case FLOW_IPC_V1_22 -> EnumSet.of(FLOW_IPC_V1, FLOW_IPC_V1_1, FLOW_IPC_V1_2,
+                        FLOW_IPC_V1_3, FLOW_IPC_V1_4, FLOW_IPC_V1_5, FLOW_IPC_V1_7,
+                        FLOW_IPC_V1_8, FLOW_IPC_V1_9_LOADONDEMAND, FLOW_IPC_V1_9,
+                        FLOW_IPC_V1_10_LAZY_DEPENDENCY, FLOW_IPC_V1_10_PRODUCTION_RUNTIME,
+                        FLOW_IPC_V1_10, FLOW_IPC_V1_11_LOADONDEMAND_CHUNK, FLOW_IPC_V1_11,
+                        FLOW_IPC_V1_12_LOADONDEMAND_CHUNK_FILE, FLOW_IPC_V1_12,
+                        FLOW_IPC_V1_13_PRODUCTION_OWNER, FLOW_IPC_V1_13,
+                        FLOW_IPC_V1_14_PRODUCTION_OWNER_IMPORT, FLOW_IPC_V1_14,
+                        FLOW_IPC_V1_15_PRODUCTION_OWNER_DEPENDENCIES, FLOW_IPC_V1_15,
+                        FLOW_IPC_V1_16_PRODUCTION_OWNER_ORDERING, FLOW_IPC_V1_16,
+                        FLOW_IPC_V1_17_RESOURCE_SCHEME, FLOW_IPC_V1_17,
+                        FLOW_IPC_V1_18_PRODUCTION_OWNER_RESOURCE_SCHEME, FLOW_IPC_V1_18,
+                        FLOW_IPC_V1_19_PRODUCTION_OWNER_SIDE_EFFECT, FLOW_IPC_V1_19,
+                        FLOW_IPC_V1_20_PRODUCTION_OWNER_OWNED_RUNTIME, FLOW_IPC_V1_20,
+                        FLOW_IPC_V1_21_FRONTEND_RESOLVER_CONTRACT, FLOW_IPC_V1_21,
+                        FLOW_IPC_V1_22_GENERATED_CHUNK_FIXTURE, FLOW_IPC_V1_22);
                 case FLOW_IPC_V1_3_FRAMEWORK -> EnumSet.of(FLOW_IPC_V1_3_FRAMEWORK);
             };
         }
@@ -318,6 +339,9 @@ public final class DesktopTraceInspector {
                 case FLOW_IPC_V1_21_FRONTEND_RESOLVER_CONTRACT ->
                     summary.hasRequiredFlowIpcV1_21FrontendResolverContractTypes();
                 case FLOW_IPC_V1_21 -> summary.hasRequiredFlowIpcV1_21Types();
+                case FLOW_IPC_V1_22_GENERATED_CHUNK_FIXTURE ->
+                    summary.hasRequiredFlowIpcV1_22GeneratedChunkFixtureTypes();
+                case FLOW_IPC_V1_22 -> summary.hasRequiredFlowIpcV1_22Types();
                 case FLOW_IPC_V1_3_FRAMEWORK -> summary.hasRequiredFlowIpcV1_3FrameworkTypes();
             };
         }
@@ -1610,6 +1634,48 @@ public final class DesktopTraceInspector {
                 summary.frontendResolverContractV121ResponseObserved = true;
             }
             if (line.contains("\"type\":\"resourceRequest\"")
+                    && containsPath(line, "META-INF/vatori/generated/flow/generated-flow-imports-v1_22.js")
+                    && containsStringField(line, "generatedLazyChunkFileExecutionVersion",
+                            "flow-ipc-loadondemand-chunk-file-execution-v1_22")
+                    && containsLiteralField(line, "generatedLazyChunkFileFixture", "true")
+                    && containsStringField(line, "generatedLazyChunkFileFixtureRole", "imports")
+                    && containsStringField(line, "generatedLazyChunkFileFixtureSource",
+                            "repository-vaadin-shaped-generated-flow-imports-v1_22")
+                    && containsStringField(line, "generatedLazyChunkFileFixtureChunkArtifact",
+                            "META-INF/vatori/generated/flow/chunks/chunk-v1_22.js")
+                    && containsStringField(line, "loadOnDemandTableShape", "branch-table-dynamic-import")
+                    && containsStringField(line, "chunkFileStatus", "available")) {
+                summary.generatedChunkFileFixtureV122RequestObserved = true;
+            }
+            if (line.contains("\"type\":\"resourceResponse\"")
+                    && containsPath(line, "META-INF/vatori/generated/flow/generated-flow-imports-v1_22.js")
+                    && containsStringField(line, "generatedLazyChunkFileExecutionVersion",
+                            "flow-ipc-loadondemand-chunk-file-execution-v1_22")
+                    && containsLiteralField(line, "generatedLazyChunkFileFixture", "true")
+                    && containsStringField(line, "loadOnDemandTableShape", "branch-table-dynamic-import")
+                    && containsStringField(line, "chunkImportSpecifier", "./chunks/chunk-v1_22.js")
+                    && containsStringField(line, "chunkFileStatus", "available")
+                    && containsStringField(line, "loadOnDemandChunkFileSideEffectProof",
+                            "chunk-file-body-available-for-staged-import")
+                    && line.contains("\"sha256\":\"")
+                    && line.contains("\"bodyRedacted\":true")) {
+                summary.generatedChunkFileFixtureV122ImportsResponseObserved = true;
+            }
+            if (line.contains("\"type\":\"resourceResponse\"")
+                    && containsPath(line, "META-INF/vatori/generated/flow/chunks/chunk-v1_22.js")
+                    && containsStringField(line, "generatedLazyChunkFileExecutionVersion",
+                            "flow-ipc-loadondemand-chunk-file-execution-v1_22")
+                    && containsLiteralField(line, "generatedLazyChunkFileFixture", "true")
+                    && containsStringField(line, "generatedLazyChunkFileFixtureRole", "chunk")
+                    && containsStringField(line, "chunkFileStatus", "available")
+                    && containsStringField(line, "loadOnDemandChunkFileStatus", "available")
+                    && containsStringField(line, "loadOnDemandChunkFileSideEffectProof",
+                            "chunk-file-body-available-for-staged-import")
+                    && line.contains("\"sha256\":\"")
+                    && line.contains("\"bodyRedacted\":true")) {
+                summary.generatedChunkFileFixtureV122ChunkResponseObserved = true;
+            }
+            if (line.contains("\"type\":\"resourceRequest\"")
                     && line.contains("\"purpose\":\"generated-loadondemand-chunk-v1_11\"")
                     && line.contains("\"lookupKind\":\"Generated-flow-imports-dev-bundle-chunk-v1_4\"")
                     && containsPath(line, "vaadin-dev-bundle/webapp/VAADIN/build/generated-flow-imports-VW7hRaNw.js")
@@ -2100,6 +2166,29 @@ public final class DesktopTraceInspector {
                             "no-chunk-generated-by-real-generated-flow-imports-no-op-table")
                     && containsGeneratedChunkFileStrictBlockerResult(line)) {
                 summary.generatedLoadOnDemandChunkFileV112StageObserved = true;
+            }
+            if (line.contains("\"type\":\"resourceStage\"")
+                    && line.contains("\"artifactFamily\":\"generated-lazy\"")
+                    && containsStringField(line, "generatedLazyChunkFileExecutionVersion",
+                            "flow-ipc-loadondemand-chunk-file-execution-v1_22")
+                    && containsLiteralField(line, "generatedLazyChunkFileFixtureObserved", "true")
+                    && containsStringField(line, "generatedLazyChunkFileFixtureSource",
+                            "repository-vaadin-shaped-generated-flow-imports-v1_22")
+                    && containsPath(line, "META-INF/vatori/generated/flow/generated-flow-imports-v1_22.js")
+                    && containsStringField(line, "generatedLazyChunkFileFixtureChunkArtifact",
+                            "META-INF/vatori/generated/flow/chunks/chunk-v1_22.js")
+                    && containsStringField(line, "generatedLazyChunkFileFixtureChunkId",
+                            "vatori-flow-ipc-generated-lazy-chunk-v1_22")
+                    && containsStringField(line, "loadOnDemandTableShape", "branch-table-dynamic-import")
+                    && containsStringField(line, "chunkFileStatus", "available")
+                    && containsLiteralField(line, "generatedLazyChunkFileFixtureStageObserved", "true")
+                    && containsLiteralField(line, "generatedLazyChunkFileFixtureExecuted", "true")
+                    && containsLiteralField(line, "generatedLazyChunkFileFixtureCallbackResolved", "true")
+                    && containsLiteralField(line, "generatedLazyChunkFileFixtureSideEffectSatisfied", "true")
+                    && containsStringField(line, "generatedLazyChunkFileFixtureSideEffectProof",
+                            "window.VaadinDesktopGeneratedLazyChunkV122.executed")
+                    && line.contains("\"executionStatus\":\"executed\"")) {
+                summary.generatedChunkFileFixtureV122StageObserved = true;
             }
             if (line.contains("\"type\":\"webview.dom\"")
                     && containsStringField(line, "frontendStagingResolverVersion", "flow-ipc-resource-staging-v1_5")
@@ -2668,6 +2757,31 @@ public final class DesktopTraceInspector {
                     && containsGeneratedChunkFileStrictBlockerResult(line)
                     && line.contains("noChunkGeneratedReason")) {
                 summary.generatedLoadOnDemandChunkFileV112DomObserved = true;
+            }
+            if (line.contains("\"type\":\"webview.dom\"")
+                    && containsStringField(line, "generatedLazyChunkFileExecutionVersion",
+                            "flow-ipc-loadondemand-chunk-file-execution-v1_22")
+                    && containsLiteralField(line, "generatedLazyChunkFileFixtureObserved", "true")
+                    && containsStringField(line, "generatedLazyChunkFileFixtureSource",
+                            "repository-vaadin-shaped-generated-flow-imports-v1_22")
+                    && containsStringField(line, "generatedLazyChunkFileFixtureImportsArtifact",
+                            "META-INF/vatori/generated/flow/generated-flow-imports-v1_22.js")
+                    && containsStringField(line, "generatedLazyChunkFileFixtureChunkArtifact",
+                            "META-INF/vatori/generated/flow/chunks/chunk-v1_22.js")
+                    && containsStringField(line, "generatedLazyChunkFileFixtureChunkId",
+                            "vatori-flow-ipc-generated-lazy-chunk-v1_22")
+                    && containsStringField(line, "generatedLazyChunkFileFixtureTriggerOwner",
+                            "repository-fixture-generated-loadondemand-executor")
+                    && containsLiteralField(line, "generatedLazyChunkFileFixtureStageObserved", "true")
+                    && containsLiteralField(line, "generatedLazyChunkFileFixtureExecuted", "true")
+                    && containsLiteralField(line, "generatedLazyChunkFileFixtureCallbackResolved", "true")
+                    && containsLiteralField(line, "generatedLazyChunkFileFixtureSideEffectSatisfied", "true")
+                    && containsStringFieldPrefix(line, "generatedLazyChunkFileFixtureExecutionResult",
+                            "executed:")
+                    && containsStringField(line, "generatedLazyChunkFileFixtureSideEffectProof",
+                            "window.VaadinDesktopGeneratedLazyChunkV122.executed")
+                    && containsStringField(line, "generatedLazyChunkFileFixtureFailureLayer", "")) {
+                summary.generatedChunkFileFixtureV122DomObserved = true;
             }
             if (line.contains("\"type\":\"resourceRequest\"")
                     && line.contains("\"purpose\":\"vaadin-web-component-resource-probe\"")
@@ -3595,6 +3709,11 @@ public final class DesktopTraceInspector {
         private boolean frontendResolverContractV121CustomSchemeStageObserved;
         private boolean frontendResolverContractV121StrictOrGapStageObserved;
         private boolean frontendResolverContractV121DomObserved;
+        private boolean generatedChunkFileFixtureV122RequestObserved;
+        private boolean generatedChunkFileFixtureV122ImportsResponseObserved;
+        private boolean generatedChunkFileFixtureV122ChunkResponseObserved;
+        private boolean generatedChunkFileFixtureV122StageObserved;
+        private boolean generatedChunkFileFixtureV122DomObserved;
 
         public boolean hasRequiredFlowIpcTypes() {
             return types.keySet().containsAll(FLOW_IPC_REQUIRED_TYPES)
@@ -3938,6 +4057,20 @@ public final class DesktopTraceInspector {
         public boolean hasRequiredFlowIpcV1_21Types() {
             return hasRequiredFlowIpcV1_20Types()
                     && hasRequiredFlowIpcV1_21FrontendResolverContractTypes();
+        }
+
+        public boolean hasRequiredFlowIpcV1_22GeneratedChunkFixtureTypes() {
+            return hasRequiredFlowIpcV1_12LoadOnDemandChunkFileTypes()
+                    && generatedChunkFileFixtureV122RequestObserved
+                    && generatedChunkFileFixtureV122ImportsResponseObserved
+                    && generatedChunkFileFixtureV122ChunkResponseObserved
+                    && generatedChunkFileFixtureV122StageObserved
+                    && generatedChunkFileFixtureV122DomObserved;
+        }
+
+        public boolean hasRequiredFlowIpcV1_22Types() {
+            return hasRequiredFlowIpcV1_21Types()
+                    && hasRequiredFlowIpcV1_22GeneratedChunkFixtureTypes();
         }
 
         public boolean hasRequiredFlowIpcV1_3FrameworkTypes() {
@@ -4329,6 +4462,14 @@ public final class DesktopTraceInspector {
                     + frontendResolverContractV121StrictOrGapStageObserved);
             System.out.println("Flow IPC v1.21 frontend resolver contract DOM observed: "
                     + frontendResolverContractV121DomObserved);
+            System.out.println("Flow IPC v1.22 generated chunk fixture request observed: "
+                    + generatedChunkFileFixtureV122RequestObserved);
+            System.out.println("Flow IPC v1.22 generated chunk fixture imports/chunk response observed: "
+                    + generatedChunkFileFixtureV122ImportsResponseObserved + "/"
+                    + generatedChunkFileFixtureV122ChunkResponseObserved);
+            System.out.println("Flow IPC v1.22 generated chunk fixture stage/DOM observed: "
+                    + generatedChunkFileFixtureV122StageObserved + "/"
+                    + generatedChunkFileFixtureV122DomObserved);
             System.out.println("Flow IPC v1.6 TextField graph manifest observed: "
                     + frontendTextFieldV16ManifestObserved);
             System.out.println("Flow IPC v1.6 TextField graph request observed: "

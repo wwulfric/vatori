@@ -1,6 +1,32 @@
 # Goal 1.22: Generated Lazy Chunk File Positive Execution Boundary
 
-状态：计划中。
+状态：已完成。
+
+完成证据：
+
+- 新增 classpath fixture `META-INF/vatori/generated/flow/generated-flow-imports-v1_22.js`
+  和 `META-INF/vatori/generated/flow/chunks/chunk-v1_22.js`。
+- Java resource metadata、Swift host execution probe、`DesktopTraceInspector` delta/cumulative
+  gate 和 `flow-client-resource-smoke` assertions 已落地。
+- `docs/traces/flow-ipc-v1_22.ndjson` 收录真实 no-activate smoke trace。
+- 验证通过：
+  - `git diff --check`
+  - `bash -n bin/vaadin-desktop`
+  - `swiftc -parse vaadin-desktop-host-swift/Sources/VaadinDesktopHost/main.swift`
+  - `mvn -o -Dmaven.repo.local=/Users/bytedance/IdeaProjects/vatori/.m2/repository -DskipTests compile`
+  - `bash bin/flow-client-resource-smoke`
+  - `bash bin/uidl-adapter-smoke`
+  - `bash bin/uidl-rpc-smoke`
+  - `bash bin/flow-ipc-scope-smoke`
+  - `bash bin/flow-ipc-trace-inspect --require-flow-ipc-v1_22-generated-chunk-fixture docs/traces/flow-ipc-v1_22.ndjson`
+  - `bash bin/flow-ipc-trace-inspect --require-flow-ipc-v1_22 docs/traces/flow-ipc-v1_22.ndjson`
+  - no-activate real-window smoke app + `--require-flow-ipc-v1_22`
+  - no-activate framework validation app + `--require-flow-ipc-v1_3-framework`
+
+结论：v1.22 证明了 generated `Flow.loadOnDemand` chunk-file table shape 存在时，当前
+no-localhost resolver、parser、staging/import、callback 和 side-effect proof 可以闭环。
+它不表示当前 Vaadin app/build 已真实生成 lazy chunk；v1.12 的真实 dev-bundle no-op table /
+`chunk-file-not-generated` blocker 仍保留为后续工作。
 
 `docs/goal.md` 是长期愿景和完成度账本。v1.21 已经把 flow-client、component
 frontend、theme/static、generated/lazy、Flow lazy dependency、production owner 和

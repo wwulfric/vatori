@@ -2023,6 +2023,22 @@ final class WebViewHost: NSObject, NSApplicationDelegate, NSWindowDelegate, WKNa
           loadOnDemandChunkFileBrowserError: window.VaadinDesktopIpcDiagnostics ? window.VaadinDesktopIpcDiagnostics.loadOnDemandChunkFileBrowserError : "",
           loadOnDemandChunkFileBlockerVersion: window.VaadinDesktopIpcDiagnostics ? window.VaadinDesktopIpcDiagnostics.loadOnDemandChunkFileBlockerVersion : "",
           loadOnDemandChunkFileNextResolutionStep: window.VaadinDesktopIpcDiagnostics ? window.VaadinDesktopIpcDiagnostics.loadOnDemandChunkFileNextResolutionStep : "",
+          generatedLazyChunkFileExecutionVersion: window.VaadinDesktopIpcDiagnostics ? window.VaadinDesktopIpcDiagnostics.generatedLazyChunkFileExecutionVersion : "",
+          generatedLazyChunkFileFixtureObserved: !!(window.VaadinDesktopIpcDiagnostics && window.VaadinDesktopIpcDiagnostics.generatedLazyChunkFileFixtureObserved),
+          generatedLazyChunkFileFixtureSource: window.VaadinDesktopIpcDiagnostics ? window.VaadinDesktopIpcDiagnostics.generatedLazyChunkFileFixtureSource : "",
+          generatedLazyChunkFileFixtureImportsArtifact: window.VaadinDesktopIpcDiagnostics ? window.VaadinDesktopIpcDiagnostics.generatedLazyChunkFileFixtureImportsArtifact : "",
+          generatedLazyChunkFileFixtureChunkArtifact: window.VaadinDesktopIpcDiagnostics ? window.VaadinDesktopIpcDiagnostics.generatedLazyChunkFileFixtureChunkArtifact : "",
+          generatedLazyChunkFileFixtureChunkId: window.VaadinDesktopIpcDiagnostics ? window.VaadinDesktopIpcDiagnostics.generatedLazyChunkFileFixtureChunkId : "",
+          generatedLazyChunkFileFixtureTriggerOwner: window.VaadinDesktopIpcDiagnostics ? window.VaadinDesktopIpcDiagnostics.generatedLazyChunkFileFixtureTriggerOwner : "",
+          generatedLazyChunkFileFixtureStageObserved: !!(window.VaadinDesktopIpcDiagnostics && window.VaadinDesktopIpcDiagnostics.generatedLazyChunkFileFixtureStageObserved),
+          generatedLazyChunkFileFixtureExecuted: !!(window.VaadinDesktopIpcDiagnostics && window.VaadinDesktopIpcDiagnostics.generatedLazyChunkFileFixtureExecuted),
+          generatedLazyChunkFileFixtureCallbackResolved: !!(window.VaadinDesktopIpcDiagnostics && window.VaadinDesktopIpcDiagnostics.generatedLazyChunkFileFixtureCallbackResolved),
+          generatedLazyChunkFileFixtureSideEffectSatisfied: !!(window.VaadinDesktopIpcDiagnostics && window.VaadinDesktopIpcDiagnostics.generatedLazyChunkFileFixtureSideEffectSatisfied),
+          generatedLazyChunkFileFixtureExecutionResult: window.VaadinDesktopIpcDiagnostics ? window.VaadinDesktopIpcDiagnostics.generatedLazyChunkFileFixtureExecutionResult : "",
+          generatedLazyChunkFileFixtureSideEffectProof: window.VaadinDesktopIpcDiagnostics ? window.VaadinDesktopIpcDiagnostics.generatedLazyChunkFileFixtureSideEffectProof : "",
+          generatedLazyChunkFileFixtureFailureLayer: window.VaadinDesktopIpcDiagnostics ? window.VaadinDesktopIpcDiagnostics.generatedLazyChunkFileFixtureFailureLayer : "",
+          generatedLazyChunkFileFixtureBrowserError: window.VaadinDesktopIpcDiagnostics ? window.VaadinDesktopIpcDiagnostics.generatedLazyChunkFileFixtureBrowserError : "",
+          generatedLazyChunkFileFixtureChunkSha256: window.VaadinDesktopIpcDiagnostics ? window.VaadinDesktopIpcDiagnostics.generatedLazyChunkFileFixtureChunkSha256 : "",
           frontendRuntimeResolverContractVersion: window.VaadinDesktopIpcDiagnostics ? window.VaadinDesktopIpcDiagnostics.frontendRuntimeResolverContractVersion : "",
           frontendRuntimeResolverLogicalRequestIds: window.VaadinDesktopIpcDiagnostics ? window.VaadinDesktopIpcDiagnostics.frontendRuntimeResolverLogicalRequestIds : "",
           frontendRuntimeResolverPathMappings: window.VaadinDesktopIpcDiagnostics ? window.VaadinDesktopIpcDiagnostics.frontendRuntimeResolverPathMappings : "",
@@ -2863,6 +2879,7 @@ let flowIpcShell = #"""
       const hostResourceStagePromises = new Map();
       let hostResourceStageSequence = 0;
       let generatedLazyBundleExecutionAttempted = false;
+      let generatedLazyChunkFileFixtureExecutionAttempted = false;
       const generatedLoadOnDemandChunkPromises = new Map();
       let flowLazyDependencyExecutionAttempted = false;
       let productionBundleRuntimeStageAttempted = false;
@@ -3075,6 +3092,22 @@ let flowIpcShell = #"""
         loadOnDemandChunkFileBrowserError: '',
         loadOnDemandChunkFileBlockerVersion: '',
         loadOnDemandChunkFileNextResolutionStep: '',
+        generatedLazyChunkFileExecutionVersion: '',
+        generatedLazyChunkFileFixtureObserved: false,
+        generatedLazyChunkFileFixtureSource: '',
+        generatedLazyChunkFileFixtureImportsArtifact: '',
+        generatedLazyChunkFileFixtureChunkArtifact: '',
+        generatedLazyChunkFileFixtureChunkId: '',
+        generatedLazyChunkFileFixtureTriggerOwner: '',
+        generatedLazyChunkFileFixtureStageObserved: false,
+        generatedLazyChunkFileFixtureExecuted: false,
+        generatedLazyChunkFileFixtureCallbackResolved: false,
+        generatedLazyChunkFileFixtureSideEffectSatisfied: false,
+        generatedLazyChunkFileFixtureExecutionResult: '',
+        generatedLazyChunkFileFixtureSideEffectProof: '',
+        generatedLazyChunkFileFixtureFailureLayer: '',
+        generatedLazyChunkFileFixtureBrowserError: '',
+        generatedLazyChunkFileFixtureChunkSha256: '',
         flowLazyDependencyObserved: false,
         flowLazyDependencyRequested: false,
         flowLazyDependencyResponse: false,
@@ -5797,6 +5830,18 @@ let flowIpcShell = #"""
           loadOnDemandChunkFileBlockerVersion: resource.loadOnDemandChunkFileBlockerVersion || '',
           loadOnDemandChunkFileNextResolutionStep: resource.loadOnDemandChunkFileNextResolutionStep || '',
           loadOnDemandChunkFileSideEffectProof: resource.loadOnDemandChunkFileSideEffectProof || '',
+          generatedLazyChunkFileFixture: resource.generatedLazyChunkFileFixture === true,
+          generatedLazyChunkFileFixtureRole: resource.generatedLazyChunkFileFixtureRole || '',
+          generatedLazyChunkFileExecutionVersion: resource.generatedLazyChunkFileExecutionVersion || '',
+          generatedLazyChunkFileFixtureSource: resource.generatedLazyChunkFileFixtureSource || '',
+          generatedLazyChunkFileFixtureImportsArtifact:
+            resource.generatedLazyChunkFileFixtureImportsArtifact || '',
+          generatedLazyChunkFileFixtureChunkArtifact:
+            resource.generatedLazyChunkFileFixtureChunkArtifact || '',
+          generatedLazyChunkFileFixtureChunkId: resource.generatedLazyChunkFileFixtureChunkId || '',
+          generatedLazyChunkFileFixtureTriggerOwner: resource.generatedLazyChunkFileFixtureTriggerOwner || '',
+          generatedLazyChunkFileFixtureExpectedSideEffect:
+            resource.generatedLazyChunkFileFixtureExpectedSideEffect || '',
           runtimeResolverContractVersion: resource.runtimeResolverContractVersion || '',
           logicalRequestId: resource.logicalRequestId || '',
           pathMapping: resource.pathMapping || '',
@@ -6528,6 +6573,59 @@ let flowIpcShell = #"""
           loadOnDemandChunkFileNextResolutionStep: extra && extra.loadOnDemandChunkFileNextResolutionStep
             ? extra.loadOnDemandChunkFileNextResolutionStep
             : (resource.loadOnDemandChunkFileNextResolutionStep || ''),
+          generatedLazyChunkFileExecutionVersion: extra && extra.generatedLazyChunkFileExecutionVersion
+            ? extra.generatedLazyChunkFileExecutionVersion
+            : (resource.generatedLazyChunkFileExecutionVersion || ''),
+          generatedLazyChunkFileFixtureObserved: extra
+            && typeof extra.generatedLazyChunkFileFixtureObserved === 'boolean'
+            ? extra.generatedLazyChunkFileFixtureObserved
+            : resource.generatedLazyChunkFileFixture === true,
+          generatedLazyChunkFileFixtureSource: extra && extra.generatedLazyChunkFileFixtureSource
+            ? extra.generatedLazyChunkFileFixtureSource
+            : (resource.generatedLazyChunkFileFixtureSource || ''),
+          generatedLazyChunkFileFixtureImportsArtifact: extra && extra.generatedLazyChunkFileFixtureImportsArtifact
+            ? extra.generatedLazyChunkFileFixtureImportsArtifact
+            : (resource.generatedLazyChunkFileFixtureImportsArtifact || ''),
+          generatedLazyChunkFileFixtureChunkArtifact: extra && extra.generatedLazyChunkFileFixtureChunkArtifact
+            ? extra.generatedLazyChunkFileFixtureChunkArtifact
+            : (resource.generatedLazyChunkFileFixtureChunkArtifact || ''),
+          generatedLazyChunkFileFixtureChunkId: extra && extra.generatedLazyChunkFileFixtureChunkId
+            ? extra.generatedLazyChunkFileFixtureChunkId
+            : (resource.generatedLazyChunkFileFixtureChunkId || ''),
+          generatedLazyChunkFileFixtureTriggerOwner: extra && extra.generatedLazyChunkFileFixtureTriggerOwner
+            ? extra.generatedLazyChunkFileFixtureTriggerOwner
+            : (resource.generatedLazyChunkFileFixtureTriggerOwner || ''),
+          generatedLazyChunkFileFixtureStageObserved: extra
+            && typeof extra.generatedLazyChunkFileFixtureStageObserved === 'boolean'
+            ? extra.generatedLazyChunkFileFixtureStageObserved
+            : false,
+          generatedLazyChunkFileFixtureExecuted: extra
+            && typeof extra.generatedLazyChunkFileFixtureExecuted === 'boolean'
+            ? extra.generatedLazyChunkFileFixtureExecuted
+            : false,
+          generatedLazyChunkFileFixtureCallbackResolved: extra
+            && typeof extra.generatedLazyChunkFileFixtureCallbackResolved === 'boolean'
+            ? extra.generatedLazyChunkFileFixtureCallbackResolved
+            : false,
+          generatedLazyChunkFileFixtureSideEffectSatisfied: extra
+            && typeof extra.generatedLazyChunkFileFixtureSideEffectSatisfied === 'boolean'
+            ? extra.generatedLazyChunkFileFixtureSideEffectSatisfied
+            : false,
+          generatedLazyChunkFileFixtureExecutionResult: extra && extra.generatedLazyChunkFileFixtureExecutionResult
+            ? extra.generatedLazyChunkFileFixtureExecutionResult
+            : '',
+          generatedLazyChunkFileFixtureSideEffectProof: extra && extra.generatedLazyChunkFileFixtureSideEffectProof
+            ? extra.generatedLazyChunkFileFixtureSideEffectProof
+            : '',
+          generatedLazyChunkFileFixtureFailureLayer: extra && extra.generatedLazyChunkFileFixtureFailureLayer
+            ? extra.generatedLazyChunkFileFixtureFailureLayer
+            : '',
+          generatedLazyChunkFileFixtureBrowserError: extra && extra.generatedLazyChunkFileFixtureBrowserError
+            ? extra.generatedLazyChunkFileFixtureBrowserError
+            : '',
+          generatedLazyChunkFileFixtureChunkSha256: extra && extra.generatedLazyChunkFileFixtureChunkSha256
+            ? extra.generatedLazyChunkFileFixtureChunkSha256
+            : (resource.chunkFileSha256 || resource.sha256 || ''),
           generatedLazySourceArtifact: extra && extra.generatedLazySourceArtifact
             ? extra.generatedLazySourceArtifact
             : '',
@@ -8643,6 +8741,18 @@ let flowIpcShell = #"""
           window.VaadinDesktopIpcDiagnostics.frontendArtifactGeneratedLazyBlocker = true;
         }
         try {
+          await maybeExecuteGeneratedLazyChunkFileFixture();
+        } catch (error) {
+          window.VaadinDesktopIpcDiagnostics.generatedLazyChunkFileFixtureObserved = true;
+          window.VaadinDesktopIpcDiagnostics.generatedLazyChunkFileFixtureExecuted = false;
+          window.VaadinDesktopIpcDiagnostics.generatedLazyChunkFileFixtureExecutionResult =
+            'strict-blocker:probe-dispatch';
+          window.VaadinDesktopIpcDiagnostics.generatedLazyChunkFileFixtureFailureLayer =
+            'generated-lazy-chunk-file-fixture-dispatch';
+          window.VaadinDesktopIpcDiagnostics.generatedLazyChunkFileFixtureBrowserError =
+            error && error.message ? error.message : String(error);
+        }
+        try {
           await maybeStageTextFieldDevBundleBlocker();
         } catch (error) {
           const resource = textFieldDevBundleResource();
@@ -9409,6 +9519,26 @@ let flowIpcShell = #"""
           && entry.artifactFamily === 'generated-lazy'
           && typeof entry.path === 'string')
           || null;
+      }
+
+      function generatedLazyChunkFileFixtureResource() {
+        return componentFrontendResources.find((entry) => entry
+          && entry.generatedLazyChunkFileFixture === true
+          && entry.generatedLazyChunkFileFixtureRole === 'imports'
+          && entry.artifactFamily === 'generated-lazy'
+          && typeof entry.path === 'string')
+          || null;
+      }
+
+      function generatedLazyChunkFileFixtureChunkResource(importsResource) {
+        const chunkPath = importsResource
+          && typeof importsResource.generatedLazyChunkFileFixtureChunkArtifact === 'string'
+          ? importsResource.generatedLazyChunkFileFixtureChunkArtifact
+          : '';
+        if (!chunkPath) {
+          return null;
+        }
+        return componentFrontendResourceByPath(chunkPath);
       }
 
       function textFieldDevBundleResource() {
@@ -12355,6 +12485,226 @@ let flowIpcShell = #"""
             generatedLazyGraphProbe: resource.generatedLazyGraphProbe || ''
           });
         } finally {
+          refreshFrontendStagingDiagnostics();
+          for (const url of urlsToRevoke) {
+            URL.revokeObjectURL(url);
+          }
+        }
+      }
+
+      function generatedLazyChunkFileFixtureStageExtra(importsResource, chunkResource, extra) {
+        const chunkId = importsResource && importsResource.generatedLazyChunkFileFixtureChunkId
+          ? importsResource.generatedLazyChunkFileFixtureChunkId
+          : 'vatori-flow-ipc-generated-lazy-chunk-v1_22';
+        const chunkPath = chunkResource && chunkResource.path
+          ? chunkResource.path
+          : (importsResource && importsResource.generatedLazyChunkFileFixtureChunkArtifact
+            ? importsResource.generatedLazyChunkFileFixtureChunkArtifact
+            : '');
+        return Object.assign({
+          cleanupPolicy: 'revoke-after-generated-lazy-chunk-file-fixture-v1_22',
+          importResolutionStrategy: 'rewrite-fixture-relative-chunk-import-v1_22',
+          generatedLazyChunkFileExecutionVersion:
+            (importsResource && importsResource.generatedLazyChunkFileExecutionVersion)
+            || 'flow-ipc-loadondemand-chunk-file-execution-v1_22',
+          generatedLazyChunkFileFixtureObserved: true,
+          generatedLazyChunkFileFixtureSource:
+            (importsResource && importsResource.generatedLazyChunkFileFixtureSource)
+            || 'repository-vaadin-shaped-generated-flow-imports-v1_22',
+          generatedLazyChunkFileFixtureImportsArtifact:
+            importsResource && importsResource.path ? importsResource.path : '',
+          generatedLazyChunkFileFixtureChunkArtifact: chunkPath,
+          generatedLazyChunkFileFixtureChunkId: chunkId,
+          generatedLazyChunkFileFixtureTriggerOwner:
+            (importsResource && importsResource.generatedLazyChunkFileFixtureTriggerOwner)
+            || 'repository-fixture-generated-loadondemand-executor',
+          generatedLazyChunkFileFixtureExpectedSideEffect:
+            (importsResource && importsResource.generatedLazyChunkFileFixtureExpectedSideEffect)
+            || 'window.VaadinDesktopGeneratedLazyChunkV122.executed',
+          generatedLazyChunkFileFixtureStageObserved: true,
+          generatedLazyChunkFileFixtureChunkSha256:
+            (chunkResource && (chunkResource.sha256 || chunkResource.chunkFileSha256)) || '',
+          generatedLoadOnDemandChunkFileRegistryVersion:
+            importsResource && importsResource.generatedLoadOnDemandChunkFileRegistryVersion
+              ? importsResource.generatedLoadOnDemandChunkFileRegistryVersion
+              : 'flow-ipc-loadondemand-chunk-file-v1_12',
+          generatedLoadOnDemandChunkFileRegistrySource:
+            importsResource && importsResource.generatedLoadOnDemandChunkFileRegistrySource
+              ? importsResource.generatedLoadOnDemandChunkFileRegistrySource
+              : 'generated-flow-imports-body-parser-v1_12',
+          generatedLoadOnDemandChunkFileMappingSource:
+            importsResource && importsResource.generatedLoadOnDemandChunkFileMappingSource
+              ? importsResource.generatedLoadOnDemandChunkFileMappingSource
+              : 'real-generated-flow-imports-loadondemand-table-v1_12',
+          loadOnDemandTableShape:
+            importsResource && importsResource.loadOnDemandTableShape
+              ? importsResource.loadOnDemandTableShape
+              : 'branch-table-dynamic-import',
+          chunkImportSpecifier:
+            importsResource && importsResource.chunkImportSpecifier
+              ? importsResource.chunkImportSpecifier
+              : './chunks/chunk-v1_22.js',
+          chunkArtifactPath: chunkPath,
+          chunkFileResolver:
+            importsResource && importsResource.chunkFileResolver
+              ? importsResource.chunkFileResolver
+              : 'generated-flow-imports-relative-chunk-file-resolver-v1_12',
+          chunkFileStatus:
+            importsResource && importsResource.chunkFileStatus
+              ? importsResource.chunkFileStatus
+              : 'available',
+          chunkFileBytes:
+            importsResource && Number.isFinite(importsResource.chunkFileBytes)
+              ? importsResource.chunkFileBytes
+              : (chunkResource && Number.isFinite(chunkResource.bytes) ? chunkResource.bytes : 0),
+          chunkFileSha256:
+            importsResource && importsResource.chunkFileSha256
+              ? importsResource.chunkFileSha256
+              : ((chunkResource && (chunkResource.sha256 || chunkResource.chunkFileSha256)) || ''),
+          loadOnDemandChunkFileStatus: 'available',
+          loadOnDemandChunkFileStageObserved: true,
+          loadOnDemandChunkFileFailureLayer: '',
+          loadOnDemandChunkFileSideEffectProof: 'chunk-file-body-available-for-staged-import',
+          blockerClassification: 'none',
+          moduleIdentityStrategy: 'generated-lazy-chunk-file-fixture-blob-identity-v1_22',
+          moduleIdentityKey: importsResource && importsResource.path ? importsResource.path : ''
+        }, extra || {});
+      }
+
+      async function maybeExecuteGeneratedLazyChunkFileFixture() {
+        if (generatedLazyChunkFileFixtureExecutionAttempted
+            || !window.VaadinDesktopIpcDiagnostics.vaadinWebComponentResourceGraphVerified) {
+          return;
+        }
+        const importsResource = generatedLazyChunkFileFixtureResource();
+        if (!importsResource) {
+          return;
+        }
+        const chunkResource = generatedLazyChunkFileFixtureChunkResource(importsResource);
+        if (!chunkResource) {
+          return;
+        }
+        const importsSource = componentFrontendResourceBodies.get(importsResource.path) || '';
+        const chunkSource = componentFrontendResourceBodies.get(chunkResource.path) || '';
+        if (!importsSource || !chunkSource) {
+          return;
+        }
+        generatedLazyChunkFileFixtureExecutionAttempted = true;
+        const urlsToRevoke = [];
+        const urlCache = new Map();
+        let importsUrl = '';
+        let chunkUrl = '';
+        const chunkId = importsResource.generatedLazyChunkFileFixtureChunkId
+          || 'vatori-flow-ipc-generated-lazy-chunk-v1_22';
+        const importSpecifier = importsResource.chunkImportSpecifier || './chunks/chunk-v1_22.js';
+        const previousLoadOnDemand = window.Vaadin && window.Vaadin.Flow
+          && typeof window.Vaadin.Flow.loadOnDemand === 'function'
+          ? window.Vaadin.Flow.loadOnDemand
+          : null;
+        const baseExtra = generatedLazyChunkFileFixtureStageExtra(importsResource, chunkResource, {
+          generatedLazyChunkFileFixtureStageObserved: true,
+          generatedLazyChunkFileFixtureExecuted: false,
+          generatedLazyChunkFileFixtureCallbackResolved: false,
+          generatedLazyChunkFileFixtureSideEffectSatisfied: false,
+          generatedLazyChunkFileFixtureExecutionResult: 'execution-attempt:' + importsResource.path
+        });
+        Object.assign(window.VaadinDesktopIpcDiagnostics, {
+          generatedLazyChunkFileExecutionVersion: baseExtra.generatedLazyChunkFileExecutionVersion,
+          generatedLazyChunkFileFixtureObserved: true,
+          generatedLazyChunkFileFixtureSource: baseExtra.generatedLazyChunkFileFixtureSource,
+          generatedLazyChunkFileFixtureImportsArtifact: importsResource.path,
+          generatedLazyChunkFileFixtureChunkArtifact: chunkResource.path,
+          generatedLazyChunkFileFixtureChunkId: chunkId,
+          generatedLazyChunkFileFixtureTriggerOwner: baseExtra.generatedLazyChunkFileFixtureTriggerOwner,
+          generatedLazyChunkFileFixtureStageObserved: true,
+          generatedLazyChunkFileFixtureChunkSha256: baseExtra.generatedLazyChunkFileFixtureChunkSha256
+        });
+        try {
+          chunkUrl = stageFrontendArtifact(chunkResource, chunkSource, 'staged', urlsToRevoke, urlCache,
+            generatedLazyChunkFileFixtureStageExtra(importsResource, chunkResource, {
+              generatedLazyChunkFileFixtureExecutionResult: 'chunk-staged:' + chunkResource.path
+            }));
+          if (!chunkUrl) {
+            throw new Error('generated-lazy-chunk-file-fixture-chunk-stage-url-missing');
+          }
+          const rewrittenImports = importsSource
+            .split("import('" + importSpecifier + "')").join("import('" + chunkUrl + "')")
+            .split('import("' + importSpecifier + '")').join('import("' + chunkUrl + '")');
+          importsUrl = stageFrontendArtifact(importsResource, rewrittenImports, 'execution-attempt',
+            urlsToRevoke, urlCache, baseExtra);
+          if (!importsUrl) {
+            throw new Error('generated-lazy-chunk-file-fixture-imports-stage-url-missing');
+          }
+          await import(importsUrl);
+          const fixtureLoadOnDemand = window.Vaadin && window.Vaadin.Flow
+            && typeof window.Vaadin.Flow.loadOnDemand === 'function'
+            ? window.Vaadin.Flow.loadOnDemand
+            : null;
+          if (!fixtureLoadOnDemand) {
+            throw new Error('generated-lazy-chunk-file-fixture-loadondemand-missing');
+          }
+          await fixtureLoadOnDemand(chunkId);
+          const sideEffect = window.VaadinDesktopGeneratedLazyChunkV122 || {};
+          const sideEffectSatisfied = sideEffect.executed === true
+            && sideEffect.chunkId === chunkId
+            && sideEffect.executionVersion === baseExtra.generatedLazyChunkFileExecutionVersion;
+          if (!sideEffectSatisfied) {
+            throw new Error('generated-lazy-chunk-file-fixture-side-effect-missing');
+          }
+          window.VaadinDesktopIpcDiagnostics.generatedLazyChunkFileFixtureExecuted = true;
+          window.VaadinDesktopIpcDiagnostics.generatedLazyChunkFileFixtureCallbackResolved = true;
+          window.VaadinDesktopIpcDiagnostics.generatedLazyChunkFileFixtureSideEffectSatisfied = true;
+          window.VaadinDesktopIpcDiagnostics.generatedLazyChunkFileFixtureExecutionResult =
+            'executed:' + importsResource.path + '=>' + chunkResource.path;
+          window.VaadinDesktopIpcDiagnostics.generatedLazyChunkFileFixtureSideEffectProof =
+            'window.VaadinDesktopGeneratedLazyChunkV122.executed';
+          window.VaadinDesktopIpcDiagnostics.generatedLazyChunkFileFixtureFailureLayer = '';
+          window.VaadinDesktopIpcDiagnostics.generatedLazyChunkFileFixtureBrowserError = '';
+          recordFrontendStageOutcome(chunkResource, chunkUrl, 'executed',
+            generatedLazyChunkFileFixtureStageExtra(importsResource, chunkResource, {
+              generatedLazyChunkFileFixtureExecuted: true,
+              generatedLazyChunkFileFixtureCallbackResolved: true,
+              generatedLazyChunkFileFixtureSideEffectSatisfied: true,
+              generatedLazyChunkFileFixtureExecutionResult:
+                'executed:' + chunkResource.path,
+              generatedLazyChunkFileFixtureSideEffectProof:
+                'window.VaadinDesktopGeneratedLazyChunkV122.executed'
+            }));
+          recordFrontendStageOutcome(importsResource, importsUrl, 'executed',
+            generatedLazyChunkFileFixtureStageExtra(importsResource, chunkResource, {
+              generatedLazyChunkFileFixtureExecuted: true,
+              generatedLazyChunkFileFixtureCallbackResolved: true,
+              generatedLazyChunkFileFixtureSideEffectSatisfied: true,
+              generatedLazyChunkFileFixtureExecutionResult:
+                window.VaadinDesktopIpcDiagnostics.generatedLazyChunkFileFixtureExecutionResult,
+              generatedLazyChunkFileFixtureSideEffectProof:
+                window.VaadinDesktopIpcDiagnostics.generatedLazyChunkFileFixtureSideEffectProof
+            }));
+        } catch (error) {
+          const message = error && error.message ? error.message : String(error);
+          window.VaadinDesktopIpcDiagnostics.generatedLazyChunkFileFixtureExecuted = false;
+          window.VaadinDesktopIpcDiagnostics.generatedLazyChunkFileFixtureCallbackResolved = false;
+          window.VaadinDesktopIpcDiagnostics.generatedLazyChunkFileFixtureSideEffectSatisfied = false;
+          window.VaadinDesktopIpcDiagnostics.generatedLazyChunkFileFixtureExecutionResult =
+            'strict-blocker:' + importsResource.path;
+          window.VaadinDesktopIpcDiagnostics.generatedLazyChunkFileFixtureFailureLayer =
+            'generated-lazy-chunk-file-fixture-browser-execution';
+          window.VaadinDesktopIpcDiagnostics.generatedLazyChunkFileFixtureBrowserError = message;
+          recordFrontendStageOutcome(importsResource, importsUrl, 'strict-blocker',
+            generatedLazyChunkFileFixtureStageExtra(importsResource, chunkResource, {
+              browserError: message,
+              generatedLazyChunkFileFixtureExecuted: false,
+              generatedLazyChunkFileFixtureExecutionResult:
+                window.VaadinDesktopIpcDiagnostics.generatedLazyChunkFileFixtureExecutionResult,
+              generatedLazyChunkFileFixtureFailureLayer:
+                window.VaadinDesktopIpcDiagnostics.generatedLazyChunkFileFixtureFailureLayer,
+              generatedLazyChunkFileFixtureBrowserError: message
+            }));
+        } finally {
+          if (previousLoadOnDemand && window.Vaadin && window.Vaadin.Flow
+              && window.Vaadin.Flow.loadOnDemand !== previousLoadOnDemand) {
+            window.Vaadin.Flow.loadOnDemand = previousLoadOnDemand;
+          }
           refreshFrontendStagingDiagnostics();
           for (const url of urlsToRevoke) {
             URL.revokeObjectURL(url);

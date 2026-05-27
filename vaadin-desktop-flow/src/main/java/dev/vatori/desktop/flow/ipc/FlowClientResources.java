@@ -84,6 +84,10 @@ final class FlowClientResources {
             "META-INF/vatori/dev-bundle-entry/component-base-define.js";
     private static final String GENERATED_FLOW_IMPORTS_JS =
             "META-INF/vatori/generated/flow/generated-flow-imports.js";
+    private static final String GENERATED_FLOW_IMPORTS_V1_22_JS =
+            "META-INF/vatori/generated/flow/generated-flow-imports-v1_22.js";
+    private static final String GENERATED_FLOW_IMPORTS_CHUNK_V1_22_JS =
+            "META-INF/vatori/generated/flow/chunks/chunk-v1_22.js";
     private static final String DEV_MODE_PACKAGE_LOCK_JSON =
             "vaadin-dev-bundle/package-lock.json";
     private static final String DEV_BUNDLE_CHECKBOX_ENTRY_JS =
@@ -177,6 +181,16 @@ final class FlowClientResources {
             "real generated-flow-imports loadOnDemand table is a Promise.resolve(0) no-op; this Vaadin build did not generate a ./chunks/chunk-*.js branch for the current app";
     private static final String GENERATED_LAZY_CHUNK_FILE_NEXT_RESOLUTION_STEP =
             "make the smoke app produce a real Vaadin generated lazy chunk or route the next build's ./chunks/chunk-*.js branch through this resolver";
+    private static final String GENERATED_LAZY_CHUNK_FILE_EXECUTION_VERSION =
+            "flow-ipc-loadondemand-chunk-file-execution-v1_22";
+    private static final String GENERATED_LAZY_CHUNK_FILE_FIXTURE_SOURCE =
+            "repository-vaadin-shaped-generated-flow-imports-v1_22";
+    private static final String GENERATED_LAZY_CHUNK_FILE_FIXTURE_CHUNK_ID =
+            "vatori-flow-ipc-generated-lazy-chunk-v1_22";
+    private static final String GENERATED_LAZY_CHUNK_FILE_FIXTURE_TRIGGER_OWNER =
+            "repository-fixture-generated-loadondemand-executor";
+    private static final String GENERATED_LAZY_CHUNK_FILE_FIXTURE_SIDE_EFFECT =
+            "window.VaadinDesktopGeneratedLazyChunkV122.executed";
     private static final Pattern GENERATED_LAZY_CHUNK_IMPORT =
             Pattern.compile("key\\s*={2,3}\\s*['\"]([^'\"]+)['\"][\\s\\S]*?pending\\.push\\(import\\(['\"](\\./chunks/[^'\"]+\\.js)['\"]\\)\\)");
     private static final Pattern GENERATED_LAZY_NOOP_LOAD_ON_DEMAND =
@@ -646,6 +660,12 @@ final class FlowClientResources {
         add(discoveredComponentResources, GENERATED_FLOW_IMPORTS_JS,
                 "vaadin-generated-flow-imports-module", true,
                 generatedLazyAttributes());
+        add(discoveredComponentResources, GENERATED_FLOW_IMPORTS_V1_22_JS,
+                "vaadin-generated-flow-imports-v1_22-module", true,
+                generatedLazyChunkFileFixtureAttributes(true));
+        add(discoveredComponentResources, GENERATED_FLOW_IMPORTS_CHUNK_V1_22_JS,
+                "vaadin-generated-flow-imports-v1_22-chunk", true,
+                generatedLazyChunkFileFixtureAttributes(false));
         add(discoveredComponentResources, DEV_BUNDLE_GENERATED_FLOW_IMPORTS_JS,
                 "vaadin-dev-bundle-generated-flow-imports-chunk", true,
                 generatedLazyDevBundleChunkAttributes(DEV_BUNDLE_GENERATED_FLOW_IMPORTS_JS,
@@ -781,6 +801,14 @@ final class FlowClientResources {
         manifest.put("loadOnDemandChunkBlockerVersion", GENERATED_LAZY_CHUNK_BLOCKER_VERSION);
         manifest.put("loadOnDemandChunkNextResolutionStep", GENERATED_LAZY_CHUNK_NEXT_RESOLUTION_STEP);
         manifest.putAll(generatedLoadOnDemandChunkFileRegistryAttributes(DEV_BUNDLE_GENERATED_FLOW_IMPORTS_JS));
+        manifest.put("generatedLazyChunkFileExecutionVersion", GENERATED_LAZY_CHUNK_FILE_EXECUTION_VERSION);
+        manifest.put("generatedLazyChunkFileFixtureSource", GENERATED_LAZY_CHUNK_FILE_FIXTURE_SOURCE);
+        manifest.put("generatedLazyChunkFileFixtureImportsArtifact", GENERATED_FLOW_IMPORTS_V1_22_JS);
+        manifest.put("generatedLazyChunkFileFixtureChunkArtifact", GENERATED_FLOW_IMPORTS_CHUNK_V1_22_JS);
+        manifest.put("generatedLazyChunkFileFixtureChunkId", GENERATED_LAZY_CHUNK_FILE_FIXTURE_CHUNK_ID);
+        manifest.put("generatedLazyChunkFileFixtureTriggerOwner", GENERATED_LAZY_CHUNK_FILE_FIXTURE_TRIGGER_OWNER);
+        manifest.put("generatedLazyChunkFileFixtureExpectedSideEffect",
+                GENERATED_LAZY_CHUNK_FILE_FIXTURE_SIDE_EFFECT);
         manifest.put("runtimeResolverContractVersion", RUNTIME_RESOLVER_CONTRACT_VERSION);
         manifest.putAll(frontendResourceLoaderAttributes());
         manifest.putAll(frontendResolverContractAttributes());
@@ -1544,6 +1572,75 @@ final class FlowClientResources {
         return attributes;
     }
 
+    private static Map<String, Object> generatedLazyChunkFileFixtureAttributes(boolean importsArtifact) {
+        Map<String, Object> attributes = new LinkedHashMap<>();
+        attributes.put("componentFrontendResource", true);
+        attributes.put("generatedLazyResource", true);
+        attributes.put("generatedLazyChunkFileFixture", true);
+        attributes.put("generatedLazyChunkFileFixtureRole", importsArtifact ? "imports" : "chunk");
+        attributes.put("generatedLazyChunkFileExecutionVersion", GENERATED_LAZY_CHUNK_FILE_EXECUTION_VERSION);
+        attributes.put("generatedLazyChunkFileFixtureSource", GENERATED_LAZY_CHUNK_FILE_FIXTURE_SOURCE);
+        attributes.put("generatedLazyChunkFileFixtureImportsArtifact", GENERATED_FLOW_IMPORTS_V1_22_JS);
+        attributes.put("generatedLazyChunkFileFixtureChunkArtifact", GENERATED_FLOW_IMPORTS_CHUNK_V1_22_JS);
+        attributes.put("generatedLazyChunkFileFixtureChunkId", GENERATED_LAZY_CHUNK_FILE_FIXTURE_CHUNK_ID);
+        attributes.put("generatedLazyChunkFileFixtureTriggerOwner",
+                GENERATED_LAZY_CHUNK_FILE_FIXTURE_TRIGGER_OWNER);
+        attributes.put("generatedLazyChunkFileFixtureExpectedSideEffect",
+                GENERATED_LAZY_CHUNK_FILE_FIXTURE_SIDE_EFFECT);
+        attributes.put("loadOnDemandChunkFileBlockerVersion", "");
+        attributes.put("blockerClassification", "none");
+        attributes.put("artifactFamily", "generated-lazy");
+        attributes.put("origin", "repository-generated-flow-imports-fixture");
+        attributes.put("resourceOrigin", importsArtifact
+                ? "repository-generated-flow-imports-v1_22"
+                : "repository-generated-flow-imports-v1_22-chunk");
+        attributes.put("dependencyOf", importsArtifact ? "Flow.loadOnDemand" : GENERATED_FLOW_IMPORTS_V1_22_JS);
+        attributes.put("executionPolicy", importsArtifact
+                ? "stage-and-import-generated-lazy-chunk-file-fixture-v1_22"
+                : "generated-lazy-chunk-file-body-v1_22");
+        attributes.put("artifactStatus", "available");
+        attributes.put("requestedBy", "component-frontend-manifest-v1_22");
+        attributes.put("failureClassification", importsArtifact
+                ? "generated-lazy-chunk-file-positive-fixture-v1_22"
+                : "generated-lazy-chunk-file-body-positive-fixture-v1_22");
+        attributes.put("blockedReason", importsArtifact
+                ? "Vaadin-shaped repository fixture contains a real generated loadOnDemand chunk table and is used only to prove the no-localhost chunk-file executor positive path"
+                : "Repository chunk body for the v1.22 generated loadOnDemand positive fixture");
+        attributes.put("lookupKind", importsArtifact
+                ? "Generated-flow-imports-positive-fixture-v1_22"
+                : "Generated-flow-imports-positive-fixture-chunk-v1_22");
+        attributes.put("moduleSpecifier", importsArtifact ? GENERATED_FLOW_IMPORTS_V1_22_JS
+                : GENERATED_FLOW_IMPORTS_CHUNK_V1_22_JS);
+        attributes.put("resolver", "repository-generated-flow-imports-chunk-file-fixture-v1_22");
+        attributes.put("shim", false);
+        if (importsArtifact) {
+            attributes.putAll(generatedLoadOnDemandChunkFileRegistryAttributes(GENERATED_FLOW_IMPORTS_V1_22_JS));
+            attributes.put("loadOnDemandChunkContractVersion", GENERATED_LAZY_CHUNK_CONTRACT_VERSION);
+            attributes.put("loadOnDemandChunkApiOwner", GENERATED_LAZY_LOAD_ON_DEMAND_API_OWNER);
+            attributes.put("loadOnDemandChunkApiInstallSource",
+                    "repository-generated-flow-imports-v1_22-after-staged-import");
+            attributes.put("loadOnDemandChunkRegistrySource", "repository-fixture-chunk-table-v1_22");
+            attributes.put("loadOnDemandChunkMappingSource", GENERATED_LAZY_CHUNK_FILE_MAPPING_SOURCE);
+            attributes.put("loadOnDemandChunkResolvedArtifactPath", GENERATED_FLOW_IMPORTS_V1_22_JS);
+            attributes.put("loadOnDemandChunkRequestedChunk", GENERATED_LAZY_CHUNK_FILE_FIXTURE_CHUNK_ID);
+            attributes.put("loadOnDemandChunkFailureLayer", "");
+            attributes.put("loadOnDemandChunkNextResolutionStep", "");
+        } else {
+            byte[] chunkBody = classpathResourceBytes(GENERATED_FLOW_IMPORTS_CHUNK_V1_22_JS);
+            attributes.put("chunkId", GENERATED_LAZY_CHUNK_FILE_FIXTURE_CHUNK_ID);
+            attributes.put("chunkArtifactPath", GENERATED_FLOW_IMPORTS_CHUNK_V1_22_JS);
+            attributes.put("chunkFileStatus", "available");
+            attributes.put("chunkFileBytes", chunkBody.length);
+            attributes.put("chunkFileSha256", Resource.sha256(chunkBody));
+            attributes.put("chunkFileResolver", GENERATED_LAZY_CHUNK_FILE_RESOLVER);
+            attributes.put("loadOnDemandChunkFileStatus", "available");
+            attributes.put("loadOnDemandChunkFileBytes", chunkBody.length);
+            attributes.put("loadOnDemandChunkFileSha256", Resource.sha256(chunkBody));
+            attributes.put("loadOnDemandChunkFileSideEffectProof", "chunk-file-body-available-for-staged-import");
+        }
+        return attributes;
+    }
+
     private static Map<String, Object> generatedLazyDevBundleChunkAttributes(String path, String lookupKind,
             String dependencyOf, boolean primary) {
         Map<String, Object> attributes = new LinkedHashMap<>();
@@ -1952,18 +2049,22 @@ final class FlowClientResources {
         }
 
         private static byte[] classpathResourceBytes(String path) {
-            if (path == null || path.isBlank()) {
-                return new byte[0];
-            }
-            ClassLoader loader = Thread.currentThread().getContextClassLoader();
-            if (loader == null) {
-                loader = FlowClientResources.class.getClassLoader();
-            }
-            try (InputStream stream = loader.getResourceAsStream(path)) {
-                return stream == null ? new byte[0] : stream.readAllBytes();
-            } catch (IOException error) {
-                throw new IllegalStateException("Unable to read generated loadOnDemand chunk " + path, error);
-            }
+            return FlowClientResources.classpathResourceBytes(path);
+        }
+    }
+
+    private static byte[] classpathResourceBytes(String path) {
+        if (path == null || path.isBlank()) {
+            return new byte[0];
+        }
+        ClassLoader loader = Thread.currentThread().getContextClassLoader();
+        if (loader == null) {
+            loader = FlowClientResources.class.getClassLoader();
+        }
+        try (InputStream stream = loader.getResourceAsStream(path)) {
+            return stream == null ? new byte[0] : stream.readAllBytes();
+        } catch (IOException error) {
+            throw new IllegalStateException("Unable to read Flow IPC resource " + path, error);
         }
     }
 

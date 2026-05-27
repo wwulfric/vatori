@@ -26,12 +26,11 @@ v0/v1 runtime 切片走向可产品化桌面框架的最终完成状态。
 - `docs/goal-1_18.md`：Production Owner Custom-Scheme Resource Graph，已完成。
 - `docs/goal-1_19.md`：Production Owner Side-Effect and Reuse Decision，已完成。
 - `docs/goal-1_20.md`：Production Owner-Owned Runtime Reuse Path，已完成。
-- `docs/goal-1_21.md`：Unified Frontend Resource Resolver Contract，已规划，正在执行。
+- `docs/goal-1_21.md`：Unified Frontend Resource Resolver Contract，已完成。
 
-当前已完成到 `docs/goal-1_20.md`，当前正在执行 `docs/goal-1_21.md`。下一阶段从
-owner-first runtime reuse attempt 继续推进到统一 frontend resource resolver contract，让当前
-component、generated/lazy、theme/static、flow-lazy-dependency、production owner 和 dev-mode
-resource graph 能被同一套 resolver/cache/cleanup/integrity 语义追踪，而不是继续堆叠孤立字段。
+当前已完成到 `docs/goal-1_21.md`。下一阶段应从统一 frontend resource resolver contract
+继续推进到一个真实执行闭环 blocker：generated lazy chunk file、production owner side-effect /
+owner-owned runtime reuse，或 dev-mode/Vite execution。
 
 后续阶段应继续以 `docs/goal-1_22.md` 等文件拆分，
 每个阶段只拿走本长期目标中的一个可评审切片。不要把本文件改写成短期任务清单；
@@ -55,7 +54,7 @@ resource graph 能被同一套 resolver/cache/cleanup/integrity 语义追踪，�
 
 ## 当前基线
 
-截至 goal 1.20，仓库已经证明：
+截至 goal 1.21，仓库已经证明：
 
 - `dev-ipc` 可以启动 no-localhost Flow IPC runtime。
 - 真实 macOS Swift/AppKit/WKWebView 窗口可以运行 Flow IPC smoke app 和 framework
@@ -240,6 +239,18 @@ resource graph 能被同一套 resolver/cache/cleanup/integrity 语义追踪，�
   `focused-fallback-after-owner-owned-runtime-attempt`。这不是 production owner side-effect
   success，但它证明 fallback 发生在 v1.20 owner-owned runtime contract 之后，而不是停留在
   v1.19 side-effect decision。
+- v1.21 已把分散在 component frontend、generated/lazy、theme/static、
+  flow-lazy-dependency、production owner 和 dev-mode package graph 上的 resource evidence
+  收束成统一 frontend resolver contract：Java manifest / resource response 声明
+  `frontendResolverContractVersion=flow-ipc-frontend-resolver-contract-v1_21`、
+  resolver scope、stable source-path + owner namespace identity、sha256 integrity、
+  window-lifetime cache/cleanup、allowed schemes `blob,vatori-resource`、no-localhost proof、
+  covered families 和 accepted gaps。Swift host 聚合 `resourceRequest` / `resourceResponse` /
+  `resourceStage` / `resourceLoad` 证据，在 `webview.dom` 记录 observed families、
+  body-integrity families、stable-identity families、Blob/custom-scheme/verified-only/strict-blocker
+  分类、accepted gap classification 和 `frontendResolverContractComplete=true`。这不是
+  production bundle/dev-mode/generated chunk parity；v1.20 owner-owned runtime fallback 仍明确为
+  accepted blocker。
 - 完整 generated/lazy chunk file execution、production owner import/side-effect success
   和 dev-mode/Vite execution 仍是明确 blocker，不计入最终完成。
 
@@ -367,17 +378,11 @@ resource graph 能被同一套 resolver/cache/cleanup/integrity 语义追踪，�
 
 ## 当前建议的下一阶段
 
-`docs/goal-1_20.md` 已完成 production owner-owned runtime reuse attempt。它基于 v1.19 的
-side-effect / reuse decision 证据，让 production owner 在 focused component imports 之前获得
-owner-first custom-scheme execution / side-effect opportunity，并让 component resolver 明确
-记录当前 `focused-fallback-after-owner-owned-runtime-attempt`，failure layer 为
-`production-owner-owned-missing-real-artifact`。
-
-`docs/goal-1_21.md` 已选择统一 frontend resource resolver contract。它不会把 v1.20 的
+`docs/goal-1_21.md` 已完成统一 frontend resource resolver contract。它不会把 v1.20 的
 production owner fallback 包装成 success，而是把现有 family-specific resolver metadata 收束为
 一个横向可验证的 resolver/cache/cleanup/integrity contract。
 
-v1.21 之后可继续从以下方向选择：
+v1.22 可继续从以下方向选择：
 
 - 让当前 smoke/framework build 产生真实 generated lazy chunk file，或评估受支持 Vaadin lazy
   chunk SPI，越过 v1.12 的 `chunk-file-not-generated` blocker。

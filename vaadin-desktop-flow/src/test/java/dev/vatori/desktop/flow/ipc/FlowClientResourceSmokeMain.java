@@ -23,6 +23,7 @@ public final class FlowClientResourceSmokeMain {
         requireEquals("vaadin-frontend-artifact-graph-v1_4", manifest.get("artifactGraphSource"),
                 "Flow client artifact graph source");
         requireFrontendResourceLoaderMetadata(manifest, "Flow client manifest");
+        requireFrontendResolverContractMetadata(manifest, "Flow client manifest");
         requireListContains(manifest.get("artifactFamilies"), "flow-client-classpath",
                 "Flow client artifact families");
         if (!resources.contains("META-INF/frontend/FlowBootstrap.js")) {
@@ -72,6 +73,8 @@ public final class FlowClientResourceSmokeMain {
                     path + " response execution policy");
             requireEquals(metadata.get("failureClassification"), response.get("failureClassification"),
                     path + " response failure classification");
+            requireFrontendResolverContractMetadata(metadata, path + " manifest entry");
+            requireFrontendResolverContractMetadata(response, path + " response");
             if (!Boolean.TRUE.equals(response.get("flowClientResource")) || !Boolean.TRUE.equals(response.get("available"))) {
                 throw new IllegalStateException("Flow client resource response is not marked available: " + path);
             }
@@ -122,6 +125,7 @@ public final class FlowClientResourceSmokeMain {
         requireEquals("vaadin-frontend-artifact-graph-v1_4", componentManifest.get("artifactGraphSource"),
                 "Component artifact graph source");
         requireFrontendResourceLoaderMetadata(componentManifest, "Component frontend manifest");
+        requireFrontendResolverContractMetadata(componentManifest, "Component frontend manifest");
         requireEquals("flow-ipc-textfield-graph-v1_6", componentManifest.get("textfieldGraphParityVersion"),
                 "TextField graph parity version");
         requireEquals("flow-ipc-textfield-v1_6", componentManifest.get("textfieldPreviousBlockerVersion"),
@@ -910,6 +914,7 @@ public final class FlowClientResourceSmokeMain {
         }
         Map<String, Object> flowLazyDependencyResponse = resources.response(flowLazyDependencyPath);
         requireFrontendResourceLoaderMetadata(flowLazyDependencyResponse, "Flow lazy dependency response");
+        requireFrontendResolverContractMetadata(flowLazyDependencyResponse, "Flow lazy dependency response");
         if (!Objects.equals(flowLazyDependencyResponse.get("lookupKind"),
                 "Flow-lazy-dependency-resource-v1_10")
                 || !Boolean.TRUE.equals(flowLazyDependencyResponse.get("flowLazyDependencyResource"))
@@ -1000,6 +1005,42 @@ public final class FlowClientResourceSmokeMain {
         requireStringContains(metadata.get("frontendResourceLoaderAcceptableFallbacks"),
                 "production-owner-blob-fallback",
                 label + " frontend resource loader acceptable fallbacks");
+    }
+
+    private static void requireFrontendResolverContractMetadata(Map<?, ?> metadata, String label) {
+        requireEquals("flow-ipc-frontend-resolver-contract-v1_21",
+                metadata.get("frontendResolverContractVersion"),
+                label + " frontend resolver contract version");
+        requireEquals("flow-client,component-frontend,theme-static,generated-lazy,flow-lazy-dependency,production-owner,dev-mode",
+                metadata.get("frontendResolverContractScope"),
+                label + " frontend resolver contract scope");
+        requireEquals("stable-source-path-plus-owner-namespace-v1_21",
+                metadata.get("frontendResolverIdentityPolicy"),
+                label + " frontend resolver identity policy");
+        requireEquals("sha256-required-for-bodied-resources-v1_21",
+                metadata.get("frontendResolverIntegrityPolicy"),
+                label + " frontend resolver integrity policy");
+        requireEquals("window-lifetime-content-addressed-v1_21",
+                metadata.get("frontendResolverCachePolicy"),
+                label + " frontend resolver cache policy");
+        requireEquals("host-owned-window-lifetime-v1_21",
+                metadata.get("frontendResolverCleanupPolicy"),
+                label + " frontend resolver cleanup policy");
+        requireEquals("blob,vatori-resource",
+                metadata.get("frontendResolverAllowedSchemes"),
+                label + " frontend resolver allowed schemes");
+        requireEquals(Boolean.TRUE,
+                metadata.get("frontendResolverNoLocalhost"),
+                label + " frontend resolver no-localhost flag");
+        requireStringContains(metadata.get("frontendResolverFamiliesCovered"),
+                "flow-client-classpath",
+                label + " frontend resolver covered families");
+        requireStringContains(metadata.get("frontendResolverFamiliesCovered"),
+                "production-bundle",
+                label + " frontend resolver covered families");
+        requireStringContains(metadata.get("frontendResolverAcceptableGaps"),
+                "production-owner-owned-missing-real-artifact",
+                label + " frontend resolver acceptable gaps");
     }
 
     private static void requireProductionOwnerResourceLoaderMetadata(Map<String, Object> metadata,

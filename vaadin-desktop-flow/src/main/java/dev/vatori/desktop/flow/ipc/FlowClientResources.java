@@ -326,6 +326,24 @@ final class FlowClientResources {
             "flow-ipc-component-owner-reuse-policy-v1_20";
     private static final String COMPONENT_PRODUCTION_OWNER_REUSE_POLICY_V1_20 =
             "owner-first-then-focused-fallback-v1_20";
+    private static final String FRONTEND_RESOLVER_CONTRACT_VERSION =
+            "flow-ipc-frontend-resolver-contract-v1_21";
+    private static final String FRONTEND_RESOLVER_CONTRACT_SCOPE =
+            "flow-client,component-frontend,theme-static,generated-lazy,flow-lazy-dependency,production-owner,dev-mode";
+    private static final String FRONTEND_RESOLVER_IDENTITY_POLICY =
+            "stable-source-path-plus-owner-namespace-v1_21";
+    private static final String FRONTEND_RESOLVER_INTEGRITY_POLICY =
+            "sha256-required-for-bodied-resources-v1_21";
+    private static final String FRONTEND_RESOLVER_CACHE_POLICY =
+            "window-lifetime-content-addressed-v1_21";
+    private static final String FRONTEND_RESOLVER_CLEANUP_POLICY =
+            "host-owned-window-lifetime-v1_21";
+    private static final String FRONTEND_RESOLVER_ALLOWED_SCHEMES =
+            "blob,vatori-resource";
+    private static final String FRONTEND_RESOLVER_FAMILIES_COVERED =
+            "flow-client-classpath,vaadin-component-classpath-frontend,npm-frontend,theme-static,generated-lazy,flow-lazy-dependency,production-bundle,dev-mode-bundle";
+    private static final String FRONTEND_RESOLVER_ACCEPTABLE_GAPS =
+            "generated-lazy-chunk-file-not-generated,production-owner-owned-missing-real-artifact,dev-mode-vite-execution-unmapped";
     private static final List<String> PRODUCTION_RUNTIME_OWNER_DEPENDENCY_ARTIFACTS = List.of(
             DEV_BUNDLE_COMMONJS_JS,
             DEV_BUNDLE_INDEX_HTML_JS,
@@ -443,7 +461,8 @@ final class FlowClientResources {
             }
             """;
     private static final String TEXT_FIELD_DEV_BUNDLE_ENTRY_SOURCE = """
-            import { aG as defineCustomElement, c7 as TextField } from './indexhtml-BfYYZi8S.js';
+            import { c7 as TextField } from './indexhtml-BfYYZi8S.js';
+            import { defineCustomElement } from './component-base-define.js';
 
             defineCustomElement(TextField);
 
@@ -510,11 +529,15 @@ final class FlowClientResources {
             const experimentalMap = {};
 
             export function defineCustomElement(CustomElement, version = '25.1.2') {
-              Object.defineProperty(CustomElement, 'version', {
-                get() {
-                  return version;
-                }
-              });
+              const versionDescriptor = Object.getOwnPropertyDescriptor(CustomElement, 'version');
+              if (!versionDescriptor || versionDescriptor.configurable) {
+                Object.defineProperty(CustomElement, 'version', {
+                  configurable: true,
+                  get() {
+                    return version;
+                  }
+                });
+              }
               if (CustomElement.experimental) {
                 const featureFlagKey = typeof CustomElement.experimental === 'string'
                   ? CustomElement.experimental
@@ -522,19 +545,23 @@ final class FlowClientResources {
                 if (!window.Vaadin.featureFlags[featureFlagKey] && !experimentalMap[featureFlagKey]) {
                   experimentalMap[featureFlagKey] = new Set();
                   experimentalMap[featureFlagKey].add(CustomElement);
-                  Object.defineProperty(window.Vaadin.featureFlags, featureFlagKey, {
-                    get() {
-                      return experimentalMap[featureFlagKey].size === 0;
-                    },
-                    set(value) {
-                      if (!!value && experimentalMap[featureFlagKey].size > 0) {
-                        experimentalMap[featureFlagKey].forEach((elementClass) => {
-                          customElements.define(elementClass.is, elementClass);
-                        });
-                        experimentalMap[featureFlagKey].clear();
+                  const featureFlagDescriptor = Object.getOwnPropertyDescriptor(window.Vaadin.featureFlags, featureFlagKey);
+                  if (!featureFlagDescriptor || featureFlagDescriptor.configurable) {
+                    Object.defineProperty(window.Vaadin.featureFlags, featureFlagKey, {
+                      configurable: true,
+                      get() {
+                        return experimentalMap[featureFlagKey].size === 0;
+                      },
+                      set(value) {
+                        if (!!value && experimentalMap[featureFlagKey].size > 0) {
+                          experimentalMap[featureFlagKey].forEach((elementClass) => {
+                            customElements.define(elementClass.is, elementClass);
+                          });
+                          experimentalMap[featureFlagKey].clear();
+                        }
                       }
-                    }
-                  });
+                    });
+                  }
                   return;
                 } else if (experimentalMap[featureFlagKey]) {
                   experimentalMap[featureFlagKey].add(CustomElement);
@@ -557,14 +584,16 @@ final class FlowClientResources {
             }
             """;
     private static final String CHECKBOX_DEV_BUNDLE_ENTRY_SOURCE = """
-            import { aG as defineCustomElement, c5 as Checkbox } from './indexhtml-BfYYZi8S.js';
+            import { c5 as Checkbox } from './indexhtml-BfYYZi8S.js';
+            import { defineCustomElement } from './component-base-define.js';
 
             defineCustomElement(Checkbox);
 
             export { Checkbox };
             """;
     private static final String SELECT_DEV_BUNDLE_ENTRY_SOURCE = """
-            import { aG as defineCustomElement, c6 as Select } from './indexhtml-BfYYZi8S.js';
+            import { c6 as Select } from './indexhtml-BfYYZi8S.js';
+            import { defineCustomElement } from './component-base-define.js';
 
             defineCustomElement(Select);
 
@@ -677,6 +706,7 @@ final class FlowClientResources {
         manifest.put("transport", "flow-ipc");
         manifest.put("resourceLoading", "ipc-resource-request");
         manifest.putAll(frontendResourceLoaderAttributes());
+        manifest.putAll(frontendResolverContractAttributes());
         manifest.put("classpath", true);
         manifest.put("count", entries.size());
         manifest.put("resources", entries);
@@ -753,6 +783,7 @@ final class FlowClientResources {
         manifest.putAll(generatedLoadOnDemandChunkFileRegistryAttributes(DEV_BUNDLE_GENERATED_FLOW_IMPORTS_JS));
         manifest.put("runtimeResolverContractVersion", RUNTIME_RESOLVER_CONTRACT_VERSION);
         manifest.putAll(frontendResourceLoaderAttributes());
+        manifest.putAll(frontendResolverContractAttributes());
         manifest.put("flowLazyDependencyVersion", FLOW_LAZY_DEPENDENCY_VERSION);
         manifest.put("flowLazyDependencySource", FLOW_LAZY_DEPENDENCY_SOURCE);
         manifest.put("flowLazyDependencyMode", "LoadMode.LAZY");
@@ -1757,6 +1788,21 @@ final class FlowClientResources {
         return attributes;
     }
 
+    private static Map<String, Object> frontendResolverContractAttributes() {
+        Map<String, Object> attributes = new LinkedHashMap<>();
+        attributes.put("frontendResolverContractVersion", FRONTEND_RESOLVER_CONTRACT_VERSION);
+        attributes.put("frontendResolverContractScope", FRONTEND_RESOLVER_CONTRACT_SCOPE);
+        attributes.put("frontendResolverIdentityPolicy", FRONTEND_RESOLVER_IDENTITY_POLICY);
+        attributes.put("frontendResolverIntegrityPolicy", FRONTEND_RESOLVER_INTEGRITY_POLICY);
+        attributes.put("frontendResolverCachePolicy", FRONTEND_RESOLVER_CACHE_POLICY);
+        attributes.put("frontendResolverCleanupPolicy", FRONTEND_RESOLVER_CLEANUP_POLICY);
+        attributes.put("frontendResolverAllowedSchemes", FRONTEND_RESOLVER_ALLOWED_SCHEMES);
+        attributes.put("frontendResolverNoLocalhost", true);
+        attributes.put("frontendResolverFamiliesCovered", FRONTEND_RESOLVER_FAMILIES_COVERED);
+        attributes.put("frontendResolverAcceptableGaps", FRONTEND_RESOLVER_ACCEPTABLE_GAPS);
+        return attributes;
+    }
+
     private static String flowClientExecutionPolicy(String kind) {
         if ("flow-bootstrap-module".equals(kind) || "flow-client-module".equals(kind)) {
             return "execute-primary-module";
@@ -1939,6 +1985,7 @@ final class FlowClientResources {
             metadata.put("text", text);
             metadata.put("ipcAugmented", ipcAugmented);
             metadata.putAll(frontendResourceLoaderAttributes());
+            metadata.putAll(frontendResolverContractAttributes());
             metadata.putAll(attributes);
             return metadata;
         }

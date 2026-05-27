@@ -1,6 +1,15 @@
 # Goal 1.21: Unified Frontend Resource Resolver Contract
 
-状态：已规划，待执行。
+状态：已完成。
+
+完成摘要：v1.21 已在 Java manifest / resource response、Swift host `resourceStage` /
+`resourceLoad` / `webview.dom` summary 和 `DesktopTraceInspector` gate 中落地统一
+`frontendResolverContract`。当前 trace gate 证明同一 resolver contract 覆盖
+flow-client classpath、component frontend、theme/static、generated/lazy、Flow lazy dependency、
+production bundle / owner 和 dev-mode package graph，并同时分类 Blob staging、
+`vatori-resource` custom-scheme/file-backed loading、verified-only resource、strict blocker 和
+accepted fallback。v1.20 owner-owned runtime fallback 仍明确为 accepted blocker，不计为
+production owner side-effect success。
 
 `docs/goal.md` 是长期愿景和完成度账本。v1.20 已经证明 production owner-first
 custom-scheme runtime attempt 会在 focused component imports 之前发生，并把当前 fallback
@@ -207,3 +216,15 @@ v1.21 完成时必须满足：
    strict blocker 和 accepted fallback。
 3. v1.20 production owner-owned runtime fallback 继续明确，不被包装成 success。
 4. `flow-client-resource-smoke`、v1.21 trace gates、真实窗口 smoke、framework validation 和基础编译检查全部通过。
+
+完成证据：
+
+- `docs/traces/flow-ipc-v1_21.ndjson` 已新增为 v1.21 fixture。
+- `bash bin/flow-ipc-trace-inspect --require-flow-ipc-v1_21-frontend-resolver-contract docs/traces/flow-ipc-v1_21.ndjson`
+  通过。
+- `bash bin/flow-ipc-trace-inspect --require-flow-ipc-v1_21 docs/traces/flow-ipc-v1_21.ndjson`
+  通过。
+- 真实窗口 smoke 使用 `VAADIN_DESKTOP_HOST_NO_ACTIVATE=1` 和 auto-shutdown hooks 通过，并且
+  `.build/vaadin-desktop-host-swift/host.out.log` 通过 `--require-flow-ipc-v1_21`。
+- Framework validation app 使用 `VAADIN_DESKTOP_HOST_NO_ACTIVATE=1` 和 auto-shutdown hooks
+  通过，并且 host log 通过 `--require-flow-ipc-v1_3-framework`。

@@ -1359,6 +1359,26 @@ final class WebViewHost: NSObject, NSApplicationDelegate, NSWindowDelegate, WKNa
             payload["productionBundleRuntimeOwnerResourceLoaderRootArtifact"] as? String ?? ""
         let productionOwnerArtifactRole =
             payload["productionBundleRuntimeOwnerResourceLoaderArtifactRole"] as? String ?? ""
+        let frontendResolverContractVersion =
+            payload["frontendResolverContractVersion"] as? String ?? ""
+        let frontendResolverContractScope =
+            payload["frontendResolverContractScope"] as? String ?? ""
+        let frontendResolverIdentityPolicy =
+            payload["frontendResolverIdentityPolicy"] as? String ?? ""
+        let frontendResolverIntegrityPolicy =
+            payload["frontendResolverIntegrityPolicy"] as? String ?? ""
+        let frontendResolverCachePolicy =
+            payload["frontendResolverCachePolicy"] as? String ?? ""
+        let frontendResolverCleanupPolicy =
+            payload["frontendResolverCleanupPolicy"] as? String ?? ""
+        let frontendResolverAllowedSchemes =
+            payload["frontendResolverAllowedSchemes"] as? String ?? ""
+        let frontendResolverNoLocalhost =
+            payload["frontendResolverNoLocalhost"] as? Bool ?? false
+        let frontendResolverFamiliesCovered =
+            payload["frontendResolverFamiliesCovered"] as? String ?? ""
+        let frontendResolverAcceptableGaps =
+            payload["frontendResolverAcceptableGaps"] as? String ?? ""
         let data = Data(body.utf8)
         let cacheKey = "\(sourcePath)#\(sha256)#\(data.count)"
         let cacheStatus = hostResourceStageCache.contains(cacheKey) ? "hit" : "miss"
@@ -1401,7 +1421,17 @@ final class WebViewHost: NSObject, NSApplicationDelegate, NSWindowDelegate, WKNa
             "productionBundleRuntimeOwnerResourcePathMode": useStableSourcePath
                 ? "stable-source-path"
                 : "hash-resource-key",
-            "productionBundleRuntimeOwnerResourceUrlPath": urlPath
+            "productionBundleRuntimeOwnerResourceUrlPath": urlPath,
+            "frontendResolverContractVersion": frontendResolverContractVersion,
+            "frontendResolverContractScope": frontendResolverContractScope,
+            "frontendResolverIdentityPolicy": frontendResolverIdentityPolicy,
+            "frontendResolverIntegrityPolicy": frontendResolverIntegrityPolicy,
+            "frontendResolverCachePolicy": frontendResolverCachePolicy,
+            "frontendResolverCleanupPolicy": frontendResolverCleanupPolicy,
+            "frontendResolverAllowedSchemes": frontendResolverAllowedSchemes,
+            "frontendResolverNoLocalhost": frontendResolverNoLocalhost,
+            "frontendResolverFamiliesCovered": frontendResolverFamiliesCovered,
+            "frontendResolverAcceptableGaps": frontendResolverAcceptableGaps
         ]
 
         var stageRequestTrace: [String: Any] = [
@@ -1877,6 +1907,28 @@ final class WebViewHost: NSObject, NSApplicationDelegate, NSWindowDelegate, WKNa
           frontendArtifactStatuses: window.VaadinDesktopIpcDiagnostics ? window.VaadinDesktopIpcDiagnostics.frontendArtifactStatuses : "",
           frontendArtifactStrictBlockers: window.VaadinDesktopIpcDiagnostics ? window.VaadinDesktopIpcDiagnostics.frontendArtifactStrictBlockers : "",
           frontendArtifactStrictBlockerCount: window.VaadinDesktopIpcDiagnostics ? window.VaadinDesktopIpcDiagnostics.frontendArtifactStrictBlockerCount : 0,
+          frontendResolverContractObserved: !!(window.VaadinDesktopIpcDiagnostics && window.VaadinDesktopIpcDiagnostics.frontendResolverContractObserved),
+          frontendResolverContractVersion: window.VaadinDesktopIpcDiagnostics ? window.VaadinDesktopIpcDiagnostics.frontendResolverContractVersion : "",
+          frontendResolverContractScope: window.VaadinDesktopIpcDiagnostics ? window.VaadinDesktopIpcDiagnostics.frontendResolverContractScope : "",
+          frontendResolverIdentityPolicy: window.VaadinDesktopIpcDiagnostics ? window.VaadinDesktopIpcDiagnostics.frontendResolverIdentityPolicy : "",
+          frontendResolverIntegrityPolicy: window.VaadinDesktopIpcDiagnostics ? window.VaadinDesktopIpcDiagnostics.frontendResolverIntegrityPolicy : "",
+          frontendResolverCachePolicy: window.VaadinDesktopIpcDiagnostics ? window.VaadinDesktopIpcDiagnostics.frontendResolverCachePolicy : "",
+          frontendResolverCleanupPolicy: window.VaadinDesktopIpcDiagnostics ? window.VaadinDesktopIpcDiagnostics.frontendResolverCleanupPolicy : "",
+          frontendResolverAllowedSchemes: window.VaadinDesktopIpcDiagnostics ? window.VaadinDesktopIpcDiagnostics.frontendResolverAllowedSchemes : "",
+          frontendResolverNoLocalhost: !!(window.VaadinDesktopIpcDiagnostics && window.VaadinDesktopIpcDiagnostics.frontendResolverNoLocalhost),
+          frontendResolverFamiliesCovered: window.VaadinDesktopIpcDiagnostics ? window.VaadinDesktopIpcDiagnostics.frontendResolverFamiliesCovered : "",
+          frontendResolverAcceptableGaps: window.VaadinDesktopIpcDiagnostics ? window.VaadinDesktopIpcDiagnostics.frontendResolverAcceptableGaps : "",
+          frontendResolverFamiliesObserved: window.VaadinDesktopIpcDiagnostics ? window.VaadinDesktopIpcDiagnostics.frontendResolverFamiliesObserved : "",
+          frontendResolverFamiliesWithBodyIntegrity: window.VaadinDesktopIpcDiagnostics ? window.VaadinDesktopIpcDiagnostics.frontendResolverFamiliesWithBodyIntegrity : "",
+          frontendResolverFamiliesWithStableIdentity: window.VaadinDesktopIpcDiagnostics ? window.VaadinDesktopIpcDiagnostics.frontendResolverFamiliesWithStableIdentity : "",
+          frontendResolverSchemesObserved: window.VaadinDesktopIpcDiagnostics ? window.VaadinDesktopIpcDiagnostics.frontendResolverSchemesObserved : "",
+          frontendResolverCustomSchemeFamilies: window.VaadinDesktopIpcDiagnostics ? window.VaadinDesktopIpcDiagnostics.frontendResolverCustomSchemeFamilies : "",
+          frontendResolverBlobFamilies: window.VaadinDesktopIpcDiagnostics ? window.VaadinDesktopIpcDiagnostics.frontendResolverBlobFamilies : "",
+          frontendResolverVerifiedOnlyFamilies: window.VaadinDesktopIpcDiagnostics ? window.VaadinDesktopIpcDiagnostics.frontendResolverVerifiedOnlyFamilies : "",
+          frontendResolverStrictBlockerFamilies: window.VaadinDesktopIpcDiagnostics ? window.VaadinDesktopIpcDiagnostics.frontendResolverStrictBlockerFamilies : "",
+          frontendResolverAcceptedGapFamilies: window.VaadinDesktopIpcDiagnostics ? window.VaadinDesktopIpcDiagnostics.frontendResolverAcceptedGapFamilies : "",
+          frontendResolverContractComplete: !!(window.VaadinDesktopIpcDiagnostics && window.VaadinDesktopIpcDiagnostics.frontendResolverContractComplete),
+          frontendResolverContractFailureReason: window.VaadinDesktopIpcDiagnostics ? window.VaadinDesktopIpcDiagnostics.frontendResolverContractFailureReason : "",
           frontendArtifactShimFallback: !!(window.VaadinDesktopIpcDiagnostics && window.VaadinDesktopIpcDiagnostics.frontendArtifactShimFallback),
           frontendArtifactProductionBundlePartial: !!(window.VaadinDesktopIpcDiagnostics && window.VaadinDesktopIpcDiagnostics.frontendArtifactProductionBundlePartial),
           frontendArtifactProductionBundleStatsVerified: !!(window.VaadinDesktopIpcDiagnostics && window.VaadinDesktopIpcDiagnostics.frontendArtifactProductionBundleStatsVerified),
@@ -2789,6 +2841,25 @@ let flowIpcShell = #"""
       const frontendHostResourceLoaderPaths = new Set();
       const frontendHostResourceLoaderExecutedPaths = new Set();
       const frontendHostResourceLoaderFallbackPaths = new Set();
+      const frontendResolverExpectedFamilies = [
+        'flow-client-classpath',
+        'vaadin-component-classpath-frontend',
+        'npm-frontend',
+        'theme-static',
+        'generated-lazy',
+        'flow-lazy-dependency',
+        'production-bundle',
+        'dev-mode-bundle'
+      ];
+      const frontendResolverFamiliesObserved = new Set();
+      const frontendResolverFamiliesWithBodyIntegrity = new Set();
+      const frontendResolverFamiliesWithStableIdentity = new Set();
+      const frontendResolverSchemesObserved = new Set();
+      const frontendResolverCustomSchemeFamilies = new Set();
+      const frontendResolverBlobFamilies = new Set();
+      const frontendResolverVerifiedOnlyFamilies = new Set();
+      const frontendResolverStrictBlockerFamilies = new Set();
+      const frontendResolverAcceptedGapFamilies = new Set();
       const hostResourceStagePromises = new Map();
       let hostResourceStageSequence = 0;
       let generatedLazyBundleExecutionAttempted = false;
@@ -2884,6 +2955,28 @@ let flowIpcShell = #"""
         frontendArtifactStatuses: '',
         frontendArtifactStrictBlockers: '',
         frontendArtifactStrictBlockerCount: 0,
+        frontendResolverContractObserved: false,
+        frontendResolverContractVersion: '',
+        frontendResolverContractScope: '',
+        frontendResolverIdentityPolicy: '',
+        frontendResolverIntegrityPolicy: '',
+        frontendResolverCachePolicy: '',
+        frontendResolverCleanupPolicy: '',
+        frontendResolverAllowedSchemes: '',
+        frontendResolverNoLocalhost: false,
+        frontendResolverFamiliesCovered: '',
+        frontendResolverAcceptableGaps: '',
+        frontendResolverFamiliesObserved: '',
+        frontendResolverFamiliesWithBodyIntegrity: '',
+        frontendResolverFamiliesWithStableIdentity: '',
+        frontendResolverSchemesObserved: '',
+        frontendResolverCustomSchemeFamilies: '',
+        frontendResolverBlobFamilies: '',
+        frontendResolverVerifiedOnlyFamilies: '',
+        frontendResolverStrictBlockerFamilies: '',
+        frontendResolverAcceptedGapFamilies: '',
+        frontendResolverContractComplete: false,
+        frontendResolverContractFailureReason: '',
         frontendArtifactShimFallback: false,
         frontendArtifactProductionBundlePartial: false,
         frontendArtifactProductionBundleStatsVerified: false,
@@ -4817,10 +4910,147 @@ let flowIpcShell = #"""
           : [];
       }
 
+      function addFrontendResolverCsv(set, value) {
+        for (const entry of csvValues(value)) {
+          set.add(entry);
+        }
+      }
+
+      function recordFrontendResolverContractFields(source) {
+        if (!source || typeof source !== 'object') {
+          return;
+        }
+        if (typeof source.frontendResolverContractVersion === 'string'
+            && source.frontendResolverContractVersion) {
+          window.VaadinDesktopIpcDiagnostics.frontendResolverContractObserved = true;
+          window.VaadinDesktopIpcDiagnostics.frontendResolverContractVersion =
+            source.frontendResolverContractVersion;
+        }
+        for (const [sourceKey, diagnosticKey] of [
+          ['frontendResolverContractScope', 'frontendResolverContractScope'],
+          ['frontendResolverIdentityPolicy', 'frontendResolverIdentityPolicy'],
+          ['frontendResolverIntegrityPolicy', 'frontendResolverIntegrityPolicy'],
+          ['frontendResolverCachePolicy', 'frontendResolverCachePolicy'],
+          ['frontendResolverCleanupPolicy', 'frontendResolverCleanupPolicy'],
+          ['frontendResolverAllowedSchemes', 'frontendResolverAllowedSchemes'],
+          ['frontendResolverFamiliesCovered', 'frontendResolverFamiliesCovered'],
+          ['frontendResolverAcceptableGaps', 'frontendResolverAcceptableGaps']
+        ]) {
+          if (typeof source[sourceKey] === 'string' && source[sourceKey]) {
+            window.VaadinDesktopIpcDiagnostics[diagnosticKey] = source[sourceKey];
+          }
+        }
+        if (source.frontendResolverNoLocalhost === true) {
+          window.VaadinDesktopIpcDiagnostics.frontendResolverNoLocalhost = true;
+        }
+        addFrontendResolverCsv(frontendResolverFamiliesObserved, source.frontendResolverFamiliesCovered || '');
+        addFrontendResolverCsv(frontendResolverAcceptedGapFamilies, source.frontendResolverAcceptableGaps || '');
+      }
+
+      function recordFrontendResolverResource(resource, stagedUrl, executionStatus, extra) {
+        if (!resource || typeof resource !== 'object') {
+          return;
+        }
+        recordFrontendResolverContractFields(resource);
+        const family = typeof resource.artifactFamily === 'string' ? resource.artifactFamily : '';
+        if (family) {
+          frontendResolverFamiliesObserved.add(family);
+        }
+        if (family && (resource.sha256 || (extra && extra.sha256))) {
+          frontendResolverFamiliesWithBodyIntegrity.add(family);
+        }
+        const identityPolicy = resource.frontendResolverIdentityPolicy
+          || (extra && extra.frontendResolverIdentityPolicy)
+          || '';
+        if (family && (identityPolicy || resource.path || (extra && extra.resourceBaseUrl))) {
+          frontendResolverFamiliesWithStableIdentity.add(family);
+        }
+        const policy = resource.executionPolicy || '';
+        if (family && policy === 'verified-only-intentionally-not-executed') {
+          frontendResolverVerifiedOnlyFamilies.add(family);
+        }
+        const scheme = stagedUrlScheme(stagedUrl || (extra && extra.resourceBaseUrl) || '');
+        if (scheme) {
+          frontendResolverSchemesObserved.add(scheme);
+          if (scheme === 'blob') {
+            frontendResolverBlobFamilies.add(family);
+          } else if (scheme === 'vatori-resource') {
+            frontendResolverCustomSchemeFamilies.add(family);
+          }
+        }
+        const failureLayer = (extra && (extra.failureLayer
+          || extra.productionBundleRuntimeOwnerOwnedRuntimeFailureLayer
+          || extra.loadOnDemandChunkFileFailureLayer))
+          || resource.failureLayer
+          || resource.productionBundleRuntimeOwnerOwnedRuntimeFailureLayer
+          || resource.loadOnDemandChunkFileFailureLayer
+          || '';
+        if (family && (executionStatus === 'strict-blocker' || failureLayer)) {
+          if (failureLayer === 'chunk-file-not-generated'
+              || failureLayer === 'production-owner-owned-missing-real-artifact'
+              || failureLayer === 'dev-mode-vite-execution-unmapped') {
+            frontendResolverAcceptedGapFamilies.add(family);
+          } else if (executionStatus === 'strict-blocker') {
+            frontendResolverStrictBlockerFamilies.add(family);
+          }
+        }
+        refreshFrontendResolverContractDiagnostics();
+      }
+
+      function refreshFrontendResolverContractDiagnostics() {
+        const d = window.VaadinDesktopIpcDiagnostics;
+        d.frontendResolverFamiliesObserved = Array.from(frontendResolverFamiliesObserved).join(',');
+        d.frontendResolverFamiliesWithBodyIntegrity =
+          Array.from(frontendResolverFamiliesWithBodyIntegrity).join(',');
+        d.frontendResolverFamiliesWithStableIdentity =
+          Array.from(frontendResolverFamiliesWithStableIdentity).join(',');
+        d.frontendResolverSchemesObserved = Array.from(frontendResolverSchemesObserved).join(',');
+        d.frontendResolverCustomSchemeFamilies =
+          Array.from(frontendResolverCustomSchemeFamilies).filter((entry) => entry).join(',');
+        d.frontendResolverBlobFamilies =
+          Array.from(frontendResolverBlobFamilies).filter((entry) => entry).join(',');
+        d.frontendResolverVerifiedOnlyFamilies =
+          Array.from(frontendResolverVerifiedOnlyFamilies).filter((entry) => entry).join(',');
+        d.frontendResolverStrictBlockerFamilies =
+          Array.from(frontendResolverStrictBlockerFamilies).filter((entry) => entry).join(',');
+        d.frontendResolverAcceptedGapFamilies =
+          Array.from(frontendResolverAcceptedGapFamilies).filter((entry) => entry).join(',');
+        const missingFamilies = frontendResolverExpectedFamilies.filter((family) =>
+          !frontendResolverFamiliesObserved.has(family));
+        const missingIntegrity = frontendResolverExpectedFamilies.filter((family) =>
+          !frontendResolverFamiliesWithBodyIntegrity.has(family));
+        const missingIdentity = frontendResolverExpectedFamilies.filter((family) =>
+          !frontendResolverFamiliesWithStableIdentity.has(family));
+        const missingSchemes = ['blob', 'vatori-resource'].filter((scheme) =>
+          !frontendResolverSchemesObserved.has(scheme));
+        const failures = [];
+        if (!d.frontendResolverContractObserved) {
+          failures.push('contract-not-observed');
+        }
+        if (!d.frontendResolverNoLocalhost) {
+          failures.push('no-localhost-proof-missing');
+        }
+        if (missingFamilies.length > 0) {
+          failures.push('families-missing:' + missingFamilies.join('|'));
+        }
+        if (missingIntegrity.length > 0) {
+          failures.push('body-integrity-missing:' + missingIntegrity.join('|'));
+        }
+        if (missingIdentity.length > 0) {
+          failures.push('stable-identity-missing:' + missingIdentity.join('|'));
+        }
+        if (missingSchemes.length > 0) {
+          failures.push('schemes-missing:' + missingSchemes.join('|'));
+        }
+        d.frontendResolverContractComplete = failures.length === 0;
+        d.frontendResolverContractFailureReason = failures.join(',');
+      }
+
       function recordFrontendArtifactManifest(manifest) {
         if (!manifest || typeof manifest !== 'object') {
           return;
         }
+        recordFrontendResolverContractFields(manifest);
         if (typeof manifest.frontendAssetPipelineVersion === 'string') {
           window.VaadinDesktopIpcDiagnostics.frontendAssetPipelineVersion =
             manifest.frontendAssetPipelineVersion;
@@ -4923,6 +5153,9 @@ let flowIpcShell = #"""
               : 0;
         }
         const resources = Array.isArray(manifest.resources) ? manifest.resources : [];
+        for (const resource of resources) {
+          recordFrontendResolverResource(resource, '', '', {});
+        }
         const requestedBy = resources.map((entry) => entry && entry.requestedBy);
         const dependencyOf = resources.map((entry) => entry && entry.dependencyOf);
         const moduleSpecifiers = resources.map((entry) => entry && entry.moduleSpecifier);
@@ -5426,6 +5659,16 @@ let flowIpcShell = #"""
         }
         const blockers = Array.isArray(manifest.strictBlockers) ? manifest.strictBlockers : [];
         if (blockers.length > 0) {
+          for (const blocker of blockers) {
+            if (blocker && typeof blocker.artifactFamily === 'string' && blocker.strictBlocker === true) {
+              frontendResolverStrictBlockerFamilies.add(blocker.artifactFamily);
+              if (blocker.failureClassification === 'flow-ipc-loadondemand-chunk-file-v1_12'
+                  || blocker.failureClassification === 'dev-mode-bundle-execution-unmapped') {
+                frontendResolverAcceptedGapFamilies.add(blocker.artifactFamily);
+              }
+            }
+          }
+          refreshFrontendResolverContractDiagnostics();
           window.VaadinDesktopIpcDiagnostics.frontendArtifactStrictBlockerCount =
             Math.max(window.VaadinDesktopIpcDiagnostics.frontendArtifactStrictBlockerCount, blockers.length);
           window.VaadinDesktopIpcDiagnostics.frontendArtifactStrictBlockers = csvUnique(blockers.map((entry) => {
@@ -5455,6 +5698,16 @@ let flowIpcShell = #"""
           requestedBy: resource.requestedBy || '',
           resolver: resource.resolver || '',
           artifactStatus: resource.artifactStatus || '',
+          frontendResolverContractVersion: resource.frontendResolverContractVersion || '',
+          frontendResolverContractScope: resource.frontendResolverContractScope || '',
+          frontendResolverIdentityPolicy: resource.frontendResolverIdentityPolicy || '',
+          frontendResolverIntegrityPolicy: resource.frontendResolverIntegrityPolicy || '',
+          frontendResolverCachePolicy: resource.frontendResolverCachePolicy || '',
+          frontendResolverCleanupPolicy: resource.frontendResolverCleanupPolicy || '',
+          frontendResolverAllowedSchemes: resource.frontendResolverAllowedSchemes || '',
+          frontendResolverNoLocalhost: resource.frontendResolverNoLocalhost === true,
+          frontendResolverFamiliesCovered: resource.frontendResolverFamiliesCovered || '',
+          frontendResolverAcceptableGaps: resource.frontendResolverAcceptableGaps || '',
           lookupKind: resource.lookupKind || '',
           textfieldGraphParityVersion: resource.textfieldGraphParityVersion || '',
           blockerVersion: resource.blockerVersion || '',
@@ -5809,6 +6062,7 @@ let flowIpcShell = #"""
         } else if (executionStatus === 'strict-blocker' || executionStatus === 'execution-failed') {
           frontendStagedResourceFailedPaths.add(sourcePath);
         }
+        recordFrontendResolverResource(resource, stagedUrl, executionStatus, extra || {});
         if (extra && extra.frontendResourceSchemeVersion === 'flow-ipc-resource-scheme-v1_17') {
           frontendHostResourceLoaderPaths.add(sourcePath);
           if (executionStatus === 'executed') {
@@ -5940,6 +6194,16 @@ let flowIpcShell = #"""
           sourcePath,
           stagedUrl,
           stagedUrlScheme: scheme,
+          frontendResolverContractVersion: resource.frontendResolverContractVersion || '',
+          frontendResolverContractScope: resource.frontendResolverContractScope || '',
+          frontendResolverIdentityPolicy: resource.frontendResolverIdentityPolicy || '',
+          frontendResolverIntegrityPolicy: resource.frontendResolverIntegrityPolicy || '',
+          frontendResolverCachePolicy: resource.frontendResolverCachePolicy || '',
+          frontendResolverCleanupPolicy: resource.frontendResolverCleanupPolicy || '',
+          frontendResolverAllowedSchemes: resource.frontendResolverAllowedSchemes || '',
+          frontendResolverNoLocalhost: resource.frontendResolverNoLocalhost === true,
+          frontendResolverFamiliesCovered: resource.frontendResolverFamiliesCovered || '',
+          frontendResolverAcceptableGaps: resource.frontendResolverAcceptableGaps || '',
           stagedPath: '',
           owner: stageOwner,
           artifactFamily: family,
@@ -6900,7 +7164,17 @@ let flowIpcShell = #"""
             productionBundleRuntimeOwnerResourceLoaderRootArtifact:
               hostExtra.productionBundleRuntimeOwnerResourceLoaderRootArtifact || '',
             productionBundleRuntimeOwnerResourceLoaderArtifactRole:
-              hostExtra.productionBundleRuntimeOwnerResourceLoaderArtifactRole || ''
+              hostExtra.productionBundleRuntimeOwnerResourceLoaderArtifactRole || '',
+            frontendResolverContractVersion: resource.frontendResolverContractVersion || '',
+            frontendResolverContractScope: resource.frontendResolverContractScope || '',
+            frontendResolverIdentityPolicy: resource.frontendResolverIdentityPolicy || '',
+            frontendResolverIntegrityPolicy: resource.frontendResolverIntegrityPolicy || '',
+            frontendResolverCachePolicy: resource.frontendResolverCachePolicy || '',
+            frontendResolverCleanupPolicy: resource.frontendResolverCleanupPolicy || '',
+            frontendResolverAllowedSchemes: resource.frontendResolverAllowedSchemes || '',
+            frontendResolverNoLocalhost: resource.frontendResolverNoLocalhost === true,
+            frontendResolverFamiliesCovered: resource.frontendResolverFamiliesCovered || '',
+            frontendResolverAcceptableGaps: resource.frontendResolverAcceptableGaps || ''
           });
           hostExtra.frontendResourceSchemeVersion =
             response.frontendResourceSchemeVersion || 'flow-ipc-resource-scheme-v1_17';
@@ -9066,8 +9340,11 @@ let flowIpcShell = #"""
         if (productionOwnerOwnedRuntimeGateRequired()
             && !productionBundleRuntimeOwnerImportAttempted) {
           await maybeImportProductionBundleRuntimeOwner();
+          if (productionBundleRuntimeOwnerImportInProgress) {
+            return;
+          }
           if (!productionBundleRuntimeOwnerImportAttempted
-              || productionBundleRuntimeOwnerImportInProgress) {
+              && !productionOwnerOwnedRuntimeAcceptedPreflightRecorded()) {
             return;
           }
         }
@@ -9101,6 +9378,9 @@ let flowIpcShell = #"""
         if (!productionOwnerOwnedRuntimeGateRequired()) {
           return false;
         }
+        if (productionOwnerOwnedRuntimeAcceptedPreflightRecorded()) {
+          return false;
+        }
         if (productionBundleRuntimeOwnerImportInProgress) {
           return true;
         }
@@ -9108,6 +9388,12 @@ let flowIpcShell = #"""
           return false;
         }
         return productionOwnerImportPhase() === 'before-component-imports';
+      }
+
+      function productionOwnerOwnedRuntimeAcceptedPreflightRecorded() {
+        return productionBundleRuntimeOwnerOrderingPreflightRecorded === true
+          && window.VaadinDesktopIpcDiagnostics.frontendArtifactProductionBundleRuntimeOwnerOwnedRuntimeAttempted === true
+          && !!window.VaadinDesktopIpcDiagnostics.frontendArtifactProductionBundleRuntimeOwnerOwnedRuntimeFailureLayer;
       }
 
       function productionOwnerOwnedRuntimeGateRequired() {
@@ -10618,6 +10904,10 @@ let flowIpcShell = #"""
         if (!details) {
           return;
         }
+        const previousDecision =
+          window.VaadinDesktopIpcDiagnostics.componentProductionOwnerReuseDecision || '';
+        const previousDecisionPhase =
+          window.VaadinDesktopIpcDiagnostics.componentProductionOwnerReuseDecisionPhase || '';
         window.VaadinDesktopIpcDiagnostics.componentProductionOwnerReuseVersion =
           details.componentProductionOwnerReuseVersion || '';
         window.VaadinDesktopIpcDiagnostics.componentProductionOwnerReusePolicy =
@@ -10635,7 +10925,10 @@ let flowIpcShell = #"""
         window.VaadinDesktopIpcDiagnostics.componentProductionOwnerReuseDecisionSource =
           details.componentProductionOwnerReuseDecisionSource || '';
         window.VaadinDesktopIpcDiagnostics.componentProductionOwnerReuseDecision =
-          details.componentProductionOwnerReuseDecision || '';
+          previousDecision === 'focused-fallback-after-owner-owned-runtime-attempt'
+            && details.componentProductionOwnerReuseDecision !== 'owner-reused'
+            ? previousDecision
+            : (details.componentProductionOwnerReuseDecision || '');
         window.VaadinDesktopIpcDiagnostics.componentProductionOwnerReuseDecisionReason =
           details.componentProductionOwnerReuseDecisionReason || '';
         window.VaadinDesktopIpcDiagnostics.componentProductionOwnerReuseDecisionTags =
@@ -10645,7 +10938,9 @@ let flowIpcShell = #"""
         window.VaadinDesktopIpcDiagnostics.componentProductionOwnerReusePolicyV1_20 =
           details.componentProductionOwnerReusePolicyV1_20 || '';
         window.VaadinDesktopIpcDiagnostics.componentProductionOwnerReuseDecisionPhase =
-          details.componentProductionOwnerReuseDecisionPhase || '';
+          previousDecisionPhase === 'before-component-imports'
+            ? previousDecisionPhase
+            : (details.componentProductionOwnerReuseDecisionPhase || '');
         window.VaadinDesktopIpcDiagnostics.componentProductionOwnerOwnedTags =
           details.componentProductionOwnerOwnedTags || '';
         window.VaadinDesktopIpcDiagnostics.componentProductionOwnerSkippedDefinitions =
@@ -10666,6 +10961,10 @@ let flowIpcShell = #"""
         const registryBefore = vaadinCustomElementRegistrySnapshot();
         const globalBefore = vaadinGlobalSnapshot();
         const failureLayer = 'production-owner-component-reuse-contract-missing';
+        const ownerOwnedRuntimeFailureLayer = resource.productionBundleRuntimeOwnerOwnedRuntimeVersion
+          === 'flow-ipc-production-owner-owned-runtime-v1_20'
+            ? 'production-owner-owned-missing-real-artifact'
+            : '';
         const importVersion = resource.productionBundleRuntimeOwnerImportVersion
           || 'flow-ipc-production-owner-import-v1_14';
         const ownerIdentity = resource.productionBundleRuntimeOwnerModuleIdentity
@@ -10829,6 +11128,55 @@ let flowIpcShell = #"""
           componentProductionOwnerReused: false,
           componentProductionOwnerReuseReason:
             'owner import failed before component import; failureLayer=' + failureLayer,
+          componentProductionOwnerReuseDecisionVersion:
+            resource.componentProductionOwnerReuseDecisionVersion
+            || 'flow-ipc-component-owner-reuse-decision-v1_19',
+          componentProductionOwnerReuseDecisionSource:
+            resource.componentProductionOwnerReuseDecisionSource
+            || 'production-owner-owned-runtime-preflight-v1_20',
+          componentProductionOwnerReuseDecision:
+            ownerOwnedRuntimeFailureLayer
+              ? 'focused-fallback-after-owner-owned-runtime-attempt'
+              : 'focused-fallback-after-owner-side-effect-check',
+          componentProductionOwnerReuseDecisionReason:
+            ownerOwnedRuntimeFailureLayer
+              ? 'owner-first runtime preflight reached before component imports but unresolved production owner artifacts keep focused fallback required; failureLayer='
+                + ownerOwnedRuntimeFailureLayer
+              : 'owner-first preflight reached before component imports but owner reuse contract is not satisfied',
+          componentProductionOwnerReuseDecisionTags:
+            resource.componentProductionOwnerReuseDecisionTags
+            || 'vaadin-text-field,vaadin-checkbox,vaadin-select',
+          componentProductionOwnerReusePolicyVersionV1_20:
+            resource.componentProductionOwnerReusePolicyVersionV1_20
+            || 'flow-ipc-component-owner-reuse-policy-v1_20',
+          componentProductionOwnerReusePolicyV1_20:
+            resource.componentProductionOwnerReusePolicyV1_20
+            || 'owner-first-then-focused-fallback-v1_20',
+          componentProductionOwnerReuseDecisionPhase: 'before-component-imports',
+          productionBundleRuntimeOwnerOwnedRuntimeVersion:
+            resource.productionBundleRuntimeOwnerOwnedRuntimeVersion || '',
+          productionBundleRuntimeOwnerOwnedRuntimePolicy:
+            resource.productionBundleRuntimeOwnerOwnedRuntimePolicy || '',
+          productionBundleRuntimeOwnerOwnedRuntimePhase:
+            resource.productionBundleRuntimeOwnerOwnedRuntimePhase || 'before-component-imports',
+          productionBundleRuntimeOwnerOwnedRuntimeActualPhase: phase,
+          productionBundleRuntimeOwnerOwnedRuntimeExpectedTags:
+            resource.productionBundleRuntimeOwnerOwnedRuntimeExpectedTags
+            || 'vaadin-text-field,vaadin-checkbox,vaadin-select',
+          productionBundleRuntimeOwnerOwnedRuntimeExpectedGlobals:
+            resource.productionBundleRuntimeOwnerOwnedRuntimeExpectedGlobals
+            || 'window.Vaadin,window.Vaadin.Flow,window.Vaadin.Flow.loadOnDemand',
+          productionBundleRuntimeOwnerOwnedRuntimeNoBlobFallback:
+            resource.productionBundleRuntimeOwnerOwnedRuntimeNoBlobFallback !== false,
+          productionBundleRuntimeOwnerOwnedRuntimeAcceptableFailures:
+            resource.productionBundleRuntimeOwnerOwnedRuntimeAcceptableFailures
+            || 'production-owner-owned-side-effect-unobservable,production-owner-owned-duplicate-custom-element,production-owner-owned-missing-real-artifact,production-owner-owned-browser-import-failed,production-owner-owned-unsupported-vaadin-contract',
+          productionBundleRuntimeOwnerOwnedRuntimeAttempted:
+            !!ownerOwnedRuntimeFailureLayer,
+          productionBundleRuntimeOwnerOwnedRuntimeSatisfied: false,
+          productionBundleRuntimeOwnerOwnedRuntimeFailureLayer:
+            ownerOwnedRuntimeFailureLayer,
+          productionBundleRuntimeOwnerBlobFallbackUsed: false,
           componentProductionOwnerOwnedTags: '',
           componentProductionOwnerSkippedDefinitions: '',
           componentProductionOwnerFallbackImports:
@@ -10848,6 +11196,16 @@ let flowIpcShell = #"""
       }
 
       function applyProductionOwnerImportDiagnostics(extra) {
+        const previousOwnedRuntimeAttempted =
+          window.VaadinDesktopIpcDiagnostics.frontendArtifactProductionBundleRuntimeOwnerOwnedRuntimeAttempted === true;
+        const previousOwnedRuntimeActualPhase =
+          window.VaadinDesktopIpcDiagnostics.frontendArtifactProductionBundleRuntimeOwnerOwnedRuntimeActualPhase || '';
+        const previousOwnedRuntimeFailureLayer =
+          window.VaadinDesktopIpcDiagnostics.frontendArtifactProductionBundleRuntimeOwnerOwnedRuntimeFailureLayer || '';
+        const previousReuseDecision =
+          window.VaadinDesktopIpcDiagnostics.componentProductionOwnerReuseDecision || '';
+        const previousReuseDecisionPhase =
+          window.VaadinDesktopIpcDiagnostics.componentProductionOwnerReuseDecisionPhase || '';
         window.VaadinDesktopIpcDiagnostics.frontendArtifactProductionBundleRuntimeObserved = true;
         window.VaadinDesktopIpcDiagnostics.frontendArtifactProductionBundleRuntimeStageAttempted = true;
         window.VaadinDesktopIpcDiagnostics.frontendArtifactProductionBundleRuntimeOwnerObserved = true;
@@ -10958,7 +11316,9 @@ let flowIpcShell = #"""
         window.VaadinDesktopIpcDiagnostics.frontendArtifactProductionBundleRuntimeOwnerOwnedRuntimePhase =
           extra.productionBundleRuntimeOwnerOwnedRuntimePhase || '';
         window.VaadinDesktopIpcDiagnostics.frontendArtifactProductionBundleRuntimeOwnerOwnedRuntimeActualPhase =
-          extra.productionBundleRuntimeOwnerOwnedRuntimeActualPhase || '';
+          previousOwnedRuntimeAttempted && previousOwnedRuntimeActualPhase
+            ? previousOwnedRuntimeActualPhase
+            : (extra.productionBundleRuntimeOwnerOwnedRuntimeActualPhase || '');
         window.VaadinDesktopIpcDiagnostics.frontendArtifactProductionBundleRuntimeOwnerOwnedRuntimeExpectedTags =
           extra.productionBundleRuntimeOwnerOwnedRuntimeExpectedTags || '';
         window.VaadinDesktopIpcDiagnostics.frontendArtifactProductionBundleRuntimeOwnerOwnedRuntimeExpectedGlobals =
@@ -10968,11 +11328,14 @@ let flowIpcShell = #"""
         window.VaadinDesktopIpcDiagnostics.frontendArtifactProductionBundleRuntimeOwnerOwnedRuntimeAcceptableFailures =
           extra.productionBundleRuntimeOwnerOwnedRuntimeAcceptableFailures || '';
         window.VaadinDesktopIpcDiagnostics.frontendArtifactProductionBundleRuntimeOwnerOwnedRuntimeAttempted =
-          extra.productionBundleRuntimeOwnerOwnedRuntimeAttempted === true;
+          extra.productionBundleRuntimeOwnerOwnedRuntimeAttempted === true || previousOwnedRuntimeAttempted;
         window.VaadinDesktopIpcDiagnostics.frontendArtifactProductionBundleRuntimeOwnerOwnedRuntimeSatisfied =
           extra.productionBundleRuntimeOwnerOwnedRuntimeSatisfied === true;
         window.VaadinDesktopIpcDiagnostics.frontendArtifactProductionBundleRuntimeOwnerOwnedRuntimeFailureLayer =
-          extra.productionBundleRuntimeOwnerOwnedRuntimeFailureLayer || '';
+          previousOwnedRuntimeAttempted && previousOwnedRuntimeFailureLayer
+            && extra.productionBundleRuntimeOwnerOwnedRuntimeAttempted !== true
+              ? previousOwnedRuntimeFailureLayer
+              : (extra.productionBundleRuntimeOwnerOwnedRuntimeFailureLayer || '');
         window.VaadinDesktopIpcDiagnostics.frontendArtifactProductionBundleRuntimeOwnerFailureLayer =
           extra.productionBundleRuntimeOwnerFailureLayer;
         window.VaadinDesktopIpcDiagnostics.frontendArtifactProductionBundleRuntimeOwnerBrowserError =
@@ -11084,7 +11447,10 @@ let flowIpcShell = #"""
         window.VaadinDesktopIpcDiagnostics.componentProductionOwnerReuseDecisionSource =
           extra.componentProductionOwnerReuseDecisionSource || '';
         window.VaadinDesktopIpcDiagnostics.componentProductionOwnerReuseDecision =
-          extra.componentProductionOwnerReuseDecision || '';
+          previousReuseDecision === 'focused-fallback-after-owner-owned-runtime-attempt'
+            && extra.componentProductionOwnerReuseDecision !== 'owner-reused'
+            ? previousReuseDecision
+            : (extra.componentProductionOwnerReuseDecision || '');
         window.VaadinDesktopIpcDiagnostics.componentProductionOwnerReuseDecisionReason =
           extra.componentProductionOwnerReuseDecisionReason || '';
         window.VaadinDesktopIpcDiagnostics.componentProductionOwnerReuseDecisionTags =
@@ -11094,7 +11460,9 @@ let flowIpcShell = #"""
         window.VaadinDesktopIpcDiagnostics.componentProductionOwnerReusePolicyV1_20 =
           extra.componentProductionOwnerReusePolicyV1_20 || '';
         window.VaadinDesktopIpcDiagnostics.componentProductionOwnerReuseDecisionPhase =
-          extra.componentProductionOwnerReuseDecisionPhase || '';
+          previousReuseDecisionPhase === 'before-component-imports'
+            ? previousReuseDecisionPhase
+            : (extra.componentProductionOwnerReuseDecisionPhase || '');
         window.VaadinDesktopIpcDiagnostics.componentProductionOwnerOwnedTags =
           extra.componentProductionOwnerOwnedTags || '';
         window.VaadinDesktopIpcDiagnostics.componentProductionOwnerSkippedDefinitions =
@@ -11122,10 +11490,14 @@ let flowIpcShell = #"""
         installOpaqueOriginStorageFallbacks();
         installVaadinDevBundleGlobals();
         const preflight = productionOwnerImportPreflight(resource, source);
+        const preflightPhase = productionOwnerImportPhase();
         if (preflight.pendingPaths && preflight.pendingPaths.length > 0) {
-          recordProductionOwnerOrderingPreflight(resource, source, preflight, productionOwnerImportPhase());
+          recordProductionOwnerOrderingPreflight(resource, source, preflight, preflightPhase);
           requestProductionOwnerPendingDependencies(preflight);
-          return;
+          if (preflightPhase !== 'after-component-imports'
+              || !productionOwnerOwnedRuntimeAcceptedPreflightRecorded()) {
+            return;
+          }
         }
         const importStartedPhase = productionOwnerImportPhase();
         productionBundleRuntimeOwnerImportInProgress = true;
@@ -11143,6 +11515,11 @@ let flowIpcShell = #"""
         const importPhase = productionBundleRuntimeOwnerImportStartedPhase
           || importStartedPhase
           || productionOwnerImportPhase();
+        const ownerOwnedRuntimeFailureLayer = importPhase === 'before-component-imports'
+          && resource.productionBundleRuntimeOwnerOwnedRuntimeVersion
+            === 'flow-ipc-production-owner-owned-runtime-v1_20'
+              ? 'production-owner-owned-missing-real-artifact'
+              : '';
         const importVersion = resource.productionBundleRuntimeOwnerImportVersion
           || 'flow-ipc-production-owner-import-v1_14';
         const importModuleIdentity = 'production-owner-custom-scheme-v1_18:' + resource.path;
@@ -11388,14 +11765,49 @@ let flowIpcShell = #"""
             resource.componentProductionOwnerReuseDecisionSource
             || 'production-owner-custom-scheme-side-effect-v1_19',
           componentProductionOwnerReuseDecision:
-            resource.componentProductionOwnerReuseDecision
-            || 'pending-runtime-side-effect-check',
+            ownerOwnedRuntimeFailureLayer
+              ? 'focused-fallback-after-owner-owned-runtime-attempt'
+              : (resource.componentProductionOwnerReuseDecision
+                || 'pending-runtime-side-effect-check'),
           componentProductionOwnerReuseDecisionReason:
-            resource.componentProductionOwnerReuseDecisionReason
-            || 'production owner custom-scheme import side effects must be checked before focused component resolver can reuse owner-owned tags',
+            ownerOwnedRuntimeFailureLayer
+              ? 'owner-first runtime preflight reached before component imports but unresolved production owner artifacts keep focused fallback required; failureLayer='
+                + ownerOwnedRuntimeFailureLayer
+              : (resource.componentProductionOwnerReuseDecisionReason
+                || 'production owner custom-scheme import side effects must be checked before focused component resolver can reuse owner-owned tags'),
           componentProductionOwnerReuseDecisionTags:
             resource.componentProductionOwnerReuseDecisionTags
             || 'vaadin-text-field,vaadin-checkbox,vaadin-select',
+          componentProductionOwnerReusePolicyVersionV1_20:
+            resource.componentProductionOwnerReusePolicyVersionV1_20
+            || 'flow-ipc-component-owner-reuse-policy-v1_20',
+          componentProductionOwnerReusePolicyV1_20:
+            resource.componentProductionOwnerReusePolicyV1_20
+            || 'owner-first-then-focused-fallback-v1_20',
+          componentProductionOwnerReuseDecisionPhase: 'before-component-imports',
+          productionBundleRuntimeOwnerOwnedRuntimeVersion:
+            resource.productionBundleRuntimeOwnerOwnedRuntimeVersion || '',
+          productionBundleRuntimeOwnerOwnedRuntimePolicy:
+            resource.productionBundleRuntimeOwnerOwnedRuntimePolicy || '',
+          productionBundleRuntimeOwnerOwnedRuntimePhase:
+            resource.productionBundleRuntimeOwnerOwnedRuntimePhase || 'before-component-imports',
+          productionBundleRuntimeOwnerOwnedRuntimeActualPhase: importPhase,
+          productionBundleRuntimeOwnerOwnedRuntimeExpectedTags:
+            resource.productionBundleRuntimeOwnerOwnedRuntimeExpectedTags
+            || 'vaadin-text-field,vaadin-checkbox,vaadin-select',
+          productionBundleRuntimeOwnerOwnedRuntimeExpectedGlobals:
+            resource.productionBundleRuntimeOwnerOwnedRuntimeExpectedGlobals
+            || 'window.Vaadin,window.Vaadin.Flow,window.Vaadin.Flow.loadOnDemand',
+          productionBundleRuntimeOwnerOwnedRuntimeNoBlobFallback:
+            resource.productionBundleRuntimeOwnerOwnedRuntimeNoBlobFallback !== false,
+          productionBundleRuntimeOwnerOwnedRuntimeAcceptableFailures:
+            resource.productionBundleRuntimeOwnerOwnedRuntimeAcceptableFailures
+            || 'production-owner-owned-side-effect-unobservable,production-owner-owned-duplicate-custom-element,production-owner-owned-missing-real-artifact,production-owner-owned-browser-import-failed,production-owner-owned-unsupported-vaadin-contract',
+          productionBundleRuntimeOwnerOwnedRuntimeAttempted:
+            !!ownerOwnedRuntimeFailureLayer,
+          productionBundleRuntimeOwnerOwnedRuntimeSatisfied: false,
+          productionBundleRuntimeOwnerOwnedRuntimeFailureLayer:
+            ownerOwnedRuntimeFailureLayer,
           componentProductionOwnerOwnedTags: '',
           componentProductionOwnerSkippedDefinitions: '',
           componentProductionOwnerFallbackImports:

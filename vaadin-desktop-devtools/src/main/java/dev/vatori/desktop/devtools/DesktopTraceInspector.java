@@ -77,6 +77,9 @@ public final class DesktopTraceInspector {
         FLOW_IPC_V1_20_PRODUCTION_OWNER_OWNED_RUNTIME(
                 "--require-flow-ipc-v1_20-production-owner-owned-runtime"),
         FLOW_IPC_V1_20("--require-flow-ipc-v1_20"),
+        FLOW_IPC_V1_21_FRONTEND_RESOLVER_CONTRACT(
+                "--require-flow-ipc-v1_21-frontend-resolver-contract"),
+        FLOW_IPC_V1_21("--require-flow-ipc-v1_21"),
         FLOW_IPC_V1_3_FRAMEWORK("--require-flow-ipc-v1_3-framework");
 
         private final String option;
@@ -246,6 +249,23 @@ public final class DesktopTraceInspector {
                         FLOW_IPC_V1_18_PRODUCTION_OWNER_RESOURCE_SCHEME, FLOW_IPC_V1_18,
                         FLOW_IPC_V1_19_PRODUCTION_OWNER_SIDE_EFFECT, FLOW_IPC_V1_19,
                         FLOW_IPC_V1_20_PRODUCTION_OWNER_OWNED_RUNTIME, FLOW_IPC_V1_20);
+                case FLOW_IPC_V1_21_FRONTEND_RESOLVER_CONTRACT ->
+                    EnumSet.of(FLOW_IPC_V1_21_FRONTEND_RESOLVER_CONTRACT);
+                case FLOW_IPC_V1_21 -> EnumSet.of(FLOW_IPC_V1, FLOW_IPC_V1_1, FLOW_IPC_V1_2,
+                        FLOW_IPC_V1_3, FLOW_IPC_V1_4, FLOW_IPC_V1_5, FLOW_IPC_V1_7,
+                        FLOW_IPC_V1_8, FLOW_IPC_V1_9_LOADONDEMAND, FLOW_IPC_V1_9,
+                        FLOW_IPC_V1_10_LAZY_DEPENDENCY, FLOW_IPC_V1_10_PRODUCTION_RUNTIME,
+                        FLOW_IPC_V1_10, FLOW_IPC_V1_11_LOADONDEMAND_CHUNK, FLOW_IPC_V1_11,
+                        FLOW_IPC_V1_12_LOADONDEMAND_CHUNK_FILE, FLOW_IPC_V1_12,
+                        FLOW_IPC_V1_13_PRODUCTION_OWNER, FLOW_IPC_V1_13,
+                        FLOW_IPC_V1_14_PRODUCTION_OWNER_IMPORT, FLOW_IPC_V1_14,
+                        FLOW_IPC_V1_15_PRODUCTION_OWNER_DEPENDENCIES, FLOW_IPC_V1_15,
+                        FLOW_IPC_V1_16_PRODUCTION_OWNER_ORDERING, FLOW_IPC_V1_16,
+                        FLOW_IPC_V1_17_RESOURCE_SCHEME, FLOW_IPC_V1_17,
+                        FLOW_IPC_V1_18_PRODUCTION_OWNER_RESOURCE_SCHEME, FLOW_IPC_V1_18,
+                        FLOW_IPC_V1_19_PRODUCTION_OWNER_SIDE_EFFECT, FLOW_IPC_V1_19,
+                        FLOW_IPC_V1_20_PRODUCTION_OWNER_OWNED_RUNTIME, FLOW_IPC_V1_20,
+                        FLOW_IPC_V1_21_FRONTEND_RESOLVER_CONTRACT, FLOW_IPC_V1_21);
                 case FLOW_IPC_V1_3_FRAMEWORK -> EnumSet.of(FLOW_IPC_V1_3_FRAMEWORK);
             };
         }
@@ -295,6 +315,9 @@ public final class DesktopTraceInspector {
                 case FLOW_IPC_V1_20_PRODUCTION_OWNER_OWNED_RUNTIME ->
                     summary.hasRequiredFlowIpcV1_20ProductionOwnerOwnedRuntimeTypes();
                 case FLOW_IPC_V1_20 -> summary.hasRequiredFlowIpcV1_20Types();
+                case FLOW_IPC_V1_21_FRONTEND_RESOLVER_CONTRACT ->
+                    summary.hasRequiredFlowIpcV1_21FrontendResolverContractTypes();
+                case FLOW_IPC_V1_21 -> summary.hasRequiredFlowIpcV1_21Types();
                 case FLOW_IPC_V1_3_FRAMEWORK -> summary.hasRequiredFlowIpcV1_3FrameworkTypes();
             };
         }
@@ -873,6 +896,29 @@ public final class DesktopTraceInspector {
                     && containsStringField(line, "componentProductionOwnerReusePolicyV1_20",
                             "owner-first-then-focused-fallback-v1_20")) {
                 summary.productionRuntimeOwnerOwnedRuntimeV120ManifestObserved = true;
+            }
+            if (line.contains("\"type\":\"bootstrapResponse\"")
+                    && line.contains("\"componentFrontendResources\"")
+                    && containsStringField(line, "frontendResolverContractVersion",
+                            "flow-ipc-frontend-resolver-contract-v1_21")
+                    && containsStringField(line, "frontendResolverContractScope",
+                            "flow-client,component-frontend,theme-static,generated-lazy,flow-lazy-dependency,production-owner,dev-mode")
+                    && containsStringField(line, "frontendResolverIdentityPolicy",
+                            "stable-source-path-plus-owner-namespace-v1_21")
+                    && containsStringField(line, "frontendResolverIntegrityPolicy",
+                            "sha256-required-for-bodied-resources-v1_21")
+                    && containsStringField(line, "frontendResolverCachePolicy",
+                            "window-lifetime-content-addressed-v1_21")
+                    && containsStringField(line, "frontendResolverCleanupPolicy",
+                            "host-owned-window-lifetime-v1_21")
+                    && containsStringField(line, "frontendResolverAllowedSchemes",
+                            "blob,vatori-resource")
+                    && containsLiteralField(line, "frontendResolverNoLocalhost", "true")
+                    && containsStringField(line, "frontendResolverFamiliesCovered",
+                            "flow-client-classpath,vaadin-component-classpath-frontend,npm-frontend,theme-static,generated-lazy,flow-lazy-dependency,production-bundle,dev-mode-bundle")
+                    && containsStringField(line, "frontendResolverAcceptableGaps",
+                            "generated-lazy-chunk-file-not-generated,production-owner-owned-missing-real-artifact,dev-mode-vite-execution-unmapped")) {
+                summary.frontendResolverContractV121ManifestObserved = true;
             }
             if (line.contains("\"type\":\"bootstrapResponse\"")
                     && line.contains("\"componentFrontendResources\"")
@@ -1541,6 +1587,29 @@ public final class DesktopTraceInspector {
                 summary.productionRuntimeOwnerOwnedRuntimeV120RequestObserved = true;
             }
             if (line.contains("\"type\":\"resourceRequest\"")
+                    && containsStringField(line, "frontendResolverContractVersion",
+                            "flow-ipc-frontend-resolver-contract-v1_21")
+                    && containsStringField(line, "frontendResolverIdentityPolicy",
+                            "stable-source-path-plus-owner-namespace-v1_21")
+                    && containsStringField(line, "frontendResolverIntegrityPolicy",
+                            "sha256-required-for-bodied-resources-v1_21")
+                    && containsLiteralField(line, "frontendResolverNoLocalhost", "true")
+                    && containsStringField(line, "frontendResolverAllowedSchemes",
+                            "blob,vatori-resource")
+                    && line.contains("\"expectedSha256\":\"")) {
+                summary.frontendResolverContractV121RequestObserved = true;
+            }
+            if (line.contains("\"type\":\"resourceResponse\"")
+                    && containsStringField(line, "frontendResolverContractVersion",
+                            "flow-ipc-frontend-resolver-contract-v1_21")
+                    && containsStringField(line, "frontendResolverIntegrityPolicy",
+                            "sha256-required-for-bodied-resources-v1_21")
+                    && containsLiteralField(line, "frontendResolverNoLocalhost", "true")
+                    && line.contains("\"sha256\":\"")
+                    && line.contains("\"bodyRedacted\":true")) {
+                summary.frontendResolverContractV121ResponseObserved = true;
+            }
+            if (line.contains("\"type\":\"resourceRequest\"")
                     && line.contains("\"purpose\":\"generated-loadondemand-chunk-v1_11\"")
                     && line.contains("\"lookupKind\":\"Generated-flow-imports-dev-bundle-chunk-v1_4\"")
                     && containsPath(line, "vaadin-dev-bundle/webapp/VAADIN/build/generated-flow-imports-VW7hRaNw.js")
@@ -1790,6 +1859,31 @@ public final class DesktopTraceInspector {
                     && containsLiteralField(line, "productionBundleRuntimeOwnerBlobFallbackUsed", "false")) {
                 summary.productionRuntimeOwnerOwnedRuntimeV120StageObserved = true;
                 summary.productionRuntimeOwnerOwnedRuntimeV120ReuseDecisionObserved = true;
+            }
+            if (line.contains("\"type\":\"resourceStage\"")
+                    && containsStringField(line, "frontendResolverContractVersion",
+                            "flow-ipc-frontend-resolver-contract-v1_21")
+                    && containsStringField(line, "frontendResolverIdentityPolicy",
+                            "stable-source-path-plus-owner-namespace-v1_21")
+                    && containsStringField(line, "frontendResolverIntegrityPolicy",
+                            "sha256-required-for-bodied-resources-v1_21")
+                    && containsLiteralField(line, "frontendResolverNoLocalhost", "true")
+                    && line.contains("\"sha256\":\"")
+                    && line.contains("\"sourcePath\":\"")) {
+                summary.frontendResolverContractV121StageObserved = true;
+                if (containsStringField(line, "stagedUrlScheme", "blob")
+                        || line.contains("\"stagedUrl\":\"blob:")) {
+                    summary.frontendResolverContractV121BlobStageObserved = true;
+                }
+                if (containsStringField(line, "stagedUrlScheme", "vatori-resource")
+                        || line.contains("vatori-resource://")) {
+                    summary.frontendResolverContractV121CustomSchemeStageObserved = true;
+                }
+                if (line.contains("\"artifactFamily\":\"generated-lazy\"")
+                        || line.contains("\"artifactFamily\":\"production-bundle\"")
+                        || line.contains("\"artifactFamily\":\"dev-mode-bundle\"")) {
+                    summary.frontendResolverContractV121StrictOrGapStageObserved = true;
+                }
             }
             if (line.contains("\"type\":\"resourceLoad\"")
                     && containsStringField(line, "productionBundleRuntimeOwnerResourceLoaderVersion",
@@ -2400,7 +2494,7 @@ public final class DesktopTraceInspector {
                     && containsStringField(line,
                             "frontendArtifactProductionBundleRuntimeOwnerResourcePathMode",
                             "stable-source-path")
-                    && (containsProductionOwnerCustomSchemeFailureLayer(line,
+                    && (containsProductionOwnerResourceSchemeV118FinalLayer(line,
                             "frontendArtifactProductionBundleRuntimeOwnerFailureLayer")
                             || containsStringField(line,
                                     "frontendArtifactProductionBundleRuntimeOwnerFailureLayer",
@@ -2485,6 +2579,38 @@ public final class DesktopTraceInspector {
                             "frontendArtifactProductionBundleRuntimeOwnerImportOverCustomScheme", "true")) {
                 summary.productionRuntimeOwnerOwnedRuntimeV120DomObserved = true;
                 summary.productionRuntimeOwnerOwnedRuntimeV120ReuseDecisionObserved = true;
+            }
+            if (line.contains("\"type\":\"webview.dom\"")
+                    && containsLiteralField(line, "frontendResolverContractObserved", "true")
+                    && containsStringField(line, "frontendResolverContractVersion",
+                            "flow-ipc-frontend-resolver-contract-v1_21")
+                    && containsStringField(line, "frontendResolverIdentityPolicy",
+                            "stable-source-path-plus-owner-namespace-v1_21")
+                    && containsStringField(line, "frontendResolverIntegrityPolicy",
+                            "sha256-required-for-bodied-resources-v1_21")
+                    && containsStringField(line, "frontendResolverCachePolicy",
+                            "window-lifetime-content-addressed-v1_21")
+                    && containsStringField(line, "frontendResolverCleanupPolicy",
+                            "host-owned-window-lifetime-v1_21")
+                    && containsStringField(line, "frontendResolverAllowedSchemes",
+                            "blob,vatori-resource")
+                    && containsLiteralField(line, "frontendResolverNoLocalhost", "true")
+                    && line.contains("frontendResolverSchemesObserved")
+                    && line.contains("blob")
+                    && line.contains("vatori-resource")
+                    && line.contains("frontendResolverCustomSchemeFamilies")
+                    && line.contains("flow-lazy-dependency")
+                    && line.contains("production-bundle")
+                    && line.contains("frontendResolverBlobFamilies")
+                    && line.contains("frontendResolverVerifiedOnlyFamilies")
+                    && line.contains("flow-client-classpath")
+                    && line.contains("theme-static")
+                    && line.contains("frontendResolverStrictBlockerFamilies")
+                    && line.contains("generated-lazy")
+                    && line.contains("production-bundle")
+                    && line.contains("dev-mode-bundle")
+                    && containsLiteralField(line, "frontendResolverContractComplete", "true")) {
+                summary.frontendResolverContractV121DomObserved = true;
             }
             if (line.contains("\"type\":\"webview.dom\"")
                     && containsLiteralField(line, "generatedLazyChunkUidlExpressionObserved", "true")
@@ -3105,6 +3231,11 @@ public final class DesktopTraceInspector {
                 || containsStringField(line, field, "production-owner-custom-scheme-unsupported-vaadin-contract");
     }
 
+    private static boolean containsProductionOwnerResourceSchemeV118FinalLayer(String line, String field) {
+        return containsProductionOwnerCustomSchemeFailureLayer(line, field)
+                || containsProductionOwnerOwnedRuntimeFailureLayer(line, field);
+    }
+
     private static boolean containsProductionOwnerSideEffectV119FinalResult(String line, String failureLayerField) {
         return containsLiteralField(line, "productionBundleRuntimeOwnerSideEffectSatisfied", "true")
                 || containsLiteralField(line, "frontendArtifactProductionBundleRuntimeOwnerSideEffectSatisfied", "true")
@@ -3456,6 +3587,14 @@ public final class DesktopTraceInspector {
         private boolean productionRuntimeOwnerOwnedRuntimeV120StageObserved;
         private boolean productionRuntimeOwnerOwnedRuntimeV120DomObserved;
         private boolean productionRuntimeOwnerOwnedRuntimeV120ReuseDecisionObserved;
+        private boolean frontendResolverContractV121ManifestObserved;
+        private boolean frontendResolverContractV121RequestObserved;
+        private boolean frontendResolverContractV121ResponseObserved;
+        private boolean frontendResolverContractV121StageObserved;
+        private boolean frontendResolverContractV121BlobStageObserved;
+        private boolean frontendResolverContractV121CustomSchemeStageObserved;
+        private boolean frontendResolverContractV121StrictOrGapStageObserved;
+        private boolean frontendResolverContractV121DomObserved;
 
         public boolean hasRequiredFlowIpcTypes() {
             return types.keySet().containsAll(FLOW_IPC_REQUIRED_TYPES)
@@ -3783,6 +3922,22 @@ public final class DesktopTraceInspector {
         public boolean hasRequiredFlowIpcV1_20Types() {
             return hasRequiredFlowIpcV1_19Types()
                     && hasRequiredFlowIpcV1_20ProductionOwnerOwnedRuntimeTypes();
+        }
+
+        public boolean hasRequiredFlowIpcV1_21FrontendResolverContractTypes() {
+            return frontendResolverContractV121ManifestObserved
+                    && frontendResolverContractV121RequestObserved
+                    && frontendResolverContractV121ResponseObserved
+                    && frontendResolverContractV121StageObserved
+                    && frontendResolverContractV121BlobStageObserved
+                    && frontendResolverContractV121CustomSchemeStageObserved
+                    && frontendResolverContractV121StrictOrGapStageObserved
+                    && frontendResolverContractV121DomObserved;
+        }
+
+        public boolean hasRequiredFlowIpcV1_21Types() {
+            return hasRequiredFlowIpcV1_20Types()
+                    && hasRequiredFlowIpcV1_21FrontendResolverContractTypes();
         }
 
         public boolean hasRequiredFlowIpcV1_3FrameworkTypes() {
@@ -4164,6 +4319,16 @@ public final class DesktopTraceInspector {
                     + productionRuntimeOwnerOwnedRuntimeV120DomObserved);
             System.out.println("Flow IPC v1.20 component owner reuse decision observed: "
                     + productionRuntimeOwnerOwnedRuntimeV120ReuseDecisionObserved);
+            System.out.println("Flow IPC v1.21 frontend resolver contract manifest/request/response observed: "
+                    + frontendResolverContractV121ManifestObserved + "/"
+                    + frontendResolverContractV121RequestObserved + "/"
+                    + frontendResolverContractV121ResponseObserved);
+            System.out.println("Flow IPC v1.21 frontend resolver contract stage blob/custom/gap observed: "
+                    + frontendResolverContractV121BlobStageObserved + "/"
+                    + frontendResolverContractV121CustomSchemeStageObserved + "/"
+                    + frontendResolverContractV121StrictOrGapStageObserved);
+            System.out.println("Flow IPC v1.21 frontend resolver contract DOM observed: "
+                    + frontendResolverContractV121DomObserved);
             System.out.println("Flow IPC v1.6 TextField graph manifest observed: "
                     + frontendTextFieldV16ManifestObserved);
             System.out.println("Flow IPC v1.6 TextField graph request observed: "

@@ -19,10 +19,11 @@ v0/v1 runtime 切片走向可产品化桌面框架的最终完成状态。
 - `docs/goal-1_11.md`：Generated `Flow.loadOnDemand` chunk runtime path，已完成。
 - `docs/goal-1_12.md`：Generated LoadOnDemand chunk file registry and side-effect proof，已完成。
 - `docs/goal-1_13.md`：Production Bundle Owned Runtime Boundary，已完成。
+- `docs/goal-1_14.md`：Production Owner Import and Side-Effect Boundary，已规划，尚未执行。
 
-当前没有已指定但尚未完成的短期阶段目标。
+当前已规划但尚未执行的短期阶段目标是 `docs/goal-1_14.md`。
 
-后续阶段应继续以 `docs/goal-1_13.md`、`docs/goal-1_14.md` 等文件拆分，
+后续阶段应继续以 `docs/goal-1_15.md` 等文件拆分，
 每个阶段只拿走本长期目标中的一个可评审切片。不要把本文件改写成短期任务清单；
 它是长期北极星和完成度账本。
 
@@ -265,11 +266,14 @@ v0/v1 runtime 切片走向可产品化桌面框架的最终完成状态。
 
 ## 当前建议的下一阶段
 
-当前已选择 `docs/goal-1_13.md` 作为下一阶段：production bundle owned runtime boundary。
-这个方向承接 v1.10 的 production bundle `execution-attempt`，同时避开 v1.12 已证明当前 build
-没有 generated chunk file 的死胡同。目标不是 broad production parity，而是把 production
-artifact 从 focused component entry import 中拆出独立 owner、生命周期、side-effect 和 blocker
-证据。
+当前已规划 `docs/goal-1_14.md` 作为下一阶段：production owner import and side-effect
+boundary。这个方向承接 v1.13 的 production owner contract，不再只证明 owner 可以 stage
+真实 stats-selected artifact，而是要求 owner 对
+`vaadin-dev-bundle/webapp/VAADIN/build/indexhtml-BfYYZi8S.js` 发起受控 import /
+side-effect probe。目标不是 broad production parity，而是把 v1.13 的
+`production-owner-runtime-contract-missing` 推进到真实 import success，或推进到 browser
+import、relative dependency、custom element registry、global collision、side-effect
+unobservable 等更具体失败层。
 
 后续阶段可继续从以下方向选择：
 

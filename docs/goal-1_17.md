@@ -2,9 +2,9 @@
 
 状态：已规划，尚未执行。
 
-`docs/goal.md` 是长期愿景和完成度账本。v1.15 已规划为 production owner dependency
-resolver closure，v1.16 已规划为 production owner import ordering / component reuse。v1.17
-只应在 v1.15 和 v1.16 完成后执行。
+`docs/goal.md` 是长期愿景和完成度账本。v1.15 已完成 production owner dependency
+resolver closure，v1.16 已完成 production owner import ordering / component reuse。v1.17
+承接这两个已完成阶段执行。
 
 v1.5-v1.16 的 frontend execution path 主要依赖 WebView 内部的 Blob module URL staging：
 Swift host 通过 IPC 拿到 Java sidecar 返回的真实 Vaadin artifact body，然后在 WebView runtime

@@ -1603,9 +1603,21 @@ final class WebViewHost: NSObject, NSApplicationDelegate, NSWindowDelegate, WKNa
           frontendArtifactProductionBundleRuntimeOwnerImportVaadinGlobalAfter: window.VaadinDesktopIpcDiagnostics ? window.VaadinDesktopIpcDiagnostics.frontendArtifactProductionBundleRuntimeOwnerImportVaadinGlobalAfter : "",
           frontendArtifactProductionBundleRuntimeOwnerImportNextResolutionStep: window.VaadinDesktopIpcDiagnostics ? window.VaadinDesktopIpcDiagnostics.frontendArtifactProductionBundleRuntimeOwnerImportNextResolutionStep : "",
           frontendArtifactProductionBundleRuntimeOwnerImportBrowserErrorName: window.VaadinDesktopIpcDiagnostics ? window.VaadinDesktopIpcDiagnostics.frontendArtifactProductionBundleRuntimeOwnerImportBrowserErrorName : "",
+          frontendArtifactProductionBundleRuntimeOwnerImportOrderingVersion: window.VaadinDesktopIpcDiagnostics ? window.VaadinDesktopIpcDiagnostics.frontendArtifactProductionBundleRuntimeOwnerImportOrderingVersion : "",
+          frontendArtifactProductionBundleRuntimeOwnerImportPhasePolicy: window.VaadinDesktopIpcDiagnostics ? window.VaadinDesktopIpcDiagnostics.frontendArtifactProductionBundleRuntimeOwnerImportPhasePolicy : "",
+          frontendArtifactProductionBundleRuntimeOwnerImportOrderingResult: window.VaadinDesktopIpcDiagnostics ? window.VaadinDesktopIpcDiagnostics.frontendArtifactProductionBundleRuntimeOwnerImportOrderingResult : "",
+          frontendArtifactProductionBundleRuntimeOwnerImportOrderingObservedPhases: window.VaadinDesktopIpcDiagnostics ? window.VaadinDesktopIpcDiagnostics.frontendArtifactProductionBundleRuntimeOwnerImportOrderingObservedPhases : "",
+          frontendArtifactProductionBundleRuntimeOwnerImportOrderingAcceptableFailures: window.VaadinDesktopIpcDiagnostics ? window.VaadinDesktopIpcDiagnostics.frontendArtifactProductionBundleRuntimeOwnerImportOrderingAcceptableFailures : "",
           componentProductionOwnerImportOrder: window.VaadinDesktopIpcDiagnostics ? window.VaadinDesktopIpcDiagnostics.componentProductionOwnerImportOrder : "",
+          componentProductionOwnerReuseVersion: window.VaadinDesktopIpcDiagnostics ? window.VaadinDesktopIpcDiagnostics.componentProductionOwnerReuseVersion : "",
+          componentProductionOwnerReusePolicy: window.VaadinDesktopIpcDiagnostics ? window.VaadinDesktopIpcDiagnostics.componentProductionOwnerReusePolicy : "",
+          componentProductionOwnerReuseMode: window.VaadinDesktopIpcDiagnostics ? window.VaadinDesktopIpcDiagnostics.componentProductionOwnerReuseMode : "",
+          componentProductionOwnerReuseAcceptableFailures: window.VaadinDesktopIpcDiagnostics ? window.VaadinDesktopIpcDiagnostics.componentProductionOwnerReuseAcceptableFailures : "",
           componentProductionOwnerReused: !!(window.VaadinDesktopIpcDiagnostics && window.VaadinDesktopIpcDiagnostics.componentProductionOwnerReused),
           componentProductionOwnerReuseReason: window.VaadinDesktopIpcDiagnostics ? window.VaadinDesktopIpcDiagnostics.componentProductionOwnerReuseReason : "",
+          componentProductionOwnerOwnedTags: window.VaadinDesktopIpcDiagnostics ? window.VaadinDesktopIpcDiagnostics.componentProductionOwnerOwnedTags : "",
+          componentProductionOwnerSkippedDefinitions: window.VaadinDesktopIpcDiagnostics ? window.VaadinDesktopIpcDiagnostics.componentProductionOwnerSkippedDefinitions : "",
+          componentProductionOwnerFallbackImports: window.VaadinDesktopIpcDiagnostics ? window.VaadinDesktopIpcDiagnostics.componentProductionOwnerFallbackImports : "",
           componentProductionOwnerDependencyPaths: window.VaadinDesktopIpcDiagnostics ? window.VaadinDesktopIpcDiagnostics.componentProductionOwnerDependencyPaths : "",
           frontendArtifactGeneratedLazyStagedDependencyGraph: window.VaadinDesktopIpcDiagnostics ? window.VaadinDesktopIpcDiagnostics.frontendArtifactGeneratedLazyStagedDependencyGraph : "",
           frontendArtifactDevModeVerified: !!(window.VaadinDesktopIpcDiagnostics && window.VaadinDesktopIpcDiagnostics.frontendArtifactDevModeVerified),
@@ -2238,6 +2250,7 @@ let flowIpcShell = #"""
       let flowLazyDependencyExecutionAttempted = false;
       let productionBundleRuntimeStageAttempted = false;
       let productionBundleRuntimeOwnerImportAttempted = false;
+      var productionBundleRuntimeOwnerOrderingPreflightRecorded = false;
       let textFieldDevBundleStageAttempted = false;
       const flowLazyDependencyPendingElements = new Map();
       const pendingFlowClientXhrRequests = new Map();
@@ -2513,9 +2526,21 @@ let flowIpcShell = #"""
         frontendArtifactProductionBundleRuntimeOwnerImportVaadinGlobalAfter: '',
         frontendArtifactProductionBundleRuntimeOwnerImportNextResolutionStep: '',
         frontendArtifactProductionBundleRuntimeOwnerImportBrowserErrorName: '',
+        frontendArtifactProductionBundleRuntimeOwnerImportOrderingVersion: '',
+        frontendArtifactProductionBundleRuntimeOwnerImportPhasePolicy: '',
+        frontendArtifactProductionBundleRuntimeOwnerImportOrderingResult: '',
+        frontendArtifactProductionBundleRuntimeOwnerImportOrderingObservedPhases: '',
+        frontendArtifactProductionBundleRuntimeOwnerImportOrderingAcceptableFailures: '',
         componentProductionOwnerImportOrder: '',
+        componentProductionOwnerReuseVersion: '',
+        componentProductionOwnerReusePolicy: '',
+        componentProductionOwnerReuseMode: '',
+        componentProductionOwnerReuseAcceptableFailures: '',
         componentProductionOwnerReused: false,
         componentProductionOwnerReuseReason: '',
+        componentProductionOwnerOwnedTags: '',
+        componentProductionOwnerSkippedDefinitions: '',
+        componentProductionOwnerFallbackImports: '',
         componentProductionOwnerDependencyPaths: '',
         frontendArtifactDevModeVerified: false,
         frontendArtifactDevModePath: '',
@@ -4611,10 +4636,46 @@ let flowIpcShell = #"""
             manifest.productionBundleRuntimeOwnerImportNextResolutionStep
             || runtime.productionBundleRuntimeOwnerImportNextResolutionStep
             || '';
+          window.VaadinDesktopIpcDiagnostics.frontendArtifactProductionBundleRuntimeOwnerImportOrderingVersion =
+            manifest.productionBundleRuntimeOwnerImportOrderingVersion
+            || runtime.productionBundleRuntimeOwnerImportOrderingVersion
+            || '';
+          window.VaadinDesktopIpcDiagnostics.frontendArtifactProductionBundleRuntimeOwnerImportPhasePolicy =
+            manifest.productionBundleRuntimeOwnerImportPhasePolicy
+            || runtime.productionBundleRuntimeOwnerImportPhasePolicy
+            || '';
+          window.VaadinDesktopIpcDiagnostics.frontendArtifactProductionBundleRuntimeOwnerImportOrderingResult =
+            manifest.productionBundleRuntimeOwnerImportOrderingResult
+            || runtime.productionBundleRuntimeOwnerImportOrderingResult
+            || '';
+          window.VaadinDesktopIpcDiagnostics.frontendArtifactProductionBundleRuntimeOwnerImportOrderingObservedPhases =
+            manifest.productionBundleRuntimeOwnerImportOrderingObservedPhases
+            || runtime.productionBundleRuntimeOwnerImportOrderingObservedPhases
+            || '';
+          window.VaadinDesktopIpcDiagnostics.frontendArtifactProductionBundleRuntimeOwnerImportOrderingAcceptableFailures =
+            manifest.productionBundleRuntimeOwnerImportOrderingAcceptableFailures
+            || runtime.productionBundleRuntimeOwnerImportOrderingAcceptableFailures
+            || '';
+          window.VaadinDesktopIpcDiagnostics.componentProductionOwnerReuseVersion =
+            manifest.componentProductionOwnerReuseVersion || runtime.componentProductionOwnerReuseVersion || '';
+          window.VaadinDesktopIpcDiagnostics.componentProductionOwnerReusePolicy =
+            manifest.componentProductionOwnerReusePolicy || runtime.componentProductionOwnerReusePolicy || '';
+          window.VaadinDesktopIpcDiagnostics.componentProductionOwnerReuseMode =
+            manifest.componentProductionOwnerReuseMode || runtime.componentProductionOwnerReuseMode || '';
+          window.VaadinDesktopIpcDiagnostics.componentProductionOwnerReuseAcceptableFailures =
+            manifest.componentProductionOwnerReuseAcceptableFailures
+            || runtime.componentProductionOwnerReuseAcceptableFailures
+            || '';
           window.VaadinDesktopIpcDiagnostics.componentProductionOwnerReused =
             manifest.componentProductionOwnerReused === true || runtime.componentProductionOwnerReused === true;
           window.VaadinDesktopIpcDiagnostics.componentProductionOwnerReuseReason =
             manifest.componentProductionOwnerReuseReason || runtime.componentProductionOwnerReuseReason || '';
+          window.VaadinDesktopIpcDiagnostics.componentProductionOwnerOwnedTags =
+            manifest.componentProductionOwnerOwnedTags || runtime.componentProductionOwnerOwnedTags || '';
+          window.VaadinDesktopIpcDiagnostics.componentProductionOwnerSkippedDefinitions =
+            manifest.componentProductionOwnerSkippedDefinitions || runtime.componentProductionOwnerSkippedDefinitions || '';
+          window.VaadinDesktopIpcDiagnostics.componentProductionOwnerFallbackImports =
+            manifest.componentProductionOwnerFallbackImports || runtime.componentProductionOwnerFallbackImports || '';
           window.VaadinDesktopIpcDiagnostics.componentProductionOwnerDependencyPaths =
             manifest.componentProductionOwnerDependencyPaths || runtime.componentProductionOwnerDependencyPaths || '';
           window.VaadinDesktopIpcDiagnostics.componentProductionOwnerImportOrder =
@@ -4829,8 +4890,26 @@ let flowIpcShell = #"""
             resource.productionBundleRuntimeOwnerImported === true,
           productionBundleRuntimeOwnerImportNextResolutionStep:
             resource.productionBundleRuntimeOwnerImportNextResolutionStep || '',
+          productionBundleRuntimeOwnerImportOrderingVersion:
+            resource.productionBundleRuntimeOwnerImportOrderingVersion || '',
+          productionBundleRuntimeOwnerImportPhasePolicy:
+            resource.productionBundleRuntimeOwnerImportPhasePolicy || '',
+          productionBundleRuntimeOwnerImportOrderingResult:
+            resource.productionBundleRuntimeOwnerImportOrderingResult || '',
+          productionBundleRuntimeOwnerImportOrderingObservedPhases:
+            resource.productionBundleRuntimeOwnerImportOrderingObservedPhases || '',
+          productionBundleRuntimeOwnerImportOrderingAcceptableFailures:
+            resource.productionBundleRuntimeOwnerImportOrderingAcceptableFailures || '',
+          componentProductionOwnerReuseVersion: resource.componentProductionOwnerReuseVersion || '',
+          componentProductionOwnerReusePolicy: resource.componentProductionOwnerReusePolicy || '',
+          componentProductionOwnerReuseMode: resource.componentProductionOwnerReuseMode || '',
+          componentProductionOwnerReuseAcceptableFailures:
+            resource.componentProductionOwnerReuseAcceptableFailures || '',
           componentProductionOwnerReused: resource.componentProductionOwnerReused === true,
           componentProductionOwnerReuseReason: resource.componentProductionOwnerReuseReason || '',
+          componentProductionOwnerOwnedTags: resource.componentProductionOwnerOwnedTags || '',
+          componentProductionOwnerSkippedDefinitions: resource.componentProductionOwnerSkippedDefinitions || '',
+          componentProductionOwnerFallbackImports: resource.componentProductionOwnerFallbackImports || '',
           componentProductionOwnerDependencyPaths: resource.componentProductionOwnerDependencyPaths || '',
           componentProductionOwnerImportOrder: resource.componentProductionOwnerImportOrder || '',
           legacyShimSuccessPath: resource.legacyShimSuccessPath === true
@@ -5519,6 +5598,39 @@ let flowIpcShell = #"""
             extra && extra.productionBundleRuntimeOwnerImportBrowserErrorName
               ? extra.productionBundleRuntimeOwnerImportBrowserErrorName
               : '',
+          productionBundleRuntimeOwnerImportOrderingVersion:
+            extra && extra.productionBundleRuntimeOwnerImportOrderingVersion
+              ? extra.productionBundleRuntimeOwnerImportOrderingVersion
+              : (resource.productionBundleRuntimeOwnerImportOrderingVersion || ''),
+          productionBundleRuntimeOwnerImportPhasePolicy:
+            extra && extra.productionBundleRuntimeOwnerImportPhasePolicy
+              ? extra.productionBundleRuntimeOwnerImportPhasePolicy
+              : (resource.productionBundleRuntimeOwnerImportPhasePolicy || ''),
+          productionBundleRuntimeOwnerImportOrderingResult:
+            extra && extra.productionBundleRuntimeOwnerImportOrderingResult
+              ? extra.productionBundleRuntimeOwnerImportOrderingResult
+              : (resource.productionBundleRuntimeOwnerImportOrderingResult || ''),
+          productionBundleRuntimeOwnerImportOrderingObservedPhases:
+            extra && extra.productionBundleRuntimeOwnerImportOrderingObservedPhases
+              ? extra.productionBundleRuntimeOwnerImportOrderingObservedPhases
+              : (resource.productionBundleRuntimeOwnerImportOrderingObservedPhases || ''),
+          productionBundleRuntimeOwnerImportOrderingAcceptableFailures:
+            extra && extra.productionBundleRuntimeOwnerImportOrderingAcceptableFailures
+              ? extra.productionBundleRuntimeOwnerImportOrderingAcceptableFailures
+              : (resource.productionBundleRuntimeOwnerImportOrderingAcceptableFailures || ''),
+          componentProductionOwnerReuseVersion: extra && extra.componentProductionOwnerReuseVersion
+            ? extra.componentProductionOwnerReuseVersion
+            : (resource.componentProductionOwnerReuseVersion || ''),
+          componentProductionOwnerReusePolicy: extra && extra.componentProductionOwnerReusePolicy
+            ? extra.componentProductionOwnerReusePolicy
+            : (resource.componentProductionOwnerReusePolicy || ''),
+          componentProductionOwnerReuseMode: extra && extra.componentProductionOwnerReuseMode
+            ? extra.componentProductionOwnerReuseMode
+            : (resource.componentProductionOwnerReuseMode || ''),
+          componentProductionOwnerReuseAcceptableFailures: extra
+            && extra.componentProductionOwnerReuseAcceptableFailures
+            ? extra.componentProductionOwnerReuseAcceptableFailures
+            : (resource.componentProductionOwnerReuseAcceptableFailures || ''),
           componentProductionOwnerReused: extra
             && typeof extra.componentProductionOwnerReused === 'boolean'
             ? extra.componentProductionOwnerReused
@@ -5526,6 +5638,15 @@ let flowIpcShell = #"""
           componentProductionOwnerReuseReason: extra && extra.componentProductionOwnerReuseReason
             ? extra.componentProductionOwnerReuseReason
             : (resource.componentProductionOwnerReuseReason || ''),
+          componentProductionOwnerOwnedTags: extra && extra.componentProductionOwnerOwnedTags
+            ? extra.componentProductionOwnerOwnedTags
+            : (resource.componentProductionOwnerOwnedTags || ''),
+          componentProductionOwnerSkippedDefinitions: extra && extra.componentProductionOwnerSkippedDefinitions
+            ? extra.componentProductionOwnerSkippedDefinitions
+            : (resource.componentProductionOwnerSkippedDefinitions || ''),
+          componentProductionOwnerFallbackImports: extra && extra.componentProductionOwnerFallbackImports
+            ? extra.componentProductionOwnerFallbackImports
+            : (resource.componentProductionOwnerFallbackImports || ''),
           componentProductionOwnerDependencyPaths: extra && extra.componentProductionOwnerDependencyPaths
             ? extra.componentProductionOwnerDependencyPaths
             : (resource.componentProductionOwnerDependencyPaths || ''),
@@ -5600,6 +5721,12 @@ let flowIpcShell = #"""
       function componentFrontendResourcePriority(resource) {
         if (!resource || typeof resource.path !== 'string') {
           return 100;
+        }
+        if (resource.productionBundleRuntimeArtifact === true) {
+          return 5;
+        }
+        if (resource.productionOwnerDependencyResource === true) {
+          return 6;
         }
         if (resource.generatedLazyBundleChunk === true || resource.generatedLazyBundleDependency === true) {
           return 90;
@@ -6799,12 +6926,48 @@ let flowIpcShell = #"""
               window.VaadinDesktopIpcDiagnostics.frontendArtifactProductionBundleRuntimeOwnerImportNextResolutionStep =
                 payload.productionBundleRuntimeOwnerImportNextResolutionStep
                 || window.VaadinDesktopIpcDiagnostics.frontendArtifactProductionBundleRuntimeOwnerImportNextResolutionStep;
+              window.VaadinDesktopIpcDiagnostics.frontendArtifactProductionBundleRuntimeOwnerImportOrderingVersion =
+                payload.productionBundleRuntimeOwnerImportOrderingVersion
+                || window.VaadinDesktopIpcDiagnostics.frontendArtifactProductionBundleRuntimeOwnerImportOrderingVersion;
+              window.VaadinDesktopIpcDiagnostics.frontendArtifactProductionBundleRuntimeOwnerImportPhasePolicy =
+                payload.productionBundleRuntimeOwnerImportPhasePolicy
+                || window.VaadinDesktopIpcDiagnostics.frontendArtifactProductionBundleRuntimeOwnerImportPhasePolicy;
+              window.VaadinDesktopIpcDiagnostics.frontendArtifactProductionBundleRuntimeOwnerImportOrderingResult =
+                payload.productionBundleRuntimeOwnerImportOrderingResult
+                || window.VaadinDesktopIpcDiagnostics.frontendArtifactProductionBundleRuntimeOwnerImportOrderingResult;
+              window.VaadinDesktopIpcDiagnostics.frontendArtifactProductionBundleRuntimeOwnerImportOrderingObservedPhases =
+                payload.productionBundleRuntimeOwnerImportOrderingObservedPhases
+                || window.VaadinDesktopIpcDiagnostics.frontendArtifactProductionBundleRuntimeOwnerImportOrderingObservedPhases;
+              window.VaadinDesktopIpcDiagnostics.frontendArtifactProductionBundleRuntimeOwnerImportOrderingAcceptableFailures =
+                payload.productionBundleRuntimeOwnerImportOrderingAcceptableFailures
+                || window.VaadinDesktopIpcDiagnostics.frontendArtifactProductionBundleRuntimeOwnerImportOrderingAcceptableFailures;
+              window.VaadinDesktopIpcDiagnostics.componentProductionOwnerReuseVersion =
+                payload.componentProductionOwnerReuseVersion
+                || window.VaadinDesktopIpcDiagnostics.componentProductionOwnerReuseVersion;
+              window.VaadinDesktopIpcDiagnostics.componentProductionOwnerReusePolicy =
+                payload.componentProductionOwnerReusePolicy
+                || window.VaadinDesktopIpcDiagnostics.componentProductionOwnerReusePolicy;
+              window.VaadinDesktopIpcDiagnostics.componentProductionOwnerReuseMode =
+                payload.componentProductionOwnerReuseMode
+                || window.VaadinDesktopIpcDiagnostics.componentProductionOwnerReuseMode;
+              window.VaadinDesktopIpcDiagnostics.componentProductionOwnerReuseAcceptableFailures =
+                payload.componentProductionOwnerReuseAcceptableFailures
+                || window.VaadinDesktopIpcDiagnostics.componentProductionOwnerReuseAcceptableFailures;
               window.VaadinDesktopIpcDiagnostics.componentProductionOwnerReused =
                 payload.componentProductionOwnerReused === true
                 || window.VaadinDesktopIpcDiagnostics.componentProductionOwnerReused;
               window.VaadinDesktopIpcDiagnostics.componentProductionOwnerReuseReason =
                 payload.componentProductionOwnerReuseReason
                 || window.VaadinDesktopIpcDiagnostics.componentProductionOwnerReuseReason;
+              window.VaadinDesktopIpcDiagnostics.componentProductionOwnerOwnedTags =
+                payload.componentProductionOwnerOwnedTags
+                || window.VaadinDesktopIpcDiagnostics.componentProductionOwnerOwnedTags;
+              window.VaadinDesktopIpcDiagnostics.componentProductionOwnerSkippedDefinitions =
+                payload.componentProductionOwnerSkippedDefinitions
+                || window.VaadinDesktopIpcDiagnostics.componentProductionOwnerSkippedDefinitions;
+              window.VaadinDesktopIpcDiagnostics.componentProductionOwnerFallbackImports =
+                payload.componentProductionOwnerFallbackImports
+                || window.VaadinDesktopIpcDiagnostics.componentProductionOwnerFallbackImports;
               window.VaadinDesktopIpcDiagnostics.componentProductionOwnerDependencyPaths =
                 payload.componentProductionOwnerDependencyPaths
                 || window.VaadinDesktopIpcDiagnostics.componentProductionOwnerDependencyPaths;
@@ -6857,6 +7020,19 @@ let flowIpcShell = #"""
             error && error.message ? error.message : String(error);
           window.VaadinDesktopIpcDiagnostics.flowLazyDependencyFailureLayer =
             'flow-lazy-dependency-execution-dispatch';
+        }
+        try {
+          await maybeImportProductionBundleRuntimeOwner();
+        } catch (error) {
+          const message = error && error.message ? error.message : String(error);
+          window.VaadinDesktopIpcDiagnostics.frontendArtifactProductionBundleRuntimeOwnerImportAttempted = true;
+          window.VaadinDesktopIpcDiagnostics.frontendArtifactProductionBundleRuntimeOwnerImported = false;
+          window.VaadinDesktopIpcDiagnostics.frontendArtifactProductionBundleRuntimeOwnerExecutionResult =
+            'strict-blocker:production-owner-browser-import-failed:dispatch';
+          window.VaadinDesktopIpcDiagnostics.frontendArtifactProductionBundleRuntimeOwnerFailureLayer =
+            'production-owner-browser-import-failed';
+          window.VaadinDesktopIpcDiagnostics.frontendArtifactProductionBundleRuntimeOwnerBrowserError = message;
+          window.VaadinDesktopIpcDiagnostics.frontendArtifactProductionBundleRuntimeOwnerBlocker = true;
         }
         try {
           await maybeExecuteVaadinWebComponentResource();
@@ -8422,12 +8598,6 @@ let flowIpcShell = #"""
       function classifyProductionOwnerImportFailure(error, preflight) {
         const message = error && error.message ? error.message : String(error || '');
         const lower = message.toLowerCase();
-        if (preflight && preflight.missingDependencyPaths && preflight.missingDependencyPaths.length > 0) {
-          return 'production-owner-missing-real-artifact';
-        }
-        if (preflight && preflight.pendingPaths && preflight.pendingPaths.length > 0) {
-          return 'production-owner-relative-import-unresolved';
-        }
         if (lower.includes('already been defined')
             || lower.includes('cannot define multiple custom elements')
             || lower.includes('customelementregistry')
@@ -8441,6 +8611,12 @@ let flowIpcShell = #"""
             || lower.includes('relative references must start')
             || lower.includes('module specifier')
             || lower.includes('failed to fetch dynamically imported module')) {
+          return 'production-owner-relative-import-unresolved';
+        }
+        if (preflight && preflight.missingDependencyPaths && preflight.missingDependencyPaths.length > 0) {
+          return 'production-owner-missing-real-artifact';
+        }
+        if (preflight && preflight.pendingPaths && preflight.pendingPaths.length > 0) {
           return 'production-owner-relative-import-unresolved';
         }
         return 'production-owner-browser-import-failed';
@@ -8467,6 +8643,289 @@ let flowIpcShell = #"""
           proof.push('loadondemand-present-after-owner-import');
         }
         return Array.from(new Set(proof)).join(',');
+      }
+
+      function productionOwnerImportPhase() {
+        const componentImportStarted = componentFrontendResourceExecutedPaths.size > 0
+          || componentFrontendResourceExecutedTags.size > 0
+          || window.VaadinDesktopIpcDiagnostics.vaadinWebComponentResourceExecuted === true
+          || window.VaadinDesktopIpcDiagnostics.frontendArtifactTextFieldExecuted === true
+          || window.VaadinDesktopIpcDiagnostics.vaadinSecondWebComponentTagDefined === true;
+        return componentImportStarted ? 'after-component-imports' : 'before-component-imports';
+      }
+
+      function productionOwnerOrderingResult(phase, preflight, failureLayer) {
+        const base = phase === 'before-component-imports'
+          ? 'owner-first-import-attempted-before-component-focused-imports'
+          : 'after-component-import-fallback-observed';
+        const graph = preflight && preflight.dependencyGraphClosed === true
+          ? 'dependency-graph-closed-for-requested-artifacts'
+          : 'dependency-graph-pending';
+        const failure = failureLayer ? ('failureLayer=' + failureLayer) : 'failureLayer=none';
+        return base + ';' + graph + ';' + failure;
+      }
+
+      function mergedProductionOwnerOrderingResult(next) {
+        const existing =
+          window.VaadinDesktopIpcDiagnostics.frontendArtifactProductionBundleRuntimeOwnerImportOrderingResult || '';
+        if (!existing || existing === next) {
+          return next;
+        }
+        if (existing.includes(next)) {
+          return existing;
+        }
+        return existing + '|' + next;
+      }
+
+      function componentProductionOwnerReuseDiagnostics(resource, componentTag) {
+        const ownerImported =
+          window.VaadinDesktopIpcDiagnostics.frontendArtifactProductionBundleRuntimeOwnerImported === true;
+        const ownerAttempted =
+          window.VaadinDesktopIpcDiagnostics.frontendArtifactProductionBundleRuntimeOwnerImportAttempted === true;
+        const ownerFailureLayer =
+          window.VaadinDesktopIpcDiagnostics.frontendArtifactProductionBundleRuntimeOwnerFailureLayer || '';
+        const ownerPhase =
+          window.VaadinDesktopIpcDiagnostics.frontendArtifactProductionBundleRuntimeOwnerImportPhase || '';
+        const ownerHasTag = ownerImported && componentTag && !!customElements.get(componentTag);
+        let mode = ownerHasTag ? 'owner-owned-custom-elements' : 'focused-component-import-fallback';
+        let reason = '';
+        if (ownerHasTag) {
+          reason = 'owner import registered ' + componentTag + ' before focused component import';
+        } else if (ownerAttempted) {
+          reason = 'owner import failed before component import; failureLayer='
+            + ownerFailureLayer + ';phase=' + ownerPhase;
+        } else {
+          reason = 'owner import not attempted before this focused component import';
+        }
+        const details = {
+          componentProductionOwnerReuseVersion:
+            resource.componentProductionOwnerReuseVersion || 'flow-ipc-component-owner-reuse-v1_16',
+          componentProductionOwnerReusePolicy:
+            resource.componentProductionOwnerReusePolicy || 'reuse-owner-owned-custom-elements-before-focused-imports-v1_16',
+          componentProductionOwnerReuseMode: mode,
+          componentProductionOwnerReuseAcceptableFailures:
+            resource.componentProductionOwnerReuseAcceptableFailures
+            || 'owner-import-failed-before-component-import,owner-import-succeeded-but-component-class-export-unreachable,owner-side-effects-global-but-focused-entry-still-required,vaadin-production-artifact-does-not-expose-reusable-owner-contract,blob-module-identity-cannot-safely-merge-owner-and-component-lifetime',
+          componentProductionOwnerReused: ownerHasTag,
+          componentProductionOwnerReuseReason: reason,
+          componentProductionOwnerOwnedTags: ownerHasTag ? componentTag : '',
+          componentProductionOwnerSkippedDefinitions: ownerHasTag ? componentTag : '',
+          componentProductionOwnerFallbackImports: ownerHasTag ? '' : (resource.path || ''),
+          componentProductionOwnerDependencyPaths:
+            resource.componentProductionOwnerDependencyPaths || 'vaadin-dev-bundle/webapp/VAADIN/build/indexhtml-BfYYZi8S.js',
+          componentProductionOwnerImportOrder: ownerPhase
+            ? ('production-owner-' + ownerPhase + '-then-focused-component-import-v1_16')
+            : (resource.componentProductionOwnerImportOrder || 'focused-component-import-before-owner-decision-v1_16')
+        };
+        applyComponentProductionOwnerReuseDiagnostics(details);
+        return details;
+      }
+
+      function applyComponentProductionOwnerReuseDiagnostics(details) {
+        if (!details) {
+          return;
+        }
+        window.VaadinDesktopIpcDiagnostics.componentProductionOwnerReuseVersion =
+          details.componentProductionOwnerReuseVersion || '';
+        window.VaadinDesktopIpcDiagnostics.componentProductionOwnerReusePolicy =
+          details.componentProductionOwnerReusePolicy || '';
+        window.VaadinDesktopIpcDiagnostics.componentProductionOwnerReuseMode =
+          details.componentProductionOwnerReuseMode || '';
+        window.VaadinDesktopIpcDiagnostics.componentProductionOwnerReuseAcceptableFailures =
+          details.componentProductionOwnerReuseAcceptableFailures || '';
+        window.VaadinDesktopIpcDiagnostics.componentProductionOwnerReused =
+          details.componentProductionOwnerReused === true;
+        window.VaadinDesktopIpcDiagnostics.componentProductionOwnerReuseReason =
+          details.componentProductionOwnerReuseReason || '';
+        window.VaadinDesktopIpcDiagnostics.componentProductionOwnerOwnedTags =
+          details.componentProductionOwnerOwnedTags || '';
+        window.VaadinDesktopIpcDiagnostics.componentProductionOwnerSkippedDefinitions =
+          details.componentProductionOwnerSkippedDefinitions || '';
+        window.VaadinDesktopIpcDiagnostics.componentProductionOwnerFallbackImports =
+          details.componentProductionOwnerFallbackImports || '';
+        window.VaadinDesktopIpcDiagnostics.componentProductionOwnerDependencyPaths =
+          details.componentProductionOwnerDependencyPaths || '';
+        window.VaadinDesktopIpcDiagnostics.componentProductionOwnerImportOrder =
+          details.componentProductionOwnerImportOrder || '';
+      }
+
+      function recordProductionOwnerOrderingPreflight(resource, source, preflight, phase) {
+        if (productionBundleRuntimeOwnerOrderingPreflightRecorded || phase !== 'before-component-imports') {
+          return;
+        }
+        productionBundleRuntimeOwnerOrderingPreflightRecorded = true;
+        const registryBefore = vaadinCustomElementRegistrySnapshot();
+        const globalBefore = vaadinGlobalSnapshot();
+        const failureLayer = 'production-owner-component-reuse-contract-missing';
+        const importVersion = resource.productionBundleRuntimeOwnerImportVersion
+          || 'flow-ipc-production-owner-import-v1_14';
+        const ownerIdentity = resource.productionBundleRuntimeOwnerModuleIdentity
+          || ('production-owner-v1_13:' + resource.path);
+        const importModuleIdentity = 'production-owner-import-v1_14:' + resource.path;
+        const observedPhases = mergeCsv(
+          window.VaadinDesktopIpcDiagnostics.frontendArtifactProductionBundleRuntimeOwnerImportOrderingObservedPhases,
+          [phase]);
+        const preflightExtra = {
+          owner: 'production-bundle-runtime',
+          cleanupPolicy: 'retain-for-window-lifetime-owner-ordering-preflight-v1_16',
+          runtimeResolverContractVersion: resource.runtimeResolverContractVersion
+            || 'flow-ipc-frontend-runtime-resolver-v1_10',
+          logicalRequestId: resource.logicalRequestId || 'production-runtime:indexhtml:v1_10',
+          pathMapping: resource.pathMapping || 'stats-bundle-import-to-dev-bundle-artifact',
+          stageUrlPolicy: 'blob-module-url-owner-ordering-preflight-v1_16',
+          cachePolicy: 'retain-per-owner-import-module-identity',
+          cleanupOwnership: 'window-lifetime-owner-ordering-preflight-cache',
+          blockerClassification: 'flow-ipc-production-owner-ordering-v1_16',
+          productionBundleRuntimeVersion: resource.productionBundleRuntimeVersion
+            || 'flow-ipc-production-runtime-v1_10',
+          productionBundleRuntimeRegistrySource: resource.productionBundleRuntimeRegistrySource
+            || 'vaadin-dev-bundle-stats-runtime-registry-v1_10',
+          productionBundleRuntimeStatsSource: resource.productionBundleRuntimeStatsSource || '',
+          productionBundleRuntimeSelectedArtifact: resource.productionBundleRuntimeSelectedArtifact || resource.path,
+          productionBundleRuntimeDependencyChain: resource.productionBundleRuntimeDependencyChain || '',
+          productionBundleRuntimeModuleIdentity: resource.productionBundleRuntimeModuleIdentity || resource.path,
+          productionBundleRuntimeExecutionPolicy: resource.productionBundleRuntimeExecutionPolicy
+            || 'stage-execution-attempt-production-bundle-runtime-v1_10',
+          productionBundleRuntimeBlockerVersion: resource.productionBundleRuntimeBlockerVersion
+            || 'flow-ipc-production-runtime-v1_10',
+          productionBundleRuntimeFailureLayer: resource.productionBundleRuntimeFailureLayer
+            || 'production-runtime-ownership-not-yet-separated-from-focused-component-entry-imports',
+          productionBundleRuntimeNextResolutionStep: resource.productionBundleRuntimeNextResolutionStep || '',
+          productionBundleRuntimeOwnerVersion: resource.productionBundleRuntimeOwnerVersion
+            || 'flow-ipc-production-owner-v1_13',
+          productionBundleRuntimeOwner: resource.productionBundleRuntimeOwner
+            || 'flow-ipc-production-bundle-runtime',
+          productionBundleRuntimeEntryArtifact: resource.productionBundleRuntimeEntryArtifact || resource.path,
+          productionBundleRuntimeSource: resource.productionBundleRuntimeSource || 'vaadin-dev-bundle-stats',
+          productionBundleRuntimeSelectedBy: resource.productionBundleRuntimeSelectedBy
+            || 'stats-entrypoint-or-focused-production-entry',
+          productionBundleRuntimeOwnerModuleIdentity: ownerIdentity,
+          productionBundleRuntimeOwnerLifecycle:
+            'created,staged,owner-first-preflight-blocked,component-reuse-fallback,cleanup-owned',
+          productionBundleRuntimeOwnerExecutionPolicy:
+            resource.productionBundleRuntimeOwnerExecutionPolicy
+            || 'stage-owner-contract-production-bundle-runtime-v1_13',
+          productionBundleRuntimeOwnerStageUrlPolicy:
+            resource.productionBundleRuntimeOwnerStageUrlPolicy || 'temporary-blob-module-url-owner-namespace-v1_13',
+          productionBundleRuntimeOwnerCachePolicy: 'retain-per-owner-import-module-identity',
+          productionBundleRuntimeOwnerCacheStatus:
+            frontendProductionOwnerImportUrlCache.has(resource.path) ? 'hit' : 'miss',
+          productionBundleRuntimeOwnerCleanupStrategy: 'cleanup-owned-window-lifetime-owner-import',
+          productionBundleRuntimeOwnerExecutionResult:
+            'strict-blocker:' + failureLayer + ':' + resource.path,
+          productionBundleRuntimeOwnerSideEffectProof:
+            'owner-first-preflight-reached-before-component-imports-but-owner-module-not-reusable',
+          productionBundleRuntimeOwnerFailureLayer: failureLayer,
+          productionBundleRuntimeOwnerBrowserError: '',
+          productionBundleRuntimeOwnerBlockerVersion: 'flow-ipc-production-owner-ordering-v1_16',
+          productionBundleRuntimeOwnerNextResolutionStep:
+            'run the owner through a host-owned resource scheme or Vaadin-supported production owner contract before focused component imports can reuse it',
+          productionBundleRuntimeOwnerRegistryBefore: registryBefore,
+          productionBundleRuntimeOwnerRegistryAfter: registryBefore,
+          productionBundleRuntimeOwnerDuplicateTag: '',
+          productionBundleRuntimeOwnerFirstDefinitionOwner: '',
+          productionBundleRuntimeOwnerSecondDefinitionOwner: '',
+          productionBundleRuntimeOwnerImportVersion: importVersion,
+          productionBundleRuntimeOwnerImportPolicy:
+            resource.productionBundleRuntimeOwnerImportPolicy
+            || 'controlled-owner-dynamic-import-after-component-graph-v1_14',
+          productionBundleRuntimeOwnerImportArtifact:
+            resource.productionBundleRuntimeOwnerImportArtifact || resource.path,
+          productionBundleRuntimeOwnerImportPhase: phase,
+          productionBundleRuntimeOwnerImportPhaseCandidates:
+            resource.productionBundleRuntimeOwnerImportPhaseCandidates
+            || 'isolated-preflight,before-component-imports,after-component-imports',
+          productionBundleRuntimeOwnerImportDiagnosticModes:
+            resource.productionBundleRuntimeOwnerImportDiagnosticModes
+            || 'isolated-preflight:available-not-enabled,before-component-imports:available-not-enabled,after-component-imports:default',
+          productionBundleRuntimeOwnerImportExpectedSideEffects:
+            resource.productionBundleRuntimeOwnerImportExpectedSideEffects || '',
+          productionBundleRuntimeOwnerImportAcceptableFailures:
+            resource.productionBundleRuntimeOwnerImportAcceptableFailures || '',
+          productionBundleRuntimeOwnerImportRewriteStrategy:
+            resource.productionBundleRuntimeOwnerImportRewriteStrategy
+            || 'rewrite-relative-dev-bundle-dependencies-before-owner-import-v1_14',
+          productionBundleRuntimeOwnerImportDependencyPaths:
+            resource.productionBundleRuntimeOwnerImportDependencyPaths || resource.path,
+          productionBundleRuntimeOwnerImportResolvedDependencyPaths: preflight.resolvedPaths.join(','),
+          productionBundleRuntimeOwnerImportUnresolvedSpecifiers: preflight.unresolvedSpecifiers.join(','),
+          productionBundleRuntimeOwnerImportDependencyRewriteResult: preflight.dependencyRewriteResult,
+          productionBundleRuntimeOwnerDependencyResolverVersion:
+            resource.productionBundleRuntimeOwnerDependencyResolverVersion
+            || 'flow-ipc-production-owner-deps-v1_15',
+          productionBundleRuntimeOwnerDependencyResolverRoot:
+            resource.productionBundleRuntimeOwnerDependencyResolverRoot
+            || 'vaadin-dev-bundle/webapp/VAADIN/build/',
+          productionBundleRuntimeOwnerDependencyResolverPolicy:
+            resource.productionBundleRuntimeOwnerDependencyResolverPolicy
+            || 'owner-scoped-recursive-relative-import-graph-v1_15',
+          productionBundleRuntimeOwnerDependencyResolverExpectedArtifacts:
+            resource.productionBundleRuntimeOwnerDependencyResolverExpectedArtifacts || '',
+          productionBundleRuntimeOwnerDependencyResolverAcceptableFailures:
+            resource.productionBundleRuntimeOwnerDependencyResolverAcceptableFailures || '',
+          productionBundleRuntimeOwnerDependencyResolverModuleIdentityNamespace:
+            resource.productionBundleRuntimeOwnerDependencyResolverModuleIdentityNamespace
+            || 'production-owner-deps-v1_15',
+          productionBundleRuntimeOwnerDependencyResolverRootArtifact:
+            resource.productionBundleRuntimeOwnerDependencyResolverRootArtifact || resource.path,
+          productionBundleRuntimeOwnerDependencyGraphClosed: preflight.dependencyGraphClosed === true,
+          productionBundleRuntimeOwnerDependencyGraphTotalSpecifierCount: preflight.totalSpecifierCount,
+          productionBundleRuntimeOwnerDependencyGraphResolvedCount: preflight.resolvedCount,
+          productionBundleRuntimeOwnerDependencyGraphMissingCount: preflight.missingCount,
+          productionBundleRuntimeOwnerDependencyGraphStagedCount: preflight.stagedCount,
+          productionBundleRuntimeOwnerDependencyGraphMaxDepth: preflight.maxDepth,
+          productionBundleRuntimeOwnerDependencyClassifications:
+            preflight.dependencyClassifications.join('|'),
+          productionBundleRuntimeOwnerImportMissingDependencyPaths:
+            preflight.missingDependencyPaths.join(','),
+          productionBundleRuntimeOwnerImportMissingSpecifiers:
+            preflight.missingSpecifiers.join(','),
+          productionBundleRuntimeOwnerImportStageCount: preflight.resolvedPaths.length,
+          productionBundleRuntimeOwnerImportModuleIdentity: importModuleIdentity,
+          productionBundleRuntimeOwnerImportVaadinGlobalBefore: globalBefore,
+          productionBundleRuntimeOwnerImportVaadinGlobalAfter: globalBefore,
+          productionBundleRuntimeOwnerImportAttempted: true,
+          productionBundleRuntimeOwnerImported: false,
+          productionBundleRuntimeOwnerImportNextResolutionStep:
+            'component resolver fallback remains required until the owner import can expose reusable side effects',
+          productionBundleRuntimeOwnerImportBrowserErrorName: '',
+          productionBundleRuntimeOwnerImportOrderingVersion:
+            resource.productionBundleRuntimeOwnerImportOrderingVersion
+            || 'flow-ipc-production-owner-ordering-v1_16',
+          productionBundleRuntimeOwnerImportPhasePolicy:
+            resource.productionBundleRuntimeOwnerImportPhasePolicy
+            || 'owner-first-before-component-imports-with-after-component-fallback-v1_16',
+          productionBundleRuntimeOwnerImportOrderingResult:
+            productionOwnerOrderingResult(phase, preflight, failureLayer),
+          productionBundleRuntimeOwnerImportOrderingObservedPhases: observedPhases,
+          productionBundleRuntimeOwnerImportOrderingAcceptableFailures:
+            resource.productionBundleRuntimeOwnerImportOrderingAcceptableFailures || '',
+          componentProductionOwnerReuseVersion:
+            resource.componentProductionOwnerReuseVersion || 'flow-ipc-component-owner-reuse-v1_16',
+          componentProductionOwnerReusePolicy:
+            resource.componentProductionOwnerReusePolicy || 'reuse-owner-owned-custom-elements-before-focused-imports-v1_16',
+          componentProductionOwnerReuseMode: 'focused-component-import-fallback',
+          componentProductionOwnerReuseAcceptableFailures:
+            resource.componentProductionOwnerReuseAcceptableFailures || '',
+          componentProductionOwnerReused: false,
+          componentProductionOwnerReuseReason:
+            'owner import failed before component import; failureLayer=' + failureLayer,
+          componentProductionOwnerOwnedTags: '',
+          componentProductionOwnerSkippedDefinitions: '',
+          componentProductionOwnerFallbackImports:
+            resource.componentProductionOwnerFallbackImports || '',
+          componentProductionOwnerDependencyPaths:
+            resource.componentProductionOwnerDependencyPaths || resource.path,
+          componentProductionOwnerImportOrder:
+            'production-owner-before-focused-component-imports-v1_16',
+          moduleIdentityStrategy: 'production-owner-ordering-preflight-module-identity-v1_16',
+          moduleIdentityKey: 'production-owner-ordering-v1_16:' + phase + ':' + resource.path,
+          importResolutionStrategy:
+            resource.productionBundleRuntimeOwnerImportRewriteStrategy
+            || 'rewrite-relative-dev-bundle-dependencies-before-owner-import-v1_14'
+        };
+        applyProductionOwnerImportDiagnostics(preflightExtra);
+        stageFrontendArtifact(resource, source, 'strict-blocker', null, null, preflightExtra);
       }
 
       function applyProductionOwnerImportDiagnostics(extra) {
@@ -8578,10 +9037,34 @@ let flowIpcShell = #"""
           extra.productionBundleRuntimeOwnerImportNextResolutionStep;
         window.VaadinDesktopIpcDiagnostics.frontendArtifactProductionBundleRuntimeOwnerImportBrowserErrorName =
           extra.productionBundleRuntimeOwnerImportBrowserErrorName || '';
+        window.VaadinDesktopIpcDiagnostics.frontendArtifactProductionBundleRuntimeOwnerImportOrderingVersion =
+          extra.productionBundleRuntimeOwnerImportOrderingVersion || '';
+        window.VaadinDesktopIpcDiagnostics.frontendArtifactProductionBundleRuntimeOwnerImportPhasePolicy =
+          extra.productionBundleRuntimeOwnerImportPhasePolicy || '';
+        window.VaadinDesktopIpcDiagnostics.frontendArtifactProductionBundleRuntimeOwnerImportOrderingResult =
+          extra.productionBundleRuntimeOwnerImportOrderingResult || '';
+        window.VaadinDesktopIpcDiagnostics.frontendArtifactProductionBundleRuntimeOwnerImportOrderingObservedPhases =
+          extra.productionBundleRuntimeOwnerImportOrderingObservedPhases || '';
+        window.VaadinDesktopIpcDiagnostics.frontendArtifactProductionBundleRuntimeOwnerImportOrderingAcceptableFailures =
+          extra.productionBundleRuntimeOwnerImportOrderingAcceptableFailures || '';
+        window.VaadinDesktopIpcDiagnostics.componentProductionOwnerReuseVersion =
+          extra.componentProductionOwnerReuseVersion || '';
+        window.VaadinDesktopIpcDiagnostics.componentProductionOwnerReusePolicy =
+          extra.componentProductionOwnerReusePolicy || '';
+        window.VaadinDesktopIpcDiagnostics.componentProductionOwnerReuseMode =
+          extra.componentProductionOwnerReuseMode || '';
+        window.VaadinDesktopIpcDiagnostics.componentProductionOwnerReuseAcceptableFailures =
+          extra.componentProductionOwnerReuseAcceptableFailures || '';
         window.VaadinDesktopIpcDiagnostics.componentProductionOwnerReused =
           extra.componentProductionOwnerReused === true;
         window.VaadinDesktopIpcDiagnostics.componentProductionOwnerReuseReason =
           extra.componentProductionOwnerReuseReason;
+        window.VaadinDesktopIpcDiagnostics.componentProductionOwnerOwnedTags =
+          extra.componentProductionOwnerOwnedTags || '';
+        window.VaadinDesktopIpcDiagnostics.componentProductionOwnerSkippedDefinitions =
+          extra.componentProductionOwnerSkippedDefinitions || '';
+        window.VaadinDesktopIpcDiagnostics.componentProductionOwnerFallbackImports =
+          extra.componentProductionOwnerFallbackImports || '';
         window.VaadinDesktopIpcDiagnostics.componentProductionOwnerDependencyPaths =
           extra.componentProductionOwnerDependencyPaths;
         window.VaadinDesktopIpcDiagnostics.componentProductionOwnerImportOrder =
@@ -8600,15 +9083,11 @@ let flowIpcShell = #"""
         if (!source) {
           return;
         }
-        if (!window.VaadinDesktopIpcDiagnostics.vaadinWebComponentResourceExecuted
-            && !window.VaadinDesktopIpcDiagnostics.frontendArtifactTextFieldExecuted
-            && componentFrontendResourceExecutedPaths.size === 0) {
-          return;
-        }
         installOpaqueOriginStorageFallbacks();
         installVaadinDevBundleGlobals();
         const preflight = productionOwnerImportPreflight(resource, source);
         if (preflight.pendingPaths && preflight.pendingPaths.length > 0) {
+          recordProductionOwnerOrderingPreflight(resource, source, preflight, productionOwnerImportPhase());
           requestProductionOwnerPendingDependencies(preflight);
           return;
         }
@@ -8616,6 +9095,7 @@ let flowIpcShell = #"""
         productionBundleRuntimeOwnerImportAttempted = true;
         const registryBefore = vaadinCustomElementRegistrySnapshot();
         const globalBefore = vaadinGlobalSnapshot();
+        const importPhase = productionOwnerImportPhase();
         const importVersion = resource.productionBundleRuntimeOwnerImportVersion
           || 'flow-ipc-production-owner-import-v1_14';
         const importModuleIdentity = 'production-owner-import-v1_14:' + resource.path;
@@ -8692,7 +9172,7 @@ let flowIpcShell = #"""
           productionBundleRuntimeOwnerImportArtifact:
             resource.productionBundleRuntimeOwnerImportArtifact || resource.path,
           productionBundleRuntimeOwnerImportPhase:
-            resource.productionBundleRuntimeOwnerImportPhase || 'after-component-imports',
+            importPhase,
           productionBundleRuntimeOwnerImportPhaseCandidates:
             resource.productionBundleRuntimeOwnerImportPhaseCandidates
             || 'isolated-preflight,before-component-imports,after-component-imports',
@@ -8754,13 +9234,44 @@ let flowIpcShell = #"""
             resource.productionBundleRuntimeOwnerImportNextResolutionStep
             || 'if owner import fails, move the production owner to a custom-scheme/file-backed resolver or tighten dependency rewrite/global collision guards around the real indexhtml artifact',
           productionBundleRuntimeOwnerImportBrowserErrorName: '',
+          productionBundleRuntimeOwnerImportOrderingVersion:
+            resource.productionBundleRuntimeOwnerImportOrderingVersion
+            || 'flow-ipc-production-owner-ordering-v1_16',
+          productionBundleRuntimeOwnerImportPhasePolicy:
+            resource.productionBundleRuntimeOwnerImportPhasePolicy
+            || 'owner-first-before-component-imports-with-after-component-fallback-v1_16',
+          productionBundleRuntimeOwnerImportOrderingResult:
+            mergedProductionOwnerOrderingResult(productionOwnerOrderingResult(importPhase, preflight, '')),
+          productionBundleRuntimeOwnerImportOrderingObservedPhases: mergeCsv(
+            window.VaadinDesktopIpcDiagnostics.frontendArtifactProductionBundleRuntimeOwnerImportOrderingObservedPhases,
+            [importPhase]),
+          productionBundleRuntimeOwnerImportOrderingAcceptableFailures:
+            resource.productionBundleRuntimeOwnerImportOrderingAcceptableFailures
+            || 'production-owner-duplicate-custom-element,production-owner-global-collision,production-owner-side-effect-unobservable,production-owner-browser-import-failed,production-owner-component-reuse-contract-missing,production-owner-unsupported-vaadin-production-owner-contract',
+          componentProductionOwnerReuseVersion:
+            resource.componentProductionOwnerReuseVersion || 'flow-ipc-component-owner-reuse-v1_16',
+          componentProductionOwnerReusePolicy:
+            resource.componentProductionOwnerReusePolicy || 'reuse-owner-owned-custom-elements-before-focused-imports-v1_16',
+          componentProductionOwnerReuseMode:
+            resource.componentProductionOwnerReuseMode || 'focused-component-import-fallback',
+          componentProductionOwnerReuseAcceptableFailures:
+            resource.componentProductionOwnerReuseAcceptableFailures
+            || 'owner-import-failed-before-component-import,owner-import-succeeded-but-component-class-export-unreachable,owner-side-effects-global-but-focused-entry-still-required,vaadin-production-artifact-does-not-expose-reusable-owner-contract,blob-module-identity-cannot-safely-merge-owner-and-component-lifetime',
           componentProductionOwnerReused: false,
           componentProductionOwnerReuseReason:
-            'v1.14 runs the production owner import probe after focused component imports; component resolver reuse remains disabled until owner import can safely run first',
+            importPhase === 'before-component-imports'
+              ? 'owner-first import attempted before focused component imports; component resolver will decide reuse after owner result'
+              : 'owner import ran after focused component imports; component resolver reuse remains a fallback decision',
+          componentProductionOwnerOwnedTags: '',
+          componentProductionOwnerSkippedDefinitions: '',
+          componentProductionOwnerFallbackImports:
+            resource.componentProductionOwnerFallbackImports || '',
           componentProductionOwnerDependencyPaths:
             resource.componentProductionOwnerDependencyPaths || resource.path,
           componentProductionOwnerImportOrder:
-            resource.componentProductionOwnerImportOrder || 'component-focused-imports-before-owner-import-probe-v1_14',
+            importPhase === 'before-component-imports'
+              ? 'production-owner-before-focused-component-imports-v1_16'
+              : 'component-focused-imports-before-owner-import-fallback-v1_16',
           moduleIdentityStrategy: 'production-owner-import-module-identity-v1_14',
           moduleIdentityKey: importModuleIdentity,
           importResolutionStrategy:
@@ -8778,6 +9289,11 @@ let flowIpcShell = #"""
             productionBundleRuntimeOwnerExecutionResult: 'execution-failed:' + resource.path,
             productionBundleRuntimeOwnerFailureLayer: 'production-owner-browser-import-failed',
             productionBundleRuntimeOwnerBrowserError: 'production-owner-import-stage-url-missing',
+            productionBundleRuntimeOwnerImportOrderingResult:
+              mergedProductionOwnerOrderingResult(
+                productionOwnerOrderingResult(importPhase, preflight, 'production-owner-browser-import-failed')),
+            componentProductionOwnerReuseReason:
+              'owner import failed before component import; failureLayer=production-owner-browser-import-failed',
             browserError: 'production-owner-import-stage-url-missing'
           });
           applyProductionOwnerImportDiagnostics(failureExtra);
@@ -8800,6 +9316,14 @@ let flowIpcShell = #"""
             productionBundleRuntimeOwnerRegistryAfter: registryAfter,
             productionBundleRuntimeOwnerImportVaadinGlobalAfter: globalAfter,
             productionBundleRuntimeOwnerImported: true,
+            productionBundleRuntimeOwnerImportOrderingResult:
+              mergedProductionOwnerOrderingResult(productionOwnerOrderingResult(importPhase, preflight, failureLayer)),
+            componentProductionOwnerReuseMode: proof
+              ? 'owner-side-effect-observed-awaiting-focused-component-reuse'
+              : 'owner-imported-side-effect-unobservable-focused-component-fallback',
+            componentProductionOwnerReuseReason: proof
+              ? 'owner import completed; focused component resolver will reuse only owner-owned tags'
+              : 'owner import resolved without observable component side effects; focused component imports remain required',
             browserError: ''
           });
           window.VaadinDesktopIpcDiagnostics.frontendArtifactProductionBundleRuntimeExecutionResult =
@@ -8810,7 +9334,11 @@ let flowIpcShell = #"""
           recordFrontendStageOutcome(resource, stagedUrl, proof ? 'executed' : 'strict-blocker', successExtra);
         } catch (error) {
           const message = error && error.message ? error.message : String(error);
-          const failureLayer = classifyProductionOwnerImportFailure(error, preflight);
+          const classifiedFailureLayer = classifyProductionOwnerImportFailure(error, preflight);
+          const failureLayer = importPhase === 'before-component-imports'
+            && classifiedFailureLayer === 'production-owner-missing-real-artifact'
+            ? 'production-owner-component-reuse-contract-missing'
+            : classifiedFailureLayer;
           const registryAfter = vaadinCustomElementRegistrySnapshot();
           const globalAfter = vaadinGlobalSnapshot();
           const failureExtra = Object.assign({}, baseExtra, {
@@ -8826,6 +9354,15 @@ let flowIpcShell = #"""
             productionBundleRuntimeOwnerImportBrowserErrorName:
               error && error.name ? error.name : '',
             productionBundleRuntimeOwnerImported: false,
+            productionBundleRuntimeOwnerImportOrderingResult:
+              mergedProductionOwnerOrderingResult(productionOwnerOrderingResult(importPhase, preflight, failureLayer)
+              + ';rawFailureLayer=' + classifiedFailureLayer),
+            componentProductionOwnerReuseMode: 'focused-component-import-fallback',
+            componentProductionOwnerReuseReason:
+              'owner import failed before component import; failureLayer='
+              + failureLayer + ';rawFailureLayer=' + classifiedFailureLayer,
+            componentProductionOwnerFallbackImports:
+              resource.componentProductionOwnerFallbackImports || '',
             browserError: message,
             failureLayer
           });
@@ -9253,6 +9790,7 @@ let flowIpcShell = #"""
         let stagedUrl = '';
         const registryBefore = customElementRegistrySnapshot('vaadin-text-field');
         const textFieldDefinedBefore = !!customElements.get('vaadin-text-field');
+        const ownerReuseDetails = componentProductionOwnerReuseDiagnostics(resource, 'vaadin-text-field');
         const transitiveArtifacts = Array.isArray(resource.transitiveImports)
           ? resource.transitiveImports.join(',')
           : '';
@@ -9301,7 +9839,7 @@ let flowIpcShell = #"""
         try {
           installOpaqueOriginStorageFallbacks();
           installVaadinDevBundleGlobals();
-          stagedUrl = componentModuleBlobUrl(resource.path, urlsToRevoke, urlCache, 'execution-attempt', {
+          stagedUrl = componentModuleBlobUrl(resource.path, urlsToRevoke, urlCache, 'execution-attempt', Object.assign({
             cleanupPolicy: 'retain-for-window-lifetime-module-identity-v1_7',
             previousBlockerVersion: resource.previousBlockerVersion || resource.blockerVersion || '',
             executionVersion: resource.executionVersion || '',
@@ -9321,7 +9859,7 @@ let flowIpcShell = #"""
             secondDefinitionSource: resource.secondDefinitionSource || '',
             duplicateTag: resource.duplicateTag || 'vaadin-text-field',
             remainingBlockerClassification: resource.remainingBlockerClassification || ''
-          });
+          }, ownerReuseDetails));
           if (!stagedUrl) {
             throw new Error(window.VaadinDesktopIpcDiagnostics.vaadinWebComponentResourceExecutionError
               || 'textfield-staging-rewrite-failed');
@@ -9335,7 +9873,7 @@ let flowIpcShell = #"""
             window.VaadinDesktopIpcDiagnostics.frontendArtifactTextFieldStagedBlockerDependency = '';
             window.VaadinDesktopIpcDiagnostics.frontendArtifactTextFieldRemainingBlockerClassification =
               resource.remainingBlockerClassification || 'none';
-            recordFrontendStageOutcome(resource, stagedUrl, 'executed', {
+            recordFrontendStageOutcome(resource, stagedUrl, 'executed', Object.assign({
               cleanupPolicy: 'retain-for-window-lifetime-module-identity-v1_7',
               previousBlockerVersion: resource.previousBlockerVersion || resource.blockerVersion || '',
               executionVersion: resource.executionVersion || '',
@@ -9361,7 +9899,7 @@ let flowIpcShell = #"""
               secondDefinitionSource: resource.secondDefinitionSource || '',
               duplicateTag: resource.duplicateTag || 'vaadin-text-field',
               remainingBlockerClassification: resource.remainingBlockerClassification || 'none'
-            });
+            }, ownerReuseDetails));
             for (const [dependencyPath, dependencyUrl] of urlCache.entries()) {
               const dependency = componentFrontendResourceByPath(dependencyPath);
               recordFrontendStageOutcome(dependency, dependencyUrl, 'executed', {
@@ -9426,7 +9964,8 @@ let flowIpcShell = #"""
             duplicateTag: resource.duplicateTag || 'vaadin-text-field',
             remainingBlockerClassification: 'textfield-real-graph-execution-failed-v1_7'
           };
-          recordFrontendStageOutcome(resource, stagedUrl, 'strict-blocker', blockerDetails);
+          recordFrontendStageOutcome(resource, stagedUrl, 'strict-blocker',
+            Object.assign({}, blockerDetails, ownerReuseDetails));
           markStagedDependenciesStrictBlocker(urlCache, message, blockerDetails);
         } finally {
           refreshFrontendStagingDiagnostics();
@@ -9447,6 +9986,7 @@ let flowIpcShell = #"""
           return;
         }
         const componentTag = componentTagForResource(resource);
+        const ownerReuseDetails = componentProductionOwnerReuseDiagnostics(resource, componentTag);
         const urlsToRevoke = [];
         const urlCache = new Map();
         let primaryUrl = '';
@@ -9478,9 +10018,10 @@ let flowIpcShell = #"""
             window.VaadinDesktopIpcDiagnostics.vaadinWebComponentResourceImportMode =
               'dynamic-import-blob-generic-component-frontend-v1_3';
           }
-          primaryUrl = stageFrontendArtifact(resource, importSource, 'execution-attempt', urlsToRevoke, null, {
-            cleanupPolicy: 'revoke-after-dynamic-import'
-          });
+          primaryUrl = stageFrontendArtifact(resource, importSource, 'execution-attempt', urlsToRevoke, null,
+            Object.assign({
+              cleanupPolicy: 'revoke-after-dynamic-import'
+            }, ownerReuseDetails));
           await import(primaryUrl);
           if (componentTag && !customElements.get(componentTag)) {
             componentFrontendResourceExecutionFailedPaths.add(primaryPath);
@@ -9499,17 +10040,19 @@ let flowIpcShell = #"""
               + ' featureFlag=' + featureFlagKey + ':' + featureFlagEnabled;
             window.VaadinDesktopIpcDiagnostics.vaadinWebComponentFailureReason =
               'custom-element-not-defined-after-import';
-            recordFrontendStageOutcome(resource, primaryUrl, 'execution-failed', {
-              cleanupPolicy: 'revoke-after-dynamic-import',
-              browserError: window.VaadinDesktopIpcDiagnostics.vaadinWebComponentResourceExecutionError
-            });
+            recordFrontendStageOutcome(resource, primaryUrl, 'execution-failed',
+              Object.assign({
+                cleanupPolicy: 'revoke-after-dynamic-import',
+                browserError: window.VaadinDesktopIpcDiagnostics.vaadinWebComponentResourceExecutionError
+              }, ownerReuseDetails));
             refreshComponentFrontendResourceDiagnostics();
             return;
           }
           componentFrontendResourceExecutedPaths.add(primaryPath);
-          recordFrontendStageOutcome(resource, primaryUrl, 'executed', {
-            cleanupPolicy: 'revoke-after-dynamic-import'
-          });
+          recordFrontendStageOutcome(resource, primaryUrl, 'executed',
+            Object.assign({
+              cleanupPolicy: 'revoke-after-dynamic-import'
+            }, ownerReuseDetails));
           for (const [dependencyPath, dependencyUrl] of urlCache.entries()) {
             const dependency = componentFrontendResourceByPath(dependencyPath);
             recordFrontendStageOutcome(dependency, dependencyUrl, 'executed', {
@@ -9540,10 +10083,11 @@ let flowIpcShell = #"""
           if (componentTag && customElements.get(componentTag)) {
             componentFrontendResourceExecutedPaths.add(primaryPath);
             componentFrontendResourceExecutionFailedPaths.delete(primaryPath);
-            recordFrontendStageOutcome(resource, primaryUrl, 'executed', {
-              cleanupPolicy: 'revoke-after-dynamic-import',
-              browserError: error && error.message ? error.message : String(error)
-            });
+            recordFrontendStageOutcome(resource, primaryUrl, 'executed',
+              Object.assign({
+                cleanupPolicy: 'revoke-after-dynamic-import',
+                browserError: error && error.message ? error.message : String(error)
+              }, ownerReuseDetails));
             componentFrontendResourceExecutedTags.add(componentTag);
             if (!window.VaadinDesktopIpcDiagnostics.vaadinWebComponentResourceExecutedPath) {
               window.VaadinDesktopIpcDiagnostics.vaadinWebComponentResourceExecutedPath = primaryPath;

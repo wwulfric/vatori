@@ -320,6 +320,24 @@ public final class FlowClientResourceSmokeMain {
         requireEquals("production-owner-missing-real-artifact,production-owner-browser-import-failed,production-owner-duplicate-custom-element,production-owner-global-collision,production-owner-side-effect-unobservable",
                 componentManifest.get("productionBundleRuntimeOwnerDependencyResolverAcceptableFailures"),
                 "Production owner dependency resolver acceptable failures");
+        requireEquals("flow-ipc-production-owner-ordering-v1_16",
+                componentManifest.get("productionBundleRuntimeOwnerImportOrderingVersion"),
+                "Production owner import ordering version");
+        requireEquals("owner-first-before-component-imports-with-after-component-fallback-v1_16",
+                componentManifest.get("productionBundleRuntimeOwnerImportPhasePolicy"),
+                "Production owner import phase policy");
+        requireStringContains(componentManifest.get("productionBundleRuntimeOwnerImportOrderingAcceptableFailures"),
+                "production-owner-component-reuse-contract-missing",
+                "Production owner import ordering acceptable failures");
+        requireEquals("flow-ipc-component-owner-reuse-v1_16",
+                componentManifest.get("componentProductionOwnerReuseVersion"),
+                "Component owner reuse version");
+        requireEquals("reuse-owner-owned-custom-elements-before-focused-imports-v1_16",
+                componentManifest.get("componentProductionOwnerReusePolicy"),
+                "Component owner reuse policy");
+        requireStringContains(componentManifest.get("componentProductionOwnerReuseAcceptableFailures"),
+                "owner-import-failed-before-component-import",
+                "Component owner reuse acceptable failures");
         requireComponentResourceMetadata(componentResources);
         String checkboxDevBundlePath = "META-INF/vatori/dev-bundle-entry/vaadin-checkbox.js";
         String selectDevBundlePath = "META-INF/vatori/dev-bundle-entry/vaadin-select.js";
@@ -544,7 +562,16 @@ public final class FlowClientResourceSmokeMain {
                 || !Objects.equals(
                         productionBundleStatsResponse
                                 .get("productionBundleRuntimeOwnerDependencyResolverAcceptableFailures"),
-                        "production-owner-missing-real-artifact,production-owner-browser-import-failed,production-owner-duplicate-custom-element,production-owner-global-collision,production-owner-side-effect-unobservable")) {
+                        "production-owner-missing-real-artifact,production-owner-browser-import-failed,production-owner-duplicate-custom-element,production-owner-global-collision,production-owner-side-effect-unobservable")
+                || !Objects.equals(
+                        productionBundleStatsResponse.get("productionBundleRuntimeOwnerImportOrderingVersion"),
+                        "flow-ipc-production-owner-ordering-v1_16")
+                || !Objects.equals(productionBundleStatsResponse.get("productionBundleRuntimeOwnerImportPhasePolicy"),
+                        "owner-first-before-component-imports-with-after-component-fallback-v1_16")
+                || !Objects.equals(productionBundleStatsResponse.get("componentProductionOwnerReuseVersion"),
+                        "flow-ipc-component-owner-reuse-v1_16")
+                || !Objects.equals(productionBundleStatsResponse.get("componentProductionOwnerReusePolicy"),
+                        "reuse-owner-owned-custom-elements-before-focused-imports-v1_16")) {
             throw new IllegalStateException("Production bundle stats graph is missing runtime owner metadata");
         }
         requireStringContains(
@@ -610,6 +637,15 @@ public final class FlowClientResourceSmokeMain {
                         productionRuntimeResponse
                                 .get("productionBundleRuntimeOwnerDependencyResolverAcceptableFailures"),
                         "production-owner-missing-real-artifact,production-owner-browser-import-failed,production-owner-duplicate-custom-element,production-owner-global-collision,production-owner-side-effect-unobservable")
+                || !Objects.equals(
+                        productionRuntimeResponse.get("productionBundleRuntimeOwnerImportOrderingVersion"),
+                        "flow-ipc-production-owner-ordering-v1_16")
+                || !Objects.equals(productionRuntimeResponse.get("productionBundleRuntimeOwnerImportPhasePolicy"),
+                        "owner-first-before-component-imports-with-after-component-fallback-v1_16")
+                || !Objects.equals(productionRuntimeResponse.get("componentProductionOwnerReuseVersion"),
+                        "flow-ipc-component-owner-reuse-v1_16")
+                || !Objects.equals(productionRuntimeResponse.get("componentProductionOwnerReusePolicy"),
+                        "reuse-owner-owned-custom-elements-before-focused-imports-v1_16")
                 || !Boolean.FALSE.equals(productionRuntimeResponse.get("componentProductionOwnerReused"))) {
             throw new IllegalStateException("Production bundle runtime artifact is missing runtime owner metadata");
         }

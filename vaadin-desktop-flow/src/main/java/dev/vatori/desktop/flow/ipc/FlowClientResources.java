@@ -265,6 +265,18 @@ final class FlowClientResources {
             "production-owner-missing-real-artifact,production-owner-browser-import-failed,production-owner-duplicate-custom-element,production-owner-global-collision,production-owner-side-effect-unobservable";
     private static final String PRODUCTION_RUNTIME_OWNER_DEPENDENCY_RESOLVER_NEXT_STEP =
             "run production owner import after the real dev-bundle relative dependency graph has been resolved, staged and classified";
+    private static final String PRODUCTION_RUNTIME_OWNER_IMPORT_ORDERING_VERSION =
+            "flow-ipc-production-owner-ordering-v1_16";
+    private static final String PRODUCTION_RUNTIME_OWNER_IMPORT_PHASE_POLICY =
+            "owner-first-before-component-imports-with-after-component-fallback-v1_16";
+    private static final String PRODUCTION_RUNTIME_OWNER_IMPORT_ORDERING_ACCEPTABLE_FAILURES =
+            "production-owner-duplicate-custom-element,production-owner-global-collision,production-owner-side-effect-unobservable,production-owner-browser-import-failed,production-owner-component-reuse-contract-missing,production-owner-unsupported-vaadin-production-owner-contract";
+    private static final String COMPONENT_PRODUCTION_OWNER_REUSE_VERSION =
+            "flow-ipc-component-owner-reuse-v1_16";
+    private static final String COMPONENT_PRODUCTION_OWNER_REUSE_POLICY =
+            "reuse-owner-owned-custom-elements-before-focused-imports-v1_16";
+    private static final String COMPONENT_PRODUCTION_OWNER_REUSE_ACCEPTABLE_FAILURES =
+            "owner-import-failed-before-component-import,owner-import-succeeded-but-component-class-export-unreachable,owner-side-effects-global-but-focused-entry-still-required,vaadin-production-artifact-does-not-expose-reusable-owner-contract,blob-module-identity-cannot-safely-merge-owner-and-component-lifetime";
     private static final List<String> PRODUCTION_RUNTIME_OWNER_DEPENDENCY_ARTIFACTS = List.of(
             DEV_BUNDLE_COMMONJS_JS,
             DEV_BUNDLE_INDEX_HTML_JS,
@@ -1194,6 +1206,15 @@ final class FlowClientResources {
                 PRODUCTION_RUNTIME_OWNER_DEPENDENCY_RESOLVER_MODULE_IDENTITY_NAMESPACE);
         attributes.put("productionBundleRuntimeOwnerDependencyResolverNextResolutionStep",
                 PRODUCTION_RUNTIME_OWNER_DEPENDENCY_RESOLVER_NEXT_STEP);
+        attributes.put("productionBundleRuntimeOwnerImportOrderingVersion",
+                PRODUCTION_RUNTIME_OWNER_IMPORT_ORDERING_VERSION);
+        attributes.put("productionBundleRuntimeOwnerImportPhasePolicy",
+                PRODUCTION_RUNTIME_OWNER_IMPORT_PHASE_POLICY);
+        attributes.put("productionBundleRuntimeOwnerImportOrderingAcceptableFailures",
+                PRODUCTION_RUNTIME_OWNER_IMPORT_ORDERING_ACCEPTABLE_FAILURES);
+        attributes.put("productionBundleRuntimeOwnerImportOrderingResult",
+                "not-run-until-host-selects-owner-first-or-after-component-phase");
+        attributes.put("productionBundleRuntimeOwnerImportOrderingObservedPhases", "");
         attributes.put("productionBundleRuntimeOwnerDependencyGraphClosed", false);
         attributes.put("productionBundleRuntimeOwnerImportStageCount", 0);
         attributes.put("productionBundleRuntimeOwnerImportMissingDependencyPaths", "");
@@ -1201,12 +1222,24 @@ final class FlowClientResources {
         attributes.put("productionBundleRuntimeOwnerImported", false);
         attributes.put("productionBundleRuntimeOwnerImportNextResolutionStep",
                 PRODUCTION_RUNTIME_OWNER_IMPORT_NEXT_STEP);
+        attributes.put("componentProductionOwnerReuseVersion",
+                COMPONENT_PRODUCTION_OWNER_REUSE_VERSION);
+        attributes.put("componentProductionOwnerReusePolicy",
+                COMPONENT_PRODUCTION_OWNER_REUSE_POLICY);
+        attributes.put("componentProductionOwnerReuseAcceptableFailures",
+                COMPONENT_PRODUCTION_OWNER_REUSE_ACCEPTABLE_FAILURES);
+        attributes.put("componentProductionOwnerReuseMode",
+                "decision-required-after-owner-import-v1_16");
         attributes.put("componentProductionOwnerReused", false);
         attributes.put("componentProductionOwnerReuseReason",
-                "owner import disabled until production indexhtml side effects can be owned without duplicate custom element definitions");
+                "owner import ordering and component reuse decision are evaluated by the v1.16 host runtime");
+        attributes.put("componentProductionOwnerOwnedTags", "");
+        attributes.put("componentProductionOwnerSkippedDefinitions", "");
+        attributes.put("componentProductionOwnerFallbackImports",
+                DEV_BUNDLE_TEXT_FIELD_ENTRY_JS + "," + DEV_BUNDLE_CHECKBOX_ENTRY_JS + "," + DEV_BUNDLE_SELECT_ENTRY_JS);
         attributes.put("componentProductionOwnerDependencyPaths", DEV_BUNDLE_INDEX_HTML_JS);
         attributes.put("componentProductionOwnerImportOrder",
-                "component-focused-imports-before-owner-import-probe-v1_14");
+                "owner-first-or-component-focused-fallback-v1_16");
         return attributes;
     }
 

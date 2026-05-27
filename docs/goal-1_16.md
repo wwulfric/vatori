@@ -1,9 +1,9 @@
 # Goal 1.16: Production Owner Import Ordering and Component Reuse
 
-状态：已规划，尚未执行。
+状态：已完成。
 
-`docs/goal.md` 是长期愿景和完成度账本。v1.15 已规划为 production owner dependency
-resolver closure：它应把 v1.14 的 focused single-dependency rewrite 推进为
+`docs/goal.md` 是长期愿景和完成度账本。v1.15 已完成 production owner dependency
+resolver closure：它把 v1.14 的 focused single-dependency rewrite 推进为
 owner-scoped relative dependency graph closure，使真实 stats-selected production owner
 artifact 的 relative imports 能被解析、stage、rewrite，或被明确分类为真实缺失 artifact。
 
@@ -19,6 +19,16 @@ component imports 不再重复定义已有 Vaadin custom elements，并记录
 `componentProductionOwnerReused=true`。Acceptable 是 owner-first / isolated import 真实运行后，
 blocker 从 dependency resolver 层收敛到 custom element ordering、global collision、side-effect
 ownership 或 unsupported Vaadin production owner contract 的具体失败层。**
+
+完成结果采用 acceptable 路径：真实窗口 trace 记录
+`flow-ipc-production-owner-ordering-v1_16` 和
+`flow-ipc-component-owner-reuse-v1_16`。Swift host 在 component focused imports 之前执行
+`before-component-imports` owner-first preflight，随后保留 after-component fallback import，
+并在 `resourceStage` / `webview.dom` 中记录 observed phases、ordering result、
+component reuse mode/reason、duplicate custom element browser error 和 final blocker。
+当前 blocker 已从 dependency resolver / runtime contract 层推进到
+`production-owner-duplicate-custom-element` 与 component reuse contract 层；这不是
+production owner import success，也不是 broad production parity。
 
 ## 为什么选择这个目标
 

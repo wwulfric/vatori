@@ -21,12 +21,11 @@ v0/v1 runtime 切片走向可产品化桌面框架的最终完成状态。
 - `docs/goal-1_13.md`：Production Bundle Owned Runtime Boundary，已完成。
 - `docs/goal-1_14.md`：Production Owner Import and Side-Effect Boundary，已完成。
 - `docs/goal-1_15.md`：Production Owner Dependency Resolver Closure，已完成。
-- `docs/goal-1_16.md`：Production Owner Import Ordering and Component Reuse，已规划但尚未执行。
+- `docs/goal-1_16.md`：Production Owner Import Ordering and Component Reuse，已完成。
 - `docs/goal-1_17.md`：Host-Owned Frontend Resource Scheme，已规划但尚未执行。
 
-当前建议的短期阶段目标已规划到 `docs/goal-1_17.md`。执行顺序上应先启动
-`docs/goal-1_16.md`，再推进 `docs/goal-1_17.md`；后续阶段
-应从长期未完成账本中继续拆分。
+当前建议的短期阶段目标已规划到 `docs/goal-1_17.md`。执行顺序上应先推进
+`docs/goal-1_17.md`；后续阶段应从长期未完成账本中继续拆分。
 
 后续阶段应继续以 `docs/goal-1_18.md` 等文件拆分，
 每个阶段只拿走本长期目标中的一个可评审切片。不要把本文件改写成短期任务清单；
@@ -50,7 +49,7 @@ v0/v1 runtime 切片走向可产品化桌面框架的最终完成状态。
 
 ## 当前基线
 
-截至 goal 1.14，仓库已经证明：
+截至 goal 1.16，仓库已经证明：
 
 - `dev-ipc` 可以启动 no-localhost Flow IPC runtime。
 - 真实 macOS Swift/AppKit/WKWebView 窗口可以运行 Flow IPC smoke app 和 framework
@@ -170,6 +169,18 @@ v0/v1 runtime 切片走向可产品化桌面框架的最终完成状态。
   明确分类为 `missing-real-artifact`；最终 blocker 从未分类的
   `production-owner-relative-import-unresolved` 收敛为 `production-owner-missing-real-artifact`。
   这仍不是 production owner import success，也不是 broad production parity。
+- v1.16 已把 production owner 从单纯 after-component diagnostic probe 推进到可审计
+  import ordering / component reuse 边界：Java manifest / response 声明
+  `productionBundleRuntimeOwnerImportOrderingVersion=flow-ipc-production-owner-ordering-v1_16`
+  和 `componentProductionOwnerReuseVersion=flow-ipc-component-owner-reuse-v1_16`；
+  Swift host 在 component focused imports 之前记录 `before-component-imports` owner-first
+  preflight，在 fallback owner import 后记录 `after-component-imports` 结果，并把 observed
+  phases、ordering result、component reuse mode/reason、duplicate custom element browser error
+  和 final blocker 写入 `resourceStage` / `webview.dom`。当前真实 trace 的 acceptable 完成形态是：
+  owner-first preflight 真实发生，after-component fallback 到达真实 duplicate custom element
+  blocker，component resolver 明确拒绝复用 owner side effects，最终层收敛到
+  `production-owner-duplicate-custom-element` / component reuse contract，而不是回退到
+  dependency resolver 或 runtime contract missing。
 - 完整 generated/lazy chunk file execution、production owner import/side-effect success
   和 dev-mode/Vite execution 仍是明确 blocker，不计入最终完成。
 

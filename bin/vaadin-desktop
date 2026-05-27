@@ -45,6 +45,30 @@ single_line_log_summary() {
   tail -n 12 "$file" | tr '\n' ' ' | tr -s ' ' | cut -c 1-1200
 }
 
+classify_frontend_build_output_usability() {
+  local module_dir="$ROOT/$MODULE"
+  local target_dir="$module_dir/target"
+  if [[ ! -d "$target_dir" ]]; then
+    printf '%s' "output-missing"
+    return 0
+  fi
+  if find "$target_dir" -type f -path '*/chunks/chunk-*.js' 2>/dev/null | grep -q .; then
+    printf '%s' "usable-generated-chunk"
+    return 0
+  fi
+  if find "$target_dir" -type f -name 'generated-flow-imports*.js' 2>/dev/null | grep -q .; then
+    printf '%s' "generated-imports-no-chunk"
+    return 0
+  fi
+  if [[ -d "$module_dir/src/main/frontend/generated" ]] \
+      || [[ -d "$module_dir/frontend/generated" ]] \
+      || [[ -d "$target_dir/frontend/generated" ]]; then
+    printf '%s' "prepare-frontend-generated-scaffold-no-generated-imports"
+    return 0
+  fi
+  printf '%s' "output-incomplete"
+}
+
 install_module_with_dependencies() {
   local maven_mode="-U"
   if [[ "${VAADIN_DESKTOP_MAVEN_OFFLINE:-}" == "1" ]]; then
@@ -58,6 +82,7 @@ run_flow_ipc_frontend_build_preflight() {
     return 0
   fi
   export VAADIN_DESKTOP_FLOW_IPC_FRONTEND_BUILD_V1_30=1
+  export VAADIN_DESKTOP_FLOW_IPC_FRONTEND_BUILD_V1_31=1
   export VAADIN_DESKTOP_FLOW_IPC_FRONTEND_BUILD_STEP_STATUS="skipped"
   export VAADIN_DESKTOP_FLOW_IPC_FRONTEND_BUILD_STEP_EXIT_CODE="-1"
   export VAADIN_DESKTOP_FLOW_IPC_FRONTEND_BUILD_STEP_DURATION_MILLIS="0"
@@ -66,6 +91,12 @@ run_flow_ipc_frontend_build_preflight() {
   export VAADIN_DESKTOP_FLOW_IPC_FRONTEND_BUILD_STEP_SUMMARY=""
   export VAADIN_DESKTOP_FLOW_IPC_FRONTEND_BUILD_STDOUT_LOG=""
   export VAADIN_DESKTOP_FLOW_IPC_FRONTEND_BUILD_STDERR_LOG=""
+  export VAADIN_DESKTOP_FLOW_IPC_FRONTEND_BUILD_AVAILABILITY_MODE="offline-default"
+  export VAADIN_DESKTOP_FLOW_IPC_FRONTEND_BUILD_EFFECTIVE_MAVEN_MODE="-o"
+  export VAADIN_DESKTOP_FLOW_IPC_FRONTEND_BUILD_PLUGIN_COORDINATES=""
+  export VAADIN_DESKTOP_FLOW_IPC_FRONTEND_BUILD_PLUGIN_RESOLUTION_STATUS="not-attempted"
+  export VAADIN_DESKTOP_FLOW_IPC_FRONTEND_BUILD_GOAL_RESULT="skipped"
+  export VAADIN_DESKTOP_FLOW_IPC_FRONTEND_BUILD_OUTPUT_USABILITY="not-inspected"
   if [[ "${VAADIN_DESKTOP_FLOW_IPC_PREPARE_FRONTEND:-}" != "1" ]]; then
     return 0
   fi
@@ -81,18 +112,27 @@ run_flow_ipc_frontend_build_preflight() {
   if [[ -z "$vaadin_version" ]]; then
     vaadin_version="$(sed -n 's:.*<vaadin.version>\(.*\)</vaadin.version>.*:\1:p' "$ROOT/pom.xml" | head -n 1)"
   fi
-  local maven_mode="-U"
+  local maven_mode="-o"
+  export VAADIN_DESKTOP_FLOW_IPC_FRONTEND_BUILD_AVAILABILITY_MODE="offline-default"
   if [[ "${VAADIN_DESKTOP_MAVEN_OFFLINE:-}" == "1" ]]; then
     maven_mode="-o"
+    export VAADIN_DESKTOP_FLOW_IPC_FRONTEND_BUILD_AVAILABILITY_MODE="forced-offline"
+  elif [[ "${VAADIN_DESKTOP_FLOW_IPC_FRONTEND_BUILD_ONLINE:-}" == "1" ]]; then
+    maven_mode="-U"
+    export VAADIN_DESKTOP_FLOW_IPC_FRONTEND_BUILD_AVAILABILITY_MODE="explicit-online-local-repo"
   fi
+  export VAADIN_DESKTOP_FLOW_IPC_FRONTEND_BUILD_EFFECTIVE_MAVEN_MODE="$maven_mode"
 
   if [[ -z "$vaadin_version" ]]; then
     export VAADIN_DESKTOP_FLOW_IPC_FRONTEND_BUILD_STEP_STATUS="unavailable"
     export VAADIN_DESKTOP_FLOW_IPC_FRONTEND_BUILD_STEP_SUMMARY="vaadin.version not found in root pom"
+    export VAADIN_DESKTOP_FLOW_IPC_FRONTEND_BUILD_PLUGIN_RESOLUTION_STATUS="version-unavailable"
+    export VAADIN_DESKTOP_FLOW_IPC_FRONTEND_BUILD_GOAL_RESULT="version-unavailable"
     return 0
   fi
 
   local goal="com.vaadin:vaadin-maven-plugin:${vaadin_version}:prepare-frontend"
+  export VAADIN_DESKTOP_FLOW_IPC_FRONTEND_BUILD_PLUGIN_COORDINATES="com.vaadin:vaadin-maven-plugin:${vaadin_version}"
   local cmd=(mvn "$maven_mode" "-Dmaven.repo.local=$MAVEN_REPO" -f "$MODULE_POM" -DskipTests "$goal")
   local redacted_command
   redacted_command="$(printf '%q ' "${cmd[@]}")"
@@ -118,12 +158,25 @@ run_flow_ipc_frontend_build_preflight() {
     summary="$(single_line_log_summary "$stdout_log")"
   fi
   export VAADIN_DESKTOP_FLOW_IPC_FRONTEND_BUILD_STEP_SUMMARY="$summary"
+  local plugin_jar="$MAVEN_REPO/com/vaadin/vaadin-maven-plugin/$vaadin_version/vaadin-maven-plugin-$vaadin_version.jar"
   if [[ "$status" == "0" ]]; then
     export VAADIN_DESKTOP_FLOW_IPC_FRONTEND_BUILD_STEP_STATUS="success"
+    export VAADIN_DESKTOP_FLOW_IPC_FRONTEND_BUILD_PLUGIN_RESOLUTION_STATUS="resolved"
+    export VAADIN_DESKTOP_FLOW_IPC_FRONTEND_BUILD_GOAL_RESULT="success"
+    export VAADIN_DESKTOP_FLOW_IPC_FRONTEND_BUILD_OUTPUT_USABILITY="$(classify_frontend_build_output_usability)"
   elif grep -Eiq "No plugin found|PluginResolutionException|Could not find artifact|could not be resolved|Plugin .* was not found" "$stdout_log" "$stderr_log"; then
     export VAADIN_DESKTOP_FLOW_IPC_FRONTEND_BUILD_STEP_STATUS="unavailable"
+    export VAADIN_DESKTOP_FLOW_IPC_FRONTEND_BUILD_PLUGIN_RESOLUTION_STATUS="missing"
+    export VAADIN_DESKTOP_FLOW_IPC_FRONTEND_BUILD_GOAL_RESULT="plugin-unavailable"
   else
     export VAADIN_DESKTOP_FLOW_IPC_FRONTEND_BUILD_STEP_STATUS="failed"
+    if [[ -f "$plugin_jar" ]]; then
+      export VAADIN_DESKTOP_FLOW_IPC_FRONTEND_BUILD_PLUGIN_RESOLUTION_STATUS="resolved"
+    else
+      export VAADIN_DESKTOP_FLOW_IPC_FRONTEND_BUILD_PLUGIN_RESOLUTION_STATUS="unknown"
+    fi
+    export VAADIN_DESKTOP_FLOW_IPC_FRONTEND_BUILD_GOAL_RESULT="failed"
+    export VAADIN_DESKTOP_FLOW_IPC_FRONTEND_BUILD_OUTPUT_USABILITY="$(classify_frontend_build_output_usability)"
   fi
   echo "Flow IPC frontend build preflight status: $VAADIN_DESKTOP_FLOW_IPC_FRONTEND_BUILD_STEP_STATUS ($status)"
 }
@@ -192,6 +245,7 @@ PLIST
     }
     forward_env_if_set "VAADIN_DESKTOP_FLOW_IPC_PREPARE_FRONTEND"
     forward_env_if_set "VAADIN_DESKTOP_FLOW_IPC_FRONTEND_BUILD_V1_30"
+    forward_env_if_set "VAADIN_DESKTOP_FLOW_IPC_FRONTEND_BUILD_V1_31"
     forward_env_if_set "VAADIN_DESKTOP_FLOW_IPC_FRONTEND_BUILD_STEP_COMMAND"
     forward_env_if_set "VAADIN_DESKTOP_FLOW_IPC_FRONTEND_BUILD_STEP_EXIT_CODE"
     forward_env_if_set "VAADIN_DESKTOP_FLOW_IPC_FRONTEND_BUILD_STEP_STATUS"
@@ -200,6 +254,12 @@ PLIST
     forward_env_if_set "VAADIN_DESKTOP_FLOW_IPC_FRONTEND_BUILD_STEP_SUMMARY"
     forward_env_if_set "VAADIN_DESKTOP_FLOW_IPC_FRONTEND_BUILD_STDOUT_LOG"
     forward_env_if_set "VAADIN_DESKTOP_FLOW_IPC_FRONTEND_BUILD_STDERR_LOG"
+    forward_env_if_set "VAADIN_DESKTOP_FLOW_IPC_FRONTEND_BUILD_AVAILABILITY_MODE"
+    forward_env_if_set "VAADIN_DESKTOP_FLOW_IPC_FRONTEND_BUILD_EFFECTIVE_MAVEN_MODE"
+    forward_env_if_set "VAADIN_DESKTOP_FLOW_IPC_FRONTEND_BUILD_PLUGIN_COORDINATES"
+    forward_env_if_set "VAADIN_DESKTOP_FLOW_IPC_FRONTEND_BUILD_PLUGIN_RESOLUTION_STATUS"
+    forward_env_if_set "VAADIN_DESKTOP_FLOW_IPC_FRONTEND_BUILD_GOAL_RESULT"
+    forward_env_if_set "VAADIN_DESKTOP_FLOW_IPC_FRONTEND_BUILD_OUTPUT_USABILITY"
     if [[ -n "${JAVA_HOME:-}" ]]; then
       OPEN_ENV_ARGS+=(--env "JAVA_HOME=$JAVA_HOME")
     fi

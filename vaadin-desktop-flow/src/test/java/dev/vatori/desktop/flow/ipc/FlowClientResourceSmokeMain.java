@@ -1617,6 +1617,73 @@ public final class FlowClientResourceSmokeMain {
         requireEquals(Boolean.TRUE,
                 metadata.get("currentAppFrontendBuildNoLocalhost"),
                 label + " no-localhost flag");
+        requireFrontendBuildPreflightAvailabilityMetadata(metadata, label);
+    }
+
+    private static void requireFrontendBuildPreflightAvailabilityMetadata(Map<?, ?> metadata, String label) {
+        requireEquals("flow-ipc-frontend-build-preflight-availability-v1_31",
+                metadata.get("frontendBuildPreflightAvailabilityVersion"),
+                label + " preflight availability version");
+        requireEquals("dev-ipc-vaadin-maven-plugin-availability-v1_31",
+                metadata.get("frontendBuildPreflightAvailabilitySource"),
+                label + " preflight availability source");
+        Object mode = metadata.get("frontendBuildPreflightAvailabilityMode");
+        if (!Objects.equals(mode, "offline-default")
+                && !Objects.equals(mode, "forced-offline")
+                && !Objects.equals(mode, "explicit-online-local-repo")) {
+            throw new IllegalStateException(label + " preflight mode has unexpected value: " + mode);
+        }
+        Object mavenMode = metadata.get("frontendBuildPreflightEffectiveMavenMode");
+        if (!Objects.equals(mavenMode, "-o") && !Objects.equals(mavenMode, "-U")) {
+            throw new IllegalStateException(label + " effective Maven mode has unexpected value: " + mavenMode);
+        }
+        Object pluginStatus = metadata.get("frontendBuildPreflightPluginResolutionStatus");
+        if (!Objects.equals(pluginStatus, "not-attempted")
+                && !Objects.equals(pluginStatus, "version-unavailable")
+                && !Objects.equals(pluginStatus, "missing")
+                && !Objects.equals(pluginStatus, "resolved")
+                && !Objects.equals(pluginStatus, "unknown")) {
+            throw new IllegalStateException(label + " plugin status has unexpected value: " + pluginStatus);
+        }
+        Object goalResult = metadata.get("frontendBuildPreflightGoalResult");
+        if (!Objects.equals(goalResult, "skipped")
+                && !Objects.equals(goalResult, "version-unavailable")
+                && !Objects.equals(goalResult, "plugin-unavailable")
+                && !Objects.equals(goalResult, "success")
+                && !Objects.equals(goalResult, "failed")) {
+            throw new IllegalStateException(label + " goal result has unexpected value: " + goalResult);
+        }
+        Object outputUsability = metadata.get("frontendBuildPreflightOutputUsability");
+        if (!Objects.equals(outputUsability, "not-inspected")
+                && !Objects.equals(outputUsability, "output-missing")
+                && !Objects.equals(outputUsability, "output-incomplete")
+                && !Objects.equals(outputUsability, "prepare-frontend-generated-scaffold-no-generated-imports")
+                && !Objects.equals(outputUsability, "generated-imports-no-chunk")
+                && !Objects.equals(outputUsability, "usable-generated-chunk")) {
+            throw new IllegalStateException(label + " output usability has unexpected value: " + outputUsability);
+        }
+        requirePresentString(metadata.get("frontendBuildPreflightRuntimeSourceDecision"),
+                label + " runtime source decision");
+        Object failureLayer = metadata.get("frontendBuildPreflightFailureLayer");
+        if (!Objects.equals(failureLayer, "frontend-build-preflight-not-enabled")
+                && !Objects.equals(failureLayer, "frontend-build-plugin-unavailable")
+                && !Objects.equals(failureLayer, "frontend-build-goal-failed-before-output")
+                && !Objects.equals(failureLayer, "frontend-build-plugin-resolved-output-incomplete")
+                && !Objects.equals(failureLayer, "current-app-build-output-has-no-generated-lazy-chunk")
+                && !Objects.equals(failureLayer, "current-app-build-output-generated-chunk-file-missing")
+                && !Objects.equals(failureLayer, "current-app-build-output-generated-chunk-available-pending-stage")
+                && !Objects.equals(failureLayer, "frontend-build-preflight-unknown")) {
+            throw new IllegalStateException(label + " preflight failure layer has unexpected value: " + failureLayer);
+        }
+        requireStringContains(metadata.get("frontendBuildPreflightNextResolutionStep"),
+                "Vaadin frontend build",
+                label + " preflight next resolution step");
+        if (!(metadata.get("frontendBuildPreflightBuildStepUnavailableCleared") instanceof Boolean)) {
+            throw new IllegalStateException(label + " unavailable-cleared flag missing");
+        }
+        requireEquals(Boolean.TRUE,
+                metadata.get("frontendBuildPreflightNoLocalhost"),
+                label + " preflight no-localhost flag");
     }
 
     private static void requireProductionOwnerResourceLoaderMetadata(Map<String, Object> metadata,

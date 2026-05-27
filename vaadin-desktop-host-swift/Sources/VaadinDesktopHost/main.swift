@@ -2389,6 +2389,21 @@ final class WebViewHost: NSObject, NSApplicationDelegate, NSWindowDelegate, WKNa
           currentAppFrontendBuildNextResolutionStep: window.VaadinDesktopIpcDiagnostics ? window.VaadinDesktopIpcDiagnostics.currentAppFrontendBuildNextResolutionStep : "",
           currentAppFrontendBuildFixtureSubstituted: !!(window.VaadinDesktopIpcDiagnostics && window.VaadinDesktopIpcDiagnostics.currentAppFrontendBuildFixtureSubstituted),
           currentAppFrontendBuildNoLocalhost: !!(window.VaadinDesktopIpcDiagnostics && window.VaadinDesktopIpcDiagnostics.currentAppFrontendBuildNoLocalhost),
+          frontendBuildPreflightAvailabilityObserved: !!(window.VaadinDesktopIpcDiagnostics && window.VaadinDesktopIpcDiagnostics.frontendBuildPreflightAvailabilityObserved),
+          frontendBuildPreflightAvailabilityVersion: window.VaadinDesktopIpcDiagnostics ? window.VaadinDesktopIpcDiagnostics.frontendBuildPreflightAvailabilityVersion : "",
+          frontendBuildPreflightAvailabilitySource: window.VaadinDesktopIpcDiagnostics ? window.VaadinDesktopIpcDiagnostics.frontendBuildPreflightAvailabilitySource : "",
+          frontendBuildPreflightAvailabilityMode: window.VaadinDesktopIpcDiagnostics ? window.VaadinDesktopIpcDiagnostics.frontendBuildPreflightAvailabilityMode : "",
+          frontendBuildPreflightEffectiveMavenMode: window.VaadinDesktopIpcDiagnostics ? window.VaadinDesktopIpcDiagnostics.frontendBuildPreflightEffectiveMavenMode : "",
+          frontendBuildPreflightPluginCoordinates: window.VaadinDesktopIpcDiagnostics ? window.VaadinDesktopIpcDiagnostics.frontendBuildPreflightPluginCoordinates : "",
+          frontendBuildPreflightPluginResolutionStatus: window.VaadinDesktopIpcDiagnostics ? window.VaadinDesktopIpcDiagnostics.frontendBuildPreflightPluginResolutionStatus : "",
+          frontendBuildPreflightGoalResult: window.VaadinDesktopIpcDiagnostics ? window.VaadinDesktopIpcDiagnostics.frontendBuildPreflightGoalResult : "",
+          frontendBuildPreflightOutputUsability: window.VaadinDesktopIpcDiagnostics ? window.VaadinDesktopIpcDiagnostics.frontendBuildPreflightOutputUsability : "",
+          frontendBuildPreflightRuntimeSourceDecision: window.VaadinDesktopIpcDiagnostics ? window.VaadinDesktopIpcDiagnostics.frontendBuildPreflightRuntimeSourceDecision : "",
+          frontendBuildPreflightBuildStepStatus: window.VaadinDesktopIpcDiagnostics ? window.VaadinDesktopIpcDiagnostics.frontendBuildPreflightBuildStepStatus : "",
+          frontendBuildPreflightFailureLayer: window.VaadinDesktopIpcDiagnostics ? window.VaadinDesktopIpcDiagnostics.frontendBuildPreflightFailureLayer : "",
+          frontendBuildPreflightNextResolutionStep: window.VaadinDesktopIpcDiagnostics ? window.VaadinDesktopIpcDiagnostics.frontendBuildPreflightNextResolutionStep : "",
+          frontendBuildPreflightBuildStepUnavailableCleared: !!(window.VaadinDesktopIpcDiagnostics && window.VaadinDesktopIpcDiagnostics.frontendBuildPreflightBuildStepUnavailableCleared),
+          frontendBuildPreflightNoLocalhost: !!(window.VaadinDesktopIpcDiagnostics && window.VaadinDesktopIpcDiagnostics.frontendBuildPreflightNoLocalhost),
           frontendArtifactShimFallback: !!(window.VaadinDesktopIpcDiagnostics && window.VaadinDesktopIpcDiagnostics.frontendArtifactShimFallback),
           frontendArtifactProductionBundlePartial: !!(window.VaadinDesktopIpcDiagnostics && window.VaadinDesktopIpcDiagnostics.frontendArtifactProductionBundlePartial),
           frontendArtifactProductionBundleStatsVerified: !!(window.VaadinDesktopIpcDiagnostics && window.VaadinDesktopIpcDiagnostics.frontendArtifactProductionBundleStatsVerified),
@@ -3638,6 +3653,21 @@ let flowIpcShell = #"""
         currentAppFrontendBuildNextResolutionStep: '',
         currentAppFrontendBuildFixtureSubstituted: false,
         currentAppFrontendBuildNoLocalhost: false,
+        frontendBuildPreflightAvailabilityObserved: false,
+        frontendBuildPreflightAvailabilityVersion: '',
+        frontendBuildPreflightAvailabilitySource: '',
+        frontendBuildPreflightAvailabilityMode: '',
+        frontendBuildPreflightEffectiveMavenMode: '',
+        frontendBuildPreflightPluginCoordinates: '',
+        frontendBuildPreflightPluginResolutionStatus: '',
+        frontendBuildPreflightGoalResult: '',
+        frontendBuildPreflightOutputUsability: '',
+        frontendBuildPreflightRuntimeSourceDecision: '',
+        frontendBuildPreflightBuildStepStatus: '',
+        frontendBuildPreflightFailureLayer: '',
+        frontendBuildPreflightNextResolutionStep: '',
+        frontendBuildPreflightBuildStepUnavailableCleared: false,
+        frontendBuildPreflightNoLocalhost: false,
         frontendArtifactShimFallback: false,
         frontendArtifactProductionBundlePartial: false,
         frontendArtifactProductionBundleStatsVerified: false,
@@ -5913,6 +5943,37 @@ let flowIpcShell = #"""
             window.VaadinDesktopIpcDiagnostics[diagnosticKey] = source[sourceKey];
           }
         }
+        if (typeof source.frontendBuildPreflightAvailabilityVersion === 'string'
+            && source.frontendBuildPreflightAvailabilityVersion) {
+          window.VaadinDesktopIpcDiagnostics.frontendBuildPreflightAvailabilityObserved = true;
+          window.VaadinDesktopIpcDiagnostics.frontendBuildPreflightAvailabilityVersion =
+            source.frontendBuildPreflightAvailabilityVersion;
+        }
+        for (const [sourceKey, diagnosticKey] of [
+          ['frontendBuildPreflightAvailabilitySource', 'frontendBuildPreflightAvailabilitySource'],
+          ['frontendBuildPreflightAvailabilityMode', 'frontendBuildPreflightAvailabilityMode'],
+          ['frontendBuildPreflightEffectiveMavenMode', 'frontendBuildPreflightEffectiveMavenMode'],
+          ['frontendBuildPreflightPluginCoordinates', 'frontendBuildPreflightPluginCoordinates'],
+          ['frontendBuildPreflightPluginResolutionStatus', 'frontendBuildPreflightPluginResolutionStatus'],
+          ['frontendBuildPreflightGoalResult', 'frontendBuildPreflightGoalResult'],
+          ['frontendBuildPreflightOutputUsability', 'frontendBuildPreflightOutputUsability'],
+          ['frontendBuildPreflightRuntimeSourceDecision', 'frontendBuildPreflightRuntimeSourceDecision'],
+          ['frontendBuildPreflightBuildStepStatus', 'frontendBuildPreflightBuildStepStatus'],
+          ['frontendBuildPreflightFailureLayer', 'frontendBuildPreflightFailureLayer'],
+          ['frontendBuildPreflightNextResolutionStep', 'frontendBuildPreflightNextResolutionStep']
+        ]) {
+          if (typeof source[sourceKey] === 'string' && source[sourceKey]) {
+            window.VaadinDesktopIpcDiagnostics[diagnosticKey] = source[sourceKey];
+          }
+        }
+        for (const [sourceKey, diagnosticKey] of [
+          ['frontendBuildPreflightBuildStepUnavailableCleared', 'frontendBuildPreflightBuildStepUnavailableCleared'],
+          ['frontendBuildPreflightNoLocalhost', 'frontendBuildPreflightNoLocalhost']
+        ]) {
+          if (source[sourceKey] === true) {
+            window.VaadinDesktopIpcDiagnostics[diagnosticKey] = true;
+          }
+        }
         addFrontendResolverCsv(frontendResolverFamiliesObserved, source.frontendResolverFamiliesCovered || '');
         addFrontendResolverCsv(frontendResolverAcceptedGapFamilies, source.frontendResolverAcceptableGaps || '');
       }
@@ -6970,6 +7031,34 @@ let flowIpcShell = #"""
             resource.currentAppFrontendBuildFixtureSubstituted === true,
           currentAppFrontendBuildNoLocalhost:
             resource.currentAppFrontendBuildNoLocalhost === true,
+          frontendBuildPreflightAvailabilityVersion:
+            resource.frontendBuildPreflightAvailabilityVersion || '',
+          frontendBuildPreflightAvailabilitySource:
+            resource.frontendBuildPreflightAvailabilitySource || '',
+          frontendBuildPreflightAvailabilityMode:
+            resource.frontendBuildPreflightAvailabilityMode || '',
+          frontendBuildPreflightEffectiveMavenMode:
+            resource.frontendBuildPreflightEffectiveMavenMode || '',
+          frontendBuildPreflightPluginCoordinates:
+            resource.frontendBuildPreflightPluginCoordinates || '',
+          frontendBuildPreflightPluginResolutionStatus:
+            resource.frontendBuildPreflightPluginResolutionStatus || '',
+          frontendBuildPreflightGoalResult:
+            resource.frontendBuildPreflightGoalResult || '',
+          frontendBuildPreflightOutputUsability:
+            resource.frontendBuildPreflightOutputUsability || '',
+          frontendBuildPreflightRuntimeSourceDecision:
+            resource.frontendBuildPreflightRuntimeSourceDecision || '',
+          frontendBuildPreflightBuildStepStatus:
+            resource.frontendBuildPreflightBuildStepStatus || '',
+          frontendBuildPreflightFailureLayer:
+            resource.frontendBuildPreflightFailureLayer || '',
+          frontendBuildPreflightNextResolutionStep:
+            resource.frontendBuildPreflightNextResolutionStep || '',
+          frontendBuildPreflightBuildStepUnavailableCleared:
+            resource.frontendBuildPreflightBuildStepUnavailableCleared === true,
+          frontendBuildPreflightNoLocalhost:
+            resource.frontendBuildPreflightNoLocalhost === true,
           lookupKind: resource.lookupKind || '',
           textfieldGraphParityVersion: resource.textfieldGraphParityVersion || '',
           blockerVersion: resource.blockerVersion || '',
@@ -7749,6 +7838,34 @@ let flowIpcShell = #"""
             resource.currentAppFrontendBuildFixtureSubstituted === true,
           currentAppFrontendBuildNoLocalhost:
             resource.currentAppFrontendBuildNoLocalhost === true,
+          frontendBuildPreflightAvailabilityVersion:
+            resource.frontendBuildPreflightAvailabilityVersion || '',
+          frontendBuildPreflightAvailabilitySource:
+            resource.frontendBuildPreflightAvailabilitySource || '',
+          frontendBuildPreflightAvailabilityMode:
+            resource.frontendBuildPreflightAvailabilityMode || '',
+          frontendBuildPreflightEffectiveMavenMode:
+            resource.frontendBuildPreflightEffectiveMavenMode || '',
+          frontendBuildPreflightPluginCoordinates:
+            resource.frontendBuildPreflightPluginCoordinates || '',
+          frontendBuildPreflightPluginResolutionStatus:
+            resource.frontendBuildPreflightPluginResolutionStatus || '',
+          frontendBuildPreflightGoalResult:
+            resource.frontendBuildPreflightGoalResult || '',
+          frontendBuildPreflightOutputUsability:
+            resource.frontendBuildPreflightOutputUsability || '',
+          frontendBuildPreflightRuntimeSourceDecision:
+            resource.frontendBuildPreflightRuntimeSourceDecision || '',
+          frontendBuildPreflightBuildStepStatus:
+            resource.frontendBuildPreflightBuildStepStatus || '',
+          frontendBuildPreflightFailureLayer:
+            resource.frontendBuildPreflightFailureLayer || '',
+          frontendBuildPreflightNextResolutionStep:
+            resource.frontendBuildPreflightNextResolutionStep || '',
+          frontendBuildPreflightBuildStepUnavailableCleared:
+            resource.frontendBuildPreflightBuildStepUnavailableCleared === true,
+          frontendBuildPreflightNoLocalhost:
+            resource.frontendBuildPreflightNoLocalhost === true,
           stagedPath: '',
           owner: stageOwner,
           artifactFamily: family,

@@ -1,6 +1,6 @@
 # Goal 1.31: Vaadin Frontend Build Preflight Availability
 
-状态：待执行
+状态：已完成
 
 `docs/goal.md` 是长期愿景和完成度账本。v1.30 已完成
 `flow-ipc-current-app-frontend-build-output-v1_30`：`dev-ipc` 可以通过
@@ -9,10 +9,13 @@ preflight，并把 command/status/log/output inventory、generated imports candi
 runtime source、chunk status、failure layer 和 next step 写入 manifest、resource
 request/response/stage 与 DOM diagnostics。
 
-当前本机验收结果仍停在 `build-step-unavailable` /
-`vaadin-frontend-build-step-unavailable`，原因是 offline 模式下项目本地 Maven repo 尚未缓存
-`com.vaadin:vaadin-maven-plugin:25.1.5`。v1.31 的目标是把这层 blocker 推进到“build
-step 可执行，并且 output 被真实检查/接入”的层级。
+v1.31 已把这层 blocker 推进到“build step 可执行，并且 output 被真实检查/接入”的层级：
+显式 `VAADIN_DESKTOP_FLOW_IPC_FRONTEND_BUILD_ONLINE=1` 时，preflight 使用项目本地 Maven
+repo 解析 `com.vaadin:vaadin-maven-plugin:25.1.5` 并成功执行 `prepare-frontend`；trace
+记录 `pluginResolutionStatus=resolved`、`goalResult=success`、`outputUsability=
+prepare-frontend-generated-scaffold-no-generated-imports` 和 failure layer
+`frontend-build-plugin-resolved-output-incomplete`。当前 Vaadin 输出仍未产生当前 app 的
+`generated-flow-imports*.js` 或 `chunks/chunk-*.js`，所以这不是 real generated chunk parity。
 
 ## 核心目标
 
@@ -140,3 +143,19 @@ bash bin/flow-ipc-trace-inspect --require-flow-ipc-v1_30 docs/traces/flow-ipc-v1
 ```text
 docs: add goal 1.31 frontend build preflight availability
 ```
+
+## 完成记录
+
+- CLI 新增 v1.31 availability metadata：availability mode、effective Maven mode、plugin
+  coordinates/resolution、goal result 和 output usability；默认 preflight 保持 offline，
+  online local-repo populate 必须显式设置
+  `VAADIN_DESKTOP_FLOW_IPC_FRONTEND_BUILD_ONLINE=1`。
+- Java/Swift trace 贯穿
+  `flow-ipc-frontend-build-preflight-availability-v1_31` 到 manifest、resource
+  request/response/stage 和 DOM diagnostics。
+- Inspector 新增 `--require-flow-ipc-v1_31-frontend-build-preflight-availability` 和
+  `--require-flow-ipc-v1_31` gates。
+- 固定 trace：`docs/traces/flow-ipc-v1_31.ndjson`。
+- 验收结论：插件已解析且 `prepare-frontend` 成功，但输出仍是 scaffold/no generated imports；
+  下一步应进入 full frontend build/package 或 Vaadin lazy chunk SPI，而不是继续处理 Maven plugin
+  availability。

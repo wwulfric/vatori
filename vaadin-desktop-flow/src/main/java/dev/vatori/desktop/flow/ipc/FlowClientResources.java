@@ -488,6 +488,12 @@ final class FlowClientResources {
             "dev-ipc-current-app-frontend-build-output-materialization-v1_30";
     private static final String CURRENT_APP_FRONTEND_BUILD_NEXT_STEP =
             "make the Vaadin frontend build step produce generated-flow-imports/chunks for the current dev-ipc app, or replace the probe with a supported Vaadin lazy chunk SPI before removing packaged dev-bundle fallback";
+    private static final String FRONTEND_BUILD_PREFLIGHT_AVAILABILITY_VERSION =
+            "flow-ipc-frontend-build-preflight-availability-v1_31";
+    private static final String FRONTEND_BUILD_PREFLIGHT_AVAILABILITY_SOURCE =
+            "dev-ipc-vaadin-maven-plugin-availability-v1_31";
+    private static final String FRONTEND_BUILD_PREFLIGHT_NEXT_STEP =
+            "run a full Vaadin frontend build/package step or connect a supported Vaadin lazy chunk SPI so current app generated-flow-imports/chunks become resolver-owned runtime artifacts";
     private static final List<String> PRODUCTION_RUNTIME_OWNER_DEPENDENCY_ARTIFACTS = List.of(
             DEV_BUNDLE_COMMONJS_JS,
             DEV_BUNDLE_INDEX_HTML_JS,
@@ -2421,13 +2427,75 @@ final class FlowClientResources {
         attributes.put("currentAppFrontendBuildNextResolutionStep", CURRENT_APP_FRONTEND_BUILD_NEXT_STEP);
         attributes.put("currentAppFrontendBuildFixtureSubstituted", false);
         attributes.put("currentAppFrontendBuildNoLocalhost", true);
+        attributes.putAll(frontendBuildPreflightAvailabilityAttributes(buildStep, appOutput, runtimeSource));
         return attributes;
+    }
+
+    private static Map<String, Object> frontendBuildPreflightAvailabilityAttributes(
+            FrontendBuildStepEvidence buildStep,
+            AppBuildGeneratedImportsEvidence appOutput,
+            String runtimeSource) {
+        String failureLayer = frontendBuildPreflightFailureLayer(buildStep, appOutput);
+        Map<String, Object> attributes = new LinkedHashMap<>();
+        attributes.put("frontendBuildPreflightAvailabilityVersion",
+                FRONTEND_BUILD_PREFLIGHT_AVAILABILITY_VERSION);
+        attributes.put("frontendBuildPreflightAvailabilitySource",
+                FRONTEND_BUILD_PREFLIGHT_AVAILABILITY_SOURCE);
+        attributes.put("frontendBuildPreflightAvailabilityMode", buildStep.availabilityMode());
+        attributes.put("frontendBuildPreflightEffectiveMavenMode", buildStep.effectiveMavenMode());
+        attributes.put("frontendBuildPreflightPluginCoordinates", buildStep.pluginCoordinates());
+        attributes.put("frontendBuildPreflightPluginResolutionStatus",
+                buildStep.pluginResolutionStatus());
+        attributes.put("frontendBuildPreflightGoalResult", buildStep.goalResult());
+        attributes.put("frontendBuildPreflightOutputUsability", buildStep.outputUsability());
+        attributes.put("frontendBuildPreflightRuntimeSourceDecision", runtimeSource);
+        attributes.put("frontendBuildPreflightBuildStepStatus", buildStep.status());
+        attributes.put("frontendBuildPreflightFailureLayer", failureLayer);
+        attributes.put("frontendBuildPreflightNextResolutionStep", FRONTEND_BUILD_PREFLIGHT_NEXT_STEP);
+        attributes.put("frontendBuildPreflightBuildStepUnavailableCleared",
+                !"unavailable".equals(buildStep.status())
+                        && !"missing".equals(buildStep.pluginResolutionStatus())
+                        && !"plugin-unavailable".equals(buildStep.goalResult()));
+        attributes.put("frontendBuildPreflightNoLocalhost", true);
+        return attributes;
+    }
+
+    private static String frontendBuildPreflightFailureLayer(
+            FrontendBuildStepEvidence buildStep,
+            AppBuildGeneratedImportsEvidence appOutput) {
+        if ("skipped".equals(buildStep.status())) {
+            return "frontend-build-preflight-not-enabled";
+        }
+        if ("unavailable".equals(buildStep.status())
+                || "missing".equals(buildStep.pluginResolutionStatus())
+                || "plugin-unavailable".equals(buildStep.goalResult())) {
+            return "frontend-build-plugin-unavailable";
+        }
+        if ("failed".equals(buildStep.status()) || "failed".equals(buildStep.goalResult())) {
+            return "frontend-build-goal-failed-before-output";
+        }
+        if (!"success".equals(buildStep.status())) {
+            return "frontend-build-preflight-unknown";
+        }
+        if (!appOutput.observed()) {
+            return "frontend-build-plugin-resolved-output-incomplete";
+        }
+        if ("available".equals(appOutput.chunkStatus())) {
+            return "current-app-build-output-generated-chunk-available-pending-stage";
+        }
+        if ("branch-table-dynamic-import".equals(appOutput.tableShape())) {
+            return "current-app-build-output-generated-chunk-file-missing";
+        }
+        return "current-app-build-output-has-no-generated-lazy-chunk";
     }
 
     private static FrontendBuildStepEvidence frontendBuildStepEvidence() {
         String enabled = System.getenv("VAADIN_DESKTOP_FLOW_IPC_FRONTEND_BUILD_V1_30");
+        String enabledV131 = System.getenv("VAADIN_DESKTOP_FLOW_IPC_FRONTEND_BUILD_V1_31");
         String status = System.getenv("VAADIN_DESKTOP_FLOW_IPC_FRONTEND_BUILD_STEP_STATUS");
-        if (enabled == null || enabled.isBlank() || status == null || status.isBlank()) {
+        if ((enabled == null || enabled.isBlank())
+                && (enabledV131 == null || enabledV131.isBlank())
+                || status == null || status.isBlank()) {
             status = "skipped";
         }
         return new FrontendBuildStepEvidence(
@@ -2438,7 +2506,18 @@ final class FlowClientResources {
                 compactText(System.getenv("VAADIN_DESKTOP_FLOW_IPC_FRONTEND_BUILD_OUTPUT_ROOTS")),
                 compactText(System.getenv("VAADIN_DESKTOP_FLOW_IPC_FRONTEND_BUILD_STEP_SUMMARY")),
                 compactText(System.getenv("VAADIN_DESKTOP_FLOW_IPC_FRONTEND_BUILD_STDOUT_LOG")),
-                compactText(System.getenv("VAADIN_DESKTOP_FLOW_IPC_FRONTEND_BUILD_STDERR_LOG")));
+                compactText(System.getenv("VAADIN_DESKTOP_FLOW_IPC_FRONTEND_BUILD_STDERR_LOG")),
+                compactText(System.getenv("VAADIN_DESKTOP_FLOW_IPC_FRONTEND_BUILD_AVAILABILITY_MODE"),
+                        "offline-default"),
+                compactText(System.getenv("VAADIN_DESKTOP_FLOW_IPC_FRONTEND_BUILD_EFFECTIVE_MAVEN_MODE"),
+                        "-o"),
+                compactText(System.getenv("VAADIN_DESKTOP_FLOW_IPC_FRONTEND_BUILD_PLUGIN_COORDINATES")),
+                compactText(System.getenv("VAADIN_DESKTOP_FLOW_IPC_FRONTEND_BUILD_PLUGIN_RESOLUTION_STATUS"),
+                        "not-attempted"),
+                compactText(System.getenv("VAADIN_DESKTOP_FLOW_IPC_FRONTEND_BUILD_GOAL_RESULT"),
+                        "skipped"),
+                compactText(System.getenv("VAADIN_DESKTOP_FLOW_IPC_FRONTEND_BUILD_OUTPUT_USABILITY"),
+                        "not-inspected"));
     }
 
     private static List<Map<String, Object>> currentAppFrontendBuildOutputInventory(Path module) {
@@ -2689,6 +2768,11 @@ final class FlowClientResources {
             return "";
         }
         return value.replaceAll("\\s+", " ").trim();
+    }
+
+    private static String compactText(String value, String fallback) {
+        String compacted = compactText(value);
+        return compacted.isBlank() ? fallback : compacted;
     }
 
     private static Class<?> loadOptionalClass(String className) {
@@ -3061,7 +3145,13 @@ final class FlowClientResources {
             String outputRoots,
             String summary,
             String stdoutLog,
-            String stderrLog) {
+            String stderrLog,
+            String availabilityMode,
+            String effectiveMavenMode,
+            String pluginCoordinates,
+            String pluginResolutionStatus,
+            String goalResult,
+            String outputUsability) {
     }
 
     private record DirectoryInventory(

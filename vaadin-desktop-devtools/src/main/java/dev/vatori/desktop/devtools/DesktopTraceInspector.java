@@ -107,6 +107,9 @@ public final class DesktopTraceInspector {
         FLOW_IPC_V1_30_CURRENT_APP_FRONTEND_BUILD_OUTPUT(
                 "--require-flow-ipc-v1_30-current-app-frontend-build-output"),
         FLOW_IPC_V1_30("--require-flow-ipc-v1_30"),
+        FLOW_IPC_V1_31_FRONTEND_BUILD_PREFLIGHT_AVAILABILITY(
+                "--require-flow-ipc-v1_31-frontend-build-preflight-availability"),
+        FLOW_IPC_V1_31("--require-flow-ipc-v1_31"),
         FLOW_IPC_V1_3_FRAMEWORK("--require-flow-ipc-v1_3-framework");
 
         private final String option;
@@ -456,6 +459,14 @@ public final class DesktopTraceInspector {
                     gates.add(FLOW_IPC_V1_30);
                     yield gates;
                 }
+                case FLOW_IPC_V1_31_FRONTEND_BUILD_PREFLIGHT_AVAILABILITY ->
+                    EnumSet.of(FLOW_IPC_V1_31_FRONTEND_BUILD_PREFLIGHT_AVAILABILITY);
+                case FLOW_IPC_V1_31 -> {
+                    EnumSet<AcceptanceGate> gates = FLOW_IPC_V1_30.expandedRequirements();
+                    gates.add(FLOW_IPC_V1_31_FRONTEND_BUILD_PREFLIGHT_AVAILABILITY);
+                    gates.add(FLOW_IPC_V1_31);
+                    yield gates;
+                }
                 case FLOW_IPC_V1_3_FRAMEWORK -> EnumSet.of(FLOW_IPC_V1_3_FRAMEWORK);
             };
         }
@@ -535,6 +546,9 @@ public final class DesktopTraceInspector {
                 case FLOW_IPC_V1_30_CURRENT_APP_FRONTEND_BUILD_OUTPUT ->
                     summary.hasRequiredFlowIpcV1_30CurrentAppFrontendBuildOutputTypes();
                 case FLOW_IPC_V1_30 -> summary.hasRequiredFlowIpcV1_30Types();
+                case FLOW_IPC_V1_31_FRONTEND_BUILD_PREFLIGHT_AVAILABILITY ->
+                    summary.hasRequiredFlowIpcV1_31FrontendBuildPreflightAvailabilityTypes();
+                case FLOW_IPC_V1_31 -> summary.hasRequiredFlowIpcV1_31Types();
                 case FLOW_IPC_V1_3_FRAMEWORK -> summary.hasRequiredFlowIpcV1_3FrameworkTypes();
             };
         }
@@ -1168,6 +1182,11 @@ public final class DesktopTraceInspector {
                     && line.contains("\"componentFrontendResources\"")
                     && containsCurrentAppFrontendBuildOutputV130Fields(line)) {
                 summary.currentAppFrontendBuildOutputV130ManifestObserved = true;
+            }
+            if (line.contains("\"type\":\"bootstrapResponse\"")
+                    && line.contains("\"componentFrontendResources\"")
+                    && containsFrontendBuildPreflightAvailabilityV131Fields(line)) {
+                summary.frontendBuildPreflightAvailabilityV131ManifestObserved = true;
             }
             if (line.contains("\"type\":\"bootstrapResponse\"")
                     && line.contains("\"componentFrontendResources\"")
@@ -2053,6 +2072,17 @@ public final class DesktopTraceInspector {
                 summary.currentAppFrontendBuildOutputV130ResponseObserved = true;
             }
             if (line.contains("\"type\":\"resourceRequest\"")
+                    && containsPath(line, "vaadin-dev-bundle/webapp/VAADIN/build/generated-flow-imports-VW7hRaNw.js")
+                    && containsFrontendBuildPreflightAvailabilityV131Fields(line)) {
+                summary.frontendBuildPreflightAvailabilityV131RequestObserved = true;
+            }
+            if (line.contains("\"type\":\"resourceResponse\"")
+                    && containsPath(line, "vaadin-dev-bundle/webapp/VAADIN/build/generated-flow-imports-VW7hRaNw.js")
+                    && containsFrontendBuildPreflightAvailabilityV131Fields(line)
+                    && line.contains("\"bodyRedacted\":true")) {
+                summary.frontendBuildPreflightAvailabilityV131ResponseObserved = true;
+            }
+            if (line.contains("\"type\":\"resourceRequest\"")
                     && line.contains("\"purpose\":\"generated-loadondemand-chunk-v1_11\"")
                     && line.contains("\"lookupKind\":\"Generated-flow-imports-dev-bundle-chunk-v1_4\"")
                     && containsPath(line, "vaadin-dev-bundle/webapp/VAADIN/build/generated-flow-imports-VW7hRaNw.js")
@@ -2716,6 +2746,14 @@ public final class DesktopTraceInspector {
                             || line.contains("\"executionStatus\":\"strict-blocker\"")
                             || line.contains("\"executionStatus\":\"staged\""))) {
                 summary.currentAppFrontendBuildOutputV130StageObserved = true;
+            }
+            if (line.contains("\"type\":\"resourceStage\"")
+                    && containsPath(line, "vaadin-dev-bundle/webapp/VAADIN/build/generated-flow-imports-VW7hRaNw.js")
+                    && containsFrontendBuildPreflightAvailabilityV131Fields(line)
+                    && (line.contains("\"executionStatus\":\"executed\"")
+                            || line.contains("\"executionStatus\":\"strict-blocker\"")
+                            || line.contains("\"executionStatus\":\"staged\""))) {
+                summary.frontendBuildPreflightAvailabilityV131StageObserved = true;
             }
             if (line.contains("\"type\":\"webview.dom\"")
                     && containsStringField(line, "frontendStagingResolverVersion", "flow-ipc-resource-staging-v1_5")
@@ -3438,6 +3476,11 @@ public final class DesktopTraceInspector {
                 summary.currentAppFrontendBuildOutputV130DomObserved = true;
             }
             if (line.contains("\"type\":\"webview.dom\"")
+                    && containsLiteralField(line, "frontendBuildPreflightAvailabilityObserved", "true")
+                    && containsFrontendBuildPreflightAvailabilityV131Fields(line)) {
+                summary.frontendBuildPreflightAvailabilityV131DomObserved = true;
+            }
+            if (line.contains("\"type\":\"webview.dom\"")
                     && containsLiteralField(line, "generatedLazySourceCurrentBuildNoOpConfirmed", "true")
                     && containsStringField(line, "generatedLazySourceCurrentBuildTableShape",
                             "no-op-promise-resolve-0")
@@ -3505,6 +3548,12 @@ public final class DesktopTraceInspector {
                     && containsCurrentAppFrontendBuildRuntimeSource(line)
                     && containsCurrentAppFrontendBuildFailureLayer(line)) {
                 summary.currentAppFrontendBuildOutputV130BuildStepObserved = true;
+            }
+            if (line.contains("\"type\":\"webview.dom\"")
+                    && containsFrontendBuildPreflightAvailabilityV131Fields(line)
+                    && containsLiteralField(line, "frontendBuildPreflightBuildStepUnavailableCleared", "true")
+                    && containsResolvedFrontendBuildPreflightFailureLayer(line)) {
+                summary.frontendBuildPreflightAvailabilityV131ResolvedObserved = true;
             }
             if (line.contains("\"type\":\"resourceRequest\"")
                     && line.contains("\"purpose\":\"vaadin-web-component-resource-probe\"")
@@ -4360,6 +4409,90 @@ public final class DesktopTraceInspector {
                         "pending-real-generated-chunk-stage");
     }
 
+    private static boolean containsFrontendBuildPreflightAvailabilityV131Fields(String line) {
+        return containsStringField(line, "frontendBuildPreflightAvailabilityVersion",
+                "flow-ipc-frontend-build-preflight-availability-v1_31")
+                && containsStringField(line, "frontendBuildPreflightAvailabilitySource",
+                        "dev-ipc-vaadin-maven-plugin-availability-v1_31")
+                && containsFrontendBuildPreflightAvailabilityMode(line)
+                && containsFrontendBuildPreflightMavenMode(line)
+                && line.contains("frontendBuildPreflightPluginCoordinates")
+                && containsFrontendBuildPreflightPluginStatus(line)
+                && containsFrontendBuildPreflightGoalResult(line)
+                && containsFrontendBuildPreflightOutputUsability(line)
+                && containsCurrentAppFrontendBuildRuntimeSource(line.replace(
+                        "frontendBuildPreflightRuntimeSourceDecision",
+                        "currentAppFrontendBuildOutputRuntimeSource"))
+                && containsFrontendBuildPreflightFailureLayer(line)
+                && line.contains("Vaadin frontend build")
+                && line.contains("frontendBuildPreflightBuildStepUnavailableCleared")
+                && containsLiteralField(line, "frontendBuildPreflightNoLocalhost", "true");
+    }
+
+    private static boolean containsFrontendBuildPreflightAvailabilityMode(String line) {
+        return containsStringField(line, "frontendBuildPreflightAvailabilityMode", "offline-default")
+                || containsStringField(line, "frontendBuildPreflightAvailabilityMode", "forced-offline")
+                || containsStringField(line, "frontendBuildPreflightAvailabilityMode",
+                        "explicit-online-local-repo");
+    }
+
+    private static boolean containsFrontendBuildPreflightMavenMode(String line) {
+        return containsStringField(line, "frontendBuildPreflightEffectiveMavenMode", "-o")
+                || containsStringField(line, "frontendBuildPreflightEffectiveMavenMode", "-U");
+    }
+
+    private static boolean containsFrontendBuildPreflightPluginStatus(String line) {
+        return containsStringField(line, "frontendBuildPreflightPluginResolutionStatus", "not-attempted")
+                || containsStringField(line, "frontendBuildPreflightPluginResolutionStatus",
+                        "version-unavailable")
+                || containsStringField(line, "frontendBuildPreflightPluginResolutionStatus", "missing")
+                || containsStringField(line, "frontendBuildPreflightPluginResolutionStatus", "resolved")
+                || containsStringField(line, "frontendBuildPreflightPluginResolutionStatus", "unknown");
+    }
+
+    private static boolean containsFrontendBuildPreflightGoalResult(String line) {
+        return containsStringField(line, "frontendBuildPreflightGoalResult", "skipped")
+                || containsStringField(line, "frontendBuildPreflightGoalResult", "version-unavailable")
+                || containsStringField(line, "frontendBuildPreflightGoalResult", "plugin-unavailable")
+                || containsStringField(line, "frontendBuildPreflightGoalResult", "success")
+                || containsStringField(line, "frontendBuildPreflightGoalResult", "failed");
+    }
+
+    private static boolean containsFrontendBuildPreflightOutputUsability(String line) {
+        return containsStringField(line, "frontendBuildPreflightOutputUsability", "not-inspected")
+                || containsStringField(line, "frontendBuildPreflightOutputUsability", "output-missing")
+                || containsStringField(line, "frontendBuildPreflightOutputUsability", "output-incomplete")
+                || containsStringField(line, "frontendBuildPreflightOutputUsability",
+                        "prepare-frontend-generated-scaffold-no-generated-imports")
+                || containsStringField(line, "frontendBuildPreflightOutputUsability",
+                        "generated-imports-no-chunk")
+                || containsStringField(line, "frontendBuildPreflightOutputUsability",
+                        "usable-generated-chunk");
+    }
+
+    private static boolean containsFrontendBuildPreflightFailureLayer(String line) {
+        return containsStringField(line, "frontendBuildPreflightFailureLayer",
+                "frontend-build-preflight-not-enabled")
+                || containsStringField(line, "frontendBuildPreflightFailureLayer",
+                        "frontend-build-plugin-unavailable")
+                || containsStringField(line, "frontendBuildPreflightFailureLayer",
+                        "frontend-build-goal-failed-before-output")
+                || containsResolvedFrontendBuildPreflightFailureLayer(line)
+                || containsStringField(line, "frontendBuildPreflightFailureLayer",
+                        "frontend-build-preflight-unknown");
+    }
+
+    private static boolean containsResolvedFrontendBuildPreflightFailureLayer(String line) {
+        return containsStringField(line, "frontendBuildPreflightFailureLayer",
+                "frontend-build-plugin-resolved-output-incomplete")
+                || containsStringField(line, "frontendBuildPreflightFailureLayer",
+                        "current-app-build-output-has-no-generated-lazy-chunk")
+                || containsStringField(line, "frontendBuildPreflightFailureLayer",
+                        "current-app-build-output-generated-chunk-file-missing")
+                || containsStringField(line, "frontendBuildPreflightFailureLayer",
+                        "current-app-build-output-generated-chunk-available-pending-stage");
+    }
+
     private static boolean containsProductionOwnerFailureLayer(String line, String field) {
         return containsStringField(line, field, "production-owner-duplicate-custom-element")
                 || containsStringField(line, field, "production-owner-relative-import-unresolved")
@@ -4836,6 +4969,12 @@ public final class DesktopTraceInspector {
         private boolean currentAppFrontendBuildOutputV130StageObserved;
         private boolean currentAppFrontendBuildOutputV130DomObserved;
         private boolean currentAppFrontendBuildOutputV130BuildStepObserved;
+        private boolean frontendBuildPreflightAvailabilityV131ManifestObserved;
+        private boolean frontendBuildPreflightAvailabilityV131RequestObserved;
+        private boolean frontendBuildPreflightAvailabilityV131ResponseObserved;
+        private boolean frontendBuildPreflightAvailabilityV131StageObserved;
+        private boolean frontendBuildPreflightAvailabilityV131DomObserved;
+        private boolean frontendBuildPreflightAvailabilityV131ResolvedObserved;
 
         public boolean hasRequiredFlowIpcTypes() {
             return types.keySet().containsAll(FLOW_IPC_REQUIRED_TYPES)
@@ -5314,6 +5453,20 @@ public final class DesktopTraceInspector {
         public boolean hasRequiredFlowIpcV1_30Types() {
             return hasRequiredFlowIpcV1_29Types()
                     && hasRequiredFlowIpcV1_30CurrentAppFrontendBuildOutputTypes();
+        }
+
+        public boolean hasRequiredFlowIpcV1_31FrontendBuildPreflightAvailabilityTypes() {
+            return frontendBuildPreflightAvailabilityV131ManifestObserved
+                    && frontendBuildPreflightAvailabilityV131RequestObserved
+                    && frontendBuildPreflightAvailabilityV131ResponseObserved
+                    && frontendBuildPreflightAvailabilityV131StageObserved
+                    && frontendBuildPreflightAvailabilityV131DomObserved
+                    && frontendBuildPreflightAvailabilityV131ResolvedObserved;
+        }
+
+        public boolean hasRequiredFlowIpcV1_31Types() {
+            return hasRequiredFlowIpcV1_30Types()
+                    && hasRequiredFlowIpcV1_31FrontendBuildPreflightAvailabilityTypes();
         }
 
         public boolean hasRequiredFlowIpcV1_3FrameworkTypes() {
@@ -5797,6 +5950,15 @@ public final class DesktopTraceInspector {
                     + currentAppFrontendBuildOutputV130StageObserved + "/"
                     + currentAppFrontendBuildOutputV130DomObserved + "/"
                     + currentAppFrontendBuildOutputV130BuildStepObserved);
+            System.out.println("Flow IPC v1.31 frontend build preflight availability manifest observed: "
+                    + frontendBuildPreflightAvailabilityV131ManifestObserved);
+            System.out.println("Flow IPC v1.31 frontend build preflight availability request/response observed: "
+                    + frontendBuildPreflightAvailabilityV131RequestObserved + "/"
+                    + frontendBuildPreflightAvailabilityV131ResponseObserved);
+            System.out.println("Flow IPC v1.31 frontend build preflight availability stage/DOM/resolved observed: "
+                    + frontendBuildPreflightAvailabilityV131StageObserved + "/"
+                    + frontendBuildPreflightAvailabilityV131DomObserved + "/"
+                    + frontendBuildPreflightAvailabilityV131ResolvedObserved);
             System.out.println("Flow IPC v1.6 TextField graph manifest observed: "
                     + frontendTextFieldV16ManifestObserved);
             System.out.println("Flow IPC v1.6 TextField graph request observed: "

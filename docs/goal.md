@@ -386,6 +386,20 @@ production owner-owned runtime 和 dev-mode/Vite parity 仍作为真实 app/buil
   尚未缓存 `com.vaadin:vaadin-maven-plugin:25.1.5`；v1.30 不是 real generated chunk
   parity，但它证明 runtime 已越过“没有运行/接入 build step”这一层，剩余缺口在可执行
   Vaadin frontend build 输出或受支持 lazy chunk SPI。
+- v1.31 已把 v1.30 的 offline plugin availability blocker 推进到 explicit online/local-repo
+  preflight availability contract：`VAADIN_DESKTOP_FLOW_IPC_FRONTEND_BUILD_ONLINE=1`
+  让 `dev-ipc` preflight 使用项目本地 Maven repo 解析
+  `com.vaadin:vaadin-maven-plugin:25.1.5` 并成功执行 `prepare-frontend`。Java manifest /
+  resource response、Swift `resourceRequest` / `resourceResponse` / `resourceStage` /
+  `webview.dom` 和 inspector gate 统一记录
+  `frontendBuildPreflightAvailabilityVersion=flow-ipc-frontend-build-preflight-availability-v1_31`、
+  availability mode `explicit-online-local-repo`、effective Maven mode、plugin coordinates /
+  resolution status `resolved`、goal result `success`、output usability
+  `prepare-frontend-generated-scaffold-no-generated-imports`、runtime source decision
+  `current-app-build-output-incomplete`、`frontendBuildPreflightBuildStepUnavailableCleared=true`
+  和 failure layer `frontend-build-plugin-resolved-output-incomplete`。v1.31 不是 real generated
+  chunk parity；它证明 Maven plugin availability 不再是当前 blocker，剩余缺口在 full Vaadin
+  frontend build/package 输出或受支持 lazy chunk SPI。
 - 当前 app/build 的真实 generated/lazy chunk file parity、production owner import/side-effect success
   和 dev-mode/Vite execution 仍是明确 blocker，不计入最终完成。
 

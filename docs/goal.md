@@ -25,12 +25,13 @@ v0/v1 runtime 切片走向可产品化桌面框架的最终完成状态。
 - `docs/goal-1_17.md`：Host-Owned Frontend Resource Scheme，已完成。
 - `docs/goal-1_18.md`：Production Owner Custom-Scheme Resource Graph，已完成。
 - `docs/goal-1_19.md`：Production Owner Side-Effect and Reuse Decision，已完成。
+- `docs/goal-1_20.md`：Production Owner-Owned Runtime Reuse Path，已规划，正在执行。
 
-当前已完成到 `docs/goal-1_19.md`。建议下一个阶段继续从 production owner
-side-effect / component reuse decision 往真实 owner-owned runtime path、generated
-chunk-file execution 或 dev-mode/Vite execution 推进，而不是停留在 decision 证明层。
+当前已完成到 `docs/goal-1_19.md`，当前正在执行 `docs/goal-1_20.md`。下一阶段从
+production owner side-effect / component reuse decision 往真实 owner-owned runtime path
+推进，而不是停留在 decision 证明层。
 
-后续阶段应继续以 `docs/goal-1_19.md` 等文件拆分，
+后续阶段应继续以 `docs/goal-1_20.md` 等文件拆分，
 每个阶段只拿走本长期目标中的一个可评审切片。不要把本文件改写成短期任务清单；
 它是长期北极星和完成度账本。
 
@@ -350,13 +351,12 @@ chunk-file execution 或 dev-mode/Vite execution 推进，而不是停留在 dec
 
 ## 当前建议的下一阶段
 
-`docs/goal-1_20.md` 应该基于 v1.19 的 production owner side-effect / reuse decision 证据继续推进。
-合理方向是选择一个能让 frontend/resource pipeline 更接近闭环的真实切片：让 production owner
-获得可复用 owner-owned side effects，或让当前 smoke/framework build 产生真实 generated lazy
-chunk file，或接入受支持 Vaadin lazy chunk SPI / dev-mode Vite execution。不要把 v1.19 的
-`focused-fallback-after-owner-side-effect-check` 包装成 owner reuse success。
+`docs/goal-1_20.md` 已选择 production owner-owned runtime reuse path。它基于 v1.19 的
+side-effect / reuse decision 证据，让 production owner 在 focused component imports 之前获得
+owner-first custom-scheme execution / side-effect opportunity，并要求 component resolver 明确
+`owner-reused` 或 `focused-fallback-after-owner-owned-runtime-attempt`。
 
-后续阶段可继续从以下方向选择：
+v1.20 之后可继续从以下方向选择：
 
 - 让当前 smoke/framework build 产生真实 generated lazy chunk file，或评估受支持 Vaadin lazy
   chunk SPI，越过 v1.12 的 `chunk-file-not-generated` blocker。

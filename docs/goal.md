@@ -20,10 +20,11 @@ v0/v1 runtime 切片走向可产品化桌面框架的最终完成状态。
 - `docs/goal-1_12.md`：Generated LoadOnDemand chunk file registry and side-effect proof，已完成。
 - `docs/goal-1_13.md`：Production Bundle Owned Runtime Boundary，已完成。
 - `docs/goal-1_14.md`：Production Owner Import and Side-Effect Boundary，已完成。
+- `docs/goal-1_15.md`：Production Owner Dependency Resolver Closure，已规划但尚未执行。
 
-当前短期阶段目标已推进到 `docs/goal-1_14.md`，后续阶段应从长期未完成账本中继续拆分。
+当前建议的短期阶段目标已规划为 `docs/goal-1_15.md`，后续阶段应从长期未完成账本中继续拆分。
 
-后续阶段应继续以 `docs/goal-1_15.md` 等文件拆分，
+后续阶段应继续以 `docs/goal-1_16.md` 等文件拆分，
 每个阶段只拿走本长期目标中的一个可评审切片。不要把本文件改写成短期任务清单；
 它是长期北极星和完成度账本。
 
@@ -279,16 +280,19 @@ v0/v1 runtime 切片走向可产品化桌面框架的最终完成状态。
 
 ## 当前建议的下一阶段
 
-`docs/goal-1_14.md` 已完成 production owner import and side-effect boundary：它承接
-v1.13 的 production owner contract，不再只证明 owner 可以 stage 真实 stats-selected
-artifact，而是证明 owner 对
-`vaadin-dev-bundle/webapp/VAADIN/build/indexhtml-BfYYZi8S.js` 发起受控 import /
-side-effect probe。当前结果不是 broad production parity，也不是 import success；trace
-已把 v1.13 的 `production-owner-runtime-contract-missing` 推进到
-`production-owner-relative-import-unresolved`，并记录真实浏览器 duplicate custom element
-错误、relative dependency rewrite diagnostics、Vaadin global snapshot 和 registry
-snapshot。下一阶段应继续从这个 v1.14 证据拆解 owner dependency resolver、custom
-element collision ordering 或 custom-scheme/file-backed resolver。
+`docs/goal-1_15.md` 已规划为下一阶段：它承接 v1.14 的真实 production owner import
+attempt，不再满足于证明 owner 可以对
+`vaadin-dev-bundle/webapp/VAADIN/build/indexhtml-BfYYZi8S.js` 发起 import，而是要求把
+owner-scoped relative dependency resolver 推进到可审计的 graph closure。Preferred 是
+真实 stats-selected production owner artifact 的 relative imports 全部被解析、stage 和
+rewrite，并让 owner import 继续向 side-effect proof 前进；Acceptable 是所有真实存在的
+dependencies 都被解析后，最终 blocker 收敛到明确的 missing-real-artifact、duplicate custom
+element、browser import failure、global collision 或 side-effect-unobservable。
+
+该阶段仍不是 broad production parity，也不要求 dev-mode/Vite parity。它的价值是把 v1.14 的
+`production-owner-relative-import-unresolved` 拆成 owner dependency graph 证据，为后续
+custom element ordering、custom-scheme/file-backed resolver、production owner side-effect
+ownership 或更宽组件覆盖铺路。
 
 后续阶段可继续从以下方向选择：
 

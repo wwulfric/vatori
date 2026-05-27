@@ -22,11 +22,13 @@ v0/v1 runtime 切片走向可产品化桌面框架的最终完成状态。
 - `docs/goal-1_14.md`：Production Owner Import and Side-Effect Boundary，已完成。
 - `docs/goal-1_15.md`：Production Owner Dependency Resolver Closure，已规划但尚未执行。
 - `docs/goal-1_16.md`：Production Owner Import Ordering and Component Reuse，已规划但尚未执行。
+- `docs/goal-1_17.md`：Host-Owned Frontend Resource Scheme，已规划但尚未执行。
 
-当前建议的短期阶段目标已规划到 `docs/goal-1_16.md`。执行顺序上应先完成
-`docs/goal-1_15.md`，再启动 `docs/goal-1_16.md`；后续阶段应从长期未完成账本中继续拆分。
+当前建议的短期阶段目标已规划到 `docs/goal-1_17.md`。执行顺序上应先完成
+`docs/goal-1_15.md`，再启动 `docs/goal-1_16.md`，最后推进 `docs/goal-1_17.md`；后续阶段
+应从长期未完成账本中继续拆分。
 
-后续阶段应继续以 `docs/goal-1_17.md` 等文件拆分，
+后续阶段应继续以 `docs/goal-1_18.md` 等文件拆分，
 每个阶段只拿走本长期目标中的一个可评审切片。不要把本文件改写成短期任务清单；
 它是长期北极星和完成度账本。
 
@@ -256,8 +258,8 @@ v0/v1 runtime 切片走向可产品化桌面框架的最终完成状态。
   execution 和 dev-mode/Vite execution 从 partial/blocker 推进到真实可执行路径。
 - 完整 generated/lazy `Flow.loadOnDemand` execution，不再停在 staged generated-flow-imports
   no-op / missing chunk file blocker。
-- Production bundle owner dependency resolver、import success、chunk side-effect ownership 和
-  packaging-time staging。
+- Production bundle owner dependency resolver、import success、chunk side-effect ownership、
+  host-owned resource scheme / file-backed loader 和 packaging-time staging。
 - Dev-mode/Vite graph execution 或可靠替代模式。
 - Broader Vaadin component parity，尤其是 Grid/VirtualList、ComboBox、DatePicker、
   Dialog、Upload。
@@ -304,6 +306,13 @@ module identity / side effects。Preferred 是 owner-first import 成功、compo
 Acceptable 是真实 owner-first / isolated import 之后，blocker 收敛到 custom element ordering、
 global collision、side-effect ownership 或 unsupported Vaadin production owner contract 的具体
 失败层。
+
+`docs/goal-1_17.md` 已作为 v1.16 之后的阶段提前规划：它把 no-localhost frontend resource
+loading 从 WebView JS 内部 Blob module URL staging 推进到 host-owned custom scheme 或
+file-backed loader boundary。Preferred 是 Flow client resources、当前 component frontend
+entries、generated/lazy artifact 和 production owner graph 都通过 host-owned URL layer 执行；
+Acceptable 是至少一条真实 executed artifact path 从 Blob 迁移到 scheme/file loader，并记录
+Blob fallback 的 artifact、reason、blocked layer 和下一步拆解。
 
 后续阶段可继续从以下方向选择：
 

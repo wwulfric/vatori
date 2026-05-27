@@ -26,12 +26,14 @@ v0/v1 runtime 切片走向可产品化桌面框架的最终完成状态。
 - `docs/goal-1_18.md`：Production Owner Custom-Scheme Resource Graph，已完成。
 - `docs/goal-1_19.md`：Production Owner Side-Effect and Reuse Decision，已完成。
 - `docs/goal-1_20.md`：Production Owner-Owned Runtime Reuse Path，已完成。
+- `docs/goal-1_21.md`：Unified Frontend Resource Resolver Contract，已规划，正在执行。
 
-当前已完成到 `docs/goal-1_20.md`。下一阶段应从 owner-first runtime reuse attempt
-继续推进到统一 frontend resource resolver contract、真实 owner side-effect/reuse success、
-generated lazy chunk file / SPI 或 dev-mode/Vite execution，而不是停留在可审计 fallback。
+当前已完成到 `docs/goal-1_20.md`，当前正在执行 `docs/goal-1_21.md`。下一阶段从
+owner-first runtime reuse attempt 继续推进到统一 frontend resource resolver contract，让当前
+component、generated/lazy、theme/static、flow-lazy-dependency、production owner 和 dev-mode
+resource graph 能被同一套 resolver/cache/cleanup/integrity 语义追踪，而不是继续堆叠孤立字段。
 
-后续阶段应继续以 `docs/goal-1_21.md` 等文件拆分，
+后续阶段应继续以 `docs/goal-1_22.md` 等文件拆分，
 每个阶段只拿走本长期目标中的一个可评审切片。不要把本文件改写成短期任务清单；
 它是长期北极星和完成度账本。
 
@@ -371,10 +373,12 @@ owner-first custom-scheme execution / side-effect opportunity，并让 component
 记录当前 `focused-fallback-after-owner-owned-runtime-attempt`，failure layer 为
 `production-owner-owned-missing-real-artifact`。
 
-v1.20 之后可继续从以下方向选择：
+`docs/goal-1_21.md` 已选择统一 frontend resource resolver contract。它不会把 v1.20 的
+production owner fallback 包装成 success，而是把现有 family-specific resolver metadata 收束为
+一个横向可验证的 resolver/cache/cleanup/integrity contract。
 
-- 统一 component/generated/theme/production owner resource graph 的 resolver、cache、cleanup
-  和 integrity 策略，把当前多条专用 resolver 收束成可产品化 pipeline contract。
+v1.21 之后可继续从以下方向选择：
+
 - 让当前 smoke/framework build 产生真实 generated lazy chunk file，或评估受支持 Vaadin lazy
   chunk SPI，越过 v1.12 的 `chunk-file-not-generated` blocker。
 - Dev-mode/Vite graph execution 或可靠替代模式。

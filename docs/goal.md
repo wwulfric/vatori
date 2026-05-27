@@ -25,13 +25,13 @@ v0/v1 runtime 切片走向可产品化桌面框架的最终完成状态。
 - `docs/goal-1_17.md`：Host-Owned Frontend Resource Scheme，已完成。
 - `docs/goal-1_18.md`：Production Owner Custom-Scheme Resource Graph，已完成。
 - `docs/goal-1_19.md`：Production Owner Side-Effect and Reuse Decision，已完成。
-- `docs/goal-1_20.md`：Production Owner-Owned Runtime Reuse Path，已规划，正在执行。
+- `docs/goal-1_20.md`：Production Owner-Owned Runtime Reuse Path，已完成。
 
-当前已完成到 `docs/goal-1_19.md`，当前正在执行 `docs/goal-1_20.md`。下一阶段从
-production owner side-effect / component reuse decision 往真实 owner-owned runtime path
-推进，而不是停留在 decision 证明层。
+当前已完成到 `docs/goal-1_20.md`。下一阶段应从 owner-first runtime reuse attempt
+继续推进到统一 frontend resource resolver contract、真实 owner side-effect/reuse success、
+generated lazy chunk file / SPI 或 dev-mode/Vite execution，而不是停留在可审计 fallback。
 
-后续阶段应继续以 `docs/goal-1_20.md` 等文件拆分，
+后续阶段应继续以 `docs/goal-1_21.md` 等文件拆分，
 每个阶段只拿走本长期目标中的一个可评审切片。不要把本文件改写成短期任务清单；
 它是长期北极星和完成度账本。
 
@@ -53,7 +53,7 @@ production owner side-effect / component reuse decision 往真实 owner-owned ru
 
 ## 当前基线
 
-截至 goal 1.19，仓库已经证明：
+截至 goal 1.20，仓库已经证明：
 
 - `dev-ipc` 可以启动 no-localhost Flow IPC runtime。
 - 真实 macOS Swift/AppKit/WKWebView 窗口可以运行 Flow IPC smoke app 和 framework
@@ -225,6 +225,19 @@ production owner side-effect / component reuse decision 往真实 owner-owned ru
   组件 resolver 明确记录 `focused-fallback-after-owner-side-effect-check`。这不是 production
   owner import/side-effect success，也不是 full production bundle parity；它避免把 module
   import resolve 或 focused component fallback 误算为 owner-owned runtime success。
+- v1.20 已把 production owner 从 v1.19 after-check decision 推进到 owner-first runtime reuse
+  attempt：Java manifest / resource response 声明
+  `productionBundleRuntimeOwnerOwnedRuntimeVersion=flow-ipc-production-owner-owned-runtime-v1_20`、
+  `productionBundleRuntimeOwnerOwnedRuntimePolicy=owner-first-custom-scheme-runtime-reuse-v1_20`、
+  expected tags/globals、no-Blob-fallback contract 和
+  `componentProductionOwnerReusePolicyVersionV1_20=flow-ipc-component-owner-reuse-policy-v1_20`；
+  Swift host 在 focused component imports 之前执行 owner-first custom-scheme runtime attempt，
+  记录 actual phase、satisfied/failure result 和 component resolver decision。当前真实 trace
+  的 accepted 形态是 owner-owned runtime 仍未满足，failure layer 收敛为
+  `production-owner-owned-missing-real-artifact`，组件 resolver 明确记录
+  `focused-fallback-after-owner-owned-runtime-attempt`。这不是 production owner side-effect
+  success，但它证明 fallback 发生在 v1.20 owner-owned runtime contract 之后，而不是停留在
+  v1.19 side-effect decision。
 - 完整 generated/lazy chunk file execution、production owner import/side-effect success
   和 dev-mode/Vite execution 仍是明确 blocker，不计入最终完成。
 
@@ -325,8 +338,9 @@ production owner side-effect / component reuse decision 往真实 owner-owned ru
 - 完整 generated/lazy `Flow.loadOnDemand` execution，不再停在 staged generated-flow-imports
   no-op / missing chunk file blocker。
 - Production bundle owner import/side-effect success、chunk side-effect ownership、
-  packaging-time staging，以及把 v1.19 side-effect / reuse decision 从可审计 fallback
-  推进到可复用 owner-owned runtime path。
+  packaging-time staging，以及把 v1.20 owner-first runtime reuse attempt 从
+  `production-owner-owned-missing-real-artifact` / focused fallback 推进到可复用
+  owner-owned runtime path。
 - Dev-mode/Vite graph execution 或可靠替代模式。
 - Broader Vaadin component parity，尤其是 Grid/VirtualList、ComboBox、DatePicker、
   Dialog、Upload。
@@ -351,18 +365,19 @@ production owner side-effect / component reuse decision 往真实 owner-owned ru
 
 ## 当前建议的下一阶段
 
-`docs/goal-1_20.md` 已选择 production owner-owned runtime reuse path。它基于 v1.19 的
+`docs/goal-1_20.md` 已完成 production owner-owned runtime reuse attempt。它基于 v1.19 的
 side-effect / reuse decision 证据，让 production owner 在 focused component imports 之前获得
-owner-first custom-scheme execution / side-effect opportunity，并要求 component resolver 明确
-`owner-reused` 或 `focused-fallback-after-owner-owned-runtime-attempt`。
+owner-first custom-scheme execution / side-effect opportunity，并让 component resolver 明确
+记录当前 `focused-fallback-after-owner-owned-runtime-attempt`，failure layer 为
+`production-owner-owned-missing-real-artifact`。
 
 v1.20 之后可继续从以下方向选择：
 
+- 统一 component/generated/theme/production owner resource graph 的 resolver、cache、cleanup
+  和 integrity 策略，把当前多条专用 resolver 收束成可产品化 pipeline contract。
 - 让当前 smoke/framework build 产生真实 generated lazy chunk file，或评估受支持 Vaadin lazy
   chunk SPI，越过 v1.12 的 `chunk-file-not-generated` blocker。
 - Dev-mode/Vite graph execution 或可靠替代模式。
-- 统一 component/generated/theme/production owner resource graph 的 resolver、cache、cleanup
-  和 integrity 策略。
 - Broader Vaadin component parity，尤其是 Grid/VirtualList、ComboBox、DatePicker、Dialog、
   Upload。
 - Swift host tests / default-host readiness。

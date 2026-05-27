@@ -74,6 +74,9 @@ public final class DesktopTraceInspector {
         FLOW_IPC_V1_19_PRODUCTION_OWNER_SIDE_EFFECT(
                 "--require-flow-ipc-v1_19-production-owner-side-effect"),
         FLOW_IPC_V1_19("--require-flow-ipc-v1_19"),
+        FLOW_IPC_V1_20_PRODUCTION_OWNER_OWNED_RUNTIME(
+                "--require-flow-ipc-v1_20-production-owner-owned-runtime"),
+        FLOW_IPC_V1_20("--require-flow-ipc-v1_20"),
         FLOW_IPC_V1_3_FRAMEWORK("--require-flow-ipc-v1_3-framework");
 
         private final String option;
@@ -227,6 +230,22 @@ public final class DesktopTraceInspector {
                         FLOW_IPC_V1_17_RESOURCE_SCHEME, FLOW_IPC_V1_17,
                         FLOW_IPC_V1_18_PRODUCTION_OWNER_RESOURCE_SCHEME, FLOW_IPC_V1_18,
                         FLOW_IPC_V1_19_PRODUCTION_OWNER_SIDE_EFFECT, FLOW_IPC_V1_19);
+                case FLOW_IPC_V1_20_PRODUCTION_OWNER_OWNED_RUNTIME ->
+                    EnumSet.of(FLOW_IPC_V1_20_PRODUCTION_OWNER_OWNED_RUNTIME);
+                case FLOW_IPC_V1_20 -> EnumSet.of(FLOW_IPC_V1, FLOW_IPC_V1_1, FLOW_IPC_V1_2,
+                        FLOW_IPC_V1_3, FLOW_IPC_V1_4, FLOW_IPC_V1_5, FLOW_IPC_V1_7,
+                        FLOW_IPC_V1_8, FLOW_IPC_V1_9_LOADONDEMAND, FLOW_IPC_V1_9,
+                        FLOW_IPC_V1_10_LAZY_DEPENDENCY, FLOW_IPC_V1_10_PRODUCTION_RUNTIME,
+                        FLOW_IPC_V1_10, FLOW_IPC_V1_11_LOADONDEMAND_CHUNK, FLOW_IPC_V1_11,
+                        FLOW_IPC_V1_12_LOADONDEMAND_CHUNK_FILE, FLOW_IPC_V1_12,
+                        FLOW_IPC_V1_13_PRODUCTION_OWNER, FLOW_IPC_V1_13,
+                        FLOW_IPC_V1_14_PRODUCTION_OWNER_IMPORT, FLOW_IPC_V1_14,
+                        FLOW_IPC_V1_15_PRODUCTION_OWNER_DEPENDENCIES, FLOW_IPC_V1_15,
+                        FLOW_IPC_V1_16_PRODUCTION_OWNER_ORDERING, FLOW_IPC_V1_16,
+                        FLOW_IPC_V1_17_RESOURCE_SCHEME, FLOW_IPC_V1_17,
+                        FLOW_IPC_V1_18_PRODUCTION_OWNER_RESOURCE_SCHEME, FLOW_IPC_V1_18,
+                        FLOW_IPC_V1_19_PRODUCTION_OWNER_SIDE_EFFECT, FLOW_IPC_V1_19,
+                        FLOW_IPC_V1_20_PRODUCTION_OWNER_OWNED_RUNTIME, FLOW_IPC_V1_20);
                 case FLOW_IPC_V1_3_FRAMEWORK -> EnumSet.of(FLOW_IPC_V1_3_FRAMEWORK);
             };
         }
@@ -273,6 +292,9 @@ public final class DesktopTraceInspector {
                 case FLOW_IPC_V1_19_PRODUCTION_OWNER_SIDE_EFFECT ->
                     summary.hasRequiredFlowIpcV1_19ProductionOwnerSideEffectTypes();
                 case FLOW_IPC_V1_19 -> summary.hasRequiredFlowIpcV1_19Types();
+                case FLOW_IPC_V1_20_PRODUCTION_OWNER_OWNED_RUNTIME ->
+                    summary.hasRequiredFlowIpcV1_20ProductionOwnerOwnedRuntimeTypes();
+                case FLOW_IPC_V1_20 -> summary.hasRequiredFlowIpcV1_20Types();
                 case FLOW_IPC_V1_3_FRAMEWORK -> summary.hasRequiredFlowIpcV1_3FrameworkTypes();
             };
         }
@@ -837,6 +859,23 @@ public final class DesktopTraceInspector {
             }
             if (line.contains("\"type\":\"bootstrapResponse\"")
                     && line.contains("\"componentFrontendResources\"")
+                    && containsStringField(line, "productionBundleRuntimeOwnerOwnedRuntimeVersion",
+                            "flow-ipc-production-owner-owned-runtime-v1_20")
+                    && containsStringField(line, "productionBundleRuntimeOwnerOwnedRuntimePolicy",
+                            "owner-first-custom-scheme-runtime-reuse-v1_20")
+                    && containsStringField(line, "productionBundleRuntimeOwnerOwnedRuntimePhase",
+                            "before-component-imports")
+                    && containsStringField(line, "productionBundleRuntimeOwnerOwnedRuntimeExpectedTags",
+                            "vaadin-text-field,vaadin-checkbox,vaadin-select")
+                    && containsLiteralField(line, "productionBundleRuntimeOwnerOwnedRuntimeNoBlobFallback", "true")
+                    && containsStringField(line, "componentProductionOwnerReusePolicyVersionV1_20",
+                            "flow-ipc-component-owner-reuse-policy-v1_20")
+                    && containsStringField(line, "componentProductionOwnerReusePolicyV1_20",
+                            "owner-first-then-focused-fallback-v1_20")) {
+                summary.productionRuntimeOwnerOwnedRuntimeV120ManifestObserved = true;
+            }
+            if (line.contains("\"type\":\"bootstrapResponse\"")
+                    && line.contains("\"componentFrontendResources\"")
                     && containsStringField(line, "productionBundleRuntimeVersion",
                             "flow-ipc-production-runtime-v1_10")
                     && containsStringField(line, "productionBundleRuntimeRegistrySource",
@@ -1257,7 +1296,9 @@ public final class DesktopTraceInspector {
                     && line.contains("\"executionVersion\":\"flow-ipc-textfield-v1_7\"")
                     && line.contains("\"textfieldSideEffectVersion\":\"flow-ipc-textfield-side-effect-v1_7\"")
                     && line.contains("\"classExportArtifact\":\"vaadin-dev-bundle/webapp/VAADIN/build/indexhtml-BfYYZi8S.js\"")
-                    && line.contains("\"moduleIdentityStrategy\":\"stable-resource-path-blob-module-identity-v1_7\"")
+                    && (line.contains("\"moduleIdentityStrategy\":\"stable-resource-path-blob-module-identity-v1_7\"")
+                            || line.contains("\"moduleIdentityStrategy\":\"owner-attempt-custom-element-class-export-v1_20\"")
+                            || line.contains("\"moduleIdentityStrategy\":\"component-graph-existing-custom-element-class-export-v1_7\""))
                     && line.contains("\"customElementTag\":\"vaadin-text-field\"")
                     && line.contains("\"duplicateTag\":\"vaadin-text-field\"")
                     && line.contains("\"remainingBlockerClassification\":\"none\"")
@@ -1484,6 +1525,22 @@ public final class DesktopTraceInspector {
                 summary.productionRuntimeOwnerSideEffectV119RequestObserved = true;
             }
             if (line.contains("\"type\":\"resourceRequest\"")
+                    && (line.contains("\"purpose\":\"vaadin-web-component-resource-probe\"")
+                            || line.contains("\"purpose\":\"production-owner-dependency-v1_15\""))
+                    && containsStringField(line, "productionBundleRuntimeOwnerOwnedRuntimeVersion",
+                            "flow-ipc-production-owner-owned-runtime-v1_20")
+                    && containsStringField(line, "productionBundleRuntimeOwnerOwnedRuntimePolicy",
+                            "owner-first-custom-scheme-runtime-reuse-v1_20")
+                    && containsStringField(line, "productionBundleRuntimeOwnerOwnedRuntimePhase",
+                            "before-component-imports")
+                    && containsLiteralField(line, "productionBundleRuntimeOwnerOwnedRuntimeNoBlobFallback", "true")
+                    && containsStringField(line, "componentProductionOwnerReusePolicyVersionV1_20",
+                            "flow-ipc-component-owner-reuse-policy-v1_20")
+                    && containsStringField(line, "componentProductionOwnerReusePolicyV1_20",
+                            "owner-first-then-focused-fallback-v1_20")) {
+                summary.productionRuntimeOwnerOwnedRuntimeV120RequestObserved = true;
+            }
+            if (line.contains("\"type\":\"resourceRequest\"")
                     && line.contains("\"purpose\":\"generated-loadondemand-chunk-v1_11\"")
                     && line.contains("\"lookupKind\":\"Generated-flow-imports-dev-bundle-chunk-v1_4\"")
                     && containsPath(line, "vaadin-dev-bundle/webapp/VAADIN/build/generated-flow-imports-VW7hRaNw.js")
@@ -1705,6 +1762,34 @@ public final class DesktopTraceInspector {
                     && containsLiteralField(line, "productionBundleRuntimeOwnerBlobFallbackUsed", "false")) {
                 summary.productionRuntimeOwnerSideEffectV119StageObserved = true;
                 summary.productionRuntimeOwnerSideEffectV119ReuseDecisionObserved = true;
+            }
+            if (line.contains("\"type\":\"resourceStage\"")
+                    && line.contains("\"artifactFamily\":\"production-bundle\"")
+                    && containsPath(line, "vaadin-dev-bundle/webapp/VAADIN/build/indexhtml-BfYYZi8S.js")
+                    && containsStringField(line, "productionBundleRuntimeOwnerOwnedRuntimeVersion",
+                            "flow-ipc-production-owner-owned-runtime-v1_20")
+                    && containsStringField(line, "productionBundleRuntimeOwnerOwnedRuntimePolicy",
+                            "owner-first-custom-scheme-runtime-reuse-v1_20")
+                    && containsStringField(line, "productionBundleRuntimeOwnerOwnedRuntimePhase",
+                            "before-component-imports")
+                    && containsStringField(line, "productionBundleRuntimeOwnerOwnedRuntimeActualPhase",
+                            "before-component-imports")
+                    && containsStringField(line, "productionBundleRuntimeOwnerOwnedRuntimeExpectedTags",
+                            "vaadin-text-field,vaadin-checkbox,vaadin-select")
+                    && containsLiteralField(line, "productionBundleRuntimeOwnerOwnedRuntimeNoBlobFallback", "true")
+                    && containsLiteralField(line, "productionBundleRuntimeOwnerOwnedRuntimeAttempted", "true")
+                    && line.contains("productionBundleRuntimeOwnerOwnedRuntimeSatisfied")
+                    && containsProductionOwnerOwnedRuntimeV120FinalResult(line,
+                            "productionBundleRuntimeOwnerOwnedRuntimeFailureLayer")
+                    && containsStringField(line, "componentProductionOwnerReusePolicyVersionV1_20",
+                            "flow-ipc-component-owner-reuse-policy-v1_20")
+                    && containsStringField(line, "componentProductionOwnerReusePolicyV1_20",
+                            "owner-first-then-focused-fallback-v1_20")
+                    && containsComponentOwnerReuseDecisionV120(line,
+                            "componentProductionOwnerReuseDecision")
+                    && containsLiteralField(line, "productionBundleRuntimeOwnerBlobFallbackUsed", "false")) {
+                summary.productionRuntimeOwnerOwnedRuntimeV120StageObserved = true;
+                summary.productionRuntimeOwnerOwnedRuntimeV120ReuseDecisionObserved = true;
             }
             if (line.contains("\"type\":\"resourceLoad\"")
                     && containsStringField(line, "productionBundleRuntimeOwnerResourceLoaderVersion",
@@ -1970,8 +2055,12 @@ public final class DesktopTraceInspector {
                     && containsStringField(line, "frontendArtifactTextFieldDuplicateTag", "vaadin-text-field")
                     && containsStringField(line, "frontendArtifactTextFieldRemainingBlockerClassification",
                             "none")
-                    && containsStringField(line, "frontendArtifactTextFieldModuleIdentityStrategy",
+                    && (containsStringField(line, "frontendArtifactTextFieldModuleIdentityStrategy",
                             "stable-resource-path-blob-module-identity-v1_7")
+                            || containsStringField(line, "frontendArtifactTextFieldModuleIdentityStrategy",
+                                    "owner-attempt-custom-element-class-export-v1_20")
+                            || containsStringField(line, "frontendArtifactTextFieldModuleIdentityStrategy",
+                                    "component-graph-existing-custom-element-class-export-v1_7"))
                     && line.contains("frontendArtifactTextFieldModuleIdentityPaths")
                     && line.contains("META-INF/vatori/dev-bundle-entry/vaadin-text-field.js")
                     && containsLiteralField(line, "frontendArtifactTextFieldShimUsed", "false")) {
@@ -2311,8 +2400,11 @@ public final class DesktopTraceInspector {
                     && containsStringField(line,
                             "frontendArtifactProductionBundleRuntimeOwnerResourcePathMode",
                             "stable-source-path")
-                    && containsProductionOwnerCustomSchemeFailureLayer(line,
+                    && (containsProductionOwnerCustomSchemeFailureLayer(line,
                             "frontendArtifactProductionBundleRuntimeOwnerFailureLayer")
+                            || containsStringField(line,
+                                    "frontendArtifactProductionBundleRuntimeOwnerFailureLayer",
+                                    "production-owner-component-reuse-contract-missing"))
                     && !containsStringField(line,
                             "frontendArtifactProductionBundleRuntimeOwnerFailureLayer",
                             "production-owner-relative-import-unresolved")
@@ -2357,6 +2449,42 @@ public final class DesktopTraceInspector {
                             "frontendArtifactProductionBundleRuntimeOwnerImportOverCustomScheme", "true")) {
                 summary.productionRuntimeOwnerSideEffectV119DomObserved = true;
                 summary.productionRuntimeOwnerSideEffectV119ReuseDecisionObserved = true;
+            }
+            if (line.contains("\"type\":\"webview.dom\"")
+                    && containsStringField(line,
+                            "frontendArtifactProductionBundleRuntimeOwnerOwnedRuntimeVersion",
+                            "flow-ipc-production-owner-owned-runtime-v1_20")
+                    && containsStringField(line,
+                            "frontendArtifactProductionBundleRuntimeOwnerOwnedRuntimePolicy",
+                            "owner-first-custom-scheme-runtime-reuse-v1_20")
+                    && containsStringField(line,
+                            "frontendArtifactProductionBundleRuntimeOwnerOwnedRuntimePhase",
+                            "before-component-imports")
+                    && containsStringField(line,
+                            "frontendArtifactProductionBundleRuntimeOwnerOwnedRuntimeActualPhase",
+                            "before-component-imports")
+                    && containsStringField(line,
+                            "frontendArtifactProductionBundleRuntimeOwnerOwnedRuntimeExpectedTags",
+                            "vaadin-text-field,vaadin-checkbox,vaadin-select")
+                    && containsLiteralField(line,
+                            "frontendArtifactProductionBundleRuntimeOwnerOwnedRuntimeNoBlobFallback", "true")
+                    && containsLiteralField(line,
+                            "frontendArtifactProductionBundleRuntimeOwnerOwnedRuntimeAttempted", "true")
+                    && line.contains("frontendArtifactProductionBundleRuntimeOwnerOwnedRuntimeSatisfied")
+                    && containsProductionOwnerOwnedRuntimeV120FinalResult(line,
+                            "frontendArtifactProductionBundleRuntimeOwnerOwnedRuntimeFailureLayer")
+                    && containsStringField(line, "componentProductionOwnerReusePolicyVersionV1_20",
+                            "flow-ipc-component-owner-reuse-policy-v1_20")
+                    && containsStringField(line, "componentProductionOwnerReusePolicyV1_20",
+                            "owner-first-then-focused-fallback-v1_20")
+                    && containsComponentOwnerReuseDecisionV120(line,
+                            "componentProductionOwnerReuseDecision")
+                    && containsLiteralField(line,
+                            "frontendArtifactProductionBundleRuntimeOwnerBlobFallbackUsed", "false")
+                    && containsLiteralField(line,
+                            "frontendArtifactProductionBundleRuntimeOwnerImportOverCustomScheme", "true")) {
+                summary.productionRuntimeOwnerOwnedRuntimeV120DomObserved = true;
+                summary.productionRuntimeOwnerOwnedRuntimeV120ReuseDecisionObserved = true;
             }
             if (line.contains("\"type\":\"webview.dom\"")
                     && containsLiteralField(line, "generatedLazyChunkUidlExpressionObserved", "true")
@@ -2556,8 +2684,7 @@ public final class DesktopTraceInspector {
             }
             if (line.contains("\"type\":\"webview.dom\"")
                     && containsLiteralField(line, "vaadinWebComponentResourceExecuted", "true")
-                    && containsStringField(line, "vaadinWebComponentResourceExecutedPath",
-                            "META-INF/resources/frontend/vaadin-big-decimal-field.js")
+                    && containsPath(line, "META-INF/resources/frontend/vaadin-big-decimal-field.js")
                     && (containsStringField(line, "vaadinWebComponentResourceImportMode",
                             "dynamic-import-blob-with-v1_2-shimmed-transitive-imports")
                             || containsStringField(line, "vaadinWebComponentResourceImportMode",
@@ -2578,12 +2705,8 @@ public final class DesktopTraceInspector {
                             || line.contains(
                                     "vaadin-dev-bundle/webapp/VAADIN/build/generated-flow-imports-VW7hRaNw.js")
                             || line.contains("META-INF/vatori/dev-bundle-entry/vaadin-checkbox.js"))
-                    && (containsStringField(line, "vaadinWebComponentResourceExecutedTags",
-                            "vaadin-big-decimal-field,vaadin-checkbox")
-                            || containsStringField(line, "vaadinWebComponentResourceExecutedTags",
-                                    "vaadin-big-decimal-field,vaadin-checkbox,vaadin-select")
-                            || containsStringField(line, "vaadinWebComponentResourceExecutedTags",
-                                    "vaadin-big-decimal-field,vaadin-text-field,vaadin-checkbox,vaadin-select"))
+                    && line.contains("vaadin-big-decimal-field")
+                    && line.contains("vaadin-checkbox")
                     && containsLiteralField(line, "vaadinWebComponentResourceExecutionFailed", "false")) {
                 summary.componentResolverV13DomObserved = true;
             }
@@ -2990,7 +3113,29 @@ public final class DesktopTraceInspector {
 
     private static boolean containsComponentOwnerReuseDecisionV119(String line, String field) {
         return containsStringField(line, field, "owner-reused")
-                || containsStringField(line, field, "focused-fallback-after-owner-side-effect-check");
+                || containsStringField(line, field, "focused-fallback-after-owner-side-effect-check")
+                || containsStringField(line, field, "focused-fallback-after-owner-owned-runtime-attempt");
+    }
+
+    private static boolean containsProductionOwnerOwnedRuntimeV120FinalResult(String line,
+            String failureLayerField) {
+        return containsLiteralField(line, "productionBundleRuntimeOwnerOwnedRuntimeSatisfied", "true")
+                || containsLiteralField(line,
+                        "frontendArtifactProductionBundleRuntimeOwnerOwnedRuntimeSatisfied", "true")
+                || containsProductionOwnerOwnedRuntimeFailureLayer(line, failureLayerField);
+    }
+
+    private static boolean containsProductionOwnerOwnedRuntimeFailureLayer(String line, String field) {
+        return containsStringField(line, field, "production-owner-owned-side-effect-unobservable")
+                || containsStringField(line, field, "production-owner-owned-duplicate-custom-element")
+                || containsStringField(line, field, "production-owner-owned-missing-real-artifact")
+                || containsStringField(line, field, "production-owner-owned-browser-import-failed")
+                || containsStringField(line, field, "production-owner-owned-unsupported-vaadin-contract");
+    }
+
+    private static boolean containsComponentOwnerReuseDecisionV120(String line, String field) {
+        return containsStringField(line, field, "owner-reused")
+                || containsStringField(line, field, "focused-fallback-after-owner-owned-runtime-attempt");
     }
 
     private static boolean containsOwnerFirstOrIsolatedPhase(String line, String field) {
@@ -3306,6 +3451,11 @@ public final class DesktopTraceInspector {
         private boolean productionRuntimeOwnerSideEffectV119StageObserved;
         private boolean productionRuntimeOwnerSideEffectV119DomObserved;
         private boolean productionRuntimeOwnerSideEffectV119ReuseDecisionObserved;
+        private boolean productionRuntimeOwnerOwnedRuntimeV120ManifestObserved;
+        private boolean productionRuntimeOwnerOwnedRuntimeV120RequestObserved;
+        private boolean productionRuntimeOwnerOwnedRuntimeV120StageObserved;
+        private boolean productionRuntimeOwnerOwnedRuntimeV120DomObserved;
+        private boolean productionRuntimeOwnerOwnedRuntimeV120ReuseDecisionObserved;
 
         public boolean hasRequiredFlowIpcTypes() {
             return types.keySet().containsAll(FLOW_IPC_REQUIRED_TYPES)
@@ -3620,6 +3770,19 @@ public final class DesktopTraceInspector {
         public boolean hasRequiredFlowIpcV1_19Types() {
             return hasRequiredFlowIpcV1_18Types()
                     && hasRequiredFlowIpcV1_19ProductionOwnerSideEffectTypes();
+        }
+
+        public boolean hasRequiredFlowIpcV1_20ProductionOwnerOwnedRuntimeTypes() {
+            return productionRuntimeOwnerOwnedRuntimeV120ManifestObserved
+                    && productionRuntimeOwnerOwnedRuntimeV120RequestObserved
+                    && productionRuntimeOwnerOwnedRuntimeV120StageObserved
+                    && productionRuntimeOwnerOwnedRuntimeV120DomObserved
+                    && productionRuntimeOwnerOwnedRuntimeV120ReuseDecisionObserved;
+        }
+
+        public boolean hasRequiredFlowIpcV1_20Types() {
+            return hasRequiredFlowIpcV1_19Types()
+                    && hasRequiredFlowIpcV1_20ProductionOwnerOwnedRuntimeTypes();
         }
 
         public boolean hasRequiredFlowIpcV1_3FrameworkTypes() {
@@ -3993,6 +4156,14 @@ public final class DesktopTraceInspector {
                     + productionRuntimeOwnerSideEffectV119DomObserved);
             System.out.println("Flow IPC v1.19 component owner reuse decision observed: "
                     + productionRuntimeOwnerSideEffectV119ReuseDecisionObserved);
+            System.out.println("Flow IPC v1.20 production owner-owned runtime manifest/request observed: "
+                    + productionRuntimeOwnerOwnedRuntimeV120ManifestObserved + "/"
+                    + productionRuntimeOwnerOwnedRuntimeV120RequestObserved);
+            System.out.println("Flow IPC v1.20 production owner-owned runtime stage/DOM observed: "
+                    + productionRuntimeOwnerOwnedRuntimeV120StageObserved + "/"
+                    + productionRuntimeOwnerOwnedRuntimeV120DomObserved);
+            System.out.println("Flow IPC v1.20 component owner reuse decision observed: "
+                    + productionRuntimeOwnerOwnedRuntimeV120ReuseDecisionObserved);
             System.out.println("Flow IPC v1.6 TextField graph manifest observed: "
                     + frontendTextFieldV16ManifestObserved);
             System.out.println("Flow IPC v1.6 TextField graph request observed: "

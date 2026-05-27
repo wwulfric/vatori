@@ -1,6 +1,6 @@
 # Goal 1.20: Production Owner-Owned Runtime Reuse Path
 
-状态：已规划，正在执行。
+状态：已完成。
 
 `docs/goal.md` 是长期愿景和完成度账本。v1.19 已经把 production owner custom-scheme
 import 之后的 `module import resolved` 与 `side effect satisfied` 拆开，并明确记录当前
@@ -232,3 +232,10 @@ v1.20 可以用两种方式完成：
 2. Acceptable：owner-first attempt 真实运行，但 owner-owned runtime 仍不满足；failure layer
    必须从 v1.19 的 side-effect decision 推进到 v1.20 owner-owned runtime contract 层，并记录
    `focused-fallback-after-owner-owned-runtime-attempt`，同时组件行为不退化。
+
+当前完成形态：Acceptable。`docs/traces/flow-ipc-v1_20.ndjson` 证明 owner-first
+custom-scheme runtime attempt 在 `before-component-imports` phase 发生，root Blob fallback
+未被接受；owner-owned runtime 仍未满足，failure layer 收敛为
+`production-owner-owned-missing-real-artifact`，component resolver 记录
+`focused-fallback-after-owner-owned-runtime-attempt`。Smoke app 和 framework validation app
+的真实窗口路径保持通过，组件行为未退化。

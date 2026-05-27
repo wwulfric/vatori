@@ -30,13 +30,15 @@ v0/v1 runtime 切片走向可产品化桌面框架的最终完成状态。
 - `docs/goal-1_22.md`：Generated Lazy Chunk File Positive Execution Boundary，已完成。
 - `docs/goal-1_23.md`：Production Owner Positive Runtime Fixture Boundary，已完成。
 - `docs/goal-1_24.md`：Frontend Pipeline Closure Decision Contract，已完成。
+- `docs/goal-1_25.md`：Packaging-Time Staged Frontend Baseline，待实施。
 
-当前已完成到 `docs/goal-1_24.md`。下一阶段应从 closure decision contract 继续推进到真实
-app/build 或产品化路径：让当前 app/build 产生真实 generated chunk、接入受支持 Vaadin lazy
-chunk SPI、让真实 production owner 暴露可复用 owner contract，或选择 dev-mode/Vite /
-packaging-time staging 作为最终 frontend/resource pipeline 路径。
+当前已完成到 `docs/goal-1_24.md`。下一阶段 `docs/goal-1_25.md` 已选择
+packaging-time staged frontend baseline：从 closure decision contract 继续推进到
+host-owned inventory、custom-scheme/file-backed staging 和产品化 resource path。真实
+generated chunk、production owner owned runtime 和 dev-mode/Vite parity 仍作为真实
+app/build blocker 保留。
 
-后续阶段应继续以 `docs/goal-1_24.md` 等文件拆分，
+后续阶段应继续以 `docs/goal-1_25.md` 等文件拆分，
 每个阶段只拿走本长期目标中的一个可评审切片。不要把本文件改写成短期任务清单；
 它是长期北极星和完成度账本。
 
@@ -421,19 +423,17 @@ packaging-time staging 作为最终 frontend/resource pipeline 路径。
 
 ## 当前建议的下一阶段
 
-`docs/goal-1_24.md` 已完成 frontend pipeline closure decision contract。它不会把
-repository fixture 包装成当前 app/build 真实 generated chunk 或 production owner parity，而是把
-v1.21-v1.23 的正向 fixture 和真实 blocker 收束成一条可审计决策：代表性 no-localhost
-resource infrastructure 已经闭合，真实 app/build parity 仍待产品路径落定。
+`docs/goal-1_25.md` 已制定为 Packaging-Time Staged Frontend Baseline。它选择
+packaging-time staged frontend 作为 v0/v1 可落地产品路径，把 v1.24 的 closure decision
+推进到 host-owned inventory、custom-scheme/file-backed staging、integrity metadata、
+cleanup policy 和 real-build blocker preservation。
 
-v1.25 可继续从以下方向选择：
+v1.25 完成后可继续从以下方向选择：
 
-- 让当前 smoke/framework build 产生真实 generated lazy chunk file，或评估受支持 Vaadin lazy
-  chunk SPI，把 v1.22 fixture path 推进为真实 app/build path。
+- 让当前 smoke/framework build 产生真实 generated lazy chunk file，或评估受支持 Vaadin
+  lazy chunk SPI，把 v1.22 fixture path 推进为真实 app/build path。
+- 真实 production owner side-effect / owner-owned runtime reuse success。
 - Dev-mode/Vite graph execution 或可靠替代模式。
-- 真实 production owner side-effect / owner-owned runtime reuse success，或 packaging-time
-  staging contract。
-- Broader Vaadin component parity，尤其是 Grid/VirtualList、ComboBox、DatePicker、Dialog、
-  Upload。
-- Swift host tests / default-host readiness。
-- Broader component parity、durable push / reconnect / resync、打包和更新。
+- Broader Vaadin component parity，尤其是 Grid/VirtualList、ComboBox、DatePicker、
+  Dialog、Upload。
+- Durable push / reconnect / resync、Swift host tests / default-host readiness、打包和更新。

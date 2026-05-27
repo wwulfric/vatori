@@ -29,13 +29,14 @@ v0/v1 runtime 切片走向可产品化桌面框架的最终完成状态。
 - `docs/goal-1_21.md`：Unified Frontend Resource Resolver Contract，已完成。
 - `docs/goal-1_22.md`：Generated Lazy Chunk File Positive Execution Boundary，已完成。
 - `docs/goal-1_23.md`：Production Owner Positive Runtime Fixture Boundary，已完成。
+- `docs/goal-1_24.md`：Frontend Pipeline Closure Decision Contract，已完成。
 
-当前已完成到 `docs/goal-1_23.md`。下一阶段应从 positive fixture 证明继续推进到真实
+当前已完成到 `docs/goal-1_24.md`。下一阶段应从 closure decision contract 继续推进到真实
 app/build 或产品化路径：让当前 app/build 产生真实 generated chunk、接入受支持 Vaadin lazy
 chunk SPI、让真实 production owner 暴露可复用 owner contract，或选择 dev-mode/Vite /
 packaging-time staging 作为最终 frontend/resource pipeline 路径。
 
-后续阶段应继续以 `docs/goal-1_23.md` 等文件拆分，
+后续阶段应继续以 `docs/goal-1_24.md` 等文件拆分，
 每个阶段只拿走本长期目标中的一个可评审切片。不要把本文件改写成短期任务清单；
 它是长期北极星和完成度账本。
 
@@ -57,7 +58,7 @@ packaging-time staging 作为最终 frontend/resource pipeline 路径。
 
 ## 当前基线
 
-截至 goal 1.23，仓库已经证明：
+截至 goal 1.24，仓库已经证明：
 
 - `dev-ipc` 可以启动 no-localhost Flow IPC runtime。
 - 真实 macOS Swift/AppKit/WKWebView 窗口可以运行 Flow IPC smoke app 和 framework
@@ -282,6 +283,16 @@ packaging-time staging 作为最终 frontend/resource pipeline 路径。
   artifact 具备可复用 side-effect contract 时，当前 no-localhost custom-scheme owner path 可以闭环；
   它不是当前 app/build 的真实 Vaadin production owner parity。真实 production owner 仍保留
   `production-owner-owned-missing-real-artifact` / focused fallback blocker。
+- v1.24 已把 v1.21 unified resolver、v1.22 generated chunk-file positive fixture 和
+  v1.23 production owner positive fixture 收束成一个可审计的 frontend pipeline closure
+  decision contract：Java manifest / resource response、Swift `resourceRequest` /
+  `resourceResponse` / `resourceStage` / `webview.dom` 和 inspector gate 统一记录
+  `frontendPipelineClosureVersion=flow-ipc-frontend-pipeline-closure-v1_24`、
+  `frontendPipelineClosureInfrastructureStatus=closed-for-representative-fixture-paths`、
+  `frontendPipelineClosureRealBuildStatus=product-parity-pending`、
+  satisfied proofs、remaining blockers、no-localhost proof 和产品路径决策
+  `packaging-time-staged-frontend-or-supported-vaadin-build-spi`。这表示代表性 fixture
+  基础设施已经闭合、真实 app/build 差距已分类；它不是完整 production/dev-mode parity。
 - 当前 app/build 的真实 generated/lazy chunk file parity、production owner import/side-effect success
   和 dev-mode/Vite execution 仍是明确 blocker，不计入最终完成。
 
@@ -376,8 +387,8 @@ packaging-time staging 作为最终 frontend/resource pipeline 路径。
 
 以下项目仍需要后续阶段推进：
 
-- 基于 v1.22 generated lazy chunk-file positive fixture 和 v1.23 production owner positive
-  runtime fixture，继续让当前 app/build 产生真实 generated lazy chunk file，接入受支持
+- 基于 v1.22 generated lazy chunk-file positive fixture、v1.23 production owner positive
+  runtime fixture 和 v1.24 closure decision contract，继续让当前 app/build 产生真实 generated lazy chunk file，接入受支持
   Vaadin lazy chunk SPI，或把真实 production bundle owned execution / dev-mode/Vite execution
   从 partial/blocker 推进到真实可执行路径。
 - 真实 app/build 的 generated/lazy `Flow.loadOnDemand` chunk-file parity，不再停在真实
@@ -410,13 +421,12 @@ packaging-time staging 作为最终 frontend/resource pipeline 路径。
 
 ## 当前建议的下一阶段
 
-`docs/goal-1_23.md` 已完成 production owner positive runtime fixture boundary。它不会把
-repository fixture 包装成当前 app/build 真实 production owner parity，而是证明当 owner runtime
-artifact 暴露可复用 side-effect contract 时，当前 IPC resource response、host-owned custom
-scheme、owner namespace、dependency rewrite、dynamic import 和 side-effect verification path
-可以闭环。
+`docs/goal-1_24.md` 已完成 frontend pipeline closure decision contract。它不会把
+repository fixture 包装成当前 app/build 真实 generated chunk 或 production owner parity，而是把
+v1.21-v1.23 的正向 fixture 和真实 blocker 收束成一条可审计决策：代表性 no-localhost
+resource infrastructure 已经闭合，真实 app/build parity 仍待产品路径落定。
 
-v1.24 可继续从以下方向选择：
+v1.25 可继续从以下方向选择：
 
 - 让当前 smoke/framework build 产生真实 generated lazy chunk file，或评估受支持 Vaadin lazy
   chunk SPI，把 v1.22 fixture path 推进为真实 app/build path。

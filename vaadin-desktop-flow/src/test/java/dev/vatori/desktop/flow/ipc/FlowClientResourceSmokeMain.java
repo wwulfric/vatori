@@ -1181,6 +1181,40 @@ public final class FlowClientResourceSmokeMain {
         requireStringContains(metadata.get("frontendResolverAcceptableGaps"),
                 "production-owner-owned-missing-real-artifact",
                 label + " frontend resolver acceptable gaps");
+        requireFrontendPipelineClosureMetadata(metadata, label);
+    }
+
+    private static void requireFrontendPipelineClosureMetadata(Map<?, ?> metadata, String label) {
+        requireEquals("flow-ipc-frontend-pipeline-closure-v1_24",
+                metadata.get("frontendPipelineClosureVersion"),
+                label + " frontend pipeline closure version");
+        requireEquals("flow-client,component-frontend,theme-static,generated-lazy,flow-lazy-dependency,production-owner,dev-mode",
+                metadata.get("frontendPipelineClosureScope"),
+                label + " frontend pipeline closure scope");
+        requireEquals("no-localhost-ipc-resource-request",
+                metadata.get("frontendPipelineClosureTransport"),
+                label + " frontend pipeline closure transport");
+        requireEquals("closed-for-representative-fixture-paths",
+                metadata.get("frontendPipelineClosureInfrastructureStatus"),
+                label + " frontend pipeline closure infrastructure status");
+        requireEquals("product-parity-pending",
+                metadata.get("frontendPipelineClosureRealBuildStatus"),
+                label + " frontend pipeline closure real build status");
+        requireEquals("flow-client-executed,component-frontend-executed,theme-static-verified,flow-lazy-dependency-executed,generated-chunk-fixture-executed,production-owner-fixture-executed",
+                metadata.get("frontendPipelineClosureSatisfiedProofs"),
+                label + " frontend pipeline closure satisfied proofs");
+        requireEquals("real-generated-lazy-chunk-file-not-generated,real-production-owner-owned-runtime-missing-real-artifact,dev-mode-vite-execution-unmapped",
+                metadata.get("frontendPipelineClosureRemainingBlockers"),
+                label + " frontend pipeline closure remaining blockers");
+        requireEquals("basic-pipeline-infrastructure-closed-real-build-parity-pending",
+                metadata.get("frontendPipelineClosureDecision"),
+                label + " frontend pipeline closure decision");
+        requireEquals("packaging-time-staged-frontend-or-supported-vaadin-build-spi",
+                metadata.get("frontendPipelineClosureNextProductPath"),
+                label + " frontend pipeline closure next product path");
+        requireEquals(Boolean.TRUE,
+                metadata.get("frontendPipelineClosureNoLocalhost"),
+                label + " frontend pipeline closure no-localhost flag");
     }
 
     private static void requireProductionOwnerResourceLoaderMetadata(Map<String, Object> metadata,

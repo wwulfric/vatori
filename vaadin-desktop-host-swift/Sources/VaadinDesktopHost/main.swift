@@ -1379,6 +1379,26 @@ final class WebViewHost: NSObject, NSApplicationDelegate, NSWindowDelegate, WKNa
             payload["frontendResolverFamiliesCovered"] as? String ?? ""
         let frontendResolverAcceptableGaps =
             payload["frontendResolverAcceptableGaps"] as? String ?? ""
+        let frontendPipelineClosureVersion =
+            payload["frontendPipelineClosureVersion"] as? String ?? ""
+        let frontendPipelineClosureScope =
+            payload["frontendPipelineClosureScope"] as? String ?? ""
+        let frontendPipelineClosureTransport =
+            payload["frontendPipelineClosureTransport"] as? String ?? ""
+        let frontendPipelineClosureInfrastructureStatus =
+            payload["frontendPipelineClosureInfrastructureStatus"] as? String ?? ""
+        let frontendPipelineClosureRealBuildStatus =
+            payload["frontendPipelineClosureRealBuildStatus"] as? String ?? ""
+        let frontendPipelineClosureSatisfiedProofs =
+            payload["frontendPipelineClosureSatisfiedProofs"] as? String ?? ""
+        let frontendPipelineClosureRemainingBlockers =
+            payload["frontendPipelineClosureRemainingBlockers"] as? String ?? ""
+        let frontendPipelineClosureDecision =
+            payload["frontendPipelineClosureDecision"] as? String ?? ""
+        let frontendPipelineClosureNextProductPath =
+            payload["frontendPipelineClosureNextProductPath"] as? String ?? ""
+        let frontendPipelineClosureNoLocalhost =
+            payload["frontendPipelineClosureNoLocalhost"] as? Bool ?? false
         let data = Data(body.utf8)
         let cacheKey = "\(sourcePath)#\(sha256)#\(data.count)"
         let cacheStatus = hostResourceStageCache.contains(cacheKey) ? "hit" : "miss"
@@ -1431,7 +1451,17 @@ final class WebViewHost: NSObject, NSApplicationDelegate, NSWindowDelegate, WKNa
             "frontendResolverAllowedSchemes": frontendResolverAllowedSchemes,
             "frontendResolverNoLocalhost": frontendResolverNoLocalhost,
             "frontendResolverFamiliesCovered": frontendResolverFamiliesCovered,
-            "frontendResolverAcceptableGaps": frontendResolverAcceptableGaps
+            "frontendResolverAcceptableGaps": frontendResolverAcceptableGaps,
+            "frontendPipelineClosureVersion": frontendPipelineClosureVersion,
+            "frontendPipelineClosureScope": frontendPipelineClosureScope,
+            "frontendPipelineClosureTransport": frontendPipelineClosureTransport,
+            "frontendPipelineClosureInfrastructureStatus": frontendPipelineClosureInfrastructureStatus,
+            "frontendPipelineClosureRealBuildStatus": frontendPipelineClosureRealBuildStatus,
+            "frontendPipelineClosureSatisfiedProofs": frontendPipelineClosureSatisfiedProofs,
+            "frontendPipelineClosureRemainingBlockers": frontendPipelineClosureRemainingBlockers,
+            "frontendPipelineClosureDecision": frontendPipelineClosureDecision,
+            "frontendPipelineClosureNextProductPath": frontendPipelineClosureNextProductPath,
+            "frontendPipelineClosureNoLocalhost": frontendPipelineClosureNoLocalhost
         ]
 
         var stageRequestTrace: [String: Any] = [
@@ -1929,6 +1959,17 @@ final class WebViewHost: NSObject, NSApplicationDelegate, NSWindowDelegate, WKNa
           frontendResolverAcceptedGapFamilies: window.VaadinDesktopIpcDiagnostics ? window.VaadinDesktopIpcDiagnostics.frontendResolverAcceptedGapFamilies : "",
           frontendResolverContractComplete: !!(window.VaadinDesktopIpcDiagnostics && window.VaadinDesktopIpcDiagnostics.frontendResolverContractComplete),
           frontendResolverContractFailureReason: window.VaadinDesktopIpcDiagnostics ? window.VaadinDesktopIpcDiagnostics.frontendResolverContractFailureReason : "",
+          frontendPipelineClosureObserved: !!(window.VaadinDesktopIpcDiagnostics && window.VaadinDesktopIpcDiagnostics.frontendPipelineClosureObserved),
+          frontendPipelineClosureVersion: window.VaadinDesktopIpcDiagnostics ? window.VaadinDesktopIpcDiagnostics.frontendPipelineClosureVersion : "",
+          frontendPipelineClosureScope: window.VaadinDesktopIpcDiagnostics ? window.VaadinDesktopIpcDiagnostics.frontendPipelineClosureScope : "",
+          frontendPipelineClosureTransport: window.VaadinDesktopIpcDiagnostics ? window.VaadinDesktopIpcDiagnostics.frontendPipelineClosureTransport : "",
+          frontendPipelineClosureInfrastructureStatus: window.VaadinDesktopIpcDiagnostics ? window.VaadinDesktopIpcDiagnostics.frontendPipelineClosureInfrastructureStatus : "",
+          frontendPipelineClosureRealBuildStatus: window.VaadinDesktopIpcDiagnostics ? window.VaadinDesktopIpcDiagnostics.frontendPipelineClosureRealBuildStatus : "",
+          frontendPipelineClosureSatisfiedProofs: window.VaadinDesktopIpcDiagnostics ? window.VaadinDesktopIpcDiagnostics.frontendPipelineClosureSatisfiedProofs : "",
+          frontendPipelineClosureRemainingBlockers: window.VaadinDesktopIpcDiagnostics ? window.VaadinDesktopIpcDiagnostics.frontendPipelineClosureRemainingBlockers : "",
+          frontendPipelineClosureDecision: window.VaadinDesktopIpcDiagnostics ? window.VaadinDesktopIpcDiagnostics.frontendPipelineClosureDecision : "",
+          frontendPipelineClosureNextProductPath: window.VaadinDesktopIpcDiagnostics ? window.VaadinDesktopIpcDiagnostics.frontendPipelineClosureNextProductPath : "",
+          frontendPipelineClosureNoLocalhost: !!(window.VaadinDesktopIpcDiagnostics && window.VaadinDesktopIpcDiagnostics.frontendPipelineClosureNoLocalhost),
           frontendArtifactShimFallback: !!(window.VaadinDesktopIpcDiagnostics && window.VaadinDesktopIpcDiagnostics.frontendArtifactShimFallback),
           frontendArtifactProductionBundlePartial: !!(window.VaadinDesktopIpcDiagnostics && window.VaadinDesktopIpcDiagnostics.frontendArtifactProductionBundlePartial),
           frontendArtifactProductionBundleStatsVerified: !!(window.VaadinDesktopIpcDiagnostics && window.VaadinDesktopIpcDiagnostics.frontendArtifactProductionBundleStatsVerified),
@@ -3019,6 +3060,17 @@ let flowIpcShell = #"""
         frontendResolverAcceptedGapFamilies: '',
         frontendResolverContractComplete: false,
         frontendResolverContractFailureReason: '',
+        frontendPipelineClosureObserved: false,
+        frontendPipelineClosureVersion: '',
+        frontendPipelineClosureScope: '',
+        frontendPipelineClosureTransport: '',
+        frontendPipelineClosureInfrastructureStatus: '',
+        frontendPipelineClosureRealBuildStatus: '',
+        frontendPipelineClosureSatisfiedProofs: '',
+        frontendPipelineClosureRemainingBlockers: '',
+        frontendPipelineClosureDecision: '',
+        frontendPipelineClosureNextProductPath: '',
+        frontendPipelineClosureNoLocalhost: false,
         frontendArtifactShimFallback: false,
         frontendArtifactProductionBundlePartial: false,
         frontendArtifactProductionBundleStatsVerified: false,
@@ -5024,6 +5076,29 @@ let flowIpcShell = #"""
         if (source.frontendResolverNoLocalhost === true) {
           window.VaadinDesktopIpcDiagnostics.frontendResolverNoLocalhost = true;
         }
+        if (typeof source.frontendPipelineClosureVersion === 'string'
+            && source.frontendPipelineClosureVersion) {
+          window.VaadinDesktopIpcDiagnostics.frontendPipelineClosureObserved = true;
+          window.VaadinDesktopIpcDiagnostics.frontendPipelineClosureVersion =
+            source.frontendPipelineClosureVersion;
+        }
+        for (const [sourceKey, diagnosticKey] of [
+          ['frontendPipelineClosureScope', 'frontendPipelineClosureScope'],
+          ['frontendPipelineClosureTransport', 'frontendPipelineClosureTransport'],
+          ['frontendPipelineClosureInfrastructureStatus', 'frontendPipelineClosureInfrastructureStatus'],
+          ['frontendPipelineClosureRealBuildStatus', 'frontendPipelineClosureRealBuildStatus'],
+          ['frontendPipelineClosureSatisfiedProofs', 'frontendPipelineClosureSatisfiedProofs'],
+          ['frontendPipelineClosureRemainingBlockers', 'frontendPipelineClosureRemainingBlockers'],
+          ['frontendPipelineClosureDecision', 'frontendPipelineClosureDecision'],
+          ['frontendPipelineClosureNextProductPath', 'frontendPipelineClosureNextProductPath']
+        ]) {
+          if (typeof source[sourceKey] === 'string' && source[sourceKey]) {
+            window.VaadinDesktopIpcDiagnostics[diagnosticKey] = source[sourceKey];
+          }
+        }
+        if (source.frontendPipelineClosureNoLocalhost === true) {
+          window.VaadinDesktopIpcDiagnostics.frontendPipelineClosureNoLocalhost = true;
+        }
         addFrontendResolverCsv(frontendResolverFamiliesObserved, source.frontendResolverFamiliesCovered || '');
         addFrontendResolverCsv(frontendResolverAcceptedGapFamilies, source.frontendResolverAcceptableGaps || '');
       }
@@ -5809,6 +5884,16 @@ let flowIpcShell = #"""
           frontendResolverNoLocalhost: resource.frontendResolverNoLocalhost === true,
           frontendResolverFamiliesCovered: resource.frontendResolverFamiliesCovered || '',
           frontendResolverAcceptableGaps: resource.frontendResolverAcceptableGaps || '',
+          frontendPipelineClosureVersion: resource.frontendPipelineClosureVersion || '',
+          frontendPipelineClosureScope: resource.frontendPipelineClosureScope || '',
+          frontendPipelineClosureTransport: resource.frontendPipelineClosureTransport || '',
+          frontendPipelineClosureInfrastructureStatus: resource.frontendPipelineClosureInfrastructureStatus || '',
+          frontendPipelineClosureRealBuildStatus: resource.frontendPipelineClosureRealBuildStatus || '',
+          frontendPipelineClosureSatisfiedProofs: resource.frontendPipelineClosureSatisfiedProofs || '',
+          frontendPipelineClosureRemainingBlockers: resource.frontendPipelineClosureRemainingBlockers || '',
+          frontendPipelineClosureDecision: resource.frontendPipelineClosureDecision || '',
+          frontendPipelineClosureNextProductPath: resource.frontendPipelineClosureNextProductPath || '',
+          frontendPipelineClosureNoLocalhost: resource.frontendPipelineClosureNoLocalhost === true,
           lookupKind: resource.lookupKind || '',
           textfieldGraphParityVersion: resource.textfieldGraphParityVersion || '',
           blockerVersion: resource.blockerVersion || '',
@@ -6317,6 +6402,17 @@ let flowIpcShell = #"""
           frontendResolverNoLocalhost: resource.frontendResolverNoLocalhost === true,
           frontendResolverFamiliesCovered: resource.frontendResolverFamiliesCovered || '',
           frontendResolverAcceptableGaps: resource.frontendResolverAcceptableGaps || '',
+          frontendPipelineClosureVersion: resource.frontendPipelineClosureVersion || '',
+          frontendPipelineClosureScope: resource.frontendPipelineClosureScope || '',
+          frontendPipelineClosureTransport: resource.frontendPipelineClosureTransport || '',
+          frontendPipelineClosureInfrastructureStatus:
+            resource.frontendPipelineClosureInfrastructureStatus || '',
+          frontendPipelineClosureRealBuildStatus: resource.frontendPipelineClosureRealBuildStatus || '',
+          frontendPipelineClosureSatisfiedProofs: resource.frontendPipelineClosureSatisfiedProofs || '',
+          frontendPipelineClosureRemainingBlockers: resource.frontendPipelineClosureRemainingBlockers || '',
+          frontendPipelineClosureDecision: resource.frontendPipelineClosureDecision || '',
+          frontendPipelineClosureNextProductPath: resource.frontendPipelineClosureNextProductPath || '',
+          frontendPipelineClosureNoLocalhost: resource.frontendPipelineClosureNoLocalhost === true,
           stagedPath: '',
           owner: stageOwner,
           artifactFamily: family,

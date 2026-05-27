@@ -372,6 +372,24 @@ final class FlowClientResources {
             "flow-client-classpath,vaadin-component-classpath-frontend,npm-frontend,theme-static,generated-lazy,flow-lazy-dependency,production-bundle,dev-mode-bundle";
     private static final String FRONTEND_RESOLVER_ACCEPTABLE_GAPS =
             "generated-lazy-chunk-file-not-generated,production-owner-owned-missing-real-artifact,dev-mode-vite-execution-unmapped";
+    private static final String FRONTEND_PIPELINE_CLOSURE_VERSION =
+            "flow-ipc-frontend-pipeline-closure-v1_24";
+    private static final String FRONTEND_PIPELINE_CLOSURE_SCOPE =
+            FRONTEND_RESOLVER_CONTRACT_SCOPE;
+    private static final String FRONTEND_PIPELINE_CLOSURE_TRANSPORT =
+            "no-localhost-ipc-resource-request";
+    private static final String FRONTEND_PIPELINE_CLOSURE_INFRASTRUCTURE_STATUS =
+            "closed-for-representative-fixture-paths";
+    private static final String FRONTEND_PIPELINE_CLOSURE_REAL_BUILD_STATUS =
+            "product-parity-pending";
+    private static final String FRONTEND_PIPELINE_CLOSURE_SATISFIED_PROOFS =
+            "flow-client-executed,component-frontend-executed,theme-static-verified,flow-lazy-dependency-executed,generated-chunk-fixture-executed,production-owner-fixture-executed";
+    private static final String FRONTEND_PIPELINE_CLOSURE_REMAINING_BLOCKERS =
+            "real-generated-lazy-chunk-file-not-generated,real-production-owner-owned-runtime-missing-real-artifact,dev-mode-vite-execution-unmapped";
+    private static final String FRONTEND_PIPELINE_CLOSURE_DECISION =
+            "basic-pipeline-infrastructure-closed-real-build-parity-pending";
+    private static final String FRONTEND_PIPELINE_CLOSURE_NEXT_PRODUCT_PATH =
+            "packaging-time-staged-frontend-or-supported-vaadin-build-spi";
     private static final List<String> PRODUCTION_RUNTIME_OWNER_DEPENDENCY_ARTIFACTS = List.of(
             DEV_BUNDLE_COMMONJS_JS,
             DEV_BUNDLE_INDEX_HTML_JS,
@@ -2078,6 +2096,27 @@ final class FlowClientResources {
         attributes.put("frontendResolverNoLocalhost", true);
         attributes.put("frontendResolverFamiliesCovered", FRONTEND_RESOLVER_FAMILIES_COVERED);
         attributes.put("frontendResolverAcceptableGaps", FRONTEND_RESOLVER_ACCEPTABLE_GAPS);
+        attributes.putAll(frontendPipelineClosureAttributes());
+        return attributes;
+    }
+
+    private static Map<String, Object> frontendPipelineClosureAttributes() {
+        Map<String, Object> attributes = new LinkedHashMap<>();
+        attributes.put("frontendPipelineClosureVersion", FRONTEND_PIPELINE_CLOSURE_VERSION);
+        attributes.put("frontendPipelineClosureScope", FRONTEND_PIPELINE_CLOSURE_SCOPE);
+        attributes.put("frontendPipelineClosureTransport", FRONTEND_PIPELINE_CLOSURE_TRANSPORT);
+        attributes.put("frontendPipelineClosureInfrastructureStatus",
+                FRONTEND_PIPELINE_CLOSURE_INFRASTRUCTURE_STATUS);
+        attributes.put("frontendPipelineClosureRealBuildStatus",
+                FRONTEND_PIPELINE_CLOSURE_REAL_BUILD_STATUS);
+        attributes.put("frontendPipelineClosureSatisfiedProofs",
+                FRONTEND_PIPELINE_CLOSURE_SATISFIED_PROOFS);
+        attributes.put("frontendPipelineClosureRemainingBlockers",
+                FRONTEND_PIPELINE_CLOSURE_REMAINING_BLOCKERS);
+        attributes.put("frontendPipelineClosureDecision", FRONTEND_PIPELINE_CLOSURE_DECISION);
+        attributes.put("frontendPipelineClosureNextProductPath",
+                FRONTEND_PIPELINE_CLOSURE_NEXT_PRODUCT_PATH);
+        attributes.put("frontendPipelineClosureNoLocalhost", true);
         return attributes;
     }
 

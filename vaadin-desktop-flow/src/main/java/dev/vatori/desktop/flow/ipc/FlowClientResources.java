@@ -22,6 +22,7 @@ import java.util.Objects;
 import java.util.Properties;
 import java.util.regex.Matcher;
 import java.util.regex.Pattern;
+import java.util.stream.Stream;
 
 final class FlowClientResources {
     private static final String COMPILE_PROPERTIES =
@@ -473,6 +474,14 @@ final class FlowClientResources {
             "runtime-using-stale-packaged-dev-bundle";
     private static final String GENERATED_LAZY_BUILD_LIFECYCLE_NEXT_STEP =
             "connect dev-ipc resource resolution to a Vaadin prepare-frontend/update-imports output for the v1.27 route, or replace the static dev-bundle artifact with a supported generated lazy chunk build SPI";
+    private static final String GENERATED_LAZY_APP_BUILD_OUTPUT_VERSION =
+            "flow-ipc-generated-lazy-app-build-output-v1_29";
+    private static final String GENERATED_LAZY_APP_BUILD_OUTPUT_DISCOVERY_SOURCE =
+            "dev-ipc-module-target-generated-imports-discovery-v1_29";
+    private static final String GENERATED_LAZY_APP_BUILD_OUTPUT_FAILURE_LAYER =
+            "app-build-output-missing-generated-imports";
+    private static final String GENERATED_LAZY_APP_BUILD_OUTPUT_NEXT_STEP =
+            "run Vaadin prepare-frontend/update-imports for the dev-ipc app module or connect a supported Vaadin lazy chunk SPI so generated-flow-imports comes from current app build output instead of packaged dev-bundle fallback";
     private static final List<String> PRODUCTION_RUNTIME_OWNER_DEPENDENCY_ARTIFACTS = List.of(
             DEV_BUNDLE_COMMONJS_JS,
             DEV_BUNDLE_INDEX_HTML_JS,
@@ -925,6 +934,7 @@ final class FlowClientResources {
         manifest.putAll(generatedLazySourceBoundaryAttributes());
         manifest.putAll(generatedLazyRealBuildProbeAttributes());
         manifest.putAll(generatedLazyBuildLifecycleAttributes());
+        manifest.putAll(generatedLazyAppBuildOutputAttributes());
         manifest.put("generatedLazyChunkFileExecutionVersion", GENERATED_LAZY_CHUNK_FILE_EXECUTION_VERSION);
         manifest.put("generatedLazyChunkFileFixtureSource", GENERATED_LAZY_CHUNK_FILE_FIXTURE_SOURCE);
         manifest.put("generatedLazyChunkFileFixtureImportsArtifact", GENERATED_FLOW_IMPORTS_V1_22_JS);
@@ -1004,6 +1014,8 @@ final class FlowClientResources {
                         "generated-flow-imports has been parsed for chunk-file branches; this Vaadin dev bundle exposes a real no-op Promise.resolve(0) loadOnDemand table, so there is no generated ./chunks/chunk-*.js file to stage yet"),
                 strictBlocker("generated-lazy", GENERATED_LAZY_BUILD_LIFECYCLE_VERSION,
                         "the v1.27 route/lazy JavaScript probe is visible on the app classpath, but the no-localhost runtime still resolves generated-flow-imports from the static packaged Vaadin dev-bundle instead of an app update-imports output"),
+                strictBlocker("generated-lazy", GENERATED_LAZY_APP_BUILD_OUTPUT_VERSION,
+                        "current app build output discovery is explicit, but generated-flow-imports is still missing from the app module output so the runtime uses the packaged dev-bundle fallback"),
                 strictBlocker("production-bundle", "flow-ipc-production-runtime-v1_10",
                         "production bundle stats now selects an executable runtime artifact and stages it through stable module identity, but full production runtime ownership is still blocked until side effects can be executed without relying on focused component entry imports"),
                 strictBlocker("production-bundle", PRODUCTION_RUNTIME_OWNER_BLOCKER,
@@ -1985,6 +1997,7 @@ final class FlowClientResources {
             attributes.putAll(generatedLazySourceBoundaryAttributes());
             attributes.putAll(generatedLazyRealBuildProbeAttributes());
             attributes.putAll(generatedLazyBuildLifecycleAttributes());
+            attributes.putAll(generatedLazyAppBuildOutputAttributes());
         }
         attributes.put("devBundleResource", true);
         attributes.put("productionBundleResource", true);
@@ -2242,6 +2255,211 @@ final class FlowClientResources {
         attributes.put("generatedLazyBuildLifecycleFixtureSubstituted", false);
         attributes.put("generatedLazyBuildLifecycleNoLocalhost", true);
         return attributes;
+    }
+
+    private static Map<String, Object> generatedLazyAppBuildOutputAttributes() {
+        Properties properties = generatedLazyRealBuildProbeProperties();
+        boolean probeManifestObserved = !properties.isEmpty();
+        String routeClass = propertyOrDefault(properties, "routeClass",
+                GENERATED_LAZY_REAL_BUILD_DEFAULT_ROUTE_CLASS);
+        String expectedRoute = propertyOrDefault(properties, "route",
+                GENERATED_LAZY_REAL_BUILD_DEFAULT_ROUTE);
+        String expectedDependency = propertyOrDefault(properties, "dependency",
+                GENERATED_LAZY_REAL_BUILD_DEFAULT_DEPENDENCY);
+
+        Class<?> probeClass = loadOptionalClass(routeClass);
+        Route route = probeClass == null ? null : probeClass.getAnnotation(Route.class);
+        JavaScript[] scripts = probeClass == null ? new JavaScript[0]
+                : probeClass.getAnnotationsByType(JavaScript.class);
+        boolean routeObserved = route != null && expectedRoute.equals(route.value());
+        boolean lazyJavascriptObserved = false;
+        for (JavaScript script : scripts) {
+            if ("LAZY".equals(script.loadMode().name())
+                    && expectedDependency.equals(script.value())) {
+                lazyJavascriptObserved = true;
+                break;
+            }
+        }
+        boolean scannerObserved = routeObserved && lazyJavascriptObserved;
+
+        AppBuildGeneratedImportsEvidence appOutput = appBuildGeneratedImportsEvidence();
+        ClasspathArtifactEvidence fallbackEvidence =
+                classpathArtifactEvidence(DEV_BUNDLE_GENERATED_FLOW_IMPORTS_JS);
+        boolean usesFallback = !appOutput.observed()
+                && "static-dev-bundle".equals(fallbackEvidence.source());
+        String runtimeSource = appOutput.observed()
+                ? "current-app-build-output"
+                : usesFallback ? "packaged-dev-bundle-fallback" : "missing-build-output";
+
+        String failureLayer;
+        if (!probeManifestObserved) {
+            failureLayer = "lazy-route-probe-metadata-not-on-classpath";
+        } else if (!scannerObserved) {
+            failureLayer = "lazy-route-input-not-observed-by-scanner";
+        } else if (!appOutput.observed()) {
+            failureLayer = GENERATED_LAZY_APP_BUILD_OUTPUT_FAILURE_LAYER;
+        } else if ("available".equals(appOutput.chunkStatus())) {
+            failureLayer = "pending-real-generated-chunk-stage";
+        } else if ("branch-table-dynamic-import".equals(appOutput.tableShape())) {
+            failureLayer = "app-build-output-generated-chunk-file-missing";
+        } else {
+            failureLayer = "app-build-output-has-no-generated-lazy-chunk";
+        }
+
+        Map<String, Object> attributes = new LinkedHashMap<>();
+        attributes.put("generatedLazyAppBuildOutputVersion", GENERATED_LAZY_APP_BUILD_OUTPUT_VERSION);
+        attributes.put("generatedLazyAppBuildOutputDiscoverySource",
+                GENERATED_LAZY_APP_BUILD_OUTPUT_DISCOVERY_SOURCE);
+        attributes.put("generatedLazyAppBuildOutputInputRoute", expectedRoute);
+        attributes.put("generatedLazyAppBuildOutputInputRouteClass", routeClass);
+        attributes.put("generatedLazyAppBuildOutputInputDependency", expectedDependency);
+        attributes.put("generatedLazyAppBuildOutputScannerObserved", scannerObserved);
+        attributes.put("generatedLazyAppBuildOutputRuntimeSource", runtimeSource);
+        attributes.put("generatedLazyAppBuildOutputModulePath", appOutput.modulePath());
+        attributes.put("generatedLazyAppBuildOutputGeneratedImportsPath", appOutput.path());
+        attributes.put("generatedLazyAppBuildOutputGeneratedImportsObserved", appOutput.observed());
+        attributes.put("generatedLazyAppBuildOutputGeneratedImportsMtimeMillis",
+                appOutput.lastModifiedMillis());
+        attributes.put("generatedLazyAppBuildOutputGeneratedImportsBytes", appOutput.bytes());
+        attributes.put("generatedLazyAppBuildOutputGeneratedImportsSha256", appOutput.sha256());
+        attributes.put("generatedLazyAppBuildOutputGeneratedImportsTableShape", appOutput.tableShape());
+        attributes.put("generatedLazyAppBuildOutputGeneratedImportsNoOpLoadOnDemand",
+                appOutput.noOpLoadOnDemand());
+        attributes.put("generatedLazyAppBuildOutputChunkReferences", appOutput.chunkReferences());
+        attributes.put("generatedLazyAppBuildOutputChunkStatus", appOutput.chunkStatus());
+        attributes.put("generatedLazyAppBuildOutputChunkArtifact", appOutput.chunkArtifact());
+        attributes.put("generatedLazyAppBuildOutputFallbackReason",
+                usesFallback ? "current-app-build-output-generated-imports-missing" : "");
+        attributes.put("generatedLazyAppBuildOutputPackagedFallbackPath",
+                fallbackEvidence.runtimePath());
+        attributes.put("generatedLazyAppBuildOutputSpiAssessment",
+                appOutput.observed() ? "requires-chunk-output-or-supported-spi" : "requires-build-step");
+        attributes.put("generatedLazyAppBuildOutputFailureLayer", failureLayer);
+        attributes.put("generatedLazyAppBuildOutputNextResolutionStep",
+                GENERATED_LAZY_APP_BUILD_OUTPUT_NEXT_STEP);
+        attributes.put("generatedLazyAppBuildOutputFixtureSubstituted", false);
+        attributes.put("generatedLazyAppBuildOutputNoLocalhost", true);
+        return attributes;
+    }
+
+    private static AppBuildGeneratedImportsEvidence appBuildGeneratedImportsEvidence() {
+        Path module = appModuleDirectory();
+        Path target = module.resolve("target").normalize();
+        Path generatedImports = findAppGeneratedImports(module);
+        if (generatedImports == null || !Files.isRegularFile(generatedImports)) {
+            Path candidate = target.resolve("classes").resolve(DEV_BUNDLE_GENERATED_FLOW_IMPORTS_JS).normalize();
+            return new AppBuildGeneratedImportsEvidence(
+                    redactLocation(module.toString()),
+                    redactLocation(candidate.toString()),
+                    false,
+                    0L,
+                    0,
+                    "",
+                    "missing",
+                    false,
+                    0,
+                    "missing-build-output",
+                    "",
+                    "");
+        }
+        try {
+            byte[] bytes = Files.readAllBytes(generatedImports);
+            String body = new String(bytes, StandardCharsets.UTF_8);
+            GeneratedLoadOnDemandChunkFileRegistry registry =
+                    GeneratedLoadOnDemandChunkFileRegistry.parse(redactLocation(generatedImports.toString()),
+                            body);
+            String chunkStatus = registry.chunkFileStatus();
+            String chunkArtifact = registry.chunkArtifactPath();
+            if ("branch-table-dynamic-import".equals(registry.loadOnDemandTableShape())
+                    && !registry.chunkImportSpecifier().isBlank()) {
+                Path chunkPath = generatedImports.getParent()
+                        .resolve(registry.chunkImportSpecifier().replaceFirst("^\\./", ""))
+                        .normalize();
+                chunkArtifact = redactLocation(chunkPath.toString());
+                chunkStatus = Files.isRegularFile(chunkPath) ? "available" : "not-found";
+            }
+            return new AppBuildGeneratedImportsEvidence(
+                    redactLocation(module.toString()),
+                    redactLocation(generatedImports.toString()),
+                    true,
+                    Files.getLastModifiedTime(generatedImports).toMillis(),
+                    bytes.length,
+                    Resource.sha256(bytes),
+                    registry.loadOnDemandTableShape(),
+                    registry.noOpLoadOnDemand(),
+                    countGeneratedLazyChunkReferences(body),
+                    chunkStatus,
+                    chunkArtifact,
+                    "");
+        } catch (IOException error) {
+            return new AppBuildGeneratedImportsEvidence(
+                    redactLocation(module.toString()),
+                    redactLocation(generatedImports.toString()),
+                    false,
+                    0L,
+                    0,
+                    "",
+                    "unreadable",
+                    false,
+                    0,
+                    "blocked",
+                    "",
+                    error.getClass().getSimpleName());
+        }
+    }
+
+    private static Path appModuleDirectory() {
+        String module = System.getenv("VAADIN_DESKTOP_MODULE");
+        if (module != null && !module.isBlank()) {
+            return Path.of(module).toAbsolutePath().normalize();
+        }
+        String repoRoot = System.getenv("VAADIN_DESKTOP_REPO_ROOT");
+        Path root = repoRoot == null || repoRoot.isBlank()
+                ? Path.of("").toAbsolutePath().normalize()
+                : Path.of(repoRoot).toAbsolutePath().normalize();
+        Path smokeApp = root.resolve("test-apps/flow-over-ipc-smoke-app").normalize();
+        if (Files.isDirectory(smokeApp)) {
+            return smokeApp;
+        }
+        return root;
+    }
+
+    private static Path findAppGeneratedImports(Path module) {
+        List<Path> candidates = List.of(
+                module.resolve("target/classes").resolve(DEV_BUNDLE_GENERATED_FLOW_IMPORTS_JS),
+                module.resolve("target/classes/META-INF/VAADIN/build/generated-flow-imports-VW7hRaNw.js"),
+                module.resolve("target/generated-resources").resolve(DEV_BUNDLE_GENERATED_FLOW_IMPORTS_JS),
+                module.resolve("target/frontend/generated-flow-imports-VW7hRaNw.js"));
+        for (Path candidate : candidates) {
+            Path normalized = candidate.normalize();
+            if (Files.isRegularFile(normalized)) {
+                return normalized;
+            }
+        }
+        Path target = module.resolve("target").normalize();
+        if (!Files.isDirectory(target)) {
+            return null;
+        }
+        try (Stream<Path> stream = Files.find(target, 8,
+                (path, attributes) -> attributes.isRegularFile()
+                        && path.getFileName().toString().startsWith("generated-flow-imports")
+                        && path.getFileName().toString().endsWith(".js"))) {
+            return stream.findFirst().orElse(null);
+        } catch (IOException ignored) {
+            return null;
+        }
+    }
+
+    private static int countGeneratedLazyChunkReferences(String body) {
+        if (body == null || body.isBlank()) {
+            return 0;
+        }
+        int count = 0;
+        Matcher matcher = GENERATED_LAZY_CHUNK_IMPORT.matcher(body);
+        while (matcher.find()) {
+            count++;
+        }
+        return count;
     }
 
     private static String propertyOrDefault(Properties properties, String key, String defaultValue) {
@@ -2594,6 +2812,21 @@ final class FlowClientResources {
             String path,
             boolean observed,
             long lastModifiedMillis) {
+    }
+
+    private record AppBuildGeneratedImportsEvidence(
+            String modulePath,
+            String path,
+            boolean observed,
+            long lastModifiedMillis,
+            int bytes,
+            String sha256,
+            String tableShape,
+            boolean noOpLoadOnDemand,
+            int chunkReferences,
+            String chunkStatus,
+            String chunkArtifact,
+            String readError) {
     }
 
     private record GeneratedLoadOnDemandChunkFileRegistry(

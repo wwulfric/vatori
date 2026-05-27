@@ -1,6 +1,6 @@
 # Goal 1.29: Generated Lazy App Build Output Connection
 
-状态：待执行
+状态：已完成
 
 `docs/goal.md` 是长期愿景和完成度账本。v1.28 已完成
 `flow-ipc-generated-lazy-build-lifecycle-v1_28`：trace 现在能证明真实
@@ -151,3 +151,48 @@ bash bin/flow-ipc-trace-inspect --require-flow-ipc-v1_28 docs/traces/flow-ipc-v1
 ```text
 feat: connect generated lazy resolver to app build output
 ```
+
+## 完成记录
+
+v1.29 已完成。实现结果是 acceptable blocker 收敛，而不是 generated lazy chunk parity：
+
+- `FlowClientResources` 新增当前 app build output discovery / fallback metadata，基于
+  sidecar 传入的 repo root 和 module path 检查当前 app build output，区分
+  `current-app-build-output`、`packaged-dev-bundle-fallback`、`missing-build-output` 和
+  `spi-required` 语义。
+- Java manifest/resource response、Swift `resourceRequest` / `resourceResponse` /
+  `resourceStage` / `webview.dom` 都传播
+  `flow-ipc-generated-lazy-app-build-output-v1_29` contract。
+- `DesktopTraceInspector` 新增
+  `--require-flow-ipc-v1_29-generated-lazy-app-build-output` delta gate 和
+  `--require-flow-ipc-v1_29` cumulative gate。
+- 当前真实窗口 trace 证明当前 app build output 尚未产生 generated imports/chunk：
+  `generatedLazyAppBuildOutputRuntimeSource=packaged-dev-bundle-fallback`、
+  `generatedLazyAppBuildOutputGeneratedImportsObserved=false`、
+  `generatedLazyAppBuildOutputGeneratedImportsTableShape=missing`、
+  `generatedLazyAppBuildOutputChunkStatus=missing-build-output`、
+  `generatedLazyAppBuildOutputFallbackReason=current-app-build-output-generated-imports-missing`、
+  `generatedLazyAppBuildOutputSpiAssessment=requires-build-step`、
+  `generatedLazyAppBuildOutputFailureLayer=app-build-output-missing-generated-imports`。
+
+验收通过：
+
+```bash
+git diff --check
+bash -n bin/vaadin-desktop
+swiftc -parse vaadin-desktop-host-swift/Sources/VaadinDesktopHost/main.swift
+source /Users/bytedance/.sdkman/bin/sdkman-init.sh
+mvn -q -o -Dmaven.repo.local=/Users/bytedance/IdeaProjects/vatori/.m2/repository -pl vaadin-desktop-devtools -am -DskipTests compile
+bash bin/flow-client-resource-smoke
+VAADIN_DESKTOP_MAVEN_OFFLINE=1 VAADIN_DESKTOP_HOST_NO_ACTIVATE=1 VAADIN_DESKTOP_FLOW_IPC_AUTO_CLICK=1 VAADIN_DESKTOP_FLOW_IPC_AUTO_VAADIN_TEXT_FIELD_REAL=1 VAADIN_DESKTOP_FLOW_IPC_AUTO_RESYNC=1 VAADIN_DESKTOP_FLOW_IPC_AUTO_ERROR=1 VAADIN_DESKTOP_FLOW_IPC_AUTO_FILE_DIALOG_CANCEL=1 VAADIN_DESKTOP_FLOW_IPC_AUTO_SHUTDOWN=1 bash bin/vaadin-desktop dev-ipc test-apps/flow-over-ipc-smoke-app
+bash bin/flow-ipc-trace-inspect --require-flow-ipc-v1_29-generated-lazy-app-build-output .build/vaadin-desktop-host-swift/host.out.log
+bash bin/flow-ipc-trace-inspect --require-flow-ipc-v1_29 .build/vaadin-desktop-host-swift/host.out.log
+cp .build/vaadin-desktop-host-swift/host.out.log docs/traces/flow-ipc-v1_29.ndjson
+bash bin/flow-ipc-trace-inspect --require-flow-ipc-v1_29-generated-lazy-app-build-output docs/traces/flow-ipc-v1_29.ndjson
+bash bin/flow-ipc-trace-inspect --require-flow-ipc-v1_29 docs/traces/flow-ipc-v1_29.ndjson
+bash bin/flow-ipc-trace-inspect --require-flow-ipc-v1_28 docs/traces/flow-ipc-v1_28.ndjson
+```
+
+这不是最终 frontend/resource pipeline 基本闭环。下一阶段应从
+`app-build-output-missing-generated-imports` 继续推进到可执行的 Vaadin
+`prepare-frontend` / `update-imports` app output，或接入受支持 lazy chunk SPI。

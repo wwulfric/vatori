@@ -180,6 +180,8 @@ public final class FlowClientResourceSmokeMain {
         requireStrictBlocker(componentManifest, "generated-lazy", "flow-ipc-loadondemand-chunk-file-v1_12");
         requireStrictBlocker(componentManifest, "generated-lazy",
                 "flow-ipc-generated-lazy-build-lifecycle-v1_28");
+        requireStrictBlocker(componentManifest, "generated-lazy",
+                "flow-ipc-generated-lazy-app-build-output-v1_29");
         requireStrictBlocker(componentManifest, "production-bundle", "flow-ipc-production-runtime-v1_10");
         requireStrictBlocker(componentManifest, "production-bundle", "flow-ipc-production-owner-deps-v1_15");
         requireEquals("flow-ipc-frontend-runtime-resolver-v1_10",
@@ -282,6 +284,8 @@ public final class FlowClientResourceSmokeMain {
                 "Component frontend manifest generated lazy real build probe");
         requireGeneratedLazyBuildLifecycleMetadata(componentManifest,
                 "Component frontend manifest generated lazy build lifecycle");
+        requireGeneratedLazyAppBuildOutputMetadata(componentManifest,
+                "Component frontend manifest generated lazy app build output");
         requireProductionOwnerPositiveFixtureMetadata(componentManifest,
                 "Component frontend manifest production owner positive fixture");
         requireEquals("flow-ipc-lazy-dependency-v1_10",
@@ -1019,6 +1023,8 @@ public final class FlowClientResourceSmokeMain {
                 "Generated-flow-imports dev-bundle real build probe response");
         requireGeneratedLazyBuildLifecycleMetadata(generatedFlowImportsDevBundleResponse,
                 "Generated-flow-imports dev-bundle build lifecycle response");
+        requireGeneratedLazyAppBuildOutputMetadata(generatedFlowImportsDevBundleResponse,
+                "Generated-flow-imports dev-bundle app build output response");
         Object generatedFlowImportsDevBundleBody = generatedFlowImportsDevBundleResponse.get("body");
         if (!(generatedFlowImportsDevBundleBody instanceof String generatedFlowImportsDevBundleText)
                 || !generatedFlowImportsDevBundleText.contains("from \"./indexhtml-BfYYZi8S.js\"")
@@ -1467,6 +1473,71 @@ public final class FlowClientResourceSmokeMain {
                 label + " no-localhost flag");
     }
 
+    private static void requireGeneratedLazyAppBuildOutputMetadata(Map<?, ?> metadata, String label) {
+        requireEquals("flow-ipc-generated-lazy-app-build-output-v1_29",
+                metadata.get("generatedLazyAppBuildOutputVersion"),
+                label + " version");
+        requireEquals("dev-ipc-module-target-generated-imports-discovery-v1_29",
+                metadata.get("generatedLazyAppBuildOutputDiscoverySource"),
+                label + " discovery source");
+        requireEquals("flow-ipc-lazy-probe-v1_27",
+                metadata.get("generatedLazyAppBuildOutputInputRoute"),
+                label + " input route");
+        requireEquals("dev.vatori.ipcsmoke.FlowIpcGeneratedLazyProbeView",
+                metadata.get("generatedLazyAppBuildOutputInputRouteClass"),
+                label + " input route class");
+        requireEquals("context://vatori-flow-ipc-real-build-probe-v1_27.js",
+                metadata.get("generatedLazyAppBuildOutputInputDependency"),
+                label + " input dependency");
+        Object runtimeSource = metadata.get("generatedLazyAppBuildOutputRuntimeSource");
+        if (!Objects.equals(runtimeSource, "current-app-build-output")
+                && !Objects.equals(runtimeSource, "packaged-dev-bundle-fallback")
+                && !Objects.equals(runtimeSource, "missing-build-output")) {
+            throw new IllegalStateException(label + " runtime source has unexpected value: " + runtimeSource);
+        }
+        requirePresentString(metadata.get("generatedLazyAppBuildOutputModulePath"),
+                label + " module path");
+        requirePresentString(metadata.get("generatedLazyAppBuildOutputGeneratedImportsPath"),
+                label + " generated imports path");
+        Object observed = metadata.get("generatedLazyAppBuildOutputGeneratedImportsObserved");
+        if (!(observed instanceof Boolean)) {
+            throw new IllegalStateException(label + " generated imports observed flag missing");
+        }
+        Object tableShape = metadata.get("generatedLazyAppBuildOutputGeneratedImportsTableShape");
+        if (!Objects.equals(tableShape, "missing")
+                && !Objects.equals(tableShape, "no-op-promise-resolve-0")
+                && !Objects.equals(tableShape, "branch-table-dynamic-import")
+                && !Objects.equals(tableShape, "unrecognized")) {
+            throw new IllegalStateException(label + " table shape has unexpected value: " + tableShape);
+        }
+        Object chunkStatus = metadata.get("generatedLazyAppBuildOutputChunkStatus");
+        if (!Objects.equals(chunkStatus, "missing-build-output")
+                && !Objects.equals(chunkStatus, "not-generated")
+                && !Objects.equals(chunkStatus, "available")
+                && !Objects.equals(chunkStatus, "not-found")
+                && !Objects.equals(chunkStatus, "blocked")) {
+            throw new IllegalStateException(label + " chunk status has unexpected value: " + chunkStatus);
+        }
+        Object failureLayer = metadata.get("generatedLazyAppBuildOutputFailureLayer");
+        if (!Objects.equals(failureLayer, "lazy-route-probe-metadata-not-on-classpath")
+                && !Objects.equals(failureLayer, "lazy-route-input-not-observed-by-scanner")
+                && !Objects.equals(failureLayer, "app-build-output-missing-generated-imports")
+                && !Objects.equals(failureLayer, "app-build-output-has-no-generated-lazy-chunk")
+                && !Objects.equals(failureLayer, "app-build-output-generated-chunk-file-missing")
+                && !Objects.equals(failureLayer, "pending-real-generated-chunk-stage")) {
+            throw new IllegalStateException(label + " failure layer has unexpected value: " + failureLayer);
+        }
+        requireStringContains(metadata.get("generatedLazyAppBuildOutputNextResolutionStep"),
+                "prepare-frontend",
+                label + " next resolution step");
+        requireEquals(Boolean.FALSE,
+                metadata.get("generatedLazyAppBuildOutputFixtureSubstituted"),
+                label + " fixture substitution flag");
+        requireEquals(Boolean.TRUE,
+                metadata.get("generatedLazyAppBuildOutputNoLocalhost"),
+                label + " no-localhost flag");
+    }
+
     private static void requireProductionOwnerResourceLoaderMetadata(Map<String, Object> metadata,
             boolean rootArtifact, String label) {
         requireEquals("flow-ipc-production-owner-resource-loader-v1_18",
@@ -1765,6 +1836,7 @@ public final class FlowClientResourceSmokeMain {
         boolean generatedLazySourceBoundaryObserved = false;
         boolean generatedLazyRealBuildProbeObserved = false;
         boolean generatedLazyBuildLifecycleObserved = false;
+        boolean generatedLazyAppBuildOutputObserved = false;
         boolean devModePackageGraphObserved = false;
         boolean flowLazyDependencyObserved = false;
         boolean productionRuntimeArtifactObserved = false;
@@ -1869,6 +1941,13 @@ public final class FlowClientResourceSmokeMain {
                             || "lazy-route-probe-metadata-not-on-classpath".equals(
                                     metadata.get("generatedLazyBuildLifecycleFailureLayer")))
                     && Boolean.TRUE.equals(metadata.get("generatedLazyBuildLifecycleNoLocalhost"));
+            generatedLazyAppBuildOutputObserved = generatedLazyAppBuildOutputObserved
+                    || "generated-lazy".equals(artifactFamily)
+                    && "stage-and-import-generated-lazy-chunk-v1_8".equals(executionPolicy)
+                    && "flow-ipc-generated-lazy-app-build-output-v1_29".equals(
+                            metadata.get("generatedLazyAppBuildOutputVersion"))
+                    && Boolean.TRUE.equals(metadata.get("generatedLazyAppBuildOutputNoLocalhost"))
+                    && Boolean.FALSE.equals(metadata.get("generatedLazyAppBuildOutputFixtureSubstituted"));
             devModePackageGraphObserved = devModePackageGraphObserved
                     || "dev-mode-bundle".equals(artifactFamily)
                     && "verified-only-intentionally-not-executed".equals(executionPolicy)
@@ -1934,6 +2013,7 @@ public final class FlowClientResourceSmokeMain {
                 || !generatedLoadOnDemandChunkObserved || !generatedLazySourceBoundaryObserved
                 || !generatedLazyRealBuildProbeObserved
                 || !generatedLazyBuildLifecycleObserved
+                || !generatedLazyAppBuildOutputObserved
                 || !flowLazyDependencyObserved
                 || !productionRuntimeArtifactObserved || !productionRuntimeOwnerObserved
                 || !productionRuntimeOwnerImportObserved || !productionRuntimeOwnerDependencyObserved) {

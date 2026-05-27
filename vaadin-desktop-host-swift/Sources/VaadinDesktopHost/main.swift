@@ -460,6 +460,8 @@ final class JavaSidecar {
         environment["VAADIN_DESKTOP_TRANSPORT"] = config.transport
         environment["VAADIN_DESKTOP_NATIVE_BRIDGE"] = "host-protocol"
         environment["VAADIN_DESKTOP_HOST_PROTOCOL"] = "stdout-v0"
+        environment["VAADIN_DESKTOP_REPO_ROOT"] = config.repoRoot
+        environment["VAADIN_DESKTOP_MODULE"] = config.module
         process.environment = environment
 
         let stdinPipe = Pipe()
@@ -1523,6 +1525,56 @@ final class WebViewHost: NSObject, NSApplicationDelegate, NSWindowDelegate, WKNa
             payload["generatedLazyBuildLifecycleFixtureSubstituted"] as? Bool ?? false
         let generatedLazyBuildLifecycleNoLocalhost =
             payload["generatedLazyBuildLifecycleNoLocalhost"] as? Bool ?? false
+        let generatedLazyAppBuildOutputVersion =
+            payload["generatedLazyAppBuildOutputVersion"] as? String ?? ""
+        let generatedLazyAppBuildOutputDiscoverySource =
+            payload["generatedLazyAppBuildOutputDiscoverySource"] as? String ?? ""
+        let generatedLazyAppBuildOutputInputRoute =
+            payload["generatedLazyAppBuildOutputInputRoute"] as? String ?? ""
+        let generatedLazyAppBuildOutputInputRouteClass =
+            payload["generatedLazyAppBuildOutputInputRouteClass"] as? String ?? ""
+        let generatedLazyAppBuildOutputInputDependency =
+            payload["generatedLazyAppBuildOutputInputDependency"] as? String ?? ""
+        let generatedLazyAppBuildOutputScannerObserved =
+            payload["generatedLazyAppBuildOutputScannerObserved"] as? Bool ?? false
+        let generatedLazyAppBuildOutputRuntimeSource =
+            payload["generatedLazyAppBuildOutputRuntimeSource"] as? String ?? ""
+        let generatedLazyAppBuildOutputModulePath =
+            payload["generatedLazyAppBuildOutputModulePath"] as? String ?? ""
+        let generatedLazyAppBuildOutputGeneratedImportsPath =
+            payload["generatedLazyAppBuildOutputGeneratedImportsPath"] as? String ?? ""
+        let generatedLazyAppBuildOutputGeneratedImportsObserved =
+            payload["generatedLazyAppBuildOutputGeneratedImportsObserved"] as? Bool ?? false
+        let generatedLazyAppBuildOutputGeneratedImportsMtimeMillis =
+            payload["generatedLazyAppBuildOutputGeneratedImportsMtimeMillis"] as? Int64 ?? 0
+        let generatedLazyAppBuildOutputGeneratedImportsBytes =
+            payload["generatedLazyAppBuildOutputGeneratedImportsBytes"] as? Int ?? 0
+        let generatedLazyAppBuildOutputGeneratedImportsSha256 =
+            payload["generatedLazyAppBuildOutputGeneratedImportsSha256"] as? String ?? ""
+        let generatedLazyAppBuildOutputGeneratedImportsTableShape =
+            payload["generatedLazyAppBuildOutputGeneratedImportsTableShape"] as? String ?? ""
+        let generatedLazyAppBuildOutputGeneratedImportsNoOpLoadOnDemand =
+            payload["generatedLazyAppBuildOutputGeneratedImportsNoOpLoadOnDemand"] as? Bool ?? false
+        let generatedLazyAppBuildOutputChunkReferences =
+            payload["generatedLazyAppBuildOutputChunkReferences"] as? Int ?? 0
+        let generatedLazyAppBuildOutputChunkStatus =
+            payload["generatedLazyAppBuildOutputChunkStatus"] as? String ?? ""
+        let generatedLazyAppBuildOutputChunkArtifact =
+            payload["generatedLazyAppBuildOutputChunkArtifact"] as? String ?? ""
+        let generatedLazyAppBuildOutputFallbackReason =
+            payload["generatedLazyAppBuildOutputFallbackReason"] as? String ?? ""
+        let generatedLazyAppBuildOutputPackagedFallbackPath =
+            payload["generatedLazyAppBuildOutputPackagedFallbackPath"] as? String ?? ""
+        let generatedLazyAppBuildOutputSpiAssessment =
+            payload["generatedLazyAppBuildOutputSpiAssessment"] as? String ?? ""
+        let generatedLazyAppBuildOutputFailureLayer =
+            payload["generatedLazyAppBuildOutputFailureLayer"] as? String ?? ""
+        let generatedLazyAppBuildOutputNextResolutionStep =
+            payload["generatedLazyAppBuildOutputNextResolutionStep"] as? String ?? ""
+        let generatedLazyAppBuildOutputFixtureSubstituted =
+            payload["generatedLazyAppBuildOutputFixtureSubstituted"] as? Bool ?? false
+        let generatedLazyAppBuildOutputNoLocalhost =
+            payload["generatedLazyAppBuildOutputNoLocalhost"] as? Bool ?? false
         let data = Data(body.utf8)
         let cacheKey = "\(sourcePath)#\(sha256)#\(data.count)"
         let cacheStatus = hostResourceStageCache.contains(cacheKey) ? "hit" : "miss"
@@ -1647,7 +1699,40 @@ final class WebViewHost: NSObject, NSApplicationDelegate, NSWindowDelegate, WKNa
             "generatedLazyBuildLifecycleFailureLayer": generatedLazyBuildLifecycleFailureLayer,
             "generatedLazyBuildLifecycleNextResolutionStep": generatedLazyBuildLifecycleNextResolutionStep,
             "generatedLazyBuildLifecycleFixtureSubstituted": generatedLazyBuildLifecycleFixtureSubstituted,
-            "generatedLazyBuildLifecycleNoLocalhost": generatedLazyBuildLifecycleNoLocalhost
+            "generatedLazyBuildLifecycleNoLocalhost": generatedLazyBuildLifecycleNoLocalhost,
+            "generatedLazyAppBuildOutputVersion": generatedLazyAppBuildOutputVersion,
+            "generatedLazyAppBuildOutputDiscoverySource": generatedLazyAppBuildOutputDiscoverySource,
+            "generatedLazyAppBuildOutputInputRoute": generatedLazyAppBuildOutputInputRoute,
+            "generatedLazyAppBuildOutputInputRouteClass": generatedLazyAppBuildOutputInputRouteClass,
+            "generatedLazyAppBuildOutputInputDependency": generatedLazyAppBuildOutputInputDependency,
+            "generatedLazyAppBuildOutputScannerObserved": generatedLazyAppBuildOutputScannerObserved,
+            "generatedLazyAppBuildOutputRuntimeSource": generatedLazyAppBuildOutputRuntimeSource,
+            "generatedLazyAppBuildOutputModulePath": generatedLazyAppBuildOutputModulePath,
+            "generatedLazyAppBuildOutputGeneratedImportsPath":
+                generatedLazyAppBuildOutputGeneratedImportsPath,
+            "generatedLazyAppBuildOutputGeneratedImportsObserved":
+                generatedLazyAppBuildOutputGeneratedImportsObserved,
+            "generatedLazyAppBuildOutputGeneratedImportsMtimeMillis":
+                generatedLazyAppBuildOutputGeneratedImportsMtimeMillis,
+            "generatedLazyAppBuildOutputGeneratedImportsBytes":
+                generatedLazyAppBuildOutputGeneratedImportsBytes,
+            "generatedLazyAppBuildOutputGeneratedImportsSha256":
+                generatedLazyAppBuildOutputGeneratedImportsSha256,
+            "generatedLazyAppBuildOutputGeneratedImportsTableShape":
+                generatedLazyAppBuildOutputGeneratedImportsTableShape,
+            "generatedLazyAppBuildOutputGeneratedImportsNoOpLoadOnDemand":
+                generatedLazyAppBuildOutputGeneratedImportsNoOpLoadOnDemand,
+            "generatedLazyAppBuildOutputChunkReferences": generatedLazyAppBuildOutputChunkReferences,
+            "generatedLazyAppBuildOutputChunkStatus": generatedLazyAppBuildOutputChunkStatus,
+            "generatedLazyAppBuildOutputChunkArtifact": generatedLazyAppBuildOutputChunkArtifact,
+            "generatedLazyAppBuildOutputFallbackReason": generatedLazyAppBuildOutputFallbackReason,
+            "generatedLazyAppBuildOutputPackagedFallbackPath":
+                generatedLazyAppBuildOutputPackagedFallbackPath,
+            "generatedLazyAppBuildOutputSpiAssessment": generatedLazyAppBuildOutputSpiAssessment,
+            "generatedLazyAppBuildOutputFailureLayer": generatedLazyAppBuildOutputFailureLayer,
+            "generatedLazyAppBuildOutputNextResolutionStep": generatedLazyAppBuildOutputNextResolutionStep,
+            "generatedLazyAppBuildOutputFixtureSubstituted": generatedLazyAppBuildOutputFixtureSubstituted,
+            "generatedLazyAppBuildOutputNoLocalhost": generatedLazyAppBuildOutputNoLocalhost
         ]
 
         var stageRequestTrace: [String: Any] = [
@@ -2250,6 +2335,32 @@ final class WebViewHost: NSObject, NSApplicationDelegate, NSWindowDelegate, WKNa
           generatedLazyBuildLifecycleNextResolutionStep: window.VaadinDesktopIpcDiagnostics ? window.VaadinDesktopIpcDiagnostics.generatedLazyBuildLifecycleNextResolutionStep : "",
           generatedLazyBuildLifecycleFixtureSubstituted: !!(window.VaadinDesktopIpcDiagnostics && window.VaadinDesktopIpcDiagnostics.generatedLazyBuildLifecycleFixtureSubstituted),
           generatedLazyBuildLifecycleNoLocalhost: !!(window.VaadinDesktopIpcDiagnostics && window.VaadinDesktopIpcDiagnostics.generatedLazyBuildLifecycleNoLocalhost),
+          generatedLazyAppBuildOutputObserved: !!(window.VaadinDesktopIpcDiagnostics && window.VaadinDesktopIpcDiagnostics.generatedLazyAppBuildOutputObserved),
+          generatedLazyAppBuildOutputVersion: window.VaadinDesktopIpcDiagnostics ? window.VaadinDesktopIpcDiagnostics.generatedLazyAppBuildOutputVersion : "",
+          generatedLazyAppBuildOutputDiscoverySource: window.VaadinDesktopIpcDiagnostics ? window.VaadinDesktopIpcDiagnostics.generatedLazyAppBuildOutputDiscoverySource : "",
+          generatedLazyAppBuildOutputInputRoute: window.VaadinDesktopIpcDiagnostics ? window.VaadinDesktopIpcDiagnostics.generatedLazyAppBuildOutputInputRoute : "",
+          generatedLazyAppBuildOutputInputRouteClass: window.VaadinDesktopIpcDiagnostics ? window.VaadinDesktopIpcDiagnostics.generatedLazyAppBuildOutputInputRouteClass : "",
+          generatedLazyAppBuildOutputInputDependency: window.VaadinDesktopIpcDiagnostics ? window.VaadinDesktopIpcDiagnostics.generatedLazyAppBuildOutputInputDependency : "",
+          generatedLazyAppBuildOutputScannerObserved: !!(window.VaadinDesktopIpcDiagnostics && window.VaadinDesktopIpcDiagnostics.generatedLazyAppBuildOutputScannerObserved),
+          generatedLazyAppBuildOutputRuntimeSource: window.VaadinDesktopIpcDiagnostics ? window.VaadinDesktopIpcDiagnostics.generatedLazyAppBuildOutputRuntimeSource : "",
+          generatedLazyAppBuildOutputModulePath: window.VaadinDesktopIpcDiagnostics ? window.VaadinDesktopIpcDiagnostics.generatedLazyAppBuildOutputModulePath : "",
+          generatedLazyAppBuildOutputGeneratedImportsPath: window.VaadinDesktopIpcDiagnostics ? window.VaadinDesktopIpcDiagnostics.generatedLazyAppBuildOutputGeneratedImportsPath : "",
+          generatedLazyAppBuildOutputGeneratedImportsObserved: !!(window.VaadinDesktopIpcDiagnostics && window.VaadinDesktopIpcDiagnostics.generatedLazyAppBuildOutputGeneratedImportsObserved),
+          generatedLazyAppBuildOutputGeneratedImportsMtimeMillis: window.VaadinDesktopIpcDiagnostics ? window.VaadinDesktopIpcDiagnostics.generatedLazyAppBuildOutputGeneratedImportsMtimeMillis : 0,
+          generatedLazyAppBuildOutputGeneratedImportsBytes: window.VaadinDesktopIpcDiagnostics ? window.VaadinDesktopIpcDiagnostics.generatedLazyAppBuildOutputGeneratedImportsBytes : 0,
+          generatedLazyAppBuildOutputGeneratedImportsSha256: window.VaadinDesktopIpcDiagnostics ? window.VaadinDesktopIpcDiagnostics.generatedLazyAppBuildOutputGeneratedImportsSha256 : "",
+          generatedLazyAppBuildOutputGeneratedImportsTableShape: window.VaadinDesktopIpcDiagnostics ? window.VaadinDesktopIpcDiagnostics.generatedLazyAppBuildOutputGeneratedImportsTableShape : "",
+          generatedLazyAppBuildOutputGeneratedImportsNoOpLoadOnDemand: !!(window.VaadinDesktopIpcDiagnostics && window.VaadinDesktopIpcDiagnostics.generatedLazyAppBuildOutputGeneratedImportsNoOpLoadOnDemand),
+          generatedLazyAppBuildOutputChunkReferences: window.VaadinDesktopIpcDiagnostics ? window.VaadinDesktopIpcDiagnostics.generatedLazyAppBuildOutputChunkReferences : 0,
+          generatedLazyAppBuildOutputChunkStatus: window.VaadinDesktopIpcDiagnostics ? window.VaadinDesktopIpcDiagnostics.generatedLazyAppBuildOutputChunkStatus : "",
+          generatedLazyAppBuildOutputChunkArtifact: window.VaadinDesktopIpcDiagnostics ? window.VaadinDesktopIpcDiagnostics.generatedLazyAppBuildOutputChunkArtifact : "",
+          generatedLazyAppBuildOutputFallbackReason: window.VaadinDesktopIpcDiagnostics ? window.VaadinDesktopIpcDiagnostics.generatedLazyAppBuildOutputFallbackReason : "",
+          generatedLazyAppBuildOutputPackagedFallbackPath: window.VaadinDesktopIpcDiagnostics ? window.VaadinDesktopIpcDiagnostics.generatedLazyAppBuildOutputPackagedFallbackPath : "",
+          generatedLazyAppBuildOutputSpiAssessment: window.VaadinDesktopIpcDiagnostics ? window.VaadinDesktopIpcDiagnostics.generatedLazyAppBuildOutputSpiAssessment : "",
+          generatedLazyAppBuildOutputFailureLayer: window.VaadinDesktopIpcDiagnostics ? window.VaadinDesktopIpcDiagnostics.generatedLazyAppBuildOutputFailureLayer : "",
+          generatedLazyAppBuildOutputNextResolutionStep: window.VaadinDesktopIpcDiagnostics ? window.VaadinDesktopIpcDiagnostics.generatedLazyAppBuildOutputNextResolutionStep : "",
+          generatedLazyAppBuildOutputFixtureSubstituted: !!(window.VaadinDesktopIpcDiagnostics && window.VaadinDesktopIpcDiagnostics.generatedLazyAppBuildOutputFixtureSubstituted),
+          generatedLazyAppBuildOutputNoLocalhost: !!(window.VaadinDesktopIpcDiagnostics && window.VaadinDesktopIpcDiagnostics.generatedLazyAppBuildOutputNoLocalhost),
           frontendArtifactShimFallback: !!(window.VaadinDesktopIpcDiagnostics && window.VaadinDesktopIpcDiagnostics.frontendArtifactShimFallback),
           frontendArtifactProductionBundlePartial: !!(window.VaadinDesktopIpcDiagnostics && window.VaadinDesktopIpcDiagnostics.frontendArtifactProductionBundlePartial),
           frontendArtifactProductionBundleStatsVerified: !!(window.VaadinDesktopIpcDiagnostics && window.VaadinDesktopIpcDiagnostics.frontendArtifactProductionBundleStatsVerified),
@@ -3445,6 +3556,32 @@ let flowIpcShell = #"""
         generatedLazyBuildLifecycleNextResolutionStep: '',
         generatedLazyBuildLifecycleFixtureSubstituted: false,
         generatedLazyBuildLifecycleNoLocalhost: false,
+        generatedLazyAppBuildOutputObserved: false,
+        generatedLazyAppBuildOutputVersion: '',
+        generatedLazyAppBuildOutputDiscoverySource: '',
+        generatedLazyAppBuildOutputInputRoute: '',
+        generatedLazyAppBuildOutputInputRouteClass: '',
+        generatedLazyAppBuildOutputInputDependency: '',
+        generatedLazyAppBuildOutputScannerObserved: false,
+        generatedLazyAppBuildOutputRuntimeSource: '',
+        generatedLazyAppBuildOutputModulePath: '',
+        generatedLazyAppBuildOutputGeneratedImportsPath: '',
+        generatedLazyAppBuildOutputGeneratedImportsObserved: false,
+        generatedLazyAppBuildOutputGeneratedImportsMtimeMillis: 0,
+        generatedLazyAppBuildOutputGeneratedImportsBytes: 0,
+        generatedLazyAppBuildOutputGeneratedImportsSha256: '',
+        generatedLazyAppBuildOutputGeneratedImportsTableShape: '',
+        generatedLazyAppBuildOutputGeneratedImportsNoOpLoadOnDemand: false,
+        generatedLazyAppBuildOutputChunkReferences: 0,
+        generatedLazyAppBuildOutputChunkStatus: '',
+        generatedLazyAppBuildOutputChunkArtifact: '',
+        generatedLazyAppBuildOutputFallbackReason: '',
+        generatedLazyAppBuildOutputPackagedFallbackPath: '',
+        generatedLazyAppBuildOutputSpiAssessment: '',
+        generatedLazyAppBuildOutputFailureLayer: '',
+        generatedLazyAppBuildOutputNextResolutionStep: '',
+        generatedLazyAppBuildOutputFixtureSubstituted: false,
+        generatedLazyAppBuildOutputNoLocalhost: false,
         frontendArtifactShimFallback: false,
         frontendArtifactProductionBundlePartial: false,
         frontendArtifactProductionBundleStatsVerified: false,
@@ -5622,6 +5759,54 @@ let flowIpcShell = #"""
             window.VaadinDesktopIpcDiagnostics[diagnosticKey] = source[sourceKey];
           }
         }
+        if (typeof source.generatedLazyAppBuildOutputVersion === 'string'
+            && source.generatedLazyAppBuildOutputVersion) {
+          window.VaadinDesktopIpcDiagnostics.generatedLazyAppBuildOutputObserved = true;
+          window.VaadinDesktopIpcDiagnostics.generatedLazyAppBuildOutputVersion =
+            source.generatedLazyAppBuildOutputVersion;
+        }
+        for (const [sourceKey, diagnosticKey] of [
+          ['generatedLazyAppBuildOutputDiscoverySource', 'generatedLazyAppBuildOutputDiscoverySource'],
+          ['generatedLazyAppBuildOutputInputRoute', 'generatedLazyAppBuildOutputInputRoute'],
+          ['generatedLazyAppBuildOutputInputRouteClass', 'generatedLazyAppBuildOutputInputRouteClass'],
+          ['generatedLazyAppBuildOutputInputDependency', 'generatedLazyAppBuildOutputInputDependency'],
+          ['generatedLazyAppBuildOutputRuntimeSource', 'generatedLazyAppBuildOutputRuntimeSource'],
+          ['generatedLazyAppBuildOutputModulePath', 'generatedLazyAppBuildOutputModulePath'],
+          ['generatedLazyAppBuildOutputGeneratedImportsPath', 'generatedLazyAppBuildOutputGeneratedImportsPath'],
+          ['generatedLazyAppBuildOutputGeneratedImportsSha256', 'generatedLazyAppBuildOutputGeneratedImportsSha256'],
+          ['generatedLazyAppBuildOutputGeneratedImportsTableShape', 'generatedLazyAppBuildOutputGeneratedImportsTableShape'],
+          ['generatedLazyAppBuildOutputChunkStatus', 'generatedLazyAppBuildOutputChunkStatus'],
+          ['generatedLazyAppBuildOutputChunkArtifact', 'generatedLazyAppBuildOutputChunkArtifact'],
+          ['generatedLazyAppBuildOutputFallbackReason', 'generatedLazyAppBuildOutputFallbackReason'],
+          ['generatedLazyAppBuildOutputPackagedFallbackPath', 'generatedLazyAppBuildOutputPackagedFallbackPath'],
+          ['generatedLazyAppBuildOutputSpiAssessment', 'generatedLazyAppBuildOutputSpiAssessment'],
+          ['generatedLazyAppBuildOutputFailureLayer', 'generatedLazyAppBuildOutputFailureLayer'],
+          ['generatedLazyAppBuildOutputNextResolutionStep', 'generatedLazyAppBuildOutputNextResolutionStep']
+        ]) {
+          if (typeof source[sourceKey] === 'string' && source[sourceKey]) {
+            window.VaadinDesktopIpcDiagnostics[diagnosticKey] = source[sourceKey];
+          }
+        }
+        for (const [sourceKey, diagnosticKey] of [
+          ['generatedLazyAppBuildOutputScannerObserved', 'generatedLazyAppBuildOutputScannerObserved'],
+          ['generatedLazyAppBuildOutputGeneratedImportsObserved', 'generatedLazyAppBuildOutputGeneratedImportsObserved'],
+          ['generatedLazyAppBuildOutputGeneratedImportsNoOpLoadOnDemand', 'generatedLazyAppBuildOutputGeneratedImportsNoOpLoadOnDemand'],
+          ['generatedLazyAppBuildOutputFixtureSubstituted', 'generatedLazyAppBuildOutputFixtureSubstituted'],
+          ['generatedLazyAppBuildOutputNoLocalhost', 'generatedLazyAppBuildOutputNoLocalhost']
+        ]) {
+          if (source[sourceKey] === true) {
+            window.VaadinDesktopIpcDiagnostics[diagnosticKey] = true;
+          }
+        }
+        for (const [sourceKey, diagnosticKey] of [
+          ['generatedLazyAppBuildOutputGeneratedImportsMtimeMillis', 'generatedLazyAppBuildOutputGeneratedImportsMtimeMillis'],
+          ['generatedLazyAppBuildOutputGeneratedImportsBytes', 'generatedLazyAppBuildOutputGeneratedImportsBytes'],
+          ['generatedLazyAppBuildOutputChunkReferences', 'generatedLazyAppBuildOutputChunkReferences']
+        ]) {
+          if (Number.isFinite(source[sourceKey])) {
+            window.VaadinDesktopIpcDiagnostics[diagnosticKey] = source[sourceKey];
+          }
+        }
         addFrontendResolverCsv(frontendResolverFamiliesObserved, source.frontendResolverFamiliesCovered || '');
         addFrontendResolverCsv(frontendResolverAcceptedGapFamilies, source.frontendResolverAcceptableGaps || '');
       }
@@ -6562,6 +6747,59 @@ let flowIpcShell = #"""
             resource.generatedLazyBuildLifecycleFixtureSubstituted === true,
           generatedLazyBuildLifecycleNoLocalhost:
             resource.generatedLazyBuildLifecycleNoLocalhost === true,
+          generatedLazyAppBuildOutputVersion: resource.generatedLazyAppBuildOutputVersion || '',
+          generatedLazyAppBuildOutputDiscoverySource:
+            resource.generatedLazyAppBuildOutputDiscoverySource || '',
+          generatedLazyAppBuildOutputInputRoute: resource.generatedLazyAppBuildOutputInputRoute || '',
+          generatedLazyAppBuildOutputInputRouteClass:
+            resource.generatedLazyAppBuildOutputInputRouteClass || '',
+          generatedLazyAppBuildOutputInputDependency:
+            resource.generatedLazyAppBuildOutputInputDependency || '',
+          generatedLazyAppBuildOutputScannerObserved:
+            resource.generatedLazyAppBuildOutputScannerObserved === true,
+          generatedLazyAppBuildOutputRuntimeSource:
+            resource.generatedLazyAppBuildOutputRuntimeSource || '',
+          generatedLazyAppBuildOutputModulePath: resource.generatedLazyAppBuildOutputModulePath || '',
+          generatedLazyAppBuildOutputGeneratedImportsPath:
+            resource.generatedLazyAppBuildOutputGeneratedImportsPath || '',
+          generatedLazyAppBuildOutputGeneratedImportsObserved:
+            resource.generatedLazyAppBuildOutputGeneratedImportsObserved === true,
+          generatedLazyAppBuildOutputGeneratedImportsMtimeMillis:
+            Number.isFinite(resource.generatedLazyAppBuildOutputGeneratedImportsMtimeMillis)
+              ? resource.generatedLazyAppBuildOutputGeneratedImportsMtimeMillis
+              : 0,
+          generatedLazyAppBuildOutputGeneratedImportsBytes:
+            Number.isFinite(resource.generatedLazyAppBuildOutputGeneratedImportsBytes)
+              ? resource.generatedLazyAppBuildOutputGeneratedImportsBytes
+              : 0,
+          generatedLazyAppBuildOutputGeneratedImportsSha256:
+            resource.generatedLazyAppBuildOutputGeneratedImportsSha256 || '',
+          generatedLazyAppBuildOutputGeneratedImportsTableShape:
+            resource.generatedLazyAppBuildOutputGeneratedImportsTableShape || '',
+          generatedLazyAppBuildOutputGeneratedImportsNoOpLoadOnDemand:
+            resource.generatedLazyAppBuildOutputGeneratedImportsNoOpLoadOnDemand === true,
+          generatedLazyAppBuildOutputChunkReferences:
+            Number.isFinite(resource.generatedLazyAppBuildOutputChunkReferences)
+              ? resource.generatedLazyAppBuildOutputChunkReferences
+              : 0,
+          generatedLazyAppBuildOutputChunkStatus:
+            resource.generatedLazyAppBuildOutputChunkStatus || '',
+          generatedLazyAppBuildOutputChunkArtifact:
+            resource.generatedLazyAppBuildOutputChunkArtifact || '',
+          generatedLazyAppBuildOutputFallbackReason:
+            resource.generatedLazyAppBuildOutputFallbackReason || '',
+          generatedLazyAppBuildOutputPackagedFallbackPath:
+            resource.generatedLazyAppBuildOutputPackagedFallbackPath || '',
+          generatedLazyAppBuildOutputSpiAssessment:
+            resource.generatedLazyAppBuildOutputSpiAssessment || '',
+          generatedLazyAppBuildOutputFailureLayer:
+            resource.generatedLazyAppBuildOutputFailureLayer || '',
+          generatedLazyAppBuildOutputNextResolutionStep:
+            resource.generatedLazyAppBuildOutputNextResolutionStep || '',
+          generatedLazyAppBuildOutputFixtureSubstituted:
+            resource.generatedLazyAppBuildOutputFixtureSubstituted === true,
+          generatedLazyAppBuildOutputNoLocalhost:
+            resource.generatedLazyAppBuildOutputNoLocalhost === true,
           lookupKind: resource.lookupKind || '',
           textfieldGraphParityVersion: resource.textfieldGraphParityVersion || '',
           blockerVersion: resource.blockerVersion || '',
@@ -7224,6 +7462,59 @@ let flowIpcShell = #"""
             resource.generatedLazyBuildLifecycleFixtureSubstituted === true,
           generatedLazyBuildLifecycleNoLocalhost:
             resource.generatedLazyBuildLifecycleNoLocalhost === true,
+          generatedLazyAppBuildOutputVersion: resource.generatedLazyAppBuildOutputVersion || '',
+          generatedLazyAppBuildOutputDiscoverySource:
+            resource.generatedLazyAppBuildOutputDiscoverySource || '',
+          generatedLazyAppBuildOutputInputRoute: resource.generatedLazyAppBuildOutputInputRoute || '',
+          generatedLazyAppBuildOutputInputRouteClass:
+            resource.generatedLazyAppBuildOutputInputRouteClass || '',
+          generatedLazyAppBuildOutputInputDependency:
+            resource.generatedLazyAppBuildOutputInputDependency || '',
+          generatedLazyAppBuildOutputScannerObserved:
+            resource.generatedLazyAppBuildOutputScannerObserved === true,
+          generatedLazyAppBuildOutputRuntimeSource:
+            resource.generatedLazyAppBuildOutputRuntimeSource || '',
+          generatedLazyAppBuildOutputModulePath: resource.generatedLazyAppBuildOutputModulePath || '',
+          generatedLazyAppBuildOutputGeneratedImportsPath:
+            resource.generatedLazyAppBuildOutputGeneratedImportsPath || '',
+          generatedLazyAppBuildOutputGeneratedImportsObserved:
+            resource.generatedLazyAppBuildOutputGeneratedImportsObserved === true,
+          generatedLazyAppBuildOutputGeneratedImportsMtimeMillis:
+            Number.isFinite(resource.generatedLazyAppBuildOutputGeneratedImportsMtimeMillis)
+              ? resource.generatedLazyAppBuildOutputGeneratedImportsMtimeMillis
+              : 0,
+          generatedLazyAppBuildOutputGeneratedImportsBytes:
+            Number.isFinite(resource.generatedLazyAppBuildOutputGeneratedImportsBytes)
+              ? resource.generatedLazyAppBuildOutputGeneratedImportsBytes
+              : 0,
+          generatedLazyAppBuildOutputGeneratedImportsSha256:
+            resource.generatedLazyAppBuildOutputGeneratedImportsSha256 || '',
+          generatedLazyAppBuildOutputGeneratedImportsTableShape:
+            resource.generatedLazyAppBuildOutputGeneratedImportsTableShape || '',
+          generatedLazyAppBuildOutputGeneratedImportsNoOpLoadOnDemand:
+            resource.generatedLazyAppBuildOutputGeneratedImportsNoOpLoadOnDemand === true,
+          generatedLazyAppBuildOutputChunkReferences:
+            Number.isFinite(resource.generatedLazyAppBuildOutputChunkReferences)
+              ? resource.generatedLazyAppBuildOutputChunkReferences
+              : 0,
+          generatedLazyAppBuildOutputChunkStatus:
+            resource.generatedLazyAppBuildOutputChunkStatus || '',
+          generatedLazyAppBuildOutputChunkArtifact:
+            resource.generatedLazyAppBuildOutputChunkArtifact || '',
+          generatedLazyAppBuildOutputFallbackReason:
+            resource.generatedLazyAppBuildOutputFallbackReason || '',
+          generatedLazyAppBuildOutputPackagedFallbackPath:
+            resource.generatedLazyAppBuildOutputPackagedFallbackPath || '',
+          generatedLazyAppBuildOutputSpiAssessment:
+            resource.generatedLazyAppBuildOutputSpiAssessment || '',
+          generatedLazyAppBuildOutputFailureLayer:
+            resource.generatedLazyAppBuildOutputFailureLayer || '',
+          generatedLazyAppBuildOutputNextResolutionStep:
+            resource.generatedLazyAppBuildOutputNextResolutionStep || '',
+          generatedLazyAppBuildOutputFixtureSubstituted:
+            resource.generatedLazyAppBuildOutputFixtureSubstituted === true,
+          generatedLazyAppBuildOutputNoLocalhost:
+            resource.generatedLazyAppBuildOutputNoLocalhost === true,
           stagedPath: '',
           owner: stageOwner,
           artifactFamily: family,
@@ -8478,7 +8769,60 @@ let flowIpcShell = #"""
             generatedLazyBuildLifecycleFixtureSubstituted:
               resource.generatedLazyBuildLifecycleFixtureSubstituted === true,
             generatedLazyBuildLifecycleNoLocalhost:
-              resource.generatedLazyBuildLifecycleNoLocalhost === true
+              resource.generatedLazyBuildLifecycleNoLocalhost === true,
+            generatedLazyAppBuildOutputVersion: resource.generatedLazyAppBuildOutputVersion || '',
+            generatedLazyAppBuildOutputDiscoverySource:
+              resource.generatedLazyAppBuildOutputDiscoverySource || '',
+            generatedLazyAppBuildOutputInputRoute: resource.generatedLazyAppBuildOutputInputRoute || '',
+            generatedLazyAppBuildOutputInputRouteClass:
+              resource.generatedLazyAppBuildOutputInputRouteClass || '',
+            generatedLazyAppBuildOutputInputDependency:
+              resource.generatedLazyAppBuildOutputInputDependency || '',
+            generatedLazyAppBuildOutputScannerObserved:
+              resource.generatedLazyAppBuildOutputScannerObserved === true,
+            generatedLazyAppBuildOutputRuntimeSource:
+              resource.generatedLazyAppBuildOutputRuntimeSource || '',
+            generatedLazyAppBuildOutputModulePath: resource.generatedLazyAppBuildOutputModulePath || '',
+            generatedLazyAppBuildOutputGeneratedImportsPath:
+              resource.generatedLazyAppBuildOutputGeneratedImportsPath || '',
+            generatedLazyAppBuildOutputGeneratedImportsObserved:
+              resource.generatedLazyAppBuildOutputGeneratedImportsObserved === true,
+            generatedLazyAppBuildOutputGeneratedImportsMtimeMillis:
+              Number.isFinite(resource.generatedLazyAppBuildOutputGeneratedImportsMtimeMillis)
+                ? resource.generatedLazyAppBuildOutputGeneratedImportsMtimeMillis
+                : 0,
+            generatedLazyAppBuildOutputGeneratedImportsBytes:
+              Number.isFinite(resource.generatedLazyAppBuildOutputGeneratedImportsBytes)
+                ? resource.generatedLazyAppBuildOutputGeneratedImportsBytes
+                : 0,
+            generatedLazyAppBuildOutputGeneratedImportsSha256:
+              resource.generatedLazyAppBuildOutputGeneratedImportsSha256 || '',
+            generatedLazyAppBuildOutputGeneratedImportsTableShape:
+              resource.generatedLazyAppBuildOutputGeneratedImportsTableShape || '',
+            generatedLazyAppBuildOutputGeneratedImportsNoOpLoadOnDemand:
+              resource.generatedLazyAppBuildOutputGeneratedImportsNoOpLoadOnDemand === true,
+            generatedLazyAppBuildOutputChunkReferences:
+              Number.isFinite(resource.generatedLazyAppBuildOutputChunkReferences)
+                ? resource.generatedLazyAppBuildOutputChunkReferences
+                : 0,
+            generatedLazyAppBuildOutputChunkStatus:
+              resource.generatedLazyAppBuildOutputChunkStatus || '',
+            generatedLazyAppBuildOutputChunkArtifact:
+              resource.generatedLazyAppBuildOutputChunkArtifact || '',
+            generatedLazyAppBuildOutputFallbackReason:
+              resource.generatedLazyAppBuildOutputFallbackReason || '',
+            generatedLazyAppBuildOutputPackagedFallbackPath:
+              resource.generatedLazyAppBuildOutputPackagedFallbackPath || '',
+            generatedLazyAppBuildOutputSpiAssessment:
+              resource.generatedLazyAppBuildOutputSpiAssessment || '',
+            generatedLazyAppBuildOutputFailureLayer:
+              resource.generatedLazyAppBuildOutputFailureLayer || '',
+            generatedLazyAppBuildOutputNextResolutionStep:
+              resource.generatedLazyAppBuildOutputNextResolutionStep || '',
+            generatedLazyAppBuildOutputFixtureSubstituted:
+              resource.generatedLazyAppBuildOutputFixtureSubstituted === true,
+            generatedLazyAppBuildOutputNoLocalhost:
+              resource.generatedLazyAppBuildOutputNoLocalhost === true
           });
           hostExtra.frontendResourceSchemeVersion =
             response.frontendResourceSchemeVersion || 'flow-ipc-resource-scheme-v1_17';
@@ -8796,6 +9140,107 @@ let flowIpcShell = #"""
           hostExtra.generatedLazyBuildLifecycleNoLocalhost =
             response.generatedLazyBuildLifecycleNoLocalhost === true
             || resource.generatedLazyBuildLifecycleNoLocalhost === true;
+          hostExtra.generatedLazyAppBuildOutputVersion =
+            response.generatedLazyAppBuildOutputVersion
+            || resource.generatedLazyAppBuildOutputVersion
+            || '';
+          hostExtra.generatedLazyAppBuildOutputDiscoverySource =
+            response.generatedLazyAppBuildOutputDiscoverySource
+            || resource.generatedLazyAppBuildOutputDiscoverySource
+            || '';
+          hostExtra.generatedLazyAppBuildOutputInputRoute =
+            response.generatedLazyAppBuildOutputInputRoute
+            || resource.generatedLazyAppBuildOutputInputRoute
+            || '';
+          hostExtra.generatedLazyAppBuildOutputInputRouteClass =
+            response.generatedLazyAppBuildOutputInputRouteClass
+            || resource.generatedLazyAppBuildOutputInputRouteClass
+            || '';
+          hostExtra.generatedLazyAppBuildOutputInputDependency =
+            response.generatedLazyAppBuildOutputInputDependency
+            || resource.generatedLazyAppBuildOutputInputDependency
+            || '';
+          hostExtra.generatedLazyAppBuildOutputScannerObserved =
+            response.generatedLazyAppBuildOutputScannerObserved === true
+            || resource.generatedLazyAppBuildOutputScannerObserved === true;
+          hostExtra.generatedLazyAppBuildOutputRuntimeSource =
+            response.generatedLazyAppBuildOutputRuntimeSource
+            || resource.generatedLazyAppBuildOutputRuntimeSource
+            || '';
+          hostExtra.generatedLazyAppBuildOutputModulePath =
+            response.generatedLazyAppBuildOutputModulePath
+            || resource.generatedLazyAppBuildOutputModulePath
+            || '';
+          hostExtra.generatedLazyAppBuildOutputGeneratedImportsPath =
+            response.generatedLazyAppBuildOutputGeneratedImportsPath
+            || resource.generatedLazyAppBuildOutputGeneratedImportsPath
+            || '';
+          hostExtra.generatedLazyAppBuildOutputGeneratedImportsObserved =
+            response.generatedLazyAppBuildOutputGeneratedImportsObserved === true
+            || resource.generatedLazyAppBuildOutputGeneratedImportsObserved === true;
+          hostExtra.generatedLazyAppBuildOutputGeneratedImportsMtimeMillis =
+            Number.isFinite(response.generatedLazyAppBuildOutputGeneratedImportsMtimeMillis)
+              ? response.generatedLazyAppBuildOutputGeneratedImportsMtimeMillis
+              : (Number.isFinite(resource.generatedLazyAppBuildOutputGeneratedImportsMtimeMillis)
+                ? resource.generatedLazyAppBuildOutputGeneratedImportsMtimeMillis
+                : 0);
+          hostExtra.generatedLazyAppBuildOutputGeneratedImportsBytes =
+            Number.isFinite(response.generatedLazyAppBuildOutputGeneratedImportsBytes)
+              ? response.generatedLazyAppBuildOutputGeneratedImportsBytes
+              : (Number.isFinite(resource.generatedLazyAppBuildOutputGeneratedImportsBytes)
+                ? resource.generatedLazyAppBuildOutputGeneratedImportsBytes
+                : 0);
+          hostExtra.generatedLazyAppBuildOutputGeneratedImportsSha256 =
+            response.generatedLazyAppBuildOutputGeneratedImportsSha256
+            || resource.generatedLazyAppBuildOutputGeneratedImportsSha256
+            || '';
+          hostExtra.generatedLazyAppBuildOutputGeneratedImportsTableShape =
+            response.generatedLazyAppBuildOutputGeneratedImportsTableShape
+            || resource.generatedLazyAppBuildOutputGeneratedImportsTableShape
+            || '';
+          hostExtra.generatedLazyAppBuildOutputGeneratedImportsNoOpLoadOnDemand =
+            response.generatedLazyAppBuildOutputGeneratedImportsNoOpLoadOnDemand === true
+            || resource.generatedLazyAppBuildOutputGeneratedImportsNoOpLoadOnDemand === true;
+          hostExtra.generatedLazyAppBuildOutputChunkReferences =
+            Number.isFinite(response.generatedLazyAppBuildOutputChunkReferences)
+              ? response.generatedLazyAppBuildOutputChunkReferences
+              : (Number.isFinite(resource.generatedLazyAppBuildOutputChunkReferences)
+                ? resource.generatedLazyAppBuildOutputChunkReferences
+                : 0);
+          hostExtra.generatedLazyAppBuildOutputChunkStatus =
+            response.generatedLazyAppBuildOutputChunkStatus
+            || resource.generatedLazyAppBuildOutputChunkStatus
+            || '';
+          hostExtra.generatedLazyAppBuildOutputChunkArtifact =
+            response.generatedLazyAppBuildOutputChunkArtifact
+            || resource.generatedLazyAppBuildOutputChunkArtifact
+            || '';
+          hostExtra.generatedLazyAppBuildOutputFallbackReason =
+            response.generatedLazyAppBuildOutputFallbackReason
+            || resource.generatedLazyAppBuildOutputFallbackReason
+            || '';
+          hostExtra.generatedLazyAppBuildOutputPackagedFallbackPath =
+            response.generatedLazyAppBuildOutputPackagedFallbackPath
+            || resource.generatedLazyAppBuildOutputPackagedFallbackPath
+            || '';
+          hostExtra.generatedLazyAppBuildOutputSpiAssessment =
+            response.generatedLazyAppBuildOutputSpiAssessment
+            || resource.generatedLazyAppBuildOutputSpiAssessment
+            || '';
+          hostExtra.generatedLazyAppBuildOutputFailureLayer =
+            response.generatedLazyAppBuildOutputFailureLayer
+            || resource.generatedLazyAppBuildOutputFailureLayer
+            || '';
+          hostExtra.generatedLazyAppBuildOutputNextResolutionStep =
+            response.generatedLazyAppBuildOutputNextResolutionStep
+            || resource.generatedLazyAppBuildOutputNextResolutionStep
+            || '';
+          hostExtra.generatedLazyAppBuildOutputFixtureSubstituted =
+            response.generatedLazyAppBuildOutputFixtureSubstituted === true
+            || resource.generatedLazyAppBuildOutputFixtureSubstituted === true;
+          hostExtra.generatedLazyAppBuildOutputNoLocalhost =
+            response.generatedLazyAppBuildOutputNoLocalhost === true
+            || resource.generatedLazyAppBuildOutputNoLocalhost === true;
           const stagedUrl = response.stagedUrl || '';
           if (!stagedUrl) {
             return '';

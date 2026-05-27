@@ -101,6 +101,9 @@ public final class DesktopTraceInspector {
         FLOW_IPC_V1_28_GENERATED_LAZY_BUILD_LIFECYCLE(
                 "--require-flow-ipc-v1_28-generated-lazy-build-lifecycle"),
         FLOW_IPC_V1_28("--require-flow-ipc-v1_28"),
+        FLOW_IPC_V1_29_GENERATED_LAZY_APP_BUILD_OUTPUT(
+                "--require-flow-ipc-v1_29-generated-lazy-app-build-output"),
+        FLOW_IPC_V1_29("--require-flow-ipc-v1_29"),
         FLOW_IPC_V1_3_FRAMEWORK("--require-flow-ipc-v1_3-framework");
 
         private final String option;
@@ -434,6 +437,14 @@ public final class DesktopTraceInspector {
                         FLOW_IPC_V1_26_GENERATED_LAZY_SOURCE_BOUNDARY, FLOW_IPC_V1_26,
                         FLOW_IPC_V1_27_GENERATED_LAZY_REAL_BUILD_PROBE, FLOW_IPC_V1_27,
                         FLOW_IPC_V1_28_GENERATED_LAZY_BUILD_LIFECYCLE, FLOW_IPC_V1_28);
+                case FLOW_IPC_V1_29_GENERATED_LAZY_APP_BUILD_OUTPUT ->
+                    EnumSet.of(FLOW_IPC_V1_29_GENERATED_LAZY_APP_BUILD_OUTPUT);
+                case FLOW_IPC_V1_29 -> {
+                    EnumSet<AcceptanceGate> gates = FLOW_IPC_V1_28.expandedRequirements();
+                    gates.add(FLOW_IPC_V1_29_GENERATED_LAZY_APP_BUILD_OUTPUT);
+                    gates.add(FLOW_IPC_V1_29);
+                    yield gates;
+                }
                 case FLOW_IPC_V1_3_FRAMEWORK -> EnumSet.of(FLOW_IPC_V1_3_FRAMEWORK);
             };
         }
@@ -507,6 +518,9 @@ public final class DesktopTraceInspector {
                 case FLOW_IPC_V1_28_GENERATED_LAZY_BUILD_LIFECYCLE ->
                     summary.hasRequiredFlowIpcV1_28GeneratedLazyBuildLifecycleTypes();
                 case FLOW_IPC_V1_28 -> summary.hasRequiredFlowIpcV1_28Types();
+                case FLOW_IPC_V1_29_GENERATED_LAZY_APP_BUILD_OUTPUT ->
+                    summary.hasRequiredFlowIpcV1_29GeneratedLazyAppBuildOutputTypes();
+                case FLOW_IPC_V1_29 -> summary.hasRequiredFlowIpcV1_29Types();
                 case FLOW_IPC_V1_3_FRAMEWORK -> summary.hasRequiredFlowIpcV1_3FrameworkTypes();
             };
         }
@@ -1130,6 +1144,11 @@ public final class DesktopTraceInspector {
                     && line.contains("\"componentFrontendResources\"")
                     && containsGeneratedLazyBuildLifecycleV128Fields(line)) {
                 summary.generatedLazyBuildLifecycleV128ManifestObserved = true;
+            }
+            if (line.contains("\"type\":\"bootstrapResponse\"")
+                    && line.contains("\"componentFrontendResources\"")
+                    && containsGeneratedLazyAppBuildOutputV129Fields(line)) {
+                summary.generatedLazyAppBuildOutputV129ManifestObserved = true;
             }
             if (line.contains("\"type\":\"bootstrapResponse\"")
                     && line.contains("\"componentFrontendResources\"")
@@ -1993,6 +2012,17 @@ public final class DesktopTraceInspector {
                 summary.generatedLazyBuildLifecycleV128ResponseObserved = true;
             }
             if (line.contains("\"type\":\"resourceRequest\"")
+                    && containsPath(line, "vaadin-dev-bundle/webapp/VAADIN/build/generated-flow-imports-VW7hRaNw.js")
+                    && containsGeneratedLazyAppBuildOutputV129Fields(line)) {
+                summary.generatedLazyAppBuildOutputV129RequestObserved = true;
+            }
+            if (line.contains("\"type\":\"resourceResponse\"")
+                    && containsPath(line, "vaadin-dev-bundle/webapp/VAADIN/build/generated-flow-imports-VW7hRaNw.js")
+                    && containsGeneratedLazyAppBuildOutputV129Fields(line)
+                    && line.contains("\"bodyRedacted\":true")) {
+                summary.generatedLazyAppBuildOutputV129ResponseObserved = true;
+            }
+            if (line.contains("\"type\":\"resourceRequest\"")
                     && line.contains("\"purpose\":\"generated-loadondemand-chunk-v1_11\"")
                     && line.contains("\"lookupKind\":\"Generated-flow-imports-dev-bundle-chunk-v1_4\"")
                     && containsPath(line, "vaadin-dev-bundle/webapp/VAADIN/build/generated-flow-imports-VW7hRaNw.js")
@@ -2640,6 +2670,14 @@ public final class DesktopTraceInspector {
                             || line.contains("\"executionStatus\":\"strict-blocker\"")
                             || line.contains("\"executionStatus\":\"staged\""))) {
                 summary.generatedLazyBuildLifecycleV128StageObserved = true;
+            }
+            if (line.contains("\"type\":\"resourceStage\"")
+                    && containsPath(line, "vaadin-dev-bundle/webapp/VAADIN/build/generated-flow-imports-VW7hRaNw.js")
+                    && containsGeneratedLazyAppBuildOutputV129Fields(line)
+                    && (line.contains("\"executionStatus\":\"executed\"")
+                            || line.contains("\"executionStatus\":\"strict-blocker\"")
+                            || line.contains("\"executionStatus\":\"staged\""))) {
+                summary.generatedLazyAppBuildOutputV129StageObserved = true;
             }
             if (line.contains("\"type\":\"webview.dom\"")
                     && containsStringField(line, "frontendStagingResolverVersion", "flow-ipc-resource-staging-v1_5")
@@ -3352,6 +3390,11 @@ public final class DesktopTraceInspector {
                 summary.generatedLazyBuildLifecycleV128DomObserved = true;
             }
             if (line.contains("\"type\":\"webview.dom\"")
+                    && containsLiteralField(line, "generatedLazyAppBuildOutputObserved", "true")
+                    && containsGeneratedLazyAppBuildOutputV129Fields(line)) {
+                summary.generatedLazyAppBuildOutputV129DomObserved = true;
+            }
+            if (line.contains("\"type\":\"webview.dom\"")
                     && containsLiteralField(line, "generatedLazySourceCurrentBuildNoOpConfirmed", "true")
                     && containsStringField(line, "generatedLazySourceCurrentBuildTableShape",
                             "no-op-promise-resolve-0")
@@ -3397,6 +3440,21 @@ public final class DesktopTraceInspector {
                     && containsStringField(line, "loadOnDemandChunkFileFailureLayer",
                             "chunk-file-not-generated")) {
                 summary.generatedLazyBuildLifecycleV128CurrentBuildBlockerObserved = true;
+            }
+            if (line.contains("\"type\":\"webview.dom\"")
+                    && containsLiteralField(line, "generatedLazyAppBuildOutputScannerObserved", "true")
+                    && containsStringField(line, "generatedLazyAppBuildOutputRuntimeSource",
+                            "packaged-dev-bundle-fallback")
+                    && containsLiteralField(line, "generatedLazyAppBuildOutputGeneratedImportsObserved", "false")
+                    && containsStringField(line, "generatedLazyAppBuildOutputGeneratedImportsTableShape",
+                            "missing")
+                    && containsStringField(line, "generatedLazyAppBuildOutputChunkStatus",
+                            "missing-build-output")
+                    && containsStringField(line, "generatedLazyAppBuildOutputFailureLayer",
+                            "app-build-output-missing-generated-imports")
+                    && containsStringField(line, "generatedLazyAppBuildOutputFallbackReason",
+                            "current-app-build-output-generated-imports-missing")) {
+                summary.generatedLazyAppBuildOutputV129CurrentBuildBlockerObserved = true;
             }
             if (line.contains("\"type\":\"resourceRequest\"")
                     && line.contains("\"purpose\":\"vaadin-web-component-resource-probe\"")
@@ -4070,6 +4128,94 @@ public final class DesktopTraceInspector {
                 && containsLiteralField(line, "generatedLazyBuildLifecycleNoLocalhost", "true");
     }
 
+    private static boolean containsGeneratedLazyAppBuildOutputV129Fields(String line) {
+        return containsStringField(line, "generatedLazyAppBuildOutputVersion",
+                "flow-ipc-generated-lazy-app-build-output-v1_29")
+                && containsStringField(line, "generatedLazyAppBuildOutputDiscoverySource",
+                        "dev-ipc-module-target-generated-imports-discovery-v1_29")
+                && containsStringField(line, "generatedLazyAppBuildOutputInputRoute",
+                        "flow-ipc-lazy-probe-v1_27")
+                && containsStringField(line, "generatedLazyAppBuildOutputInputRouteClass",
+                        "dev.vatori.ipcsmoke.FlowIpcGeneratedLazyProbeView")
+                && containsStringField(line, "generatedLazyAppBuildOutputInputDependency",
+                        "context://vatori-flow-ipc-real-build-probe-v1_27.js")
+                && containsLiteralField(line, "generatedLazyAppBuildOutputScannerObserved", "true")
+                && containsGeneratedLazyAppBuildOutputRuntimeSource(line)
+                && line.contains("generatedLazyAppBuildOutputModulePath")
+                && line.contains("generatedLazyAppBuildOutputGeneratedImportsPath")
+                && line.contains("generatedLazyAppBuildOutputGeneratedImportsObserved")
+                && line.contains("generatedLazyAppBuildOutputGeneratedImportsMtimeMillis")
+                && line.contains("generatedLazyAppBuildOutputGeneratedImportsBytes")
+                && line.contains("generatedLazyAppBuildOutputGeneratedImportsSha256")
+                && containsGeneratedLazyAppBuildOutputTableShape(line)
+                && line.contains("generatedLazyAppBuildOutputGeneratedImportsNoOpLoadOnDemand")
+                && line.contains("generatedLazyAppBuildOutputChunkReferences")
+                && containsGeneratedLazyAppBuildOutputChunkStatus(line)
+                && line.contains("generatedLazyAppBuildOutputChunkArtifact")
+                && line.contains("generatedLazyAppBuildOutputFallbackReason")
+                && line.contains("generatedLazyAppBuildOutputPackagedFallbackPath")
+                && containsGeneratedLazyAppBuildOutputSpiAssessment(line)
+                && containsGeneratedLazyAppBuildOutputFailureLayer(line)
+                && line.contains("prepare-frontend")
+                && containsLiteralField(line, "generatedLazyAppBuildOutputFixtureSubstituted", "false")
+                && containsLiteralField(line, "generatedLazyAppBuildOutputNoLocalhost", "true");
+    }
+
+    private static boolean containsGeneratedLazyAppBuildOutputRuntimeSource(String line) {
+        return containsStringField(line, "generatedLazyAppBuildOutputRuntimeSource",
+                "current-app-build-output")
+                || containsStringField(line, "generatedLazyAppBuildOutputRuntimeSource",
+                        "packaged-dev-bundle-fallback")
+                || containsStringField(line, "generatedLazyAppBuildOutputRuntimeSource",
+                        "missing-build-output");
+    }
+
+    private static boolean containsGeneratedLazyAppBuildOutputTableShape(String line) {
+        return containsStringField(line, "generatedLazyAppBuildOutputGeneratedImportsTableShape",
+                "missing")
+                || containsStringField(line, "generatedLazyAppBuildOutputGeneratedImportsTableShape",
+                        "no-op-promise-resolve-0")
+                || containsStringField(line, "generatedLazyAppBuildOutputGeneratedImportsTableShape",
+                        "branch-table-dynamic-import")
+                || containsStringField(line, "generatedLazyAppBuildOutputGeneratedImportsTableShape",
+                        "unrecognized");
+    }
+
+    private static boolean containsGeneratedLazyAppBuildOutputChunkStatus(String line) {
+        return containsStringField(line, "generatedLazyAppBuildOutputChunkStatus",
+                "missing-build-output")
+                || containsStringField(line, "generatedLazyAppBuildOutputChunkStatus",
+                        "not-generated")
+                || containsStringField(line, "generatedLazyAppBuildOutputChunkStatus",
+                        "available")
+                || containsStringField(line, "generatedLazyAppBuildOutputChunkStatus",
+                        "not-found")
+                || containsStringField(line, "generatedLazyAppBuildOutputChunkStatus",
+                        "blocked");
+    }
+
+    private static boolean containsGeneratedLazyAppBuildOutputSpiAssessment(String line) {
+        return containsStringField(line, "generatedLazyAppBuildOutputSpiAssessment",
+                "requires-build-step")
+                || containsStringField(line, "generatedLazyAppBuildOutputSpiAssessment",
+                        "requires-chunk-output-or-supported-spi");
+    }
+
+    private static boolean containsGeneratedLazyAppBuildOutputFailureLayer(String line) {
+        return containsStringField(line, "generatedLazyAppBuildOutputFailureLayer",
+                "lazy-route-probe-metadata-not-on-classpath")
+                || containsStringField(line, "generatedLazyAppBuildOutputFailureLayer",
+                        "lazy-route-input-not-observed-by-scanner")
+                || containsStringField(line, "generatedLazyAppBuildOutputFailureLayer",
+                        "app-build-output-missing-generated-imports")
+                || containsStringField(line, "generatedLazyAppBuildOutputFailureLayer",
+                        "app-build-output-has-no-generated-lazy-chunk")
+                || containsStringField(line, "generatedLazyAppBuildOutputFailureLayer",
+                        "app-build-output-generated-chunk-file-missing")
+                || containsStringField(line, "generatedLazyAppBuildOutputFailureLayer",
+                        "pending-real-generated-chunk-stage");
+    }
+
     private static boolean containsProductionOwnerFailureLayer(String line, String field) {
         return containsStringField(line, field, "production-owner-duplicate-custom-element")
                 || containsStringField(line, field, "production-owner-relative-import-unresolved")
@@ -4534,6 +4680,12 @@ public final class DesktopTraceInspector {
         private boolean generatedLazyBuildLifecycleV128StageObserved;
         private boolean generatedLazyBuildLifecycleV128DomObserved;
         private boolean generatedLazyBuildLifecycleV128CurrentBuildBlockerObserved;
+        private boolean generatedLazyAppBuildOutputV129ManifestObserved;
+        private boolean generatedLazyAppBuildOutputV129RequestObserved;
+        private boolean generatedLazyAppBuildOutputV129ResponseObserved;
+        private boolean generatedLazyAppBuildOutputV129StageObserved;
+        private boolean generatedLazyAppBuildOutputV129DomObserved;
+        private boolean generatedLazyAppBuildOutputV129CurrentBuildBlockerObserved;
 
         public boolean hasRequiredFlowIpcTypes() {
             return types.keySet().containsAll(FLOW_IPC_REQUIRED_TYPES)
@@ -4984,6 +5136,20 @@ public final class DesktopTraceInspector {
         public boolean hasRequiredFlowIpcV1_28Types() {
             return hasRequiredFlowIpcV1_27Types()
                     && hasRequiredFlowIpcV1_28GeneratedLazyBuildLifecycleTypes();
+        }
+
+        public boolean hasRequiredFlowIpcV1_29GeneratedLazyAppBuildOutputTypes() {
+            return generatedLazyAppBuildOutputV129ManifestObserved
+                    && generatedLazyAppBuildOutputV129RequestObserved
+                    && generatedLazyAppBuildOutputV129ResponseObserved
+                    && generatedLazyAppBuildOutputV129StageObserved
+                    && generatedLazyAppBuildOutputV129DomObserved
+                    && generatedLazyAppBuildOutputV129CurrentBuildBlockerObserved;
+        }
+
+        public boolean hasRequiredFlowIpcV1_29Types() {
+            return hasRequiredFlowIpcV1_28Types()
+                    && hasRequiredFlowIpcV1_29GeneratedLazyAppBuildOutputTypes();
         }
 
         public boolean hasRequiredFlowIpcV1_3FrameworkTypes() {
@@ -5449,6 +5615,15 @@ public final class DesktopTraceInspector {
                     + generatedLazyBuildLifecycleV128StageObserved + "/"
                     + generatedLazyBuildLifecycleV128DomObserved + "/"
                     + generatedLazyBuildLifecycleV128CurrentBuildBlockerObserved);
+            System.out.println("Flow IPC v1.29 generated lazy app build output manifest observed: "
+                    + generatedLazyAppBuildOutputV129ManifestObserved);
+            System.out.println("Flow IPC v1.29 generated lazy app build output request/response observed: "
+                    + generatedLazyAppBuildOutputV129RequestObserved + "/"
+                    + generatedLazyAppBuildOutputV129ResponseObserved);
+            System.out.println("Flow IPC v1.29 generated lazy app build output stage/DOM/current blocker observed: "
+                    + generatedLazyAppBuildOutputV129StageObserved + "/"
+                    + generatedLazyAppBuildOutputV129DomObserved + "/"
+                    + generatedLazyAppBuildOutputV129CurrentBuildBlockerObserved);
             System.out.println("Flow IPC v1.6 TextField graph manifest observed: "
                     + frontendTextFieldV16ManifestObserved);
             System.out.println("Flow IPC v1.6 TextField graph request observed: "

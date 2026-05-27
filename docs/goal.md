@@ -34,19 +34,21 @@ v0/v1 runtime 切片走向可产品化桌面框架的最终完成状态。
 - `docs/goal-1_26.md`：Generated Lazy Source Boundary，已完成。
 - `docs/goal-1_27.md`：Generated Lazy Real Build Probe，已完成。
 - `docs/goal-1_28.md`：Generated Lazy Build Lifecycle Trace，已完成。
+- `docs/goal-1_29.md`：Generated Lazy App Build Output Connection，已完成。
 
-当前已完成到 `docs/goal-1_28.md`。v1.28 已把 v1.27 的真实
-route/lazy JavaScript probe 继续推进到 Vaadin build lifecycle 证据：trace 在
-manifest、`resourceRequest`、`resourceResponse`、`resourceStage` 和 `webview.dom`
-中记录 scanner 输入、build/update-imports 状态、runtime artifact source、
-redacted runtime path、mtime、byte count、sha256、write target、table shape 和 failure
-layer。当前结果收敛为 `runtime-using-stale-packaged-dev-bundle`：probe 已被 scanner
-观察到，但 no-localhost runtime 仍从 packaged Vaadin dev-bundle jar 读取
-`generated-flow-imports-VW7hRaNw.js`，没有使用当前 app 的 update-imports/build 输出。
-真实 generated chunk、production owner owned runtime 和 dev-mode/Vite parity 仍作为真实
-app/build blocker 保留。
+当前已完成到 `docs/goal-1_29.md`。v1.29 已把 v1.28 定位出的
+`runtime-using-stale-packaged-dev-bundle` 继续推进到当前 app build output discovery
+证据：trace 在 manifest、`resourceRequest`、`resourceResponse`、`resourceStage` 和
+`webview.dom` 中记录 app module/repo root、scanner 输入、build output discovery、
+generated imports observed/path/mtime/bytes/sha256/table shape、chunk status、runtime
+source、fallback reason、SPI assessment 和 failure layer。当前结果收敛为
+`app-build-output-missing-generated-imports`：当前 app build output 尚未产生可用
+generated imports / generated lazy chunk，runtime 明确分类为
+`packaged-dev-bundle-fallback`，下一步需要运行/接入 Vaadin `prepare-frontend` /
+`update-imports` 输出或受支持 lazy chunk SPI。真实 generated chunk、production owner
+owned runtime 和 dev-mode/Vite parity 仍作为真实 app/build blocker 保留。
 
-后续阶段应继续以 `docs/goal-1_28.md` 等文件拆分，
+后续阶段应继续以 `docs/goal-1_29.md` 等文件拆分，
 每个阶段只拿走本长期目标中的一个可评审切片。不要把本文件改写成短期任务清单；
 它是长期北极星和完成度账本。
 
@@ -68,7 +70,7 @@ app/build blocker 保留。
 
 ## 当前基线
 
-截至 goal 1.28，仓库已经证明：
+截至 goal 1.29，仓库已经证明：
 
 - `dev-ipc` 可以启动 no-localhost Flow IPC runtime。
 - 真实 macOS Swift/AppKit/WKWebView 窗口可以运行 Flow IPC smoke app 和 framework
@@ -355,6 +357,19 @@ app/build blocker 保留。
   `runtime-using-stale-packaged-dev-bundle`。v1.28 不是 real generated chunk parity；
   它证明当前缺口在 dev-ipc runtime 仍使用 packaged Vaadin dev-bundle artifact，而不是当前
   app 的 update-imports/build 输出或受支持 lazy chunk SPI。
+- v1.29 已把 v1.28 的 stale packaged dev-bundle blocker 推进到当前 app build output
+  discovery / fallback contract：Java manifest / resource response、Swift
+  `resourceRequest` / `resourceResponse` / `resourceStage` / `webview.dom` 和 inspector gate
+  统一记录
+  `generatedLazyAppBuildOutputVersion=flow-ipc-generated-lazy-app-build-output-v1_29`、
+  app module/root、discovery source、input route/class/dependency、scanner observation、
+  runtime source `packaged-dev-bundle-fallback`、generated imports observed=false、
+  table shape `missing`、chunk status `missing-build-output`、fallback reason
+  `current-app-build-output-generated-imports-missing`、SPI assessment
+  `requires-build-step`、`fixtureSubstituted=false`、no-localhost proof 和 failure layer
+  `app-build-output-missing-generated-imports`。v1.29 不是 real generated chunk parity；
+  它证明当前 app build output 尚未产生 generated imports/chunk，并把下一步收敛到
+  Vaadin `prepare-frontend` / `update-imports` 输出连接或受支持 lazy chunk SPI。
 - 当前 app/build 的真实 generated/lazy chunk file parity、production owner import/side-effect success
   和 dev-mode/Vite execution 仍是明确 blocker，不计入最终完成。
 
@@ -451,10 +466,11 @@ app/build blocker 保留。
 
 - 基于 v1.22 generated lazy chunk-file positive fixture、v1.23 production owner positive
   runtime fixture、v1.24 closure decision contract、v1.25 packaged frontend baseline 和
-  v1.26 generated lazy source boundary、v1.27 generated lazy real build probe，
-  继续让当前 app/build 产生真实 generated lazy chunk file，连接 scanner output 到
-  generated-flow-imports 输出，接入受支持 Vaadin lazy chunk SPI，或把真实 production
-  bundle owned execution / dev-mode/Vite execution 从 partial/blocker 推进到真实可执行路径。
+  v1.26 generated lazy source boundary、v1.27 generated lazy real build probe、v1.28 build
+  lifecycle trace、v1.29 app build output discovery/fallback contract，继续让当前 app/build
+  产生真实 generated lazy chunk file，连接 scanner output 到 generated-flow-imports 输出，
+  接入受支持 Vaadin lazy chunk SPI，或把真实 production bundle owned execution /
+  dev-mode/Vite execution 从 partial/blocker 推进到真实可执行路径。
 - 真实 app/build 的 generated/lazy `Flow.loadOnDemand` chunk-file parity，不再停在真实
   generated-flow-imports no-op / missing chunk file blocker，也不只依赖 repository fixture。
 - Production bundle owner import/side-effect success、chunk side-effect ownership、
@@ -485,9 +501,9 @@ app/build blocker 保留。
 
 ## 当前建议的下一阶段
 
-v1.28 已完成 Generated Lazy Build Lifecycle Trace。下一阶段建议优先把 v1.28
-定位出的 static packaged dev-bundle blocker 连接到真实 app build output 或受支持
-Vaadin lazy chunk SPI：
+v1.29 已完成 Generated Lazy App Build Output Connection。下一阶段建议优先把 v1.29
+定位出的 `app-build-output-missing-generated-imports` blocker 连接到可执行的
+Vaadin `prepare-frontend` / `update-imports` build step 或受支持 Vaadin lazy chunk SPI：
 
 - 让当前 smoke/framework build 产生真实 generated lazy chunk file，或让 dev-ipc
   runtime 使用当前 app 的 `prepare-frontend` / `update-imports` 输出。

@@ -23,10 +23,13 @@ v0/v1 runtime 切片走向可产品化桌面框架的最终完成状态。
 - `docs/goal-1_15.md`：Production Owner Dependency Resolver Closure，已完成。
 - `docs/goal-1_16.md`：Production Owner Import Ordering and Component Reuse，已完成。
 - `docs/goal-1_17.md`：Host-Owned Frontend Resource Scheme，已完成。
+- `docs/goal-1_18.md`：Production Owner Custom-Scheme Resource Graph，已规划但尚未执行。
 
-当前已完成到 `docs/goal-1_17.md`。后续阶段应从长期未完成账本中继续拆分。
+当前已完成到 `docs/goal-1_17.md`。建议下一个阶段先推进
+`docs/goal-1_18.md`，把 v1.17 证明过的 host-owned resource loader 用到 production
+owner root/dependency graph，而不是继续停留在 Blob fallback。
 
-后续阶段应继续以 `docs/goal-1_18.md` 等文件拆分，
+后续阶段应继续以 `docs/goal-1_19.md` 等文件拆分，
 每个阶段只拿走本长期目标中的一个可评审切片。不要把本文件改写成短期任务清单；
 它是长期北极星和完成度账本。
 

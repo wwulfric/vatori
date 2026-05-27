@@ -2361,6 +2361,34 @@ final class WebViewHost: NSObject, NSApplicationDelegate, NSWindowDelegate, WKNa
           generatedLazyAppBuildOutputNextResolutionStep: window.VaadinDesktopIpcDiagnostics ? window.VaadinDesktopIpcDiagnostics.generatedLazyAppBuildOutputNextResolutionStep : "",
           generatedLazyAppBuildOutputFixtureSubstituted: !!(window.VaadinDesktopIpcDiagnostics && window.VaadinDesktopIpcDiagnostics.generatedLazyAppBuildOutputFixtureSubstituted),
           generatedLazyAppBuildOutputNoLocalhost: !!(window.VaadinDesktopIpcDiagnostics && window.VaadinDesktopIpcDiagnostics.generatedLazyAppBuildOutputNoLocalhost),
+          currentAppFrontendBuildOutputObserved: !!(window.VaadinDesktopIpcDiagnostics && window.VaadinDesktopIpcDiagnostics.currentAppFrontendBuildOutputObserved),
+          currentAppFrontendBuildOutputVersion: window.VaadinDesktopIpcDiagnostics ? window.VaadinDesktopIpcDiagnostics.currentAppFrontendBuildOutputVersion : "",
+          currentAppFrontendBuildOutputDiscoverySource: window.VaadinDesktopIpcDiagnostics ? window.VaadinDesktopIpcDiagnostics.currentAppFrontendBuildOutputDiscoverySource : "",
+          currentAppFrontendBuildStepCommand: window.VaadinDesktopIpcDiagnostics ? window.VaadinDesktopIpcDiagnostics.currentAppFrontendBuildStepCommand : "",
+          currentAppFrontendBuildStepExitCode: window.VaadinDesktopIpcDiagnostics ? window.VaadinDesktopIpcDiagnostics.currentAppFrontendBuildStepExitCode : -1,
+          currentAppFrontendBuildStepStatus: window.VaadinDesktopIpcDiagnostics ? window.VaadinDesktopIpcDiagnostics.currentAppFrontendBuildStepStatus : "",
+          currentAppFrontendBuildStepDurationMillis: window.VaadinDesktopIpcDiagnostics ? window.VaadinDesktopIpcDiagnostics.currentAppFrontendBuildStepDurationMillis : 0,
+          currentAppFrontendBuildStepSummary: window.VaadinDesktopIpcDiagnostics ? window.VaadinDesktopIpcDiagnostics.currentAppFrontendBuildStepSummary : "",
+          currentAppFrontendBuildStepStdoutLog: window.VaadinDesktopIpcDiagnostics ? window.VaadinDesktopIpcDiagnostics.currentAppFrontendBuildStepStdoutLog : "",
+          currentAppFrontendBuildStepStderrLog: window.VaadinDesktopIpcDiagnostics ? window.VaadinDesktopIpcDiagnostics.currentAppFrontendBuildStepStderrLog : "",
+          currentAppFrontendBuildModulePath: window.VaadinDesktopIpcDiagnostics ? window.VaadinDesktopIpcDiagnostics.currentAppFrontendBuildModulePath : "",
+          currentAppFrontendBuildOutputRoots: window.VaadinDesktopIpcDiagnostics ? window.VaadinDesktopIpcDiagnostics.currentAppFrontendBuildOutputRoots : "",
+          currentAppFrontendBuildOutputRoot: window.VaadinDesktopIpcDiagnostics ? window.VaadinDesktopIpcDiagnostics.currentAppFrontendBuildOutputRoot : "",
+          currentAppFrontendBuildOutputRuntimeSource: window.VaadinDesktopIpcDiagnostics ? window.VaadinDesktopIpcDiagnostics.currentAppFrontendBuildOutputRuntimeSource : "",
+          currentAppFrontendBuildGeneratedImportsPath: window.VaadinDesktopIpcDiagnostics ? window.VaadinDesktopIpcDiagnostics.currentAppFrontendBuildGeneratedImportsPath : "",
+          currentAppFrontendBuildGeneratedImportsObserved: !!(window.VaadinDesktopIpcDiagnostics && window.VaadinDesktopIpcDiagnostics.currentAppFrontendBuildGeneratedImportsObserved),
+          currentAppFrontendBuildGeneratedImportsMtimeMillis: window.VaadinDesktopIpcDiagnostics ? window.VaadinDesktopIpcDiagnostics.currentAppFrontendBuildGeneratedImportsMtimeMillis : 0,
+          currentAppFrontendBuildGeneratedImportsBytes: window.VaadinDesktopIpcDiagnostics ? window.VaadinDesktopIpcDiagnostics.currentAppFrontendBuildGeneratedImportsBytes : 0,
+          currentAppFrontendBuildGeneratedImportsSha256: window.VaadinDesktopIpcDiagnostics ? window.VaadinDesktopIpcDiagnostics.currentAppFrontendBuildGeneratedImportsSha256 : "",
+          currentAppFrontendBuildGeneratedImportsTableShape: window.VaadinDesktopIpcDiagnostics ? window.VaadinDesktopIpcDiagnostics.currentAppFrontendBuildGeneratedImportsTableShape : "",
+          currentAppFrontendBuildGeneratedImportsNoOpLoadOnDemand: !!(window.VaadinDesktopIpcDiagnostics && window.VaadinDesktopIpcDiagnostics.currentAppFrontendBuildGeneratedImportsNoOpLoadOnDemand),
+          currentAppFrontendBuildChunkReferences: window.VaadinDesktopIpcDiagnostics ? window.VaadinDesktopIpcDiagnostics.currentAppFrontendBuildChunkReferences : 0,
+          currentAppFrontendBuildChunkStatus: window.VaadinDesktopIpcDiagnostics ? window.VaadinDesktopIpcDiagnostics.currentAppFrontendBuildChunkStatus : "",
+          currentAppFrontendBuildChunkArtifact: window.VaadinDesktopIpcDiagnostics ? window.VaadinDesktopIpcDiagnostics.currentAppFrontendBuildChunkArtifact : "",
+          currentAppFrontendBuildFailureLayer: window.VaadinDesktopIpcDiagnostics ? window.VaadinDesktopIpcDiagnostics.currentAppFrontendBuildFailureLayer : "",
+          currentAppFrontendBuildNextResolutionStep: window.VaadinDesktopIpcDiagnostics ? window.VaadinDesktopIpcDiagnostics.currentAppFrontendBuildNextResolutionStep : "",
+          currentAppFrontendBuildFixtureSubstituted: !!(window.VaadinDesktopIpcDiagnostics && window.VaadinDesktopIpcDiagnostics.currentAppFrontendBuildFixtureSubstituted),
+          currentAppFrontendBuildNoLocalhost: !!(window.VaadinDesktopIpcDiagnostics && window.VaadinDesktopIpcDiagnostics.currentAppFrontendBuildNoLocalhost),
           frontendArtifactShimFallback: !!(window.VaadinDesktopIpcDiagnostics && window.VaadinDesktopIpcDiagnostics.frontendArtifactShimFallback),
           frontendArtifactProductionBundlePartial: !!(window.VaadinDesktopIpcDiagnostics && window.VaadinDesktopIpcDiagnostics.frontendArtifactProductionBundlePartial),
           frontendArtifactProductionBundleStatsVerified: !!(window.VaadinDesktopIpcDiagnostics && window.VaadinDesktopIpcDiagnostics.frontendArtifactProductionBundleStatsVerified),
@@ -3582,6 +3610,34 @@ let flowIpcShell = #"""
         generatedLazyAppBuildOutputNextResolutionStep: '',
         generatedLazyAppBuildOutputFixtureSubstituted: false,
         generatedLazyAppBuildOutputNoLocalhost: false,
+        currentAppFrontendBuildOutputObserved: false,
+        currentAppFrontendBuildOutputVersion: '',
+        currentAppFrontendBuildOutputDiscoverySource: '',
+        currentAppFrontendBuildStepCommand: '',
+        currentAppFrontendBuildStepExitCode: -1,
+        currentAppFrontendBuildStepStatus: '',
+        currentAppFrontendBuildStepDurationMillis: 0,
+        currentAppFrontendBuildStepSummary: '',
+        currentAppFrontendBuildStepStdoutLog: '',
+        currentAppFrontendBuildStepStderrLog: '',
+        currentAppFrontendBuildModulePath: '',
+        currentAppFrontendBuildOutputRoots: '',
+        currentAppFrontendBuildOutputRoot: '',
+        currentAppFrontendBuildOutputRuntimeSource: '',
+        currentAppFrontendBuildGeneratedImportsPath: '',
+        currentAppFrontendBuildGeneratedImportsObserved: false,
+        currentAppFrontendBuildGeneratedImportsMtimeMillis: 0,
+        currentAppFrontendBuildGeneratedImportsBytes: 0,
+        currentAppFrontendBuildGeneratedImportsSha256: '',
+        currentAppFrontendBuildGeneratedImportsTableShape: '',
+        currentAppFrontendBuildGeneratedImportsNoOpLoadOnDemand: false,
+        currentAppFrontendBuildChunkReferences: 0,
+        currentAppFrontendBuildChunkStatus: '',
+        currentAppFrontendBuildChunkArtifact: '',
+        currentAppFrontendBuildFailureLayer: '',
+        currentAppFrontendBuildNextResolutionStep: '',
+        currentAppFrontendBuildFixtureSubstituted: false,
+        currentAppFrontendBuildNoLocalhost: false,
         frontendArtifactShimFallback: false,
         frontendArtifactProductionBundlePartial: false,
         frontendArtifactProductionBundleStatsVerified: false,
@@ -5807,6 +5863,56 @@ let flowIpcShell = #"""
             window.VaadinDesktopIpcDiagnostics[diagnosticKey] = source[sourceKey];
           }
         }
+        if (typeof source.currentAppFrontendBuildOutputVersion === 'string'
+            && source.currentAppFrontendBuildOutputVersion) {
+          window.VaadinDesktopIpcDiagnostics.currentAppFrontendBuildOutputObserved = true;
+          window.VaadinDesktopIpcDiagnostics.currentAppFrontendBuildOutputVersion =
+            source.currentAppFrontendBuildOutputVersion;
+        }
+        for (const [sourceKey, diagnosticKey] of [
+          ['currentAppFrontendBuildOutputDiscoverySource', 'currentAppFrontendBuildOutputDiscoverySource'],
+          ['currentAppFrontendBuildStepCommand', 'currentAppFrontendBuildStepCommand'],
+          ['currentAppFrontendBuildStepStatus', 'currentAppFrontendBuildStepStatus'],
+          ['currentAppFrontendBuildStepSummary', 'currentAppFrontendBuildStepSummary'],
+          ['currentAppFrontendBuildStepStdoutLog', 'currentAppFrontendBuildStepStdoutLog'],
+          ['currentAppFrontendBuildStepStderrLog', 'currentAppFrontendBuildStepStderrLog'],
+          ['currentAppFrontendBuildModulePath', 'currentAppFrontendBuildModulePath'],
+          ['currentAppFrontendBuildOutputRoots', 'currentAppFrontendBuildOutputRoots'],
+          ['currentAppFrontendBuildOutputRoot', 'currentAppFrontendBuildOutputRoot'],
+          ['currentAppFrontendBuildOutputRuntimeSource', 'currentAppFrontendBuildOutputRuntimeSource'],
+          ['currentAppFrontendBuildGeneratedImportsPath', 'currentAppFrontendBuildGeneratedImportsPath'],
+          ['currentAppFrontendBuildGeneratedImportsSha256', 'currentAppFrontendBuildGeneratedImportsSha256'],
+          ['currentAppFrontendBuildGeneratedImportsTableShape', 'currentAppFrontendBuildGeneratedImportsTableShape'],
+          ['currentAppFrontendBuildChunkStatus', 'currentAppFrontendBuildChunkStatus'],
+          ['currentAppFrontendBuildChunkArtifact', 'currentAppFrontendBuildChunkArtifact'],
+          ['currentAppFrontendBuildFailureLayer', 'currentAppFrontendBuildFailureLayer'],
+          ['currentAppFrontendBuildNextResolutionStep', 'currentAppFrontendBuildNextResolutionStep']
+        ]) {
+          if (typeof source[sourceKey] === 'string' && source[sourceKey]) {
+            window.VaadinDesktopIpcDiagnostics[diagnosticKey] = source[sourceKey];
+          }
+        }
+        for (const [sourceKey, diagnosticKey] of [
+          ['currentAppFrontendBuildGeneratedImportsObserved', 'currentAppFrontendBuildGeneratedImportsObserved'],
+          ['currentAppFrontendBuildGeneratedImportsNoOpLoadOnDemand', 'currentAppFrontendBuildGeneratedImportsNoOpLoadOnDemand'],
+          ['currentAppFrontendBuildFixtureSubstituted', 'currentAppFrontendBuildFixtureSubstituted'],
+          ['currentAppFrontendBuildNoLocalhost', 'currentAppFrontendBuildNoLocalhost']
+        ]) {
+          if (source[sourceKey] === true) {
+            window.VaadinDesktopIpcDiagnostics[diagnosticKey] = true;
+          }
+        }
+        for (const [sourceKey, diagnosticKey] of [
+          ['currentAppFrontendBuildStepExitCode', 'currentAppFrontendBuildStepExitCode'],
+          ['currentAppFrontendBuildStepDurationMillis', 'currentAppFrontendBuildStepDurationMillis'],
+          ['currentAppFrontendBuildGeneratedImportsMtimeMillis', 'currentAppFrontendBuildGeneratedImportsMtimeMillis'],
+          ['currentAppFrontendBuildGeneratedImportsBytes', 'currentAppFrontendBuildGeneratedImportsBytes'],
+          ['currentAppFrontendBuildChunkReferences', 'currentAppFrontendBuildChunkReferences']
+        ]) {
+          if (Number.isFinite(source[sourceKey])) {
+            window.VaadinDesktopIpcDiagnostics[diagnosticKey] = source[sourceKey];
+          }
+        }
         addFrontendResolverCsv(frontendResolverFamiliesObserved, source.frontendResolverFamiliesCovered || '');
         addFrontendResolverCsv(frontendResolverAcceptedGapFamilies, source.frontendResolverAcceptableGaps || '');
       }
@@ -6800,6 +6906,70 @@ let flowIpcShell = #"""
             resource.generatedLazyAppBuildOutputFixtureSubstituted === true,
           generatedLazyAppBuildOutputNoLocalhost:
             resource.generatedLazyAppBuildOutputNoLocalhost === true,
+          currentAppFrontendBuildOutputVersion:
+            resource.currentAppFrontendBuildOutputVersion || '',
+          currentAppFrontendBuildOutputDiscoverySource:
+            resource.currentAppFrontendBuildOutputDiscoverySource || '',
+          currentAppFrontendBuildStepCommand:
+            resource.currentAppFrontendBuildStepCommand || '',
+          currentAppFrontendBuildStepExitCode:
+            Number.isFinite(resource.currentAppFrontendBuildStepExitCode)
+              ? resource.currentAppFrontendBuildStepExitCode
+              : -1,
+          currentAppFrontendBuildStepStatus:
+            resource.currentAppFrontendBuildStepStatus || '',
+          currentAppFrontendBuildStepDurationMillis:
+            Number.isFinite(resource.currentAppFrontendBuildStepDurationMillis)
+              ? resource.currentAppFrontendBuildStepDurationMillis
+              : 0,
+          currentAppFrontendBuildStepSummary:
+            resource.currentAppFrontendBuildStepSummary || '',
+          currentAppFrontendBuildStepStdoutLog:
+            resource.currentAppFrontendBuildStepStdoutLog || '',
+          currentAppFrontendBuildStepStderrLog:
+            resource.currentAppFrontendBuildStepStderrLog || '',
+          currentAppFrontendBuildModulePath:
+            resource.currentAppFrontendBuildModulePath || '',
+          currentAppFrontendBuildOutputRoots:
+            resource.currentAppFrontendBuildOutputRoots || '',
+          currentAppFrontendBuildOutputRoot:
+            resource.currentAppFrontendBuildOutputRoot || '',
+          currentAppFrontendBuildOutputRuntimeSource:
+            resource.currentAppFrontendBuildOutputRuntimeSource || '',
+          currentAppFrontendBuildGeneratedImportsPath:
+            resource.currentAppFrontendBuildGeneratedImportsPath || '',
+          currentAppFrontendBuildGeneratedImportsObserved:
+            resource.currentAppFrontendBuildGeneratedImportsObserved === true,
+          currentAppFrontendBuildGeneratedImportsMtimeMillis:
+            Number.isFinite(resource.currentAppFrontendBuildGeneratedImportsMtimeMillis)
+              ? resource.currentAppFrontendBuildGeneratedImportsMtimeMillis
+              : 0,
+          currentAppFrontendBuildGeneratedImportsBytes:
+            Number.isFinite(resource.currentAppFrontendBuildGeneratedImportsBytes)
+              ? resource.currentAppFrontendBuildGeneratedImportsBytes
+              : 0,
+          currentAppFrontendBuildGeneratedImportsSha256:
+            resource.currentAppFrontendBuildGeneratedImportsSha256 || '',
+          currentAppFrontendBuildGeneratedImportsTableShape:
+            resource.currentAppFrontendBuildGeneratedImportsTableShape || '',
+          currentAppFrontendBuildGeneratedImportsNoOpLoadOnDemand:
+            resource.currentAppFrontendBuildGeneratedImportsNoOpLoadOnDemand === true,
+          currentAppFrontendBuildChunkReferences:
+            Number.isFinite(resource.currentAppFrontendBuildChunkReferences)
+              ? resource.currentAppFrontendBuildChunkReferences
+              : 0,
+          currentAppFrontendBuildChunkStatus:
+            resource.currentAppFrontendBuildChunkStatus || '',
+          currentAppFrontendBuildChunkArtifact:
+            resource.currentAppFrontendBuildChunkArtifact || '',
+          currentAppFrontendBuildFailureLayer:
+            resource.currentAppFrontendBuildFailureLayer || '',
+          currentAppFrontendBuildNextResolutionStep:
+            resource.currentAppFrontendBuildNextResolutionStep || '',
+          currentAppFrontendBuildFixtureSubstituted:
+            resource.currentAppFrontendBuildFixtureSubstituted === true,
+          currentAppFrontendBuildNoLocalhost:
+            resource.currentAppFrontendBuildNoLocalhost === true,
           lookupKind: resource.lookupKind || '',
           textfieldGraphParityVersion: resource.textfieldGraphParityVersion || '',
           blockerVersion: resource.blockerVersion || '',
@@ -7515,6 +7685,70 @@ let flowIpcShell = #"""
             resource.generatedLazyAppBuildOutputFixtureSubstituted === true,
           generatedLazyAppBuildOutputNoLocalhost:
             resource.generatedLazyAppBuildOutputNoLocalhost === true,
+          currentAppFrontendBuildOutputVersion:
+            resource.currentAppFrontendBuildOutputVersion || '',
+          currentAppFrontendBuildOutputDiscoverySource:
+            resource.currentAppFrontendBuildOutputDiscoverySource || '',
+          currentAppFrontendBuildStepCommand:
+            resource.currentAppFrontendBuildStepCommand || '',
+          currentAppFrontendBuildStepExitCode:
+            Number.isFinite(resource.currentAppFrontendBuildStepExitCode)
+              ? resource.currentAppFrontendBuildStepExitCode
+              : -1,
+          currentAppFrontendBuildStepStatus:
+            resource.currentAppFrontendBuildStepStatus || '',
+          currentAppFrontendBuildStepDurationMillis:
+            Number.isFinite(resource.currentAppFrontendBuildStepDurationMillis)
+              ? resource.currentAppFrontendBuildStepDurationMillis
+              : 0,
+          currentAppFrontendBuildStepSummary:
+            resource.currentAppFrontendBuildStepSummary || '',
+          currentAppFrontendBuildStepStdoutLog:
+            resource.currentAppFrontendBuildStepStdoutLog || '',
+          currentAppFrontendBuildStepStderrLog:
+            resource.currentAppFrontendBuildStepStderrLog || '',
+          currentAppFrontendBuildModulePath:
+            resource.currentAppFrontendBuildModulePath || '',
+          currentAppFrontendBuildOutputRoots:
+            resource.currentAppFrontendBuildOutputRoots || '',
+          currentAppFrontendBuildOutputRoot:
+            resource.currentAppFrontendBuildOutputRoot || '',
+          currentAppFrontendBuildOutputRuntimeSource:
+            resource.currentAppFrontendBuildOutputRuntimeSource || '',
+          currentAppFrontendBuildGeneratedImportsPath:
+            resource.currentAppFrontendBuildGeneratedImportsPath || '',
+          currentAppFrontendBuildGeneratedImportsObserved:
+            resource.currentAppFrontendBuildGeneratedImportsObserved === true,
+          currentAppFrontendBuildGeneratedImportsMtimeMillis:
+            Number.isFinite(resource.currentAppFrontendBuildGeneratedImportsMtimeMillis)
+              ? resource.currentAppFrontendBuildGeneratedImportsMtimeMillis
+              : 0,
+          currentAppFrontendBuildGeneratedImportsBytes:
+            Number.isFinite(resource.currentAppFrontendBuildGeneratedImportsBytes)
+              ? resource.currentAppFrontendBuildGeneratedImportsBytes
+              : 0,
+          currentAppFrontendBuildGeneratedImportsSha256:
+            resource.currentAppFrontendBuildGeneratedImportsSha256 || '',
+          currentAppFrontendBuildGeneratedImportsTableShape:
+            resource.currentAppFrontendBuildGeneratedImportsTableShape || '',
+          currentAppFrontendBuildGeneratedImportsNoOpLoadOnDemand:
+            resource.currentAppFrontendBuildGeneratedImportsNoOpLoadOnDemand === true,
+          currentAppFrontendBuildChunkReferences:
+            Number.isFinite(resource.currentAppFrontendBuildChunkReferences)
+              ? resource.currentAppFrontendBuildChunkReferences
+              : 0,
+          currentAppFrontendBuildChunkStatus:
+            resource.currentAppFrontendBuildChunkStatus || '',
+          currentAppFrontendBuildChunkArtifact:
+            resource.currentAppFrontendBuildChunkArtifact || '',
+          currentAppFrontendBuildFailureLayer:
+            resource.currentAppFrontendBuildFailureLayer || '',
+          currentAppFrontendBuildNextResolutionStep:
+            resource.currentAppFrontendBuildNextResolutionStep || '',
+          currentAppFrontendBuildFixtureSubstituted:
+            resource.currentAppFrontendBuildFixtureSubstituted === true,
+          currentAppFrontendBuildNoLocalhost:
+            resource.currentAppFrontendBuildNoLocalhost === true,
           stagedPath: '',
           owner: stageOwner,
           artifactFamily: family,

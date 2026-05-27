@@ -482,6 +482,12 @@ final class FlowClientResources {
             "app-build-output-missing-generated-imports";
     private static final String GENERATED_LAZY_APP_BUILD_OUTPUT_NEXT_STEP =
             "run Vaadin prepare-frontend/update-imports for the dev-ipc app module or connect a supported Vaadin lazy chunk SPI so generated-flow-imports comes from current app build output instead of packaged dev-bundle fallback";
+    private static final String CURRENT_APP_FRONTEND_BUILD_OUTPUT_VERSION =
+            "flow-ipc-current-app-frontend-build-output-v1_30";
+    private static final String CURRENT_APP_FRONTEND_BUILD_DISCOVERY_SOURCE =
+            "dev-ipc-current-app-frontend-build-output-materialization-v1_30";
+    private static final String CURRENT_APP_FRONTEND_BUILD_NEXT_STEP =
+            "make the Vaadin frontend build step produce generated-flow-imports/chunks for the current dev-ipc app, or replace the probe with a supported Vaadin lazy chunk SPI before removing packaged dev-bundle fallback";
     private static final List<String> PRODUCTION_RUNTIME_OWNER_DEPENDENCY_ARTIFACTS = List.of(
             DEV_BUNDLE_COMMONJS_JS,
             DEV_BUNDLE_INDEX_HTML_JS,
@@ -935,6 +941,7 @@ final class FlowClientResources {
         manifest.putAll(generatedLazyRealBuildProbeAttributes());
         manifest.putAll(generatedLazyBuildLifecycleAttributes());
         manifest.putAll(generatedLazyAppBuildOutputAttributes());
+        manifest.putAll(currentAppFrontendBuildOutputAttributes());
         manifest.put("generatedLazyChunkFileExecutionVersion", GENERATED_LAZY_CHUNK_FILE_EXECUTION_VERSION);
         manifest.put("generatedLazyChunkFileFixtureSource", GENERATED_LAZY_CHUNK_FILE_FIXTURE_SOURCE);
         manifest.put("generatedLazyChunkFileFixtureImportsArtifact", GENERATED_FLOW_IMPORTS_V1_22_JS);
@@ -1998,6 +2005,7 @@ final class FlowClientResources {
             attributes.putAll(generatedLazyRealBuildProbeAttributes());
             attributes.putAll(generatedLazyBuildLifecycleAttributes());
             attributes.putAll(generatedLazyAppBuildOutputAttributes());
+            attributes.putAll(currentAppFrontendBuildOutputAttributes());
         }
         attributes.put("devBundleResource", true);
         attributes.put("productionBundleResource", true);
@@ -2342,6 +2350,193 @@ final class FlowClientResources {
         return attributes;
     }
 
+    private static Map<String, Object> currentAppFrontendBuildOutputAttributes() {
+        AppBuildGeneratedImportsEvidence appOutput = appBuildGeneratedImportsEvidence();
+        FrontendBuildStepEvidence buildStep = frontendBuildStepEvidence();
+        Path module = appModuleDirectory();
+        List<Map<String, Object>> inventory = currentAppFrontendBuildOutputInventory(module);
+        String outputRoot = firstObservedInventoryPath(inventory);
+        if (outputRoot.isBlank()) {
+            outputRoot = redactLocation(module.resolve("target").normalize().toString());
+        }
+
+        boolean buildStepAttempted = "success".equals(buildStep.status())
+                || "failed".equals(buildStep.status())
+                || "unavailable".equals(buildStep.status());
+        String runtimeSource;
+        if (appOutput.observed()) {
+            runtimeSource = "current-app-build-output";
+        } else if ("unavailable".equals(buildStep.status())) {
+            runtimeSource = "build-step-unavailable";
+        } else if (buildStepAttempted) {
+            runtimeSource = "current-app-build-output-incomplete";
+        } else {
+            runtimeSource = "packaged-dev-bundle-fallback";
+        }
+
+        String failureLayer;
+        if (!buildStepAttempted) {
+            failureLayer = "current-app-frontend-build-step-not-enabled";
+        } else if ("unavailable".equals(buildStep.status())) {
+            failureLayer = "vaadin-frontend-build-step-unavailable";
+        } else if (!appOutput.observed()) {
+            failureLayer = "vaadin-frontend-build-step-output-incomplete";
+        } else if ("available".equals(appOutput.chunkStatus())) {
+            failureLayer = "pending-real-generated-chunk-stage";
+        } else if ("branch-table-dynamic-import".equals(appOutput.tableShape())) {
+            failureLayer = "current-app-build-output-generated-chunk-file-missing";
+        } else {
+            failureLayer = "current-app-build-output-has-no-generated-lazy-chunk";
+        }
+
+        Map<String, Object> attributes = new LinkedHashMap<>();
+        attributes.put("currentAppFrontendBuildOutputVersion", CURRENT_APP_FRONTEND_BUILD_OUTPUT_VERSION);
+        attributes.put("currentAppFrontendBuildOutputDiscoverySource",
+                CURRENT_APP_FRONTEND_BUILD_DISCOVERY_SOURCE);
+        attributes.put("currentAppFrontendBuildStepCommand", buildStep.command());
+        attributes.put("currentAppFrontendBuildStepExitCode", buildStep.exitCode());
+        attributes.put("currentAppFrontendBuildStepStatus", buildStep.status());
+        attributes.put("currentAppFrontendBuildStepDurationMillis", buildStep.durationMillis());
+        attributes.put("currentAppFrontendBuildStepSummary", buildStep.summary());
+        attributes.put("currentAppFrontendBuildStepStdoutLog", buildStep.stdoutLog());
+        attributes.put("currentAppFrontendBuildStepStderrLog", buildStep.stderrLog());
+        attributes.put("currentAppFrontendBuildModulePath", appOutput.modulePath());
+        attributes.put("currentAppFrontendBuildOutputRoots", buildStep.outputRoots());
+        attributes.put("currentAppFrontendBuildOutputRoot", outputRoot);
+        attributes.put("currentAppFrontendBuildOutputInventory", inventory);
+        attributes.put("currentAppFrontendBuildOutputRuntimeSource", runtimeSource);
+        attributes.put("currentAppFrontendBuildGeneratedImportsPath", appOutput.path());
+        attributes.put("currentAppFrontendBuildGeneratedImportsObserved", appOutput.observed());
+        attributes.put("currentAppFrontendBuildGeneratedImportsMtimeMillis",
+                appOutput.lastModifiedMillis());
+        attributes.put("currentAppFrontendBuildGeneratedImportsBytes", appOutput.bytes());
+        attributes.put("currentAppFrontendBuildGeneratedImportsSha256", appOutput.sha256());
+        attributes.put("currentAppFrontendBuildGeneratedImportsTableShape", appOutput.tableShape());
+        attributes.put("currentAppFrontendBuildGeneratedImportsNoOpLoadOnDemand",
+                appOutput.noOpLoadOnDemand());
+        attributes.put("currentAppFrontendBuildChunkReferences", appOutput.chunkReferences());
+        attributes.put("currentAppFrontendBuildChunkStatus", appOutput.chunkStatus());
+        attributes.put("currentAppFrontendBuildChunkArtifact", appOutput.chunkArtifact());
+        attributes.put("currentAppFrontendBuildFailureLayer", failureLayer);
+        attributes.put("currentAppFrontendBuildNextResolutionStep", CURRENT_APP_FRONTEND_BUILD_NEXT_STEP);
+        attributes.put("currentAppFrontendBuildFixtureSubstituted", false);
+        attributes.put("currentAppFrontendBuildNoLocalhost", true);
+        return attributes;
+    }
+
+    private static FrontendBuildStepEvidence frontendBuildStepEvidence() {
+        String enabled = System.getenv("VAADIN_DESKTOP_FLOW_IPC_FRONTEND_BUILD_V1_30");
+        String status = System.getenv("VAADIN_DESKTOP_FLOW_IPC_FRONTEND_BUILD_STEP_STATUS");
+        if (enabled == null || enabled.isBlank() || status == null || status.isBlank()) {
+            status = "skipped";
+        }
+        return new FrontendBuildStepEvidence(
+                compactText(System.getenv("VAADIN_DESKTOP_FLOW_IPC_FRONTEND_BUILD_STEP_COMMAND")),
+                parseInt(System.getenv("VAADIN_DESKTOP_FLOW_IPC_FRONTEND_BUILD_STEP_EXIT_CODE"), -1),
+                status,
+                parseLong(System.getenv("VAADIN_DESKTOP_FLOW_IPC_FRONTEND_BUILD_STEP_DURATION_MILLIS"), 0L),
+                compactText(System.getenv("VAADIN_DESKTOP_FLOW_IPC_FRONTEND_BUILD_OUTPUT_ROOTS")),
+                compactText(System.getenv("VAADIN_DESKTOP_FLOW_IPC_FRONTEND_BUILD_STEP_SUMMARY")),
+                compactText(System.getenv("VAADIN_DESKTOP_FLOW_IPC_FRONTEND_BUILD_STDOUT_LOG")),
+                compactText(System.getenv("VAADIN_DESKTOP_FLOW_IPC_FRONTEND_BUILD_STDERR_LOG")));
+    }
+
+    private static List<Map<String, Object>> currentAppFrontendBuildOutputInventory(Path module) {
+        Path target = module.resolve("target").normalize();
+        List<Path> candidates = List.of(
+                target,
+                target.resolve("classes").resolve(DEV_BUNDLE_GENERATED_FLOW_IMPORTS_JS).normalize(),
+                target.resolve("classes/META-INF/VAADIN/build").normalize(),
+                target.resolve("classes/META-INF/resources/VAADIN/build").normalize(),
+                target.resolve("generated-resources/META-INF/VAADIN/build").normalize(),
+                target.resolve("frontend/generated").normalize(),
+                module.resolve("frontend/generated").normalize(),
+                target.resolve("classes/META-INF/resources/vatori-flow-ipc-real-build-probe-v1_27.js")
+                        .normalize());
+        List<Map<String, Object>> inventory = new ArrayList<>();
+        for (Path candidate : candidates) {
+            inventory.add(buildOutputCandidate(candidate));
+        }
+        return inventory;
+    }
+
+    private static Map<String, Object> buildOutputCandidate(Path candidate) {
+        Map<String, Object> metadata = new LinkedHashMap<>();
+        boolean exists = Files.exists(candidate);
+        boolean file = Files.isRegularFile(candidate);
+        boolean directory = Files.isDirectory(candidate);
+        metadata.put("path", redactLocation(candidate.toString()));
+        metadata.put("exists", exists);
+        metadata.put("file", file);
+        metadata.put("directory", directory);
+        metadata.put("status", file ? "file" : directory ? "directory" : "missing");
+        metadata.put("mtimeMillis", lastModifiedMillis(candidate));
+        if (file) {
+            try {
+                byte[] bytes = Files.readAllBytes(candidate);
+                metadata.put("fileCount", 1L);
+                metadata.put("byteCount", (long) bytes.length);
+                metadata.put("sha256", Resource.sha256(bytes));
+            } catch (IOException error) {
+                metadata.put("fileCount", 0L);
+                metadata.put("byteCount", 0L);
+                metadata.put("sha256", "");
+                metadata.put("readError", error.getClass().getSimpleName());
+            }
+        } else if (directory) {
+            DirectoryInventory directoryInventory = directoryInventory(candidate);
+            metadata.put("fileCount", directoryInventory.fileCount());
+            metadata.put("byteCount", directoryInventory.byteCount());
+            metadata.put("sha256", "");
+            if (!directoryInventory.readError().isBlank()) {
+                metadata.put("readError", directoryInventory.readError());
+            }
+        } else {
+            metadata.put("fileCount", 0L);
+            metadata.put("byteCount", 0L);
+            metadata.put("sha256", "");
+        }
+        return metadata;
+    }
+
+    private static DirectoryInventory directoryInventory(Path directory) {
+        long[] counters = new long[] { 0L, 0L };
+        try (Stream<Path> stream = Files.walk(directory, 8)) {
+            stream.filter(Files::isRegularFile).forEach(path -> {
+                counters[0]++;
+                try {
+                    counters[1] += Files.size(path);
+                } catch (IOException ignored) {
+                    // Byte count is diagnostic only.
+                }
+            });
+            return new DirectoryInventory(counters[0], counters[1], "");
+        } catch (IOException error) {
+            return new DirectoryInventory(0L, 0L, error.getClass().getSimpleName());
+        }
+    }
+
+    private static String firstObservedInventoryPath(List<Map<String, Object>> inventory) {
+        for (Map<String, Object> candidate : inventory) {
+            if (Boolean.TRUE.equals(candidate.get("exists"))) {
+                Object path = candidate.get("path");
+                return path == null ? "" : path.toString();
+            }
+        }
+        return "";
+    }
+
+    private static long lastModifiedMillis(Path path) {
+        if (!Files.exists(path)) {
+            return 0L;
+        }
+        try {
+            return Files.getLastModifiedTime(path).toMillis();
+        } catch (IOException error) {
+            return 0L;
+        }
+    }
+
     private static AppBuildGeneratedImportsEvidence appBuildGeneratedImportsEvidence() {
         Path module = appModuleDirectory();
         Path target = module.resolve("target").normalize();
@@ -2465,6 +2660,35 @@ final class FlowClientResources {
     private static String propertyOrDefault(Properties properties, String key, String defaultValue) {
         String value = properties.getProperty(key);
         return value == null || value.isBlank() ? defaultValue : value.trim();
+    }
+
+    private static int parseInt(String value, int fallback) {
+        if (value == null || value.isBlank()) {
+            return fallback;
+        }
+        try {
+            return Integer.parseInt(value.trim());
+        } catch (NumberFormatException error) {
+            return fallback;
+        }
+    }
+
+    private static long parseLong(String value, long fallback) {
+        if (value == null || value.isBlank()) {
+            return fallback;
+        }
+        try {
+            return Long.parseLong(value.trim());
+        } catch (NumberFormatException error) {
+            return fallback;
+        }
+    }
+
+    private static String compactText(String value) {
+        if (value == null || value.isBlank()) {
+            return "";
+        }
+        return value.replaceAll("\\s+", " ").trim();
     }
 
     private static Class<?> loadOptionalClass(String className) {
@@ -2826,6 +3050,23 @@ final class FlowClientResources {
             int chunkReferences,
             String chunkStatus,
             String chunkArtifact,
+            String readError) {
+    }
+
+    private record FrontendBuildStepEvidence(
+            String command,
+            int exitCode,
+            String status,
+            long durationMillis,
+            String outputRoots,
+            String summary,
+            String stdoutLog,
+            String stderrLog) {
+    }
+
+    private record DirectoryInventory(
+            long fileCount,
+            long byteCount,
             String readError) {
     }
 

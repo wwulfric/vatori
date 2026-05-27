@@ -1,6 +1,27 @@
 # Goal 1.30: Current App Frontend Build Output Materialization
 
-状态：待执行
+状态：已完成
+
+完成记录：
+
+- `bin/vaadin-desktop dev-ipc` 增加 opt-in
+  `VAADIN_DESKTOP_FLOW_IPC_PREPARE_FRONTEND=1` frontend build preflight，使用项目本地
+  Maven repo，记录 redacted command、exit/status、duration、summary 和 stdout/stderr
+  log path。
+- `FlowClientResources` 新增
+  `flow-ipc-current-app-frontend-build-output-v1_30` metadata，记录当前 app output
+  inventory、generated imports candidates、runtime source、chunk status、failure layer
+  和 next step。
+- Swift host / WebView 将 v1.30 metadata 传播到 resource request/response/stage 和
+  DOM diagnostics。
+- `DesktopTraceInspector` 新增
+  `--require-flow-ipc-v1_30-current-app-frontend-build-output` 与
+  `--require-flow-ipc-v1_30` gates。
+- 本机真实窗口验收通过 v1.30 gates。当前离线环境缺少
+  `com.vaadin:vaadin-maven-plugin:25.1.5`，所以 accepted outcome 是
+  `currentAppFrontendBuildOutputRuntimeSource=build-step-unavailable` 和
+  `currentAppFrontendBuildFailureLayer=vaadin-frontend-build-step-unavailable`，不是
+  真实 generated lazy chunk parity。
 
 `docs/goal.md` 是长期愿景和完成度账本。v1.29 已完成
 `flow-ipc-generated-lazy-app-build-output-v1_29`：trace 现在证明 no-localhost

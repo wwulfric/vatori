@@ -286,6 +286,8 @@ public final class FlowClientResourceSmokeMain {
                 "Component frontend manifest generated lazy build lifecycle");
         requireGeneratedLazyAppBuildOutputMetadata(componentManifest,
                 "Component frontend manifest generated lazy app build output");
+        requireCurrentAppFrontendBuildOutputMetadata(componentManifest,
+                "Component frontend manifest current app frontend build output");
         requireProductionOwnerPositiveFixtureMetadata(componentManifest,
                 "Component frontend manifest production owner positive fixture");
         requireEquals("flow-ipc-lazy-dependency-v1_10",
@@ -1025,6 +1027,8 @@ public final class FlowClientResourceSmokeMain {
                 "Generated-flow-imports dev-bundle build lifecycle response");
         requireGeneratedLazyAppBuildOutputMetadata(generatedFlowImportsDevBundleResponse,
                 "Generated-flow-imports dev-bundle app build output response");
+        requireCurrentAppFrontendBuildOutputMetadata(generatedFlowImportsDevBundleResponse,
+                "Generated-flow-imports dev-bundle current app frontend build output response");
         Object generatedFlowImportsDevBundleBody = generatedFlowImportsDevBundleResponse.get("body");
         if (!(generatedFlowImportsDevBundleBody instanceof String generatedFlowImportsDevBundleText)
                 || !generatedFlowImportsDevBundleText.contains("from \"./indexhtml-BfYYZi8S.js\"")
@@ -1538,6 +1542,83 @@ public final class FlowClientResourceSmokeMain {
                 label + " no-localhost flag");
     }
 
+    private static void requireCurrentAppFrontendBuildOutputMetadata(Map<?, ?> metadata, String label) {
+        requireEquals("flow-ipc-current-app-frontend-build-output-v1_30",
+                metadata.get("currentAppFrontendBuildOutputVersion"),
+                label + " version");
+        requireEquals("dev-ipc-current-app-frontend-build-output-materialization-v1_30",
+                metadata.get("currentAppFrontendBuildOutputDiscoverySource"),
+                label + " discovery source");
+        Object status = metadata.get("currentAppFrontendBuildStepStatus");
+        if (!Objects.equals(status, "skipped")
+                && !Objects.equals(status, "success")
+                && !Objects.equals(status, "failed")
+                && !Objects.equals(status, "unavailable")) {
+            throw new IllegalStateException(label + " build step status has unexpected value: " + status);
+        }
+        if (!(metadata.get("currentAppFrontendBuildStepExitCode") instanceof Number)) {
+            throw new IllegalStateException(label + " build step exit code missing");
+        }
+        if (!(metadata.get("currentAppFrontendBuildStepDurationMillis") instanceof Number)) {
+            throw new IllegalStateException(label + " build step duration missing");
+        }
+        requirePresentString(metadata.get("currentAppFrontendBuildModulePath"),
+                label + " module path");
+        requirePresentString(metadata.get("currentAppFrontendBuildOutputRoot"),
+                label + " output root");
+        requirePresentString(metadata.get("currentAppFrontendBuildGeneratedImportsPath"),
+                label + " generated imports path");
+        if (!(metadata.get("currentAppFrontendBuildOutputInventory") instanceof List<?> inventory)
+                || inventory.isEmpty()) {
+            throw new IllegalStateException(label + " output inventory is missing");
+        }
+        Object runtimeSource = metadata.get("currentAppFrontendBuildOutputRuntimeSource");
+        if (!Objects.equals(runtimeSource, "current-app-build-output")
+                && !Objects.equals(runtimeSource, "current-app-build-output-incomplete")
+                && !Objects.equals(runtimeSource, "current-app-build-output-no-generated-lazy-chunk")
+                && !Objects.equals(runtimeSource, "packaged-dev-bundle-fallback")
+                && !Objects.equals(runtimeSource, "build-step-unavailable")) {
+            throw new IllegalStateException(label + " runtime source has unexpected value: " + runtimeSource);
+        }
+        if (!(metadata.get("currentAppFrontendBuildGeneratedImportsObserved") instanceof Boolean)) {
+            throw new IllegalStateException(label + " generated imports observed flag missing");
+        }
+        Object tableShape = metadata.get("currentAppFrontendBuildGeneratedImportsTableShape");
+        if (!Objects.equals(tableShape, "missing")
+                && !Objects.equals(tableShape, "no-op-promise-resolve-0")
+                && !Objects.equals(tableShape, "branch-table-dynamic-import")
+                && !Objects.equals(tableShape, "unrecognized")
+                && !Objects.equals(tableShape, "unreadable")) {
+            throw new IllegalStateException(label + " table shape has unexpected value: " + tableShape);
+        }
+        Object chunkStatus = metadata.get("currentAppFrontendBuildChunkStatus");
+        if (!Objects.equals(chunkStatus, "missing-build-output")
+                && !Objects.equals(chunkStatus, "not-generated")
+                && !Objects.equals(chunkStatus, "available")
+                && !Objects.equals(chunkStatus, "not-found")
+                && !Objects.equals(chunkStatus, "blocked")) {
+            throw new IllegalStateException(label + " chunk status has unexpected value: " + chunkStatus);
+        }
+        Object failureLayer = metadata.get("currentAppFrontendBuildFailureLayer");
+        if (!Objects.equals(failureLayer, "current-app-frontend-build-step-not-enabled")
+                && !Objects.equals(failureLayer, "vaadin-frontend-build-step-unavailable")
+                && !Objects.equals(failureLayer, "vaadin-frontend-build-step-output-incomplete")
+                && !Objects.equals(failureLayer, "current-app-build-output-has-no-generated-lazy-chunk")
+                && !Objects.equals(failureLayer, "current-app-build-output-generated-chunk-file-missing")
+                && !Objects.equals(failureLayer, "pending-real-generated-chunk-stage")) {
+            throw new IllegalStateException(label + " failure layer has unexpected value: " + failureLayer);
+        }
+        requireStringContains(metadata.get("currentAppFrontendBuildNextResolutionStep"),
+                "Vaadin frontend build",
+                label + " next resolution step");
+        requireEquals(Boolean.FALSE,
+                metadata.get("currentAppFrontendBuildFixtureSubstituted"),
+                label + " fixture substitution flag");
+        requireEquals(Boolean.TRUE,
+                metadata.get("currentAppFrontendBuildNoLocalhost"),
+                label + " no-localhost flag");
+    }
+
     private static void requireProductionOwnerResourceLoaderMetadata(Map<String, Object> metadata,
             boolean rootArtifact, String label) {
         requireEquals("flow-ipc-production-owner-resource-loader-v1_18",
@@ -1837,6 +1918,7 @@ public final class FlowClientResourceSmokeMain {
         boolean generatedLazyRealBuildProbeObserved = false;
         boolean generatedLazyBuildLifecycleObserved = false;
         boolean generatedLazyAppBuildOutputObserved = false;
+        boolean currentAppFrontendBuildOutputObserved = false;
         boolean devModePackageGraphObserved = false;
         boolean flowLazyDependencyObserved = false;
         boolean productionRuntimeArtifactObserved = false;
@@ -1948,6 +2030,13 @@ public final class FlowClientResourceSmokeMain {
                             metadata.get("generatedLazyAppBuildOutputVersion"))
                     && Boolean.TRUE.equals(metadata.get("generatedLazyAppBuildOutputNoLocalhost"))
                     && Boolean.FALSE.equals(metadata.get("generatedLazyAppBuildOutputFixtureSubstituted"));
+            currentAppFrontendBuildOutputObserved = currentAppFrontendBuildOutputObserved
+                    || "generated-lazy".equals(artifactFamily)
+                    && "stage-and-import-generated-lazy-chunk-v1_8".equals(executionPolicy)
+                    && "flow-ipc-current-app-frontend-build-output-v1_30".equals(
+                            metadata.get("currentAppFrontendBuildOutputVersion"))
+                    && Boolean.TRUE.equals(metadata.get("currentAppFrontendBuildNoLocalhost"))
+                    && Boolean.FALSE.equals(metadata.get("currentAppFrontendBuildFixtureSubstituted"));
             devModePackageGraphObserved = devModePackageGraphObserved
                     || "dev-mode-bundle".equals(artifactFamily)
                     && "verified-only-intentionally-not-executed".equals(executionPolicy)
@@ -2014,6 +2103,7 @@ public final class FlowClientResourceSmokeMain {
                 || !generatedLazyRealBuildProbeObserved
                 || !generatedLazyBuildLifecycleObserved
                 || !generatedLazyAppBuildOutputObserved
+                || !currentAppFrontendBuildOutputObserved
                 || !flowLazyDependencyObserved
                 || !productionRuntimeArtifactObserved || !productionRuntimeOwnerObserved
                 || !productionRuntimeOwnerImportObserved || !productionRuntimeOwnerDependencyObserved) {

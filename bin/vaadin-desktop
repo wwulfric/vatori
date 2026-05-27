@@ -30,12 +30,102 @@ ensure_module() {
   fi
 }
 
+redact_for_trace() {
+  local value="$1"
+  value="${value//$ROOT/\$REPO}"
+  value="${value//$HOME/\$HOME}"
+  printf '%s' "$value"
+}
+
+single_line_log_summary() {
+  local file="$1"
+  if [[ ! -f "$file" ]]; then
+    return 0
+  fi
+  tail -n 12 "$file" | tr '\n' ' ' | tr -s ' ' | cut -c 1-1200
+}
+
 install_module_with_dependencies() {
   local maven_mode="-U"
   if [[ "${VAADIN_DESKTOP_MAVEN_OFFLINE:-}" == "1" ]]; then
     maven_mode="-o"
   fi
   mvn "$maven_mode" -Dmaven.repo.local="$MAVEN_REPO" -f "$ROOT/pom.xml" -pl "$MODULE" -am -DskipTests install
+}
+
+run_flow_ipc_frontend_build_preflight() {
+  if [[ "$COMMAND" != "dev-ipc" && "$COMMAND" != "run-ipc" ]]; then
+    return 0
+  fi
+  export VAADIN_DESKTOP_FLOW_IPC_FRONTEND_BUILD_V1_30=1
+  export VAADIN_DESKTOP_FLOW_IPC_FRONTEND_BUILD_STEP_STATUS="skipped"
+  export VAADIN_DESKTOP_FLOW_IPC_FRONTEND_BUILD_STEP_EXIT_CODE="-1"
+  export VAADIN_DESKTOP_FLOW_IPC_FRONTEND_BUILD_STEP_DURATION_MILLIS="0"
+  export VAADIN_DESKTOP_FLOW_IPC_FRONTEND_BUILD_OUTPUT_ROOTS="$(redact_for_trace "$MODULE/target,$MODULE/frontend/generated,$MODULE/target/frontend/generated,$MODULE/target/classes/META-INF/VAADIN/build")"
+  export VAADIN_DESKTOP_FLOW_IPC_FRONTEND_BUILD_STEP_COMMAND=""
+  export VAADIN_DESKTOP_FLOW_IPC_FRONTEND_BUILD_STEP_SUMMARY=""
+  export VAADIN_DESKTOP_FLOW_IPC_FRONTEND_BUILD_STDOUT_LOG=""
+  export VAADIN_DESKTOP_FLOW_IPC_FRONTEND_BUILD_STDERR_LOG=""
+  if [[ "${VAADIN_DESKTOP_FLOW_IPC_PREPARE_FRONTEND:-}" != "1" ]]; then
+    return 0
+  fi
+
+  local build_dir="$ROOT/.build/flow-ipc-frontend-build"
+  local stdout_log="$build_dir/prepare-frontend.out.log"
+  local stderr_log="$build_dir/prepare-frontend.err.log"
+  mkdir -p "$build_dir"
+  : > "$stdout_log"
+  : > "$stderr_log"
+
+  local vaadin_version="${VAADIN_DESKTOP_VAADIN_VERSION:-}"
+  if [[ -z "$vaadin_version" ]]; then
+    vaadin_version="$(sed -n 's:.*<vaadin.version>\(.*\)</vaadin.version>.*:\1:p' "$ROOT/pom.xml" | head -n 1)"
+  fi
+  local maven_mode="-U"
+  if [[ "${VAADIN_DESKTOP_MAVEN_OFFLINE:-}" == "1" ]]; then
+    maven_mode="-o"
+  fi
+
+  if [[ -z "$vaadin_version" ]]; then
+    export VAADIN_DESKTOP_FLOW_IPC_FRONTEND_BUILD_STEP_STATUS="unavailable"
+    export VAADIN_DESKTOP_FLOW_IPC_FRONTEND_BUILD_STEP_SUMMARY="vaadin.version not found in root pom"
+    return 0
+  fi
+
+  local goal="com.vaadin:vaadin-maven-plugin:${vaadin_version}:prepare-frontend"
+  local cmd=(mvn "$maven_mode" "-Dmaven.repo.local=$MAVEN_REPO" -f "$MODULE_POM" -DskipTests "$goal")
+  local redacted_command
+  redacted_command="$(printf '%q ' "${cmd[@]}")"
+  redacted_command="$(redact_for_trace "$redacted_command")"
+  export VAADIN_DESKTOP_FLOW_IPC_FRONTEND_BUILD_STEP_COMMAND="$redacted_command"
+  export VAADIN_DESKTOP_FLOW_IPC_FRONTEND_BUILD_STDOUT_LOG="$(redact_for_trace "$stdout_log")"
+  export VAADIN_DESKTOP_FLOW_IPC_FRONTEND_BUILD_STDERR_LOG="$(redact_for_trace "$stderr_log")"
+
+  echo "Running Flow IPC frontend build preflight: $redacted_command"
+  local started_at ended_at status
+  started_at="$(date +%s)"
+  set +e
+  "${cmd[@]}" >"$stdout_log" 2>"$stderr_log"
+  status=$?
+  set -e
+  ended_at="$(date +%s)"
+
+  export VAADIN_DESKTOP_FLOW_IPC_FRONTEND_BUILD_STEP_EXIT_CODE="$status"
+  export VAADIN_DESKTOP_FLOW_IPC_FRONTEND_BUILD_STEP_DURATION_MILLIS="$(((ended_at - started_at) * 1000))"
+  local summary
+  summary="$(single_line_log_summary "$stderr_log")"
+  if [[ -z "$summary" ]]; then
+    summary="$(single_line_log_summary "$stdout_log")"
+  fi
+  export VAADIN_DESKTOP_FLOW_IPC_FRONTEND_BUILD_STEP_SUMMARY="$summary"
+  if [[ "$status" == "0" ]]; then
+    export VAADIN_DESKTOP_FLOW_IPC_FRONTEND_BUILD_STEP_STATUS="success"
+  elif grep -Eiq "No plugin found|PluginResolutionException|Could not find artifact|could not be resolved|Plugin .* was not found" "$stdout_log" "$stderr_log"; then
+    export VAADIN_DESKTOP_FLOW_IPC_FRONTEND_BUILD_STEP_STATUS="unavailable"
+  else
+    export VAADIN_DESKTOP_FLOW_IPC_FRONTEND_BUILD_STEP_STATUS="failed"
+  fi
+  echo "Flow IPC frontend build preflight status: $VAADIN_DESKTOP_FLOW_IPC_FRONTEND_BUILD_STEP_STATUS ($status)"
 }
 
 case "$COMMAND" in
@@ -47,6 +137,7 @@ case "$COMMAND" in
   dev-swift|run-swift|dev-native|run-native|dev-ipc|run-ipc)
     ensure_module
     install_module_with_dependencies
+    run_flow_ipc_frontend_build_preflight
     if [[ ! -x /usr/bin/swiftc ]]; then
       echo "swiftc not found at /usr/bin/swiftc. Install Xcode command line tools before running the Swift host." >&2
       exit 1
@@ -93,6 +184,22 @@ PLIST
       codesign --force --sign - "$SWIFT_HOST_APP" >/dev/null 2>&1 || true
     fi
     OPEN_ENV_ARGS=(--env "PATH=$PATH")
+    forward_env_if_set() {
+      local name="$1"
+      if [[ -n "${!name:-}" ]]; then
+        OPEN_ENV_ARGS+=(--env "$name=${!name}")
+      fi
+    }
+    forward_env_if_set "VAADIN_DESKTOP_FLOW_IPC_PREPARE_FRONTEND"
+    forward_env_if_set "VAADIN_DESKTOP_FLOW_IPC_FRONTEND_BUILD_V1_30"
+    forward_env_if_set "VAADIN_DESKTOP_FLOW_IPC_FRONTEND_BUILD_STEP_COMMAND"
+    forward_env_if_set "VAADIN_DESKTOP_FLOW_IPC_FRONTEND_BUILD_STEP_EXIT_CODE"
+    forward_env_if_set "VAADIN_DESKTOP_FLOW_IPC_FRONTEND_BUILD_STEP_STATUS"
+    forward_env_if_set "VAADIN_DESKTOP_FLOW_IPC_FRONTEND_BUILD_STEP_DURATION_MILLIS"
+    forward_env_if_set "VAADIN_DESKTOP_FLOW_IPC_FRONTEND_BUILD_OUTPUT_ROOTS"
+    forward_env_if_set "VAADIN_DESKTOP_FLOW_IPC_FRONTEND_BUILD_STEP_SUMMARY"
+    forward_env_if_set "VAADIN_DESKTOP_FLOW_IPC_FRONTEND_BUILD_STDOUT_LOG"
+    forward_env_if_set "VAADIN_DESKTOP_FLOW_IPC_FRONTEND_BUILD_STDERR_LOG"
     if [[ -n "${JAVA_HOME:-}" ]]; then
       OPEN_ENV_ARGS+=(--env "JAVA_HOME=$JAVA_HOME")
     fi

@@ -35,20 +35,23 @@ v0/v1 runtime 切片走向可产品化桌面框架的最终完成状态。
 - `docs/goal-1_27.md`：Generated Lazy Real Build Probe，已完成。
 - `docs/goal-1_28.md`：Generated Lazy Build Lifecycle Trace，已完成。
 - `docs/goal-1_29.md`：Generated Lazy App Build Output Connection，已完成。
+- `docs/goal-1_30.md`：Current App Frontend Build Output Materialization，已完成。
 
-当前已完成到 `docs/goal-1_29.md`。v1.29 已把 v1.28 定位出的
-`runtime-using-stale-packaged-dev-bundle` 继续推进到当前 app build output discovery
-证据：trace 在 manifest、`resourceRequest`、`resourceResponse`、`resourceStage` 和
-`webview.dom` 中记录 app module/repo root、scanner 输入、build output discovery、
-generated imports observed/path/mtime/bytes/sha256/table shape、chunk status、runtime
-source、fallback reason、SPI assessment 和 failure layer。当前结果收敛为
-`app-build-output-missing-generated-imports`：当前 app build output 尚未产生可用
-generated imports / generated lazy chunk，runtime 明确分类为
-`packaged-dev-bundle-fallback`，下一步需要运行/接入 Vaadin `prepare-frontend` /
-`update-imports` 输出或受支持 lazy chunk SPI。真实 generated chunk、production owner
-owned runtime 和 dev-mode/Vite parity 仍作为真实 app/build blocker 保留。
+当前已完成到 `docs/goal-1_30.md`。v1.30 已把 v1.29 定位出的
+`app-build-output-missing-generated-imports` 继续推进到当前 app frontend build output
+materialization 证据：`dev-ipc` 可通过
+`VAADIN_DESKTOP_FLOW_IPC_PREPARE_FRONTEND=1` 运行可审计 build preflight，trace 在
+manifest、`resourceRequest`、`resourceResponse`、`resourceStage` 和 `webview.dom`
+中记录 build command、exit/status、stdout/stderr log、output roots、current app
+inventory、generated imports candidates、runtime source、chunk status、failure layer
+和 next step。当前本机离线验收结果收敛为 `build-step-unavailable` /
+`vaadin-frontend-build-step-unavailable`：Vaadin Maven plugin
+`com.vaadin:vaadin-maven-plugin:25.1.5` 不在项目本地 Maven repo 中，offline
+preflight 不能 materialize 当前 app generated imports/chunks。真实 generated chunk、
+production owner-owned runtime 和 dev-mode/Vite parity 仍作为真实 app/build blocker
+保留。
 
-后续阶段应继续以 `docs/goal-1_29.md` 等文件拆分，
+后续阶段应继续以 `docs/goal-1_30.md` 等文件拆分，
 每个阶段只拿走本长期目标中的一个可评审切片。不要把本文件改写成短期任务清单；
 它是长期北极星和完成度账本。
 
@@ -70,7 +73,7 @@ owned runtime 和 dev-mode/Vite parity 仍作为真实 app/build blocker 保留�
 
 ## 当前基线
 
-截至 goal 1.29，仓库已经证明：
+截至 goal 1.30，仓库已经证明：
 
 - `dev-ipc` 可以启动 no-localhost Flow IPC runtime。
 - 真实 macOS Swift/AppKit/WKWebView 窗口可以运行 Flow IPC smoke app 和 framework
@@ -370,6 +373,19 @@ owned runtime 和 dev-mode/Vite parity 仍作为真实 app/build blocker 保留�
   `app-build-output-missing-generated-imports`。v1.29 不是 real generated chunk parity；
   它证明当前 app build output 尚未产生 generated imports/chunk，并把下一步收敛到
   Vaadin `prepare-frontend` / `update-imports` 输出连接或受支持 lazy chunk SPI。
+- v1.30 已把 v1.29 的 missing build output blocker 推进到当前 app frontend build output
+  materialization contract：`bin/vaadin-desktop dev-ipc` 可通过
+  `VAADIN_DESKTOP_FLOW_IPC_PREPARE_FRONTEND=1` 运行可审计 Vaadin frontend build preflight，
+  Java manifest / resource response、Swift `resourceRequest` / `resourceResponse` /
+  `resourceStage` / `webview.dom` 和 inspector gate 统一记录
+  `currentAppFrontendBuildOutputVersion=flow-ipc-current-app-frontend-build-output-v1_30`、
+  redacted build command、exit/status、duration、stdout/stderr log、output roots、
+  current app inventory、generated imports candidates、runtime source、chunk status、
+  failure layer 和 next resolution step。当前本机离线验收结果是
+  `build-step-unavailable` / `vaadin-frontend-build-step-unavailable`，因为项目本地 Maven repo
+  尚未缓存 `com.vaadin:vaadin-maven-plugin:25.1.5`；v1.30 不是 real generated chunk
+  parity，但它证明 runtime 已越过“没有运行/接入 build step”这一层，剩余缺口在可执行
+  Vaadin frontend build 输出或受支持 lazy chunk SPI。
 - 当前 app/build 的真实 generated/lazy chunk file parity、production owner import/side-effect success
   和 dev-mode/Vite execution 仍是明确 blocker，不计入最终完成。
 
@@ -501,12 +517,12 @@ owned runtime 和 dev-mode/Vite parity 仍作为真实 app/build blocker 保留�
 
 ## 当前建议的下一阶段
 
-v1.29 已完成 Generated Lazy App Build Output Connection。下一阶段建议优先把 v1.29
-定位出的 `app-build-output-missing-generated-imports` blocker 连接到可执行的
-Vaadin `prepare-frontend` / `update-imports` build step 或受支持 Vaadin lazy chunk SPI：
+v1.30 已完成 Current App Frontend Build Output Materialization。下一阶段建议优先把 v1.30
+定位出的 `build-step-unavailable` / `vaadin-frontend-build-step-unavailable` blocker 推进到
+可执行 Vaadin frontend build 输出，或改走受支持 Vaadin lazy chunk SPI：
 
 - 让当前 smoke/framework build 产生真实 generated lazy chunk file，或让 dev-ipc
-  runtime 使用当前 app 的 `prepare-frontend` / `update-imports` 输出。
+  runtime 使用当前 app 的 `prepare-frontend` / `build-frontend` / `update-imports` 输出。
 - 接入/评估受支持 Vaadin lazy chunk SPI，把 v1.22 fixture path 推进为真实 app/build path。
 - 真实 production owner side-effect / owner-owned runtime reuse success。
 - Dev-mode/Vite graph execution 或可靠替代模式。

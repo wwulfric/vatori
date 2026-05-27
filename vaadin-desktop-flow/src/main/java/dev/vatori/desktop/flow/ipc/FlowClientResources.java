@@ -26,12 +26,54 @@ final class FlowClientResources {
             "META-INF/vatori/frontend-shims/vaadin-text-field.js";
     private static final String DEV_BUNDLE_COMMONJS_JS =
             "vaadin-dev-bundle/webapp/VAADIN/build/commonjsHelpers-CUmg6egw.js";
+    private static final String DEV_BUNDLE_BUILD_ROOT =
+            "vaadin-dev-bundle/webapp/VAADIN/build/";
     private static final String DEV_BUNDLE_INDEX_HTML_JS =
             "vaadin-dev-bundle/webapp/VAADIN/build/indexhtml-BfYYZi8S.js";
+    private static final String DEV_BUNDLE_COPILOT_LOG_PLUGIN_JS =
+            "vaadin-dev-bundle/webapp/VAADIN/build/copilot-log-plugin-h3VQq9-2-BlujgixT.js";
+    private static final String DEV_BUNDLE_COPILOT_INFO_PLUGIN_JS =
+            "vaadin-dev-bundle/webapp/VAADIN/build/copilot-info-plugin-sfSeRBmW-DQ0SanHi.js";
+    private static final String DEV_BUNDLE_COPILOT_FEATURES_PLUGIN_JS =
+            "vaadin-dev-bundle/webapp/VAADIN/build/copilot-features-plugin-Bclmq7gl-NZmEZo5L.js";
+    private static final String DEV_BUNDLE_COPILOT_FEEDBACK_PLUGIN_JS =
+            "vaadin-dev-bundle/webapp/VAADIN/build/copilot-feedback-plugin-1zAxYjpE-BgRBGxgc.js";
+    private static final String DEV_BUNDLE_COPILOT_SETTINGS_PANEL_JS =
+            "vaadin-dev-bundle/webapp/VAADIN/build/copilot-settings-panel-ZoFKAdB8-B8JXXb5r.js";
+    private static final String DEV_BUNDLE_COPILOT_IMPERSONATOR_PLUGIN_JS =
+            "vaadin-dev-bundle/webapp/VAADIN/build/copilot-impersonator-plugin-DcZdAFXt-DdRy9h0o.js";
+    private static final String DEV_BUNDLE_COPILOT_DEVELOPMENT_SETUP_GUIDE_JS =
+            "vaadin-dev-bundle/webapp/VAADIN/build/copilot-development-setup-user-guide-Bg1Jpy5v-DVg5L7gy.js";
+    private static final String DEV_BUNDLE_BASE_PANEL_JS =
+            "vaadin-dev-bundle/webapp/VAADIN/build/base-panel-Djw-d72n-DCiGU9ul.js";
+    private static final String DEV_BUNDLE_COPILOT_FOCUS_TRAP_JS =
+            "vaadin-dev-bundle/webapp/VAADIN/build/copilot-focus-trap-D6_tO8dw-BKIBibXo.js";
+    private static final String DEV_BUNDLE_TYPESCRIPT_JS =
+            "vaadin-dev-bundle/webapp/VAADIN/build/typescript-jmYPauaZ-CsDy5M4U.js";
+    private static final String DEV_BUNDLE_COPILOT_GLOBAL_VARS_LATER_JS =
+            "vaadin-dev-bundle/webapp/VAADIN/build/copilot-global-vars-later-DKkGjSH--ij_B3zsO.js";
+    private static final String DEV_BUNDLE_COPILOT_INIT_STEP2_JS =
+            "vaadin-dev-bundle/webapp/VAADIN/build/copilot-init-step2-D0JX2IbT-DHUx_SJy.js";
+    private static final String DEV_BUNDLE_REPEAT_JS =
+            "vaadin-dev-bundle/webapp/VAADIN/build/repeat-B6aSW1iL-LbvYsU-M.js";
+    private static final String DEV_BUNDLE_LIT_RENDERER_JS =
+            "vaadin-dev-bundle/webapp/VAADIN/build/lit-renderer-CWzNMnPU-CUV1j_pj.js";
+    private static final String DEV_BUNDLE_DIRECTIVE_HELPERS_JS =
+            "vaadin-dev-bundle/webapp/VAADIN/build/directive-helpers-BuSA7Eqp-CCzZr0Zr.js";
+    private static final String DEV_BUNDLE_STATE_JS =
+            "vaadin-dev-bundle/webapp/VAADIN/build/state-aTUQA9pO-DwC6YZCk.js";
+    private static final String DEV_BUNDLE_ICONS_JS =
+            "vaadin-dev-bundle/webapp/VAADIN/build/icons-CJYK-fIm-Bt18GX7w.js";
     private static final String DEV_BUNDLE_GENERATED_FLOW_IMPORTS_JS =
             "vaadin-dev-bundle/webapp/VAADIN/build/generated-flow-imports-VW7hRaNw.js";
     private static final String DEV_BUNDLE_MARKDOWN_HELPERS_JS =
             "vaadin-dev-bundle/webapp/VAADIN/build/markdown-helpers-31I0A-hg.js";
+    private static final String DEV_BUNDLE_FLOW_BOOTSTRAP_CHUNK_JS =
+            "vaadin-dev-bundle/webapp/VAADIN/build/FlowBootstrap-r4imYSsC.js";
+    private static final String DEV_BUNDLE_FLOW_CLIENT_CHUNK_JS =
+            "vaadin-dev-bundle/webapp/VAADIN/build/FlowClient-RTzSA_ve.js";
+    private static final String DEV_BUNDLE_COPILOT_DEVTOOLS_JS =
+            "vaadin-dev-bundle/webapp/VAADIN/build/copilot-devtools-Cpd_CV50-CKw1U-T_.js";
     private static final String DEV_BUNDLE_STATS_JSON =
             "vaadin-dev-bundle/config/stats.json";
     private static final String DEV_BUNDLE_LIT_ENTRY_JS =
@@ -199,6 +241,10 @@ final class FlowClientResources {
             "controlled-owner-dynamic-import-after-component-graph-v1_14";
     private static final String PRODUCTION_RUNTIME_OWNER_IMPORT_PHASE =
             "after-component-imports";
+    private static final String PRODUCTION_RUNTIME_OWNER_IMPORT_PHASE_CANDIDATES =
+            "isolated-preflight,before-component-imports,after-component-imports";
+    private static final String PRODUCTION_RUNTIME_OWNER_IMPORT_DIAGNOSTIC_MODES =
+            "isolated-preflight:available-not-enabled,before-component-imports:available-not-enabled,after-component-imports:default";
     private static final String PRODUCTION_RUNTIME_OWNER_IMPORT_EXPECTED_SIDE_EFFECTS =
             "window.Vaadin,window.Vaadin.Flow,window.Vaadin.Flow.loadOnDemand,customElements:vaadin-text-field|vaadin-checkbox|vaadin-select";
     private static final String PRODUCTION_RUNTIME_OWNER_IMPORT_ACCEPTABLE_FAILURES =
@@ -207,6 +253,45 @@ final class FlowClientResources {
             "rewrite-relative-dev-bundle-dependencies-before-owner-import-v1_14";
     private static final String PRODUCTION_RUNTIME_OWNER_IMPORT_NEXT_STEP =
             "if owner import fails, move the production owner to a custom-scheme/file-backed resolver or tighten dependency rewrite/global collision guards around the real indexhtml artifact";
+    private static final String PRODUCTION_RUNTIME_OWNER_DEPENDENCY_RESOLVER_VERSION =
+            "flow-ipc-production-owner-deps-v1_15";
+    private static final String PRODUCTION_RUNTIME_OWNER_DEPENDENCY_RESOLVER_POLICY =
+            "owner-scoped-recursive-relative-import-graph-v1_15";
+    private static final String PRODUCTION_RUNTIME_OWNER_DEPENDENCY_RESOLVER_ROOT =
+            DEV_BUNDLE_BUILD_ROOT;
+    private static final String PRODUCTION_RUNTIME_OWNER_DEPENDENCY_RESOLVER_MODULE_IDENTITY_NAMESPACE =
+            "production-owner-deps-v1_15";
+    private static final String PRODUCTION_RUNTIME_OWNER_DEPENDENCY_RESOLVER_ACCEPTABLE_FAILURES =
+            "production-owner-missing-real-artifact,production-owner-browser-import-failed,production-owner-duplicate-custom-element,production-owner-global-collision,production-owner-side-effect-unobservable";
+    private static final String PRODUCTION_RUNTIME_OWNER_DEPENDENCY_RESOLVER_NEXT_STEP =
+            "run production owner import after the real dev-bundle relative dependency graph has been resolved, staged and classified";
+    private static final List<String> PRODUCTION_RUNTIME_OWNER_DEPENDENCY_ARTIFACTS = List.of(
+            DEV_BUNDLE_COMMONJS_JS,
+            DEV_BUNDLE_INDEX_HTML_JS,
+            DEV_BUNDLE_COPILOT_LOG_PLUGIN_JS,
+            DEV_BUNDLE_COPILOT_INFO_PLUGIN_JS,
+            DEV_BUNDLE_COPILOT_FEATURES_PLUGIN_JS,
+            DEV_BUNDLE_COPILOT_FEEDBACK_PLUGIN_JS,
+            DEV_BUNDLE_COPILOT_SETTINGS_PANEL_JS,
+            DEV_BUNDLE_COPILOT_IMPERSONATOR_PLUGIN_JS,
+            DEV_BUNDLE_COPILOT_DEVELOPMENT_SETUP_GUIDE_JS,
+            DEV_BUNDLE_BASE_PANEL_JS,
+            DEV_BUNDLE_COPILOT_FOCUS_TRAP_JS,
+            DEV_BUNDLE_TYPESCRIPT_JS,
+            DEV_BUNDLE_COPILOT_GLOBAL_VARS_LATER_JS,
+            DEV_BUNDLE_COPILOT_INIT_STEP2_JS,
+            DEV_BUNDLE_REPEAT_JS,
+            DEV_BUNDLE_LIT_RENDERER_JS,
+            DEV_BUNDLE_DIRECTIVE_HELPERS_JS,
+            DEV_BUNDLE_STATE_JS,
+            DEV_BUNDLE_ICONS_JS,
+            DEV_BUNDLE_GENERATED_FLOW_IMPORTS_JS,
+            DEV_BUNDLE_MARKDOWN_HELPERS_JS,
+            DEV_BUNDLE_FLOW_BOOTSTRAP_CHUNK_JS,
+            DEV_BUNDLE_FLOW_CLIENT_CHUNK_JS,
+            DEV_BUNDLE_COPILOT_DEVTOOLS_JS);
+    private static final String PRODUCTION_RUNTIME_OWNER_DEPENDENCY_RESOLVER_EXPECTED_ARTIFACTS =
+            String.join(",", PRODUCTION_RUNTIME_OWNER_DEPENDENCY_ARTIFACTS);
     private static final String FLOW_CLIENT_IPC_BRIDGE_NEEDLE = """
             j.sendEventMessage=mI(function(a,b,c){var d=i.a.Z();d.Ab(a,b,c)});j.initializing=false;\
             """;
@@ -502,6 +587,12 @@ final class FlowClientResources {
         addText(discoveredComponentResources, FLOW_LAZY_DEPENDENCY_JS,
                 "flow-lazy-dependency-script", FLOW_LAZY_DEPENDENCY_BODY,
                 flowLazyDependencyAttributes());
+        for (String path : PRODUCTION_RUNTIME_OWNER_DEPENDENCY_ARTIFACTS) {
+            if (!discoveredComponentResources.containsKey(path)) {
+                add(discoveredComponentResources, path, "vaadin-production-owner-dependency", true,
+                        productionOwnerDependencyAttributes(path));
+            }
+        }
 
         flowClientResources = Collections.unmodifiableMap(new LinkedHashMap<>(discoveredFlowClientResources));
         componentResources = Collections.unmodifiableMap(new LinkedHashMap<>(discoveredComponentResources));
@@ -655,7 +746,9 @@ final class FlowClientResources {
                 strictBlocker("production-bundle", PRODUCTION_RUNTIME_OWNER_BLOCKER,
                         "production bundle owner is now explicit and independently staged, but import remains blocked until the owner can safely execute indexhtml side effects without colliding with focused component entry imports"),
                 strictBlocker("production-bundle", PRODUCTION_RUNTIME_OWNER_IMPORT_VERSION,
-                        "production bundle owner import is now a controlled v1.14 probe; success requires observable owner side effects, and acceptable failure must come from a real import attempt against the stats-selected indexhtml artifact")));
+                        "production bundle owner import is now a controlled v1.14 probe; success requires observable owner side effects, and acceptable failure must come from a real import attempt against the stats-selected indexhtml artifact"),
+                strictBlocker("production-bundle", PRODUCTION_RUNTIME_OWNER_DEPENDENCY_RESOLVER_VERSION,
+                        "production bundle owner dependency resolver must classify and stage the real dev-bundle build graph before the owner import result is accepted")));
         manifest.put("transport", "flow-ipc");
         manifest.put("resourceLoading", "ipc-resource-request");
         manifest.put("componentClass", "com.vaadin.flow.component.textfield.BigDecimalField");
@@ -901,6 +994,9 @@ final class FlowClientResources {
         } else {
             attributes.put("componentBundleDependency", true);
         }
+        if (moduleSpecifier.startsWith(DEV_BUNDLE_BUILD_ROOT)) {
+            putProductionOwnerDependencyResolverAttributes(attributes, moduleSpecifier);
+        }
         if (DEV_BUNDLE_INDEX_HTML_JS.equals(moduleSpecifier)) {
             attributes.put("runtimeResolverContractVersion", RUNTIME_RESOLVER_CONTRACT_VERSION);
             attributes.put("logicalRequestId", "production-runtime:indexhtml:v1_10");
@@ -1071,6 +1167,10 @@ final class FlowClientResources {
         attributes.put("productionBundleRuntimeOwnerImportArtifact", DEV_BUNDLE_INDEX_HTML_JS);
         attributes.put("productionBundleRuntimeOwnerImportPhase",
                 PRODUCTION_RUNTIME_OWNER_IMPORT_PHASE);
+        attributes.put("productionBundleRuntimeOwnerImportPhaseCandidates",
+                PRODUCTION_RUNTIME_OWNER_IMPORT_PHASE_CANDIDATES);
+        attributes.put("productionBundleRuntimeOwnerImportDiagnosticModes",
+                PRODUCTION_RUNTIME_OWNER_IMPORT_DIAGNOSTIC_MODES);
         attributes.put("productionBundleRuntimeOwnerImportExpectedSideEffects",
                 PRODUCTION_RUNTIME_OWNER_IMPORT_EXPECTED_SIDE_EFFECTS);
         attributes.put("productionBundleRuntimeOwnerImportAcceptableFailures",
@@ -1080,6 +1180,23 @@ final class FlowClientResources {
         attributes.put("productionBundleRuntimeOwnerImportSourceArtifactFamily", "production-bundle");
         attributes.put("productionBundleRuntimeOwnerImportDependencyPaths",
                 DEV_BUNDLE_INDEX_HTML_JS + "," + DEV_BUNDLE_COMMONJS_JS);
+        attributes.put("productionBundleRuntimeOwnerDependencyResolverVersion",
+                PRODUCTION_RUNTIME_OWNER_DEPENDENCY_RESOLVER_VERSION);
+        attributes.put("productionBundleRuntimeOwnerDependencyResolverRoot",
+                PRODUCTION_RUNTIME_OWNER_DEPENDENCY_RESOLVER_ROOT);
+        attributes.put("productionBundleRuntimeOwnerDependencyResolverPolicy",
+                PRODUCTION_RUNTIME_OWNER_DEPENDENCY_RESOLVER_POLICY);
+        attributes.put("productionBundleRuntimeOwnerDependencyResolverExpectedArtifacts",
+                PRODUCTION_RUNTIME_OWNER_DEPENDENCY_RESOLVER_EXPECTED_ARTIFACTS);
+        attributes.put("productionBundleRuntimeOwnerDependencyResolverAcceptableFailures",
+                PRODUCTION_RUNTIME_OWNER_DEPENDENCY_RESOLVER_ACCEPTABLE_FAILURES);
+        attributes.put("productionBundleRuntimeOwnerDependencyResolverModuleIdentityNamespace",
+                PRODUCTION_RUNTIME_OWNER_DEPENDENCY_RESOLVER_MODULE_IDENTITY_NAMESPACE);
+        attributes.put("productionBundleRuntimeOwnerDependencyResolverNextResolutionStep",
+                PRODUCTION_RUNTIME_OWNER_DEPENDENCY_RESOLVER_NEXT_STEP);
+        attributes.put("productionBundleRuntimeOwnerDependencyGraphClosed", false);
+        attributes.put("productionBundleRuntimeOwnerImportStageCount", 0);
+        attributes.put("productionBundleRuntimeOwnerImportMissingDependencyPaths", "");
         attributes.put("productionBundleRuntimeOwnerImportAttempted", false);
         attributes.put("productionBundleRuntimeOwnerImported", false);
         attributes.put("productionBundleRuntimeOwnerImportNextResolutionStep",
@@ -1091,6 +1208,50 @@ final class FlowClientResources {
         attributes.put("componentProductionOwnerImportOrder",
                 "component-focused-imports-before-owner-import-probe-v1_14");
         return attributes;
+    }
+
+    private static Map<String, Object> productionOwnerDependencyAttributes(String path) {
+        Map<String, Object> attributes = new LinkedHashMap<>();
+        attributes.put("componentFrontendResource", true);
+        attributes.put("moduleSpecifier", path);
+        attributes.put("resolver", "vaadin-production-owner-dependency-resolver-v1_15");
+        attributes.put("shim", false);
+        attributes.put("artifactFamily", "production-bundle");
+        attributes.put("origin", "vaadin-dev-bundle");
+        attributes.put("resourceOrigin", "vaadin-dev-bundle-production-owner-dependency");
+        attributes.put("dependencyOf", DEV_BUNDLE_INDEX_HTML_JS);
+        attributes.put("executionPolicy", "owner-dependency-module-v1_15");
+        attributes.put("artifactStatus", "available");
+        attributes.put("requestedBy", "production-owner-dependency-resolver-v1_15");
+        attributes.put("failureClassification", "production-owner-dependency-resolved-existing-artifact");
+        attributes.put("blockedReason",
+                "real Vaadin dev-bundle production artifact exposed for owner-scoped dependency graph closure; missing paths are classified at runtime instead of being faked");
+        attributes.put("lookupKind", "Production-owner-dependency-resource-v1_15");
+        attributes.put("devBundleResource", true);
+        attributes.put("productionBundleResource", true);
+        attributes.put("productionOwnerDependencyResource", true);
+        putProductionOwnerDependencyResolverAttributes(attributes, path);
+        return attributes;
+    }
+
+    private static void putProductionOwnerDependencyResolverAttributes(Map<String, Object> attributes, String path) {
+        attributes.put("productionBundleRuntimeOwnerDependencyResolverVersion",
+                PRODUCTION_RUNTIME_OWNER_DEPENDENCY_RESOLVER_VERSION);
+        attributes.put("productionBundleRuntimeOwnerDependencyResolverRoot",
+                PRODUCTION_RUNTIME_OWNER_DEPENDENCY_RESOLVER_ROOT);
+        attributes.put("productionBundleRuntimeOwnerDependencyResolverPolicy",
+                PRODUCTION_RUNTIME_OWNER_DEPENDENCY_RESOLVER_POLICY);
+        attributes.put("productionBundleRuntimeOwnerDependencyResolverExpectedArtifacts",
+                PRODUCTION_RUNTIME_OWNER_DEPENDENCY_RESOLVER_EXPECTED_ARTIFACTS);
+        attributes.put("productionBundleRuntimeOwnerDependencyResolverAcceptableFailures",
+                PRODUCTION_RUNTIME_OWNER_DEPENDENCY_RESOLVER_ACCEPTABLE_FAILURES);
+        attributes.put("productionBundleRuntimeOwnerDependencyResolverModuleIdentityNamespace",
+                PRODUCTION_RUNTIME_OWNER_DEPENDENCY_RESOLVER_MODULE_IDENTITY_NAMESPACE);
+        attributes.put("productionBundleRuntimeOwnerDependencyResolverRootArtifact",
+                DEV_BUNDLE_INDEX_HTML_JS);
+        attributes.put("productionBundleRuntimeOwnerDependencyResolverArtifact", path);
+        attributes.put("productionBundleRuntimeOwnerDependencyResolverClassification",
+                "resolved-existing-artifact");
     }
 
     private static Map<String, Object> flowLazyDependencyAttributes() {
@@ -1254,6 +1415,8 @@ final class FlowClientResources {
         attributes.put("nextResolutionStep", GENERATED_LAZY_NEXT_RESOLUTION_STEP);
         attributes.put("importResolutionStrategy", GENERATED_LAZY_IMPORT_RESOLUTION_STRATEGY);
         attributes.put("moduleIdentityStrategy", "stable-resource-path-blob-module-identity-v1_7");
+        putProductionOwnerDependencyResolverAttributes(attributes, path);
+        attributes.put("productionOwnerDependencyResource", true);
         if (primary) {
             attributes.put("transitiveImports", List.of(
                     "vaadin-dev-bundle/webapp/VAADIN/build/indexhtml-BfYYZi8S.js",

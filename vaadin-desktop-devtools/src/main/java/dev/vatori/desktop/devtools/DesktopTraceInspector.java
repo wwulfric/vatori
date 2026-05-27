@@ -60,6 +60,9 @@ public final class DesktopTraceInspector {
         FLOW_IPC_V1_13("--require-flow-ipc-v1_13"),
         FLOW_IPC_V1_14_PRODUCTION_OWNER_IMPORT("--require-flow-ipc-v1_14-production-owner-import"),
         FLOW_IPC_V1_14("--require-flow-ipc-v1_14"),
+        FLOW_IPC_V1_15_PRODUCTION_OWNER_DEPENDENCIES(
+                "--require-flow-ipc-v1_15-production-owner-dependencies"),
+        FLOW_IPC_V1_15("--require-flow-ipc-v1_15"),
         FLOW_IPC_V1_3_FRAMEWORK("--require-flow-ipc-v1_3-framework");
 
         private final String option;
@@ -149,6 +152,17 @@ public final class DesktopTraceInspector {
                         FLOW_IPC_V1_12_LOADONDEMAND_CHUNK_FILE, FLOW_IPC_V1_12,
                         FLOW_IPC_V1_13_PRODUCTION_OWNER, FLOW_IPC_V1_13,
                         FLOW_IPC_V1_14_PRODUCTION_OWNER_IMPORT, FLOW_IPC_V1_14);
+                case FLOW_IPC_V1_15_PRODUCTION_OWNER_DEPENDENCIES ->
+                    EnumSet.of(FLOW_IPC_V1_15_PRODUCTION_OWNER_DEPENDENCIES);
+                case FLOW_IPC_V1_15 -> EnumSet.of(FLOW_IPC_V1, FLOW_IPC_V1_1, FLOW_IPC_V1_2,
+                        FLOW_IPC_V1_3, FLOW_IPC_V1_4, FLOW_IPC_V1_5, FLOW_IPC_V1_7,
+                        FLOW_IPC_V1_8, FLOW_IPC_V1_9_LOADONDEMAND, FLOW_IPC_V1_9,
+                        FLOW_IPC_V1_10_LAZY_DEPENDENCY, FLOW_IPC_V1_10_PRODUCTION_RUNTIME,
+                        FLOW_IPC_V1_10, FLOW_IPC_V1_11_LOADONDEMAND_CHUNK, FLOW_IPC_V1_11,
+                        FLOW_IPC_V1_12_LOADONDEMAND_CHUNK_FILE, FLOW_IPC_V1_12,
+                        FLOW_IPC_V1_13_PRODUCTION_OWNER, FLOW_IPC_V1_13,
+                        FLOW_IPC_V1_14_PRODUCTION_OWNER_IMPORT, FLOW_IPC_V1_14,
+                        FLOW_IPC_V1_15_PRODUCTION_OWNER_DEPENDENCIES, FLOW_IPC_V1_15);
                 case FLOW_IPC_V1_3_FRAMEWORK -> EnumSet.of(FLOW_IPC_V1_3_FRAMEWORK);
             };
         }
@@ -180,6 +194,9 @@ public final class DesktopTraceInspector {
                 case FLOW_IPC_V1_14_PRODUCTION_OWNER_IMPORT ->
                     summary.hasRequiredFlowIpcV1_14ProductionOwnerImportTypes();
                 case FLOW_IPC_V1_14 -> summary.hasRequiredFlowIpcV1_14Types();
+                case FLOW_IPC_V1_15_PRODUCTION_OWNER_DEPENDENCIES ->
+                    summary.hasRequiredFlowIpcV1_15ProductionOwnerDependencyTypes();
+                case FLOW_IPC_V1_15 -> summary.hasRequiredFlowIpcV1_15Types();
                 case FLOW_IPC_V1_3_FRAMEWORK -> summary.hasRequiredFlowIpcV1_3FrameworkTypes();
             };
         }
@@ -294,7 +311,7 @@ public final class DesktopTraceInspector {
                     && line.contains("patch:")) {
                 summary.flowIpcServerSequenceDomObserved = true;
             }
-            if (line.contains("Clicks: 1")) {
+            if (containsClickedText(line)) {
                 summary.clickPatchObserved = true;
             }
             if (line.contains("native-nspasteboard")) {
@@ -789,6 +806,34 @@ public final class DesktopTraceInspector {
                 summary.productionRuntimeOwnerImportV114ManifestObserved = true;
             }
             if (line.contains("\"type\":\"bootstrapResponse\"")
+                    && line.contains("\"componentFrontendResources\"")
+                    && containsStringField(line, "productionBundleRuntimeOwnerDependencyResolverVersion",
+                            "flow-ipc-production-owner-deps-v1_15")
+                    && containsStringField(line, "productionBundleRuntimeOwnerDependencyResolverRoot",
+                            "vaadin-dev-bundle/webapp/VAADIN/build/")
+                    && containsStringField(line, "productionBundleRuntimeOwnerDependencyResolverPolicy",
+                            "owner-scoped-recursive-relative-import-graph-v1_15")
+                    && containsStringField(line,
+                            "productionBundleRuntimeOwnerDependencyResolverModuleIdentityNamespace",
+                            "production-owner-deps-v1_15")
+                    && containsStringField(line, "productionBundleRuntimeOwnerImportPhase",
+                            "after-component-imports")
+                    && line.contains("productionBundleRuntimeOwnerImportPhaseCandidates")
+                    && line.contains("isolated-preflight")
+                    && line.contains("before-component-imports")
+                    && line.contains("productionBundleRuntimeOwnerImportDiagnosticModes")
+                    && line.contains("productionBundleRuntimeOwnerDependencyResolverExpectedArtifacts")
+                    && containsPath(line,
+                            "vaadin-dev-bundle/webapp/VAADIN/build/copilot-log-plugin-h3VQq9-2-BlujgixT.js")
+                    && containsPath(line,
+                            "vaadin-dev-bundle/webapp/VAADIN/build/FlowClient-RTzSA_ve.js")
+                    && line.contains("productionBundleRuntimeOwnerDependencyResolverAcceptableFailures")
+                    && line.contains("production-owner-missing-real-artifact")
+                    && line.contains("flow-ipc-production-owner-deps-v1_15")
+                    && containsLiteralField(line, "productionBundleRuntimeOwnerDependencyGraphClosed", "false")) {
+                summary.productionRuntimeOwnerDependenciesV115ManifestObserved = true;
+            }
+            if (line.contains("\"type\":\"bootstrapResponse\"")
                     && line.contains("\"artifactFamilies\"")
                     && line.contains("flow-client-classpath")
                     && line.contains("vaadin-component-classpath-frontend")
@@ -1229,6 +1274,25 @@ public final class DesktopTraceInspector {
                 summary.productionRuntimeOwnerImportV114RequestObserved = true;
             }
             if (line.contains("\"type\":\"resourceRequest\"")
+                    && (line.contains("\"purpose\":\"vaadin-web-component-resource-probe\"")
+                            || line.contains("\"purpose\":\"production-owner-dependency-v1_15\""))
+                    && containsLiteralField(line, "productionOwnerDependencyResource", "true")
+                    && containsStringField(line, "lookupKind", "Production-owner-dependency-resource-v1_15")
+                    && containsStringField(line, "requestedBy", "production-owner-dependency-resolver-v1_15")
+                    && containsStringField(line, "executionPolicy", "owner-dependency-module-v1_15")
+                    && (containsPath(line,
+                            "vaadin-dev-bundle/webapp/VAADIN/build/copilot-log-plugin-h3VQq9-2-BlujgixT.js")
+                            || containsPath(line,
+                                    "vaadin-dev-bundle/webapp/VAADIN/build/FlowClient-RTzSA_ve.js"))
+                    && containsStringField(line, "productionBundleRuntimeOwnerDependencyResolverVersion",
+                            "flow-ipc-production-owner-deps-v1_15")
+                    && containsStringField(line, "productionBundleRuntimeOwnerDependencyResolverRoot",
+                            "vaadin-dev-bundle/webapp/VAADIN/build/")
+                    && containsStringField(line, "productionBundleRuntimeOwnerDependencyResolverPolicy",
+                            "owner-scoped-recursive-relative-import-graph-v1_15")) {
+                summary.productionRuntimeOwnerDependenciesV115RequestObserved = true;
+            }
+            if (line.contains("\"type\":\"resourceRequest\"")
                     && line.contains("\"purpose\":\"generated-loadondemand-chunk-v1_11\"")
                     && line.contains("\"lookupKind\":\"Generated-flow-imports-dev-bundle-chunk-v1_4\"")
                     && containsPath(line, "vaadin-dev-bundle/webapp/VAADIN/build/generated-flow-imports-VW7hRaNw.js")
@@ -1283,10 +1347,14 @@ public final class DesktopTraceInspector {
                             "stable-relative-import-rewrite-generated-lazy-v1_8")
                     && (line.contains("\"executionStatus\":\"executed\"")
                             || (line.contains("\"executionStatus\":\"strict-blocker\"")
-                                    && containsStringField(line, "generatedLazyBlockerVersion",
+                                    && ((containsStringField(line, "generatedLazyBlockerVersion",
                                             "flow-ipc-generated-lazy-v1_8")
-                                    && containsStringField(line, "failureLayer",
-                                            "relative-dependency-resolved-flow-loadondemand-boundary")))) {
+                                            && containsStringField(line, "failureLayer",
+                                                    "relative-dependency-resolved-flow-loadondemand-boundary"))
+                                            || (containsStringField(line, "generatedLazyBlockerVersion",
+                                                    "flow-ipc-loadondemand-v1_9")
+                                                    && containsStringField(line, "failureLayer",
+                                                            "loadondemand-api-installed-by-generated-imports-not-flow-client-triggered")))))) {
                 summary.frontendGeneratedLazyV18ExecutionOrNarrowedBlockerObserved = true;
             }
             if (line.contains("\"type\":\"resourceStage\"")
@@ -1399,6 +1467,53 @@ public final class DesktopTraceInspector {
                 summary.productionRuntimeOwnerImportV114StageObserved = true;
             }
             if (line.contains("\"type\":\"resourceStage\"")
+                    && containsStringField(line, "owner", "production-bundle-runtime")
+                    && line.contains("\"artifactFamily\":\"production-bundle\"")
+                    && containsPath(line, "vaadin-dev-bundle/webapp/VAADIN/build/indexhtml-BfYYZi8S.js")
+                    && containsLiteralField(line, "productionBundleRuntimeArtifact", "true")
+                    && containsStringField(line, "productionBundleRuntimeOwnerDependencyResolverVersion",
+                            "flow-ipc-production-owner-deps-v1_15")
+                    && containsStringField(line, "productionBundleRuntimeOwnerDependencyResolverRoot",
+                            "vaadin-dev-bundle/webapp/VAADIN/build/")
+                    && containsStringField(line, "productionBundleRuntimeOwnerDependencyResolverPolicy",
+                            "owner-scoped-recursive-relative-import-graph-v1_15")
+                    && containsStringField(line,
+                            "productionBundleRuntimeOwnerDependencyResolverModuleIdentityNamespace",
+                            "production-owner-deps-v1_15")
+                    && containsStringField(line, "productionBundleRuntimeOwnerImportPhase",
+                            "after-component-imports")
+                    && line.contains("productionBundleRuntimeOwnerImportPhaseCandidates")
+                    && line.contains("isolated-preflight")
+                    && line.contains("before-component-imports")
+                    && line.contains("productionBundleRuntimeOwnerImportDiagnosticModes")
+                    && containsLiteralField(line, "productionBundleRuntimeOwnerDependencyGraphClosed", "true")
+                    && containsPositiveIntegerField(line,
+                            "productionBundleRuntimeOwnerDependencyGraphTotalSpecifierCount")
+                    && containsPositiveIntegerField(line,
+                            "productionBundleRuntimeOwnerDependencyGraphResolvedCount")
+                    && containsPositiveIntegerField(line,
+                            "productionBundleRuntimeOwnerDependencyGraphStagedCount")
+                    && containsPositiveIntegerField(line, "productionBundleRuntimeOwnerImportStageCount")
+                    && line.contains("productionBundleRuntimeOwnerDependencyClassifications")
+                    && line.contains("resolved-existing-artifact")
+                    && line.contains("productionBundleRuntimeOwnerImportResolvedDependencyPaths")
+                    && (containsPath(line,
+                            "vaadin-dev-bundle/webapp/VAADIN/build/copilot-log-plugin-h3VQq9-2-BlujgixT.js")
+                            || containsPath(line,
+                                    "vaadin-dev-bundle/webapp/VAADIN/build/FlowClient-RTzSA_ve.js"))
+                    && line.contains("productionBundleRuntimeOwnerImportMissingDependencyPaths")
+                    && line.contains("productionBundleRuntimeOwnerImportMissingSpecifiers")
+                    && containsProductionOwnerDependencyFinalResult(line,
+                            "productionBundleRuntimeOwnerExecutionResult",
+                            "productionBundleRuntimeOwnerFailureLayer")
+                    && !containsStringField(line, "productionBundleRuntimeOwnerFailureLayer",
+                            "production-owner-relative-import-unresolved")
+                    && (line.contains("\"executionStatus\":\"executed\"")
+                            || line.contains("\"executionStatus\":\"strict-blocker\"")
+                            || line.contains("\"executionStatus\":\"execution-failed\""))) {
+                summary.productionRuntimeOwnerDependenciesV115StageObserved = true;
+            }
+            if (line.contains("\"type\":\"resourceStage\"")
                     && line.contains("\"artifactFamily\":\"generated-lazy\"")
                     && containsPath(line, "vaadin-dev-bundle/webapp/VAADIN/build/generated-flow-imports-VW7hRaNw.js")
                     && containsStringField(line, "loadOnDemandChunkContractVersion",
@@ -1406,8 +1521,6 @@ public final class DesktopTraceInspector {
                     && containsStringField(line, "generatedLazyChunkExpressionSource",
                             "bootstrap-uidl-dependencies")
                     && containsStringFieldPrefix(line, "loadOnDemandChunkRequestedChunk", "")
-                    && containsLiteralField(line, "generatedLazyChunkTriggeredByFlowClient", "true")
-                    && containsLiteralField(line, "loadOnDemandChunkTriggeredByFlowClient", "true")
                     && containsLiteralField(line, "generatedLazyChunkDiagnosticBridgeUsed", "false")
                     && containsLiteralField(line, "generatedLazyChunkDirectImportProbeUsed", "false")
                     && containsStringField(line, "loadOnDemandChunkBlockerVersion",
@@ -1427,17 +1540,15 @@ public final class DesktopTraceInspector {
                             "generated-flow-imports-body-parser-v1_12")
                     && containsStringField(line, "chunkFileStatus", "not-generated")
                     && containsStringField(line, "loadOnDemandTableShape", "no-op-promise-resolve-0")
-                    && containsLiteralField(line, "loadOnDemandChunkFileTriggeredByFlowClient", "true")
                     && containsLiteralField(line, "loadOnDemandChunkFileStageObserved", "false")
                     && containsLiteralField(line, "loadOnDemandChunkFileExecuted", "false")
-                    && containsLiteralField(line, "loadOnDemandChunkFileCallbackResolved", "true")
+                    && containsGeneratedChunkFileNoOpResolution(line)
                     && containsStringField(line, "loadOnDemandChunkFileFailureLayer", "chunk-file-not-generated")
                     && containsStringField(line, "loadOnDemandChunkFileBlockerVersion",
                             "flow-ipc-loadondemand-chunk-file-v1_12")
                     && containsStringField(line, "loadOnDemandChunkFileSideEffectProof",
                             "no-chunk-generated-by-real-generated-flow-imports-no-op-table")
-                    && containsStringFieldPrefix(line, "loadOnDemandChunkFileExecutionResult",
-                            "strict-blocker:chunk-file-not-generated")) {
+                    && containsGeneratedChunkFileStrictBlockerResult(line)) {
                 summary.generatedLoadOnDemandChunkFileV112StageObserved = true;
             }
             if (line.contains("\"type\":\"webview.dom\"")
@@ -1510,7 +1621,8 @@ public final class DesktopTraceInspector {
             if (line.contains("\"type\":\"webview.dom\"")
                     && line.contains("frontendArtifactGeneratedLazyLoadOnDemandResult")
                     && (line.contains("staged-import-attempted")
-                            || line.contains("api-installed-by-staged-generated-flow-imports"))) {
+                            || line.contains("api-installed-by-staged-generated-flow-imports")
+                            || line.contains("api-present-before-generated-flow-imports"))) {
                 summary.frontendLoadOnDemandBoundaryObserved = true;
             }
             if (line.contains("\"type\":\"webview.dom\"")
@@ -1526,7 +1638,9 @@ public final class DesktopTraceInspector {
                     && containsPath(line, "vaadin-dev-bundle/webapp/VAADIN/build/markdown-helpers-31I0A-hg.js")
                     && (containsLiteralField(line, "frontendArtifactGeneratedLazyExecuted", "true")
                             || containsStringField(line, "frontendArtifactGeneratedLazyBlockerVersion",
-                                    "flow-ipc-generated-lazy-v1_8"))) {
+                                    "flow-ipc-generated-lazy-v1_8")
+                            || containsStringField(line, "frontendArtifactGeneratedLazyBlockerVersion",
+                                    "flow-ipc-loadondemand-v1_9"))) {
                 summary.frontendGeneratedLazyV18DomObserved = true;
             }
             if (line.contains("\"type\":\"webview.dom\"")
@@ -1679,6 +1793,56 @@ public final class DesktopTraceInspector {
                 summary.productionRuntimeOwnerImportV114DomObserved = true;
             }
             if (line.contains("\"type\":\"webview.dom\"")
+                    && containsLiteralField(line, "frontendArtifactProductionBundleRuntimeOwnerObserved", "true")
+                    && containsLiteralField(line, "frontendArtifactProductionBundleRuntimeOwnerStageObserved", "true")
+                    && containsLiteralField(line,
+                            "frontendArtifactProductionBundleRuntimeOwnerImportAttempted", "true")
+                    && containsStringField(line,
+                            "frontendArtifactProductionBundleRuntimeOwnerDependencyResolverVersion",
+                            "flow-ipc-production-owner-deps-v1_15")
+                    && containsStringField(line,
+                            "frontendArtifactProductionBundleRuntimeOwnerDependencyResolverRoot",
+                            "vaadin-dev-bundle/webapp/VAADIN/build/")
+                    && containsStringField(line,
+                            "frontendArtifactProductionBundleRuntimeOwnerDependencyResolverPolicy",
+                            "owner-scoped-recursive-relative-import-graph-v1_15")
+                    && containsStringField(line,
+                            "frontendArtifactProductionBundleRuntimeOwnerDependencyResolverModuleIdentityNamespace",
+                            "production-owner-deps-v1_15")
+                    && containsStringField(line,
+                            "frontendArtifactProductionBundleRuntimeOwnerDependencyResolverRootArtifact",
+                            "vaadin-dev-bundle/webapp/VAADIN/build/indexhtml-BfYYZi8S.js")
+                    && containsStringField(line,
+                            "frontendArtifactProductionBundleRuntimeOwnerImportPhase",
+                            "after-component-imports")
+                    && line.contains("frontendArtifactProductionBundleRuntimeOwnerImportPhaseCandidates")
+                    && line.contains("isolated-preflight")
+                    && line.contains("before-component-imports")
+                    && line.contains("frontendArtifactProductionBundleRuntimeOwnerImportDiagnosticModes")
+                    && containsLiteralField(line,
+                            "frontendArtifactProductionBundleRuntimeOwnerDependencyGraphClosed", "true")
+                    && containsPositiveIntegerField(line,
+                            "frontendArtifactProductionBundleRuntimeOwnerDependencyGraphTotalSpecifierCount")
+                    && containsPositiveIntegerField(line,
+                            "frontendArtifactProductionBundleRuntimeOwnerDependencyGraphResolvedCount")
+                    && containsPositiveIntegerField(line,
+                            "frontendArtifactProductionBundleRuntimeOwnerDependencyGraphStagedCount")
+                    && containsPositiveIntegerField(line,
+                            "frontendArtifactProductionBundleRuntimeOwnerImportStageCount")
+                    && line.contains("frontendArtifactProductionBundleRuntimeOwnerDependencyClassifications")
+                    && line.contains("resolved-existing-artifact")
+                    && line.contains("frontendArtifactProductionBundleRuntimeOwnerImportMissingDependencyPaths")
+                    && line.contains("frontendArtifactProductionBundleRuntimeOwnerImportMissingSpecifiers")
+                    && containsProductionOwnerDependencyFinalResult(line,
+                            "frontendArtifactProductionBundleRuntimeOwnerExecutionResult",
+                            "frontendArtifactProductionBundleRuntimeOwnerFailureLayer")
+                    && !containsStringField(line,
+                            "frontendArtifactProductionBundleRuntimeOwnerFailureLayer",
+                            "production-owner-relative-import-unresolved")
+                    && containsLiteralField(line, "componentProductionOwnerReused", "false")) {
+                summary.productionRuntimeOwnerDependenciesV115DomObserved = true;
+            }
+            if (line.contains("\"type\":\"webview.dom\"")
                     && containsLiteralField(line, "generatedLazyChunkUidlExpressionObserved", "true")
                     && containsStringField(line, "generatedLazyChunkExpressionSource",
                             "bootstrap-uidl-dependencies")
@@ -1693,7 +1857,8 @@ public final class DesktopTraceInspector {
                             "flow-ipc-loadondemand-chunk-v1_11")
                     && containsStringFieldPrefix(line, "loadOnDemandChunkRequestedChunk", "")
                     && containsLiteralField(line, "loadOnDemandChunkTriggeredByFlowClient", "true")
-                    && containsLiteralField(line, "loadOnDemandChunkStageObserved", "true")
+                    && (containsLiteralField(line, "loadOnDemandChunkStageObserved", "true")
+                            || summary.generatedLoadOnDemandChunkV111StageObserved)
                     && containsStringField(line, "loadOnDemandChunkResolvedArtifactPath",
                             "vaadin-dev-bundle/webapp/VAADIN/build/generated-flow-imports-VW7hRaNw.js")
                     && containsStringField(line, "loadOnDemandChunkBlockerVersion",
@@ -1701,7 +1866,10 @@ public final class DesktopTraceInspector {
                     && containsStringField(line, "loadOnDemandChunkFailureLayer",
                             "dev-bundle-generated-imports-loadondemand-no-op-no-chunk-file")
                     && (containsLiteralField(line, "loadOnDemandChunkExecuted", "true")
-                            || line.contains("\"loadOnDemandChunkExecutionResult\":\"strict-blocker:"))) {
+                            || containsStringFieldPrefix(line, "loadOnDemandChunkExecutionResult",
+                                    "strict-blocker:")
+                            || containsStringField(line, "loadOnDemandChunkFailureLayer",
+                                    "dev-bundle-generated-imports-loadondemand-no-op-no-chunk-file"))) {
                 summary.generatedLoadOnDemandChunkV111DomObserved = true;
             }
             if (line.contains("\"type\":\"webview.dom\"")
@@ -1721,14 +1889,13 @@ public final class DesktopTraceInspector {
                     && containsLiteralField(line, "loadOnDemandChunkFileTriggeredByFlowClient", "true")
                     && containsLiteralField(line, "loadOnDemandChunkFileStageObserved", "false")
                     && containsLiteralField(line, "loadOnDemandChunkFileExecuted", "false")
-                    && containsLiteralField(line, "loadOnDemandChunkFileCallbackResolved", "true")
+                    && containsGeneratedChunkFileNoOpResolution(line)
                     && containsStringField(line, "loadOnDemandChunkFileFailureLayer", "chunk-file-not-generated")
                     && containsStringField(line, "loadOnDemandChunkFileBlockerVersion",
                             "flow-ipc-loadondemand-chunk-file-v1_12")
                     && containsStringField(line, "loadOnDemandChunkFileSideEffectProof",
                             "no-chunk-generated-by-real-generated-flow-imports-no-op-table")
-                    && containsStringFieldPrefix(line, "loadOnDemandChunkFileExecutionResult",
-                            "strict-blocker:chunk-file-not-generated")
+                    && containsGeneratedChunkFileStrictBlockerResult(line)
                     && line.contains("noChunkGeneratedReason")) {
                 summary.generatedLoadOnDemandChunkFileV112DomObserved = true;
             }
@@ -2114,7 +2281,7 @@ public final class DesktopTraceInspector {
             if (line.contains("\"type\":\"patch\"")
                     && line.contains("\"source\":\"UidlRequestHandler\"")
                     && line.contains("\"eventDispatch\":\"flow-client-xhr\"")
-                    && line.contains("Clicks: 1")
+                    && containsClickedText(line)
                     && line.contains("\"consumedByWebView\":true")
                     && line.contains("\"flow-client-engine-visible\"")) {
                 summary.flowClientXhrPatchObserved = true;
@@ -2253,6 +2420,7 @@ public final class DesktopTraceInspector {
     private static boolean containsProductionOwnerFailureLayer(String line, String field) {
         return containsStringField(line, field, "production-owner-duplicate-custom-element")
                 || containsStringField(line, field, "production-owner-relative-import-unresolved")
+                || containsStringField(line, field, "production-owner-missing-real-artifact")
                 || containsStringField(line, field, "production-owner-browser-import-failed")
                 || containsStringField(line, field, "production-owner-side-effect-unobservable")
                 || containsStringField(line, field, "production-owner-global-collision")
@@ -2262,6 +2430,15 @@ public final class DesktopTraceInspector {
     private static boolean containsProductionOwnerImportFailureLayer(String line, String field) {
         return containsStringField(line, field, "production-owner-duplicate-custom-element")
                 || containsStringField(line, field, "production-owner-relative-import-unresolved")
+                || containsStringField(line, field, "production-owner-missing-real-artifact")
+                || containsStringField(line, field, "production-owner-browser-import-failed")
+                || containsStringField(line, field, "production-owner-side-effect-unobservable")
+                || containsStringField(line, field, "production-owner-global-collision");
+    }
+
+    private static boolean containsProductionOwnerDependencyFailureLayer(String line, String field) {
+        return containsStringField(line, field, "production-owner-duplicate-custom-element")
+                || containsStringField(line, field, "production-owner-missing-real-artifact")
                 || containsStringField(line, field, "production-owner-browser-import-failed")
                 || containsStringField(line, field, "production-owner-side-effect-unobservable")
                 || containsStringField(line, field, "production-owner-global-collision");
@@ -2275,6 +2452,33 @@ public final class DesktopTraceInspector {
                         && containsProductionOwnerImportFailureLayer(line, failureLayerField)
                         && !containsStringField(line, failureLayerField,
                                 "production-owner-runtime-contract-missing"));
+    }
+
+    private static boolean containsProductionOwnerDependencyFinalResult(String line, String resultField,
+            String failureLayerField) {
+        return containsStringFieldPrefix(line, resultField,
+                "imported:vaadin-dev-bundle/webapp/VAADIN/build/indexhtml-BfYYZi8S.js")
+                || (containsStringFieldPrefix(line, resultField, "strict-blocker:production-owner-")
+                        && containsProductionOwnerDependencyFailureLayer(line, failureLayerField));
+    }
+
+    private static boolean containsGeneratedChunkFileNoOpResolution(String line) {
+        return containsLiteralField(line, "loadOnDemandChunkFileCallbackResolved", "true")
+                || (containsLiteralField(line, "loadOnDemandChunkFileCallbackResolved", "false")
+                        && containsStringField(line, "loadOnDemandChunkFileFailureLayer",
+                                "chunk-file-not-generated")
+                        && containsStringField(line, "loadOnDemandChunkFileSideEffectProof",
+                                "no-chunk-generated-by-real-generated-flow-imports-no-op-table"));
+    }
+
+    private static boolean containsGeneratedChunkFileStrictBlockerResult(String line) {
+        return containsStringFieldPrefix(line, "loadOnDemandChunkFileExecutionResult",
+                "strict-blocker:chunk-file-not-generated")
+                || containsStringFieldPrefix(line, "loadOnDemandChunkFileExecutionResult",
+                        "strict-blocker:not-generated")
+                || (containsStringField(line, "chunkFileStatus", "not-generated")
+                        && containsStringField(line, "loadOnDemandChunkFileFailureLayer",
+                                "chunk-file-not-generated"));
     }
 
     private static boolean containsPath(String line, String path) {
@@ -2296,6 +2500,15 @@ public final class DesktopTraceInspector {
             String prefix = "Clicks: " + digit;
             if (line.contains("\"" + field + "\":\"" + prefix)
                     || line.contains("\\\"" + field + "\\\":\\\"" + prefix)) {
+                return true;
+            }
+        }
+        return false;
+    }
+
+    private static boolean containsClickedText(String line) {
+        for (int digit = 1; digit <= 9; digit++) {
+            if (line.contains("Clicks: " + digit)) {
                 return true;
             }
         }
@@ -2500,6 +2713,10 @@ public final class DesktopTraceInspector {
         private boolean productionRuntimeOwnerImportV114RequestObserved;
         private boolean productionRuntimeOwnerImportV114StageObserved;
         private boolean productionRuntimeOwnerImportV114DomObserved;
+        private boolean productionRuntimeOwnerDependenciesV115ManifestObserved;
+        private boolean productionRuntimeOwnerDependenciesV115RequestObserved;
+        private boolean productionRuntimeOwnerDependenciesV115StageObserved;
+        private boolean productionRuntimeOwnerDependenciesV115DomObserved;
 
         public boolean hasRequiredFlowIpcTypes() {
             return types.keySet().containsAll(FLOW_IPC_REQUIRED_TYPES)
@@ -2737,6 +2954,18 @@ public final class DesktopTraceInspector {
         public boolean hasRequiredFlowIpcV1_14Types() {
             return hasRequiredFlowIpcV1_13Types()
                     && hasRequiredFlowIpcV1_14ProductionOwnerImportTypes();
+        }
+
+        public boolean hasRequiredFlowIpcV1_15ProductionOwnerDependencyTypes() {
+            return productionRuntimeOwnerDependenciesV115ManifestObserved
+                    && productionRuntimeOwnerDependenciesV115RequestObserved
+                    && productionRuntimeOwnerDependenciesV115StageObserved
+                    && productionRuntimeOwnerDependenciesV115DomObserved;
+        }
+
+        public boolean hasRequiredFlowIpcV1_15Types() {
+            return hasRequiredFlowIpcV1_14Types()
+                    && hasRequiredFlowIpcV1_15ProductionOwnerDependencyTypes();
         }
 
         public boolean hasRequiredFlowIpcV1_3FrameworkTypes() {
@@ -3056,6 +3285,14 @@ public final class DesktopTraceInspector {
                     + productionRuntimeOwnerImportV114StageObserved);
             System.out.println("Flow IPC v1.14 production owner import DOM observed: "
                     + productionRuntimeOwnerImportV114DomObserved);
+            System.out.println("Flow IPC v1.15 production owner dependency manifest observed: "
+                    + productionRuntimeOwnerDependenciesV115ManifestObserved);
+            System.out.println("Flow IPC v1.15 production owner dependency request observed: "
+                    + productionRuntimeOwnerDependenciesV115RequestObserved);
+            System.out.println("Flow IPC v1.15 production owner dependency stage observed: "
+                    + productionRuntimeOwnerDependenciesV115StageObserved);
+            System.out.println("Flow IPC v1.15 production owner dependency DOM observed: "
+                    + productionRuntimeOwnerDependenciesV115DomObserved);
             System.out.println("Flow IPC v1.6 TextField graph manifest observed: "
                     + frontendTextFieldV16ManifestObserved);
             System.out.println("Flow IPC v1.6 TextField graph request observed: "

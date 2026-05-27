@@ -1,6 +1,6 @@
 # Goal 1.15: Production Owner Dependency Resolver Closure
 
-状态：已规划，尚未执行。
+状态：已完成。
 
 `docs/goal.md` 是长期愿景和完成度账本。v1.14 已经把 production owner 从
 `production-owner-runtime-contract-missing` 推进到真实 import attempt：Swift host 会在

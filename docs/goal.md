@@ -20,12 +20,12 @@ v0/v1 runtime 切片走向可产品化桌面框架的最终完成状态。
 - `docs/goal-1_12.md`：Generated LoadOnDemand chunk file registry and side-effect proof，已完成。
 - `docs/goal-1_13.md`：Production Bundle Owned Runtime Boundary，已完成。
 - `docs/goal-1_14.md`：Production Owner Import and Side-Effect Boundary，已完成。
-- `docs/goal-1_15.md`：Production Owner Dependency Resolver Closure，已规划但尚未执行。
+- `docs/goal-1_15.md`：Production Owner Dependency Resolver Closure，已完成。
 - `docs/goal-1_16.md`：Production Owner Import Ordering and Component Reuse，已规划但尚未执行。
 - `docs/goal-1_17.md`：Host-Owned Frontend Resource Scheme，已规划但尚未执行。
 
-当前建议的短期阶段目标已规划到 `docs/goal-1_17.md`。执行顺序上应先完成
-`docs/goal-1_15.md`，再启动 `docs/goal-1_16.md`，最后推进 `docs/goal-1_17.md`；后续阶段
+当前建议的短期阶段目标已规划到 `docs/goal-1_17.md`。执行顺序上应先启动
+`docs/goal-1_16.md`，再推进 `docs/goal-1_17.md`；后续阶段
 应从长期未完成账本中继续拆分。
 
 后续阶段应继续以 `docs/goal-1_18.md` 等文件拆分，
@@ -159,6 +159,17 @@ v0/v1 runtime 切片走向可产品化桌面框架的最终完成状态。
   `production-owner-relative-import-unresolved`。这不是 production owner import success；
   但它不再停在 `production-owner-runtime-contract-missing`，而是来自真实 owner import
   attempt 的具体 blocker 证据。
+- v1.15 已把 v1.14 的 focused single-dependency rewrite 推进到 owner-scoped relative
+  dependency graph closure：Java manifest / response 声明
+  `productionBundleRuntimeOwnerDependencyResolverVersion=flow-ipc-production-owner-deps-v1_15`、
+  resolver root、policy、expected artifacts、acceptable failures 和 import phase diagnostics；Swift host 对真实
+  stats-selected `indexhtml` artifact 递归扫描 relative imports，请求并 stage 真实存在的
+  dev-bundle build artifacts，记录 graph total/resolved/missing/staged count、module identity
+  namespace、dependency classifications、phase candidates、missing dependency paths/specifiers 和 import rewrite
+  result。当前真实 trace 解析并 stage 了 24 个 owner dependency，并把 53 个缺失真实 artifact
+  明确分类为 `missing-real-artifact`；最终 blocker 从未分类的
+  `production-owner-relative-import-unresolved` 收敛为 `production-owner-missing-real-artifact`。
+  这仍不是 production owner import success，也不是 broad production parity。
 - 完整 generated/lazy chunk file execution、production owner import/side-effect success
   和 dev-mode/Vite execution 仍是明确 blocker，不计入最终完成。
 
@@ -258,8 +269,8 @@ v0/v1 runtime 切片走向可产品化桌面框架的最终完成状态。
   execution 和 dev-mode/Vite execution 从 partial/blocker 推进到真实可执行路径。
 - 完整 generated/lazy `Flow.loadOnDemand` execution，不再停在 staged generated-flow-imports
   no-op / missing chunk file blocker。
-- Production bundle owner dependency resolver、import success、chunk side-effect ownership、
-  host-owned resource scheme / file-backed loader 和 packaging-time staging。
+- Production bundle owner import ordering、component reuse、import success、chunk side-effect
+  ownership、host-owned resource scheme / file-backed loader 和 packaging-time staging。
 - Dev-mode/Vite graph execution 或可靠替代模式。
 - Broader Vaadin component parity，尤其是 Grid/VirtualList、ComboBox、DatePicker、
   Dialog、Upload。
@@ -284,21 +295,7 @@ v0/v1 runtime 切片走向可产品化桌面框架的最终完成状态。
 
 ## 当前建议的下一阶段
 
-`docs/goal-1_15.md` 已规划为下一执行阶段：它承接 v1.14 的真实 production owner import
-attempt，不再满足于证明 owner 可以对
-`vaadin-dev-bundle/webapp/VAADIN/build/indexhtml-BfYYZi8S.js` 发起 import，而是要求把
-owner-scoped relative dependency resolver 推进到可审计的 graph closure。Preferred 是
-真实 stats-selected production owner artifact 的 relative imports 全部被解析、stage 和
-rewrite，并让 owner import 继续向 side-effect proof 前进；Acceptable 是所有真实存在的
-dependencies 都被解析后，最终 blocker 收敛到明确的 missing-real-artifact、duplicate custom
-element、browser import failure、global collision 或 side-effect-unobservable。
-
-该阶段仍不是 broad production parity，也不要求 dev-mode/Vite parity。它的价值是把 v1.14 的
-`production-owner-relative-import-unresolved` 拆成 owner dependency graph 证据，为后续
-custom element ordering、custom-scheme/file-backed resolver、production owner side-effect
-ownership 或更宽组件覆盖铺路。
-
-`docs/goal-1_16.md` 已作为再下一阶段提前规划：它只应在 v1.15 完成后执行，目标是把
+`docs/goal-1_16.md` 已作为下一执行阶段提前规划：它只应在 v1.15 完成后执行，目标是把
 production owner 从 after-component diagnostic probe 推进到 owner-first 或 isolated import
 path，并让 TextField / Checkbox / Select component resolver 明确复用或拒绝复用 owner-owned
 module identity / side effects。Preferred 是 owner-first import 成功、component focused imports

@@ -1,6 +1,12 @@
 # Goal 1.23: Production Owner Positive Runtime Fixture Boundary
 
-状态：计划中。
+状态：进行中。
+
+当前进展：
+
+- 已新增 production owner positive fixture root/dependency resource。
+- 已新增 Java manifest / resource response metadata。
+- 已新增 `flow-client-resource-smoke` assertions，并通过本地验证。
 
 `docs/goal.md` 是长期愿景和完成度账本。v1.22 已经证明 generated
 `Flow.loadOnDemand` chunk-file table 在真实 chunk 存在时，当前 no-localhost resolver、

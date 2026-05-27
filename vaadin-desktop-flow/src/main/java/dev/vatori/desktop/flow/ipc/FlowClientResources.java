@@ -88,6 +88,10 @@ final class FlowClientResources {
             "META-INF/vatori/generated/flow/generated-flow-imports-v1_22.js";
     private static final String GENERATED_FLOW_IMPORTS_CHUNK_V1_22_JS =
             "META-INF/vatori/generated/flow/chunks/chunk-v1_22.js";
+    private static final String PRODUCTION_OWNER_FIXTURE_ROOT_V1_23_JS =
+            "META-INF/vatori/production-owner/owner-runtime-v1_23.js";
+    private static final String PRODUCTION_OWNER_FIXTURE_DEPENDENCY_V1_23_JS =
+            "META-INF/vatori/production-owner/owner-dependency-v1_23.js";
     private static final String DEV_MODE_PACKAGE_LOCK_JSON =
             "vaadin-dev-bundle/package-lock.json";
     private static final String DEV_BUNDLE_CHECKBOX_ENTRY_JS =
@@ -340,6 +344,16 @@ final class FlowClientResources {
             "flow-ipc-component-owner-reuse-policy-v1_20";
     private static final String COMPONENT_PRODUCTION_OWNER_REUSE_POLICY_V1_20 =
             "owner-first-then-focused-fallback-v1_20";
+    private static final String PRODUCTION_OWNER_POSITIVE_FIXTURE_VERSION =
+            "flow-ipc-production-owner-positive-runtime-v1_23";
+    private static final String PRODUCTION_OWNER_POSITIVE_FIXTURE_SOURCE =
+            "repository-production-owner-positive-fixture-v1_23";
+    private static final String PRODUCTION_OWNER_POSITIVE_FIXTURE_EXPECTED_TAGS =
+            "vatori-production-owner-fixture";
+    private static final String PRODUCTION_OWNER_POSITIVE_FIXTURE_EXPECTED_GLOBALS =
+            "window.VaadinDesktopProductionOwnerV123";
+    private static final String PRODUCTION_OWNER_POSITIVE_FIXTURE_EXECUTION_POLICY =
+            "owner-first-custom-scheme-positive-fixture-v1_23";
     private static final String FRONTEND_RESOLVER_CONTRACT_VERSION =
             "flow-ipc-frontend-resolver-contract-v1_21";
     private static final String FRONTEND_RESOLVER_CONTRACT_SCOPE =
@@ -666,6 +680,12 @@ final class FlowClientResources {
         add(discoveredComponentResources, GENERATED_FLOW_IMPORTS_CHUNK_V1_22_JS,
                 "vaadin-generated-flow-imports-v1_22-chunk", true,
                 generatedLazyChunkFileFixtureAttributes(false));
+        add(discoveredComponentResources, PRODUCTION_OWNER_FIXTURE_ROOT_V1_23_JS,
+                "vaadin-production-owner-positive-fixture-root-v1_23", true,
+                productionOwnerPositiveFixtureAttributes(true));
+        add(discoveredComponentResources, PRODUCTION_OWNER_FIXTURE_DEPENDENCY_V1_23_JS,
+                "vaadin-production-owner-positive-fixture-dependency-v1_23", true,
+                productionOwnerPositiveFixtureAttributes(false));
         add(discoveredComponentResources, DEV_BUNDLE_GENERATED_FLOW_IMPORTS_JS,
                 "vaadin-dev-bundle-generated-flow-imports-chunk", true,
                 generatedLazyDevBundleChunkAttributes(DEV_BUNDLE_GENERATED_FLOW_IMPORTS_JS,
@@ -809,6 +829,21 @@ final class FlowClientResources {
         manifest.put("generatedLazyChunkFileFixtureTriggerOwner", GENERATED_LAZY_CHUNK_FILE_FIXTURE_TRIGGER_OWNER);
         manifest.put("generatedLazyChunkFileFixtureExpectedSideEffect",
                 GENERATED_LAZY_CHUNK_FILE_FIXTURE_SIDE_EFFECT);
+        manifest.put("productionBundleRuntimeOwnerPositiveFixtureVersion",
+                PRODUCTION_OWNER_POSITIVE_FIXTURE_VERSION);
+        manifest.put("productionBundleRuntimeOwnerPositiveFixtureSource",
+                PRODUCTION_OWNER_POSITIVE_FIXTURE_SOURCE);
+        manifest.put("productionBundleRuntimeOwnerPositiveFixtureRootArtifact",
+                PRODUCTION_OWNER_FIXTURE_ROOT_V1_23_JS);
+        manifest.put("productionBundleRuntimeOwnerPositiveFixtureDependencyArtifact",
+                PRODUCTION_OWNER_FIXTURE_DEPENDENCY_V1_23_JS);
+        manifest.put("productionBundleRuntimeOwnerPositiveFixtureExpectedTags",
+                PRODUCTION_OWNER_POSITIVE_FIXTURE_EXPECTED_TAGS);
+        manifest.put("productionBundleRuntimeOwnerPositiveFixtureExpectedGlobals",
+                PRODUCTION_OWNER_POSITIVE_FIXTURE_EXPECTED_GLOBALS);
+        manifest.put("productionBundleRuntimeOwnerPositiveFixtureExecutionPolicy",
+                PRODUCTION_OWNER_POSITIVE_FIXTURE_EXECUTION_POLICY);
+        manifest.put("productionBundleRuntimeOwnerPositiveFixtureNoBlobFallback", true);
         manifest.put("runtimeResolverContractVersion", RUNTIME_RESOLVER_CONTRACT_VERSION);
         manifest.putAll(frontendResourceLoaderAttributes());
         manifest.putAll(frontendResolverContractAttributes());
@@ -1637,6 +1672,152 @@ final class FlowClientResources {
             attributes.put("loadOnDemandChunkFileBytes", chunkBody.length);
             attributes.put("loadOnDemandChunkFileSha256", Resource.sha256(chunkBody));
             attributes.put("loadOnDemandChunkFileSideEffectProof", "chunk-file-body-available-for-staged-import");
+        }
+        return attributes;
+    }
+
+    private static Map<String, Object> productionOwnerPositiveFixtureAttributes(boolean rootArtifact) {
+        String path = rootArtifact
+                ? PRODUCTION_OWNER_FIXTURE_ROOT_V1_23_JS
+                : PRODUCTION_OWNER_FIXTURE_DEPENDENCY_V1_23_JS;
+        String dependencyPath = rootArtifact
+                ? "production-owner-positive-fixture"
+                : PRODUCTION_OWNER_FIXTURE_ROOT_V1_23_JS;
+        Map<String, Object> attributes = new LinkedHashMap<>();
+        attributes.put("componentFrontendResource", true);
+        attributes.put("productionBundleResource", true);
+        attributes.put("productionOwnerPositiveFixture", true);
+        attributes.put("productionBundleRuntimeOwnerPositiveFixture", true);
+        attributes.put("productionBundleRuntimeOwnerPositiveFixtureRole", rootArtifact ? "root" : "dependency");
+        attributes.put("productionBundleRuntimeOwnerPositiveFixtureVersion",
+                PRODUCTION_OWNER_POSITIVE_FIXTURE_VERSION);
+        attributes.put("productionBundleRuntimeOwnerPositiveFixtureSource",
+                PRODUCTION_OWNER_POSITIVE_FIXTURE_SOURCE);
+        attributes.put("productionBundleRuntimeOwnerPositiveFixtureRootArtifact",
+                PRODUCTION_OWNER_FIXTURE_ROOT_V1_23_JS);
+        attributes.put("productionBundleRuntimeOwnerPositiveFixtureDependencyArtifact",
+                PRODUCTION_OWNER_FIXTURE_DEPENDENCY_V1_23_JS);
+        attributes.put("productionBundleRuntimeOwnerPositiveFixtureExpectedTags",
+                PRODUCTION_OWNER_POSITIVE_FIXTURE_EXPECTED_TAGS);
+        attributes.put("productionBundleRuntimeOwnerPositiveFixtureExpectedGlobals",
+                PRODUCTION_OWNER_POSITIVE_FIXTURE_EXPECTED_GLOBALS);
+        attributes.put("productionBundleRuntimeOwnerPositiveFixtureExecutionPolicy",
+                PRODUCTION_OWNER_POSITIVE_FIXTURE_EXECUTION_POLICY);
+        attributes.put("productionBundleRuntimeOwnerPositiveFixtureNoBlobFallback", true);
+        attributes.put("moduleSpecifier", path);
+        attributes.put("resolver", "repository-production-owner-positive-fixture-v1_23");
+        attributes.put("shim", false);
+        attributes.put("artifactFamily", "production-bundle");
+        attributes.put("origin", "repository-production-owner-fixture");
+        attributes.put("resourceOrigin", rootArtifact
+                ? "repository-production-owner-positive-fixture-root"
+                : "repository-production-owner-positive-fixture-dependency");
+        attributes.put("dependencyOf", dependencyPath);
+        attributes.put("executionPolicy", rootArtifact
+                ? PRODUCTION_OWNER_POSITIVE_FIXTURE_EXECUTION_POLICY
+                : "owner-positive-fixture-dependency-v1_23");
+        attributes.put("artifactStatus", "available");
+        attributes.put("requestedBy", "component-frontend-manifest-v1_23");
+        attributes.put("failureClassification", rootArtifact
+                ? "production-owner-positive-fixture-root-v1_23"
+                : "production-owner-positive-fixture-dependency-v1_23");
+        attributes.put("blockedReason",
+                "Repository production owner fixture proves the custom-scheme owner runtime positive path without claiming real Vaadin production bundle parity");
+        attributes.put("lookupKind", rootArtifact
+                ? "Production-owner-positive-fixture-root-v1_23"
+                : "Production-owner-positive-fixture-dependency-v1_23");
+        attributes.put("productionBundleRuntimeOwnerVersion", PRODUCTION_RUNTIME_OWNER_VERSION);
+        attributes.put("productionBundleRuntimeOwner", PRODUCTION_RUNTIME_OWNER);
+        attributes.put("productionBundleRuntimeEntryArtifact", PRODUCTION_OWNER_FIXTURE_ROOT_V1_23_JS);
+        attributes.put("productionBundleRuntimeOwnerImportArtifact", PRODUCTION_OWNER_FIXTURE_ROOT_V1_23_JS);
+        attributes.put("productionBundleRuntimeOwnerImportVersion", PRODUCTION_RUNTIME_OWNER_IMPORT_VERSION);
+        attributes.put("productionBundleRuntimeOwnerImportPolicy",
+                "owner-first-positive-fixture-import-v1_23");
+        attributes.put("productionBundleRuntimeOwnerImportPhase", "before-component-imports");
+        attributes.put("productionBundleRuntimeOwnerImportPhaseCandidates",
+                PRODUCTION_RUNTIME_OWNER_IMPORT_PHASE_CANDIDATES);
+        attributes.put("productionBundleRuntimeOwnerImportExpectedSideEffects",
+                PRODUCTION_OWNER_POSITIVE_FIXTURE_EXPECTED_GLOBALS
+                        + ",customElements:" + PRODUCTION_OWNER_POSITIVE_FIXTURE_EXPECTED_TAGS);
+        attributes.put("productionBundleRuntimeOwnerImportAcceptableFailures",
+                "production-owner-positive-fixture-browser-import-failed,production-owner-positive-fixture-side-effect-missing");
+        attributes.put("productionBundleRuntimeOwnerImportRewriteStrategy",
+                "custom-scheme-owner-positive-fixture-relative-import-rewrite-v1_23");
+        attributes.put("productionBundleRuntimeOwnerResourceLoaderVersion",
+                PRODUCTION_RUNTIME_OWNER_RESOURCE_LOADER_VERSION);
+        attributes.put("productionBundleRuntimeOwnerResourceLoaderMode",
+                PRODUCTION_RUNTIME_OWNER_RESOURCE_LOADER_MODE);
+        attributes.put("productionBundleRuntimeOwnerResourceScheme",
+                PRODUCTION_RUNTIME_OWNER_RESOURCE_SCHEME);
+        attributes.put("productionBundleRuntimeOwnerResourceGraphMode",
+                "positive-fixture-root-and-dependency-v1_23");
+        attributes.put("productionBundleRuntimeOwnerResourceBasePolicy",
+                PRODUCTION_RUNTIME_OWNER_RESOURCE_BASE_POLICY);
+        attributes.put("productionBundleRuntimeOwnerResourceLoaderNamespace",
+                PRODUCTION_RUNTIME_OWNER_RESOURCE_LOADER_NAMESPACE);
+        attributes.put("productionBundleRuntimeOwnerResourceLoaderRootArtifact",
+                PRODUCTION_OWNER_FIXTURE_ROOT_V1_23_JS);
+        attributes.put("productionBundleRuntimeOwnerResourceLoaderArtifact", path);
+        attributes.put("productionBundleRuntimeOwnerResourceLoaderArtifactRole",
+                rootArtifact ? "positive-fixture-root" : "positive-fixture-dependency");
+        attributes.put("productionBundleRuntimeOwnerBlobFallbackAllowed", false);
+        attributes.put("productionBundleRuntimeOwnerResourceLoaderNoLocalhost", true);
+        attributes.put("productionBundleRuntimeOwnerResourceLoaderRelativeImportBase", path);
+        attributes.put("productionBundleRuntimeOwnerResourceLoaderStageUrlPolicy",
+                "host-owned-custom-scheme-stable-source-path-v1_23");
+        attributes.put("productionBundleRuntimeOwnerResourceLoaderCleanupPolicy",
+                "cleanup-owned-window-lifetime-file-backed-production-owner-v1_23");
+        attributes.put("productionBundleRuntimeOwnerResourceLoaderExpectedArtifacts",
+                PRODUCTION_OWNER_FIXTURE_ROOT_V1_23_JS + "," + PRODUCTION_OWNER_FIXTURE_DEPENDENCY_V1_23_JS);
+        attributes.put("productionBundleRuntimeOwnerSideEffectVersion",
+                PRODUCTION_RUNTIME_OWNER_SIDE_EFFECT_VERSION);
+        attributes.put("productionBundleRuntimeOwnerSideEffectPolicy",
+                "positive-fixture-owner-side-effect-contract-v1_23");
+        attributes.put("productionBundleRuntimeOwnerSideEffectExpectedTags",
+                PRODUCTION_OWNER_POSITIVE_FIXTURE_EXPECTED_TAGS);
+        attributes.put("productionBundleRuntimeOwnerSideEffectExpectedGlobals",
+                PRODUCTION_OWNER_POSITIVE_FIXTURE_EXPECTED_GLOBALS);
+        attributes.put("productionBundleRuntimeOwnerSideEffectAcceptableFailures",
+                "production-owner-positive-fixture-side-effect-missing,production-owner-positive-fixture-browser-import-failed");
+        attributes.put("productionBundleRuntimeOwnerSideEffectNoBlobFallback", true);
+        attributes.put("productionBundleRuntimeOwnerModuleImported", false);
+        attributes.put("productionBundleRuntimeOwnerSideEffectSatisfied", false);
+        attributes.put("productionBundleRuntimeOwnerSideEffectFailureLayer",
+                "pending-production-owner-positive-fixture-import-v1_23");
+        attributes.put("productionBundleRuntimeOwnerOwnedRuntimeVersion",
+                PRODUCTION_RUNTIME_OWNER_OWNED_RUNTIME_VERSION);
+        attributes.put("productionBundleRuntimeOwnerOwnedRuntimePolicy",
+                "owner-first-positive-fixture-runtime-reuse-v1_23");
+        attributes.put("productionBundleRuntimeOwnerOwnedRuntimePhase", "before-component-imports");
+        attributes.put("productionBundleRuntimeOwnerOwnedRuntimeExpectedTags",
+                PRODUCTION_OWNER_POSITIVE_FIXTURE_EXPECTED_TAGS);
+        attributes.put("productionBundleRuntimeOwnerOwnedRuntimeExpectedGlobals",
+                PRODUCTION_OWNER_POSITIVE_FIXTURE_EXPECTED_GLOBALS);
+        attributes.put("productionBundleRuntimeOwnerOwnedRuntimeNoBlobFallback", true);
+        attributes.put("productionBundleRuntimeOwnerOwnedRuntimeAttempted", false);
+        attributes.put("productionBundleRuntimeOwnerOwnedRuntimeSatisfied", false);
+        attributes.put("productionBundleRuntimeOwnerOwnedRuntimeFailureLayer",
+                "pending-production-owner-positive-fixture-runtime-v1_23");
+        attributes.put("componentProductionOwnerReuseDecisionVersion",
+                COMPONENT_PRODUCTION_OWNER_REUSE_DECISION_VERSION);
+        attributes.put("componentProductionOwnerReuseDecisionSource",
+                "production-owner-positive-fixture-v1_23");
+        attributes.put("componentProductionOwnerReuseDecision",
+                "pending-production-owner-positive-fixture");
+        attributes.put("componentProductionOwnerReuseDecisionReason",
+                "positive fixture must import through owner custom scheme before reuse can be counted");
+        attributes.put("componentProductionOwnerReuseDecisionTags",
+                PRODUCTION_OWNER_POSITIVE_FIXTURE_EXPECTED_TAGS);
+        attributes.put("componentProductionOwnerReusePolicyVersionV1_20",
+                COMPONENT_PRODUCTION_OWNER_REUSE_POLICY_VERSION_V1_20);
+        attributes.put("componentProductionOwnerReusePolicyV1_20",
+                COMPONENT_PRODUCTION_OWNER_REUSE_POLICY_V1_20);
+        attributes.put("componentProductionOwnerReuseDecisionPhase", "before-component-imports");
+        if (!rootArtifact) {
+            byte[] dependencyBody = classpathResourceBytes(PRODUCTION_OWNER_FIXTURE_DEPENDENCY_V1_23_JS);
+            attributes.put("productionBundleRuntimeOwnerPositiveFixtureDependencyBytes", dependencyBody.length);
+            attributes.put("productionBundleRuntimeOwnerPositiveFixtureDependencySha256",
+                    Resource.sha256(dependencyBody));
         }
         return attributes;
     }

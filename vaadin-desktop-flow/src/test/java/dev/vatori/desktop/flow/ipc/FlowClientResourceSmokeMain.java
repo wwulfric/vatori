@@ -274,6 +274,8 @@ public final class FlowClientResourceSmokeMain {
                 "Generated/lazy loadOnDemand chunk-file status");
         requireEquals("chunk-file-not-generated", componentManifest.get("loadOnDemandChunkFileFailureLayer"),
                 "Generated/lazy loadOnDemand chunk-file failure layer");
+        requireProductionOwnerPositiveFixtureMetadata(componentManifest,
+                "Component frontend manifest production owner positive fixture");
         requireEquals("flow-ipc-lazy-dependency-v1_10",
                 componentManifest.get("flowLazyDependencyVersion"),
                 "Flow lazy dependency version");
@@ -360,6 +362,10 @@ public final class FlowClientResourceSmokeMain {
         String generatedFlowImportsV122Path = "META-INF/vatori/generated/flow/generated-flow-imports-v1_22.js";
         String generatedFlowImportsChunkV122Path =
                 "META-INF/vatori/generated/flow/chunks/chunk-v1_22.js";
+        String productionOwnerFixtureRootV123Path =
+                "META-INF/vatori/production-owner/owner-runtime-v1_23.js";
+        String productionOwnerFixtureDependencyV123Path =
+                "META-INF/vatori/production-owner/owner-dependency-v1_23.js";
         String generatedFlowImportsDevBundlePath =
                 "vaadin-dev-bundle/webapp/VAADIN/build/generated-flow-imports-VW7hRaNw.js";
         String generatedFlowImportsMarkdownHelperPath =
@@ -836,6 +842,65 @@ public final class FlowClientResourceSmokeMain {
                 || !generatedFlowImportsChunkV122Text.contains("flow-ipc-loadondemand-chunk-file-execution-v1_22")) {
             throw new IllegalStateException("Generated Flow imports v1.22 chunk body is missing side-effect probe");
         }
+        if (!resources.contains(productionOwnerFixtureRootV123Path)) {
+            throw new IllegalStateException("Component frontend manifest is missing the v1.23 production owner fixture root");
+        }
+        Map<String, Object> productionOwnerFixtureRootV123Response =
+                resources.response(productionOwnerFixtureRootV123Path);
+        requireProductionOwnerPositiveFixtureMetadata(productionOwnerFixtureRootV123Response,
+                "Production owner positive fixture root");
+        if (!Objects.equals(productionOwnerFixtureRootV123Response.get("lookupKind"),
+                "Production-owner-positive-fixture-root-v1_23")
+                || !Objects.equals(productionOwnerFixtureRootV123Response.get("productionBundleRuntimeOwnerPositiveFixtureRole"),
+                        "root")
+                || !Objects.equals(productionOwnerFixtureRootV123Response.get("executionPolicy"),
+                        "owner-first-custom-scheme-positive-fixture-v1_23")
+                || !Objects.equals(productionOwnerFixtureRootV123Response.get("dependencyOf"),
+                        "production-owner-positive-fixture")
+                || !Objects.equals(productionOwnerFixtureRootV123Response.get("productionBundleRuntimeOwnerResourceLoaderArtifactRole"),
+                        "positive-fixture-root")
+                || !Boolean.FALSE.equals(productionOwnerFixtureRootV123Response.get("shim"))) {
+            throw new IllegalStateException("Production owner positive fixture root is missing v1.23 metadata");
+        }
+        Object productionOwnerFixtureRootBody = productionOwnerFixtureRootV123Response.get("body");
+        if (!(productionOwnerFixtureRootBody instanceof String productionOwnerFixtureRootText)
+                || !productionOwnerFixtureRootText.contains("./owner-dependency-v1_23.js")
+                || !productionOwnerFixtureRootText.contains("VaadinDesktopProductionOwnerV123")
+                || !productionOwnerFixtureRootText.contains("vatori-production-owner-fixture")) {
+            throw new IllegalStateException("Production owner positive fixture root body is missing side-effect probe");
+        }
+        if (!resources.contains(productionOwnerFixtureDependencyV123Path)) {
+            throw new IllegalStateException("Component frontend manifest is missing the v1.23 production owner fixture dependency");
+        }
+        Map<String, Object> productionOwnerFixtureDependencyV123Response =
+                resources.response(productionOwnerFixtureDependencyV123Path);
+        requireProductionOwnerPositiveFixtureMetadata(productionOwnerFixtureDependencyV123Response,
+                "Production owner positive fixture dependency");
+        if (!Objects.equals(productionOwnerFixtureDependencyV123Response.get("lookupKind"),
+                "Production-owner-positive-fixture-dependency-v1_23")
+                || !Objects.equals(productionOwnerFixtureDependencyV123Response.get("productionBundleRuntimeOwnerPositiveFixtureRole"),
+                        "dependency")
+                || !Objects.equals(productionOwnerFixtureDependencyV123Response.get("executionPolicy"),
+                        "owner-positive-fixture-dependency-v1_23")
+                || !Objects.equals(productionOwnerFixtureDependencyV123Response.get("dependencyOf"),
+                        productionOwnerFixtureRootV123Path)
+                || !Objects.equals(productionOwnerFixtureDependencyV123Response.get("productionBundleRuntimeOwnerResourceLoaderArtifactRole"),
+                        "positive-fixture-dependency")
+                || !(productionOwnerFixtureDependencyV123Response.get("productionBundleRuntimeOwnerPositiveFixtureDependencyBytes")
+                        instanceof Integer fixtureDependencyBytes
+                        && fixtureDependencyBytes > 0)
+                || !(productionOwnerFixtureDependencyV123Response.get("productionBundleRuntimeOwnerPositiveFixtureDependencySha256")
+                        instanceof String fixtureDependencySha256
+                        && !fixtureDependencySha256.isBlank())
+                || !Boolean.FALSE.equals(productionOwnerFixtureDependencyV123Response.get("shim"))) {
+            throw new IllegalStateException("Production owner positive fixture dependency is missing v1.23 metadata");
+        }
+        Object productionOwnerFixtureDependencyBody = productionOwnerFixtureDependencyV123Response.get("body");
+        if (!(productionOwnerFixtureDependencyBody instanceof String productionOwnerFixtureDependencyText)
+                || !productionOwnerFixtureDependencyText.contains("VaadinDesktopProductionOwnerDependencyV123")
+                || !productionOwnerFixtureDependencyText.contains("flow-ipc-production-owner-positive-runtime-v1_23")) {
+            throw new IllegalStateException("Production owner positive fixture dependency body is missing side-effect probe");
+        }
         if (!resources.contains(generatedFlowImportsDevBundlePath)) {
             throw new IllegalStateException("Component frontend manifest is missing the dev-bundle generated Flow imports chunk");
         }
@@ -1234,6 +1299,96 @@ public final class FlowClientResourceSmokeMain {
         requireEquals("before-component-imports",
                 metadata.get("componentProductionOwnerReuseDecisionPhase"),
                 label + " component reuse decision phase");
+    }
+
+    private static void requireProductionOwnerPositiveFixtureMetadata(Map<String, Object> metadata, String label) {
+        boolean fixtureResource = Boolean.TRUE.equals(metadata.get("productionBundleRuntimeOwnerPositiveFixture"));
+        requireEquals("flow-ipc-production-owner-positive-runtime-v1_23",
+                metadata.get("productionBundleRuntimeOwnerPositiveFixtureVersion"),
+                label + " version");
+        requireEquals("repository-production-owner-positive-fixture-v1_23",
+                metadata.get("productionBundleRuntimeOwnerPositiveFixtureSource"),
+                label + " source");
+        requireEquals("META-INF/vatori/production-owner/owner-runtime-v1_23.js",
+                metadata.get("productionBundleRuntimeOwnerPositiveFixtureRootArtifact"),
+                label + " root artifact");
+        requireEquals("META-INF/vatori/production-owner/owner-dependency-v1_23.js",
+                metadata.get("productionBundleRuntimeOwnerPositiveFixtureDependencyArtifact"),
+                label + " dependency artifact");
+        requireEquals("vatori-production-owner-fixture",
+                metadata.get("productionBundleRuntimeOwnerPositiveFixtureExpectedTags"),
+                label + " expected tags");
+        requireEquals("window.VaadinDesktopProductionOwnerV123",
+                metadata.get("productionBundleRuntimeOwnerPositiveFixtureExpectedGlobals"),
+                label + " expected globals");
+        requireEquals("owner-first-custom-scheme-positive-fixture-v1_23",
+                metadata.get("productionBundleRuntimeOwnerPositiveFixtureExecutionPolicy"),
+                label + " execution policy");
+        requireEquals(Boolean.TRUE,
+                metadata.get("productionBundleRuntimeOwnerPositiveFixtureNoBlobFallback"),
+                label + " no-blob fallback");
+        if (!fixtureResource) {
+            return;
+        }
+        requireEquals(Boolean.TRUE,
+                metadata.get("productionBundleRuntimeOwnerPositiveFixture"),
+                label + " fixture flag");
+        requireEquals("production-bundle", metadata.get("artifactFamily"),
+                label + " artifact family");
+        requireEquals("repository-production-owner-positive-fixture-v1_23",
+                metadata.get("resolver"),
+                label + " resolver");
+        requireEquals("flow-ipc-production-owner-resource-loader-v1_18",
+                metadata.get("productionBundleRuntimeOwnerResourceLoaderVersion"),
+                label + " resource loader version");
+        requireEquals("custom-scheme-file-backed",
+                metadata.get("productionBundleRuntimeOwnerResourceLoaderMode"),
+                label + " resource loader mode");
+        requireEquals("vatori-resource",
+                metadata.get("productionBundleRuntimeOwnerResourceScheme"),
+                label + " resource scheme");
+        requireEquals("positive-fixture-root-and-dependency-v1_23",
+                metadata.get("productionBundleRuntimeOwnerResourceGraphMode"),
+                label + " resource graph mode");
+        requireEquals("production-owner",
+                metadata.get("productionBundleRuntimeOwnerResourceLoaderNamespace"),
+                label + " resource loader namespace");
+        requireEquals("META-INF/vatori/production-owner/owner-runtime-v1_23.js",
+                metadata.get("productionBundleRuntimeOwnerResourceLoaderRootArtifact"),
+                label + " resource loader root artifact");
+        requireEquals(Boolean.FALSE,
+                metadata.get("productionBundleRuntimeOwnerBlobFallbackAllowed"),
+                label + " blob fallback");
+        requireEquals(Boolean.TRUE,
+                metadata.get("productionBundleRuntimeOwnerResourceLoaderNoLocalhost"),
+                label + " no-localhost");
+        requireEquals("host-owned-custom-scheme-stable-source-path-v1_23",
+                metadata.get("productionBundleRuntimeOwnerResourceLoaderStageUrlPolicy"),
+                label + " stage URL policy");
+        requireStringContains(metadata.get("productionBundleRuntimeOwnerResourceLoaderExpectedArtifacts"),
+                "owner-runtime-v1_23.js",
+                label + " expected artifacts");
+        requireStringContains(metadata.get("productionBundleRuntimeOwnerResourceLoaderExpectedArtifacts"),
+                "owner-dependency-v1_23.js",
+                label + " expected artifacts");
+        requireEquals("positive-fixture-owner-side-effect-contract-v1_23",
+                metadata.get("productionBundleRuntimeOwnerSideEffectPolicy"),
+                label + " side-effect policy");
+        requireEquals("vatori-production-owner-fixture",
+                metadata.get("productionBundleRuntimeOwnerSideEffectExpectedTags"),
+                label + " side-effect expected tags");
+        requireEquals("window.VaadinDesktopProductionOwnerV123",
+                metadata.get("productionBundleRuntimeOwnerSideEffectExpectedGlobals"),
+                label + " side-effect expected globals");
+        requireEquals("owner-first-positive-fixture-runtime-reuse-v1_23",
+                metadata.get("productionBundleRuntimeOwnerOwnedRuntimePolicy"),
+                label + " owner-owned policy");
+        requireEquals("vatori-production-owner-fixture",
+                metadata.get("productionBundleRuntimeOwnerOwnedRuntimeExpectedTags"),
+                label + " owner-owned expected tags");
+        requireEquals("window.VaadinDesktopProductionOwnerV123",
+                metadata.get("productionBundleRuntimeOwnerOwnedRuntimeExpectedGlobals"),
+                label + " owner-owned expected globals");
     }
 
     private static void requireEquals(Object expected, Object actual, String label) {

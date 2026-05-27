@@ -300,6 +300,20 @@ final class FlowClientResources {
             "production-owner-custom-scheme-missing-real-artifact,production-owner-custom-scheme-duplicate-custom-element,production-owner-custom-scheme-runtime-side-effect-blocked,production-owner-custom-scheme-browser-import-failed";
     private static final String PRODUCTION_RUNTIME_OWNER_RESOURCE_LOADER_NAMESPACE =
             "production-owner";
+    private static final String PRODUCTION_RUNTIME_OWNER_SIDE_EFFECT_VERSION =
+            "flow-ipc-production-owner-side-effect-v1_19";
+    private static final String PRODUCTION_RUNTIME_OWNER_SIDE_EFFECT_POLICY =
+            "custom-scheme-owner-import-side-effect-contract-v1_19";
+    private static final String PRODUCTION_RUNTIME_OWNER_SIDE_EFFECT_EXPECTED_TAGS =
+            "vaadin-text-field,vaadin-checkbox,vaadin-select";
+    private static final String PRODUCTION_RUNTIME_OWNER_SIDE_EFFECT_EXPECTED_GLOBALS =
+            "window.Vaadin,window.Vaadin.Flow,window.Vaadin.Flow.loadOnDemand";
+    private static final String PRODUCTION_RUNTIME_OWNER_SIDE_EFFECT_ACCEPTABLE_FAILURES =
+            "production-owner-custom-scheme-runtime-side-effect-blocked,production-owner-custom-scheme-duplicate-custom-element,production-owner-custom-scheme-browser-import-failed,production-owner-custom-scheme-missing-real-artifact,production-owner-custom-scheme-unsupported-vaadin-contract";
+    private static final String COMPONENT_PRODUCTION_OWNER_REUSE_DECISION_VERSION =
+            "flow-ipc-component-owner-reuse-decision-v1_19";
+    private static final String COMPONENT_PRODUCTION_OWNER_REUSE_DECISION_SOURCE =
+            "production-owner-custom-scheme-side-effect-v1_19";
     private static final List<String> PRODUCTION_RUNTIME_OWNER_DEPENDENCY_ARTIFACTS = List.of(
             DEV_BUNDLE_COMMONJS_JS,
             DEV_BUNDLE_INDEX_HTML_JS,
@@ -1266,6 +1280,7 @@ final class FlowClientResources {
         attributes.put("componentProductionOwnerImportOrder",
                 "owner-first-or-component-focused-fallback-v1_16");
         putProductionOwnerResourceLoaderAttributes(attributes, DEV_BUNDLE_INDEX_HTML_JS, true);
+        putProductionOwnerSideEffectAttributes(attributes);
         return attributes;
     }
 
@@ -1291,6 +1306,7 @@ final class FlowClientResources {
         attributes.put("productionOwnerDependencyResource", true);
         putProductionOwnerDependencyResolverAttributes(attributes, path);
         putProductionOwnerResourceLoaderAttributes(attributes, path, false);
+        putProductionOwnerSideEffectAttributes(attributes);
         return attributes;
     }
 
@@ -1347,6 +1363,34 @@ final class FlowClientResources {
                 "host-owned-custom-scheme-stable-source-path-v1_18");
         attributes.put("productionBundleRuntimeOwnerResourceLoaderCleanupPolicy",
                 "cleanup-owned-window-lifetime-file-backed-production-owner-v1_18");
+    }
+
+    private static void putProductionOwnerSideEffectAttributes(Map<String, Object> attributes) {
+        attributes.put("productionBundleRuntimeOwnerSideEffectVersion",
+                PRODUCTION_RUNTIME_OWNER_SIDE_EFFECT_VERSION);
+        attributes.put("productionBundleRuntimeOwnerSideEffectPolicy",
+                PRODUCTION_RUNTIME_OWNER_SIDE_EFFECT_POLICY);
+        attributes.put("productionBundleRuntimeOwnerSideEffectExpectedTags",
+                PRODUCTION_RUNTIME_OWNER_SIDE_EFFECT_EXPECTED_TAGS);
+        attributes.put("productionBundleRuntimeOwnerSideEffectExpectedGlobals",
+                PRODUCTION_RUNTIME_OWNER_SIDE_EFFECT_EXPECTED_GLOBALS);
+        attributes.put("productionBundleRuntimeOwnerSideEffectAcceptableFailures",
+                PRODUCTION_RUNTIME_OWNER_SIDE_EFFECT_ACCEPTABLE_FAILURES);
+        attributes.put("productionBundleRuntimeOwnerSideEffectNoBlobFallback", true);
+        attributes.put("productionBundleRuntimeOwnerModuleImported", false);
+        attributes.put("productionBundleRuntimeOwnerSideEffectSatisfied", false);
+        attributes.put("productionBundleRuntimeOwnerSideEffectFailureLayer",
+                "pending-custom-scheme-owner-import-side-effect-check-v1_19");
+        attributes.put("componentProductionOwnerReuseDecisionVersion",
+                COMPONENT_PRODUCTION_OWNER_REUSE_DECISION_VERSION);
+        attributes.put("componentProductionOwnerReuseDecisionSource",
+                COMPONENT_PRODUCTION_OWNER_REUSE_DECISION_SOURCE);
+        attributes.put("componentProductionOwnerReuseDecision",
+                "pending-runtime-side-effect-check");
+        attributes.put("componentProductionOwnerReuseDecisionReason",
+                "production owner custom-scheme import side effects must be checked before focused component resolver can reuse owner-owned tags");
+        attributes.put("componentProductionOwnerReuseDecisionTags",
+                PRODUCTION_RUNTIME_OWNER_SIDE_EFFECT_EXPECTED_TAGS);
     }
 
     private static Map<String, Object> flowLazyDependencyAttributes() {

@@ -342,6 +342,8 @@ public final class FlowClientResourceSmokeMain {
                 "Component owner reuse acceptable failures");
         requireProductionOwnerResourceLoaderMetadata(componentManifest, true,
                 "Component frontend manifest production owner resource loader");
+        requireProductionOwnerSideEffectMetadata(componentManifest,
+                "Component frontend manifest production owner side-effect");
         requireComponentResourceMetadata(componentResources);
         String checkboxDevBundlePath = "META-INF/vatori/dev-bundle-entry/vaadin-checkbox.js";
         String selectDevBundlePath = "META-INF/vatori/dev-bundle-entry/vaadin-select.js";
@@ -580,6 +582,8 @@ public final class FlowClientResourceSmokeMain {
         }
         requireProductionOwnerResourceLoaderMetadata(productionBundleStatsResponse, true,
                 "Production bundle stats owner resource loader");
+        requireProductionOwnerSideEffectMetadata(productionBundleStatsResponse,
+                "Production bundle stats owner side-effect");
         requireStringContains(
                 productionBundleStatsResponse.get("productionBundleRuntimeOwnerDependencyResolverExpectedArtifacts"),
                 "copilot-log-plugin-h3VQq9-2-BlujgixT.js",
@@ -657,6 +661,8 @@ public final class FlowClientResourceSmokeMain {
         }
         requireProductionOwnerResourceLoaderMetadata(productionRuntimeResponse, true,
                 "Production runtime owner resource loader");
+        requireProductionOwnerSideEffectMetadata(productionRuntimeResponse,
+                "Production runtime owner side-effect");
         requireStringContains(
                 productionRuntimeResponse.get("productionBundleRuntimeOwnerDependencyResolverExpectedArtifacts"),
                 "FlowClient-RTzSA_ve.js",
@@ -683,6 +689,8 @@ public final class FlowClientResourceSmokeMain {
         }
         requireProductionOwnerResourceLoaderMetadata(ownerDependencyResponse, false,
                 "Production owner dependency resource loader");
+        requireProductionOwnerSideEffectMetadata(ownerDependencyResponse,
+                "Production owner dependency side-effect");
         if (!resources.contains(checkboxDevBundlePath)) {
             throw new IllegalStateException("Component frontend manifest is missing the checkbox dev-bundle module");
         }
@@ -1038,6 +1046,39 @@ public final class FlowClientResourceSmokeMain {
         requireStringContains(metadata.get("productionBundleRuntimeOwnerResourceLoaderExpectedArtifacts"),
                 "copilot-log-plugin-h3VQq9-2-BlujgixT.js",
                 label + " expected artifacts");
+    }
+
+    private static void requireProductionOwnerSideEffectMetadata(Map<String, Object> metadata, String label) {
+        requireEquals("flow-ipc-production-owner-side-effect-v1_19",
+                metadata.get("productionBundleRuntimeOwnerSideEffectVersion"),
+                label + " version");
+        requireEquals("custom-scheme-owner-import-side-effect-contract-v1_19",
+                metadata.get("productionBundleRuntimeOwnerSideEffectPolicy"),
+                label + " policy");
+        requireEquals("vaadin-text-field,vaadin-checkbox,vaadin-select",
+                metadata.get("productionBundleRuntimeOwnerSideEffectExpectedTags"),
+                label + " expected tags");
+        requireEquals("window.Vaadin,window.Vaadin.Flow,window.Vaadin.Flow.loadOnDemand",
+                metadata.get("productionBundleRuntimeOwnerSideEffectExpectedGlobals"),
+                label + " expected globals");
+        requireStringContains(metadata.get("productionBundleRuntimeOwnerSideEffectAcceptableFailures"),
+                "production-owner-custom-scheme-runtime-side-effect-blocked",
+                label + " acceptable failures");
+        requireEquals(Boolean.TRUE,
+                metadata.get("productionBundleRuntimeOwnerSideEffectNoBlobFallback"),
+                label + " no-blob fallback flag");
+        requireEquals("flow-ipc-component-owner-reuse-decision-v1_19",
+                metadata.get("componentProductionOwnerReuseDecisionVersion"),
+                label + " component reuse decision version");
+        requireEquals("production-owner-custom-scheme-side-effect-v1_19",
+                metadata.get("componentProductionOwnerReuseDecisionSource"),
+                label + " component reuse decision source");
+        requireEquals("pending-runtime-side-effect-check",
+                metadata.get("componentProductionOwnerReuseDecision"),
+                label + " component reuse decision");
+        requireStringContains(metadata.get("componentProductionOwnerReuseDecisionTags"),
+                "vaadin-text-field",
+                label + " component reuse decision tags");
     }
 
     private static void requireEquals(Object expected, Object actual, String label) {

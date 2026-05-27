@@ -24,10 +24,11 @@ v0/v1 runtime 切片走向可产品化桌面框架的最终完成状态。
 - `docs/goal-1_16.md`：Production Owner Import Ordering and Component Reuse，已完成。
 - `docs/goal-1_17.md`：Host-Owned Frontend Resource Scheme，已完成。
 - `docs/goal-1_18.md`：Production Owner Custom-Scheme Resource Graph，已完成。
+- `docs/goal-1_19.md`：Production Owner Side-Effect and Reuse Decision，已完成。
 
-当前已完成到 `docs/goal-1_18.md`。建议下一个阶段继续从 production owner
-custom-scheme graph 往真实 owner import / side-effect execution、generated chunk-file
-execution 或 dev-mode/Vite execution 推进，而不是停留在 resource loader 证明层。
+当前已完成到 `docs/goal-1_19.md`。建议下一个阶段继续从 production owner
+side-effect / component reuse decision 往真实 owner-owned runtime path、generated
+chunk-file execution 或 dev-mode/Vite execution 推进，而不是停留在 decision 证明层。
 
 后续阶段应继续以 `docs/goal-1_19.md` 等文件拆分，
 每个阶段只拿走本长期目标中的一个可评审切片。不要把本文件改写成短期任务清单；
@@ -51,7 +52,7 @@ execution 或 dev-mode/Vite execution 推进，而不是停留在 resource loade
 
 ## 当前基线
 
-截至 goal 1.18，仓库已经证明：
+截至 goal 1.19，仓库已经证明：
 
 - `dev-ipc` 可以启动 no-localhost Flow IPC runtime。
 - 真实 macOS Swift/AppKit/WKWebView 窗口可以运行 Flow IPC smoke app 和 framework
@@ -211,6 +212,18 @@ execution 或 dev-mode/Vite execution 推进，而不是停留在 resource loade
   import over custom scheme、component reuse decision 和 custom-scheme graph layer blocker。
   v1.18 不复用 v1.17 Flow lazy dependency 证据作为 owner graph 成功，也不允许 production
   owner root Blob fallback 作为 v1.18 通过条件。
+- v1.19 已把 v1.18 custom-scheme owner graph 继续推进到 side-effect / component reuse
+  decision boundary：Java manifest / resource response 声明
+  `productionBundleRuntimeOwnerSideEffectVersion=flow-ipc-production-owner-side-effect-v1_19`、
+  expected tags/globals、acceptable failures、no-Blob-fallback contract 和
+  `componentProductionOwnerReuseDecisionVersion=flow-ipc-component-owner-reuse-decision-v1_19`；
+  Swift host 区分 `productionBundleRuntimeOwnerModuleImported` 与
+  `productionBundleRuntimeOwnerSideEffectSatisfied`，记录 expected/observed/missing tags、
+  Vaadin globals、side-effect failure layer 和 focused component reuse decision。当前真实
+  trace 的 accepted 形态是 owner custom-scheme import 真实运行，但 side effect 未满足，
+  组件 resolver 明确记录 `focused-fallback-after-owner-side-effect-check`。这不是 production
+  owner import/side-effect success，也不是 full production bundle parity；它避免把 module
+  import resolve 或 focused component fallback 误算为 owner-owned runtime success。
 - 完整 generated/lazy chunk file execution、production owner import/side-effect success
   和 dev-mode/Vite execution 仍是明确 blocker，不计入最终完成。
 
@@ -311,7 +324,7 @@ execution 或 dev-mode/Vite execution 推进，而不是停留在 resource loade
 - 完整 generated/lazy `Flow.loadOnDemand` execution，不再停在 staged generated-flow-imports
   no-op / missing chunk file blocker。
 - Production bundle owner import/side-effect success、chunk side-effect ownership、
-  packaging-time staging，以及把 v1.18 custom-scheme owner graph 从可审计 import attempt
+  packaging-time staging，以及把 v1.19 side-effect / reuse decision 从可审计 fallback
   推进到可复用 owner-owned runtime path。
 - Dev-mode/Vite graph execution 或可靠替代模式。
 - Broader Vaadin component parity，尤其是 Grid/VirtualList、ComboBox、DatePicker、
@@ -337,13 +350,11 @@ execution 或 dev-mode/Vite execution 推进，而不是停留在 resource loade
 
 ## 当前建议的下一阶段
 
-`docs/goal-1_19.md` 应该基于 v1.18 的 production owner custom-scheme graph 证据继续推进，
-不要重复证明 `vatori-resource` handler 是否可用。合理方向是让 owner root import 之后的
-runtime side effect / component reuse 进入可审计闭环：preferred 是 production owner 通过
-custom-scheme URL 成为可复用 owner-owned runtime path，focused TextField / Checkbox / Select
-resolver 能明确复用 owner side effects；acceptable 是 import 已经由 custom-scheme graph 负责，
-但 blocker 被进一步收敛到具体 downstream Vaadin runtime side-effect、custom element registry、
-global initialization 或 unsupported production owner contract 层，并给出下一步工程切口。
+`docs/goal-1_20.md` 应该基于 v1.19 的 production owner side-effect / reuse decision 证据继续推进。
+合理方向是选择一个能让 frontend/resource pipeline 更接近闭环的真实切片：让 production owner
+获得可复用 owner-owned side effects，或让当前 smoke/framework build 产生真实 generated lazy
+chunk file，或接入受支持 Vaadin lazy chunk SPI / dev-mode Vite execution。不要把 v1.19 的
+`focused-fallback-after-owner-side-effect-check` 包装成 owner reuse success。
 
 后续阶段可继续从以下方向选择：
 

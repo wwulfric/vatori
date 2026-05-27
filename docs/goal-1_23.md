@@ -1,12 +1,32 @@
 # Goal 1.23: Production Owner Positive Runtime Fixture Boundary
 
-状态：进行中。
+状态：已完成。
 
 当前进展：
 
 - 已新增 production owner positive fixture root/dependency resource。
 - 已新增 Java manifest / resource response metadata。
 - 已新增 `flow-client-resource-smoke` assertions，并通过本地验证。
+- 已新增 Swift host/WebView v1.23 owner fixture execution path 和 `resourceStage` /
+  `webview.dom` diagnostics。
+- 已新增 `DesktopTraceInspector` v1.23 delta / cumulative gate。
+- 已生成 `docs/traces/flow-ipc-v1_23.ndjson` fixture trace。
+
+完成证据：
+
+- `git diff --check`
+- `bash -n bin/vaadin-desktop`
+- `swiftc -parse vaadin-desktop-host-swift/Sources/VaadinDesktopHost/main.swift`
+- `mvn -q -o -Dmaven.repo.local=/Users/bytedance/IdeaProjects/vatori/.m2/repository -pl vaadin-desktop-devtools -am -DskipTests compile`
+- `bash bin/flow-client-resource-smoke`
+- `bash bin/flow-ipc-trace-inspect --require-flow-ipc-v1_23-production-owner-positive-fixture docs/traces/flow-ipc-v1_23.ndjson`
+- `bash bin/flow-ipc-trace-inspect --require-flow-ipc-v1_23 docs/traces/flow-ipc-v1_23.ndjson`
+- `bash bin/flow-ipc-trace-inspect --require-flow-ipc-v1_22 docs/traces/flow-ipc-v1_22.ndjson`
+- `VAADIN_DESKTOP_MAVEN_OFFLINE=1 VAADIN_DESKTOP_HOST_NO_ACTIVATE=1 ... bash bin/vaadin-desktop dev-ipc test-apps/flow-over-ipc-smoke-app`
+- `bash bin/flow-ipc-trace-inspect --require-flow-ipc-v1_23 .build/vaadin-desktop-host-swift/host.out.log`
+- `VAADIN_DESKTOP_MAVEN_OFFLINE=1 VAADIN_DESKTOP_HOST_NO_ACTIVATE=1 ... bash bin/vaadin-desktop dev-ipc test-apps/flow-over-ipc-framework-app`
+- `bash bin/flow-ipc-trace-inspect --require-flow-ipc-v1_3-framework .build/vaadin-desktop-host-swift/host.out.log`
+- `jps -l` after framework validation showed no lingering Java sidecar.
 
 `docs/goal.md` 是长期愿景和完成度账本。v1.22 已经证明 generated
 `Flow.loadOnDemand` chunk-file table 在真实 chunk 存在时，当前 no-localhost resolver、

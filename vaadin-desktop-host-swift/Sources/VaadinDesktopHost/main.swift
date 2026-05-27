@@ -2039,6 +2039,29 @@ final class WebViewHost: NSObject, NSApplicationDelegate, NSWindowDelegate, WKNa
           generatedLazyChunkFileFixtureFailureLayer: window.VaadinDesktopIpcDiagnostics ? window.VaadinDesktopIpcDiagnostics.generatedLazyChunkFileFixtureFailureLayer : "",
           generatedLazyChunkFileFixtureBrowserError: window.VaadinDesktopIpcDiagnostics ? window.VaadinDesktopIpcDiagnostics.generatedLazyChunkFileFixtureBrowserError : "",
           generatedLazyChunkFileFixtureChunkSha256: window.VaadinDesktopIpcDiagnostics ? window.VaadinDesktopIpcDiagnostics.generatedLazyChunkFileFixtureChunkSha256 : "",
+          productionBundleRuntimeOwnerPositiveFixtureObserved: !!(window.VaadinDesktopIpcDiagnostics && window.VaadinDesktopIpcDiagnostics.productionBundleRuntimeOwnerPositiveFixtureObserved),
+          productionBundleRuntimeOwnerPositiveFixtureStageObserved: !!(window.VaadinDesktopIpcDiagnostics && window.VaadinDesktopIpcDiagnostics.productionBundleRuntimeOwnerPositiveFixtureStageObserved),
+          productionBundleRuntimeOwnerPositiveFixtureImported: !!(window.VaadinDesktopIpcDiagnostics && window.VaadinDesktopIpcDiagnostics.productionBundleRuntimeOwnerPositiveFixtureImported),
+          productionBundleRuntimeOwnerPositiveFixtureSideEffectSatisfied: !!(window.VaadinDesktopIpcDiagnostics && window.VaadinDesktopIpcDiagnostics.productionBundleRuntimeOwnerPositiveFixtureSideEffectSatisfied),
+          productionBundleRuntimeOwnerPositiveFixtureOwnerOwnedRuntimeSatisfied: !!(window.VaadinDesktopIpcDiagnostics && window.VaadinDesktopIpcDiagnostics.productionBundleRuntimeOwnerPositiveFixtureOwnerOwnedRuntimeSatisfied),
+          productionBundleRuntimeOwnerPositiveFixtureVersion: window.VaadinDesktopIpcDiagnostics ? window.VaadinDesktopIpcDiagnostics.productionBundleRuntimeOwnerPositiveFixtureVersion : "",
+          productionBundleRuntimeOwnerPositiveFixtureSource: window.VaadinDesktopIpcDiagnostics ? window.VaadinDesktopIpcDiagnostics.productionBundleRuntimeOwnerPositiveFixtureSource : "",
+          productionBundleRuntimeOwnerPositiveFixtureRootArtifact: window.VaadinDesktopIpcDiagnostics ? window.VaadinDesktopIpcDiagnostics.productionBundleRuntimeOwnerPositiveFixtureRootArtifact : "",
+          productionBundleRuntimeOwnerPositiveFixtureDependencyArtifact: window.VaadinDesktopIpcDiagnostics ? window.VaadinDesktopIpcDiagnostics.productionBundleRuntimeOwnerPositiveFixtureDependencyArtifact : "",
+          productionBundleRuntimeOwnerPositiveFixtureExpectedTags: window.VaadinDesktopIpcDiagnostics ? window.VaadinDesktopIpcDiagnostics.productionBundleRuntimeOwnerPositiveFixtureExpectedTags : "",
+          productionBundleRuntimeOwnerPositiveFixtureExpectedGlobals: window.VaadinDesktopIpcDiagnostics ? window.VaadinDesktopIpcDiagnostics.productionBundleRuntimeOwnerPositiveFixtureExpectedGlobals : "",
+          productionBundleRuntimeOwnerPositiveFixtureExecutionPolicy: window.VaadinDesktopIpcDiagnostics ? window.VaadinDesktopIpcDiagnostics.productionBundleRuntimeOwnerPositiveFixtureExecutionPolicy : "",
+          productionBundleRuntimeOwnerPositiveFixtureNoBlobFallback: !!(window.VaadinDesktopIpcDiagnostics && window.VaadinDesktopIpcDiagnostics.productionBundleRuntimeOwnerPositiveFixtureNoBlobFallback),
+          productionBundleRuntimeOwnerPositiveFixtureRootCustomSchemeUrl: window.VaadinDesktopIpcDiagnostics ? window.VaadinDesktopIpcDiagnostics.productionBundleRuntimeOwnerPositiveFixtureRootCustomSchemeUrl : "",
+          productionBundleRuntimeOwnerPositiveFixtureDependencyCustomSchemeUrl: window.VaadinDesktopIpcDiagnostics ? window.VaadinDesktopIpcDiagnostics.productionBundleRuntimeOwnerPositiveFixtureDependencyCustomSchemeUrl : "",
+          productionBundleRuntimeOwnerPositiveFixtureRootSha256: window.VaadinDesktopIpcDiagnostics ? window.VaadinDesktopIpcDiagnostics.productionBundleRuntimeOwnerPositiveFixtureRootSha256 : "",
+          productionBundleRuntimeOwnerPositiveFixtureDependencySha256: window.VaadinDesktopIpcDiagnostics ? window.VaadinDesktopIpcDiagnostics.productionBundleRuntimeOwnerPositiveFixtureDependencySha256 : "",
+          productionBundleRuntimeOwnerPositiveFixtureExecutionResult: window.VaadinDesktopIpcDiagnostics ? window.VaadinDesktopIpcDiagnostics.productionBundleRuntimeOwnerPositiveFixtureExecutionResult : "",
+          productionBundleRuntimeOwnerPositiveFixtureSideEffectProof: window.VaadinDesktopIpcDiagnostics ? window.VaadinDesktopIpcDiagnostics.productionBundleRuntimeOwnerPositiveFixtureSideEffectProof : "",
+          productionBundleRuntimeOwnerPositiveFixtureFailureLayer: window.VaadinDesktopIpcDiagnostics ? window.VaadinDesktopIpcDiagnostics.productionBundleRuntimeOwnerPositiveFixtureFailureLayer : "",
+          productionBundleRuntimeOwnerPositiveFixtureBrowserError: window.VaadinDesktopIpcDiagnostics ? window.VaadinDesktopIpcDiagnostics.productionBundleRuntimeOwnerPositiveFixtureBrowserError : "",
+          productionBundleRuntimeOwnerPositiveFixtureDependencyRewriteResult: window.VaadinDesktopIpcDiagnostics ? window.VaadinDesktopIpcDiagnostics.productionBundleRuntimeOwnerPositiveFixtureDependencyRewriteResult : "",
+          productionBundleRuntimeOwnerPositiveFixtureComponentReuseDecision: window.VaadinDesktopIpcDiagnostics ? window.VaadinDesktopIpcDiagnostics.productionBundleRuntimeOwnerPositiveFixtureComponentReuseDecision : "",
           frontendRuntimeResolverContractVersion: window.VaadinDesktopIpcDiagnostics ? window.VaadinDesktopIpcDiagnostics.frontendRuntimeResolverContractVersion : "",
           frontendRuntimeResolverLogicalRequestIds: window.VaadinDesktopIpcDiagnostics ? window.VaadinDesktopIpcDiagnostics.frontendRuntimeResolverLogicalRequestIds : "",
           frontendRuntimeResolverPathMappings: window.VaadinDesktopIpcDiagnostics ? window.VaadinDesktopIpcDiagnostics.frontendRuntimeResolverPathMappings : "",
@@ -2880,6 +2903,8 @@ let flowIpcShell = #"""
       let hostResourceStageSequence = 0;
       let generatedLazyBundleExecutionAttempted = false;
       let generatedLazyChunkFileFixtureExecutionAttempted = false;
+      let productionOwnerPositiveFixtureImportAttempted = false;
+      let productionOwnerPositiveFixtureImportInProgress = false;
       const generatedLoadOnDemandChunkPromises = new Map();
       let flowLazyDependencyExecutionAttempted = false;
       let productionBundleRuntimeStageAttempted = false;
@@ -3108,6 +3133,29 @@ let flowIpcShell = #"""
         generatedLazyChunkFileFixtureFailureLayer: '',
         generatedLazyChunkFileFixtureBrowserError: '',
         generatedLazyChunkFileFixtureChunkSha256: '',
+        productionBundleRuntimeOwnerPositiveFixtureObserved: false,
+        productionBundleRuntimeOwnerPositiveFixtureStageObserved: false,
+        productionBundleRuntimeOwnerPositiveFixtureImported: false,
+        productionBundleRuntimeOwnerPositiveFixtureSideEffectSatisfied: false,
+        productionBundleRuntimeOwnerPositiveFixtureOwnerOwnedRuntimeSatisfied: false,
+        productionBundleRuntimeOwnerPositiveFixtureVersion: '',
+        productionBundleRuntimeOwnerPositiveFixtureSource: '',
+        productionBundleRuntimeOwnerPositiveFixtureRootArtifact: '',
+        productionBundleRuntimeOwnerPositiveFixtureDependencyArtifact: '',
+        productionBundleRuntimeOwnerPositiveFixtureExpectedTags: '',
+        productionBundleRuntimeOwnerPositiveFixtureExpectedGlobals: '',
+        productionBundleRuntimeOwnerPositiveFixtureExecutionPolicy: '',
+        productionBundleRuntimeOwnerPositiveFixtureNoBlobFallback: false,
+        productionBundleRuntimeOwnerPositiveFixtureRootCustomSchemeUrl: '',
+        productionBundleRuntimeOwnerPositiveFixtureDependencyCustomSchemeUrl: '',
+        productionBundleRuntimeOwnerPositiveFixtureRootSha256: '',
+        productionBundleRuntimeOwnerPositiveFixtureDependencySha256: '',
+        productionBundleRuntimeOwnerPositiveFixtureExecutionResult: '',
+        productionBundleRuntimeOwnerPositiveFixtureSideEffectProof: '',
+        productionBundleRuntimeOwnerPositiveFixtureFailureLayer: '',
+        productionBundleRuntimeOwnerPositiveFixtureBrowserError: '',
+        productionBundleRuntimeOwnerPositiveFixtureDependencyRewriteResult: '',
+        productionBundleRuntimeOwnerPositiveFixtureComponentReuseDecision: '',
         flowLazyDependencyObserved: false,
         flowLazyDependencyRequested: false,
         flowLazyDependencyResponse: false,
@@ -5189,6 +5237,26 @@ let flowIpcShell = #"""
         for (const resource of resources) {
           recordFrontendResolverResource(resource, '', '', {});
         }
+        if (typeof manifest.productionBundleRuntimeOwnerPositiveFixtureVersion === 'string'
+            && manifest.productionBundleRuntimeOwnerPositiveFixtureVersion) {
+          window.VaadinDesktopIpcDiagnostics.productionBundleRuntimeOwnerPositiveFixtureObserved = true;
+          window.VaadinDesktopIpcDiagnostics.productionBundleRuntimeOwnerPositiveFixtureVersion =
+            manifest.productionBundleRuntimeOwnerPositiveFixtureVersion;
+          window.VaadinDesktopIpcDiagnostics.productionBundleRuntimeOwnerPositiveFixtureSource =
+            manifest.productionBundleRuntimeOwnerPositiveFixtureSource || '';
+          window.VaadinDesktopIpcDiagnostics.productionBundleRuntimeOwnerPositiveFixtureRootArtifact =
+            manifest.productionBundleRuntimeOwnerPositiveFixtureRootArtifact || '';
+          window.VaadinDesktopIpcDiagnostics.productionBundleRuntimeOwnerPositiveFixtureDependencyArtifact =
+            manifest.productionBundleRuntimeOwnerPositiveFixtureDependencyArtifact || '';
+          window.VaadinDesktopIpcDiagnostics.productionBundleRuntimeOwnerPositiveFixtureExpectedTags =
+            manifest.productionBundleRuntimeOwnerPositiveFixtureExpectedTags || '';
+          window.VaadinDesktopIpcDiagnostics.productionBundleRuntimeOwnerPositiveFixtureExpectedGlobals =
+            manifest.productionBundleRuntimeOwnerPositiveFixtureExpectedGlobals || '';
+          window.VaadinDesktopIpcDiagnostics.productionBundleRuntimeOwnerPositiveFixtureExecutionPolicy =
+            manifest.productionBundleRuntimeOwnerPositiveFixtureExecutionPolicy || '';
+          window.VaadinDesktopIpcDiagnostics.productionBundleRuntimeOwnerPositiveFixtureNoBlobFallback =
+            manifest.productionBundleRuntimeOwnerPositiveFixtureNoBlobFallback === true;
+        }
         const requestedBy = resources.map((entry) => entry && entry.requestedBy);
         const dependencyOf = resources.map((entry) => entry && entry.dependencyOf);
         const moduleSpecifiers = resources.map((entry) => entry && entry.moduleSpecifier);
@@ -6626,6 +6694,107 @@ let flowIpcShell = #"""
           generatedLazyChunkFileFixtureChunkSha256: extra && extra.generatedLazyChunkFileFixtureChunkSha256
             ? extra.generatedLazyChunkFileFixtureChunkSha256
             : (resource.chunkFileSha256 || resource.sha256 || ''),
+          productionBundleRuntimeOwnerPositiveFixture:
+            extra && typeof extra.productionBundleRuntimeOwnerPositiveFixtureObserved === 'boolean'
+              ? extra.productionBundleRuntimeOwnerPositiveFixtureObserved
+              : resource.productionBundleRuntimeOwnerPositiveFixture === true,
+          productionBundleRuntimeOwnerPositiveFixtureRole:
+            resource.productionBundleRuntimeOwnerPositiveFixtureRole
+            || (extra && extra.productionBundleRuntimeOwnerResourceLoaderArtifactRole
+              ? extra.productionBundleRuntimeOwnerResourceLoaderArtifactRole
+              : ''),
+          productionBundleRuntimeOwnerPositiveFixtureObserved:
+            extra && typeof extra.productionBundleRuntimeOwnerPositiveFixtureObserved === 'boolean'
+              ? extra.productionBundleRuntimeOwnerPositiveFixtureObserved
+              : resource.productionBundleRuntimeOwnerPositiveFixture === true,
+          productionBundleRuntimeOwnerPositiveFixtureStageObserved:
+            extra && typeof extra.productionBundleRuntimeOwnerPositiveFixtureStageObserved === 'boolean'
+              ? extra.productionBundleRuntimeOwnerPositiveFixtureStageObserved
+              : false,
+          productionBundleRuntimeOwnerPositiveFixtureImported:
+            extra && typeof extra.productionBundleRuntimeOwnerPositiveFixtureImported === 'boolean'
+              ? extra.productionBundleRuntimeOwnerPositiveFixtureImported
+              : false,
+          productionBundleRuntimeOwnerPositiveFixtureSideEffectSatisfied:
+            extra && typeof extra.productionBundleRuntimeOwnerPositiveFixtureSideEffectSatisfied === 'boolean'
+              ? extra.productionBundleRuntimeOwnerPositiveFixtureSideEffectSatisfied
+              : false,
+          productionBundleRuntimeOwnerPositiveFixtureOwnerOwnedRuntimeSatisfied:
+            extra && typeof extra.productionBundleRuntimeOwnerPositiveFixtureOwnerOwnedRuntimeSatisfied === 'boolean'
+              ? extra.productionBundleRuntimeOwnerPositiveFixtureOwnerOwnedRuntimeSatisfied
+              : false,
+          productionBundleRuntimeOwnerPositiveFixtureVersion:
+            extra && extra.productionBundleRuntimeOwnerPositiveFixtureVersion
+              ? extra.productionBundleRuntimeOwnerPositiveFixtureVersion
+              : (resource.productionBundleRuntimeOwnerPositiveFixtureVersion || ''),
+          productionBundleRuntimeOwnerPositiveFixtureSource:
+            extra && extra.productionBundleRuntimeOwnerPositiveFixtureSource
+              ? extra.productionBundleRuntimeOwnerPositiveFixtureSource
+              : (resource.productionBundleRuntimeOwnerPositiveFixtureSource || ''),
+          productionBundleRuntimeOwnerPositiveFixtureRootArtifact:
+            extra && extra.productionBundleRuntimeOwnerPositiveFixtureRootArtifact
+              ? extra.productionBundleRuntimeOwnerPositiveFixtureRootArtifact
+              : (resource.productionBundleRuntimeOwnerPositiveFixtureRootArtifact || ''),
+          productionBundleRuntimeOwnerPositiveFixtureDependencyArtifact:
+            extra && extra.productionBundleRuntimeOwnerPositiveFixtureDependencyArtifact
+              ? extra.productionBundleRuntimeOwnerPositiveFixtureDependencyArtifact
+              : (resource.productionBundleRuntimeOwnerPositiveFixtureDependencyArtifact || ''),
+          productionBundleRuntimeOwnerPositiveFixtureExpectedTags:
+            extra && extra.productionBundleRuntimeOwnerPositiveFixtureExpectedTags
+              ? extra.productionBundleRuntimeOwnerPositiveFixtureExpectedTags
+              : (resource.productionBundleRuntimeOwnerPositiveFixtureExpectedTags || ''),
+          productionBundleRuntimeOwnerPositiveFixtureExpectedGlobals:
+            extra && extra.productionBundleRuntimeOwnerPositiveFixtureExpectedGlobals
+              ? extra.productionBundleRuntimeOwnerPositiveFixtureExpectedGlobals
+              : (resource.productionBundleRuntimeOwnerPositiveFixtureExpectedGlobals || ''),
+          productionBundleRuntimeOwnerPositiveFixtureExecutionPolicy:
+            extra && extra.productionBundleRuntimeOwnerPositiveFixtureExecutionPolicy
+              ? extra.productionBundleRuntimeOwnerPositiveFixtureExecutionPolicy
+              : (resource.productionBundleRuntimeOwnerPositiveFixtureExecutionPolicy || ''),
+          productionBundleRuntimeOwnerPositiveFixtureNoBlobFallback:
+            extra && typeof extra.productionBundleRuntimeOwnerPositiveFixtureNoBlobFallback === 'boolean'
+              ? extra.productionBundleRuntimeOwnerPositiveFixtureNoBlobFallback
+              : resource.productionBundleRuntimeOwnerPositiveFixtureNoBlobFallback === true,
+          productionBundleRuntimeOwnerPositiveFixtureRootCustomSchemeUrl:
+            extra && extra.productionBundleRuntimeOwnerPositiveFixtureRootCustomSchemeUrl
+              ? extra.productionBundleRuntimeOwnerPositiveFixtureRootCustomSchemeUrl
+              : '',
+          productionBundleRuntimeOwnerPositiveFixtureDependencyCustomSchemeUrl:
+            extra && extra.productionBundleRuntimeOwnerPositiveFixtureDependencyCustomSchemeUrl
+              ? extra.productionBundleRuntimeOwnerPositiveFixtureDependencyCustomSchemeUrl
+              : '',
+          productionBundleRuntimeOwnerPositiveFixtureRootSha256:
+            extra && extra.productionBundleRuntimeOwnerPositiveFixtureRootSha256
+              ? extra.productionBundleRuntimeOwnerPositiveFixtureRootSha256
+              : '',
+          productionBundleRuntimeOwnerPositiveFixtureDependencySha256:
+            extra && extra.productionBundleRuntimeOwnerPositiveFixtureDependencySha256
+              ? extra.productionBundleRuntimeOwnerPositiveFixtureDependencySha256
+              : '',
+          productionBundleRuntimeOwnerPositiveFixtureExecutionResult:
+            extra && extra.productionBundleRuntimeOwnerPositiveFixtureExecutionResult
+              ? extra.productionBundleRuntimeOwnerPositiveFixtureExecutionResult
+              : '',
+          productionBundleRuntimeOwnerPositiveFixtureSideEffectProof:
+            extra && extra.productionBundleRuntimeOwnerPositiveFixtureSideEffectProof
+              ? extra.productionBundleRuntimeOwnerPositiveFixtureSideEffectProof
+              : '',
+          productionBundleRuntimeOwnerPositiveFixtureFailureLayer:
+            extra && extra.productionBundleRuntimeOwnerPositiveFixtureFailureLayer
+              ? extra.productionBundleRuntimeOwnerPositiveFixtureFailureLayer
+              : '',
+          productionBundleRuntimeOwnerPositiveFixtureBrowserError:
+            extra && extra.productionBundleRuntimeOwnerPositiveFixtureBrowserError
+              ? extra.productionBundleRuntimeOwnerPositiveFixtureBrowserError
+              : '',
+          productionBundleRuntimeOwnerPositiveFixtureDependencyRewriteResult:
+            extra && extra.productionBundleRuntimeOwnerPositiveFixtureDependencyRewriteResult
+              ? extra.productionBundleRuntimeOwnerPositiveFixtureDependencyRewriteResult
+              : '',
+          productionBundleRuntimeOwnerPositiveFixtureComponentReuseDecision:
+            extra && extra.productionBundleRuntimeOwnerPositiveFixtureComponentReuseDecision
+              ? extra.productionBundleRuntimeOwnerPositiveFixtureComponentReuseDecision
+              : '',
           generatedLazySourceArtifact: extra && extra.generatedLazySourceArtifact
             ? extra.generatedLazySourceArtifact
             : '',
@@ -7417,6 +7586,9 @@ let flowIpcShell = #"""
         }
         if (resource.productionOwnerDependencyResource === true) {
           return 6;
+        }
+        if (resource.productionBundleRuntimeOwnerPositiveFixture === true) {
+          return resource.productionBundleRuntimeOwnerPositiveFixtureRole === 'root' ? 7 : 8;
         }
         if (resource.generatedLazyBundleChunk === true || resource.generatedLazyBundleDependency === true) {
           return 90;
@@ -8725,6 +8897,18 @@ let flowIpcShell = #"""
           window.VaadinDesktopIpcDiagnostics.frontendArtifactProductionBundleRuntimeOwnerBlocker = true;
         }
         try {
+          await maybeImportProductionOwnerPositiveFixture();
+        } catch (error) {
+          window.VaadinDesktopIpcDiagnostics.productionBundleRuntimeOwnerPositiveFixtureObserved = true;
+          window.VaadinDesktopIpcDiagnostics.productionBundleRuntimeOwnerPositiveFixtureImported = false;
+          window.VaadinDesktopIpcDiagnostics.productionBundleRuntimeOwnerPositiveFixtureExecutionResult =
+            'strict-blocker:probe-dispatch';
+          window.VaadinDesktopIpcDiagnostics.productionBundleRuntimeOwnerPositiveFixtureFailureLayer =
+            'production-owner-positive-fixture-dispatch';
+          window.VaadinDesktopIpcDiagnostics.productionBundleRuntimeOwnerPositiveFixtureBrowserError =
+            error && error.message ? error.message : String(error);
+        }
+        try {
           await maybeExecuteVaadinWebComponentResource();
         } catch (error) {
           window.VaadinDesktopIpcDiagnostics.vaadinWebComponentResourceExecutionError =
@@ -8776,6 +8960,18 @@ let flowIpcShell = #"""
             'production-owner-browser-import-failed';
           window.VaadinDesktopIpcDiagnostics.frontendArtifactProductionBundleRuntimeOwnerBrowserError = message;
           window.VaadinDesktopIpcDiagnostics.frontendArtifactProductionBundleRuntimeOwnerBlocker = true;
+        }
+        try {
+          await maybeImportProductionOwnerPositiveFixture();
+        } catch (error) {
+          window.VaadinDesktopIpcDiagnostics.productionBundleRuntimeOwnerPositiveFixtureObserved = true;
+          window.VaadinDesktopIpcDiagnostics.productionBundleRuntimeOwnerPositiveFixtureImported = false;
+          window.VaadinDesktopIpcDiagnostics.productionBundleRuntimeOwnerPositiveFixtureExecutionResult =
+            'strict-blocker:probe-dispatch';
+          window.VaadinDesktopIpcDiagnostics.productionBundleRuntimeOwnerPositiveFixtureFailureLayer =
+            'production-owner-positive-fixture-dispatch';
+          window.VaadinDesktopIpcDiagnostics.productionBundleRuntimeOwnerPositiveFixtureBrowserError =
+            error && error.message ? error.message : String(error);
         }
       }
 
@@ -9458,6 +9654,17 @@ let flowIpcShell = #"""
             return;
           }
         }
+        if (productionOwnerPositiveFixtureRequired()
+            && !productionOwnerPositiveFixtureImportAttempted) {
+          await maybeImportProductionOwnerPositiveFixture();
+          if (productionOwnerPositiveFixtureImportInProgress) {
+            return;
+          }
+          if (!productionOwnerPositiveFixtureImportAttempted
+              || !window.VaadinDesktopIpcDiagnostics.productionBundleRuntimeOwnerPositiveFixtureOwnerOwnedRuntimeSatisfied) {
+            return;
+          }
+        }
         const primaryResources = componentFrontendPrimaryResources();
         if (primaryResources.length === 0) {
           return;
@@ -9539,6 +9746,38 @@ let flowIpcShell = #"""
           return null;
         }
         return componentFrontendResourceByPath(chunkPath);
+      }
+
+      function productionOwnerPositiveFixtureRootResource() {
+        return componentFrontendResources.find((entry) => entry
+          && entry.productionBundleRuntimeOwnerPositiveFixture === true
+          && entry.productionBundleRuntimeOwnerPositiveFixtureRole === 'root'
+          && typeof entry.path === 'string')
+          || null;
+      }
+
+      function productionOwnerPositiveFixtureDependencyResource(rootResource) {
+        const dependencyPath = rootResource
+          && typeof rootResource.productionBundleRuntimeOwnerPositiveFixtureDependencyArtifact === 'string'
+          ? rootResource.productionBundleRuntimeOwnerPositiveFixtureDependencyArtifact
+          : '';
+        if (!dependencyPath) {
+          return null;
+        }
+        return componentFrontendResourceByPath(dependencyPath);
+      }
+
+      function productionOwnerPositiveFixtureRequired() {
+        return !!productionOwnerPositiveFixtureRootResource();
+      }
+
+      function productionOwnerPositiveFixtureResourcesReady() {
+        const root = productionOwnerPositiveFixtureRootResource();
+        const dependency = productionOwnerPositiveFixtureDependencyResource(root);
+        return !!(root
+          && dependency
+          && componentFrontendResourceBodies.has(root.path)
+          && componentFrontendResourceBodies.has(dependency.path));
       }
 
       function textFieldDevBundleResource() {
@@ -11055,10 +11294,13 @@ let flowIpcShell = #"""
         window.VaadinDesktopIpcDiagnostics.componentProductionOwnerReuseDecisionSource =
           details.componentProductionOwnerReuseDecisionSource || '';
         window.VaadinDesktopIpcDiagnostics.componentProductionOwnerReuseDecision =
-          previousDecision === 'focused-fallback-after-owner-owned-runtime-attempt'
+          previousDecision === 'owner-reused-positive-fixture'
             && details.componentProductionOwnerReuseDecision !== 'owner-reused'
             ? previousDecision
-            : (details.componentProductionOwnerReuseDecision || '');
+            : (previousDecision === 'focused-fallback-after-owner-owned-runtime-attempt'
+            && details.componentProductionOwnerReuseDecision !== 'owner-reused'
+            ? previousDecision
+            : (details.componentProductionOwnerReuseDecision || ''));
         window.VaadinDesktopIpcDiagnostics.componentProductionOwnerReuseDecisionReason =
           details.componentProductionOwnerReuseDecisionReason || '';
         window.VaadinDesktopIpcDiagnostics.componentProductionOwnerReuseDecisionTags =
@@ -11577,10 +11819,13 @@ let flowIpcShell = #"""
         window.VaadinDesktopIpcDiagnostics.componentProductionOwnerReuseDecisionSource =
           extra.componentProductionOwnerReuseDecisionSource || '';
         window.VaadinDesktopIpcDiagnostics.componentProductionOwnerReuseDecision =
-          previousReuseDecision === 'focused-fallback-after-owner-owned-runtime-attempt'
+          previousReuseDecision === 'owner-reused-positive-fixture'
             && extra.componentProductionOwnerReuseDecision !== 'owner-reused'
             ? previousReuseDecision
-            : (extra.componentProductionOwnerReuseDecision || '');
+            : (previousReuseDecision === 'focused-fallback-after-owner-owned-runtime-attempt'
+            && extra.componentProductionOwnerReuseDecision !== 'owner-reused'
+            ? previousReuseDecision
+            : (extra.componentProductionOwnerReuseDecision || ''));
         window.VaadinDesktopIpcDiagnostics.componentProductionOwnerReuseDecisionReason =
           extra.componentProductionOwnerReuseDecisionReason || '';
         window.VaadinDesktopIpcDiagnostics.componentProductionOwnerReuseDecisionTags =
@@ -12094,6 +12339,334 @@ let flowIpcShell = #"""
           recordFrontendStageOutcome(resource, stagedUrl, 'strict-blocker', failureExtra);
         }
         productionBundleRuntimeOwnerImportInProgress = false;
+      }
+
+      function productionOwnerPositiveFixtureStageExtra(rootResource, dependencyResource, artifactResource, role, extra) {
+        const root = rootResource || {};
+        const dependency = dependencyResource || {};
+        const artifact = artifactResource || root;
+        const version = root.productionBundleRuntimeOwnerPositiveFixtureVersion
+          || 'flow-ipc-production-owner-positive-runtime-v1_23';
+        const source = root.productionBundleRuntimeOwnerPositiveFixtureSource
+          || 'repository-production-owner-positive-fixture-v1_23';
+        const rootArtifact = root.productionBundleRuntimeOwnerPositiveFixtureRootArtifact
+          || root.path
+          || 'META-INF/vatori/production-owner/owner-runtime-v1_23.js';
+        const dependencyArtifact = root.productionBundleRuntimeOwnerPositiveFixtureDependencyArtifact
+          || dependency.path
+          || 'META-INF/vatori/production-owner/owner-dependency-v1_23.js';
+        const expectedTags = root.productionBundleRuntimeOwnerPositiveFixtureExpectedTags
+          || 'vatori-production-owner-fixture';
+        const expectedGlobals = root.productionBundleRuntimeOwnerPositiveFixtureExpectedGlobals
+          || 'window.VaadinDesktopProductionOwnerV123';
+        return Object.assign({
+          owner: 'production-bundle-runtime',
+          resourceNamespace: root.productionBundleRuntimeOwnerResourceLoaderNamespace || 'production-owner',
+          resourcePathMode: 'stable-source-path',
+          cleanupPolicy: root.productionBundleRuntimeOwnerResourceLoaderCleanupPolicy
+            || 'cleanup-owned-window-lifetime-file-backed-production-owner-v1_23',
+          frontendResourceSchemeVersion: 'flow-ipc-resource-scheme-v1_17',
+          frontendResourceLoaderMode: 'custom-scheme-file-backed',
+          frontendResourceSchemeName: 'vatori-resource',
+          frontendResourceSchemeHandlerInstalled: true,
+          frontendResourceLoaderNoLocalhost: true,
+          frontendResourceFileBacked: true,
+          stagingMode: 'custom-scheme',
+          relativeImportBase: artifact.path || rootArtifact,
+          relativeImportResolutionMode: 'scheme-url-native-relative-base-v1_23',
+          runtimeResolverContractVersion: root.runtimeResolverContractVersion
+            || 'flow-ipc-frontend-runtime-resolver-v1_10',
+          logicalRequestId: 'production-owner-positive-fixture:v1_23:' + (artifact.path || role),
+          pathMapping: 'repository-production-owner-positive-fixture-to-custom-scheme-v1_23',
+          stageUrlPolicy: root.productionBundleRuntimeOwnerResourceLoaderStageUrlPolicy
+            || 'host-owned-custom-scheme-stable-source-path-v1_23',
+          cachePolicy: 'retain-per-production-owner-positive-fixture-source-path-v1_23',
+          cleanupOwnership: 'window-lifetime-production-owner-positive-fixture-file-backed-resource-cache',
+          blockerClassification: 'flow-ipc-production-owner-positive-runtime-v1_23',
+          productionBundleRuntimeOwnerPositiveFixtureObserved: true,
+          productionBundleRuntimeOwnerPositiveFixtureStageObserved: true,
+          productionBundleRuntimeOwnerPositiveFixtureImported: false,
+          productionBundleRuntimeOwnerPositiveFixtureSideEffectSatisfied: false,
+          productionBundleRuntimeOwnerPositiveFixtureOwnerOwnedRuntimeSatisfied: false,
+          productionBundleRuntimeOwnerPositiveFixtureVersion: version,
+          productionBundleRuntimeOwnerPositiveFixtureSource: source,
+          productionBundleRuntimeOwnerPositiveFixtureRootArtifact: rootArtifact,
+          productionBundleRuntimeOwnerPositiveFixtureDependencyArtifact: dependencyArtifact,
+          productionBundleRuntimeOwnerPositiveFixtureExpectedTags: expectedTags,
+          productionBundleRuntimeOwnerPositiveFixtureExpectedGlobals: expectedGlobals,
+          productionBundleRuntimeOwnerPositiveFixtureExecutionPolicy:
+            root.productionBundleRuntimeOwnerPositiveFixtureExecutionPolicy
+            || 'owner-first-custom-scheme-positive-fixture-v1_23',
+          productionBundleRuntimeOwnerPositiveFixtureNoBlobFallback:
+            root.productionBundleRuntimeOwnerPositiveFixtureNoBlobFallback !== false,
+          productionBundleRuntimeOwnerPositiveFixtureRootSha256: root.sha256 || '',
+          productionBundleRuntimeOwnerPositiveFixtureDependencySha256:
+            dependency.sha256
+            || dependency.productionBundleRuntimeOwnerPositiveFixtureDependencySha256
+            || '',
+          productionBundleRuntimeOwnerPositiveFixtureDependencyRewriteResult:
+            './owner-dependency-v1_23.js=>' + dependencyArtifact + ':custom-scheme-native-relative-base',
+          productionBundleRuntimeOwnerPositiveFixtureComponentReuseDecision:
+            'pending-production-owner-positive-fixture',
+          productionBundleRuntimeOwnerResourceLoaderVersion:
+            root.productionBundleRuntimeOwnerResourceLoaderVersion
+            || 'flow-ipc-production-owner-resource-loader-v1_18',
+          productionBundleRuntimeOwnerResourceLoaderMode:
+            root.productionBundleRuntimeOwnerResourceLoaderMode || 'custom-scheme-file-backed',
+          productionBundleRuntimeOwnerResourceScheme:
+            root.productionBundleRuntimeOwnerResourceScheme || 'vatori-resource',
+          productionBundleRuntimeOwnerResourceGraphMode:
+            root.productionBundleRuntimeOwnerResourceGraphMode
+            || 'positive-fixture-root-and-dependency-v1_23',
+          productionBundleRuntimeOwnerResourceBasePolicy:
+            root.productionBundleRuntimeOwnerResourceBasePolicy || 'stable-owner-resource-path-base-v1_18',
+          productionBundleRuntimeOwnerResourceLoaderNamespace:
+            root.productionBundleRuntimeOwnerResourceLoaderNamespace || 'production-owner',
+          productionBundleRuntimeOwnerResourceLoaderRootArtifact: rootArtifact,
+          productionBundleRuntimeOwnerResourceLoaderArtifact: artifact.path || '',
+          productionBundleRuntimeOwnerResourceLoaderArtifactRole: role || '',
+          productionBundleRuntimeOwnerBlobFallbackAllowed: false,
+          productionBundleRuntimeOwnerDependencyBlobFallbackPolicy:
+            root.productionBundleRuntimeOwnerDependencyBlobFallbackPolicy || 'explicit-classified-only',
+          productionBundleRuntimeOwnerImportDependencyRewriteResult:
+            'custom-scheme-native-relative-base:./owner-dependency-v1_23.js=>' + dependencyArtifact,
+          moduleIdentityStrategy: 'production-owner-positive-fixture-custom-scheme-v1_23',
+          moduleIdentityKey: 'production-owner-positive-fixture-v1_23:' + (artifact.path || rootArtifact),
+          importResolutionStrategy: 'custom-scheme-native-relative-base-positive-fixture-v1_23',
+          noLocalhostProof: 'custom-scheme-served-by-wkurlschemehandler-no-http-v1_17'
+        }, extra || {});
+      }
+
+      function applyProductionOwnerPositiveFixtureDiagnostics(extra) {
+        if (!extra || typeof extra !== 'object') {
+          return;
+        }
+        const d = window.VaadinDesktopIpcDiagnostics;
+        d.productionBundleRuntimeOwnerPositiveFixtureObserved =
+          extra.productionBundleRuntimeOwnerPositiveFixtureObserved === true
+          || d.productionBundleRuntimeOwnerPositiveFixtureObserved;
+        d.productionBundleRuntimeOwnerPositiveFixtureStageObserved =
+          extra.productionBundleRuntimeOwnerPositiveFixtureStageObserved === true
+          || d.productionBundleRuntimeOwnerPositiveFixtureStageObserved;
+        d.productionBundleRuntimeOwnerPositiveFixtureImported =
+          extra.productionBundleRuntimeOwnerPositiveFixtureImported === true;
+        d.productionBundleRuntimeOwnerPositiveFixtureSideEffectSatisfied =
+          extra.productionBundleRuntimeOwnerPositiveFixtureSideEffectSatisfied === true;
+        d.productionBundleRuntimeOwnerPositiveFixtureOwnerOwnedRuntimeSatisfied =
+          extra.productionBundleRuntimeOwnerPositiveFixtureOwnerOwnedRuntimeSatisfied === true;
+        d.productionBundleRuntimeOwnerPositiveFixtureVersion =
+          extra.productionBundleRuntimeOwnerPositiveFixtureVersion || d.productionBundleRuntimeOwnerPositiveFixtureVersion;
+        d.productionBundleRuntimeOwnerPositiveFixtureSource =
+          extra.productionBundleRuntimeOwnerPositiveFixtureSource || d.productionBundleRuntimeOwnerPositiveFixtureSource;
+        d.productionBundleRuntimeOwnerPositiveFixtureRootArtifact =
+          extra.productionBundleRuntimeOwnerPositiveFixtureRootArtifact || d.productionBundleRuntimeOwnerPositiveFixtureRootArtifact;
+        d.productionBundleRuntimeOwnerPositiveFixtureDependencyArtifact =
+          extra.productionBundleRuntimeOwnerPositiveFixtureDependencyArtifact || d.productionBundleRuntimeOwnerPositiveFixtureDependencyArtifact;
+        d.productionBundleRuntimeOwnerPositiveFixtureExpectedTags =
+          extra.productionBundleRuntimeOwnerPositiveFixtureExpectedTags || d.productionBundleRuntimeOwnerPositiveFixtureExpectedTags;
+        d.productionBundleRuntimeOwnerPositiveFixtureExpectedGlobals =
+          extra.productionBundleRuntimeOwnerPositiveFixtureExpectedGlobals || d.productionBundleRuntimeOwnerPositiveFixtureExpectedGlobals;
+        d.productionBundleRuntimeOwnerPositiveFixtureExecutionPolicy =
+          extra.productionBundleRuntimeOwnerPositiveFixtureExecutionPolicy || d.productionBundleRuntimeOwnerPositiveFixtureExecutionPolicy;
+        d.productionBundleRuntimeOwnerPositiveFixtureNoBlobFallback =
+          extra.productionBundleRuntimeOwnerPositiveFixtureNoBlobFallback === true
+          || d.productionBundleRuntimeOwnerPositiveFixtureNoBlobFallback;
+        d.productionBundleRuntimeOwnerPositiveFixtureRootCustomSchemeUrl =
+          extra.productionBundleRuntimeOwnerPositiveFixtureRootCustomSchemeUrl
+          || d.productionBundleRuntimeOwnerPositiveFixtureRootCustomSchemeUrl;
+        d.productionBundleRuntimeOwnerPositiveFixtureDependencyCustomSchemeUrl =
+          extra.productionBundleRuntimeOwnerPositiveFixtureDependencyCustomSchemeUrl
+          || d.productionBundleRuntimeOwnerPositiveFixtureDependencyCustomSchemeUrl;
+        d.productionBundleRuntimeOwnerPositiveFixtureRootSha256 =
+          extra.productionBundleRuntimeOwnerPositiveFixtureRootSha256 || d.productionBundleRuntimeOwnerPositiveFixtureRootSha256;
+        d.productionBundleRuntimeOwnerPositiveFixtureDependencySha256 =
+          extra.productionBundleRuntimeOwnerPositiveFixtureDependencySha256
+          || d.productionBundleRuntimeOwnerPositiveFixtureDependencySha256;
+        d.productionBundleRuntimeOwnerPositiveFixtureExecutionResult =
+          extra.productionBundleRuntimeOwnerPositiveFixtureExecutionResult
+          || d.productionBundleRuntimeOwnerPositiveFixtureExecutionResult;
+        d.productionBundleRuntimeOwnerPositiveFixtureSideEffectProof =
+          extra.productionBundleRuntimeOwnerPositiveFixtureSideEffectProof
+          || d.productionBundleRuntimeOwnerPositiveFixtureSideEffectProof;
+        d.productionBundleRuntimeOwnerPositiveFixtureFailureLayer =
+          extra.productionBundleRuntimeOwnerPositiveFixtureFailureLayer || '';
+        d.productionBundleRuntimeOwnerPositiveFixtureBrowserError =
+          extra.productionBundleRuntimeOwnerPositiveFixtureBrowserError || '';
+        d.productionBundleRuntimeOwnerPositiveFixtureDependencyRewriteResult =
+          extra.productionBundleRuntimeOwnerPositiveFixtureDependencyRewriteResult
+          || d.productionBundleRuntimeOwnerPositiveFixtureDependencyRewriteResult;
+        d.productionBundleRuntimeOwnerPositiveFixtureComponentReuseDecision =
+          extra.productionBundleRuntimeOwnerPositiveFixtureComponentReuseDecision
+          || d.productionBundleRuntimeOwnerPositiveFixtureComponentReuseDecision;
+        if (extra.componentProductionOwnerReuseDecision === 'owner-reused-positive-fixture') {
+          d.componentProductionOwnerReuseDecision = 'owner-reused-positive-fixture';
+          d.componentProductionOwnerReuseDecisionSource = 'production-owner-positive-fixture-v1_23';
+          d.componentProductionOwnerReuseDecisionReason =
+            extra.componentProductionOwnerReuseDecisionReason
+            || 'repository positive fixture owner side effect satisfied through custom-scheme runtime path';
+          d.componentProductionOwnerReuseDecisionTags =
+            extra.componentProductionOwnerReuseDecisionTags
+            || d.productionBundleRuntimeOwnerPositiveFixtureExpectedTags;
+        }
+      }
+
+      async function maybeImportProductionOwnerPositiveFixture() {
+        if (productionOwnerPositiveFixtureImportAttempted || productionOwnerPositiveFixtureImportInProgress) {
+          return;
+        }
+        const root = productionOwnerPositiveFixtureRootResource();
+        if (!root) {
+          return;
+        }
+        const dependency = productionOwnerPositiveFixtureDependencyResource(root);
+        if (!dependency) {
+          return;
+        }
+        const rootSource = componentFrontendResourceBodies.get(root.path) || '';
+        const dependencySource = componentFrontendResourceBodies.get(dependency.path) || '';
+        if (!rootSource || !dependencySource) {
+          return;
+        }
+        productionOwnerPositiveFixtureImportInProgress = true;
+        productionOwnerPositiveFixtureImportAttempted = true;
+        installOpaqueOriginStorageFallbacks();
+        installVaadinDevBundleGlobals();
+        let dependencyUrl = '';
+        let rootUrl = '';
+        const baseExtra = productionOwnerPositiveFixtureStageExtra(root, dependency, root, 'positive-fixture-root', {
+          productionBundleRuntimeOwnerPositiveFixtureExecutionResult: 'execution-attempt:' + root.path
+        });
+        applyProductionOwnerPositiveFixtureDiagnostics(baseExtra);
+        try {
+          const dependencyExtra = productionOwnerPositiveFixtureStageExtra(root, dependency, dependency,
+            'positive-fixture-dependency', {
+              productionBundleRuntimeOwnerPositiveFixtureExecutionResult: 'dependency-staged:' + dependency.path
+            });
+          dependencyUrl = await stageHostOwnedFrontendArtifact(dependency, dependencySource, 'staged', dependencyExtra);
+          if (!dependencyUrl) {
+            throw new Error('production-owner-positive-fixture-dependency-stage-url-missing');
+          }
+          applyProductionOwnerPositiveFixtureDiagnostics(Object.assign({}, dependencyExtra, {
+            productionBundleRuntimeOwnerPositiveFixtureDependencyCustomSchemeUrl: dependencyUrl
+          }));
+          rootUrl = await stageHostOwnedFrontendArtifact(root, rootSource, 'execution-attempt',
+            Object.assign({}, baseExtra, {
+              productionBundleRuntimeOwnerPositiveFixtureDependencyCustomSchemeUrl: dependencyUrl,
+              productionBundleRuntimeOwnerPositiveFixtureDependencyRewriteResult:
+                './owner-dependency-v1_23.js=>' + dependencyUrl
+            }));
+          if (!rootUrl) {
+            throw new Error('production-owner-positive-fixture-root-stage-url-missing');
+          }
+          applyProductionOwnerPositiveFixtureDiagnostics(Object.assign({}, baseExtra, {
+            productionBundleRuntimeOwnerPositiveFixtureRootCustomSchemeUrl: rootUrl,
+            productionBundleRuntimeOwnerPositiveFixtureDependencyCustomSchemeUrl: dependencyUrl,
+            productionBundleRuntimeOwnerPositiveFixtureDependencyRewriteResult:
+              './owner-dependency-v1_23.js=>' + dependencyUrl,
+            productionBundleRuntimeOwnerPositiveFixtureStageObserved: true
+          }));
+          await import(rootUrl);
+          const ownerRuntime = window.VaadinDesktopProductionOwnerV123 || {};
+          const ownerDependency = window.VaadinDesktopProductionOwnerDependencyV123 || {};
+          const expectedTag = root.productionBundleRuntimeOwnerPositiveFixtureExpectedTags
+            || 'vatori-production-owner-fixture';
+          const expectedGlobal = root.productionBundleRuntimeOwnerPositiveFixtureExpectedGlobals
+            || 'window.VaadinDesktopProductionOwnerV123';
+          const tagSatisfied = !!customElements.get(expectedTag);
+          const dependencySatisfied = ownerDependency.executed === true
+            && ownerDependency.executionVersion === baseExtra.productionBundleRuntimeOwnerPositiveFixtureVersion;
+          const runtimeSatisfied = ownerRuntime.imported === true
+            && ownerRuntime.executionVersion === baseExtra.productionBundleRuntimeOwnerPositiveFixtureVersion
+            && Array.isArray(ownerRuntime.tags)
+            && ownerRuntime.tags.includes(expectedTag)
+            && Array.isArray(ownerRuntime.globals)
+            && ownerRuntime.globals.includes(expectedGlobal);
+          if (!tagSatisfied || !dependencySatisfied || !runtimeSatisfied) {
+            throw new Error('production-owner-positive-fixture-side-effect-missing');
+          }
+          const successExtra = productionOwnerPositiveFixtureStageExtra(root, dependency, root,
+            'positive-fixture-root', {
+              productionBundleRuntimeOwnerPositiveFixtureImported: true,
+              productionBundleRuntimeOwnerPositiveFixtureSideEffectSatisfied: true,
+              productionBundleRuntimeOwnerPositiveFixtureOwnerOwnedRuntimeSatisfied: true,
+              productionBundleRuntimeOwnerPositiveFixtureRootCustomSchemeUrl: rootUrl,
+              productionBundleRuntimeOwnerPositiveFixtureDependencyCustomSchemeUrl: dependencyUrl,
+              productionBundleRuntimeOwnerPositiveFixtureExecutionResult:
+                'executed:' + root.path + '=>' + dependency.path,
+              productionBundleRuntimeOwnerPositiveFixtureSideEffectProof:
+                'customElements:' + expectedTag + ';global:' + expectedGlobal + ';dependency=window.VaadinDesktopProductionOwnerDependencyV123.executed',
+              productionBundleRuntimeOwnerPositiveFixtureFailureLayer: '',
+              productionBundleRuntimeOwnerPositiveFixtureBrowserError: '',
+              productionBundleRuntimeOwnerPositiveFixtureDependencyRewriteResult:
+                './owner-dependency-v1_23.js=>' + dependencyUrl,
+              productionBundleRuntimeOwnerPositiveFixtureComponentReuseDecision:
+                'owner-reused-positive-fixture',
+              componentProductionOwnerReuseDecisionVersion:
+                root.componentProductionOwnerReuseDecisionVersion || 'flow-ipc-component-owner-reuse-decision-v1_19',
+              componentProductionOwnerReuseDecisionSource: 'production-owner-positive-fixture-v1_23',
+              componentProductionOwnerReuseDecision: 'owner-reused-positive-fixture',
+              componentProductionOwnerReuseDecisionReason:
+                'positive fixture owner module imported before focused component imports and exposed expected tags/globals',
+              componentProductionOwnerReuseDecisionTags: expectedTag,
+              componentProductionOwnerReuseDecisionPhase: 'before-component-imports'
+            });
+          applyProductionOwnerPositiveFixtureDiagnostics(successExtra);
+          const dependencySuccessExtra = productionOwnerPositiveFixtureStageExtra(root, dependency, dependency,
+            'positive-fixture-dependency', {
+              productionBundleRuntimeOwnerPositiveFixtureImported: true,
+              productionBundleRuntimeOwnerPositiveFixtureSideEffectSatisfied: true,
+              productionBundleRuntimeOwnerPositiveFixtureOwnerOwnedRuntimeSatisfied: true,
+              productionBundleRuntimeOwnerPositiveFixtureRootCustomSchemeUrl: rootUrl,
+              productionBundleRuntimeOwnerPositiveFixtureDependencyCustomSchemeUrl: dependencyUrl,
+              productionBundleRuntimeOwnerPositiveFixtureExecutionResult:
+                'executed:' + dependency.path,
+              productionBundleRuntimeOwnerPositiveFixtureSideEffectProof:
+                'dependency=window.VaadinDesktopProductionOwnerDependencyV123.executed',
+              productionBundleRuntimeOwnerPositiveFixtureFailureLayer: '',
+              productionBundleRuntimeOwnerPositiveFixtureBrowserError: '',
+              productionBundleRuntimeOwnerPositiveFixtureDependencyRewriteResult:
+                './owner-dependency-v1_23.js=>' + dependencyUrl,
+              productionBundleRuntimeOwnerPositiveFixtureComponentReuseDecision:
+                'owner-reused-positive-fixture',
+              componentProductionOwnerReuseDecisionVersion:
+                root.componentProductionOwnerReuseDecisionVersion || 'flow-ipc-component-owner-reuse-decision-v1_19',
+              componentProductionOwnerReuseDecisionSource: 'production-owner-positive-fixture-v1_23',
+              componentProductionOwnerReuseDecision: 'owner-reused-positive-fixture',
+              componentProductionOwnerReuseDecisionReason:
+                'positive fixture dependency executed through owner custom scheme before focused component imports',
+              componentProductionOwnerReuseDecisionTags: expectedTag,
+              componentProductionOwnerReuseDecisionPhase: 'before-component-imports'
+            });
+          recordFrontendStageOutcome(dependency, dependencyUrl, 'executed',
+            dependencySuccessExtra);
+          recordFrontendStageOutcome(root, rootUrl, 'executed', successExtra);
+        } catch (error) {
+          const message = error && error.message ? error.message : String(error);
+          const failureExtra = productionOwnerPositiveFixtureStageExtra(root, dependency, root,
+            'positive-fixture-root', {
+              productionBundleRuntimeOwnerPositiveFixtureImported: false,
+              productionBundleRuntimeOwnerPositiveFixtureSideEffectSatisfied: false,
+              productionBundleRuntimeOwnerPositiveFixtureOwnerOwnedRuntimeSatisfied: false,
+              productionBundleRuntimeOwnerPositiveFixtureRootCustomSchemeUrl: rootUrl,
+              productionBundleRuntimeOwnerPositiveFixtureDependencyCustomSchemeUrl: dependencyUrl,
+              productionBundleRuntimeOwnerPositiveFixtureExecutionResult:
+                'strict-blocker:production-owner-positive-fixture:' + root.path,
+              productionBundleRuntimeOwnerPositiveFixtureFailureLayer:
+                message.includes('side-effect')
+                  ? 'production-owner-positive-fixture-side-effect-missing'
+                  : 'production-owner-positive-fixture-browser-import-failed',
+              productionBundleRuntimeOwnerPositiveFixtureBrowserError: message,
+              productionBundleRuntimeOwnerPositiveFixtureComponentReuseDecision:
+                'focused-fallback-after-positive-fixture-failure',
+              browserError: message,
+              failureLayer: 'production-owner-positive-fixture-browser-import-failed'
+            });
+          applyProductionOwnerPositiveFixtureDiagnostics(failureExtra);
+          recordFrontendStageOutcome(root, rootUrl, 'strict-blocker', failureExtra);
+        } finally {
+          productionOwnerPositiveFixtureImportInProgress = false;
+          refreshFrontendStagingDiagnostics();
+        }
       }
 
       function customElementRegistrySnapshot(tag) {

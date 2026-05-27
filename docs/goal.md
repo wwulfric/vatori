@@ -28,11 +28,12 @@ v0/v1 runtime 切片走向可产品化桌面框架的最终完成状态。
 - `docs/goal-1_20.md`：Production Owner-Owned Runtime Reuse Path，已完成。
 - `docs/goal-1_21.md`：Unified Frontend Resource Resolver Contract，已完成。
 - `docs/goal-1_22.md`：Generated Lazy Chunk File Positive Execution Boundary，已完成。
+- `docs/goal-1_23.md`：Production Owner Positive Runtime Fixture Boundary，已完成。
 
-当前已完成到 `docs/goal-1_22.md`。下一阶段应从 generated lazy chunk-file positive execution
-fixture 继续推进到一个真实执行闭环 blocker：让当前 app/build 产生真实 generated chunk、
-接入受支持 Vaadin lazy chunk SPI、production owner side-effect / owner-owned runtime reuse，
-或 dev-mode/Vite execution。
+当前已完成到 `docs/goal-1_23.md`。下一阶段应从 positive fixture 证明继续推进到真实
+app/build 或产品化路径：让当前 app/build 产生真实 generated chunk、接入受支持 Vaadin lazy
+chunk SPI、让真实 production owner 暴露可复用 owner contract，或选择 dev-mode/Vite /
+packaging-time staging 作为最终 frontend/resource pipeline 路径。
 
 后续阶段应继续以 `docs/goal-1_23.md` 等文件拆分，
 每个阶段只拿走本长期目标中的一个可评审切片。不要把本文件改写成短期任务清单；
@@ -56,7 +57,7 @@ fixture 继续推进到一个真实执行闭环 blocker：让当前 app/build �
 
 ## 当前基线
 
-截至 goal 1.22，仓库已经证明：
+截至 goal 1.23，仓库已经证明：
 
 - `dev-ipc` 可以启动 no-localhost Flow IPC runtime。
 - 真实 macOS Swift/AppKit/WKWebView 窗口可以运行 Flow IPC smoke app 和 framework
@@ -267,6 +268,20 @@ fixture 继续推进到一个真实执行闭环 blocker：让当前 app/build �
   `generatedLazyChunkFileFixtureSideEffectSatisfied=true`。这证明 resolver/executor 在真实
   chunk-file table shape 存在时可以闭环，但不是当前 Vaadin app/build 真实生成了 lazy chunk；
   v1.12 的真实 dev-bundle no-op table / `chunk-file-not-generated` blocker 仍保留。
+- v1.23 已为 production owner runtime path 增加 repository-local、Vaadin production-owner
+  同形状的正向 owner runtime fixture：Java manifest / resource response 声明
+  `productionBundleRuntimeOwnerPositiveFixtureVersion=flow-ipc-production-owner-positive-runtime-v1_23`、
+  root/dependency artifact、expected tags/globals、execution policy 和 no-Blob-fallback
+  contract；Swift host 通过同一 IPC resource resolver 和 `vatori-resource://flow-ipc/production-owner/...`
+  custom scheme stage root/dependency，使用 owner namespace、relative import rewrite、
+  sha256 integrity 和 dynamic import，在 focused component imports 前验证
+  `productionBundleRuntimeOwnerPositiveFixtureImported=true`、
+  `productionBundleRuntimeOwnerPositiveFixtureSideEffectSatisfied=true`、
+  `productionBundleRuntimeOwnerPositiveFixtureOwnerOwnedRuntimeSatisfied=true` 和
+  `componentProductionOwnerReuseDecision=owner-reused-positive-fixture`。这证明当 owner runtime
+  artifact 具备可复用 side-effect contract 时，当前 no-localhost custom-scheme owner path 可以闭环；
+  它不是当前 app/build 的真实 Vaadin production owner parity。真实 production owner 仍保留
+  `production-owner-owned-missing-real-artifact` / focused fallback blocker。
 - 当前 app/build 的真实 generated/lazy chunk file parity、production owner import/side-effect success
   和 dev-mode/Vite execution 仍是明确 blocker，不计入最终完成。
 
@@ -361,15 +376,16 @@ fixture 继续推进到一个真实执行闭环 blocker：让当前 app/build �
 
 以下项目仍需要后续阶段推进：
 
-- 基于 v1.22 的 generated lazy chunk-file positive fixture，继续让当前 app/build 产生真实
-  generated lazy chunk file，接入受支持 Vaadin lazy chunk SPI，或把 production bundle owned
-  execution 和 dev-mode/Vite execution 从 partial/blocker 推进到真实可执行路径。
+- 基于 v1.22 generated lazy chunk-file positive fixture 和 v1.23 production owner positive
+  runtime fixture，继续让当前 app/build 产生真实 generated lazy chunk file，接入受支持
+  Vaadin lazy chunk SPI，或把真实 production bundle owned execution / dev-mode/Vite execution
+  从 partial/blocker 推进到真实可执行路径。
 - 真实 app/build 的 generated/lazy `Flow.loadOnDemand` chunk-file parity，不再停在真实
   generated-flow-imports no-op / missing chunk file blocker，也不只依赖 repository fixture。
 - Production bundle owner import/side-effect success、chunk side-effect ownership、
-  packaging-time staging，以及把 v1.20 owner-first runtime reuse attempt 从
+  packaging-time staging，以及把真实 v1.20 owner-first runtime reuse attempt 从
   `production-owner-owned-missing-real-artifact` / focused fallback 推进到可复用
-  owner-owned runtime path。
+  owner-owned runtime path；v1.23 positive fixture 只能证明基础设施可行，不能替代真实 owner parity。
 - Dev-mode/Vite graph execution 或可靠替代模式。
 - Broader Vaadin component parity，尤其是 Grid/VirtualList、ComboBox、DatePicker、
   Dialog、Upload。
@@ -394,17 +410,19 @@ fixture 继续推进到一个真实执行闭环 blocker：让当前 app/build �
 
 ## 当前建议的下一阶段
 
-`docs/goal-1_22.md` 已完成 generated lazy chunk-file positive execution boundary。它不会把
-repository fixture 包装成当前 app/build 真实 generated chunk parity，而是证明当 Vaadin 同形状
-`pending.push(import('./chunks/chunk-*.js'))` table 存在时，当前 no-localhost resolver/parser/
-staging/import/callback/side-effect path 可以闭环。
+`docs/goal-1_23.md` 已完成 production owner positive runtime fixture boundary。它不会把
+repository fixture 包装成当前 app/build 真实 production owner parity，而是证明当 owner runtime
+artifact 暴露可复用 side-effect contract 时，当前 IPC resource response、host-owned custom
+scheme、owner namespace、dependency rewrite、dynamic import 和 side-effect verification path
+可以闭环。
 
-v1.23 可继续从以下方向选择：
+v1.24 可继续从以下方向选择：
 
 - 让当前 smoke/framework build 产生真实 generated lazy chunk file，或评估受支持 Vaadin lazy
   chunk SPI，把 v1.22 fixture path 推进为真实 app/build path。
 - Dev-mode/Vite graph execution 或可靠替代模式。
-- Production owner side-effect / owner-owned runtime reuse success。
+- 真实 production owner side-effect / owner-owned runtime reuse success，或 packaging-time
+  staging contract。
 - Broader Vaadin component parity，尤其是 Grid/VirtualList、ComboBox、DatePicker、Dialog、
   Upload。
 - Swift host tests / default-host readiness。

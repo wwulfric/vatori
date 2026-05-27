@@ -83,6 +83,9 @@ public final class DesktopTraceInspector {
         FLOW_IPC_V1_22_GENERATED_CHUNK_FIXTURE(
                 "--require-flow-ipc-v1_22-generated-chunk-fixture"),
         FLOW_IPC_V1_22("--require-flow-ipc-v1_22"),
+        FLOW_IPC_V1_23_PRODUCTION_OWNER_POSITIVE_FIXTURE(
+                "--require-flow-ipc-v1_23-production-owner-positive-fixture"),
+        FLOW_IPC_V1_23("--require-flow-ipc-v1_23"),
         FLOW_IPC_V1_3_FRAMEWORK("--require-flow-ipc-v1_3-framework");
 
         private final String option;
@@ -287,6 +290,25 @@ public final class DesktopTraceInspector {
                         FLOW_IPC_V1_20_PRODUCTION_OWNER_OWNED_RUNTIME, FLOW_IPC_V1_20,
                         FLOW_IPC_V1_21_FRONTEND_RESOLVER_CONTRACT, FLOW_IPC_V1_21,
                         FLOW_IPC_V1_22_GENERATED_CHUNK_FIXTURE, FLOW_IPC_V1_22);
+                case FLOW_IPC_V1_23_PRODUCTION_OWNER_POSITIVE_FIXTURE ->
+                    EnumSet.of(FLOW_IPC_V1_23_PRODUCTION_OWNER_POSITIVE_FIXTURE);
+                case FLOW_IPC_V1_23 -> EnumSet.of(FLOW_IPC_V1, FLOW_IPC_V1_1, FLOW_IPC_V1_2,
+                        FLOW_IPC_V1_3, FLOW_IPC_V1_4, FLOW_IPC_V1_5, FLOW_IPC_V1_7,
+                        FLOW_IPC_V1_8, FLOW_IPC_V1_9_LOADONDEMAND, FLOW_IPC_V1_9,
+                        FLOW_IPC_V1_10_LAZY_DEPENDENCY, FLOW_IPC_V1_10_PRODUCTION_RUNTIME,
+                        FLOW_IPC_V1_10, FLOW_IPC_V1_11_LOADONDEMAND_CHUNK, FLOW_IPC_V1_11,
+                        FLOW_IPC_V1_12_LOADONDEMAND_CHUNK_FILE, FLOW_IPC_V1_12,
+                        FLOW_IPC_V1_13_PRODUCTION_OWNER, FLOW_IPC_V1_13,
+                        FLOW_IPC_V1_14_PRODUCTION_OWNER_IMPORT, FLOW_IPC_V1_14,
+                        FLOW_IPC_V1_15_PRODUCTION_OWNER_DEPENDENCIES, FLOW_IPC_V1_15,
+                        FLOW_IPC_V1_16_PRODUCTION_OWNER_ORDERING, FLOW_IPC_V1_16,
+                        FLOW_IPC_V1_17_RESOURCE_SCHEME, FLOW_IPC_V1_17,
+                        FLOW_IPC_V1_18_PRODUCTION_OWNER_RESOURCE_SCHEME, FLOW_IPC_V1_18,
+                        FLOW_IPC_V1_19_PRODUCTION_OWNER_SIDE_EFFECT, FLOW_IPC_V1_19,
+                        FLOW_IPC_V1_20_PRODUCTION_OWNER_OWNED_RUNTIME, FLOW_IPC_V1_20,
+                        FLOW_IPC_V1_21_FRONTEND_RESOLVER_CONTRACT, FLOW_IPC_V1_21,
+                        FLOW_IPC_V1_22_GENERATED_CHUNK_FIXTURE, FLOW_IPC_V1_22,
+                        FLOW_IPC_V1_23_PRODUCTION_OWNER_POSITIVE_FIXTURE, FLOW_IPC_V1_23);
                 case FLOW_IPC_V1_3_FRAMEWORK -> EnumSet.of(FLOW_IPC_V1_3_FRAMEWORK);
             };
         }
@@ -342,6 +364,9 @@ public final class DesktopTraceInspector {
                 case FLOW_IPC_V1_22_GENERATED_CHUNK_FIXTURE ->
                     summary.hasRequiredFlowIpcV1_22GeneratedChunkFixtureTypes();
                 case FLOW_IPC_V1_22 -> summary.hasRequiredFlowIpcV1_22Types();
+                case FLOW_IPC_V1_23_PRODUCTION_OWNER_POSITIVE_FIXTURE ->
+                    summary.hasRequiredFlowIpcV1_23ProductionOwnerPositiveFixtureTypes();
+                case FLOW_IPC_V1_23 -> summary.hasRequiredFlowIpcV1_23Types();
                 case FLOW_IPC_V1_3_FRAMEWORK -> summary.hasRequiredFlowIpcV1_3FrameworkTypes();
             };
         }
@@ -920,6 +945,26 @@ public final class DesktopTraceInspector {
                     && containsStringField(line, "componentProductionOwnerReusePolicyV1_20",
                             "owner-first-then-focused-fallback-v1_20")) {
                 summary.productionRuntimeOwnerOwnedRuntimeV120ManifestObserved = true;
+            }
+            if (line.contains("\"type\":\"bootstrapResponse\"")
+                    && line.contains("\"componentFrontendResources\"")
+                    && containsStringField(line, "productionBundleRuntimeOwnerPositiveFixtureVersion",
+                            "flow-ipc-production-owner-positive-runtime-v1_23")
+                    && containsStringField(line, "productionBundleRuntimeOwnerPositiveFixtureSource",
+                            "repository-production-owner-positive-fixture-v1_23")
+                    && containsStringField(line, "productionBundleRuntimeOwnerPositiveFixtureRootArtifact",
+                            "META-INF/vatori/production-owner/owner-runtime-v1_23.js")
+                    && containsStringField(line, "productionBundleRuntimeOwnerPositiveFixtureDependencyArtifact",
+                            "META-INF/vatori/production-owner/owner-dependency-v1_23.js")
+                    && containsStringField(line, "productionBundleRuntimeOwnerPositiveFixtureExpectedTags",
+                            "vatori-production-owner-fixture")
+                    && containsStringField(line, "productionBundleRuntimeOwnerPositiveFixtureExpectedGlobals",
+                            "window.VaadinDesktopProductionOwnerV123")
+                    && containsStringField(line, "productionBundleRuntimeOwnerPositiveFixtureExecutionPolicy",
+                            "owner-first-custom-scheme-positive-fixture-v1_23")
+                    && containsLiteralField(line, "productionBundleRuntimeOwnerPositiveFixtureNoBlobFallback",
+                            "true")) {
+                summary.productionRuntimeOwnerPositiveFixtureV123ManifestObserved = true;
             }
             if (line.contains("\"type\":\"bootstrapResponse\"")
                     && line.contains("\"componentFrontendResources\"")
@@ -1676,6 +1721,64 @@ public final class DesktopTraceInspector {
                 summary.generatedChunkFileFixtureV122ChunkResponseObserved = true;
             }
             if (line.contains("\"type\":\"resourceRequest\"")
+                    && containsPath(line, "META-INF/vatori/production-owner/owner-runtime-v1_23.js")
+                    && containsStringField(line, "lookupKind", "Production-owner-positive-fixture-root-v1_23")
+                    && containsStringField(line, "resolver", "repository-production-owner-positive-fixture-v1_23")
+                    && containsStringField(line, "executionPolicy",
+                            "owner-first-custom-scheme-positive-fixture-v1_23")
+                    && containsStringField(line, "productionBundleRuntimeOwnerResourceScheme",
+                            "vatori-resource")
+                    && containsStringField(line, "productionBundleRuntimeOwnerSideEffectExpectedTags",
+                            "vatori-production-owner-fixture")
+                    && containsStringField(line, "productionBundleRuntimeOwnerOwnedRuntimeExpectedGlobals",
+                            "window.VaadinDesktopProductionOwnerV123")
+                    && containsLiteralField(line, "productionBundleRuntimeOwnerOwnedRuntimeNoBlobFallback",
+                            "true")) {
+                summary.productionRuntimeOwnerPositiveFixtureV123RootRequestObserved = true;
+            }
+            if (line.contains("\"type\":\"resourceRequest\"")
+                    && containsPath(line, "META-INF/vatori/production-owner/owner-dependency-v1_23.js")
+                    && containsStringField(line, "lookupKind",
+                            "Production-owner-positive-fixture-dependency-v1_23")
+                    && containsStringField(line, "resolver", "repository-production-owner-positive-fixture-v1_23")
+                    && containsStringField(line, "executionPolicy",
+                            "owner-positive-fixture-dependency-v1_23")
+                    && containsStringField(line, "dependencyOf",
+                            "META-INF/vatori/production-owner/owner-runtime-v1_23.js")
+                    && containsStringField(line, "productionBundleRuntimeOwnerResourceScheme",
+                            "vatori-resource")
+                    && containsStringField(line, "productionBundleRuntimeOwnerSideEffectExpectedTags",
+                            "vatori-production-owner-fixture")
+                    && containsLiteralField(line, "productionBundleRuntimeOwnerOwnedRuntimeNoBlobFallback",
+                            "true")) {
+                summary.productionRuntimeOwnerPositiveFixtureV123DependencyRequestObserved = true;
+            }
+            if (line.contains("\"type\":\"resourceResponse\"")
+                    && containsPath(line, "META-INF/vatori/production-owner/owner-runtime-v1_23.js")
+                    && containsLiteralField(line, "productionBundleRuntimeOwnerPositiveFixture", "true")
+                    && containsStringField(line, "productionBundleRuntimeOwnerPositiveFixtureRole", "root")
+                    && containsStringField(line, "productionBundleRuntimeOwnerPositiveFixtureVersion",
+                            "flow-ipc-production-owner-positive-runtime-v1_23")
+                    && containsStringField(line, "productionBundleRuntimeOwnerPositiveFixtureDependencyArtifact",
+                            "META-INF/vatori/production-owner/owner-dependency-v1_23.js")
+                    && line.contains("\"sha256\":\"")
+                    && line.contains("\"bodyRedacted\":true")) {
+                summary.productionRuntimeOwnerPositiveFixtureV123RootResponseObserved = true;
+            }
+            if (line.contains("\"type\":\"resourceResponse\"")
+                    && containsPath(line, "META-INF/vatori/production-owner/owner-dependency-v1_23.js")
+                    && containsLiteralField(line, "productionBundleRuntimeOwnerPositiveFixture", "true")
+                    && containsStringField(line, "productionBundleRuntimeOwnerPositiveFixtureRole", "dependency")
+                    && containsStringField(line, "productionBundleRuntimeOwnerPositiveFixtureVersion",
+                            "flow-ipc-production-owner-positive-runtime-v1_23")
+                    && containsStringField(line, "productionBundleRuntimeOwnerPositiveFixtureDependencyArtifact",
+                            "META-INF/vatori/production-owner/owner-dependency-v1_23.js")
+                    && line.contains("productionBundleRuntimeOwnerPositiveFixtureDependencySha256")
+                    && line.contains("\"sha256\":\"")
+                    && line.contains("\"bodyRedacted\":true")) {
+                summary.productionRuntimeOwnerPositiveFixtureV123DependencyResponseObserved = true;
+            }
+            if (line.contains("\"type\":\"resourceRequest\"")
                     && line.contains("\"purpose\":\"generated-loadondemand-chunk-v1_11\"")
                     && line.contains("\"lookupKind\":\"Generated-flow-imports-dev-bundle-chunk-v1_4\"")
                     && containsPath(line, "vaadin-dev-bundle/webapp/VAADIN/build/generated-flow-imports-VW7hRaNw.js")
@@ -1925,6 +2028,13 @@ public final class DesktopTraceInspector {
                     && containsLiteralField(line, "productionBundleRuntimeOwnerBlobFallbackUsed", "false")) {
                 summary.productionRuntimeOwnerOwnedRuntimeV120StageObserved = true;
                 summary.productionRuntimeOwnerOwnedRuntimeV120ReuseDecisionObserved = true;
+            }
+            if (line.contains("\"type\":\"resourceStage\"")
+                    && (containsStringField(line, "productionBundleRuntimeOwnerOwnedRuntimeFailureLayer",
+                            "production-owner-owned-missing-real-artifact")
+                            || containsStringField(line, "componentProductionOwnerReuseDecision",
+                                    "focused-fallback-after-owner-owned-runtime-attempt"))) {
+                summary.productionRuntimeOwnerPositiveFixtureV123RealBlockerObserved = true;
             }
             if (line.contains("\"type\":\"resourceStage\"")
                     && containsStringField(line, "frontendResolverContractVersion",
@@ -2189,6 +2299,83 @@ public final class DesktopTraceInspector {
                             "window.VaadinDesktopGeneratedLazyChunkV122.executed")
                     && line.contains("\"executionStatus\":\"executed\"")) {
                 summary.generatedChunkFileFixtureV122StageObserved = true;
+            }
+            if (line.contains("\"type\":\"resourceStage\"")
+                    && line.contains("\"artifactFamily\":\"production-bundle\"")
+                    && containsPath(line, "META-INF/vatori/production-owner/owner-runtime-v1_23.js")
+                    && containsLiteralField(line, "productionBundleRuntimeOwnerPositiveFixture", "true")
+                    && containsStringField(line, "productionBundleRuntimeOwnerPositiveFixtureRole", "root")
+                    && containsLiteralField(line, "productionBundleRuntimeOwnerPositiveFixtureStageObserved",
+                            "true")
+                    && containsLiteralField(line, "productionBundleRuntimeOwnerPositiveFixtureImported",
+                            "true")
+                    && containsLiteralField(line,
+                            "productionBundleRuntimeOwnerPositiveFixtureSideEffectSatisfied", "true")
+                    && containsLiteralField(line,
+                            "productionBundleRuntimeOwnerPositiveFixtureOwnerOwnedRuntimeSatisfied", "true")
+                    && containsStringField(line, "productionBundleRuntimeOwnerPositiveFixtureVersion",
+                            "flow-ipc-production-owner-positive-runtime-v1_23")
+                    && containsStringField(line, "productionBundleRuntimeOwnerPositiveFixtureSource",
+                            "repository-production-owner-positive-fixture-v1_23")
+                    && containsStringField(line, "productionBundleRuntimeOwnerPositiveFixtureExecutionPolicy",
+                            "owner-first-custom-scheme-positive-fixture-v1_23")
+                    && containsStringField(line, "productionBundleRuntimeOwnerPositiveFixtureExpectedTags",
+                            "vatori-production-owner-fixture")
+                    && containsStringField(line, "productionBundleRuntimeOwnerPositiveFixtureExpectedGlobals",
+                            "window.VaadinDesktopProductionOwnerV123")
+                    && containsLiteralField(line, "productionBundleRuntimeOwnerPositiveFixtureNoBlobFallback",
+                            "true")
+                    && containsStringFieldPrefix(line,
+                            "productionBundleRuntimeOwnerPositiveFixtureRootCustomSchemeUrl",
+                            "vatori-resource://flow-ipc/production-owner/")
+                    && containsStringFieldPrefix(line,
+                            "productionBundleRuntimeOwnerPositiveFixtureDependencyCustomSchemeUrl",
+                            "vatori-resource://flow-ipc/production-owner/")
+                    && containsStringFieldPrefix(line,
+                            "productionBundleRuntimeOwnerPositiveFixtureExecutionResult", "executed:")
+                    && containsStringField(line,
+                            "productionBundleRuntimeOwnerPositiveFixtureComponentReuseDecision",
+                            "owner-reused-positive-fixture")
+                    && containsStringField(line, "stagedUrlScheme", "vatori-resource")
+                    && containsStringField(line, "executionStatus", "executed")) {
+                summary.productionRuntimeOwnerPositiveFixtureV123RootStageObserved = true;
+            }
+            if (line.contains("\"type\":\"resourceStage\"")
+                    && line.contains("\"artifactFamily\":\"production-bundle\"")
+                    && containsPath(line, "META-INF/vatori/production-owner/owner-dependency-v1_23.js")
+                    && containsLiteralField(line, "productionBundleRuntimeOwnerPositiveFixture", "true")
+                    && containsStringField(line, "productionBundleRuntimeOwnerPositiveFixtureRole", "dependency")
+                    && containsLiteralField(line, "productionBundleRuntimeOwnerPositiveFixtureStageObserved",
+                            "true")
+                    && containsLiteralField(line, "productionBundleRuntimeOwnerPositiveFixtureImported",
+                            "true")
+                    && containsLiteralField(line,
+                            "productionBundleRuntimeOwnerPositiveFixtureSideEffectSatisfied", "true")
+                    && containsLiteralField(line,
+                            "productionBundleRuntimeOwnerPositiveFixtureOwnerOwnedRuntimeSatisfied", "true")
+                    && containsStringField(line, "productionBundleRuntimeOwnerPositiveFixtureVersion",
+                            "flow-ipc-production-owner-positive-runtime-v1_23")
+                    && containsStringField(line, "productionBundleRuntimeOwnerPositiveFixtureSource",
+                            "repository-production-owner-positive-fixture-v1_23")
+                    && containsStringField(line, "productionBundleRuntimeOwnerPositiveFixtureExecutionPolicy",
+                            "owner-first-custom-scheme-positive-fixture-v1_23")
+                    && containsStringField(line, "productionBundleRuntimeOwnerPositiveFixtureExpectedTags",
+                            "vatori-production-owner-fixture")
+                    && containsStringField(line, "productionBundleRuntimeOwnerPositiveFixtureExpectedGlobals",
+                            "window.VaadinDesktopProductionOwnerV123")
+                    && containsLiteralField(line, "productionBundleRuntimeOwnerPositiveFixtureNoBlobFallback",
+                            "true")
+                    && containsStringFieldPrefix(line,
+                            "productionBundleRuntimeOwnerPositiveFixtureDependencyCustomSchemeUrl",
+                            "vatori-resource://flow-ipc/production-owner/")
+                    && containsStringFieldPrefix(line,
+                            "productionBundleRuntimeOwnerPositiveFixtureExecutionResult", "executed:")
+                    && containsStringField(line,
+                            "productionBundleRuntimeOwnerPositiveFixtureComponentReuseDecision",
+                            "owner-reused-positive-fixture")
+                    && containsStringField(line, "stagedUrlScheme", "vatori-resource")
+                    && containsStringField(line, "executionStatus", "executed")) {
+                summary.productionRuntimeOwnerPositiveFixtureV123DependencyStageObserved = true;
             }
             if (line.contains("\"type\":\"webview.dom\"")
                     && containsStringField(line, "frontendStagingResolverVersion", "flow-ipc-resource-staging-v1_5")
@@ -2783,6 +2970,60 @@ public final class DesktopTraceInspector {
                     && containsStringField(line, "generatedLazyChunkFileFixtureFailureLayer", "")) {
                 summary.generatedChunkFileFixtureV122DomObserved = true;
             }
+            if (line.contains("\"type\":\"webview.dom\"")
+                    && containsLiteralField(line, "productionBundleRuntimeOwnerPositiveFixtureObserved",
+                            "true")
+                    && containsLiteralField(line, "productionBundleRuntimeOwnerPositiveFixtureStageObserved",
+                            "true")
+                    && containsLiteralField(line, "productionBundleRuntimeOwnerPositiveFixtureImported",
+                            "true")
+                    && containsLiteralField(line,
+                            "productionBundleRuntimeOwnerPositiveFixtureSideEffectSatisfied", "true")
+                    && containsLiteralField(line,
+                            "productionBundleRuntimeOwnerPositiveFixtureOwnerOwnedRuntimeSatisfied", "true")
+                    && containsStringField(line, "productionBundleRuntimeOwnerPositiveFixtureVersion",
+                            "flow-ipc-production-owner-positive-runtime-v1_23")
+                    && containsStringField(line, "productionBundleRuntimeOwnerPositiveFixtureSource",
+                            "repository-production-owner-positive-fixture-v1_23")
+                    && containsStringField(line, "productionBundleRuntimeOwnerPositiveFixtureRootArtifact",
+                            "META-INF/vatori/production-owner/owner-runtime-v1_23.js")
+                    && containsStringField(line, "productionBundleRuntimeOwnerPositiveFixtureDependencyArtifact",
+                            "META-INF/vatori/production-owner/owner-dependency-v1_23.js")
+                    && containsStringField(line, "productionBundleRuntimeOwnerPositiveFixtureExpectedTags",
+                            "vatori-production-owner-fixture")
+                    && containsStringField(line, "productionBundleRuntimeOwnerPositiveFixtureExpectedGlobals",
+                            "window.VaadinDesktopProductionOwnerV123")
+                    && containsStringField(line, "productionBundleRuntimeOwnerPositiveFixtureExecutionPolicy",
+                            "owner-first-custom-scheme-positive-fixture-v1_23")
+                    && containsLiteralField(line, "productionBundleRuntimeOwnerPositiveFixtureNoBlobFallback",
+                            "true")
+                    && containsStringFieldPrefix(line,
+                            "productionBundleRuntimeOwnerPositiveFixtureRootCustomSchemeUrl",
+                            "vatori-resource://flow-ipc/production-owner/")
+                    && containsStringFieldPrefix(line,
+                            "productionBundleRuntimeOwnerPositiveFixtureDependencyCustomSchemeUrl",
+                            "vatori-resource://flow-ipc/production-owner/")
+                    && containsStringFieldPrefix(line,
+                            "productionBundleRuntimeOwnerPositiveFixtureExecutionResult", "executed:")
+                    && containsStringField(line, "productionBundleRuntimeOwnerPositiveFixtureSideEffectProof",
+                            "customElements:vatori-production-owner-fixture;global:window.VaadinDesktopProductionOwnerV123;dependency=window.VaadinDesktopProductionOwnerDependencyV123.executed")
+                    && containsStringField(line,
+                            "productionBundleRuntimeOwnerPositiveFixtureComponentReuseDecision",
+                            "owner-reused-positive-fixture")
+                    && containsStringField(line, "componentProductionOwnerReuseDecision",
+                            "owner-reused-positive-fixture")
+                    && containsStringField(line, "productionBundleRuntimeOwnerPositiveFixtureFailureLayer", "")) {
+                summary.productionRuntimeOwnerPositiveFixtureV123DomObserved = true;
+            }
+            if (line.contains("\"type\":\"webview.dom\"")
+                    && (containsStringField(line, "frontendArtifactProductionBundleRuntimeOwnerOwnedRuntimeFailureLayer",
+                            "production-owner-owned-missing-real-artifact")
+                            || containsStringField(line, "productionBundleRuntimeOwnerOwnedRuntimeFailureLayer",
+                                    "production-owner-owned-missing-real-artifact")
+                            || containsStringField(line, "componentProductionOwnerReuseDecision",
+                                    "focused-fallback-after-owner-owned-runtime-attempt"))) {
+                summary.productionRuntimeOwnerPositiveFixtureV123RealBlockerObserved = true;
+            }
             if (line.contains("\"type\":\"resourceRequest\"")
                     && line.contains("\"purpose\":\"vaadin-web-component-resource-probe\"")
                     && line.contains("\"lookupKind\":\"BigDecimalField-minimum-component-resource\"")
@@ -3358,6 +3599,7 @@ public final class DesktopTraceInspector {
 
     private static boolean containsComponentOwnerReuseDecisionV119(String line, String field) {
         return containsStringField(line, field, "owner-reused")
+                || containsStringField(line, field, "owner-reused-positive-fixture")
                 || containsStringField(line, field, "focused-fallback-after-owner-side-effect-check")
                 || containsStringField(line, field, "focused-fallback-after-owner-owned-runtime-attempt");
     }
@@ -3380,6 +3622,7 @@ public final class DesktopTraceInspector {
 
     private static boolean containsComponentOwnerReuseDecisionV120(String line, String field) {
         return containsStringField(line, field, "owner-reused")
+                || containsStringField(line, field, "owner-reused-positive-fixture")
                 || containsStringField(line, field, "focused-fallback-after-owner-owned-runtime-attempt");
     }
 
@@ -3714,6 +3957,15 @@ public final class DesktopTraceInspector {
         private boolean generatedChunkFileFixtureV122ChunkResponseObserved;
         private boolean generatedChunkFileFixtureV122StageObserved;
         private boolean generatedChunkFileFixtureV122DomObserved;
+        private boolean productionRuntimeOwnerPositiveFixtureV123ManifestObserved;
+        private boolean productionRuntimeOwnerPositiveFixtureV123RootRequestObserved;
+        private boolean productionRuntimeOwnerPositiveFixtureV123DependencyRequestObserved;
+        private boolean productionRuntimeOwnerPositiveFixtureV123RootResponseObserved;
+        private boolean productionRuntimeOwnerPositiveFixtureV123DependencyResponseObserved;
+        private boolean productionRuntimeOwnerPositiveFixtureV123RootStageObserved;
+        private boolean productionRuntimeOwnerPositiveFixtureV123DependencyStageObserved;
+        private boolean productionRuntimeOwnerPositiveFixtureV123DomObserved;
+        private boolean productionRuntimeOwnerPositiveFixtureV123RealBlockerObserved;
 
         public boolean hasRequiredFlowIpcTypes() {
             return types.keySet().containsAll(FLOW_IPC_REQUIRED_TYPES)
@@ -4071,6 +4323,24 @@ public final class DesktopTraceInspector {
         public boolean hasRequiredFlowIpcV1_22Types() {
             return hasRequiredFlowIpcV1_21Types()
                     && hasRequiredFlowIpcV1_22GeneratedChunkFixtureTypes();
+        }
+
+        public boolean hasRequiredFlowIpcV1_23ProductionOwnerPositiveFixtureTypes() {
+            return hasRequiredFlowIpcV1_20ProductionOwnerOwnedRuntimeTypes()
+                    && productionRuntimeOwnerPositiveFixtureV123ManifestObserved
+                    && productionRuntimeOwnerPositiveFixtureV123RootRequestObserved
+                    && productionRuntimeOwnerPositiveFixtureV123DependencyRequestObserved
+                    && productionRuntimeOwnerPositiveFixtureV123RootResponseObserved
+                    && productionRuntimeOwnerPositiveFixtureV123DependencyResponseObserved
+                    && productionRuntimeOwnerPositiveFixtureV123RootStageObserved
+                    && productionRuntimeOwnerPositiveFixtureV123DependencyStageObserved
+                    && productionRuntimeOwnerPositiveFixtureV123DomObserved
+                    && productionRuntimeOwnerPositiveFixtureV123RealBlockerObserved;
+        }
+
+        public boolean hasRequiredFlowIpcV1_23Types() {
+            return hasRequiredFlowIpcV1_22Types()
+                    && hasRequiredFlowIpcV1_23ProductionOwnerPositiveFixtureTypes();
         }
 
         public boolean hasRequiredFlowIpcV1_3FrameworkTypes() {
@@ -4470,6 +4740,20 @@ public final class DesktopTraceInspector {
             System.out.println("Flow IPC v1.22 generated chunk fixture stage/DOM observed: "
                     + generatedChunkFileFixtureV122StageObserved + "/"
                     + generatedChunkFileFixtureV122DomObserved);
+            System.out.println("Flow IPC v1.23 production owner positive fixture manifest observed: "
+                    + productionRuntimeOwnerPositiveFixtureV123ManifestObserved);
+            System.out.println("Flow IPC v1.23 production owner positive fixture request root/dependency observed: "
+                    + productionRuntimeOwnerPositiveFixtureV123RootRequestObserved + "/"
+                    + productionRuntimeOwnerPositiveFixtureV123DependencyRequestObserved);
+            System.out.println("Flow IPC v1.23 production owner positive fixture response root/dependency observed: "
+                    + productionRuntimeOwnerPositiveFixtureV123RootResponseObserved + "/"
+                    + productionRuntimeOwnerPositiveFixtureV123DependencyResponseObserved);
+            System.out.println("Flow IPC v1.23 production owner positive fixture stage root/dependency observed: "
+                    + productionRuntimeOwnerPositiveFixtureV123RootStageObserved + "/"
+                    + productionRuntimeOwnerPositiveFixtureV123DependencyStageObserved);
+            System.out.println("Flow IPC v1.23 production owner positive fixture DOM/real blocker observed: "
+                    + productionRuntimeOwnerPositiveFixtureV123DomObserved + "/"
+                    + productionRuntimeOwnerPositiveFixtureV123RealBlockerObserved);
             System.out.println("Flow IPC v1.6 TextField graph manifest observed: "
                     + frontendTextFieldV16ManifestObserved);
             System.out.println("Flow IPC v1.6 TextField graph request observed: "

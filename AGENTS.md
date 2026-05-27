@@ -155,6 +155,8 @@ bash bin/flow-ipc-trace-inspect --require-flow-ipc-v1_21-frontend-resolver-contr
 bash bin/flow-ipc-trace-inspect --require-flow-ipc-v1_21 docs/traces/flow-ipc-v1_21.ndjson
 bash bin/flow-ipc-trace-inspect --require-flow-ipc-v1_22-generated-chunk-fixture docs/traces/flow-ipc-v1_22.ndjson
 bash bin/flow-ipc-trace-inspect --require-flow-ipc-v1_22 docs/traces/flow-ipc-v1_22.ndjson
+bash bin/flow-ipc-trace-inspect --require-flow-ipc-v1_23-production-owner-positive-fixture docs/traces/flow-ipc-v1_23.ndjson
+bash bin/flow-ipc-trace-inspect --require-flow-ipc-v1_23 docs/traces/flow-ipc-v1_23.ndjson
 ```
 
 验证 server-side UIDL writer adapter：
@@ -253,6 +255,6 @@ Vaadin：
 
 1. 在 `vaadin-desktop-host-swift` 跨本地机器稳定后，把它作为默认 host。
 2. 将 Host Protocol v0 trace 推进为 bidirectional command/result transport。
-3. 基于 v1.21 unified frontend resolver contract 和 v1.22 generated chunk-file positive fixture，继续启用真实 production owner side-effect/reuse success，或推进真实 app/build generated chunk file / 受支持 Vaadin lazy chunk SPI、dev-mode/Vite execution。
+3. 基于 v1.21 unified frontend resolver contract、v1.22 generated chunk-file positive fixture 和 v1.23 production owner positive runtime fixture，继续启用真实 production owner side-effect/reuse success，或推进真实 app/build generated chunk file / 受支持 Vaadin lazy chunk SPI、dev-mode/Vite execution。
 4. 为 Swift host window launch、sidecar cleanup 和 desktop capability call 增加 smoke tests。
 5. 将受控 duplicate/late push probe 推进为 durable queue、ack、reconnect 和 resync 语义。

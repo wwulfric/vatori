@@ -488,7 +488,19 @@ public final class FlowClientResourceSmokeMain {
                 || !Objects.equals(productionBundleStatsResponse.get("productionBundleRuntimeEntryArtifact"),
                         devBundleIndexHtmlPath)
                 || !Objects.equals(productionBundleStatsResponse.get("productionBundleRuntimeOwnerFailureLayer"),
-                        "production-owner-runtime-contract-missing")) {
+                        "production-owner-runtime-contract-missing")
+                || !Objects.equals(productionBundleStatsResponse.get("productionBundleRuntimeOwnerImportVersion"),
+                        "flow-ipc-production-owner-import-v1_14")
+                || !Objects.equals(productionBundleStatsResponse.get("productionBundleRuntimeOwnerImportPolicy"),
+                        "controlled-owner-dynamic-import-after-component-graph-v1_14")
+                || !Objects.equals(productionBundleStatsResponse.get("productionBundleRuntimeOwnerImportArtifact"),
+                        devBundleIndexHtmlPath)
+                || !Objects.equals(
+                        productionBundleStatsResponse.get("productionBundleRuntimeOwnerImportExpectedSideEffects"),
+                        "window.Vaadin,window.Vaadin.Flow,window.Vaadin.Flow.loadOnDemand,customElements:vaadin-text-field|vaadin-checkbox|vaadin-select")
+                || !Objects.equals(
+                        productionBundleStatsResponse.get("productionBundleRuntimeOwnerImportAcceptableFailures"),
+                        "production-owner-relative-import-unresolved,production-owner-browser-import-failed,production-owner-duplicate-custom-element,production-owner-global-collision,production-owner-side-effect-unobservable")) {
             throw new IllegalStateException("Production bundle stats graph is missing runtime owner metadata");
         }
         Map<String, Object> productionRuntimeResponse = resources.response(devBundleIndexHtmlPath);
@@ -519,6 +531,18 @@ public final class FlowClientResourceSmokeMain {
                         "flow-ipc-production-owner-v1_13")
                 || !Objects.equals(productionRuntimeResponse.get("productionBundleRuntimeOwnerFailureLayer"),
                         "production-owner-runtime-contract-missing")
+                || !Objects.equals(productionRuntimeResponse.get("productionBundleRuntimeOwnerImportVersion"),
+                        "flow-ipc-production-owner-import-v1_14")
+                || !Objects.equals(productionRuntimeResponse.get("productionBundleRuntimeOwnerImportPolicy"),
+                        "controlled-owner-dynamic-import-after-component-graph-v1_14")
+                || !Objects.equals(productionRuntimeResponse.get("productionBundleRuntimeOwnerImportArtifact"),
+                        devBundleIndexHtmlPath)
+                || !Objects.equals(
+                        productionRuntimeResponse.get("productionBundleRuntimeOwnerImportExpectedSideEffects"),
+                        "window.Vaadin,window.Vaadin.Flow,window.Vaadin.Flow.loadOnDemand,customElements:vaadin-text-field|vaadin-checkbox|vaadin-select")
+                || !Objects.equals(
+                        productionRuntimeResponse.get("productionBundleRuntimeOwnerImportAcceptableFailures"),
+                        "production-owner-relative-import-unresolved,production-owner-browser-import-failed,production-owner-duplicate-custom-element,production-owner-global-collision,production-owner-side-effect-unobservable")
                 || !Boolean.FALSE.equals(productionRuntimeResponse.get("componentProductionOwnerReused"))) {
             throw new IllegalStateException("Production bundle runtime artifact is missing runtime owner metadata");
         }
@@ -889,6 +913,7 @@ public final class FlowClientResourceSmokeMain {
         boolean flowLazyDependencyObserved = false;
         boolean productionRuntimeArtifactObserved = false;
         boolean productionRuntimeOwnerObserved = false;
+        boolean productionRuntimeOwnerImportObserved = false;
         for (Object entry : componentResources) {
             if (!(entry instanceof Map<?, ?> metadata)) {
                 throw new IllegalStateException("Component frontend resource manifest contains a non-object entry");
@@ -995,12 +1020,26 @@ public final class FlowClientResourceSmokeMain {
                     && "production-owner-runtime-contract-missing".equals(
                             metadata.get("productionBundleRuntimeOwnerFailureLayer"))
                     && Boolean.FALSE.equals(metadata.get("componentProductionOwnerReused"));
+            productionRuntimeOwnerImportObserved = productionRuntimeOwnerImportObserved
+                    || "production-bundle".equals(artifactFamily)
+                    && Boolean.TRUE.equals(metadata.get("productionBundleRuntimeArtifact"))
+                    && "flow-ipc-production-owner-import-v1_14".equals(
+                            metadata.get("productionBundleRuntimeOwnerImportVersion"))
+                    && "controlled-owner-dynamic-import-after-component-graph-v1_14".equals(
+                            metadata.get("productionBundleRuntimeOwnerImportPolicy"))
+                    && "vaadin-dev-bundle/webapp/VAADIN/build/indexhtml-BfYYZi8S.js".equals(
+                            metadata.get("productionBundleRuntimeOwnerImportArtifact"))
+                    && "production-owner-relative-import-unresolved,production-owner-browser-import-failed,production-owner-duplicate-custom-element,production-owner-global-collision,production-owner-side-effect-unobservable".equals(
+                            metadata.get("productionBundleRuntimeOwnerImportAcceptableFailures"))
+                    && Boolean.FALSE.equals(metadata.get("productionBundleRuntimeOwnerImportAttempted"))
+                    && Boolean.FALSE.equals(metadata.get("productionBundleRuntimeOwnerImported"));
         }
         if (!classpathResourceObserved || !legacyShimFallbackObserved || !devBundleEntryObserved
                 || !devBundleDependencyObserved || !productionBundleStatsObserved || !themeStaticResourceObserved
                 || !generatedLazyResourceObserved || !generatedLazyBundleChunkObserved || !devModePackageGraphObserved
                 || !generatedLoadOnDemandChunkObserved || !flowLazyDependencyObserved
-                || !productionRuntimeArtifactObserved || !productionRuntimeOwnerObserved) {
+                || !productionRuntimeArtifactObserved || !productionRuntimeOwnerObserved
+                || !productionRuntimeOwnerImportObserved) {
             throw new IllegalStateException("Component frontend resource manifest is missing a v1.4 artifact family");
         }
     }

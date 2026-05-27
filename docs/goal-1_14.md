@@ -1,6 +1,6 @@
 # Goal 1.14: Production Owner Import and Side-Effect Boundary
 
-状态：已规划，尚未执行。
+状态：已完成。
 
 `docs/goal.md` 是长期愿景和完成度账本。v1.13 已经把 production
 bundle runtime 从 v1.10 的宽泛 `execution-attempt` 推进为明确 owner contract：
@@ -17,6 +17,31 @@ artifact 发起受控 import / side-effect probe。Preferred 是 owner import �
 可观测 side-effect proof；Acceptable 是 import 真实发生但失败，且 blocker 从 v1.13 的
 `production-owner-runtime-contract-missing` 收敛到 browser import、relative dependency、
 custom element registry、global collision 或 side-effect-unobservable 的具体失败层。**
+
+## 完成结果
+
+v1.14 以 acceptable blocker 路径完成：production bundle runtime owner 已对真实
+stats-selected `vaadin-dev-bundle/webapp/VAADIN/build/indexhtml-BfYYZi8S.js` artifact 发起
+受控 import attempt，而不是继续停在 v1.13 的 owner stage / contract 证据。
+
+当前真实窗口 trace 记录：
+
+- `productionBundleRuntimeOwnerImportAttempted=true`
+- `productionBundleRuntimeOwnerImportVersion=flow-ipc-production-owner-import-v1_14`
+- `productionBundleRuntimeOwnerImportPolicy=controlled-owner-dynamic-import-after-component-graph-v1_14`
+- `productionBundleRuntimeOwnerImportModuleIdentity=production-owner-import-v1_14:vaadin-dev-bundle/webapp/VAADIN/build/indexhtml-BfYYZi8S.js`
+- `productionBundleRuntimeOwnerImportDependencyRewriteResult=unresolved:...`
+- `productionBundleRuntimeOwnerImportResolvedDependencyPaths=vaadin-dev-bundle/webapp/VAADIN/build/commonjsHelpers-CUmg6egw.js`
+- `productionBundleRuntimeOwnerFailureLayer=production-owner-relative-import-unresolved`
+- `productionBundleRuntimeOwnerBrowserError=Cannot define multiple custom elements with the same tag name`
+- `productionBundleRuntimeOwnerImportBrowserErrorName=NotSupportedError`
+- `componentProductionOwnerReused=false`
+
+因此 v1.14 不是完整 production bundle parity，也不是 production owner import success。
+它完成的是 owner import / side-effect boundary：v1.13 的
+`production-owner-runtime-contract-missing` 已被替换为真实 import attempt 产生的更具体
+relative dependency / browser collision blocker，后续阶段可以继续拆 owner dependency
+resolver、custom element collision ordering 或 custom-scheme/file-backed resolver。
 
 ## 为什么选择这个目标
 

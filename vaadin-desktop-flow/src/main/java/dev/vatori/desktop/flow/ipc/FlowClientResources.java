@@ -193,6 +193,20 @@ final class FlowClientResources {
             "owner-stage-resolved-import-intentionally-disabled-until-production-runtime-contract-can-own-indexhtml-side-effects";
     private static final String PRODUCTION_RUNTIME_OWNER_NEXT_STEP =
             "unify the production owner module identity with component focused dependency imports or move the owner to a custom-scheme/file-backed runtime before enabling indexhtml side effects";
+    private static final String PRODUCTION_RUNTIME_OWNER_IMPORT_VERSION =
+            "flow-ipc-production-owner-import-v1_14";
+    private static final String PRODUCTION_RUNTIME_OWNER_IMPORT_POLICY =
+            "controlled-owner-dynamic-import-after-component-graph-v1_14";
+    private static final String PRODUCTION_RUNTIME_OWNER_IMPORT_PHASE =
+            "after-component-imports";
+    private static final String PRODUCTION_RUNTIME_OWNER_IMPORT_EXPECTED_SIDE_EFFECTS =
+            "window.Vaadin,window.Vaadin.Flow,window.Vaadin.Flow.loadOnDemand,customElements:vaadin-text-field|vaadin-checkbox|vaadin-select";
+    private static final String PRODUCTION_RUNTIME_OWNER_IMPORT_ACCEPTABLE_FAILURES =
+            "production-owner-relative-import-unresolved,production-owner-browser-import-failed,production-owner-duplicate-custom-element,production-owner-global-collision,production-owner-side-effect-unobservable";
+    private static final String PRODUCTION_RUNTIME_OWNER_IMPORT_REWRITE_STRATEGY =
+            "rewrite-relative-dev-bundle-dependencies-before-owner-import-v1_14";
+    private static final String PRODUCTION_RUNTIME_OWNER_IMPORT_NEXT_STEP =
+            "if owner import fails, move the production owner to a custom-scheme/file-backed resolver or tighten dependency rewrite/global collision guards around the real indexhtml artifact";
     private static final String FLOW_CLIENT_IPC_BRIDGE_NEEDLE = """
             j.sendEventMessage=mI(function(a,b,c){var d=i.a.Z();d.Ab(a,b,c)});j.initializing=false;\
             """;
@@ -639,7 +653,9 @@ final class FlowClientResources {
                 strictBlocker("production-bundle", "flow-ipc-production-runtime-v1_10",
                         "production bundle stats now selects an executable runtime artifact and stages it through stable module identity, but full production runtime ownership is still blocked until side effects can be executed without relying on focused component entry imports"),
                 strictBlocker("production-bundle", PRODUCTION_RUNTIME_OWNER_BLOCKER,
-                        "production bundle owner is now explicit and independently staged, but import remains blocked until the owner can safely execute indexhtml side effects without colliding with focused component entry imports")));
+                        "production bundle owner is now explicit and independently staged, but import remains blocked until the owner can safely execute indexhtml side effects without colliding with focused component entry imports"),
+                strictBlocker("production-bundle", PRODUCTION_RUNTIME_OWNER_IMPORT_VERSION,
+                        "production bundle owner import is now a controlled v1.14 probe; success requires observable owner side effects, and acceptable failure must come from a real import attempt against the stats-selected indexhtml artifact")));
         manifest.put("transport", "flow-ipc");
         manifest.put("resourceLoading", "ipc-resource-request");
         manifest.put("componentClass", "com.vaadin.flow.component.textfield.BigDecimalField");
@@ -1048,10 +1064,32 @@ final class FlowClientResources {
                 "own production indexhtml custom element and Flow global side effects before component imports reuse them");
         attributes.put("productionBundleRuntimeOwnerCustomElementTags",
                 "vaadin-text-field,vaadin-checkbox,vaadin-select");
+        attributes.put("productionBundleRuntimeOwnerImportVersion",
+                PRODUCTION_RUNTIME_OWNER_IMPORT_VERSION);
+        attributes.put("productionBundleRuntimeOwnerImportPolicy",
+                PRODUCTION_RUNTIME_OWNER_IMPORT_POLICY);
+        attributes.put("productionBundleRuntimeOwnerImportArtifact", DEV_BUNDLE_INDEX_HTML_JS);
+        attributes.put("productionBundleRuntimeOwnerImportPhase",
+                PRODUCTION_RUNTIME_OWNER_IMPORT_PHASE);
+        attributes.put("productionBundleRuntimeOwnerImportExpectedSideEffects",
+                PRODUCTION_RUNTIME_OWNER_IMPORT_EXPECTED_SIDE_EFFECTS);
+        attributes.put("productionBundleRuntimeOwnerImportAcceptableFailures",
+                PRODUCTION_RUNTIME_OWNER_IMPORT_ACCEPTABLE_FAILURES);
+        attributes.put("productionBundleRuntimeOwnerImportRewriteStrategy",
+                PRODUCTION_RUNTIME_OWNER_IMPORT_REWRITE_STRATEGY);
+        attributes.put("productionBundleRuntimeOwnerImportSourceArtifactFamily", "production-bundle");
+        attributes.put("productionBundleRuntimeOwnerImportDependencyPaths",
+                DEV_BUNDLE_INDEX_HTML_JS + "," + DEV_BUNDLE_COMMONJS_JS);
+        attributes.put("productionBundleRuntimeOwnerImportAttempted", false);
+        attributes.put("productionBundleRuntimeOwnerImported", false);
+        attributes.put("productionBundleRuntimeOwnerImportNextResolutionStep",
+                PRODUCTION_RUNTIME_OWNER_IMPORT_NEXT_STEP);
         attributes.put("componentProductionOwnerReused", false);
         attributes.put("componentProductionOwnerReuseReason",
                 "owner import disabled until production indexhtml side effects can be owned without duplicate custom element definitions");
         attributes.put("componentProductionOwnerDependencyPaths", DEV_BUNDLE_INDEX_HTML_JS);
+        attributes.put("componentProductionOwnerImportOrder",
+                "component-focused-imports-before-owner-import-probe-v1_14");
         return attributes;
     }
 

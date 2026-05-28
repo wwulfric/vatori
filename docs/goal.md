@@ -38,21 +38,22 @@ v0/v1 runtime 切片走向可产品化桌面框架的最终完成状态。
 - `docs/goal-1_30.md`：Current App Frontend Build Output Materialization，已完成。
 - `docs/goal-1_31.md`：Frontend Build Preflight Availability，已完成。
 - `docs/goal-1_32.md`：Current App Build-Frontend Output Contract，已完成。
+- `docs/goal-1_33.md`：Current App Generated Chunk Package Edge，已完成。
 
-当前已完成到 `docs/goal-1_32.md`。v1.31 先把 v1.30 的 offline plugin blocker 推进到
-explicit online/local-repo preflight：Vaadin Maven plugin 能解析并运行
-`prepare-frontend`，但输出仍是 scaffold。v1.32 进一步把 blocker 推进到 full
-`build-frontend` 输出层：当前 smoke app 已产生真实
-`src/main/frontend/generated/flow/generated-flow-imports.js`、`chunks/chunk-*.js`、
-production webapp build output 和 `src/main/bundles/prod.bundle`，并通过 IPC
-manifest、`resourceRequest`、`resourceResponse`、`resourceStage` 和 `webview.dom`
-记录为当前 app generated-lazy runtime candidate。当前 accepted blocker 是
-`current-app-source-generated-chunk-npm-specifier-unresolved`：真实 chunk 文件存在且已进入
-no-localhost resolver/staging 候选路径，但 chunk body 中的 bare npm specifier 尚未由
-runtime/packaging resolver 处理。真实 generated chunk side effect、production owner-owned
-runtime 和 dev-mode/Vite parity 仍作为真实 app/build blocker 保留。
+当前已完成到 `docs/goal-1_33.md`。v1.31 先把 v1.30 的 offline plugin blocker 推进到
+explicit online/local-repo preflight；v1.32 进一步把 blocker 推进到 full
+`build-frontend` 输出层，证明当前 smoke app 已产生真实 source generated imports/chunk、
+production webapp build output 和 `prod.bundle`。v1.33 则把 v1.32 的 generic
+`current-app-source-generated-chunk-npm-specifier-unresolved` blocker 推进到第一个真实
+package edge：当前 app generated chunk 内的
+`@vaadin/vertical-layout/src/vaadin-vertical-layout.js` 可被 no-localhost resolver 重写到稳定
+production `indexhtml` module identity，并通过 Flow-client-triggered
+`Flow.loadOnDemand(chunkId)` 路径 stage/import 当前 app generated imports/chunk，trace 记录
+`loadOnDemandChunkFileExecuted=true`。当前 accepted remaining blocker 是当前 app generated
+imports root 仍使用 diagnostic placeholder，完整 package graph、production owner-owned runtime
+和 dev-mode/Vite parity 仍作为真实 app/build blocker 保留。
 
-后续阶段应继续以 `docs/goal-1_32.md` 等文件拆分，
+后续阶段应继续以 `docs/goal-1_33.md` 等文件拆分，
 每个阶段只拿走本长期目标中的一个可评审切片。不要把本文件改写成短期任务清单；
 它是长期北极星和完成度账本。
 
@@ -412,6 +413,21 @@ runtime 和 dev-mode/Vite parity 仍作为真实 app/build blocker 保留。
   `current-app-source-generated-chunk-npm-specifier-unresolved`。v1.32 不是 generated chunk parity；
   它证明当前 app build output 已经进入 no-localhost resolver/staging 候选路径，剩余缺口在
   chunk 内 bare npm specifier resolver、production owner side-effect 或受支持 Vaadin build SPI。
+- v1.33 已把 v1.32 的 generic bare npm specifier blocker 推进到当前 app generated chunk 的
+  第一个真实 package edge：Java manifest / resource response 声明
+  `currentAppGeneratedChunkPackageResolverVersion=flow-ipc-current-app-generated-chunk-package-resolver-v1_33`、
+  source generated imports/chunk import rewrites、resolved / unresolved specifier 集合、failure
+  layer 和下一步；Swift host 对 current-app generated imports/chunk 应用 manifest rewrites，
+  支持 static side-effect import 和 literal dynamic import，把 chunk 内
+  `@vaadin/vertical-layout/src/vaadin-vertical-layout.js` 重写到稳定 production `indexhtml`
+  module identity，并通过 Flow-client-triggered `Flow.loadOnDemand(chunkId)` 路径 stage/import
+  当前 app generated imports/chunk。Trace 记录
+  `flow-ipc-current-app-generated-chunk-package-resolver-v1_33`、
+  `current-app-source-generated-chunk-package-edge-resolved-v1_33`、
+  `currentAppGeneratedChunkPackageUnresolvedSpecifiers=""` 和
+  `loadOnDemandChunkFileExecuted=true`。v1.33 仍不是完整 generated chunk parity：当前 app
+  generated imports root 仍使用 diagnostic placeholder，完整 package graph、production owner
+  side-effect / reuse 和 dev-mode/Vite execution 仍是 blocker。
 - 当前 app/build 的真实 generated/lazy chunk file parity、production owner import/side-effect success
   和 dev-mode/Vite execution 仍是明确 blocker，不计入最终完成。
 
@@ -508,9 +524,9 @@ runtime 和 dev-mode/Vite parity 仍作为真实 app/build blocker 保留。
 
 - 基于 v1.22 generated lazy chunk-file positive fixture、v1.23 production owner positive
   runtime fixture、v1.24 closure decision contract、v1.25 packaged frontend baseline 和
-  v1.26-v1.32 当前 app generated/build-frontend output contracts，继续让当前 app/build 产生的
-  真实 generated lazy chunk file 完成执行：连接 chunk 内 bare npm specifier 到 no-localhost
-  resolver / packaging-time dependency graph，接入受支持 Vaadin lazy chunk SPI，或把真实
+  v1.26-v1.33 当前 app generated/build-frontend output contracts，继续让当前 app/build 产生的
+  真实 generated lazy chunk file 完成执行：把 current app generated imports root 从 diagnostic
+  placeholder 推进到完整 no-localhost package graph，接入受支持 Vaadin lazy chunk SPI，或把真实
   production bundle owned execution / dev-mode/Vite execution 从 partial/blocker 推进到真实可执行路径。
 - 真实 app/build 的 generated/lazy `Flow.loadOnDemand` chunk-file parity，不再停在真实
   generated-flow-imports no-op / missing chunk file blocker，也不只依赖 repository fixture。
@@ -542,12 +558,14 @@ runtime 和 dev-mode/Vite parity 仍作为真实 app/build blocker 保留。
 
 ## 当前建议的下一阶段
 
-v1.32 已完成 Current App Build-Frontend Output Contract。下一阶段建议优先把 v1.32
-定位出的 `current-app-source-generated-chunk-npm-specifier-unresolved` blocker 推进到
-真实当前 app generated chunk execution，或改走 production owner / 受支持 Vaadin lazy chunk SPI：
+v1.33 已完成 Current App Generated Chunk Package Edge。下一阶段建议优先把 v1.33
+留下的 current app generated imports root placeholder / package graph blocker 推进到
+更完整的 no-localhost generated imports 执行路径，或改走 production owner / 受支持 Vaadin lazy
+chunk SPI：
 
-- 为当前 app source generated chunk 建立 no-localhost bare npm specifier resolver / package graph
-  staging，证明 chunk callback 和 side effect 能在 WebView 中执行。
+- 移除或替换当前 app generated imports root diagnostic placeholder，补齐 root imports 中的
+  package graph staging，证明 chunk callback、chunk side effect 和 root support imports 都由
+  真实 artifact graph 驱动。
 - 评估 production generated imports / `prod.bundle` 是否应成为 primary runtime candidate，
   或是否需要 packaging-time staged frontend artifact 作为 v0 支持路径。
 - 接入/评估受支持 Vaadin lazy chunk SPI，把 v1.22 fixture path 推进为真实 app/build path。

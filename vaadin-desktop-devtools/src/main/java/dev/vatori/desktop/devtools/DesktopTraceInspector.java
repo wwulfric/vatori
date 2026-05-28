@@ -113,6 +113,9 @@ public final class DesktopTraceInspector {
         FLOW_IPC_V1_32_BUILD_FRONTEND_OUTPUT(
                 "--require-flow-ipc-v1_32-build-frontend-output"),
         FLOW_IPC_V1_32("--require-flow-ipc-v1_32"),
+        FLOW_IPC_V1_33_CURRENT_APP_GENERATED_CHUNK_PACKAGE_EDGE(
+                "--require-flow-ipc-v1_33-current-app-generated-chunk-package-edge"),
+        FLOW_IPC_V1_33("--require-flow-ipc-v1_33"),
         FLOW_IPC_V1_3_FRAMEWORK("--require-flow-ipc-v1_3-framework");
 
         private final String option;
@@ -478,6 +481,14 @@ public final class DesktopTraceInspector {
                     gates.add(FLOW_IPC_V1_32);
                     yield gates;
                 }
+                case FLOW_IPC_V1_33_CURRENT_APP_GENERATED_CHUNK_PACKAGE_EDGE ->
+                    EnumSet.of(FLOW_IPC_V1_33_CURRENT_APP_GENERATED_CHUNK_PACKAGE_EDGE);
+                case FLOW_IPC_V1_33 -> {
+                    EnumSet<AcceptanceGate> gates = FLOW_IPC_V1_32.expandedRequirements();
+                    gates.add(FLOW_IPC_V1_33_CURRENT_APP_GENERATED_CHUNK_PACKAGE_EDGE);
+                    gates.add(FLOW_IPC_V1_33);
+                    yield gates;
+                }
                 case FLOW_IPC_V1_3_FRAMEWORK -> EnumSet.of(FLOW_IPC_V1_3_FRAMEWORK);
             };
         }
@@ -563,6 +574,9 @@ public final class DesktopTraceInspector {
                 case FLOW_IPC_V1_32_BUILD_FRONTEND_OUTPUT ->
                     summary.hasRequiredFlowIpcV1_32BuildFrontendOutputTypes();
                 case FLOW_IPC_V1_32 -> summary.hasRequiredFlowIpcV1_32Types();
+                case FLOW_IPC_V1_33_CURRENT_APP_GENERATED_CHUNK_PACKAGE_EDGE ->
+                    summary.hasRequiredFlowIpcV1_33CurrentAppGeneratedChunkPackageEdgeTypes();
+                case FLOW_IPC_V1_33 -> summary.hasRequiredFlowIpcV1_33Types();
                 case FLOW_IPC_V1_3_FRAMEWORK -> summary.hasRequiredFlowIpcV1_3FrameworkTypes();
             };
         }
@@ -1207,6 +1221,11 @@ public final class DesktopTraceInspector {
                     && line.contains("\"componentFrontendResources\"")
                     && containsCurrentAppBuildFrontendOutputV132Fields(line)) {
                 summary.currentAppBuildFrontendOutputV132ManifestObserved = true;
+            }
+            if (line.contains("\"type\":\"bootstrapResponse\"")
+                    && line.contains("\"componentFrontendResources\"")
+                    && containsCurrentAppGeneratedChunkPackageEdgeV133Fields(line)) {
+                summary.currentAppGeneratedChunkPackageEdgeV133ManifestObserved = true;
             }
             if (line.contains("\"type\":\"bootstrapResponse\"")
                     && line.contains("\"componentFrontendResources\"")
@@ -2107,11 +2126,22 @@ public final class DesktopTraceInspector {
                     && containsCurrentAppBuildFrontendOutputV132Fields(line)) {
                 summary.currentAppBuildFrontendOutputV132RequestObserved = true;
             }
+            if (line.contains("\"type\":\"resourceRequest\"")
+                    && containsPath(line, "current-app-frontend/generated/flow/generated-flow-imports.js")
+                    && containsCurrentAppGeneratedChunkPackageEdgeV133Fields(line)) {
+                summary.currentAppGeneratedChunkPackageEdgeV133RequestObserved = true;
+            }
             if (line.contains("\"type\":\"resourceResponse\"")
                     && containsPath(line, "current-app-frontend/generated/flow/generated-flow-imports.js")
                     && containsCurrentAppBuildFrontendOutputV132Fields(line)
                     && line.contains("\"bodyRedacted\":true")) {
                 summary.currentAppBuildFrontendOutputV132ResponseObserved = true;
+            }
+            if (line.contains("\"type\":\"resourceResponse\"")
+                    && containsPath(line, "current-app-frontend/generated/flow/generated-flow-imports.js")
+                    && containsCurrentAppGeneratedChunkPackageEdgeV133Fields(line)
+                    && line.contains("\"bodyRedacted\":true")) {
+                summary.currentAppGeneratedChunkPackageEdgeV133ResponseObserved = true;
             }
             if (line.contains("\"type\":\"resourceRequest\"")
                     && line.contains("\"purpose\":\"generated-loadondemand-chunk-v1_11\"")
@@ -2796,6 +2826,20 @@ public final class DesktopTraceInspector {
                             || line.contains("\"executionStatus\":\"strict-blocker\"")
                             || line.contains("\"executionStatus\":\"staged\""))) {
                 summary.currentAppBuildFrontendOutputV132StageObserved = true;
+            }
+            if (line.contains("\"type\":\"resourceStage\"")
+                    && containsPath(line, "current-app-frontend/generated/flow/generated-flow-imports.js")
+                    && containsCurrentAppGeneratedChunkPackageEdgeV133Fields(line)
+                    && (line.contains("\"executionStatus\":\"executed\"")
+                            || line.contains("\"executionStatus\":\"strict-blocker\"")
+                            || line.contains("\"executionStatus\":\"staged\""))) {
+                summary.currentAppGeneratedChunkPackageEdgeV133StageObserved = true;
+            }
+            if (line.contains("\"type\":\"resourceStage\"")
+                    && containsPath(line, "current-app-frontend/generated/flow/chunks/")
+                    && containsCurrentAppGeneratedChunkPackageEdgeV133Fields(line)
+                    && containsLiteralField(line, "loadOnDemandChunkFileExecuted", "true")) {
+                summary.currentAppGeneratedChunkPackageEdgeV133ExecutedObserved = true;
             }
             if (line.contains("\"type\":\"webview.dom\"")
                     && containsStringField(line, "frontendStagingResolverVersion", "flow-ipc-resource-staging-v1_5")
@@ -3526,6 +3570,11 @@ public final class DesktopTraceInspector {
                     && containsLiteralField(line, "currentAppBuildFrontendOutputObserved", "true")
                     && containsCurrentAppBuildFrontendOutputV132Fields(line)) {
                 summary.currentAppBuildFrontendOutputV132DomObserved = true;
+            }
+            if (line.contains("\"type\":\"webview.dom\"")
+                    && containsLiteralField(line, "currentAppBuildFrontendOutputObserved", "true")
+                    && containsCurrentAppGeneratedChunkPackageEdgeV133Fields(line)) {
+                summary.currentAppGeneratedChunkPackageEdgeV133DomObserved = true;
             }
             if (line.contains("\"type\":\"webview.dom\"")
                     && containsLiteralField(line, "generatedLazySourceCurrentBuildNoOpConfirmed", "true")
@@ -4608,7 +4657,27 @@ public final class DesktopTraceInspector {
                 || containsStringField(line, "currentAppBuildFrontendFailureLayer",
                         "pending-current-app-source-generated-chunk-stage")
                 || containsStringField(line, "currentAppBuildFrontendFailureLayer",
-                        "current-app-production-generated-imports-owner-boundary");
+                        "current-app-production-generated-imports-owner-boundary")
+                || containsStringField(line, "currentAppBuildFrontendFailureLayer",
+                        "current-app-source-generated-imports-root-package-graph-pending");
+    }
+
+    private static boolean containsCurrentAppGeneratedChunkPackageEdgeV133Fields(String line) {
+        return containsCurrentAppBuildFrontendOutputV132Fields(line)
+                && containsStringField(line, "currentAppGeneratedChunkPackageResolverVersion",
+                        "flow-ipc-current-app-generated-chunk-package-resolver-v1_33")
+                && containsStringField(line, "currentAppGeneratedChunkPackageResolverSource",
+                        "current-app-source-generated-chunk")
+                && containsStringField(line, "currentAppGeneratedChunkPackageResolverMode",
+                        "current-app-source-chunk-package-edge-to-production-indexhtml")
+                && containsStringField(line, "currentAppGeneratedChunkPackageBareSpecifiers",
+                        "@vaadin/vertical-layout/src/vaadin-vertical-layout.js")
+                && containsStringField(line, "currentAppGeneratedChunkPackageResolvedSpecifiers",
+                        "@vaadin/vertical-layout/src/vaadin-vertical-layout.js")
+                && containsStringField(line, "currentAppGeneratedChunkPackageUnresolvedSpecifiers", "")
+                && containsStringField(line, "currentAppGeneratedChunkPackageFailureLayer",
+                        "current-app-source-generated-imports-root-package-graph-pending")
+                && line.contains("currentAppGeneratedChunkPackageNextResolutionStep");
     }
 
     private static boolean containsProductionOwnerFailureLayer(String line, String field) {
@@ -5099,6 +5168,12 @@ public final class DesktopTraceInspector {
         private boolean currentAppBuildFrontendOutputV132StageObserved;
         private boolean currentAppBuildFrontendOutputV132DomObserved;
         private boolean currentAppBuildFrontendOutputV132ResolvedObserved;
+        private boolean currentAppGeneratedChunkPackageEdgeV133ManifestObserved;
+        private boolean currentAppGeneratedChunkPackageEdgeV133RequestObserved;
+        private boolean currentAppGeneratedChunkPackageEdgeV133ResponseObserved;
+        private boolean currentAppGeneratedChunkPackageEdgeV133StageObserved;
+        private boolean currentAppGeneratedChunkPackageEdgeV133DomObserved;
+        private boolean currentAppGeneratedChunkPackageEdgeV133ExecutedObserved;
 
         public boolean hasRequiredFlowIpcTypes() {
             return types.keySet().containsAll(FLOW_IPC_REQUIRED_TYPES)
@@ -5618,6 +5693,20 @@ public final class DesktopTraceInspector {
                     && hasRequiredFlowIpcV1_32BuildFrontendOutputTypes();
         }
 
+        public boolean hasRequiredFlowIpcV1_33CurrentAppGeneratedChunkPackageEdgeTypes() {
+            return currentAppGeneratedChunkPackageEdgeV133ManifestObserved
+                    && currentAppGeneratedChunkPackageEdgeV133RequestObserved
+                    && currentAppGeneratedChunkPackageEdgeV133ResponseObserved
+                    && currentAppGeneratedChunkPackageEdgeV133StageObserved
+                    && currentAppGeneratedChunkPackageEdgeV133DomObserved
+                    && currentAppGeneratedChunkPackageEdgeV133ExecutedObserved;
+        }
+
+        public boolean hasRequiredFlowIpcV1_33Types() {
+            return hasRequiredFlowIpcV1_32Types()
+                    && hasRequiredFlowIpcV1_33CurrentAppGeneratedChunkPackageEdgeTypes();
+        }
+
         private boolean hasCurrentAppBuildFrontendOutputSuccessorEvidence() {
             return currentAppBuildFrontendOutputV132ManifestObserved
                     && currentAppBuildFrontendOutputV132RequestObserved
@@ -6126,6 +6215,15 @@ public final class DesktopTraceInspector {
                     + currentAppBuildFrontendOutputV132StageObserved + "/"
                     + currentAppBuildFrontendOutputV132DomObserved + "/"
                     + currentAppBuildFrontendOutputV132ResolvedObserved);
+            System.out.println("Flow IPC v1.33 current app generated chunk package edge manifest observed: "
+                    + currentAppGeneratedChunkPackageEdgeV133ManifestObserved);
+            System.out.println("Flow IPC v1.33 current app generated chunk package edge request/response observed: "
+                    + currentAppGeneratedChunkPackageEdgeV133RequestObserved + "/"
+                    + currentAppGeneratedChunkPackageEdgeV133ResponseObserved);
+            System.out.println("Flow IPC v1.33 current app generated chunk package edge stage/DOM/executed observed: "
+                    + currentAppGeneratedChunkPackageEdgeV133StageObserved + "/"
+                    + currentAppGeneratedChunkPackageEdgeV133DomObserved + "/"
+                    + currentAppGeneratedChunkPackageEdgeV133ExecutedObserved);
             System.out.println("Flow IPC v1.6 TextField graph manifest observed: "
                     + frontendTextFieldV16ManifestObserved);
             System.out.println("Flow IPC v1.6 TextField graph request observed: "

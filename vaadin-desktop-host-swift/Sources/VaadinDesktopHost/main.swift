@@ -2411,6 +2411,15 @@ final class WebViewHost: NSObject, NSApplicationDelegate, NSWindowDelegate, WKNa
           currentAppBuildFrontendSourceChunkBytes: window.VaadinDesktopIpcDiagnostics ? window.VaadinDesktopIpcDiagnostics.currentAppBuildFrontendSourceChunkBytes : 0,
           currentAppBuildFrontendSourceChunkSha256: window.VaadinDesktopIpcDiagnostics ? window.VaadinDesktopIpcDiagnostics.currentAppBuildFrontendSourceChunkSha256 : "",
           currentAppBuildFrontendSourceChunkContainsBareImports: !!(window.VaadinDesktopIpcDiagnostics && window.VaadinDesktopIpcDiagnostics.currentAppBuildFrontendSourceChunkContainsBareImports),
+          currentAppGeneratedChunkPackageResolverVersion: window.VaadinDesktopIpcDiagnostics ? window.VaadinDesktopIpcDiagnostics.currentAppGeneratedChunkPackageResolverVersion : "",
+          currentAppGeneratedChunkPackageResolverSource: window.VaadinDesktopIpcDiagnostics ? window.VaadinDesktopIpcDiagnostics.currentAppGeneratedChunkPackageResolverSource : "",
+          currentAppGeneratedChunkPackageResolverMode: window.VaadinDesktopIpcDiagnostics ? window.VaadinDesktopIpcDiagnostics.currentAppGeneratedChunkPackageResolverMode : "",
+          currentAppGeneratedChunkPackageBareSpecifiers: window.VaadinDesktopIpcDiagnostics ? window.VaadinDesktopIpcDiagnostics.currentAppGeneratedChunkPackageBareSpecifiers : "",
+          currentAppGeneratedChunkPackageResolvedSpecifiers: window.VaadinDesktopIpcDiagnostics ? window.VaadinDesktopIpcDiagnostics.currentAppGeneratedChunkPackageResolvedSpecifiers : "",
+          currentAppGeneratedChunkPackageUnresolvedSpecifiers: window.VaadinDesktopIpcDiagnostics ? window.VaadinDesktopIpcDiagnostics.currentAppGeneratedChunkPackageUnresolvedSpecifiers : "",
+          currentAppGeneratedChunkPackageFailureLayer: window.VaadinDesktopIpcDiagnostics ? window.VaadinDesktopIpcDiagnostics.currentAppGeneratedChunkPackageFailureLayer : "",
+          currentAppGeneratedChunkPackageNextResolutionStep: window.VaadinDesktopIpcDiagnostics ? window.VaadinDesktopIpcDiagnostics.currentAppGeneratedChunkPackageNextResolutionStep : "",
+          currentAppGeneratedChunkPackageRootPlaceholderUsed: !!(window.VaadinDesktopIpcDiagnostics && window.VaadinDesktopIpcDiagnostics.currentAppGeneratedChunkPackageRootPlaceholderUsed),
           currentAppBuildFrontendProductionBuildObserved: !!(window.VaadinDesktopIpcDiagnostics && window.VaadinDesktopIpcDiagnostics.currentAppBuildFrontendProductionBuildObserved),
           currentAppBuildFrontendProductionBuildRoot: window.VaadinDesktopIpcDiagnostics ? window.VaadinDesktopIpcDiagnostics.currentAppBuildFrontendProductionBuildRoot : "",
           currentAppBuildFrontendProductionGeneratedImportsObserved: !!(window.VaadinDesktopIpcDiagnostics && window.VaadinDesktopIpcDiagnostics.currentAppBuildFrontendProductionGeneratedImportsObserved),
@@ -3714,6 +3723,15 @@ let flowIpcShell = #"""
         currentAppBuildFrontendSourceChunkBytes: 0,
         currentAppBuildFrontendSourceChunkSha256: '',
         currentAppBuildFrontendSourceChunkContainsBareImports: false,
+        currentAppGeneratedChunkPackageResolverVersion: '',
+        currentAppGeneratedChunkPackageResolverSource: '',
+        currentAppGeneratedChunkPackageResolverMode: '',
+        currentAppGeneratedChunkPackageBareSpecifiers: '',
+        currentAppGeneratedChunkPackageResolvedSpecifiers: '',
+        currentAppGeneratedChunkPackageUnresolvedSpecifiers: '',
+        currentAppGeneratedChunkPackageFailureLayer: '',
+        currentAppGeneratedChunkPackageNextResolutionStep: '',
+        currentAppGeneratedChunkPackageRootPlaceholderUsed: false,
         currentAppBuildFrontendProductionBuildObserved: false,
         currentAppBuildFrontendProductionBuildRoot: '',
         currentAppBuildFrontendProductionGeneratedImportsObserved: false,
@@ -6051,7 +6069,15 @@ let flowIpcShell = #"""
           ['currentAppBuildFrontendProdBundleSha256', 'currentAppBuildFrontendProdBundleSha256'],
           ['currentAppBuildFrontendRuntimeCandidate', 'currentAppBuildFrontendRuntimeCandidate'],
           ['currentAppBuildFrontendFailureLayer', 'currentAppBuildFrontendFailureLayer'],
-          ['currentAppBuildFrontendNextResolutionStep', 'currentAppBuildFrontendNextResolutionStep']
+          ['currentAppBuildFrontendNextResolutionStep', 'currentAppBuildFrontendNextResolutionStep'],
+          ['currentAppGeneratedChunkPackageResolverVersion', 'currentAppGeneratedChunkPackageResolverVersion'],
+          ['currentAppGeneratedChunkPackageResolverSource', 'currentAppGeneratedChunkPackageResolverSource'],
+          ['currentAppGeneratedChunkPackageResolverMode', 'currentAppGeneratedChunkPackageResolverMode'],
+          ['currentAppGeneratedChunkPackageBareSpecifiers', 'currentAppGeneratedChunkPackageBareSpecifiers'],
+          ['currentAppGeneratedChunkPackageResolvedSpecifiers', 'currentAppGeneratedChunkPackageResolvedSpecifiers'],
+          ['currentAppGeneratedChunkPackageUnresolvedSpecifiers', 'currentAppGeneratedChunkPackageUnresolvedSpecifiers'],
+          ['currentAppGeneratedChunkPackageFailureLayer', 'currentAppGeneratedChunkPackageFailureLayer'],
+          ['currentAppGeneratedChunkPackageNextResolutionStep', 'currentAppGeneratedChunkPackageNextResolutionStep']
         ]) {
           if (typeof source[sourceKey] === 'string' && source[sourceKey]) {
             window.VaadinDesktopIpcDiagnostics[diagnosticKey] = source[sourceKey];
@@ -6065,7 +6091,8 @@ let flowIpcShell = #"""
           ['currentAppBuildFrontendStatsObserved', 'currentAppBuildFrontendStatsObserved'],
           ['currentAppBuildFrontendProdBundleObserved', 'currentAppBuildFrontendProdBundleObserved'],
           ['currentAppBuildFrontendNoLocalhost', 'currentAppBuildFrontendNoLocalhost'],
-          ['currentAppBuildFrontendFixtureSubstituted', 'currentAppBuildFrontendFixtureSubstituted']
+          ['currentAppBuildFrontendFixtureSubstituted', 'currentAppBuildFrontendFixtureSubstituted'],
+          ['currentAppGeneratedChunkPackageRootPlaceholderUsed', 'currentAppGeneratedChunkPackageRootPlaceholderUsed']
         ]) {
           if (source[sourceKey] === true) {
             window.VaadinDesktopIpcDiagnostics[diagnosticKey] = true;
@@ -7256,6 +7283,24 @@ let flowIpcShell = #"""
             resource.currentAppBuildFrontendNoLocalhost === true,
           currentAppBuildFrontendFixtureSubstituted:
             resource.currentAppBuildFrontendFixtureSubstituted === true,
+          currentAppGeneratedChunkPackageResolverVersion:
+            resource.currentAppGeneratedChunkPackageResolverVersion || '',
+          currentAppGeneratedChunkPackageResolverSource:
+            resource.currentAppGeneratedChunkPackageResolverSource || '',
+          currentAppGeneratedChunkPackageResolverMode:
+            resource.currentAppGeneratedChunkPackageResolverMode || '',
+          currentAppGeneratedChunkPackageBareSpecifiers:
+            resource.currentAppGeneratedChunkPackageBareSpecifiers || '',
+          currentAppGeneratedChunkPackageResolvedSpecifiers:
+            resource.currentAppGeneratedChunkPackageResolvedSpecifiers || '',
+          currentAppGeneratedChunkPackageUnresolvedSpecifiers:
+            resource.currentAppGeneratedChunkPackageUnresolvedSpecifiers || '',
+          currentAppGeneratedChunkPackageFailureLayer:
+            resource.currentAppGeneratedChunkPackageFailureLayer || '',
+          currentAppGeneratedChunkPackageNextResolutionStep:
+            resource.currentAppGeneratedChunkPackageNextResolutionStep || '',
+          currentAppGeneratedChunkPackageRootPlaceholderUsed:
+            resource.currentAppGeneratedChunkPackageRootPlaceholderUsed === true,
           frontendBuildPreflightAvailabilityVersion:
             resource.frontendBuildPreflightAvailabilityVersion || '',
           frontendBuildPreflightAvailabilitySource:
@@ -8249,6 +8294,42 @@ let flowIpcShell = #"""
             extra && typeof extra.currentAppBuildFrontendFixtureSubstituted === 'boolean'
               ? extra.currentAppBuildFrontendFixtureSubstituted
               : resource.currentAppBuildFrontendFixtureSubstituted === true,
+          currentAppGeneratedChunkPackageResolverVersion:
+            extra && extra.currentAppGeneratedChunkPackageResolverVersion
+              ? extra.currentAppGeneratedChunkPackageResolverVersion
+              : (resource.currentAppGeneratedChunkPackageResolverVersion || ''),
+          currentAppGeneratedChunkPackageResolverSource:
+            extra && extra.currentAppGeneratedChunkPackageResolverSource
+              ? extra.currentAppGeneratedChunkPackageResolverSource
+              : (resource.currentAppGeneratedChunkPackageResolverSource || ''),
+          currentAppGeneratedChunkPackageResolverMode:
+            extra && extra.currentAppGeneratedChunkPackageResolverMode
+              ? extra.currentAppGeneratedChunkPackageResolverMode
+              : (resource.currentAppGeneratedChunkPackageResolverMode || ''),
+          currentAppGeneratedChunkPackageBareSpecifiers:
+            extra && extra.currentAppGeneratedChunkPackageBareSpecifiers
+              ? extra.currentAppGeneratedChunkPackageBareSpecifiers
+              : (resource.currentAppGeneratedChunkPackageBareSpecifiers || ''),
+          currentAppGeneratedChunkPackageResolvedSpecifiers:
+            extra && extra.currentAppGeneratedChunkPackageResolvedSpecifiers
+              ? extra.currentAppGeneratedChunkPackageResolvedSpecifiers
+              : (resource.currentAppGeneratedChunkPackageResolvedSpecifiers || ''),
+          currentAppGeneratedChunkPackageUnresolvedSpecifiers:
+            extra && typeof extra.currentAppGeneratedChunkPackageUnresolvedSpecifiers === 'string'
+              ? extra.currentAppGeneratedChunkPackageUnresolvedSpecifiers
+              : (resource.currentAppGeneratedChunkPackageUnresolvedSpecifiers || ''),
+          currentAppGeneratedChunkPackageFailureLayer:
+            extra && extra.currentAppGeneratedChunkPackageFailureLayer
+              ? extra.currentAppGeneratedChunkPackageFailureLayer
+              : (resource.currentAppGeneratedChunkPackageFailureLayer || ''),
+          currentAppGeneratedChunkPackageNextResolutionStep:
+            extra && extra.currentAppGeneratedChunkPackageNextResolutionStep
+              ? extra.currentAppGeneratedChunkPackageNextResolutionStep
+              : (resource.currentAppGeneratedChunkPackageNextResolutionStep || ''),
+          currentAppGeneratedChunkPackageRootPlaceholderUsed:
+            extra && typeof extra.currentAppGeneratedChunkPackageRootPlaceholderUsed === 'boolean'
+              ? extra.currentAppGeneratedChunkPackageRootPlaceholderUsed
+              : resource.currentAppGeneratedChunkPackageRootPlaceholderUsed === true,
           stagedPath: '',
           owner: stageOwner,
           artifactFamily: family,
@@ -11540,6 +11621,7 @@ let flowIpcShell = #"""
         return !!(resource
           && (resource.devBundleResource === true
             || resource.artifactFamily === 'production-bundle'
+            || resource.currentAppBuildFrontendResource === true
             || resource.path === 'META-INF/vatori/dev-bundle-entry/vaadin-text-field.js'
             || resource.path === 'vaadin-dev-bundle/webapp/VAADIN/build/indexhtml-BfYYZi8S.js'
             || resource.path === 'vaadin-dev-bundle/webapp/VAADIN/build/commonjsHelpers-CUmg6egw.js'));
@@ -11586,6 +11668,15 @@ let flowIpcShell = #"""
           installOpaqueOriginStorageFallbacks();
           installVaadinDevBundleGlobals();
         }
+        if (resource && Array.isArray(resource.importRewrites) && resource.importRewrites.length > 0) {
+          body = rewriteManifestImportSpecifiers(body, resource, urlsToRevoke, urlCache);
+          if (!body) {
+            window.VaadinDesktopIpcDiagnostics.vaadinWebComponentResourceExecutionError =
+              window.VaadinDesktopIpcDiagnostics.vaadinWebComponentResourceExecutionError
+              || ('failed-manifest-import-rewrite path=' + path);
+            return '';
+          }
+        }
         if (resource && resource.devBundleResource === true) {
           body = rewriteVaadinDevBundleModule(body, path, urlsToRevoke, urlCache);
           if (!body) {
@@ -11616,7 +11707,9 @@ let flowIpcShell = #"""
           .split("from '" + specifier + "'").join("from '" + replacementUrl + "'")
           .split('from "' + specifier + '"').join('from "' + replacementUrl + '"')
           .split("import '" + specifier + "'").join("import '" + replacementUrl + "'")
-          .split('import "' + specifier + '"').join('import "' + replacementUrl + '"');
+          .split('import "' + specifier + '"').join('import "' + replacementUrl + '"')
+          .split("import('" + specifier + "')").join("import('" + replacementUrl + "')")
+          .split('import("' + specifier + '")').join('import("' + replacementUrl + '")');
       }
 
       function productionOwnerOwnedRuntimeSatisfied() {
@@ -12093,9 +12186,22 @@ let flowIpcShell = #"""
         installOpaqueOriginStorageFallback('sessionStorage');
       }
 
+      function ensureVaadinDevBundleOutlet() {
+        if (document.getElementById('outlet')) {
+          return;
+        }
+        const outlet = document.createElement('div');
+        outlet.id = 'outlet';
+        outlet.setAttribute('aria-hidden', 'true');
+        outlet.style.cssText = 'display: none !important;';
+        document.body.appendChild(outlet);
+        window.VaadinDesktopIpcDiagnostics.vaadinDevBundleOutletInjected = true;
+      }
+
       function installVaadinDevBundleGlobals() {
         window.Vaadin = window.Vaadin || {};
         window.Vaadin.devToolsPlugins = window.Vaadin.devToolsPlugins || [];
+        ensureVaadinDevBundleOutlet();
       }
 
       async function maybeExecuteVaadinWebComponentResource() {
@@ -12444,7 +12550,25 @@ let flowIpcShell = #"""
           currentAppBuildFrontendNoLocalhost:
             resource.currentAppBuildFrontendNoLocalhost === true,
           currentAppBuildFrontendFixtureSubstituted:
-            resource.currentAppBuildFrontendFixtureSubstituted === true
+            resource.currentAppBuildFrontendFixtureSubstituted === true,
+          currentAppGeneratedChunkPackageResolverVersion:
+            resource.currentAppGeneratedChunkPackageResolverVersion || '',
+          currentAppGeneratedChunkPackageResolverSource:
+            resource.currentAppGeneratedChunkPackageResolverSource || '',
+          currentAppGeneratedChunkPackageResolverMode:
+            resource.currentAppGeneratedChunkPackageResolverMode || '',
+          currentAppGeneratedChunkPackageBareSpecifiers:
+            resource.currentAppGeneratedChunkPackageBareSpecifiers || '',
+          currentAppGeneratedChunkPackageResolvedSpecifiers:
+            resource.currentAppGeneratedChunkPackageResolvedSpecifiers || '',
+          currentAppGeneratedChunkPackageUnresolvedSpecifiers:
+            resource.currentAppGeneratedChunkPackageUnresolvedSpecifiers || '',
+          currentAppGeneratedChunkPackageFailureLayer:
+            resource.currentAppGeneratedChunkPackageFailureLayer || '',
+          currentAppGeneratedChunkPackageNextResolutionStep:
+            resource.currentAppGeneratedChunkPackageNextResolutionStep || '',
+          currentAppGeneratedChunkPackageRootPlaceholderUsed:
+            resource.currentAppGeneratedChunkPackageRootPlaceholderUsed === true
         }, extra || {});
       }
 
@@ -12591,7 +12715,33 @@ let flowIpcShell = #"""
         });
       }
 
-      async function executeGeneratedLoadOnDemandChunk(chunkId) {
+      function isCurrentAppGeneratedChunkInitCycle(message, stageExtra, retryAttempt) {
+        const text = String(message || '');
+        return (retryAttempt || 0) < 2
+          && stageExtra.currentAppGeneratedChunkPackageResolverVersion
+            === 'flow-ipc-current-app-generated-chunk-package-resolver-v1_33'
+          && stageExtra.chunkFileStatus === 'available'
+          && stageExtra.currentAppGeneratedChunkPackageUnresolvedSpecifiers === ''
+          && (text.includes('Cannot access uninitialized variable')
+            || text.includes('Cannot access uninitialized lexical binding')
+            || text.includes('before initialization'));
+      }
+
+      function invalidateGeneratedLoadOnDemandModuleIdentity(resource, stageExtra) {
+        if (resource && resource.path) {
+          frontendModuleIdentityUrlCache.delete(resource.path);
+        }
+        if (stageExtra && stageExtra.chunkArtifactPath) {
+          frontendModuleIdentityUrlCache.delete(stageExtra.chunkArtifactPath);
+        }
+      }
+
+      function waitBeforeGeneratedLoadOnDemandRetry(retryAttempt) {
+        const delayMillis = 250 * ((retryAttempt || 0) + 1);
+        return new Promise((resolve) => setTimeout(resolve, delayMillis));
+      }
+
+      async function executeGeneratedLoadOnDemandChunk(chunkId, retryAttempt) {
         const normalizedChunkId = String(chunkId || '');
         if (!normalizedChunkId) {
           return 0;
@@ -12605,8 +12755,9 @@ let flowIpcShell = #"""
           return 0;
         }
         const expression = generatedLoadOnDemandChunkExpression(normalizedChunkId);
-        const executionKey = resource.path || normalizedChunkId;
-        if (generatedLoadOnDemandChunkPromises.has(executionKey)) {
+        const attempt = retryAttempt || 0;
+        const executionKey = (resource.path || 'generated-loadondemand') + ':' + normalizedChunkId;
+        if (attempt === 0 && generatedLoadOnDemandChunkPromises.has(executionKey)) {
           return generatedLoadOnDemandChunkPromises.get(executionKey);
         }
         const promise = (async () => {
@@ -12618,7 +12769,10 @@ let flowIpcShell = #"""
           const source = await waitForComponentFrontendResourceBody(resource.path, 0);
           await waitForGeneratedLoadOnDemandChunkDependencies(resource);
           const stageExtra = generatedLoadOnDemandChunkStageExtra(resource, normalizedChunkId, expression, {
-            loadOnDemandChunkExecutionResult: 'execution-attempt:' + resource.path
+            loadOnDemandChunkExecutionResult: attempt > 0
+              ? 'execution-retry-v1_33:' + resource.path + ':attempt=' + attempt
+              : 'execution-attempt:' + resource.path,
+            loadOnDemandChunkRetryAttempt: String(attempt)
           });
           const noGeneratedChunkFile = stageExtra.chunkFileStatus === 'not-generated'
             && stageExtra.loadOnDemandChunkFileNoOpLoadOnDemand === true;
@@ -12649,6 +12803,18 @@ let flowIpcShell = #"""
                   + (delegateError && delegateError.message ? delegateError.message : String(delegateError));
               }
             }
+            const currentAppChunkPackageEdgeResolved =
+              stageExtra.currentAppGeneratedChunkPackageResolverVersion
+                === 'flow-ipc-current-app-generated-chunk-package-resolver-v1_33'
+              && stageExtra.chunkFileStatus === 'available'
+              && stageExtra.currentAppGeneratedChunkPackageUnresolvedSpecifiers === ''
+              && !delegateResult.startsWith('delegate-failed=');
+            const currentAppChunkResource = currentAppChunkPackageEdgeResolved
+              ? componentFrontendResourceByPath(stageExtra.chunkArtifactPath)
+              : null;
+            const currentAppChunkUrl = currentAppChunkResource && urlCache
+              ? (urlCache.get(currentAppChunkResource.path) || '')
+              : '';
             window.VaadinDesktopIpcDiagnostics.loadOnDemandChunkExecuted = true;
             window.VaadinDesktopIpcDiagnostics.loadOnDemandChunkExecutionResult =
               'executed:' + resource.path + ';' + delegateResult + ';remaining-blocker='
@@ -12658,10 +12824,13 @@ let flowIpcShell = #"""
               stageExtra.loadOnDemandChunkFailureLayer;
             window.VaadinDesktopIpcDiagnostics.generatedLazyChunkFailureLayer =
               stageExtra.generatedLazyChunkFailureLayer;
-            window.VaadinDesktopIpcDiagnostics.loadOnDemandChunkFileExecuted = false;
+            window.VaadinDesktopIpcDiagnostics.loadOnDemandChunkFileExecuted =
+              currentAppChunkPackageEdgeResolved;
             window.VaadinDesktopIpcDiagnostics.loadOnDemandChunkFileCallbackResolved = true;
             window.VaadinDesktopIpcDiagnostics.loadOnDemandChunkFileExecutionResult =
-              noGeneratedChunkFile
+              currentAppChunkPackageEdgeResolved
+                ? 'executed:' + stageExtra.chunkArtifactPath + ';' + delegateResult
+                : noGeneratedChunkFile
                 ? 'strict-blocker:chunk-file-not-generated;' + delegateResult
                 : 'strict-blocker:' + (stageExtra.chunkFileStatus || 'chunk-file-unresolved');
             window.VaadinDesktopIpcDiagnostics.loadOnDemandChunkFileBrowserError = '';
@@ -12669,10 +12838,29 @@ let flowIpcShell = #"""
               stageExtra.loadOnDemandChunkFileFailureLayer
               || (noGeneratedChunkFile ? 'chunk-file-not-generated' : 'chunk-file-unresolved');
             window.VaadinDesktopIpcDiagnostics.loadOnDemandChunkFileSideEffectProof =
-              stageExtra.loadOnDemandChunkFileSideEffectProof
+              currentAppChunkPackageEdgeResolved
+                ? 'current-app-source-generated-chunk-dynamic-import-resolved-v1_33'
+                : stageExtra.loadOnDemandChunkFileSideEffectProof
               || (noGeneratedChunkFile
                 ? 'no-chunk-generated-by-real-generated-flow-imports-no-op-table'
                 : 'generated-flow-imports-import-resolved-without-chunk-file-side-effect');
+            if (currentAppChunkPackageEdgeResolved && currentAppChunkResource) {
+              recordFrontendStageOutcome(currentAppChunkResource, currentAppChunkUrl, 'executed',
+                generatedLoadOnDemandChunkStageExtra(resource, normalizedChunkId, expression, {
+                  loadOnDemandChunkResolvedArtifactPath: resource.path,
+                  generatedLazyChunkResolvedArtifactPath: currentAppChunkResource.path,
+                  loadOnDemandChunkFileStageObserved: true,
+                  loadOnDemandChunkFileExecuted: true,
+                  loadOnDemandChunkFileCallbackResolved: true,
+                  loadOnDemandChunkFileExecutionResult:
+                    window.VaadinDesktopIpcDiagnostics.loadOnDemandChunkFileExecutionResult,
+                  loadOnDemandChunkFileSideEffectProof:
+                    window.VaadinDesktopIpcDiagnostics.loadOnDemandChunkFileSideEffectProof,
+                  loadOnDemandChunkFileFailureLayer:
+                    window.VaadinDesktopIpcDiagnostics.loadOnDemandChunkFileFailureLayer,
+                  executionResult: 'executed:' + currentAppChunkResource.path
+                }));
+            }
             recordFrontendStageOutcome(resource, stagedUrl, 'executed',
               generatedLoadOnDemandChunkStageExtra(resource, normalizedChunkId, expression, {
                 loadOnDemandChunkExecutionResult:
@@ -12693,16 +12881,21 @@ let flowIpcShell = #"""
             installGeneratedLoadOnDemandChunkBridge(generatedDelegate);
           } catch (error) {
             const message = error && error.message ? error.message : String(error);
+            const retryable = isCurrentAppGeneratedChunkInitCycle(message, stageExtra, attempt);
             window.VaadinDesktopIpcDiagnostics.loadOnDemandChunkExecuted = false;
             window.VaadinDesktopIpcDiagnostics.loadOnDemandChunkExecutionResult =
-              'strict-blocker:' + resource.path;
+              retryable
+                ? 'retrying-current-app-generated-chunk-module-init-cycle-v1_33:' + resource.path
+                : 'strict-blocker:' + resource.path;
             window.VaadinDesktopIpcDiagnostics.loadOnDemandChunkBrowserError = message;
             window.VaadinDesktopIpcDiagnostics.loadOnDemandChunkFailureLayer =
               stageExtra.loadOnDemandChunkFailureLayer || 'generated-loadondemand-chunk-browser-execution';
             window.VaadinDesktopIpcDiagnostics.loadOnDemandChunkFileExecuted = false;
             window.VaadinDesktopIpcDiagnostics.loadOnDemandChunkFileCallbackResolved = false;
             window.VaadinDesktopIpcDiagnostics.loadOnDemandChunkFileExecutionResult =
-              'strict-blocker:' + (stageExtra.chunkFileStatus || 'chunk-file-import-failed');
+              retryable
+                ? 'retrying-after-module-init-cycle-v1_33:' + (stageExtra.chunkFileStatus || 'chunk-file-import-failed')
+                : 'strict-blocker:' + (stageExtra.chunkFileStatus || 'chunk-file-import-failed');
             window.VaadinDesktopIpcDiagnostics.loadOnDemandChunkFileBrowserError = message;
             window.VaadinDesktopIpcDiagnostics.loadOnDemandChunkFileFailureLayer =
               stageExtra.loadOnDemandChunkFileFailureLayer || 'chunk-file-import-failed';
@@ -12720,8 +12913,16 @@ let flowIpcShell = #"""
                 loadOnDemandChunkFileExecutionResult:
                   window.VaadinDesktopIpcDiagnostics.loadOnDemandChunkFileExecutionResult,
                 loadOnDemandChunkFileFailureLayer:
-                  window.VaadinDesktopIpcDiagnostics.loadOnDemandChunkFileFailureLayer
+                  window.VaadinDesktopIpcDiagnostics.loadOnDemandChunkFileFailureLayer,
+                retryableModuleInitCycle: retryable,
+                loadOnDemandChunkRetryAttempt: String(attempt)
               }));
+            if (retryable) {
+              invalidateGeneratedLoadOnDemandModuleIdentity(resource, stageExtra);
+              generatedLoadOnDemandChunkPromises.delete(executionKey);
+              await waitBeforeGeneratedLoadOnDemandRetry(attempt);
+              return executeGeneratedLoadOnDemandChunk(normalizedChunkId, attempt + 1);
+            }
           } finally {
             refreshFrontendStagingDiagnostics();
             for (const url of urlsToRevoke) {

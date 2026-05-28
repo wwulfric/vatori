@@ -42,8 +42,9 @@ v0/v1 runtime 切片走向可产品化桌面框架的最终完成状态。
 - `docs/goal-1_34.md`：Current App Generated Imports Root Package Graph，已完成。
 - `docs/goal-1_35.md`：Current App Production Runtime Ownership Handoff，已完成。
 - `docs/goal-1_36.md`：Current App Production Owner Import Attempt，已完成。
+- `docs/goal-1_37.md`：Current App Production Owner Component Reuse，已完成。
 
-当前已完成到 `docs/goal-1_36.md`。v1.31 先把 v1.30 的 offline plugin blocker 推进到
+当前已完成到 `docs/goal-1_37.md`。v1.31 先把 v1.30 的 offline plugin blocker 推进到
 explicit online/local-repo preflight；v1.32 进一步把 blocker 推进到 full
 `build-frontend` 输出层，证明当前 smoke app 已产生真实 source generated imports/chunk、
 production webapp build output 和 `prod.bundle`。v1.33 则把 v1.32 的 generic
@@ -64,10 +65,14 @@ production owner import handoff-pending。v1.36 将该 candidate 接入 current 
 owner import attempt：root/dependency graph 通过 host-owned `vatori-resource://` custom scheme
 stage/import，trace 记录 `currentAppProductionOwnerImported=true`、
 `currentAppProductionOwnerImportSideEffectSatisfied=true`、side-effect proof 和
-`currentAppProductionOwnerImportReuseSatisfied=false`。当前 accepted remaining blocker 是
-owner-owned component runtime reuse、dev-mode/Vite parity 和 broader component/resource parity。
+`currentAppProductionOwnerImportReuseSatisfied=false`。v1.37 随后把该 side-effect proof 接入
+TextField 组件解析复用：当 current app production owner 已注册 `vaadin-text-field` 时，host 跳过
+focused TextField dev-bundle import，并记录 `currentAppProductionOwnerComponentReused=true`、
+`currentAppProductionOwnerComponentReuseDecision=current-app-owner-reused` 和 skipped focused import。
+当前 accepted remaining blockers 是更早组件执行顺序的泛化 owner reuse、真实 app/build
+generated chunk-file parity、dev-mode/Vite parity 和 broader component/resource parity。
 
-后续阶段应继续以 `docs/goal-1_37.md` 等文件拆分，
+后续阶段应继续以 `docs/goal-1_38.md` 等文件拆分，
 每个阶段只拿走本长期目标中的一个可评审切片。不要把本文件改写成短期任务清单；
 它是长期北极星和完成度账本。
 
@@ -480,7 +485,16 @@ owner-owned component runtime reuse、dev-mode/Vite parity 和 broader component
   `currentAppProductionOwnerImportReuseSatisfied=false`。v1.36 仍不是完整 frontend/resource
   pipeline parity；它把下一步定位到 owner-owned component runtime reuse，或受支持 Vaadin
   build SPI / dev-mode 路径。
-- 当前 app/build 的真实 generated/lazy chunk file parity、owner-owned component runtime reuse
+- v1.37 已把 v1.36 的 side-effect proof 接入 current app production owner component reuse：
+  Java manifest/resource response 和 Swift `resourceRequest` / `resourceStage` / `webview.dom` 记录
+  `currentAppProductionOwnerComponentReuseVersion=flow-ipc-current-app-production-owner-component-reuse-v1_37`、
+  reuse source/policy、expected tag、reuse decision、reused tag、skipped focused import 和 no-localhost
+  proof。Trace 证明 `vaadin-text-field` 由 current app owner 提供，focused
+  `META-INF/vatori/dev-bundle-entry/vaadin-text-field.js` import 被跳过，同时可见 Flow
+  `TextField` Java listener 仍更新 DOM 为 `Vaadin TextField: Flow IPC typed`。v1.37 仍不是完整
+  frontend/resource pipeline parity；它只把 TextField owner reuse 从 blocker 推进为成功路径，未声明
+  Checkbox/Select/BigDecimalField 的泛化 owner reuse。
+- 当前 app/build 的真实 generated/lazy chunk file parity、更早组件执行顺序的泛化 owner reuse
   和 dev-mode/Vite execution 仍是明确 blocker，不计入最终完成。
 
 ## 最终完成标准
@@ -576,7 +590,7 @@ owner-owned component runtime reuse、dev-mode/Vite parity 和 broader component
 
 - 基于 v1.22 generated lazy chunk-file positive fixture、v1.23 production owner positive
   runtime fixture、v1.24 closure decision contract、v1.25 packaged frontend baseline 和
-  v1.26-v1.36 当前 app generated/build-frontend output contracts，继续让当前 app/build 产生的
+  v1.26-v1.37 当前 app generated/build-frontend output contracts，继续让当前 app/build 产生的
   真实 generated lazy chunk file 完成执行：在 current app generated imports root package graph 已由
   production support artifact 承载的基础上，接入受支持 Vaadin lazy chunk SPI，或把真实
   production bundle owned execution / dev-mode/Vite execution 从 partial/blocker 推进到真实可执行路径。
@@ -586,7 +600,9 @@ owner-owned component runtime reuse、dev-mode/Vite parity 和 broader component
   packaging-time staging，以及把真实 v1.20 owner-first runtime reuse attempt 从
   `production-owner-owned-missing-real-artifact` / focused fallback 推进到可复用
   owner-owned runtime path；v1.36 已证明 current app production owner import 和 side effect，
-  但 reuse=false，v1.23 positive fixture 也只能证明基础设施可行，不能替代真实 owner parity。
+  v1.37 已证明 `vaadin-text-field` 可复用 current app owner side effect 并跳过 focused import，
+  但这还不是更早组件执行顺序的泛化 owner reuse，v1.23 positive fixture 也只能证明基础设施可行，
+  不能替代真实 owner parity。
 - Dev-mode/Vite graph execution 或可靠替代模式。
 - Broader Vaadin component parity，尤其是 Grid/VirtualList、ComboBox、DatePicker、
   Dialog、Upload。
@@ -611,10 +627,10 @@ owner-owned component runtime reuse、dev-mode/Vite parity 和 broader component
 
 ## 当前建议的下一阶段
 
-v1.36 已完成 Current App Production Owner Import Attempt。下一阶段建议优先把 import/side-effect
-proof 推进到 owner-owned component runtime reuse，或转向 supported Vaadin build SPI：
+v1.37 已完成 Current App Production Owner Component Reuse。下一阶段建议优先把 TextField owner
+reuse 泛化到更早组件执行顺序，或转向 supported Vaadin build SPI：
 
-- 让 current app production owner import 的 side-effect proof 转化为组件解析复用策略，
+- 让 current app production owner reuse 从 TextField 扩展到 Checkbox/Select/BigDecimalField 等更早执行组件，
   记录 owner-owned runtime reuse decision、失败层和下一步。
 - 接入/评估受支持 Vaadin lazy chunk SPI，把 v1.22 fixture path 推进为真实 app/build path。
 - 真实 production owner-owned runtime reuse success。

@@ -125,6 +125,9 @@ public final class DesktopTraceInspector {
         FLOW_IPC_V1_36_CURRENT_APP_PRODUCTION_OWNER_IMPORT(
                 "--require-flow-ipc-v1_36-current-app-production-owner-import"),
         FLOW_IPC_V1_36("--require-flow-ipc-v1_36"),
+        FLOW_IPC_V1_37_CURRENT_APP_PRODUCTION_OWNER_COMPONENT_REUSE(
+                "--require-flow-ipc-v1_37-current-app-production-owner-component-reuse"),
+        FLOW_IPC_V1_37("--require-flow-ipc-v1_37"),
         FLOW_IPC_V1_3_FRAMEWORK("--require-flow-ipc-v1_3-framework");
 
         private final String option;
@@ -522,6 +525,11 @@ public final class DesktopTraceInspector {
                     gates.add(FLOW_IPC_V1_36);
                     yield gates;
                 }
+                case FLOW_IPC_V1_37_CURRENT_APP_PRODUCTION_OWNER_COMPONENT_REUSE ->
+                    EnumSet.of(FLOW_IPC_V1_37_CURRENT_APP_PRODUCTION_OWNER_COMPONENT_REUSE);
+                case FLOW_IPC_V1_37 -> EnumSet.of(
+                        FLOW_IPC_V1_37_CURRENT_APP_PRODUCTION_OWNER_COMPONENT_REUSE,
+                        FLOW_IPC_V1_37);
                 case FLOW_IPC_V1_3_FRAMEWORK -> EnumSet.of(FLOW_IPC_V1_3_FRAMEWORK);
             };
         }
@@ -619,6 +627,9 @@ public final class DesktopTraceInspector {
                 case FLOW_IPC_V1_36_CURRENT_APP_PRODUCTION_OWNER_IMPORT ->
                     summary.hasRequiredFlowIpcV1_36CurrentAppProductionOwnerImportTypes();
                 case FLOW_IPC_V1_36 -> summary.hasRequiredFlowIpcV1_36Types();
+                case FLOW_IPC_V1_37_CURRENT_APP_PRODUCTION_OWNER_COMPONENT_REUSE ->
+                    summary.hasRequiredFlowIpcV1_37CurrentAppProductionOwnerComponentReuseTypes();
+                case FLOW_IPC_V1_37 -> summary.hasRequiredFlowIpcV1_37Types();
                 case FLOW_IPC_V1_3_FRAMEWORK -> summary.hasRequiredFlowIpcV1_3FrameworkTypes();
             };
         }
@@ -1283,6 +1294,12 @@ public final class DesktopTraceInspector {
                     && line.contains("\"componentFrontendResources\"")
                     && containsCurrentAppProductionOwnerImportV136Fields(line)) {
                 summary.currentAppProductionOwnerImportV136ManifestObserved = true;
+            }
+            if (line.contains("\"type\":\"bootstrapResponse\"")
+                    && line.contains("\"componentFrontendResources\"")
+                    && containsCurrentAppProductionOwnerImportV136Fields(line)
+                    && containsCurrentAppProductionOwnerComponentReuseV137Fields(line)) {
+                summary.currentAppProductionOwnerComponentReuseV137ManifestObserved = true;
             }
             if (line.contains("\"type\":\"bootstrapResponse\"")
                     && line.contains("\"componentFrontendResources\"")
@@ -2203,6 +2220,12 @@ public final class DesktopTraceInspector {
                     && containsCurrentAppProductionOwnerImportV136Fields(line)) {
                 summary.currentAppProductionOwnerImportV136RequestObserved = true;
             }
+            if (line.contains("\"type\":\"resourceRequest\"")
+                    && containsPath(line, "current-app-frontend/generated/flow/generated-flow-imports.js")
+                    && containsCurrentAppProductionOwnerImportV136Fields(line)
+                    && containsCurrentAppProductionOwnerComponentReuseV137Fields(line)) {
+                summary.currentAppProductionOwnerComponentReuseV137RequestObserved = true;
+            }
             if (line.contains("\"type\":\"resourceResponse\"")
                     && containsPath(line, "current-app-frontend/generated/flow/generated-flow-imports.js")
                     && containsCurrentAppBuildFrontendOutputV132Fields(line)
@@ -2232,6 +2255,13 @@ public final class DesktopTraceInspector {
                     && containsCurrentAppProductionOwnerImportV136Fields(line)
                     && line.contains("\"bodyRedacted\":true")) {
                 summary.currentAppProductionOwnerImportV136ResponseObserved = true;
+            }
+            if (line.contains("\"type\":\"resourceResponse\"")
+                    && containsPath(line, "current-app-frontend/generated/flow/generated-flow-imports.js")
+                    && containsCurrentAppProductionOwnerImportV136Fields(line)
+                    && containsCurrentAppProductionOwnerComponentReuseV137Fields(line)
+                    && line.contains("\"bodyRedacted\":true")) {
+                summary.currentAppProductionOwnerComponentReuseV137ResponseObserved = true;
             }
             if (line.contains("\"type\":\"resourceRequest\"")
                     && line.contains("\"purpose\":\"generated-loadondemand-chunk-v1_11\"")
@@ -2949,6 +2979,13 @@ public final class DesktopTraceInspector {
                 summary.currentAppProductionOwnerImportV136StageObserved = true;
             }
             if (line.contains("\"type\":\"resourceStage\"")
+                    && containsCurrentAppProductionOwnerComponentReuseV137Fields(line)
+                    && (line.contains("\"executionStatus\":\"executed\"")
+                            || line.contains("\"executionStatus\":\"strict-blocker\"")
+                            || line.contains("\"executionStatus\":\"staged\""))) {
+                summary.currentAppProductionOwnerComponentReuseV137StageObserved = true;
+            }
+            if (line.contains("\"type\":\"resourceStage\"")
                     && containsPath(line, "current-app-production/VAADIN/build/generated-flow-imports-")
                     && containsCurrentAppGeneratedImportsRootPackageGraphV134Fields(line)
                     && containsLiteralField(line,
@@ -2980,6 +3017,22 @@ public final class DesktopTraceInspector {
                     && line.contains("currentAppProductionOwnerImportSideEffectProof")
                     && containsCurrentAppProductionOwnerImportV136FailureOrSuccess(line)) {
                 summary.currentAppProductionOwnerImportV136AttemptObserved = true;
+            }
+            if (line.contains("\"type\":\"resourceStage\"")
+                    && containsPath(line, "META-INF/vatori/dev-bundle-entry/vaadin-text-field.js")
+                    && containsCurrentAppProductionOwnerComponentReuseV137Fields(line)
+                    && containsStringField(line, "currentAppProductionOwnerComponentReuseDecision",
+                            "current-app-owner-reused")
+                    && containsLiteralField(line, "currentAppProductionOwnerComponentReused", "true")
+                    && containsStringField(line, "currentAppProductionOwnerComponentReuseReusedTags",
+                            "vaadin-text-field")
+                    && containsStringField(line,
+                            "currentAppProductionOwnerComponentReuseSkippedFocusedImports",
+                            "META-INF/vatori/dev-bundle-entry/vaadin-text-field.js")
+                    && containsStringField(line, "executionResult",
+                            "current-app-owner-reused:META-INF/vatori/dev-bundle-entry/vaadin-text-field.js")
+                    && line.contains("\"executionStatus\":\"executed\"")) {
+                summary.currentAppProductionOwnerComponentReuseV137TextFieldReuseObserved = true;
             }
             if (line.contains("\"type\":\"resourceStage\"")
                     && containsPath(line, "current-app-frontend/generated/flow/chunks/")
@@ -3755,6 +3808,19 @@ public final class DesktopTraceInspector {
                     && line.contains("currentAppProductionOwnerImportExecutionResult")
                     && containsCurrentAppProductionOwnerImportV136FailureOrSuccess(line)) {
                 summary.currentAppProductionOwnerImportV136DomObserved = true;
+            }
+            if (line.contains("\"type\":\"webview.dom\"")
+                    && containsLiteralField(line, "currentAppProductionOwnerImportObserved", "true")
+                    && containsLiteralField(line, "currentAppProductionOwnerComponentReused", "true")
+                    && containsCurrentAppProductionOwnerComponentReuseV137Fields(line)
+                    && containsStringField(line, "currentAppProductionOwnerComponentReuseDecision",
+                            "current-app-owner-reused")
+                    && containsStringField(line, "currentAppProductionOwnerComponentReuseReusedTags",
+                            "vaadin-text-field")
+                    && containsStringField(line,
+                            "currentAppProductionOwnerComponentReuseSkippedFocusedImports",
+                            "META-INF/vatori/dev-bundle-entry/vaadin-text-field.js")) {
+                summary.currentAppProductionOwnerComponentReuseV137DomObserved = true;
             }
             if (line.contains("\"type\":\"webview.dom\"")
                     && containsLiteralField(line, "generatedLazySourceCurrentBuildNoOpConfirmed", "true")
@@ -4987,6 +5053,25 @@ public final class DesktopTraceInspector {
                         "current-app-production-owner-browser-import-failed");
     }
 
+    private static boolean containsCurrentAppProductionOwnerComponentReuseV137Fields(String line) {
+        return containsStringField(line, "currentAppProductionOwnerComponentReuseVersion",
+                        "flow-ipc-current-app-production-owner-component-reuse-v1_37")
+                && containsStringField(line, "currentAppProductionOwnerComponentReuseSource",
+                        "current-app-production-owner-import-side-effect-v1_36")
+                && containsStringField(line, "currentAppProductionOwnerComponentReusePolicy",
+                        "reuse-current-app-owner-defined-custom-elements-before-focused-import-v1_37")
+                && containsStringField(line, "currentAppProductionOwnerComponentReuseExpectedTags",
+                        "vaadin-text-field")
+                && line.contains("currentAppProductionOwnerComponentReuseDecision")
+                && line.contains("currentAppProductionOwnerComponentReuseReason")
+                && line.contains("currentAppProductionOwnerComponentReuseReusedTags")
+                && line.contains("currentAppProductionOwnerComponentReuseSkippedFocusedImports")
+                && line.contains("currentAppProductionOwnerComponentReuseFallbackFocusedImports")
+                && line.contains("currentAppProductionOwnerComponentReuseFailureLayer")
+                && line.contains("currentAppProductionOwnerComponentReuseNextResolutionStep")
+                && containsLiteralField(line, "currentAppProductionOwnerComponentReuseNoLocalhost", "true");
+    }
+
     private static boolean containsProductionOwnerFailureLayer(String line, String field) {
         return containsStringField(line, field, "production-owner-duplicate-custom-element")
                 || containsStringField(line, field, "production-owner-relative-import-unresolved")
@@ -5499,6 +5584,12 @@ public final class DesktopTraceInspector {
         private boolean currentAppProductionOwnerImportV136StageObserved;
         private boolean currentAppProductionOwnerImportV136AttemptObserved;
         private boolean currentAppProductionOwnerImportV136DomObserved;
+        private boolean currentAppProductionOwnerComponentReuseV137ManifestObserved;
+        private boolean currentAppProductionOwnerComponentReuseV137RequestObserved;
+        private boolean currentAppProductionOwnerComponentReuseV137ResponseObserved;
+        private boolean currentAppProductionOwnerComponentReuseV137StageObserved;
+        private boolean currentAppProductionOwnerComponentReuseV137TextFieldReuseObserved;
+        private boolean currentAppProductionOwnerComponentReuseV137DomObserved;
 
         public boolean hasRequiredFlowIpcTypes() {
             return types.keySet().containsAll(FLOW_IPC_REQUIRED_TYPES)
@@ -6074,6 +6165,19 @@ public final class DesktopTraceInspector {
                     && hasRequiredFlowIpcV1_36CurrentAppProductionOwnerImportTypes();
         }
 
+        public boolean hasRequiredFlowIpcV1_37CurrentAppProductionOwnerComponentReuseTypes() {
+            return currentAppProductionOwnerComponentReuseV137ManifestObserved
+                    && currentAppProductionOwnerComponentReuseV137RequestObserved
+                    && currentAppProductionOwnerComponentReuseV137ResponseObserved
+                    && currentAppProductionOwnerComponentReuseV137StageObserved
+                    && currentAppProductionOwnerComponentReuseV137TextFieldReuseObserved
+                    && currentAppProductionOwnerComponentReuseV137DomObserved;
+        }
+
+        public boolean hasRequiredFlowIpcV1_37Types() {
+            return hasRequiredFlowIpcV1_37CurrentAppProductionOwnerComponentReuseTypes();
+        }
+
         private boolean hasCurrentAppBuildFrontendOutputSuccessorEvidence() {
             return currentAppBuildFrontendOutputV132ManifestObserved
                     && currentAppBuildFrontendOutputV132RequestObserved
@@ -6618,6 +6722,15 @@ public final class DesktopTraceInspector {
                     + currentAppProductionOwnerImportV136StageObserved + "/"
                     + currentAppProductionOwnerImportV136AttemptObserved + "/"
                     + currentAppProductionOwnerImportV136DomObserved);
+            System.out.println("Flow IPC v1.37 current app production owner component reuse manifest observed: "
+                    + currentAppProductionOwnerComponentReuseV137ManifestObserved);
+            System.out.println("Flow IPC v1.37 current app production owner component reuse request/response observed: "
+                    + currentAppProductionOwnerComponentReuseV137RequestObserved + "/"
+                    + currentAppProductionOwnerComponentReuseV137ResponseObserved);
+            System.out.println("Flow IPC v1.37 current app production owner component reuse stage/TextField/DOM observed: "
+                    + currentAppProductionOwnerComponentReuseV137StageObserved + "/"
+                    + currentAppProductionOwnerComponentReuseV137TextFieldReuseObserved + "/"
+                    + currentAppProductionOwnerComponentReuseV137DomObserved);
             System.out.println("Flow IPC v1.6 TextField graph manifest observed: "
                     + frontendTextFieldV16ManifestObserved);
             System.out.println("Flow IPC v1.6 TextField graph request observed: "

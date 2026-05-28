@@ -554,6 +554,18 @@ final class FlowClientResources {
             "current-app-production-owner-import-side-effect-pending";
     private static final String CURRENT_APP_PRODUCTION_OWNER_IMPORT_NEXT_STEP =
             "make the current app production owner import expose reusable Flow/component side effects, or switch this handoff to a supported Vaadin build/runtime SPI";
+    private static final String CURRENT_APP_PRODUCTION_OWNER_COMPONENT_REUSE_VERSION =
+            "flow-ipc-current-app-production-owner-component-reuse-v1_37";
+    private static final String CURRENT_APP_PRODUCTION_OWNER_COMPONENT_REUSE_SOURCE =
+            "current-app-production-owner-import-side-effect-v1_36";
+    private static final String CURRENT_APP_PRODUCTION_OWNER_COMPONENT_REUSE_POLICY =
+            "reuse-current-app-owner-defined-custom-elements-before-focused-import-v1_37";
+    private static final String CURRENT_APP_PRODUCTION_OWNER_COMPONENT_REUSE_EXPECTED_TAGS =
+            "vaadin-text-field";
+    private static final String CURRENT_APP_PRODUCTION_OWNER_COMPONENT_REUSE_FAILURE_LAYER =
+            "current-app-production-owner-component-reuse-pending";
+    private static final String CURRENT_APP_PRODUCTION_OWNER_COMPONENT_REUSE_NEXT_STEP =
+            "extend current app owner reuse to earlier component paths and broader Vaadin component/resource coverage, then cover dev-mode/Vite parity";
     private static final List<String> PRODUCTION_RUNTIME_OWNER_DEPENDENCY_ARTIFACTS = List.of(
             DEV_BUNDLE_COMMONJS_JS,
             DEV_BUNDLE_INDEX_HTML_JS,
@@ -2323,6 +2335,27 @@ final class FlowClientResources {
                 handoffReady ? CURRENT_APP_PRODUCTION_OWNER_IMPORT_FAILURE_LAYER : evidence.failureLayer());
         attributes.put("currentAppProductionOwnerImportNextResolutionStep",
                 CURRENT_APP_PRODUCTION_OWNER_IMPORT_NEXT_STEP);
+        attributes.put("currentAppProductionOwnerComponentReuseVersion",
+                CURRENT_APP_PRODUCTION_OWNER_COMPONENT_REUSE_VERSION);
+        attributes.put("currentAppProductionOwnerComponentReuseSource",
+                CURRENT_APP_PRODUCTION_OWNER_COMPONENT_REUSE_SOURCE);
+        attributes.put("currentAppProductionOwnerComponentReusePolicy",
+                CURRENT_APP_PRODUCTION_OWNER_COMPONENT_REUSE_POLICY);
+        attributes.put("currentAppProductionOwnerComponentReuseExpectedTags",
+                CURRENT_APP_PRODUCTION_OWNER_COMPONENT_REUSE_EXPECTED_TAGS);
+        attributes.put("currentAppProductionOwnerComponentReuseDecision",
+                "pending-current-app-owner-reuse-check");
+        attributes.put("currentAppProductionOwnerComponentReuseReason",
+                "current app production owner import side effects must be checked before focused component import");
+        attributes.put("currentAppProductionOwnerComponentReuseReusedTags", "");
+        attributes.put("currentAppProductionOwnerComponentReuseSkippedFocusedImports", "");
+        attributes.put("currentAppProductionOwnerComponentReuseFallbackFocusedImports", "");
+        attributes.put("currentAppProductionOwnerComponentReuseFailureLayer",
+                handoffReady ? CURRENT_APP_PRODUCTION_OWNER_COMPONENT_REUSE_FAILURE_LAYER : evidence.failureLayer());
+        attributes.put("currentAppProductionOwnerComponentReuseNextResolutionStep",
+                CURRENT_APP_PRODUCTION_OWNER_COMPONENT_REUSE_NEXT_STEP);
+        attributes.put("currentAppProductionOwnerComponentReused", false);
+        attributes.put("currentAppProductionOwnerComponentReuseNoLocalhost", true);
         return attributes;
     }
 

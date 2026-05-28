@@ -2506,6 +2506,19 @@ final class WebViewHost: NSObject, NSApplicationDelegate, NSWindowDelegate, WKNa
           currentAppProductionOwnerImportReuseSatisfied: !!(window.VaadinDesktopIpcDiagnostics && window.VaadinDesktopIpcDiagnostics.currentAppProductionOwnerImportReuseSatisfied),
           currentAppProductionOwnerImportNoLocalhost: !!(window.VaadinDesktopIpcDiagnostics && window.VaadinDesktopIpcDiagnostics.currentAppProductionOwnerImportNoLocalhost),
           currentAppProductionOwnerImportFixtureSubstituted: !!(window.VaadinDesktopIpcDiagnostics && window.VaadinDesktopIpcDiagnostics.currentAppProductionOwnerImportFixtureSubstituted),
+          currentAppProductionOwnerComponentReuseVersion: window.VaadinDesktopIpcDiagnostics ? window.VaadinDesktopIpcDiagnostics.currentAppProductionOwnerComponentReuseVersion : "",
+          currentAppProductionOwnerComponentReuseSource: window.VaadinDesktopIpcDiagnostics ? window.VaadinDesktopIpcDiagnostics.currentAppProductionOwnerComponentReuseSource : "",
+          currentAppProductionOwnerComponentReusePolicy: window.VaadinDesktopIpcDiagnostics ? window.VaadinDesktopIpcDiagnostics.currentAppProductionOwnerComponentReusePolicy : "",
+          currentAppProductionOwnerComponentReuseExpectedTags: window.VaadinDesktopIpcDiagnostics ? window.VaadinDesktopIpcDiagnostics.currentAppProductionOwnerComponentReuseExpectedTags : "",
+          currentAppProductionOwnerComponentReuseDecision: window.VaadinDesktopIpcDiagnostics ? window.VaadinDesktopIpcDiagnostics.currentAppProductionOwnerComponentReuseDecision : "",
+          currentAppProductionOwnerComponentReuseReason: window.VaadinDesktopIpcDiagnostics ? window.VaadinDesktopIpcDiagnostics.currentAppProductionOwnerComponentReuseReason : "",
+          currentAppProductionOwnerComponentReuseReusedTags: window.VaadinDesktopIpcDiagnostics ? window.VaadinDesktopIpcDiagnostics.currentAppProductionOwnerComponentReuseReusedTags : "",
+          currentAppProductionOwnerComponentReuseSkippedFocusedImports: window.VaadinDesktopIpcDiagnostics ? window.VaadinDesktopIpcDiagnostics.currentAppProductionOwnerComponentReuseSkippedFocusedImports : "",
+          currentAppProductionOwnerComponentReuseFallbackFocusedImports: window.VaadinDesktopIpcDiagnostics ? window.VaadinDesktopIpcDiagnostics.currentAppProductionOwnerComponentReuseFallbackFocusedImports : "",
+          currentAppProductionOwnerComponentReuseFailureLayer: window.VaadinDesktopIpcDiagnostics ? window.VaadinDesktopIpcDiagnostics.currentAppProductionOwnerComponentReuseFailureLayer : "",
+          currentAppProductionOwnerComponentReuseNextResolutionStep: window.VaadinDesktopIpcDiagnostics ? window.VaadinDesktopIpcDiagnostics.currentAppProductionOwnerComponentReuseNextResolutionStep : "",
+          currentAppProductionOwnerComponentReused: !!(window.VaadinDesktopIpcDiagnostics && window.VaadinDesktopIpcDiagnostics.currentAppProductionOwnerComponentReused),
+          currentAppProductionOwnerComponentReuseNoLocalhost: !!(window.VaadinDesktopIpcDiagnostics && window.VaadinDesktopIpcDiagnostics.currentAppProductionOwnerComponentReuseNoLocalhost),
           frontendBuildPreflightAvailabilityObserved: !!(window.VaadinDesktopIpcDiagnostics && window.VaadinDesktopIpcDiagnostics.frontendBuildPreflightAvailabilityObserved),
           frontendBuildPreflightAvailabilityVersion: window.VaadinDesktopIpcDiagnostics ? window.VaadinDesktopIpcDiagnostics.frontendBuildPreflightAvailabilityVersion : "",
           frontendBuildPreflightAvailabilitySource: window.VaadinDesktopIpcDiagnostics ? window.VaadinDesktopIpcDiagnostics.frontendBuildPreflightAvailabilitySource : "",
@@ -3890,6 +3903,19 @@ let flowIpcShell = #"""
         currentAppProductionOwnerImportReuseSatisfied: false,
         currentAppProductionOwnerImportNoLocalhost: false,
         currentAppProductionOwnerImportFixtureSubstituted: false,
+        currentAppProductionOwnerComponentReuseVersion: '',
+        currentAppProductionOwnerComponentReuseSource: '',
+        currentAppProductionOwnerComponentReusePolicy: '',
+        currentAppProductionOwnerComponentReuseExpectedTags: '',
+        currentAppProductionOwnerComponentReuseDecision: '',
+        currentAppProductionOwnerComponentReuseReason: '',
+        currentAppProductionOwnerComponentReuseReusedTags: '',
+        currentAppProductionOwnerComponentReuseSkippedFocusedImports: '',
+        currentAppProductionOwnerComponentReuseFallbackFocusedImports: '',
+        currentAppProductionOwnerComponentReuseFailureLayer: '',
+        currentAppProductionOwnerComponentReuseNextResolutionStep: '',
+        currentAppProductionOwnerComponentReused: false,
+        currentAppProductionOwnerComponentReuseNoLocalhost: false,
         frontendBuildPreflightAvailabilityObserved: false,
         frontendBuildPreflightAvailabilityVersion: '',
         frontendBuildPreflightAvailabilitySource: '',
@@ -6252,7 +6278,18 @@ let flowIpcShell = #"""
           ['currentAppProductionOwnerImportExpectedSideEffects', 'currentAppProductionOwnerImportExpectedSideEffects'],
           ['currentAppProductionOwnerImportPhase', 'currentAppProductionOwnerImportPhase'],
           ['currentAppProductionOwnerImportFailureLayer', 'currentAppProductionOwnerImportFailureLayer'],
-          ['currentAppProductionOwnerImportNextResolutionStep', 'currentAppProductionOwnerImportNextResolutionStep']
+          ['currentAppProductionOwnerImportNextResolutionStep', 'currentAppProductionOwnerImportNextResolutionStep'],
+          ['currentAppProductionOwnerComponentReuseVersion', 'currentAppProductionOwnerComponentReuseVersion'],
+          ['currentAppProductionOwnerComponentReuseSource', 'currentAppProductionOwnerComponentReuseSource'],
+          ['currentAppProductionOwnerComponentReusePolicy', 'currentAppProductionOwnerComponentReusePolicy'],
+          ['currentAppProductionOwnerComponentReuseExpectedTags', 'currentAppProductionOwnerComponentReuseExpectedTags'],
+          ['currentAppProductionOwnerComponentReuseDecision', 'currentAppProductionOwnerComponentReuseDecision'],
+          ['currentAppProductionOwnerComponentReuseReason', 'currentAppProductionOwnerComponentReuseReason'],
+          ['currentAppProductionOwnerComponentReuseReusedTags', 'currentAppProductionOwnerComponentReuseReusedTags'],
+          ['currentAppProductionOwnerComponentReuseSkippedFocusedImports', 'currentAppProductionOwnerComponentReuseSkippedFocusedImports'],
+          ['currentAppProductionOwnerComponentReuseFallbackFocusedImports', 'currentAppProductionOwnerComponentReuseFallbackFocusedImports'],
+          ['currentAppProductionOwnerComponentReuseFailureLayer', 'currentAppProductionOwnerComponentReuseFailureLayer'],
+          ['currentAppProductionOwnerComponentReuseNextResolutionStep', 'currentAppProductionOwnerComponentReuseNextResolutionStep']
         ]) {
           if (typeof source[sourceKey] === 'string' && source[sourceKey]) {
             window.VaadinDesktopIpcDiagnostics[diagnosticKey] = source[sourceKey];
@@ -6289,7 +6326,9 @@ let flowIpcShell = #"""
           ['currentAppProductionOwnerImportSideEffectSatisfied', 'currentAppProductionOwnerImportSideEffectSatisfied'],
           ['currentAppProductionOwnerImportReuseSatisfied', 'currentAppProductionOwnerImportReuseSatisfied'],
           ['currentAppProductionOwnerImportNoLocalhost', 'currentAppProductionOwnerImportNoLocalhost'],
-          ['currentAppProductionOwnerImportFixtureSubstituted', 'currentAppProductionOwnerImportFixtureSubstituted']
+          ['currentAppProductionOwnerImportFixtureSubstituted', 'currentAppProductionOwnerImportFixtureSubstituted'],
+          ['currentAppProductionOwnerComponentReused', 'currentAppProductionOwnerComponentReused'],
+          ['currentAppProductionOwnerComponentReuseNoLocalhost', 'currentAppProductionOwnerComponentReuseNoLocalhost']
         ]) {
           if (source[sourceKey] === true) {
             window.VaadinDesktopIpcDiagnostics[diagnosticKey] = true;
@@ -8040,6 +8079,7 @@ let flowIpcShell = #"""
           filePathRedacted: extra && extra.filePathRedacted ? extra.filePathRedacted : '',
           fileDirectoryRedacted: extra && extra.fileDirectoryRedacted ? extra.fileDirectoryRedacted : '',
           noLocalhostProof: extra && extra.noLocalhostProof ? extra.noLocalhostProof : '',
+          executionResult: extra && extra.executionResult ? extra.executionResult : '',
           blobFallbackReason: extra && extra.blobFallbackReason ? extra.blobFallbackReason : '',
           blobFallbackBlockedLayer: extra && extra.blobFallbackBlockedLayer ? extra.blobFallbackBlockedLayer : '',
           blobFallbackNextResolutionStep: extra && extra.blobFallbackNextResolutionStep
@@ -8808,6 +8848,58 @@ let flowIpcShell = #"""
             extra && typeof extra.currentAppProductionOwnerImportFixtureSubstituted === 'boolean'
               ? extra.currentAppProductionOwnerImportFixtureSubstituted
               : resource.currentAppProductionOwnerImportFixtureSubstituted === true,
+          currentAppProductionOwnerComponentReuseVersion:
+            extra && extra.currentAppProductionOwnerComponentReuseVersion
+              ? extra.currentAppProductionOwnerComponentReuseVersion
+              : (resource.currentAppProductionOwnerComponentReuseVersion || ''),
+          currentAppProductionOwnerComponentReuseSource:
+            extra && extra.currentAppProductionOwnerComponentReuseSource
+              ? extra.currentAppProductionOwnerComponentReuseSource
+              : (resource.currentAppProductionOwnerComponentReuseSource || ''),
+          currentAppProductionOwnerComponentReusePolicy:
+            extra && extra.currentAppProductionOwnerComponentReusePolicy
+              ? extra.currentAppProductionOwnerComponentReusePolicy
+              : (resource.currentAppProductionOwnerComponentReusePolicy || ''),
+          currentAppProductionOwnerComponentReuseExpectedTags:
+            extra && extra.currentAppProductionOwnerComponentReuseExpectedTags
+              ? extra.currentAppProductionOwnerComponentReuseExpectedTags
+              : (resource.currentAppProductionOwnerComponentReuseExpectedTags || ''),
+          currentAppProductionOwnerComponentReuseDecision:
+            extra && extra.currentAppProductionOwnerComponentReuseDecision
+              ? extra.currentAppProductionOwnerComponentReuseDecision
+              : (resource.currentAppProductionOwnerComponentReuseDecision || ''),
+          currentAppProductionOwnerComponentReuseReason:
+            extra && extra.currentAppProductionOwnerComponentReuseReason
+              ? extra.currentAppProductionOwnerComponentReuseReason
+              : (resource.currentAppProductionOwnerComponentReuseReason || ''),
+          currentAppProductionOwnerComponentReuseReusedTags:
+            extra && extra.currentAppProductionOwnerComponentReuseReusedTags
+              ? extra.currentAppProductionOwnerComponentReuseReusedTags
+              : (resource.currentAppProductionOwnerComponentReuseReusedTags || ''),
+          currentAppProductionOwnerComponentReuseSkippedFocusedImports:
+            extra && extra.currentAppProductionOwnerComponentReuseSkippedFocusedImports
+              ? extra.currentAppProductionOwnerComponentReuseSkippedFocusedImports
+              : (resource.currentAppProductionOwnerComponentReuseSkippedFocusedImports || ''),
+          currentAppProductionOwnerComponentReuseFallbackFocusedImports:
+            extra && extra.currentAppProductionOwnerComponentReuseFallbackFocusedImports
+              ? extra.currentAppProductionOwnerComponentReuseFallbackFocusedImports
+              : (resource.currentAppProductionOwnerComponentReuseFallbackFocusedImports || ''),
+          currentAppProductionOwnerComponentReuseFailureLayer:
+            extra && extra.currentAppProductionOwnerComponentReuseFailureLayer
+              ? extra.currentAppProductionOwnerComponentReuseFailureLayer
+              : (resource.currentAppProductionOwnerComponentReuseFailureLayer || ''),
+          currentAppProductionOwnerComponentReuseNextResolutionStep:
+            extra && extra.currentAppProductionOwnerComponentReuseNextResolutionStep
+              ? extra.currentAppProductionOwnerComponentReuseNextResolutionStep
+              : (resource.currentAppProductionOwnerComponentReuseNextResolutionStep || ''),
+          currentAppProductionOwnerComponentReused:
+            extra && typeof extra.currentAppProductionOwnerComponentReused === 'boolean'
+              ? extra.currentAppProductionOwnerComponentReused
+              : resource.currentAppProductionOwnerComponentReused === true,
+          currentAppProductionOwnerComponentReuseNoLocalhost:
+            extra && typeof extra.currentAppProductionOwnerComponentReuseNoLocalhost === 'boolean'
+              ? extra.currentAppProductionOwnerComponentReuseNoLocalhost
+              : resource.currentAppProductionOwnerComponentReuseNoLocalhost === true,
           stagedPath: '',
           owner: stageOwner,
           artifactFamily: family,
@@ -12255,6 +12347,29 @@ let flowIpcShell = #"""
           && productionOwnerOwnedRuntimeHasTag(tag);
       }
 
+      function currentAppProductionOwnerComponentReuseExpectedTags() {
+        const diagnostics = window.VaadinDesktopIpcDiagnostics || {};
+        const tags = csvValues(diagnostics.currentAppProductionOwnerComponentReuseExpectedTags || '');
+        if (tags.length > 0) {
+          return tags;
+        }
+        const expected = diagnostics.currentAppProductionOwnerImportExpectedSideEffects || '';
+        if (expected.includes('customElements:')) {
+          return expected.substring(expected.indexOf('customElements:') + 'customElements:'.length)
+            .split(',')[0].split('|').map((entry) => entry.trim()).filter((entry) => entry);
+        }
+        return ['vaadin-text-field'];
+      }
+
+      function currentAppProductionOwnerComponentOwnsTag(tag) {
+        const diagnostics = window.VaadinDesktopIpcDiagnostics || {};
+        return diagnostics.currentAppProductionOwnerImported === true
+          && diagnostics.currentAppProductionOwnerImportSideEffectSatisfied === true
+          && diagnostics.currentAppProductionOwnerImportNoLocalhost === true
+          && currentAppProductionOwnerComponentReuseExpectedTags().includes(tag)
+          && !!customElements.get(tag);
+      }
+
       function installOwnerOwnedCustomElementDefineGuard() {
         if (customElements.__vatoriOwnerOwnedDefineGuardInstalled) {
           return;
@@ -12309,7 +12424,7 @@ let flowIpcShell = #"""
           ? "(ownerModule.c7 || ownerModule.TextField || customElements.get('" + tag + "'))"
           : "(customElements.get('" + tag + "') || ownerModule.c7 || ownerModule.TextField)";
         const source =
-          "const ownerModule = window.__vatoriProductionOwnerModuleExports || {};\n"
+          "const ownerModule = Object.assign({}, window.__vatoriProductionOwnerModuleExports || {}, window.__vatoriCurrentAppProductionOwnerModuleExports || {});\n"
           + "const existingClass = " + classExpression + ";\n"
           + "if (!existingClass) {\n"
           + "  throw new Error('missing-existing-custom-element-class tag=" + tag + " strategy="
@@ -12440,6 +12555,26 @@ let flowIpcShell = #"""
           }
           let url = '';
           if (specifier === '@vaadin/text-field/src/vaadin-text-field.js'
+              && currentAppProductionOwnerComponentOwnsTag('vaadin-text-field')) {
+            url = existingCustomElementClassExportUrl(
+              'vaadin-text-field', 'TextField', specifier, urlsToRevoke, urlCache, {
+                keyPrefix: 'current-app-production-owner-class-export',
+                strategy: 'current-app-production-owner-class-export-v1_37',
+                cleanupPolicy: 'current-app-owner-class-export-revoke-with-component-graph-v1_37',
+                executionResultPrefix: 'current-app-owner-class-export',
+                preferOwnerModuleExports: true,
+                ownerRuntimeReuse: true,
+                firstDefinitionSource:
+                  'current app production owner import registered vaadin-text-field',
+                secondDefinitionSource:
+                  'focused import rewrite reused current app owner custom element class export',
+                componentProductionOwnerReuseDecision: 'current-app-owner-reused',
+                componentProductionOwnerReuseDecisionReason:
+                  'current app production owner side-effect check satisfied for vaadin-text-field before focused import rewrite',
+                componentProductionOwnerReuseDecisionTags: 'vaadin-text-field',
+                componentProductionOwnerReuseDecisionPhase: 'before-focused-component-import'
+              });
+          } else if (specifier === '@vaadin/text-field/src/vaadin-text-field.js'
               && (productionOwnerOwnedRuntimeHasTag('vaadin-text-field')
                 || productionOwnerRuntimeAttemptProvidedTag('vaadin-text-field'))) {
             url = productionOwnerOwnedRuntimeClassExportUrl(
@@ -13189,7 +13324,33 @@ let flowIpcShell = #"""
           currentAppProductionOwnerImportFailureLayer:
             resource.currentAppProductionOwnerImportFailureLayer || '',
           currentAppProductionOwnerImportNextResolutionStep:
-            resource.currentAppProductionOwnerImportNextResolutionStep || ''
+            resource.currentAppProductionOwnerImportNextResolutionStep || '',
+          currentAppProductionOwnerComponentReuseVersion:
+            resource.currentAppProductionOwnerComponentReuseVersion || '',
+          currentAppProductionOwnerComponentReuseSource:
+            resource.currentAppProductionOwnerComponentReuseSource || '',
+          currentAppProductionOwnerComponentReusePolicy:
+            resource.currentAppProductionOwnerComponentReusePolicy || '',
+          currentAppProductionOwnerComponentReuseExpectedTags:
+            resource.currentAppProductionOwnerComponentReuseExpectedTags || '',
+          currentAppProductionOwnerComponentReuseDecision:
+            resource.currentAppProductionOwnerComponentReuseDecision || '',
+          currentAppProductionOwnerComponentReuseReason:
+            resource.currentAppProductionOwnerComponentReuseReason || '',
+          currentAppProductionOwnerComponentReuseReusedTags:
+            resource.currentAppProductionOwnerComponentReuseReusedTags || '',
+          currentAppProductionOwnerComponentReuseSkippedFocusedImports:
+            resource.currentAppProductionOwnerComponentReuseSkippedFocusedImports || '',
+          currentAppProductionOwnerComponentReuseFallbackFocusedImports:
+            resource.currentAppProductionOwnerComponentReuseFallbackFocusedImports || '',
+          currentAppProductionOwnerComponentReuseFailureLayer:
+            resource.currentAppProductionOwnerComponentReuseFailureLayer || '',
+          currentAppProductionOwnerComponentReuseNextResolutionStep:
+            resource.currentAppProductionOwnerComponentReuseNextResolutionStep || '',
+          currentAppProductionOwnerComponentReused:
+            resource.currentAppProductionOwnerComponentReused === true,
+          currentAppProductionOwnerComponentReuseNoLocalhost:
+            resource.currentAppProductionOwnerComponentReuseNoLocalhost === true
         }, extra || {});
       }
 
@@ -13441,6 +13602,40 @@ let flowIpcShell = #"""
             stageExtra.currentAppProductionOwnerImportNoLocalhost !== false,
           currentAppProductionOwnerImportFixtureSubstituted:
             stageExtra.currentAppProductionOwnerImportFixtureSubstituted === true,
+          currentAppProductionOwnerComponentReuseVersion:
+            stageExtra.currentAppProductionOwnerComponentReuseVersion
+            || 'flow-ipc-current-app-production-owner-component-reuse-v1_37',
+          currentAppProductionOwnerComponentReuseSource:
+            stageExtra.currentAppProductionOwnerComponentReuseSource
+            || 'current-app-production-owner-import-side-effect-v1_36',
+          currentAppProductionOwnerComponentReusePolicy:
+            stageExtra.currentAppProductionOwnerComponentReusePolicy
+            || 'reuse-current-app-owner-defined-custom-elements-before-focused-import-v1_37',
+          currentAppProductionOwnerComponentReuseExpectedTags:
+            stageExtra.currentAppProductionOwnerComponentReuseExpectedTags
+            || 'vaadin-text-field',
+          currentAppProductionOwnerComponentReuseDecision:
+            stageExtra.currentAppProductionOwnerComponentReuseDecision
+            || 'pending-current-app-owner-reuse-check',
+          currentAppProductionOwnerComponentReuseReason:
+            stageExtra.currentAppProductionOwnerComponentReuseReason
+            || 'current app production owner import side effects must be checked before focused component import',
+          currentAppProductionOwnerComponentReuseReusedTags:
+            stageExtra.currentAppProductionOwnerComponentReuseReusedTags || '',
+          currentAppProductionOwnerComponentReuseSkippedFocusedImports:
+            stageExtra.currentAppProductionOwnerComponentReuseSkippedFocusedImports || '',
+          currentAppProductionOwnerComponentReuseFallbackFocusedImports:
+            stageExtra.currentAppProductionOwnerComponentReuseFallbackFocusedImports || '',
+          currentAppProductionOwnerComponentReuseFailureLayer:
+            stageExtra.currentAppProductionOwnerComponentReuseFailureLayer
+            || 'current-app-production-owner-component-reuse-pending',
+          currentAppProductionOwnerComponentReuseNextResolutionStep:
+            stageExtra.currentAppProductionOwnerComponentReuseNextResolutionStep
+            || 'extend current app owner reuse to earlier component paths and broader Vaadin component/resource coverage, then cover dev-mode/Vite parity',
+          currentAppProductionOwnerComponentReused:
+            stageExtra.currentAppProductionOwnerComponentReused === true,
+          currentAppProductionOwnerComponentReuseNoLocalhost:
+            stageExtra.currentAppProductionOwnerComponentReuseNoLocalhost !== false,
           currentAppProductionRuntimeOwnershipVersion:
             stageExtra.currentAppProductionRuntimeOwnershipVersion || '',
           currentAppProductionRuntimeOwnershipHandoffReady:
@@ -13587,6 +13782,32 @@ let flowIpcShell = #"""
           extra.currentAppProductionOwnerImportNoLocalhost === true;
         d.currentAppProductionOwnerImportFixtureSubstituted =
           extra.currentAppProductionOwnerImportFixtureSubstituted === true;
+        d.currentAppProductionOwnerComponentReuseVersion =
+          extra.currentAppProductionOwnerComponentReuseVersion || '';
+        d.currentAppProductionOwnerComponentReuseSource =
+          extra.currentAppProductionOwnerComponentReuseSource || '';
+        d.currentAppProductionOwnerComponentReusePolicy =
+          extra.currentAppProductionOwnerComponentReusePolicy || '';
+        d.currentAppProductionOwnerComponentReuseExpectedTags =
+          extra.currentAppProductionOwnerComponentReuseExpectedTags || '';
+        d.currentAppProductionOwnerComponentReuseDecision =
+          extra.currentAppProductionOwnerComponentReuseDecision || '';
+        d.currentAppProductionOwnerComponentReuseReason =
+          extra.currentAppProductionOwnerComponentReuseReason || '';
+        d.currentAppProductionOwnerComponentReuseReusedTags =
+          extra.currentAppProductionOwnerComponentReuseReusedTags || '';
+        d.currentAppProductionOwnerComponentReuseSkippedFocusedImports =
+          extra.currentAppProductionOwnerComponentReuseSkippedFocusedImports || '';
+        d.currentAppProductionOwnerComponentReuseFallbackFocusedImports =
+          extra.currentAppProductionOwnerComponentReuseFallbackFocusedImports || '';
+        d.currentAppProductionOwnerComponentReuseFailureLayer =
+          extra.currentAppProductionOwnerComponentReuseFailureLayer || '';
+        d.currentAppProductionOwnerComponentReuseNextResolutionStep =
+          extra.currentAppProductionOwnerComponentReuseNextResolutionStep || '';
+        d.currentAppProductionOwnerComponentReused =
+          extra.currentAppProductionOwnerComponentReused === true;
+        d.currentAppProductionOwnerComponentReuseNoLocalhost =
+          extra.currentAppProductionOwnerComponentReuseNoLocalhost === true;
         d.currentAppProductionRuntimeOwnershipOwnerSideEffectSatisfied =
           extra.currentAppProductionRuntimeOwnershipOwnerSideEffectSatisfied === true;
         d.currentAppProductionRuntimeOwnershipOwnerReuseSatisfied =
@@ -14993,22 +15214,49 @@ let flowIpcShell = #"""
           window.VaadinDesktopIpcDiagnostics.frontendArtifactProductionBundleRuntimeOwnerOwnedRuntimeSatisfied === true;
         const ownerPhase =
           window.VaadinDesktopIpcDiagnostics.frontendArtifactProductionBundleRuntimeOwnerImportPhase || '';
+        const currentAppOwnerHasTag = currentAppProductionOwnerComponentOwnsTag(componentTag);
+        const currentAppOwnerAttempted =
+          window.VaadinDesktopIpcDiagnostics.currentAppProductionOwnerImportAttempted === true;
+        const currentAppOwnerImported =
+          window.VaadinDesktopIpcDiagnostics.currentAppProductionOwnerImported === true;
+        const currentAppOwnerSideEffectSatisfied =
+          window.VaadinDesktopIpcDiagnostics.currentAppProductionOwnerImportSideEffectSatisfied === true;
+        const currentAppOwnerFailureLayer =
+          window.VaadinDesktopIpcDiagnostics.currentAppProductionOwnerImportFailureLayer
+          || window.VaadinDesktopIpcDiagnostics.currentAppProductionOwnerComponentReuseFailureLayer
+          || '';
         const ownerHasTag = ownerOwnedRuntimeSatisfied
           && ownerSideEffectSatisfied
           && componentTag
           && !!customElements.get(componentTag);
-        let mode = ownerHasTag ? 'owner-owned-custom-elements' : 'focused-component-import-fallback';
-        const decision = ownerHasTag
+        let mode = currentAppOwnerHasTag
+          ? 'current-app-production-owner-custom-elements'
+          : (ownerHasTag ? 'owner-owned-custom-elements' : 'focused-component-import-fallback');
+        const decision = currentAppOwnerHasTag
+          ? 'current-app-owner-reused'
+          : (ownerHasTag
           ? 'owner-reused'
           : (ownerOwnedRuntimeAttempted
             ? 'focused-fallback-after-owner-owned-runtime-attempt'
-            : 'focused-fallback-after-owner-side-effect-check');
+            : 'focused-fallback-after-owner-side-effect-check'));
         let reason = '';
-        if (ownerHasTag) {
+        if (currentAppOwnerHasTag) {
+          reason = 'current app production owner side-effect check satisfied and registered '
+            + componentTag + ' before this focused component import';
+        } else if (ownerHasTag) {
           reason = 'owner side-effect check satisfied and registered ' + componentTag + ' before focused component import';
         } else if (ownerOwnedRuntimeAttempted) {
           reason = 'owner-first runtime attempt completed before focused component import but did not satisfy reuse; failureLayer='
             + ownerFailureLayer + ';phase=' + ownerPhase;
+        } else if (currentAppOwnerSideEffectSatisfied) {
+          reason = 'current app production owner import satisfied side effects but did not declare reusable tag '
+            + componentTag + ';failureLayer=' + currentAppOwnerFailureLayer;
+        } else if (currentAppOwnerImported) {
+          reason = 'current app production owner imported but component reuse side effect is not satisfied; failureLayer='
+            + currentAppOwnerFailureLayer;
+        } else if (currentAppOwnerAttempted) {
+          reason = 'current app production owner import was attempted but this component still requires focused fallback; failureLayer='
+            + currentAppOwnerFailureLayer;
         } else if (ownerModuleImported) {
           reason = 'owner module import resolved but side-effect check did not satisfy component reuse; failureLayer='
             + ownerFailureLayer + ';phase=' + ownerPhase;
@@ -15027,7 +15275,7 @@ let flowIpcShell = #"""
           componentProductionOwnerReuseAcceptableFailures:
             resource.componentProductionOwnerReuseAcceptableFailures
             || 'owner-import-failed-before-component-import,owner-import-succeeded-but-component-class-export-unreachable,owner-side-effects-global-but-focused-entry-still-required,vaadin-production-artifact-does-not-expose-reusable-owner-contract,blob-module-identity-cannot-safely-merge-owner-and-component-lifetime',
-          componentProductionOwnerReused: ownerHasTag,
+          componentProductionOwnerReused: currentAppOwnerHasTag || ownerHasTag,
           componentProductionOwnerReuseReason: reason,
           componentProductionOwnerReuseDecisionVersion:
             resource.componentProductionOwnerReuseDecisionVersion
@@ -15045,15 +15293,50 @@ let flowIpcShell = #"""
             resource.componentProductionOwnerReusePolicyV1_20
             || 'owner-first-then-focused-fallback-v1_20',
           componentProductionOwnerReuseDecisionPhase:
-            resource.componentProductionOwnerReuseDecisionPhase || 'before-component-imports',
-          componentProductionOwnerOwnedTags: ownerHasTag ? componentTag : '',
-          componentProductionOwnerSkippedDefinitions: ownerHasTag ? componentTag : '',
-          componentProductionOwnerFallbackImports: ownerHasTag ? '' : (resource.path || ''),
+            currentAppOwnerHasTag ? 'before-focused-component-import' :
+            (resource.componentProductionOwnerReuseDecisionPhase || 'before-component-imports'),
+          componentProductionOwnerOwnedTags: (currentAppOwnerHasTag || ownerHasTag) ? componentTag : '',
+          componentProductionOwnerSkippedDefinitions: (currentAppOwnerHasTag || ownerHasTag) ? componentTag : '',
+          componentProductionOwnerFallbackImports: (currentAppOwnerHasTag || ownerHasTag) ? '' : (resource.path || ''),
           componentProductionOwnerDependencyPaths:
             resource.componentProductionOwnerDependencyPaths || 'vaadin-dev-bundle/webapp/VAADIN/build/indexhtml-BfYYZi8S.js',
-          componentProductionOwnerImportOrder: ownerPhase
+          componentProductionOwnerImportOrder: currentAppOwnerHasTag
+            ? 'current-app-production-owner-before-focused-component-import-v1_37'
+            : (ownerPhase
             ? ('production-owner-' + ownerPhase + '-then-focused-component-import-v1_16')
-            : (resource.componentProductionOwnerImportOrder || 'focused-component-import-before-owner-decision-v1_16')
+            : (resource.componentProductionOwnerImportOrder || 'focused-component-import-before-owner-decision-v1_16')),
+          currentAppProductionOwnerComponentReuseVersion:
+            resource.currentAppProductionOwnerComponentReuseVersion
+            || 'flow-ipc-current-app-production-owner-component-reuse-v1_37',
+          currentAppProductionOwnerComponentReuseSource:
+            resource.currentAppProductionOwnerComponentReuseSource
+            || 'current-app-production-owner-import-side-effect-v1_36',
+          currentAppProductionOwnerComponentReusePolicy:
+            resource.currentAppProductionOwnerComponentReusePolicy
+            || 'reuse-current-app-owner-defined-custom-elements-before-focused-import-v1_37',
+          currentAppProductionOwnerComponentReuseExpectedTags:
+            currentAppProductionOwnerComponentReuseExpectedTags().join(','),
+          currentAppProductionOwnerComponentReuseDecision:
+            currentAppOwnerHasTag ? 'current-app-owner-reused'
+              : (resource.currentAppProductionOwnerComponentReuseDecision
+                || 'focused-fallback-current-app-owner-not-ready'),
+          currentAppProductionOwnerComponentReuseReason: reason,
+          currentAppProductionOwnerComponentReuseReusedTags:
+            currentAppOwnerHasTag ? componentTag : '',
+          currentAppProductionOwnerComponentReuseSkippedFocusedImports:
+            currentAppOwnerHasTag ? (resource.path || '') : '',
+          currentAppProductionOwnerComponentReuseFallbackFocusedImports:
+            currentAppOwnerHasTag ? '' : (resource.path || ''),
+          currentAppProductionOwnerComponentReuseFailureLayer:
+            currentAppOwnerHasTag ? ''
+              : (resource.currentAppProductionOwnerComponentReuseFailureLayer
+                || 'current-app-production-owner-component-reuse-not-satisfied'),
+          currentAppProductionOwnerComponentReuseNextResolutionStep:
+            resource.currentAppProductionOwnerComponentReuseNextResolutionStep
+            || 'extend current app owner reuse to earlier component paths and broader Vaadin component/resource coverage, then cover dev-mode/Vite parity',
+          currentAppProductionOwnerComponentReused: currentAppOwnerHasTag,
+          currentAppProductionOwnerComponentReuseNoLocalhost:
+            window.VaadinDesktopIpcDiagnostics.currentAppProductionOwnerImportNoLocalhost === true
         };
         applyComponentProductionOwnerReuseDiagnostics(details);
         return details;
@@ -15067,6 +15350,8 @@ let flowIpcShell = #"""
           window.VaadinDesktopIpcDiagnostics.componentProductionOwnerReuseDecision || '';
         const previousDecisionPhase =
           window.VaadinDesktopIpcDiagnostics.componentProductionOwnerReuseDecisionPhase || '';
+        const nextDecision = details.componentProductionOwnerReuseDecision || '';
+        const nextIsReuse = nextDecision === 'owner-reused' || nextDecision === 'current-app-owner-reused';
         window.VaadinDesktopIpcDiagnostics.componentProductionOwnerReuseVersion =
           details.componentProductionOwnerReuseVersion || '';
         window.VaadinDesktopIpcDiagnostics.componentProductionOwnerReusePolicy =
@@ -15085,12 +15370,12 @@ let flowIpcShell = #"""
           details.componentProductionOwnerReuseDecisionSource || '';
         window.VaadinDesktopIpcDiagnostics.componentProductionOwnerReuseDecision =
           previousDecision === 'owner-reused-positive-fixture'
-            && details.componentProductionOwnerReuseDecision !== 'owner-reused'
+            && !nextIsReuse
             ? previousDecision
             : (previousDecision === 'focused-fallback-after-owner-owned-runtime-attempt'
-            && details.componentProductionOwnerReuseDecision !== 'owner-reused'
+            && !nextIsReuse
             ? previousDecision
-            : (details.componentProductionOwnerReuseDecision || ''));
+            : nextDecision);
         window.VaadinDesktopIpcDiagnostics.componentProductionOwnerReuseDecisionReason =
           details.componentProductionOwnerReuseDecisionReason || '';
         window.VaadinDesktopIpcDiagnostics.componentProductionOwnerReuseDecisionTags =
@@ -15113,6 +15398,54 @@ let flowIpcShell = #"""
           details.componentProductionOwnerDependencyPaths || '';
         window.VaadinDesktopIpcDiagnostics.componentProductionOwnerImportOrder =
           details.componentProductionOwnerImportOrder || '';
+        window.VaadinDesktopIpcDiagnostics.currentAppProductionOwnerComponentReuseVersion =
+          details.currentAppProductionOwnerComponentReuseVersion
+          || window.VaadinDesktopIpcDiagnostics.currentAppProductionOwnerComponentReuseVersion
+          || '';
+        window.VaadinDesktopIpcDiagnostics.currentAppProductionOwnerComponentReuseSource =
+          details.currentAppProductionOwnerComponentReuseSource
+          || window.VaadinDesktopIpcDiagnostics.currentAppProductionOwnerComponentReuseSource
+          || '';
+        window.VaadinDesktopIpcDiagnostics.currentAppProductionOwnerComponentReusePolicy =
+          details.currentAppProductionOwnerComponentReusePolicy
+          || window.VaadinDesktopIpcDiagnostics.currentAppProductionOwnerComponentReusePolicy
+          || '';
+        window.VaadinDesktopIpcDiagnostics.currentAppProductionOwnerComponentReuseExpectedTags =
+          details.currentAppProductionOwnerComponentReuseExpectedTags
+          || window.VaadinDesktopIpcDiagnostics.currentAppProductionOwnerComponentReuseExpectedTags
+          || '';
+        window.VaadinDesktopIpcDiagnostics.currentAppProductionOwnerComponentReuseDecision =
+          details.currentAppProductionOwnerComponentReuseDecision
+          || window.VaadinDesktopIpcDiagnostics.currentAppProductionOwnerComponentReuseDecision
+          || '';
+        window.VaadinDesktopIpcDiagnostics.currentAppProductionOwnerComponentReuseReason =
+          details.currentAppProductionOwnerComponentReuseReason
+          || window.VaadinDesktopIpcDiagnostics.currentAppProductionOwnerComponentReuseReason
+          || '';
+        window.VaadinDesktopIpcDiagnostics.currentAppProductionOwnerComponentReuseReusedTags =
+          details.currentAppProductionOwnerComponentReuseReusedTags
+          || window.VaadinDesktopIpcDiagnostics.currentAppProductionOwnerComponentReuseReusedTags
+          || '';
+        window.VaadinDesktopIpcDiagnostics.currentAppProductionOwnerComponentReuseSkippedFocusedImports =
+          details.currentAppProductionOwnerComponentReuseSkippedFocusedImports
+          || window.VaadinDesktopIpcDiagnostics.currentAppProductionOwnerComponentReuseSkippedFocusedImports
+          || '';
+        window.VaadinDesktopIpcDiagnostics.currentAppProductionOwnerComponentReuseFallbackFocusedImports =
+          details.currentAppProductionOwnerComponentReuseFallbackFocusedImports
+          || window.VaadinDesktopIpcDiagnostics.currentAppProductionOwnerComponentReuseFallbackFocusedImports
+          || '';
+        window.VaadinDesktopIpcDiagnostics.currentAppProductionOwnerComponentReuseFailureLayer =
+          details.currentAppProductionOwnerComponentReuseFailureLayer || '';
+        window.VaadinDesktopIpcDiagnostics.currentAppProductionOwnerComponentReuseNextResolutionStep =
+          details.currentAppProductionOwnerComponentReuseNextResolutionStep
+          || window.VaadinDesktopIpcDiagnostics.currentAppProductionOwnerComponentReuseNextResolutionStep
+          || '';
+        window.VaadinDesktopIpcDiagnostics.currentAppProductionOwnerComponentReused =
+          details.currentAppProductionOwnerComponentReused === true
+          || window.VaadinDesktopIpcDiagnostics.currentAppProductionOwnerComponentReused === true;
+        window.VaadinDesktopIpcDiagnostics.currentAppProductionOwnerComponentReuseNoLocalhost =
+          details.currentAppProductionOwnerComponentReuseNoLocalhost === true
+          || window.VaadinDesktopIpcDiagnostics.currentAppProductionOwnerComponentReuseNoLocalhost === true;
       }
 
       function recordProductionOwnerOrderingPreflight(resource, source, preflight, phase) {
@@ -15608,14 +15941,18 @@ let flowIpcShell = #"""
           extra.componentProductionOwnerReuseDecisionVersion || '';
         window.VaadinDesktopIpcDiagnostics.componentProductionOwnerReuseDecisionSource =
           extra.componentProductionOwnerReuseDecisionSource || '';
+        const nextProductionOwnerDecision = extra.componentProductionOwnerReuseDecision || '';
+        const nextProductionOwnerDecisionIsReuse =
+          nextProductionOwnerDecision === 'owner-reused'
+          || nextProductionOwnerDecision === 'current-app-owner-reused';
         window.VaadinDesktopIpcDiagnostics.componentProductionOwnerReuseDecision =
           previousReuseDecision === 'owner-reused-positive-fixture'
-            && extra.componentProductionOwnerReuseDecision !== 'owner-reused'
+            && !nextProductionOwnerDecisionIsReuse
             ? previousReuseDecision
             : (previousReuseDecision === 'focused-fallback-after-owner-owned-runtime-attempt'
-            && extra.componentProductionOwnerReuseDecision !== 'owner-reused'
+            && !nextProductionOwnerDecisionIsReuse
             ? previousReuseDecision
-            : (extra.componentProductionOwnerReuseDecision || ''));
+            : nextProductionOwnerDecision);
         window.VaadinDesktopIpcDiagnostics.componentProductionOwnerReuseDecisionReason =
           extra.componentProductionOwnerReuseDecisionReason || '';
         window.VaadinDesktopIpcDiagnostics.componentProductionOwnerReuseDecisionTags =
@@ -17095,6 +17432,59 @@ let flowIpcShell = #"""
         const registryBefore = customElementRegistrySnapshot('vaadin-text-field');
         const textFieldDefinedBefore = !!customElements.get('vaadin-text-field');
         const ownerReuseDetails = componentProductionOwnerReuseDiagnostics(resource, 'vaadin-text-field');
+        if (ownerReuseDetails.currentAppProductionOwnerComponentReused === true
+            && customElements.get('vaadin-text-field')) {
+          componentFrontendResourceExecutedPaths.add(resource.path);
+          componentFrontendResourceExecutionFailedPaths.delete(resource.path);
+          componentFrontendResourceExecutedTags.add('vaadin-text-field');
+          window.VaadinDesktopIpcDiagnostics.frontendArtifactTextFieldExecuted = true;
+          window.VaadinDesktopIpcDiagnostics.frontendArtifactTextFieldStagedBlocker = false;
+          window.VaadinDesktopIpcDiagnostics.frontendArtifactTextFieldStagedBlockerError = '';
+          window.VaadinDesktopIpcDiagnostics.frontendArtifactTextFieldStagedBlockerReason = '';
+          window.VaadinDesktopIpcDiagnostics.frontendArtifactTextFieldStagedBlockerDependency = '';
+          window.VaadinDesktopIpcDiagnostics.frontendArtifactTextFieldRemainingBlockerClassification = 'none';
+          window.VaadinDesktopIpcDiagnostics.frontendArtifactTextFieldCustomElementRegistryBefore =
+            registryBefore;
+          window.VaadinDesktopIpcDiagnostics.frontendArtifactTextFieldCustomElementRegistryAfter =
+            customElementRegistrySnapshot('vaadin-text-field');
+          recordFrontendStageOutcome(resource, '', 'executed', Object.assign({
+            cleanupPolicy: 'current-app-owner-reuse-no-focused-import-v1_37',
+            executionResult: 'current-app-owner-reused:' + resource.path,
+            browserError: '',
+            executionVersion: resource.executionVersion || 'flow-ipc-textfield-v1_7',
+            textfieldSideEffectVersion:
+              resource.textfieldSideEffectVersion || 'flow-ipc-textfield-side-effect-v1_7',
+            textfieldGraphParityVersion: resource.textfieldGraphParityVersion || '',
+            graphProbe: resource.graphProbe || '',
+            graphEntryArtifact: resource.graphEntryArtifact || resource.path,
+            classExportArtifact:
+              resource.classExportArtifact
+              || 'current-app-production/VAADIN/build/indexhtml',
+            transitiveArtifacts: Array.isArray(resource.transitiveImports)
+              ? resource.transitiveImports.join(',')
+              : '',
+            importResolutionStrategy:
+              'current-app-production-owner-custom-element-reuse-v1_37',
+            sideEffectStrategy:
+              'reuse-current-app-production-owner-custom-element-before-textfield-focused-import-v1_37',
+            moduleIdentityStrategy:
+              'current-app-production-owner-custom-element-reuse-v1_37',
+            customElementTag: 'vaadin-text-field',
+            customElementDefinedBefore: textFieldDefinedBefore,
+            customElementDefinedAfter: true,
+            customElementRegistryBefore: registryBefore,
+            customElementRegistryAfter: customElementRegistrySnapshot('vaadin-text-field'),
+            firstDefinitionSource:
+              'current app production owner import registered vaadin-text-field',
+            secondDefinitionSource:
+              'TextField focused dev-bundle import skipped because current app owner owns the custom element',
+            duplicateTag: resource.duplicateTag || 'vaadin-text-field',
+            remainingBlockerClassification: 'none'
+          }, ownerReuseDetails));
+          refreshComponentFrontendResourceDiagnostics();
+          refreshFlowClientEngineDiagnostics();
+          return;
+        }
         const transitiveArtifacts = Array.isArray(resource.transitiveImports)
           ? resource.transitiveImports.join(',')
           : '';

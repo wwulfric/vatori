@@ -116,6 +116,9 @@ public final class DesktopTraceInspector {
         FLOW_IPC_V1_33_CURRENT_APP_GENERATED_CHUNK_PACKAGE_EDGE(
                 "--require-flow-ipc-v1_33-current-app-generated-chunk-package-edge"),
         FLOW_IPC_V1_33("--require-flow-ipc-v1_33"),
+        FLOW_IPC_V1_34_CURRENT_APP_GENERATED_IMPORTS_ROOT_PACKAGE_GRAPH(
+                "--require-flow-ipc-v1_34-current-app-generated-imports-root-package-graph"),
+        FLOW_IPC_V1_34("--require-flow-ipc-v1_34"),
         FLOW_IPC_V1_3_FRAMEWORK("--require-flow-ipc-v1_3-framework");
 
         private final String option;
@@ -489,6 +492,14 @@ public final class DesktopTraceInspector {
                     gates.add(FLOW_IPC_V1_33);
                     yield gates;
                 }
+                case FLOW_IPC_V1_34_CURRENT_APP_GENERATED_IMPORTS_ROOT_PACKAGE_GRAPH ->
+                    EnumSet.of(FLOW_IPC_V1_34_CURRENT_APP_GENERATED_IMPORTS_ROOT_PACKAGE_GRAPH);
+                case FLOW_IPC_V1_34 -> {
+                    EnumSet<AcceptanceGate> gates = FLOW_IPC_V1_33.expandedRequirements();
+                    gates.add(FLOW_IPC_V1_34_CURRENT_APP_GENERATED_IMPORTS_ROOT_PACKAGE_GRAPH);
+                    gates.add(FLOW_IPC_V1_34);
+                    yield gates;
+                }
                 case FLOW_IPC_V1_3_FRAMEWORK -> EnumSet.of(FLOW_IPC_V1_3_FRAMEWORK);
             };
         }
@@ -577,6 +588,9 @@ public final class DesktopTraceInspector {
                 case FLOW_IPC_V1_33_CURRENT_APP_GENERATED_CHUNK_PACKAGE_EDGE ->
                     summary.hasRequiredFlowIpcV1_33CurrentAppGeneratedChunkPackageEdgeTypes();
                 case FLOW_IPC_V1_33 -> summary.hasRequiredFlowIpcV1_33Types();
+                case FLOW_IPC_V1_34_CURRENT_APP_GENERATED_IMPORTS_ROOT_PACKAGE_GRAPH ->
+                    summary.hasRequiredFlowIpcV1_34CurrentAppGeneratedImportsRootPackageGraphTypes();
+                case FLOW_IPC_V1_34 -> summary.hasRequiredFlowIpcV1_34Types();
                 case FLOW_IPC_V1_3_FRAMEWORK -> summary.hasRequiredFlowIpcV1_3FrameworkTypes();
             };
         }
@@ -1226,6 +1240,11 @@ public final class DesktopTraceInspector {
                     && line.contains("\"componentFrontendResources\"")
                     && containsCurrentAppGeneratedChunkPackageEdgeV133Fields(line)) {
                 summary.currentAppGeneratedChunkPackageEdgeV133ManifestObserved = true;
+            }
+            if (line.contains("\"type\":\"bootstrapResponse\"")
+                    && line.contains("\"componentFrontendResources\"")
+                    && containsCurrentAppGeneratedImportsRootPackageGraphV134Fields(line)) {
+                summary.currentAppGeneratedImportsRootPackageGraphV134ManifestObserved = true;
             }
             if (line.contains("\"type\":\"bootstrapResponse\"")
                     && line.contains("\"componentFrontendResources\"")
@@ -2131,6 +2150,11 @@ public final class DesktopTraceInspector {
                     && containsCurrentAppGeneratedChunkPackageEdgeV133Fields(line)) {
                 summary.currentAppGeneratedChunkPackageEdgeV133RequestObserved = true;
             }
+            if (line.contains("\"type\":\"resourceRequest\"")
+                    && containsPath(line, "current-app-frontend/generated/flow/generated-flow-imports.js")
+                    && containsCurrentAppGeneratedImportsRootPackageGraphV134Fields(line)) {
+                summary.currentAppGeneratedImportsRootPackageGraphV134RequestObserved = true;
+            }
             if (line.contains("\"type\":\"resourceResponse\"")
                     && containsPath(line, "current-app-frontend/generated/flow/generated-flow-imports.js")
                     && containsCurrentAppBuildFrontendOutputV132Fields(line)
@@ -2142,6 +2166,12 @@ public final class DesktopTraceInspector {
                     && containsCurrentAppGeneratedChunkPackageEdgeV133Fields(line)
                     && line.contains("\"bodyRedacted\":true")) {
                 summary.currentAppGeneratedChunkPackageEdgeV133ResponseObserved = true;
+            }
+            if (line.contains("\"type\":\"resourceResponse\"")
+                    && containsPath(line, "current-app-frontend/generated/flow/generated-flow-imports.js")
+                    && containsCurrentAppGeneratedImportsRootPackageGraphV134Fields(line)
+                    && line.contains("\"bodyRedacted\":true")) {
+                summary.currentAppGeneratedImportsRootPackageGraphV134ResponseObserved = true;
             }
             if (line.contains("\"type\":\"resourceRequest\"")
                     && line.contains("\"purpose\":\"generated-loadondemand-chunk-v1_11\"")
@@ -2834,6 +2864,23 @@ public final class DesktopTraceInspector {
                             || line.contains("\"executionStatus\":\"strict-blocker\"")
                             || line.contains("\"executionStatus\":\"staged\""))) {
                 summary.currentAppGeneratedChunkPackageEdgeV133StageObserved = true;
+            }
+            if (line.contains("\"type\":\"resourceStage\"")
+                    && containsPath(line, "current-app-frontend/generated/flow/generated-flow-imports.js")
+                    && containsCurrentAppGeneratedImportsRootPackageGraphV134Fields(line)
+                    && (line.contains("\"executionStatus\":\"executed\"")
+                            || line.contains("\"executionStatus\":\"strict-blocker\"")
+                            || line.contains("\"executionStatus\":\"staged\""))) {
+                summary.currentAppGeneratedImportsRootPackageGraphV134StageObserved = true;
+            }
+            if (line.contains("\"type\":\"resourceStage\"")
+                    && containsPath(line, "current-app-production/VAADIN/build/generated-flow-imports-")
+                    && containsCurrentAppGeneratedImportsRootPackageGraphV134Fields(line)
+                    && containsLiteralField(line,
+                            "currentAppGeneratedImportsRootProductionSupportExecuted", "true")
+                    && containsLiteralField(line,
+                            "currentAppGeneratedImportsRootPackageGraphExecuted", "true")) {
+                summary.currentAppGeneratedImportsRootPackageGraphV134SupportExecutedObserved = true;
             }
             if (line.contains("\"type\":\"resourceStage\"")
                     && containsPath(line, "current-app-frontend/generated/flow/chunks/")
@@ -3575,6 +3622,15 @@ public final class DesktopTraceInspector {
                     && containsLiteralField(line, "currentAppBuildFrontendOutputObserved", "true")
                     && containsCurrentAppGeneratedChunkPackageEdgeV133Fields(line)) {
                 summary.currentAppGeneratedChunkPackageEdgeV133DomObserved = true;
+            }
+            if (line.contains("\"type\":\"webview.dom\"")
+                    && containsLiteralField(line, "currentAppBuildFrontendOutputObserved", "true")
+                    && containsCurrentAppGeneratedImportsRootPackageGraphV134Fields(line)
+                    && containsLiteralField(line,
+                            "currentAppGeneratedImportsRootProductionSupportExecuted", "true")
+                    && containsLiteralField(line,
+                            "currentAppGeneratedImportsRootPackageGraphExecuted", "true")) {
+                summary.currentAppGeneratedImportsRootPackageGraphV134DomObserved = true;
             }
             if (line.contains("\"type\":\"webview.dom\"")
                     && containsLiteralField(line, "generatedLazySourceCurrentBuildNoOpConfirmed", "true")
@@ -4659,7 +4715,9 @@ public final class DesktopTraceInspector {
                 || containsStringField(line, "currentAppBuildFrontendFailureLayer",
                         "current-app-production-generated-imports-owner-boundary")
                 || containsStringField(line, "currentAppBuildFrontendFailureLayer",
-                        "current-app-source-generated-imports-root-package-graph-pending");
+                        "current-app-source-generated-imports-root-package-graph-pending")
+                || containsStringField(line, "currentAppBuildFrontendFailureLayer",
+                        "current-app-generated-imports-root-package-graph-resolved-production-owner-pending");
     }
 
     private static boolean containsCurrentAppGeneratedChunkPackageEdgeV133Fields(String line) {
@@ -4675,9 +4733,39 @@ public final class DesktopTraceInspector {
                 && containsStringField(line, "currentAppGeneratedChunkPackageResolvedSpecifiers",
                         "@vaadin/vertical-layout/src/vaadin-vertical-layout.js")
                 && containsStringField(line, "currentAppGeneratedChunkPackageUnresolvedSpecifiers", "")
-                && containsStringField(line, "currentAppGeneratedChunkPackageFailureLayer",
-                        "current-app-source-generated-imports-root-package-graph-pending")
+                && containsCurrentAppGeneratedChunkPackageFailureLayer(line)
                 && line.contains("currentAppGeneratedChunkPackageNextResolutionStep");
+    }
+
+    private static boolean containsCurrentAppGeneratedChunkPackageFailureLayer(String line) {
+        return containsStringField(line, "currentAppGeneratedChunkPackageFailureLayer",
+                "current-app-source-generated-imports-root-package-graph-pending")
+                || containsStringField(line, "currentAppGeneratedChunkPackageFailureLayer",
+                        "current-app-generated-imports-root-package-graph-resolved-production-owner-pending");
+    }
+
+    private static boolean containsCurrentAppGeneratedImportsRootPackageGraphV134Fields(String line) {
+        return containsCurrentAppGeneratedChunkPackageEdgeV133Fields(line)
+                && containsStringField(line, "currentAppGeneratedImportsRootPackageGraphVersion",
+                        "flow-ipc-current-app-generated-imports-root-package-graph-v1_34")
+                && containsStringField(line, "currentAppGeneratedImportsRootPackageGraphSource",
+                        "current-app-source-generated-imports-root")
+                && containsStringField(line, "currentAppGeneratedImportsRootPackageResolverMode",
+                        "current-app-source-generated-imports-root-to-current-app-production-graph")
+                && line.contains("currentAppGeneratedImportsRootBareSpecifiers")
+                && line.contains("@vaadin/common-frontend/ConnectionIndicator.js")
+                && line.contains("currentAppGeneratedImportsRootStatsBundleImports")
+                && line.contains("currentAppGeneratedImportsRootResolvedSpecifiers")
+                && containsStringField(line, "currentAppGeneratedImportsRootUnresolvedSpecifiers", "")
+                && containsStringFieldPrefix(line,
+                        "currentAppGeneratedImportsRootProductionSupportArtifact",
+                        "current-app-production/VAADIN/build/generated-flow-imports-")
+                && containsLiteralField(line,
+                        "currentAppGeneratedImportsRootProductionSupportObserved", "true")
+                && containsLiteralField(line, "currentAppGeneratedImportsRootPlaceholderUsed", "false")
+                && containsStringField(line, "currentAppGeneratedImportsRootFailureLayer",
+                        "current-app-generated-imports-root-package-graph-resolved-production-owner-pending")
+                && line.contains("currentAppGeneratedImportsRootNextResolutionStep");
     }
 
     private static boolean containsProductionOwnerFailureLayer(String line, String field) {
@@ -5174,6 +5262,12 @@ public final class DesktopTraceInspector {
         private boolean currentAppGeneratedChunkPackageEdgeV133StageObserved;
         private boolean currentAppGeneratedChunkPackageEdgeV133DomObserved;
         private boolean currentAppGeneratedChunkPackageEdgeV133ExecutedObserved;
+        private boolean currentAppGeneratedImportsRootPackageGraphV134ManifestObserved;
+        private boolean currentAppGeneratedImportsRootPackageGraphV134RequestObserved;
+        private boolean currentAppGeneratedImportsRootPackageGraphV134ResponseObserved;
+        private boolean currentAppGeneratedImportsRootPackageGraphV134StageObserved;
+        private boolean currentAppGeneratedImportsRootPackageGraphV134SupportExecutedObserved;
+        private boolean currentAppGeneratedImportsRootPackageGraphV134DomObserved;
 
         public boolean hasRequiredFlowIpcTypes() {
             return types.keySet().containsAll(FLOW_IPC_REQUIRED_TYPES)
@@ -5707,6 +5801,20 @@ public final class DesktopTraceInspector {
                     && hasRequiredFlowIpcV1_33CurrentAppGeneratedChunkPackageEdgeTypes();
         }
 
+        public boolean hasRequiredFlowIpcV1_34CurrentAppGeneratedImportsRootPackageGraphTypes() {
+            return currentAppGeneratedImportsRootPackageGraphV134ManifestObserved
+                    && currentAppGeneratedImportsRootPackageGraphV134RequestObserved
+                    && currentAppGeneratedImportsRootPackageGraphV134ResponseObserved
+                    && currentAppGeneratedImportsRootPackageGraphV134StageObserved
+                    && currentAppGeneratedImportsRootPackageGraphV134SupportExecutedObserved
+                    && currentAppGeneratedImportsRootPackageGraphV134DomObserved;
+        }
+
+        public boolean hasRequiredFlowIpcV1_34Types() {
+            return hasRequiredFlowIpcV1_33Types()
+                    && hasRequiredFlowIpcV1_34CurrentAppGeneratedImportsRootPackageGraphTypes();
+        }
+
         private boolean hasCurrentAppBuildFrontendOutputSuccessorEvidence() {
             return currentAppBuildFrontendOutputV132ManifestObserved
                     && currentAppBuildFrontendOutputV132RequestObserved
@@ -6224,6 +6332,15 @@ public final class DesktopTraceInspector {
                     + currentAppGeneratedChunkPackageEdgeV133StageObserved + "/"
                     + currentAppGeneratedChunkPackageEdgeV133DomObserved + "/"
                     + currentAppGeneratedChunkPackageEdgeV133ExecutedObserved);
+            System.out.println("Flow IPC v1.34 current app generated imports root package graph manifest observed: "
+                    + currentAppGeneratedImportsRootPackageGraphV134ManifestObserved);
+            System.out.println("Flow IPC v1.34 current app generated imports root package graph request/response observed: "
+                    + currentAppGeneratedImportsRootPackageGraphV134RequestObserved + "/"
+                    + currentAppGeneratedImportsRootPackageGraphV134ResponseObserved);
+            System.out.println("Flow IPC v1.34 current app generated imports root package graph stage/support/DOM observed: "
+                    + currentAppGeneratedImportsRootPackageGraphV134StageObserved + "/"
+                    + currentAppGeneratedImportsRootPackageGraphV134SupportExecutedObserved + "/"
+                    + currentAppGeneratedImportsRootPackageGraphV134DomObserved);
             System.out.println("Flow IPC v1.6 TextField graph manifest observed: "
                     + frontendTextFieldV16ManifestObserved);
             System.out.println("Flow IPC v1.6 TextField graph request observed: "

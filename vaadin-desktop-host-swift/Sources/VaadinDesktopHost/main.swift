@@ -2420,6 +2420,22 @@ final class WebViewHost: NSObject, NSApplicationDelegate, NSWindowDelegate, WKNa
           currentAppGeneratedChunkPackageFailureLayer: window.VaadinDesktopIpcDiagnostics ? window.VaadinDesktopIpcDiagnostics.currentAppGeneratedChunkPackageFailureLayer : "",
           currentAppGeneratedChunkPackageNextResolutionStep: window.VaadinDesktopIpcDiagnostics ? window.VaadinDesktopIpcDiagnostics.currentAppGeneratedChunkPackageNextResolutionStep : "",
           currentAppGeneratedChunkPackageRootPlaceholderUsed: !!(window.VaadinDesktopIpcDiagnostics && window.VaadinDesktopIpcDiagnostics.currentAppGeneratedChunkPackageRootPlaceholderUsed),
+          currentAppGeneratedImportsRootPackageGraphVersion: window.VaadinDesktopIpcDiagnostics ? window.VaadinDesktopIpcDiagnostics.currentAppGeneratedImportsRootPackageGraphVersion : "",
+          currentAppGeneratedImportsRootPackageGraphSource: window.VaadinDesktopIpcDiagnostics ? window.VaadinDesktopIpcDiagnostics.currentAppGeneratedImportsRootPackageGraphSource : "",
+          currentAppGeneratedImportsRootPackageResolverMode: window.VaadinDesktopIpcDiagnostics ? window.VaadinDesktopIpcDiagnostics.currentAppGeneratedImportsRootPackageResolverMode : "",
+          currentAppGeneratedImportsRootBareSpecifiers: window.VaadinDesktopIpcDiagnostics ? window.VaadinDesktopIpcDiagnostics.currentAppGeneratedImportsRootBareSpecifiers : "",
+          currentAppGeneratedImportsRootStatsBundleImports: window.VaadinDesktopIpcDiagnostics ? window.VaadinDesktopIpcDiagnostics.currentAppGeneratedImportsRootStatsBundleImports : "",
+          currentAppGeneratedImportsRootResolvedSpecifiers: window.VaadinDesktopIpcDiagnostics ? window.VaadinDesktopIpcDiagnostics.currentAppGeneratedImportsRootResolvedSpecifiers : "",
+          currentAppGeneratedImportsRootUnresolvedSpecifiers: window.VaadinDesktopIpcDiagnostics ? window.VaadinDesktopIpcDiagnostics.currentAppGeneratedImportsRootUnresolvedSpecifiers : "",
+          currentAppGeneratedImportsRootProductionSupportArtifact: window.VaadinDesktopIpcDiagnostics ? window.VaadinDesktopIpcDiagnostics.currentAppGeneratedImportsRootProductionSupportArtifact : "",
+          currentAppGeneratedImportsRootProductionEntryArtifact: window.VaadinDesktopIpcDiagnostics ? window.VaadinDesktopIpcDiagnostics.currentAppGeneratedImportsRootProductionEntryArtifact : "",
+          currentAppGeneratedImportsRootProductionBuildArtifacts: window.VaadinDesktopIpcDiagnostics ? window.VaadinDesktopIpcDiagnostics.currentAppGeneratedImportsRootProductionBuildArtifacts : "",
+          currentAppGeneratedImportsRootFailureLayer: window.VaadinDesktopIpcDiagnostics ? window.VaadinDesktopIpcDiagnostics.currentAppGeneratedImportsRootFailureLayer : "",
+          currentAppGeneratedImportsRootNextResolutionStep: window.VaadinDesktopIpcDiagnostics ? window.VaadinDesktopIpcDiagnostics.currentAppGeneratedImportsRootNextResolutionStep : "",
+          currentAppGeneratedImportsRootProductionSupportObserved: !!(window.VaadinDesktopIpcDiagnostics && window.VaadinDesktopIpcDiagnostics.currentAppGeneratedImportsRootProductionSupportObserved),
+          currentAppGeneratedImportsRootPlaceholderUsed: !!(window.VaadinDesktopIpcDiagnostics && window.VaadinDesktopIpcDiagnostics.currentAppGeneratedImportsRootPlaceholderUsed),
+          currentAppGeneratedImportsRootProductionSupportExecuted: !!(window.VaadinDesktopIpcDiagnostics && window.VaadinDesktopIpcDiagnostics.currentAppGeneratedImportsRootProductionSupportExecuted),
+          currentAppGeneratedImportsRootPackageGraphExecuted: !!(window.VaadinDesktopIpcDiagnostics && window.VaadinDesktopIpcDiagnostics.currentAppGeneratedImportsRootPackageGraphExecuted),
           currentAppBuildFrontendProductionBuildObserved: !!(window.VaadinDesktopIpcDiagnostics && window.VaadinDesktopIpcDiagnostics.currentAppBuildFrontendProductionBuildObserved),
           currentAppBuildFrontendProductionBuildRoot: window.VaadinDesktopIpcDiagnostics ? window.VaadinDesktopIpcDiagnostics.currentAppBuildFrontendProductionBuildRoot : "",
           currentAppBuildFrontendProductionGeneratedImportsObserved: !!(window.VaadinDesktopIpcDiagnostics && window.VaadinDesktopIpcDiagnostics.currentAppBuildFrontendProductionGeneratedImportsObserved),
@@ -3732,6 +3748,22 @@ let flowIpcShell = #"""
         currentAppGeneratedChunkPackageFailureLayer: '',
         currentAppGeneratedChunkPackageNextResolutionStep: '',
         currentAppGeneratedChunkPackageRootPlaceholderUsed: false,
+        currentAppGeneratedImportsRootPackageGraphVersion: '',
+        currentAppGeneratedImportsRootPackageGraphSource: '',
+        currentAppGeneratedImportsRootPackageResolverMode: '',
+        currentAppGeneratedImportsRootBareSpecifiers: '',
+        currentAppGeneratedImportsRootStatsBundleImports: '',
+        currentAppGeneratedImportsRootResolvedSpecifiers: '',
+        currentAppGeneratedImportsRootUnresolvedSpecifiers: '',
+        currentAppGeneratedImportsRootProductionSupportArtifact: '',
+        currentAppGeneratedImportsRootProductionEntryArtifact: '',
+        currentAppGeneratedImportsRootProductionBuildArtifacts: '',
+        currentAppGeneratedImportsRootFailureLayer: '',
+        currentAppGeneratedImportsRootNextResolutionStep: '',
+        currentAppGeneratedImportsRootProductionSupportObserved: false,
+        currentAppGeneratedImportsRootPlaceholderUsed: false,
+        currentAppGeneratedImportsRootProductionSupportExecuted: false,
+        currentAppGeneratedImportsRootPackageGraphExecuted: false,
         currentAppBuildFrontendProductionBuildObserved: false,
         currentAppBuildFrontendProductionBuildRoot: '',
         currentAppBuildFrontendProductionGeneratedImportsObserved: false,
@@ -6077,7 +6109,19 @@ let flowIpcShell = #"""
           ['currentAppGeneratedChunkPackageResolvedSpecifiers', 'currentAppGeneratedChunkPackageResolvedSpecifiers'],
           ['currentAppGeneratedChunkPackageUnresolvedSpecifiers', 'currentAppGeneratedChunkPackageUnresolvedSpecifiers'],
           ['currentAppGeneratedChunkPackageFailureLayer', 'currentAppGeneratedChunkPackageFailureLayer'],
-          ['currentAppGeneratedChunkPackageNextResolutionStep', 'currentAppGeneratedChunkPackageNextResolutionStep']
+          ['currentAppGeneratedChunkPackageNextResolutionStep', 'currentAppGeneratedChunkPackageNextResolutionStep'],
+          ['currentAppGeneratedImportsRootPackageGraphVersion', 'currentAppGeneratedImportsRootPackageGraphVersion'],
+          ['currentAppGeneratedImportsRootPackageGraphSource', 'currentAppGeneratedImportsRootPackageGraphSource'],
+          ['currentAppGeneratedImportsRootPackageResolverMode', 'currentAppGeneratedImportsRootPackageResolverMode'],
+          ['currentAppGeneratedImportsRootBareSpecifiers', 'currentAppGeneratedImportsRootBareSpecifiers'],
+          ['currentAppGeneratedImportsRootStatsBundleImports', 'currentAppGeneratedImportsRootStatsBundleImports'],
+          ['currentAppGeneratedImportsRootResolvedSpecifiers', 'currentAppGeneratedImportsRootResolvedSpecifiers'],
+          ['currentAppGeneratedImportsRootUnresolvedSpecifiers', 'currentAppGeneratedImportsRootUnresolvedSpecifiers'],
+          ['currentAppGeneratedImportsRootProductionSupportArtifact', 'currentAppGeneratedImportsRootProductionSupportArtifact'],
+          ['currentAppGeneratedImportsRootProductionEntryArtifact', 'currentAppGeneratedImportsRootProductionEntryArtifact'],
+          ['currentAppGeneratedImportsRootProductionBuildArtifacts', 'currentAppGeneratedImportsRootProductionBuildArtifacts'],
+          ['currentAppGeneratedImportsRootFailureLayer', 'currentAppGeneratedImportsRootFailureLayer'],
+          ['currentAppGeneratedImportsRootNextResolutionStep', 'currentAppGeneratedImportsRootNextResolutionStep']
         ]) {
           if (typeof source[sourceKey] === 'string' && source[sourceKey]) {
             window.VaadinDesktopIpcDiagnostics[diagnosticKey] = source[sourceKey];
@@ -6092,7 +6136,11 @@ let flowIpcShell = #"""
           ['currentAppBuildFrontendProdBundleObserved', 'currentAppBuildFrontendProdBundleObserved'],
           ['currentAppBuildFrontendNoLocalhost', 'currentAppBuildFrontendNoLocalhost'],
           ['currentAppBuildFrontendFixtureSubstituted', 'currentAppBuildFrontendFixtureSubstituted'],
-          ['currentAppGeneratedChunkPackageRootPlaceholderUsed', 'currentAppGeneratedChunkPackageRootPlaceholderUsed']
+          ['currentAppGeneratedChunkPackageRootPlaceholderUsed', 'currentAppGeneratedChunkPackageRootPlaceholderUsed'],
+          ['currentAppGeneratedImportsRootProductionSupportObserved', 'currentAppGeneratedImportsRootProductionSupportObserved'],
+          ['currentAppGeneratedImportsRootPlaceholderUsed', 'currentAppGeneratedImportsRootPlaceholderUsed'],
+          ['currentAppGeneratedImportsRootProductionSupportExecuted', 'currentAppGeneratedImportsRootProductionSupportExecuted'],
+          ['currentAppGeneratedImportsRootPackageGraphExecuted', 'currentAppGeneratedImportsRootPackageGraphExecuted']
         ]) {
           if (source[sourceKey] === true) {
             window.VaadinDesktopIpcDiagnostics[diagnosticKey] = true;
@@ -8330,6 +8378,70 @@ let flowIpcShell = #"""
             extra && typeof extra.currentAppGeneratedChunkPackageRootPlaceholderUsed === 'boolean'
               ? extra.currentAppGeneratedChunkPackageRootPlaceholderUsed
               : resource.currentAppGeneratedChunkPackageRootPlaceholderUsed === true,
+          currentAppGeneratedImportsRootPackageGraphVersion:
+            extra && extra.currentAppGeneratedImportsRootPackageGraphVersion
+              ? extra.currentAppGeneratedImportsRootPackageGraphVersion
+              : (resource.currentAppGeneratedImportsRootPackageGraphVersion || ''),
+          currentAppGeneratedImportsRootPackageGraphSource:
+            extra && extra.currentAppGeneratedImportsRootPackageGraphSource
+              ? extra.currentAppGeneratedImportsRootPackageGraphSource
+              : (resource.currentAppGeneratedImportsRootPackageGraphSource || ''),
+          currentAppGeneratedImportsRootPackageResolverMode:
+            extra && extra.currentAppGeneratedImportsRootPackageResolverMode
+              ? extra.currentAppGeneratedImportsRootPackageResolverMode
+              : (resource.currentAppGeneratedImportsRootPackageResolverMode || ''),
+          currentAppGeneratedImportsRootBareSpecifiers:
+            extra && extra.currentAppGeneratedImportsRootBareSpecifiers
+              ? extra.currentAppGeneratedImportsRootBareSpecifiers
+              : (resource.currentAppGeneratedImportsRootBareSpecifiers || ''),
+          currentAppGeneratedImportsRootStatsBundleImports:
+            extra && extra.currentAppGeneratedImportsRootStatsBundleImports
+              ? extra.currentAppGeneratedImportsRootStatsBundleImports
+              : (resource.currentAppGeneratedImportsRootStatsBundleImports || ''),
+          currentAppGeneratedImportsRootResolvedSpecifiers:
+            extra && extra.currentAppGeneratedImportsRootResolvedSpecifiers
+              ? extra.currentAppGeneratedImportsRootResolvedSpecifiers
+              : (resource.currentAppGeneratedImportsRootResolvedSpecifiers || ''),
+          currentAppGeneratedImportsRootUnresolvedSpecifiers:
+            extra && typeof extra.currentAppGeneratedImportsRootUnresolvedSpecifiers === 'string'
+              ? extra.currentAppGeneratedImportsRootUnresolvedSpecifiers
+              : (resource.currentAppGeneratedImportsRootUnresolvedSpecifiers || ''),
+          currentAppGeneratedImportsRootProductionSupportArtifact:
+            extra && extra.currentAppGeneratedImportsRootProductionSupportArtifact
+              ? extra.currentAppGeneratedImportsRootProductionSupportArtifact
+              : (resource.currentAppGeneratedImportsRootProductionSupportArtifact || ''),
+          currentAppGeneratedImportsRootProductionEntryArtifact:
+            extra && extra.currentAppGeneratedImportsRootProductionEntryArtifact
+              ? extra.currentAppGeneratedImportsRootProductionEntryArtifact
+              : (resource.currentAppGeneratedImportsRootProductionEntryArtifact || ''),
+          currentAppGeneratedImportsRootProductionBuildArtifacts:
+            extra && extra.currentAppGeneratedImportsRootProductionBuildArtifacts
+              ? extra.currentAppGeneratedImportsRootProductionBuildArtifacts
+              : (resource.currentAppGeneratedImportsRootProductionBuildArtifacts || ''),
+          currentAppGeneratedImportsRootFailureLayer:
+            extra && extra.currentAppGeneratedImportsRootFailureLayer
+              ? extra.currentAppGeneratedImportsRootFailureLayer
+              : (resource.currentAppGeneratedImportsRootFailureLayer || ''),
+          currentAppGeneratedImportsRootNextResolutionStep:
+            extra && extra.currentAppGeneratedImportsRootNextResolutionStep
+              ? extra.currentAppGeneratedImportsRootNextResolutionStep
+              : (resource.currentAppGeneratedImportsRootNextResolutionStep || ''),
+          currentAppGeneratedImportsRootProductionSupportObserved:
+            extra && typeof extra.currentAppGeneratedImportsRootProductionSupportObserved === 'boolean'
+              ? extra.currentAppGeneratedImportsRootProductionSupportObserved
+              : resource.currentAppGeneratedImportsRootProductionSupportObserved === true,
+          currentAppGeneratedImportsRootPlaceholderUsed:
+            extra && typeof extra.currentAppGeneratedImportsRootPlaceholderUsed === 'boolean'
+              ? extra.currentAppGeneratedImportsRootPlaceholderUsed
+              : resource.currentAppGeneratedImportsRootPlaceholderUsed === true,
+          currentAppGeneratedImportsRootProductionSupportExecuted:
+            extra && typeof extra.currentAppGeneratedImportsRootProductionSupportExecuted === 'boolean'
+              ? extra.currentAppGeneratedImportsRootProductionSupportExecuted
+              : false,
+          currentAppGeneratedImportsRootPackageGraphExecuted:
+            extra && typeof extra.currentAppGeneratedImportsRootPackageGraphExecuted === 'boolean'
+              ? extra.currentAppGeneratedImportsRootPackageGraphExecuted
+              : false,
           stagedPath: '',
           owner: stageOwner,
           artifactFamily: family,
@@ -11706,10 +11818,18 @@ let flowIpcShell = #"""
         return source
           .split("from '" + specifier + "'").join("from '" + replacementUrl + "'")
           .split('from "' + specifier + '"').join('from "' + replacementUrl + '"')
+          .split("from'" + specifier + "'").join("from'" + replacementUrl + "'")
+          .split('from"' + specifier + '"').join('from"' + replacementUrl + '"')
           .split("import '" + specifier + "'").join("import '" + replacementUrl + "'")
           .split('import "' + specifier + '"').join('import "' + replacementUrl + '"')
+          .split("import'" + specifier + "'").join("import'" + replacementUrl + "'")
+          .split('import"' + specifier + '"').join('import"' + replacementUrl + '"')
           .split("import('" + specifier + "')").join("import('" + replacementUrl + "')")
           .split('import("' + specifier + '")').join('import("' + replacementUrl + '")');
+      }
+
+      function sourceContainsImportSpecifier(source, specifier) {
+        return source.includes("'" + specifier + "'") || source.includes('"' + specifier + '"');
       }
 
       function productionOwnerOwnedRuntimeSatisfied() {
@@ -11931,6 +12051,9 @@ let flowIpcShell = #"""
           const specifier = rewrite && typeof rewrite.specifier === 'string' ? rewrite.specifier : '';
           const resourcePath = rewrite && typeof rewrite.resourcePath === 'string' ? rewrite.resourcePath : '';
           if (!specifier || !resourcePath) {
+            continue;
+          }
+          if (!sourceContainsImportSpecifier(rewritten, specifier)) {
             continue;
           }
           let url = '';
@@ -12568,7 +12691,37 @@ let flowIpcShell = #"""
           currentAppGeneratedChunkPackageNextResolutionStep:
             resource.currentAppGeneratedChunkPackageNextResolutionStep || '',
           currentAppGeneratedChunkPackageRootPlaceholderUsed:
-            resource.currentAppGeneratedChunkPackageRootPlaceholderUsed === true
+            resource.currentAppGeneratedChunkPackageRootPlaceholderUsed === true,
+          currentAppGeneratedImportsRootPackageGraphVersion:
+            resource.currentAppGeneratedImportsRootPackageGraphVersion || '',
+          currentAppGeneratedImportsRootPackageGraphSource:
+            resource.currentAppGeneratedImportsRootPackageGraphSource || '',
+          currentAppGeneratedImportsRootPackageResolverMode:
+            resource.currentAppGeneratedImportsRootPackageResolverMode || '',
+          currentAppGeneratedImportsRootBareSpecifiers:
+            resource.currentAppGeneratedImportsRootBareSpecifiers || '',
+          currentAppGeneratedImportsRootStatsBundleImports:
+            resource.currentAppGeneratedImportsRootStatsBundleImports || '',
+          currentAppGeneratedImportsRootResolvedSpecifiers:
+            resource.currentAppGeneratedImportsRootResolvedSpecifiers || '',
+          currentAppGeneratedImportsRootUnresolvedSpecifiers:
+            resource.currentAppGeneratedImportsRootUnresolvedSpecifiers || '',
+          currentAppGeneratedImportsRootProductionSupportArtifact:
+            resource.currentAppGeneratedImportsRootProductionSupportArtifact || '',
+          currentAppGeneratedImportsRootProductionEntryArtifact:
+            resource.currentAppGeneratedImportsRootProductionEntryArtifact || '',
+          currentAppGeneratedImportsRootProductionBuildArtifacts:
+            resource.currentAppGeneratedImportsRootProductionBuildArtifacts || '',
+          currentAppGeneratedImportsRootFailureLayer:
+            resource.currentAppGeneratedImportsRootFailureLayer || '',
+          currentAppGeneratedImportsRootNextResolutionStep:
+            resource.currentAppGeneratedImportsRootNextResolutionStep || '',
+          currentAppGeneratedImportsRootProductionSupportObserved:
+            resource.currentAppGeneratedImportsRootProductionSupportObserved === true,
+          currentAppGeneratedImportsRootPlaceholderUsed:
+            resource.currentAppGeneratedImportsRootPlaceholderUsed === true,
+          currentAppGeneratedImportsRootProductionSupportExecuted: false,
+          currentAppGeneratedImportsRootPackageGraphExecuted: false
         }, extra || {});
       }
 
@@ -12815,6 +12968,19 @@ let flowIpcShell = #"""
             const currentAppChunkUrl = currentAppChunkResource && urlCache
               ? (urlCache.get(currentAppChunkResource.path) || '')
               : '';
+            const currentAppRootPackageGraphResolved =
+              stageExtra.currentAppGeneratedImportsRootPackageGraphVersion
+                === 'flow-ipc-current-app-generated-imports-root-package-graph-v1_34'
+              && stageExtra.currentAppGeneratedImportsRootUnresolvedSpecifiers === ''
+              && stageExtra.currentAppGeneratedImportsRootProductionSupportObserved === true
+              && stageExtra.currentAppGeneratedImportsRootPlaceholderUsed === false
+              && !delegateResult.startsWith('delegate-failed=');
+            const currentAppRootSupportResource = currentAppRootPackageGraphResolved
+              ? componentFrontendResourceByPath(stageExtra.currentAppGeneratedImportsRootProductionSupportArtifact)
+              : null;
+            const currentAppRootSupportUrl = currentAppRootSupportResource && urlCache
+              ? (urlCache.get(currentAppRootSupportResource.path) || '')
+              : '';
             window.VaadinDesktopIpcDiagnostics.loadOnDemandChunkExecuted = true;
             window.VaadinDesktopIpcDiagnostics.loadOnDemandChunkExecutionResult =
               'executed:' + resource.path + ';' + delegateResult + ';remaining-blocker='
@@ -12844,6 +13010,10 @@ let flowIpcShell = #"""
               || (noGeneratedChunkFile
                 ? 'no-chunk-generated-by-real-generated-flow-imports-no-op-table'
                 : 'generated-flow-imports-import-resolved-without-chunk-file-side-effect');
+            window.VaadinDesktopIpcDiagnostics.currentAppGeneratedImportsRootPackageGraphExecuted =
+              currentAppRootPackageGraphResolved;
+            window.VaadinDesktopIpcDiagnostics.currentAppGeneratedImportsRootProductionSupportExecuted =
+              currentAppRootPackageGraphResolved && !!currentAppRootSupportResource;
             if (currentAppChunkPackageEdgeResolved && currentAppChunkResource) {
               recordFrontendStageOutcome(currentAppChunkResource, currentAppChunkUrl, 'executed',
                 generatedLoadOnDemandChunkStageExtra(resource, normalizedChunkId, expression, {
@@ -12861,6 +13031,15 @@ let flowIpcShell = #"""
                   executionResult: 'executed:' + currentAppChunkResource.path
                 }));
             }
+            if (currentAppRootPackageGraphResolved && currentAppRootSupportResource) {
+              recordFrontendStageOutcome(currentAppRootSupportResource, currentAppRootSupportUrl, 'executed',
+                generatedLoadOnDemandChunkStageExtra(resource, normalizedChunkId, expression, {
+                  generatedLazyChunkResolvedArtifactPath: currentAppRootSupportResource.path,
+                  currentAppGeneratedImportsRootProductionSupportExecuted: true,
+                  currentAppGeneratedImportsRootPackageGraphExecuted: true,
+                  executionResult: 'executed:' + currentAppRootSupportResource.path
+                }));
+            }
             recordFrontendStageOutcome(resource, stagedUrl, 'executed',
               generatedLoadOnDemandChunkStageExtra(resource, normalizedChunkId, expression, {
                 loadOnDemandChunkExecutionResult:
@@ -12876,7 +13055,11 @@ let flowIpcShell = #"""
                 loadOnDemandChunkFileSideEffectProof:
                   window.VaadinDesktopIpcDiagnostics.loadOnDemandChunkFileSideEffectProof,
                 loadOnDemandChunkFileFailureLayer:
-                  window.VaadinDesktopIpcDiagnostics.loadOnDemandChunkFileFailureLayer
+                  window.VaadinDesktopIpcDiagnostics.loadOnDemandChunkFileFailureLayer,
+                currentAppGeneratedImportsRootProductionSupportExecuted:
+                  window.VaadinDesktopIpcDiagnostics.currentAppGeneratedImportsRootProductionSupportExecuted,
+                currentAppGeneratedImportsRootPackageGraphExecuted:
+                  window.VaadinDesktopIpcDiagnostics.currentAppGeneratedImportsRootPackageGraphExecuted
               }));
             installGeneratedLoadOnDemandChunkBridge(generatedDelegate);
           } catch (error) {

@@ -506,6 +506,8 @@ final class FlowClientResources {
             "current-app-frontend/generated/flow/generated-flow-imports.js";
     private static final String CURRENT_APP_BUILD_FRONTEND_GENERATED_CHUNK_ROOT =
             "current-app-frontend/generated/flow/";
+    private static final String CURRENT_APP_PRODUCTION_BUILD_VIRTUAL_ROOT =
+            "current-app-production/VAADIN/build/";
     private static final String CURRENT_APP_BUILD_FRONTEND_NEXT_STEP =
             "stage the current app generated-flow-imports/chunk through the no-localhost resolver and add a supported resolver for any remaining npm/bare specifier or production owner import boundary";
     private static final String CURRENT_APP_GENERATED_CHUNK_PACKAGE_RESOLVER_VERSION =
@@ -520,6 +522,16 @@ final class FlowClientResources {
             "current-app-source-generated-imports-root-package-graph-pending";
     private static final String CURRENT_APP_GENERATED_CHUNK_PACKAGE_NEXT_STEP =
             "replace the remaining generated imports root package placeholder with real package graph resources, then promote the current app generated imports/chunk path from diagnostic execution to Flow-client-owned runtime";
+    private static final String CURRENT_APP_GENERATED_IMPORTS_ROOT_PACKAGE_GRAPH_VERSION =
+            "flow-ipc-current-app-generated-imports-root-package-graph-v1_34";
+    private static final String CURRENT_APP_GENERATED_IMPORTS_ROOT_PACKAGE_GRAPH_SOURCE =
+            "current-app-source-generated-imports-root";
+    private static final String CURRENT_APP_GENERATED_IMPORTS_ROOT_PACKAGE_RESOLVER_MODE =
+            "current-app-source-generated-imports-root-to-current-app-production-graph";
+    private static final String CURRENT_APP_GENERATED_IMPORTS_ROOT_FAILURE_LAYER =
+            "current-app-generated-imports-root-package-graph-resolved-production-owner-pending";
+    private static final String CURRENT_APP_GENERATED_IMPORTS_ROOT_NEXT_STEP =
+            "promote the current app production generated imports support graph toward production owner-owned runtime side effects, then cover dev-mode/Vite or a supported Vaadin frontend SPI";
     private static final List<String> PRODUCTION_RUNTIME_OWNER_DEPENDENCY_ARTIFACTS = List.of(
             DEV_BUNDLE_COMMONJS_JS,
             DEV_BUNDLE_INDEX_HTML_JS,
@@ -882,13 +894,6 @@ final class FlowClientResources {
                         true,
                         "Select-dev-bundle-resource-v1_4",
                         "com.vaadin.flow.component.select.Select"));
-        addText(discoveredComponentResources, CURRENT_APP_CONNECTION_INDICATOR_PLACEHOLDER_JS,
-                "current-app-connection-indicator-placeholder", CURRENT_APP_CONNECTION_INDICATOR_PLACEHOLDER_SOURCE,
-                currentAppGeneratedImportsSupportAttributes(
-                        CURRENT_APP_CONNECTION_INDICATOR_PLACEHOLDER_JS,
-                        "@vaadin/common-frontend/ConnectionIndicator.js",
-                        "current-app-generated-imports-connection-indicator-placeholder-v1_33",
-                        true));
         add(discoveredComponentResources, THEME_STATIC_CSS, "theme-static-resource", true,
                 themeStaticAttributes());
         addText(discoveredComponentResources, FLOW_LAZY_DEPENDENCY_JS,
@@ -1246,6 +1251,33 @@ final class FlowClientResources {
                     "vaadin-current-app-generated-flow-imports-chunk",
                     true,
                     currentAppBuildFrontendGeneratedLazyAttributes(evidence, false));
+        }
+        addCurrentAppProductionBuildResources(target, evidence);
+    }
+
+    private void addCurrentAppProductionBuildResources(Map<String, Resource> target,
+            CurrentAppBuildFrontendOutputEvidence evidence) {
+        Path productionBuildRoot = productionBuildRootPath(appModuleDirectory());
+        if (!Files.isDirectory(productionBuildRoot)) {
+            return;
+        }
+        try (Stream<Path> stream = Files.list(productionBuildRoot)) {
+            for (Path artifact : stream
+                    .filter(Files::isRegularFile)
+                    .filter(path -> path.getFileName().toString().endsWith(".js"))
+                    .sorted()
+                    .toList()) {
+                String virtualPath = currentAppProductionBuildVirtualPath(artifact);
+                addFile(target,
+                        virtualPath,
+                        artifact,
+                        "vaadin-current-app-production-build-resource",
+                        true,
+                        currentAppProductionBuildAttributes(evidence, virtualPath));
+            }
+        } catch (IOException error) {
+            throw new IllegalStateException("Unable to inspect current app production build output "
+                    + productionBuildRoot, error);
         }
     }
 
@@ -2012,6 +2044,7 @@ final class FlowClientResources {
         attributes.put("currentAppGeneratedChunkPackageFailureLayer", evidence.failureLayer());
         attributes.put("currentAppGeneratedChunkPackageNextResolutionStep",
                 CURRENT_APP_GENERATED_CHUNK_PACKAGE_NEXT_STEP);
+        attributes.putAll(currentAppGeneratedImportsRootPackageGraphAttributes(evidence));
         attributes.put("currentAppBuildFrontendProductionBuildObserved",
                 evidence.productionBuildObserved());
         attributes.put("currentAppBuildFrontendProductionGeneratedImportsObserved",
@@ -2081,14 +2114,16 @@ final class FlowClientResources {
                     CURRENT_APP_GENERATED_CHUNK_PACKAGE_NEXT_STEP);
             attributes.put("loadOnDemandChunkFileSideEffectProof",
                     evidence.sourceChunkPackageUnresolvedSpecifiers().isBlank()
-                            ? "current-app-source-generated-chunk-package-edge-resolved-v1_33"
+                            && evidence.sourceGeneratedImportsRootUnresolvedSpecifiers().isBlank()
+                            ? "current-app-source-generated-imports-root-package-graph-resolved-v1_34"
                             : "chunk-file-body-available-but-bare-npm-imports-remain");
-            attributes.put("importRewriteStrategy", "current-app-generated-imports-package-rewrite-v1_33");
+            attributes.put("importRewriteStrategy", "current-app-generated-imports-root-package-graph-rewrite-v1_34");
             attributes.put("browserExecutionPlan",
-                    "dynamic-import-current-app-generated-imports-with-package-rewrites-v1_33");
+                    "dynamic-import-current-app-generated-imports-with-root-package-graph-rewrites-v1_34");
             attributes.put("importRewrites", currentAppGeneratedImportsImportRewrites(evidence));
             attributes.put("transitiveImports", currentAppGeneratedImportsTransitiveImports(evidence));
-            attributes.put("currentAppGeneratedChunkPackageRootPlaceholderUsed", true);
+            attributes.put("currentAppGeneratedChunkPackageRootPlaceholderUsed",
+                    evidence.sourceGeneratedImportsRootPlaceholderUsed());
             attributes.putAll(currentAppBuildFrontendOutputAttributes());
         } else {
             attributes.put("chunkId", evidence.sourceChunkId());
@@ -2116,52 +2151,16 @@ final class FlowClientResources {
     private static List<Map<String, Object>> currentAppGeneratedImportsImportRewrites(
             CurrentAppBuildFrontendOutputEvidence evidence) {
         List<Map<String, Object>> rewrites = new ArrayList<>();
-        rewrites.addAll(currentAppGeneratedChunkImportRewrites());
-        rewrites.add(importRewrite("@vaadin/button/src/vaadin-button.js",
-                DEV_BUNDLE_INDEX_HTML_JS,
-                "production-bundle",
-                "current-app-generated-imports-production-indexhtml-rewrite-v1_33",
-                "current-app-generated-imports-package-edge-v1_33"));
-        rewrites.add(importRewrite("@vaadin/tooltip/src/vaadin-tooltip.js",
-                DEV_BUNDLE_INDEX_HTML_JS,
-                "production-bundle",
-                "current-app-generated-imports-production-indexhtml-rewrite-v1_33",
-                "current-app-generated-imports-package-edge-v1_33"));
-        rewrites.add(importRewrite("Frontend/generated/jar-resources/disableOnClickFunctions.js",
-                DISABLE_ON_CLICK_FUNCTIONS_JS,
-                "vaadin-component-classpath-frontend",
-                "current-app-generated-imports-classpath-support-v1_33",
-                "current-app-generated-imports-support-resource-v1_33"));
-        rewrites.add(importRewrite("Frontend/generated/jar-resources/vaadin-big-decimal-field.js",
-                BIG_DECIMAL_FIELD_JS,
-                "vaadin-component-classpath-frontend",
-                "current-app-generated-imports-classpath-support-v1_33",
-                "current-app-generated-imports-support-resource-v1_33"));
-        rewrites.add(importRewrite("lit",
-                DEV_BUNDLE_LIT_ENTRY_JS,
-                "production-bundle",
-                "current-app-generated-imports-lit-rewrite-v1_33",
-                "current-app-generated-imports-package-edge-v1_33"));
-        rewrites.add(importRewrite("@vaadin/text-field/src/vaadin-text-field.js",
-                DEV_BUNDLE_TEXT_FIELD_ENTRY_JS,
-                "production-bundle",
-                TEXT_FIELD_IMPORT_RESOLUTION_STRATEGY,
-                "current-app-generated-imports-textfield-reuse-v1_33"));
-        rewrites.add(importRewrite("@vaadin/component-base/src/define.js",
-                DEV_BUNDLE_DEFINE_ENTRY_JS,
-                "production-bundle",
-                "current-app-generated-imports-define-rewrite-v1_33",
-                "current-app-generated-imports-package-edge-v1_33"));
-        rewrites.add(importRewrite("@vaadin/checkbox/src/vaadin-checkbox.js",
-                DEV_BUNDLE_CHECKBOX_ENTRY_JS,
-                "production-bundle",
-                "current-app-generated-imports-checkbox-rewrite-v1_33",
-                "current-app-generated-imports-package-edge-v1_33"));
-        rewrites.add(importRewrite("@vaadin/common-frontend/ConnectionIndicator.js",
-                CURRENT_APP_CONNECTION_INDICATOR_PLACEHOLDER_JS,
-                "current-app-generated-imports-placeholder",
-                "current-app-generated-imports-diagnostic-placeholder-v1_33",
-                "current-app-generated-imports-root-placeholder-v1_33"));
+        String productionSupport = evidence.sourceGeneratedImportsRootProductionSupportArtifact();
+        if (!productionSupport.isBlank()) {
+            for (String specifier : csvValues(evidence.sourceGeneratedImportsRootBareImportSpecifiers())) {
+                rewrites.add(importRewrite(specifier,
+                        productionSupport,
+                        "current-app-production-build",
+                        "current-app-generated-imports-root-production-support-rewrite-v1_34",
+                        "current-app-generated-imports-root-package-graph-v1_34"));
+            }
+        }
         if (!evidence.sourceChunkImportSpecifier().isBlank()
                 && !evidence.sourceChunkVirtualPath().isBlank()) {
             rewrites.add(importRewrite(evidence.sourceChunkImportSpecifier(),
@@ -2183,18 +2182,117 @@ final class FlowClientResources {
 
     private static List<String> currentAppGeneratedImportsTransitiveImports(
             CurrentAppBuildFrontendOutputEvidence evidence) {
-        List<String> imports = new ArrayList<>(List.of(
-                DEV_BUNDLE_INDEX_HTML_JS,
-                DEV_BUNDLE_COMMONJS_JS,
-                DISABLE_ON_CLICK_FUNCTIONS_JS,
-                BIG_DECIMAL_FIELD_JS,
-                DEV_BUNDLE_LIT_ENTRY_JS,
-                DEV_BUNDLE_TEXT_FIELD_ENTRY_JS,
-                DEV_BUNDLE_DEFINE_ENTRY_JS,
-                DEV_BUNDLE_CHECKBOX_ENTRY_JS,
-                CURRENT_APP_CONNECTION_INDICATOR_PLACEHOLDER_JS));
+        List<String> imports = new ArrayList<>();
+        for (String path : csvValues(evidence.productionBuildJsVirtualPaths())) {
+            if (!imports.contains(path)) {
+                imports.add(path);
+            }
+        }
         if (!evidence.sourceChunkVirtualPath().isBlank()) {
             imports.add(evidence.sourceChunkVirtualPath());
+        }
+        return imports;
+    }
+
+    private static Map<String, Object> currentAppGeneratedImportsRootPackageGraphAttributes(
+            CurrentAppBuildFrontendOutputEvidence evidence) {
+        Map<String, Object> attributes = new LinkedHashMap<>();
+        attributes.put("currentAppGeneratedImportsRootPackageGraphVersion",
+                CURRENT_APP_GENERATED_IMPORTS_ROOT_PACKAGE_GRAPH_VERSION);
+        attributes.put("currentAppGeneratedImportsRootPackageGraphSource",
+                CURRENT_APP_GENERATED_IMPORTS_ROOT_PACKAGE_GRAPH_SOURCE);
+        attributes.put("currentAppGeneratedImportsRootPackageResolverMode",
+                evidence.sourceGeneratedImportsRootPackageResolverMode());
+        attributes.put("currentAppGeneratedImportsRootBareSpecifiers",
+                evidence.sourceGeneratedImportsRootBareImportSpecifiers());
+        attributes.put("currentAppGeneratedImportsRootStatsBundleImports",
+                evidence.statsBundleImports());
+        attributes.put("currentAppGeneratedImportsRootResolvedSpecifiers",
+                evidence.sourceGeneratedImportsRootResolvedSpecifiers());
+        attributes.put("currentAppGeneratedImportsRootUnresolvedSpecifiers",
+                evidence.sourceGeneratedImportsRootUnresolvedSpecifiers());
+        attributes.put("currentAppGeneratedImportsRootProductionSupportArtifact",
+                evidence.sourceGeneratedImportsRootProductionSupportArtifact());
+        attributes.put("currentAppGeneratedImportsRootProductionSupportObserved",
+                evidence.sourceGeneratedImportsRootProductionSupportObserved());
+        attributes.put("currentAppGeneratedImportsRootProductionEntryArtifact",
+                evidence.productionEntryScriptVirtualPath());
+        attributes.put("currentAppGeneratedImportsRootProductionBuildArtifacts",
+                evidence.productionBuildJsVirtualPaths());
+        attributes.put("currentAppGeneratedImportsRootPlaceholderUsed",
+                evidence.sourceGeneratedImportsRootPlaceholderUsed());
+        attributes.put("currentAppGeneratedImportsRootFailureLayer",
+                evidence.sourceGeneratedImportsRootFailureLayer());
+        attributes.put("currentAppGeneratedImportsRootNextResolutionStep",
+                CURRENT_APP_GENERATED_IMPORTS_ROOT_NEXT_STEP);
+        return attributes;
+    }
+
+    private static Map<String, Object> currentAppProductionBuildAttributes(
+            CurrentAppBuildFrontendOutputEvidence evidence, String virtualPath) {
+        Map<String, Object> attributes = new LinkedHashMap<>();
+        attributes.put("componentFrontendResource", true);
+        attributes.put("currentAppBuildFrontendResource", true);
+        attributes.put("currentAppProductionBuildResource", true);
+        attributes.put("currentAppProductionBuildResourceRole",
+                virtualPath.equals(evidence.sourceGeneratedImportsRootProductionSupportArtifact())
+                        ? "generated-imports-root-support"
+                        : virtualPath.equals(evidence.productionEntryScriptVirtualPath())
+                        ? "production-entry-script"
+                        : "production-relative-dependency");
+        attributes.put("moduleSpecifier", virtualPath);
+        attributes.put("resolver", "current-app-production-webapp-build-v1_34");
+        attributes.put("shim", false);
+        attributes.put("artifactFamily", "current-app-production-build");
+        attributes.put("origin", "current-app-production-webapp-build");
+        attributes.put("resourceOrigin", "current-app-production-webapp-build");
+        attributes.put("dependencyOf", evidence.sourceGeneratedImportsRootProductionSupportArtifact());
+        attributes.put("executionPolicy", "stage-current-app-production-build-support-v1_34");
+        attributes.put("artifactStatus", "available");
+        attributes.put("requestedBy", "current-app-generated-imports-root-package-graph-v1_34");
+        attributes.put("failureClassification", "current-app-production-build-support-resource-v1_34");
+        attributes.put("blockedReason",
+                "current app production webapp build artifact staged as real support for source generated imports root package graph; remaining blocker is production owner-owned runtime parity, not a diagnostic placeholder");
+        attributes.put("lookupKind", "Current-app-production-build-support-v1_34");
+        attributes.put("blockerVersion", CURRENT_APP_GENERATED_IMPORTS_ROOT_PACKAGE_GRAPH_VERSION);
+        attributes.put("failureLayer", evidence.sourceGeneratedImportsRootFailureLayer());
+        attributes.put("nextResolutionStep", CURRENT_APP_GENERATED_IMPORTS_ROOT_NEXT_STEP);
+        attributes.put("importRewriteStrategy", "current-app-production-build-relative-import-rewrite-v1_34");
+        attributes.put("browserExecutionPlan", "stage-current-app-production-build-module-with-relative-rewrites-v1_34");
+        attributes.put("importRewrites", currentAppProductionBuildImportRewrites(evidence, virtualPath));
+        attributes.put("transitiveImports", currentAppProductionBuildTransitiveImports(evidence, virtualPath));
+        attributes.putAll(currentAppGeneratedImportsRootPackageGraphAttributes(evidence));
+        attributes.putAll(currentAppBuildFrontendOutputAttributes());
+        return attributes;
+    }
+
+    private static List<Map<String, Object>> currentAppProductionBuildImportRewrites(
+            CurrentAppBuildFrontendOutputEvidence evidence, String currentPath) {
+        List<Map<String, Object>> rewrites = new ArrayList<>();
+        for (String path : csvValues(evidence.productionBuildJsVirtualPaths())) {
+            if (path.equals(currentPath)) {
+                continue;
+            }
+            if (currentPath.equals(evidence.productionEntryScriptVirtualPath())
+                    && path.equals(evidence.sourceGeneratedImportsRootProductionSupportArtifact())) {
+                continue;
+            }
+            rewrites.add(importRewrite("./" + fileName(path),
+                    path,
+                    "current-app-production-build",
+                    "current-app-production-build-relative-import-rewrite-v1_34",
+                    "current-app-production-build-relative-dependency-v1_34"));
+        }
+        return rewrites;
+    }
+
+    private static List<String> currentAppProductionBuildTransitiveImports(
+            CurrentAppBuildFrontendOutputEvidence evidence, String currentPath) {
+        List<String> imports = new ArrayList<>();
+        for (String path : csvValues(evidence.productionBuildJsVirtualPaths())) {
+            if (!path.equals(currentPath)) {
+                imports.add(path);
+            }
         }
         return imports;
     }
@@ -2862,6 +2960,7 @@ final class FlowClientResources {
         attributes.put("currentAppGeneratedChunkPackageFailureLayer", evidence.failureLayer());
         attributes.put("currentAppGeneratedChunkPackageNextResolutionStep",
                 CURRENT_APP_GENERATED_CHUNK_PACKAGE_NEXT_STEP);
+        attributes.putAll(currentAppGeneratedImportsRootPackageGraphAttributes(evidence));
         attributes.put("currentAppBuildFrontendProductionBuildObserved",
                 evidence.productionBuildObserved());
         attributes.put("currentAppBuildFrontendProductionBuildRoot", evidence.productionBuildRoot());
@@ -3187,10 +3286,13 @@ final class FlowClientResources {
         String sourceChunkPackageResolvedSpecifiers = "";
         String sourceChunkPackageUnresolvedSpecifiers = "";
         String sourceChunkPackageResolverMode = "not-applicable";
+        String sourceGeneratedImportsRootBareImportSpecifiers = "";
 
         if (sourceImports.observed()) {
             try {
                 String body = Files.readString(sourceGeneratedImports, StandardCharsets.UTF_8);
+                sourceGeneratedImportsRootBareImportSpecifiers =
+                        String.join(",", bareModuleImportSpecifiers(body));
                 GeneratedLoadOnDemandChunkFileRegistry registry =
                         GeneratedLoadOnDemandChunkFileRegistry.parse(
                                 CURRENT_APP_BUILD_FRONTEND_GENERATED_IMPORTS_JS, body);
@@ -3234,14 +3336,45 @@ final class FlowClientResources {
             }
         }
 
-        Path productionBuildRoot = module.resolve("target/classes/META-INF/VAADIN/webapp/VAADIN/build")
-                .normalize();
+        Path productionBuildRoot = productionBuildRootPath(module);
         boolean productionBuildObserved = Files.isDirectory(productionBuildRoot);
         Path productionGeneratedImports = findFirstFile(productionBuildRoot, "generated-flow-imports", ".js");
         FileEvidence productionGeneratedImportsEvidence = fileEvidence(productionGeneratedImports);
-        FileEvidence stats = fileEvidence(module.resolve("target/classes/META-INF/VAADIN/config/stats.json")
-                .normalize());
+        Path statsPath = module.resolve("target/classes/META-INF/VAADIN/config/stats.json").normalize();
+        FileEvidence stats = fileEvidence(statsPath);
         FileEvidence prodBundle = fileEvidence(module.resolve("src/main/bundles/prod.bundle").normalize());
+        String productionBuildJsVirtualPaths = currentAppProductionBuildVirtualPaths(productionBuildRoot);
+        String productionGeneratedImportsVirtualPath = productionGeneratedImports == null
+                ? "" : currentAppProductionBuildVirtualPath(productionGeneratedImports);
+        String productionEntryScriptVirtualPath = currentAppProductionEntryScriptVirtualPath(statsPath);
+        String statsBundleImports = String.join(",", statsBundleImports(statsPath));
+        List<String> sourceRootBareSpecifiers = csvValues(sourceGeneratedImportsRootBareImportSpecifiers);
+        boolean rootProductionSupportObserved = productionGeneratedImportsEvidence.observed()
+                && !productionGeneratedImportsVirtualPath.isBlank()
+                && !statsBundleImports.isBlank();
+        List<String> statsBundleImportList = csvValues(statsBundleImports);
+        List<String> sourceRootResolvedSpecifiers = sourceRootBareSpecifiers.stream()
+                .filter(specifier -> rootProductionSupportObserved && statsBundleImportList.contains(specifier))
+                .toList();
+        List<String> sourceRootUnresolvedSpecifiers = sourceRootBareSpecifiers.stream()
+                .filter(specifier -> !sourceRootResolvedSpecifiers.contains(specifier))
+                .toList();
+        String sourceGeneratedImportsRootResolvedSpecifiers = String.join(",", sourceRootResolvedSpecifiers);
+        String sourceGeneratedImportsRootUnresolvedSpecifiers = String.join(",", sourceRootUnresolvedSpecifiers);
+        String sourceGeneratedImportsRootPackageResolverMode;
+        if (sourceRootBareSpecifiers.isEmpty()) {
+            sourceGeneratedImportsRootPackageResolverMode = "no-root-bare-specifiers";
+        } else if (sourceRootUnresolvedSpecifiers.isEmpty()) {
+            sourceGeneratedImportsRootPackageResolverMode =
+                    CURRENT_APP_GENERATED_IMPORTS_ROOT_PACKAGE_RESOLVER_MODE;
+        } else {
+            sourceGeneratedImportsRootPackageResolverMode =
+                    "current-app-source-generated-imports-root-package-graph-unresolved";
+        }
+        boolean sourceGeneratedImportsRootPlaceholderUsed = false;
+        String sourceGeneratedImportsRootFailureLayer = sourceRootUnresolvedSpecifiers.isEmpty()
+                ? CURRENT_APP_GENERATED_IMPORTS_ROOT_FAILURE_LAYER
+                : "current-app-source-generated-imports-root-package-specifier-unresolved";
 
         String runtimeCandidate;
         if (sourceImports.observed()) {
@@ -3263,8 +3396,10 @@ final class FlowClientResources {
                 && sourceChunkContainsBareImports
                 && !sourceChunkPackageUnresolvedSpecifiers.isBlank()) {
             failureLayer = "current-app-source-generated-chunk-npm-specifier-unresolved";
+        } else if (!sourceGeneratedImportsRootUnresolvedSpecifiers.isBlank()) {
+            failureLayer = "current-app-source-generated-imports-root-package-specifier-unresolved";
         } else if ("available".equals(chunkStatus) && sourceChunkContainsBareImports) {
-            failureLayer = CURRENT_APP_GENERATED_CHUNK_PACKAGE_FAILURE_LAYER;
+            failureLayer = CURRENT_APP_GENERATED_IMPORTS_ROOT_FAILURE_LAYER;
         } else if ("available".equals(chunkStatus)) {
             failureLayer = "pending-current-app-source-generated-chunk-stage";
         } else if (productionGeneratedImportsEvidence.observed()) {
@@ -3293,6 +3428,17 @@ final class FlowClientResources {
                 sourceChunkPackageResolvedSpecifiers,
                 sourceChunkPackageUnresolvedSpecifiers,
                 sourceChunkPackageResolverMode,
+                sourceGeneratedImportsRootBareImportSpecifiers,
+                statsBundleImports,
+                sourceGeneratedImportsRootResolvedSpecifiers,
+                sourceGeneratedImportsRootUnresolvedSpecifiers,
+                sourceGeneratedImportsRootPackageResolverMode,
+                productionGeneratedImportsVirtualPath,
+                rootProductionSupportObserved,
+                sourceGeneratedImportsRootPlaceholderUsed,
+                sourceGeneratedImportsRootFailureLayer,
+                productionEntryScriptVirtualPath,
+                productionBuildJsVirtualPaths,
                 productionBuildObserved,
                 redactLocation(productionBuildRoot.toString()),
                 productionGeneratedImportsEvidence.observed(),
@@ -3327,6 +3473,42 @@ final class FlowClientResources {
 
     private static Path sourceGeneratedImportsPath(Path module) {
         return module.resolve("src/main/frontend/generated/flow/generated-flow-imports.js").normalize();
+    }
+
+    private static Path productionBuildRootPath(Path module) {
+        return module.resolve("target/classes/META-INF/VAADIN/webapp/VAADIN/build").normalize();
+    }
+
+    private static String currentAppProductionBuildVirtualPath(Path artifact) {
+        return CURRENT_APP_PRODUCTION_BUILD_VIRTUAL_ROOT + artifact.getFileName();
+    }
+
+    private static String currentAppProductionBuildVirtualPaths(Path productionBuildRoot) {
+        if (!Files.isDirectory(productionBuildRoot)) {
+            return "";
+        }
+        try (Stream<Path> stream = Files.list(productionBuildRoot)) {
+            return String.join(",", stream
+                    .filter(Files::isRegularFile)
+                    .filter(path -> path.getFileName().toString().endsWith(".js"))
+                    .sorted()
+                    .map(FlowClientResources::currentAppProductionBuildVirtualPath)
+                    .toList());
+        } catch (IOException ignored) {
+            return "";
+        }
+    }
+
+    private static String currentAppProductionEntryScriptVirtualPath(Path statsPath) {
+        String entry = firstStatsArrayValue(statsPath, "entryScripts");
+        if (entry.isBlank()) {
+            return "";
+        }
+        String prefix = "VAADIN/build/";
+        if (entry.startsWith(prefix)) {
+            return CURRENT_APP_PRODUCTION_BUILD_VIRTUAL_ROOT + entry.substring(prefix.length());
+        }
+        return CURRENT_APP_PRODUCTION_BUILD_VIRTUAL_ROOT + fileName(entry);
     }
 
     private static Path findAppGeneratedImports(Path module) {
@@ -3405,6 +3587,62 @@ final class FlowClientResources {
             }
         }
         return specifiers;
+    }
+
+    private static List<String> csvValues(String csv) {
+        if (csv == null || csv.isBlank()) {
+            return List.of();
+        }
+        List<String> values = new ArrayList<>();
+        for (String value : csv.split(",")) {
+            String trimmed = value.trim();
+            if (!trimmed.isBlank() && !values.contains(trimmed)) {
+                values.add(trimmed);
+            }
+        }
+        return values;
+    }
+
+    private static String fileName(String path) {
+        if (path == null || path.isBlank()) {
+            return "";
+        }
+        int slash = path.lastIndexOf('/');
+        return slash >= 0 ? path.substring(slash + 1) : path;
+    }
+
+    private static List<String> statsBundleImports(Path statsPath) {
+        return statsArrayValues(statsPath, "bundleImports");
+    }
+
+    private static String firstStatsArrayValue(Path statsPath, String key) {
+        List<String> values = statsArrayValues(statsPath, key);
+        return values.isEmpty() ? "" : values.get(0);
+    }
+
+    private static List<String> statsArrayValues(Path statsPath, String key) {
+        if (statsPath == null || !Files.isRegularFile(statsPath)) {
+            return List.of();
+        }
+        try {
+            String body = Files.readString(statsPath, StandardCharsets.UTF_8);
+            Pattern array = Pattern.compile("\"" + Pattern.quote(key) + "\"\\s*:\\s*\\[(.*?)\\]", Pattern.DOTALL);
+            Matcher arrayMatcher = array.matcher(body);
+            if (!arrayMatcher.find()) {
+                return List.of();
+            }
+            Matcher valueMatcher = Pattern.compile("\"([^\"]+)\"").matcher(arrayMatcher.group(1));
+            List<String> values = new ArrayList<>();
+            while (valueMatcher.find()) {
+                String value = valueMatcher.group(1);
+                if (!values.contains(value)) {
+                    values.add(value);
+                }
+            }
+            return values;
+        } catch (IOException ignored) {
+            return List.of();
+        }
     }
 
     private static boolean isCurrentAppGeneratedChunkResolvableSpecifier(String specifier) {
@@ -3877,6 +4115,17 @@ final class FlowClientResources {
             String sourceChunkPackageResolvedSpecifiers,
             String sourceChunkPackageUnresolvedSpecifiers,
             String sourceChunkPackageResolverMode,
+            String sourceGeneratedImportsRootBareImportSpecifiers,
+            String statsBundleImports,
+            String sourceGeneratedImportsRootResolvedSpecifiers,
+            String sourceGeneratedImportsRootUnresolvedSpecifiers,
+            String sourceGeneratedImportsRootPackageResolverMode,
+            String sourceGeneratedImportsRootProductionSupportArtifact,
+            boolean sourceGeneratedImportsRootProductionSupportObserved,
+            boolean sourceGeneratedImportsRootPlaceholderUsed,
+            String sourceGeneratedImportsRootFailureLayer,
+            String productionEntryScriptVirtualPath,
+            String productionBuildJsVirtualPaths,
             boolean productionBuildObserved,
             String productionBuildRoot,
             boolean productionGeneratedImportsObserved,

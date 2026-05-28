@@ -578,6 +578,20 @@ final class FlowClientResources {
             "current-app-owner-component-reuse-matrix-pending";
     private static final String CURRENT_APP_PRODUCTION_OWNER_COMPONENT_REUSE_MATRIX_NEXT_STEP =
             "move current app owner import earlier than covered component focused imports, or switch to a supported Vaadin build/runtime SPI before broadening component parity";
+    private static final String CURRENT_APP_PRODUCTION_OWNER_EARLY_IMPORT_VERSION =
+            "flow-ipc-current-app-production-owner-early-import-v1_39";
+    private static final String CURRENT_APP_PRODUCTION_OWNER_EARLY_IMPORT_SOURCE =
+            "current-app-owner-component-reuse-matrix-v1_38";
+    private static final String CURRENT_APP_PRODUCTION_OWNER_EARLY_IMPORT_POLICY =
+            "request-current-app-production-owner-before-covered-component-imports-v1_39";
+    private static final String CURRENT_APP_PRODUCTION_OWNER_EARLY_IMPORT_PHASE =
+            "before-component-imports";
+    private static final String CURRENT_APP_PRODUCTION_OWNER_EARLY_IMPORT_REUSABLE_TAGS =
+            "vaadin-checkbox,vaadin-select,vaadin-text-field";
+    private static final String CURRENT_APP_PRODUCTION_OWNER_EARLY_IMPORT_FAILURE_LAYER =
+            "current-app-production-owner-early-import-pending";
+    private static final String CURRENT_APP_PRODUCTION_OWNER_EARLY_IMPORT_NEXT_STEP =
+            "move remaining owner-ready focused fallback tags to a supported Vaadin build/runtime SPI or broaden current app owner tag coverage";
     private static final List<String> PRODUCTION_RUNTIME_OWNER_DEPENDENCY_ARTIFACTS = List.of(
             DEV_BUNDLE_COMMONJS_JS,
             DEV_BUNDLE_INDEX_HTML_JS,
@@ -2395,6 +2409,38 @@ final class FlowClientResources {
         attributes.put("currentAppProductionOwnerComponentReuseMatrixTextFieldReuseRetained", false);
         attributes.put("currentAppProductionOwnerComponentReuseMatrixEarlyFallbackClassified", false);
         attributes.put("currentAppProductionOwnerComponentReuseMatrixNoLocalhost", true);
+        attributes.put("currentAppProductionOwnerEarlyImportVersion",
+                CURRENT_APP_PRODUCTION_OWNER_EARLY_IMPORT_VERSION);
+        attributes.put("currentAppProductionOwnerEarlyImportSource",
+                CURRENT_APP_PRODUCTION_OWNER_EARLY_IMPORT_SOURCE);
+        attributes.put("currentAppProductionOwnerEarlyImportPolicy",
+                CURRENT_APP_PRODUCTION_OWNER_EARLY_IMPORT_POLICY);
+        attributes.put("currentAppProductionOwnerEarlyImportPhase",
+                CURRENT_APP_PRODUCTION_OWNER_EARLY_IMPORT_PHASE);
+        attributes.put("currentAppProductionOwnerEarlyImportReusableTags",
+                CURRENT_APP_PRODUCTION_OWNER_EARLY_IMPORT_REUSABLE_TAGS);
+        attributes.put("currentAppProductionOwnerEarlyImportCoveredTags",
+                CURRENT_APP_PRODUCTION_OWNER_COMPONENT_REUSE_MATRIX_EXPECTED_TAGS);
+        attributes.put("currentAppProductionOwnerEarlyImportReusedTags", "");
+        attributes.put("currentAppProductionOwnerEarlyImportSkippedFocusedImports", "");
+        attributes.put("currentAppProductionOwnerEarlyImportFallbackTags", "");
+        attributes.put("currentAppProductionOwnerEarlyImportFallbackFocusedImports", "");
+        attributes.put("currentAppProductionOwnerEarlyImportOrderingBlockers", "");
+        attributes.put("currentAppProductionOwnerEarlyImportDecision",
+                "pending-current-app-owner-early-import");
+        attributes.put("currentAppProductionOwnerEarlyImportReason",
+                "current app production owner must be imported before covered component focused imports");
+        attributes.put("currentAppProductionOwnerEarlyImportFailureLayer",
+                handoffReady ? CURRENT_APP_PRODUCTION_OWNER_EARLY_IMPORT_FAILURE_LAYER : evidence.failureLayer());
+        attributes.put("currentAppProductionOwnerEarlyImportNextResolutionStep",
+                CURRENT_APP_PRODUCTION_OWNER_EARLY_IMPORT_NEXT_STEP);
+        attributes.put("currentAppProductionOwnerEarlyImportRequestBeforeCoveredComponents", false);
+        attributes.put("currentAppProductionOwnerEarlyImportAttempted", false);
+        attributes.put("currentAppProductionOwnerEarlyImported", false);
+        attributes.put("currentAppProductionOwnerEarlyImportSideEffectSatisfied", false);
+        attributes.put("currentAppProductionOwnerEarlyImportPartialReuseSatisfied", false);
+        attributes.put("currentAppProductionOwnerEarlyImportNoLocalhost", true);
+        attributes.put("currentAppProductionOwnerEarlyImportFixtureSubstituted", false);
         return attributes;
     }
 

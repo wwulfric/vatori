@@ -2453,6 +2453,30 @@ final class WebViewHost: NSObject, NSApplicationDelegate, NSWindowDelegate, WKNa
           currentAppBuildFrontendNextResolutionStep: window.VaadinDesktopIpcDiagnostics ? window.VaadinDesktopIpcDiagnostics.currentAppBuildFrontendNextResolutionStep : "",
           currentAppBuildFrontendNoLocalhost: !!(window.VaadinDesktopIpcDiagnostics && window.VaadinDesktopIpcDiagnostics.currentAppBuildFrontendNoLocalhost),
           currentAppBuildFrontendFixtureSubstituted: !!(window.VaadinDesktopIpcDiagnostics && window.VaadinDesktopIpcDiagnostics.currentAppBuildFrontendFixtureSubstituted),
+          currentAppProductionRuntimeOwnershipCandidateObserved: !!(window.VaadinDesktopIpcDiagnostics && window.VaadinDesktopIpcDiagnostics.currentAppProductionRuntimeOwnershipCandidateObserved),
+          currentAppProductionRuntimeOwnershipVersion: window.VaadinDesktopIpcDiagnostics ? window.VaadinDesktopIpcDiagnostics.currentAppProductionRuntimeOwnershipVersion : "",
+          currentAppProductionRuntimeOwnershipSource: window.VaadinDesktopIpcDiagnostics ? window.VaadinDesktopIpcDiagnostics.currentAppProductionRuntimeOwnershipSource : "",
+          currentAppProductionRuntimeOwnershipPrimaryCandidate: window.VaadinDesktopIpcDiagnostics ? window.VaadinDesktopIpcDiagnostics.currentAppProductionRuntimeOwnershipPrimaryCandidate : "",
+          currentAppProductionRuntimeOwnershipHandoffPolicy: window.VaadinDesktopIpcDiagnostics ? window.VaadinDesktopIpcDiagnostics.currentAppProductionRuntimeOwnershipHandoffPolicy : "",
+          currentAppProductionRuntimeOwnershipSelectedImportsArtifact: window.VaadinDesktopIpcDiagnostics ? window.VaadinDesktopIpcDiagnostics.currentAppProductionRuntimeOwnershipSelectedImportsArtifact : "",
+          currentAppProductionRuntimeOwnershipSelectedChunkArtifact: window.VaadinDesktopIpcDiagnostics ? window.VaadinDesktopIpcDiagnostics.currentAppProductionRuntimeOwnershipSelectedChunkArtifact : "",
+          currentAppProductionRuntimeOwnershipProductionSupportArtifact: window.VaadinDesktopIpcDiagnostics ? window.VaadinDesktopIpcDiagnostics.currentAppProductionRuntimeOwnershipProductionSupportArtifact : "",
+          currentAppProductionRuntimeOwnershipProductionEntryArtifact: window.VaadinDesktopIpcDiagnostics ? window.VaadinDesktopIpcDiagnostics.currentAppProductionRuntimeOwnershipProductionEntryArtifact : "",
+          currentAppProductionRuntimeOwnershipArtifactInventory: window.VaadinDesktopIpcDiagnostics ? window.VaadinDesktopIpcDiagnostics.currentAppProductionRuntimeOwnershipArtifactInventory : "",
+          currentAppProductionRuntimeOwnershipFailureLayer: window.VaadinDesktopIpcDiagnostics ? window.VaadinDesktopIpcDiagnostics.currentAppProductionRuntimeOwnershipFailureLayer : "",
+          currentAppProductionRuntimeOwnershipNextResolutionStep: window.VaadinDesktopIpcDiagnostics ? window.VaadinDesktopIpcDiagnostics.currentAppProductionRuntimeOwnershipNextResolutionStep : "",
+          currentAppProductionRuntimeOwnershipArtifactsStaged: !!(window.VaadinDesktopIpcDiagnostics && window.VaadinDesktopIpcDiagnostics.currentAppProductionRuntimeOwnershipArtifactsStaged),
+          currentAppProductionRuntimeOwnershipPrimaryCandidateSelected: !!(window.VaadinDesktopIpcDiagnostics && window.VaadinDesktopIpcDiagnostics.currentAppProductionRuntimeOwnershipPrimaryCandidateSelected),
+          currentAppProductionRuntimeOwnershipRootPackageGraphResolved: !!(window.VaadinDesktopIpcDiagnostics && window.VaadinDesktopIpcDiagnostics.currentAppProductionRuntimeOwnershipRootPackageGraphResolved),
+          currentAppProductionRuntimeOwnershipChunkPackageGraphResolved: !!(window.VaadinDesktopIpcDiagnostics && window.VaadinDesktopIpcDiagnostics.currentAppProductionRuntimeOwnershipChunkPackageGraphResolved),
+          currentAppProductionRuntimeOwnershipProductionSupportObserved: !!(window.VaadinDesktopIpcDiagnostics && window.VaadinDesktopIpcDiagnostics.currentAppProductionRuntimeOwnershipProductionSupportObserved),
+          currentAppProductionRuntimeOwnershipStatsObserved: !!(window.VaadinDesktopIpcDiagnostics && window.VaadinDesktopIpcDiagnostics.currentAppProductionRuntimeOwnershipStatsObserved),
+          currentAppProductionRuntimeOwnershipProdBundleObserved: !!(window.VaadinDesktopIpcDiagnostics && window.VaadinDesktopIpcDiagnostics.currentAppProductionRuntimeOwnershipProdBundleObserved),
+          currentAppProductionRuntimeOwnershipHandoffReady: !!(window.VaadinDesktopIpcDiagnostics && window.VaadinDesktopIpcDiagnostics.currentAppProductionRuntimeOwnershipHandoffReady),
+          currentAppProductionRuntimeOwnershipOwnerSideEffectSatisfied: !!(window.VaadinDesktopIpcDiagnostics && window.VaadinDesktopIpcDiagnostics.currentAppProductionRuntimeOwnershipOwnerSideEffectSatisfied),
+          currentAppProductionRuntimeOwnershipOwnerReuseSatisfied: !!(window.VaadinDesktopIpcDiagnostics && window.VaadinDesktopIpcDiagnostics.currentAppProductionRuntimeOwnershipOwnerReuseSatisfied),
+          currentAppProductionRuntimeOwnershipNoLocalhost: !!(window.VaadinDesktopIpcDiagnostics && window.VaadinDesktopIpcDiagnostics.currentAppProductionRuntimeOwnershipNoLocalhost),
+          currentAppProductionRuntimeOwnershipFixtureSubstituted: !!(window.VaadinDesktopIpcDiagnostics && window.VaadinDesktopIpcDiagnostics.currentAppProductionRuntimeOwnershipFixtureSubstituted),
           frontendBuildPreflightAvailabilityObserved: !!(window.VaadinDesktopIpcDiagnostics && window.VaadinDesktopIpcDiagnostics.frontendBuildPreflightAvailabilityObserved),
           frontendBuildPreflightAvailabilityVersion: window.VaadinDesktopIpcDiagnostics ? window.VaadinDesktopIpcDiagnostics.frontendBuildPreflightAvailabilityVersion : "",
           frontendBuildPreflightAvailabilitySource: window.VaadinDesktopIpcDiagnostics ? window.VaadinDesktopIpcDiagnostics.frontendBuildPreflightAvailabilitySource : "",
@@ -3781,6 +3805,30 @@ let flowIpcShell = #"""
         currentAppBuildFrontendNextResolutionStep: '',
         currentAppBuildFrontendNoLocalhost: false,
         currentAppBuildFrontendFixtureSubstituted: false,
+        currentAppProductionRuntimeOwnershipCandidateObserved: false,
+        currentAppProductionRuntimeOwnershipVersion: '',
+        currentAppProductionRuntimeOwnershipSource: '',
+        currentAppProductionRuntimeOwnershipPrimaryCandidate: '',
+        currentAppProductionRuntimeOwnershipHandoffPolicy: '',
+        currentAppProductionRuntimeOwnershipSelectedImportsArtifact: '',
+        currentAppProductionRuntimeOwnershipSelectedChunkArtifact: '',
+        currentAppProductionRuntimeOwnershipProductionSupportArtifact: '',
+        currentAppProductionRuntimeOwnershipProductionEntryArtifact: '',
+        currentAppProductionRuntimeOwnershipArtifactInventory: '',
+        currentAppProductionRuntimeOwnershipFailureLayer: '',
+        currentAppProductionRuntimeOwnershipNextResolutionStep: '',
+        currentAppProductionRuntimeOwnershipArtifactsStaged: false,
+        currentAppProductionRuntimeOwnershipPrimaryCandidateSelected: false,
+        currentAppProductionRuntimeOwnershipRootPackageGraphResolved: false,
+        currentAppProductionRuntimeOwnershipChunkPackageGraphResolved: false,
+        currentAppProductionRuntimeOwnershipProductionSupportObserved: false,
+        currentAppProductionRuntimeOwnershipStatsObserved: false,
+        currentAppProductionRuntimeOwnershipProdBundleObserved: false,
+        currentAppProductionRuntimeOwnershipHandoffReady: false,
+        currentAppProductionRuntimeOwnershipOwnerSideEffectSatisfied: false,
+        currentAppProductionRuntimeOwnershipOwnerReuseSatisfied: false,
+        currentAppProductionRuntimeOwnershipNoLocalhost: false,
+        currentAppProductionRuntimeOwnershipFixtureSubstituted: false,
         frontendBuildPreflightAvailabilityObserved: false,
         frontendBuildPreflightAvailabilityVersion: '',
         frontendBuildPreflightAvailabilitySource: '',
@@ -6121,7 +6169,18 @@ let flowIpcShell = #"""
           ['currentAppGeneratedImportsRootProductionEntryArtifact', 'currentAppGeneratedImportsRootProductionEntryArtifact'],
           ['currentAppGeneratedImportsRootProductionBuildArtifacts', 'currentAppGeneratedImportsRootProductionBuildArtifacts'],
           ['currentAppGeneratedImportsRootFailureLayer', 'currentAppGeneratedImportsRootFailureLayer'],
-          ['currentAppGeneratedImportsRootNextResolutionStep', 'currentAppGeneratedImportsRootNextResolutionStep']
+          ['currentAppGeneratedImportsRootNextResolutionStep', 'currentAppGeneratedImportsRootNextResolutionStep'],
+          ['currentAppProductionRuntimeOwnershipVersion', 'currentAppProductionRuntimeOwnershipVersion'],
+          ['currentAppProductionRuntimeOwnershipSource', 'currentAppProductionRuntimeOwnershipSource'],
+          ['currentAppProductionRuntimeOwnershipPrimaryCandidate', 'currentAppProductionRuntimeOwnershipPrimaryCandidate'],
+          ['currentAppProductionRuntimeOwnershipHandoffPolicy', 'currentAppProductionRuntimeOwnershipHandoffPolicy'],
+          ['currentAppProductionRuntimeOwnershipSelectedImportsArtifact', 'currentAppProductionRuntimeOwnershipSelectedImportsArtifact'],
+          ['currentAppProductionRuntimeOwnershipSelectedChunkArtifact', 'currentAppProductionRuntimeOwnershipSelectedChunkArtifact'],
+          ['currentAppProductionRuntimeOwnershipProductionSupportArtifact', 'currentAppProductionRuntimeOwnershipProductionSupportArtifact'],
+          ['currentAppProductionRuntimeOwnershipProductionEntryArtifact', 'currentAppProductionRuntimeOwnershipProductionEntryArtifact'],
+          ['currentAppProductionRuntimeOwnershipArtifactInventory', 'currentAppProductionRuntimeOwnershipArtifactInventory'],
+          ['currentAppProductionRuntimeOwnershipFailureLayer', 'currentAppProductionRuntimeOwnershipFailureLayer'],
+          ['currentAppProductionRuntimeOwnershipNextResolutionStep', 'currentAppProductionRuntimeOwnershipNextResolutionStep']
         ]) {
           if (typeof source[sourceKey] === 'string' && source[sourceKey]) {
             window.VaadinDesktopIpcDiagnostics[diagnosticKey] = source[sourceKey];
@@ -6140,11 +6199,27 @@ let flowIpcShell = #"""
           ['currentAppGeneratedImportsRootProductionSupportObserved', 'currentAppGeneratedImportsRootProductionSupportObserved'],
           ['currentAppGeneratedImportsRootPlaceholderUsed', 'currentAppGeneratedImportsRootPlaceholderUsed'],
           ['currentAppGeneratedImportsRootProductionSupportExecuted', 'currentAppGeneratedImportsRootProductionSupportExecuted'],
-          ['currentAppGeneratedImportsRootPackageGraphExecuted', 'currentAppGeneratedImportsRootPackageGraphExecuted']
+          ['currentAppGeneratedImportsRootPackageGraphExecuted', 'currentAppGeneratedImportsRootPackageGraphExecuted'],
+          ['currentAppProductionRuntimeOwnershipRootPackageGraphResolved', 'currentAppProductionRuntimeOwnershipRootPackageGraphResolved'],
+          ['currentAppProductionRuntimeOwnershipChunkPackageGraphResolved', 'currentAppProductionRuntimeOwnershipChunkPackageGraphResolved'],
+          ['currentAppProductionRuntimeOwnershipProductionSupportObserved', 'currentAppProductionRuntimeOwnershipProductionSupportObserved'],
+          ['currentAppProductionRuntimeOwnershipStatsObserved', 'currentAppProductionRuntimeOwnershipStatsObserved'],
+          ['currentAppProductionRuntimeOwnershipProdBundleObserved', 'currentAppProductionRuntimeOwnershipProdBundleObserved'],
+          ['currentAppProductionRuntimeOwnershipHandoffReady', 'currentAppProductionRuntimeOwnershipHandoffReady'],
+          ['currentAppProductionRuntimeOwnershipOwnerSideEffectSatisfied', 'currentAppProductionRuntimeOwnershipOwnerSideEffectSatisfied'],
+          ['currentAppProductionRuntimeOwnershipOwnerReuseSatisfied', 'currentAppProductionRuntimeOwnershipOwnerReuseSatisfied'],
+          ['currentAppProductionRuntimeOwnershipNoLocalhost', 'currentAppProductionRuntimeOwnershipNoLocalhost'],
+          ['currentAppProductionRuntimeOwnershipFixtureSubstituted', 'currentAppProductionRuntimeOwnershipFixtureSubstituted']
         ]) {
           if (source[sourceKey] === true) {
             window.VaadinDesktopIpcDiagnostics[diagnosticKey] = true;
           }
+        }
+        if (typeof source.currentAppProductionRuntimeOwnershipVersion === 'string'
+            && source.currentAppProductionRuntimeOwnershipVersion) {
+          window.VaadinDesktopIpcDiagnostics.currentAppProductionRuntimeOwnershipCandidateObserved = true;
+          window.VaadinDesktopIpcDiagnostics.currentAppProductionRuntimeOwnershipPrimaryCandidateSelected =
+            !!source.currentAppProductionRuntimeOwnershipPrimaryCandidate;
         }
         for (const [sourceKey, diagnosticKey] of [
           ['currentAppBuildFrontendSourceGeneratedImportsMtimeMillis', 'currentAppBuildFrontendSourceGeneratedImportsMtimeMillis'],
@@ -8442,6 +8517,98 @@ let flowIpcShell = #"""
             extra && typeof extra.currentAppGeneratedImportsRootPackageGraphExecuted === 'boolean'
               ? extra.currentAppGeneratedImportsRootPackageGraphExecuted
               : false,
+          currentAppProductionRuntimeOwnershipVersion:
+            extra && extra.currentAppProductionRuntimeOwnershipVersion
+              ? extra.currentAppProductionRuntimeOwnershipVersion
+              : (resource.currentAppProductionRuntimeOwnershipVersion || ''),
+          currentAppProductionRuntimeOwnershipSource:
+            extra && extra.currentAppProductionRuntimeOwnershipSource
+              ? extra.currentAppProductionRuntimeOwnershipSource
+              : (resource.currentAppProductionRuntimeOwnershipSource || ''),
+          currentAppProductionRuntimeOwnershipPrimaryCandidate:
+            extra && extra.currentAppProductionRuntimeOwnershipPrimaryCandidate
+              ? extra.currentAppProductionRuntimeOwnershipPrimaryCandidate
+              : (resource.currentAppProductionRuntimeOwnershipPrimaryCandidate || ''),
+          currentAppProductionRuntimeOwnershipHandoffPolicy:
+            extra && extra.currentAppProductionRuntimeOwnershipHandoffPolicy
+              ? extra.currentAppProductionRuntimeOwnershipHandoffPolicy
+              : (resource.currentAppProductionRuntimeOwnershipHandoffPolicy || ''),
+          currentAppProductionRuntimeOwnershipSelectedImportsArtifact:
+            extra && extra.currentAppProductionRuntimeOwnershipSelectedImportsArtifact
+              ? extra.currentAppProductionRuntimeOwnershipSelectedImportsArtifact
+              : (resource.currentAppProductionRuntimeOwnershipSelectedImportsArtifact || ''),
+          currentAppProductionRuntimeOwnershipSelectedChunkArtifact:
+            extra && extra.currentAppProductionRuntimeOwnershipSelectedChunkArtifact
+              ? extra.currentAppProductionRuntimeOwnershipSelectedChunkArtifact
+              : (resource.currentAppProductionRuntimeOwnershipSelectedChunkArtifact || ''),
+          currentAppProductionRuntimeOwnershipProductionSupportArtifact:
+            extra && extra.currentAppProductionRuntimeOwnershipProductionSupportArtifact
+              ? extra.currentAppProductionRuntimeOwnershipProductionSupportArtifact
+              : (resource.currentAppProductionRuntimeOwnershipProductionSupportArtifact || ''),
+          currentAppProductionRuntimeOwnershipProductionEntryArtifact:
+            extra && extra.currentAppProductionRuntimeOwnershipProductionEntryArtifact
+              ? extra.currentAppProductionRuntimeOwnershipProductionEntryArtifact
+              : (resource.currentAppProductionRuntimeOwnershipProductionEntryArtifact || ''),
+          currentAppProductionRuntimeOwnershipArtifactInventory:
+            extra && extra.currentAppProductionRuntimeOwnershipArtifactInventory
+              ? extra.currentAppProductionRuntimeOwnershipArtifactInventory
+              : (resource.currentAppProductionRuntimeOwnershipArtifactInventory || ''),
+          currentAppProductionRuntimeOwnershipRootPackageGraphResolved:
+            extra && typeof extra.currentAppProductionRuntimeOwnershipRootPackageGraphResolved === 'boolean'
+              ? extra.currentAppProductionRuntimeOwnershipRootPackageGraphResolved
+              : resource.currentAppProductionRuntimeOwnershipRootPackageGraphResolved === true,
+          currentAppProductionRuntimeOwnershipChunkPackageGraphResolved:
+            extra && typeof extra.currentAppProductionRuntimeOwnershipChunkPackageGraphResolved === 'boolean'
+              ? extra.currentAppProductionRuntimeOwnershipChunkPackageGraphResolved
+              : resource.currentAppProductionRuntimeOwnershipChunkPackageGraphResolved === true,
+          currentAppProductionRuntimeOwnershipProductionSupportObserved:
+            extra && typeof extra.currentAppProductionRuntimeOwnershipProductionSupportObserved === 'boolean'
+              ? extra.currentAppProductionRuntimeOwnershipProductionSupportObserved
+              : resource.currentAppProductionRuntimeOwnershipProductionSupportObserved === true,
+          currentAppProductionRuntimeOwnershipStatsObserved:
+            extra && typeof extra.currentAppProductionRuntimeOwnershipStatsObserved === 'boolean'
+              ? extra.currentAppProductionRuntimeOwnershipStatsObserved
+              : resource.currentAppProductionRuntimeOwnershipStatsObserved === true,
+          currentAppProductionRuntimeOwnershipProdBundleObserved:
+            extra && typeof extra.currentAppProductionRuntimeOwnershipProdBundleObserved === 'boolean'
+              ? extra.currentAppProductionRuntimeOwnershipProdBundleObserved
+              : resource.currentAppProductionRuntimeOwnershipProdBundleObserved === true,
+          currentAppProductionRuntimeOwnershipArtifactsStaged:
+            extra && typeof extra.currentAppProductionRuntimeOwnershipArtifactsStaged === 'boolean'
+              ? extra.currentAppProductionRuntimeOwnershipArtifactsStaged
+              : false,
+          currentAppProductionRuntimeOwnershipPrimaryCandidateSelected:
+            extra && typeof extra.currentAppProductionRuntimeOwnershipPrimaryCandidateSelected === 'boolean'
+              ? extra.currentAppProductionRuntimeOwnershipPrimaryCandidateSelected
+              : false,
+          currentAppProductionRuntimeOwnershipHandoffReady:
+            extra && typeof extra.currentAppProductionRuntimeOwnershipHandoffReady === 'boolean'
+              ? extra.currentAppProductionRuntimeOwnershipHandoffReady
+              : resource.currentAppProductionRuntimeOwnershipHandoffReady === true,
+          currentAppProductionRuntimeOwnershipOwnerSideEffectSatisfied:
+            extra && typeof extra.currentAppProductionRuntimeOwnershipOwnerSideEffectSatisfied === 'boolean'
+              ? extra.currentAppProductionRuntimeOwnershipOwnerSideEffectSatisfied
+              : resource.currentAppProductionRuntimeOwnershipOwnerSideEffectSatisfied === true,
+          currentAppProductionRuntimeOwnershipOwnerReuseSatisfied:
+            extra && typeof extra.currentAppProductionRuntimeOwnershipOwnerReuseSatisfied === 'boolean'
+              ? extra.currentAppProductionRuntimeOwnershipOwnerReuseSatisfied
+              : resource.currentAppProductionRuntimeOwnershipOwnerReuseSatisfied === true,
+          currentAppProductionRuntimeOwnershipNoLocalhost:
+            extra && typeof extra.currentAppProductionRuntimeOwnershipNoLocalhost === 'boolean'
+              ? extra.currentAppProductionRuntimeOwnershipNoLocalhost
+              : resource.currentAppProductionRuntimeOwnershipNoLocalhost === true,
+          currentAppProductionRuntimeOwnershipFixtureSubstituted:
+            extra && typeof extra.currentAppProductionRuntimeOwnershipFixtureSubstituted === 'boolean'
+              ? extra.currentAppProductionRuntimeOwnershipFixtureSubstituted
+              : resource.currentAppProductionRuntimeOwnershipFixtureSubstituted === true,
+          currentAppProductionRuntimeOwnershipFailureLayer:
+            extra && extra.currentAppProductionRuntimeOwnershipFailureLayer
+              ? extra.currentAppProductionRuntimeOwnershipFailureLayer
+              : (resource.currentAppProductionRuntimeOwnershipFailureLayer || ''),
+          currentAppProductionRuntimeOwnershipNextResolutionStep:
+            extra && extra.currentAppProductionRuntimeOwnershipNextResolutionStep
+              ? extra.currentAppProductionRuntimeOwnershipNextResolutionStep
+              : (resource.currentAppProductionRuntimeOwnershipNextResolutionStep || ''),
           stagedPath: '',
           owner: stageOwner,
           artifactFamily: family,
@@ -12721,7 +12888,51 @@ let flowIpcShell = #"""
           currentAppGeneratedImportsRootPlaceholderUsed:
             resource.currentAppGeneratedImportsRootPlaceholderUsed === true,
           currentAppGeneratedImportsRootProductionSupportExecuted: false,
-          currentAppGeneratedImportsRootPackageGraphExecuted: false
+          currentAppGeneratedImportsRootPackageGraphExecuted: false,
+          currentAppProductionRuntimeOwnershipVersion:
+            resource.currentAppProductionRuntimeOwnershipVersion || '',
+          currentAppProductionRuntimeOwnershipSource:
+            resource.currentAppProductionRuntimeOwnershipSource || '',
+          currentAppProductionRuntimeOwnershipPrimaryCandidate:
+            resource.currentAppProductionRuntimeOwnershipPrimaryCandidate || '',
+          currentAppProductionRuntimeOwnershipHandoffPolicy:
+            resource.currentAppProductionRuntimeOwnershipHandoffPolicy || '',
+          currentAppProductionRuntimeOwnershipSelectedImportsArtifact:
+            resource.currentAppProductionRuntimeOwnershipSelectedImportsArtifact || '',
+          currentAppProductionRuntimeOwnershipSelectedChunkArtifact:
+            resource.currentAppProductionRuntimeOwnershipSelectedChunkArtifact || '',
+          currentAppProductionRuntimeOwnershipProductionSupportArtifact:
+            resource.currentAppProductionRuntimeOwnershipProductionSupportArtifact || '',
+          currentAppProductionRuntimeOwnershipProductionEntryArtifact:
+            resource.currentAppProductionRuntimeOwnershipProductionEntryArtifact || '',
+          currentAppProductionRuntimeOwnershipArtifactInventory:
+            resource.currentAppProductionRuntimeOwnershipArtifactInventory || '',
+          currentAppProductionRuntimeOwnershipRootPackageGraphResolved:
+            resource.currentAppProductionRuntimeOwnershipRootPackageGraphResolved === true,
+          currentAppProductionRuntimeOwnershipChunkPackageGraphResolved:
+            resource.currentAppProductionRuntimeOwnershipChunkPackageGraphResolved === true,
+          currentAppProductionRuntimeOwnershipProductionSupportObserved:
+            resource.currentAppProductionRuntimeOwnershipProductionSupportObserved === true,
+          currentAppProductionRuntimeOwnershipStatsObserved:
+            resource.currentAppProductionRuntimeOwnershipStatsObserved === true,
+          currentAppProductionRuntimeOwnershipProdBundleObserved:
+            resource.currentAppProductionRuntimeOwnershipProdBundleObserved === true,
+          currentAppProductionRuntimeOwnershipHandoffReady:
+            resource.currentAppProductionRuntimeOwnershipHandoffReady === true,
+          currentAppProductionRuntimeOwnershipOwnerSideEffectSatisfied:
+            resource.currentAppProductionRuntimeOwnershipOwnerSideEffectSatisfied === true,
+          currentAppProductionRuntimeOwnershipOwnerReuseSatisfied:
+            resource.currentAppProductionRuntimeOwnershipOwnerReuseSatisfied === true,
+          currentAppProductionRuntimeOwnershipNoLocalhost:
+            resource.currentAppProductionRuntimeOwnershipNoLocalhost === true,
+          currentAppProductionRuntimeOwnershipFixtureSubstituted:
+            resource.currentAppProductionRuntimeOwnershipFixtureSubstituted === true,
+          currentAppProductionRuntimeOwnershipFailureLayer:
+            resource.currentAppProductionRuntimeOwnershipFailureLayer || '',
+          currentAppProductionRuntimeOwnershipNextResolutionStep:
+            resource.currentAppProductionRuntimeOwnershipNextResolutionStep || '',
+          currentAppProductionRuntimeOwnershipArtifactsStaged: false,
+          currentAppProductionRuntimeOwnershipPrimaryCandidateSelected: false
         }, extra || {});
       }
 
@@ -12981,6 +13192,12 @@ let flowIpcShell = #"""
             const currentAppRootSupportUrl = currentAppRootSupportResource && urlCache
               ? (urlCache.get(currentAppRootSupportResource.path) || '')
               : '';
+            const currentAppProductionRuntimeOwnershipReady =
+              stageExtra.currentAppProductionRuntimeOwnershipVersion
+                === 'flow-ipc-current-app-production-runtime-ownership-v1_35'
+              && currentAppChunkPackageEdgeResolved
+              && currentAppRootPackageGraphResolved
+              && stageExtra.currentAppProductionRuntimeOwnershipHandoffReady === true;
             window.VaadinDesktopIpcDiagnostics.loadOnDemandChunkExecuted = true;
             window.VaadinDesktopIpcDiagnostics.loadOnDemandChunkExecutionResult =
               'executed:' + resource.path + ';' + delegateResult + ';remaining-blocker='
@@ -13014,6 +13231,58 @@ let flowIpcShell = #"""
               currentAppRootPackageGraphResolved;
             window.VaadinDesktopIpcDiagnostics.currentAppGeneratedImportsRootProductionSupportExecuted =
               currentAppRootPackageGraphResolved && !!currentAppRootSupportResource;
+            window.VaadinDesktopIpcDiagnostics.currentAppProductionRuntimeOwnershipCandidateObserved =
+              !!stageExtra.currentAppProductionRuntimeOwnershipVersion;
+            window.VaadinDesktopIpcDiagnostics.currentAppProductionRuntimeOwnershipVersion =
+              stageExtra.currentAppProductionRuntimeOwnershipVersion || '';
+            window.VaadinDesktopIpcDiagnostics.currentAppProductionRuntimeOwnershipSource =
+              stageExtra.currentAppProductionRuntimeOwnershipSource || '';
+            window.VaadinDesktopIpcDiagnostics.currentAppProductionRuntimeOwnershipPrimaryCandidate =
+              stageExtra.currentAppProductionRuntimeOwnershipPrimaryCandidate || '';
+            window.VaadinDesktopIpcDiagnostics.currentAppProductionRuntimeOwnershipHandoffPolicy =
+              stageExtra.currentAppProductionRuntimeOwnershipHandoffPolicy || '';
+            window.VaadinDesktopIpcDiagnostics.currentAppProductionRuntimeOwnershipSelectedImportsArtifact =
+              stageExtra.currentAppProductionRuntimeOwnershipSelectedImportsArtifact || resource.path;
+            window.VaadinDesktopIpcDiagnostics.currentAppProductionRuntimeOwnershipSelectedChunkArtifact =
+              stageExtra.currentAppProductionRuntimeOwnershipSelectedChunkArtifact || stageExtra.chunkArtifactPath || '';
+            window.VaadinDesktopIpcDiagnostics.currentAppProductionRuntimeOwnershipProductionSupportArtifact =
+              stageExtra.currentAppProductionRuntimeOwnershipProductionSupportArtifact
+              || stageExtra.currentAppGeneratedImportsRootProductionSupportArtifact
+              || '';
+            window.VaadinDesktopIpcDiagnostics.currentAppProductionRuntimeOwnershipProductionEntryArtifact =
+              stageExtra.currentAppProductionRuntimeOwnershipProductionEntryArtifact
+              || stageExtra.currentAppGeneratedImportsRootProductionEntryArtifact
+              || '';
+            window.VaadinDesktopIpcDiagnostics.currentAppProductionRuntimeOwnershipArtifactInventory =
+              stageExtra.currentAppProductionRuntimeOwnershipArtifactInventory || '';
+            window.VaadinDesktopIpcDiagnostics.currentAppProductionRuntimeOwnershipRootPackageGraphResolved =
+              currentAppRootPackageGraphResolved;
+            window.VaadinDesktopIpcDiagnostics.currentAppProductionRuntimeOwnershipChunkPackageGraphResolved =
+              currentAppChunkPackageEdgeResolved;
+            window.VaadinDesktopIpcDiagnostics.currentAppProductionRuntimeOwnershipProductionSupportObserved =
+              stageExtra.currentAppProductionRuntimeOwnershipProductionSupportObserved === true
+              || stageExtra.currentAppGeneratedImportsRootProductionSupportObserved === true;
+            window.VaadinDesktopIpcDiagnostics.currentAppProductionRuntimeOwnershipStatsObserved =
+              stageExtra.currentAppProductionRuntimeOwnershipStatsObserved === true;
+            window.VaadinDesktopIpcDiagnostics.currentAppProductionRuntimeOwnershipProdBundleObserved =
+              stageExtra.currentAppProductionRuntimeOwnershipProdBundleObserved === true;
+            window.VaadinDesktopIpcDiagnostics.currentAppProductionRuntimeOwnershipArtifactsStaged =
+              currentAppProductionRuntimeOwnershipReady && !!currentAppRootSupportResource && !!currentAppChunkResource;
+            window.VaadinDesktopIpcDiagnostics.currentAppProductionRuntimeOwnershipPrimaryCandidateSelected =
+              currentAppProductionRuntimeOwnershipReady
+              && !!stageExtra.currentAppProductionRuntimeOwnershipPrimaryCandidate;
+            window.VaadinDesktopIpcDiagnostics.currentAppProductionRuntimeOwnershipHandoffReady =
+              currentAppProductionRuntimeOwnershipReady;
+            window.VaadinDesktopIpcDiagnostics.currentAppProductionRuntimeOwnershipOwnerSideEffectSatisfied = false;
+            window.VaadinDesktopIpcDiagnostics.currentAppProductionRuntimeOwnershipOwnerReuseSatisfied = false;
+            window.VaadinDesktopIpcDiagnostics.currentAppProductionRuntimeOwnershipNoLocalhost =
+              stageExtra.currentAppProductionRuntimeOwnershipNoLocalhost === true;
+            window.VaadinDesktopIpcDiagnostics.currentAppProductionRuntimeOwnershipFixtureSubstituted =
+              stageExtra.currentAppProductionRuntimeOwnershipFixtureSubstituted === true;
+            window.VaadinDesktopIpcDiagnostics.currentAppProductionRuntimeOwnershipFailureLayer =
+              stageExtra.currentAppProductionRuntimeOwnershipFailureLayer || '';
+            window.VaadinDesktopIpcDiagnostics.currentAppProductionRuntimeOwnershipNextResolutionStep =
+              stageExtra.currentAppProductionRuntimeOwnershipNextResolutionStep || '';
             if (currentAppChunkPackageEdgeResolved && currentAppChunkResource) {
               recordFrontendStageOutcome(currentAppChunkResource, currentAppChunkUrl, 'executed',
                 generatedLoadOnDemandChunkStageExtra(resource, normalizedChunkId, expression, {
@@ -13028,6 +13297,14 @@ let flowIpcShell = #"""
                     window.VaadinDesktopIpcDiagnostics.loadOnDemandChunkFileSideEffectProof,
                   loadOnDemandChunkFileFailureLayer:
                     window.VaadinDesktopIpcDiagnostics.loadOnDemandChunkFileFailureLayer,
+                  currentAppProductionRuntimeOwnershipArtifactsStaged:
+                    window.VaadinDesktopIpcDiagnostics.currentAppProductionRuntimeOwnershipArtifactsStaged,
+                  currentAppProductionRuntimeOwnershipPrimaryCandidateSelected:
+                    window.VaadinDesktopIpcDiagnostics.currentAppProductionRuntimeOwnershipPrimaryCandidateSelected,
+                  currentAppProductionRuntimeOwnershipHandoffReady:
+                    window.VaadinDesktopIpcDiagnostics.currentAppProductionRuntimeOwnershipHandoffReady,
+                  currentAppProductionRuntimeOwnershipOwnerSideEffectSatisfied: false,
+                  currentAppProductionRuntimeOwnershipOwnerReuseSatisfied: false,
                   executionResult: 'executed:' + currentAppChunkResource.path
                 }));
             }
@@ -13037,6 +13314,14 @@ let flowIpcShell = #"""
                   generatedLazyChunkResolvedArtifactPath: currentAppRootSupportResource.path,
                   currentAppGeneratedImportsRootProductionSupportExecuted: true,
                   currentAppGeneratedImportsRootPackageGraphExecuted: true,
+                  currentAppProductionRuntimeOwnershipArtifactsStaged:
+                    window.VaadinDesktopIpcDiagnostics.currentAppProductionRuntimeOwnershipArtifactsStaged,
+                  currentAppProductionRuntimeOwnershipPrimaryCandidateSelected:
+                    window.VaadinDesktopIpcDiagnostics.currentAppProductionRuntimeOwnershipPrimaryCandidateSelected,
+                  currentAppProductionRuntimeOwnershipHandoffReady:
+                    window.VaadinDesktopIpcDiagnostics.currentAppProductionRuntimeOwnershipHandoffReady,
+                  currentAppProductionRuntimeOwnershipOwnerSideEffectSatisfied: false,
+                  currentAppProductionRuntimeOwnershipOwnerReuseSatisfied: false,
                   executionResult: 'executed:' + currentAppRootSupportResource.path
                 }));
             }
@@ -13059,7 +13344,15 @@ let flowIpcShell = #"""
                 currentAppGeneratedImportsRootProductionSupportExecuted:
                   window.VaadinDesktopIpcDiagnostics.currentAppGeneratedImportsRootProductionSupportExecuted,
                 currentAppGeneratedImportsRootPackageGraphExecuted:
-                  window.VaadinDesktopIpcDiagnostics.currentAppGeneratedImportsRootPackageGraphExecuted
+                  window.VaadinDesktopIpcDiagnostics.currentAppGeneratedImportsRootPackageGraphExecuted,
+                currentAppProductionRuntimeOwnershipArtifactsStaged:
+                  window.VaadinDesktopIpcDiagnostics.currentAppProductionRuntimeOwnershipArtifactsStaged,
+                currentAppProductionRuntimeOwnershipPrimaryCandidateSelected:
+                  window.VaadinDesktopIpcDiagnostics.currentAppProductionRuntimeOwnershipPrimaryCandidateSelected,
+                currentAppProductionRuntimeOwnershipHandoffReady:
+                  window.VaadinDesktopIpcDiagnostics.currentAppProductionRuntimeOwnershipHandoffReady,
+                currentAppProductionRuntimeOwnershipOwnerSideEffectSatisfied: false,
+                currentAppProductionRuntimeOwnershipOwnerReuseSatisfied: false
               }));
             installGeneratedLoadOnDemandChunkBridge(generatedDelegate);
           } catch (error) {

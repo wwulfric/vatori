@@ -119,6 +119,9 @@ public final class DesktopTraceInspector {
         FLOW_IPC_V1_34_CURRENT_APP_GENERATED_IMPORTS_ROOT_PACKAGE_GRAPH(
                 "--require-flow-ipc-v1_34-current-app-generated-imports-root-package-graph"),
         FLOW_IPC_V1_34("--require-flow-ipc-v1_34"),
+        FLOW_IPC_V1_35_CURRENT_APP_PRODUCTION_RUNTIME_OWNERSHIP(
+                "--require-flow-ipc-v1_35-current-app-production-runtime-ownership"),
+        FLOW_IPC_V1_35("--require-flow-ipc-v1_35"),
         FLOW_IPC_V1_3_FRAMEWORK("--require-flow-ipc-v1_3-framework");
 
         private final String option;
@@ -500,6 +503,14 @@ public final class DesktopTraceInspector {
                     gates.add(FLOW_IPC_V1_34);
                     yield gates;
                 }
+                case FLOW_IPC_V1_35_CURRENT_APP_PRODUCTION_RUNTIME_OWNERSHIP ->
+                    EnumSet.of(FLOW_IPC_V1_35_CURRENT_APP_PRODUCTION_RUNTIME_OWNERSHIP);
+                case FLOW_IPC_V1_35 -> {
+                    EnumSet<AcceptanceGate> gates = FLOW_IPC_V1_34.expandedRequirements();
+                    gates.add(FLOW_IPC_V1_35_CURRENT_APP_PRODUCTION_RUNTIME_OWNERSHIP);
+                    gates.add(FLOW_IPC_V1_35);
+                    yield gates;
+                }
                 case FLOW_IPC_V1_3_FRAMEWORK -> EnumSet.of(FLOW_IPC_V1_3_FRAMEWORK);
             };
         }
@@ -591,6 +602,9 @@ public final class DesktopTraceInspector {
                 case FLOW_IPC_V1_34_CURRENT_APP_GENERATED_IMPORTS_ROOT_PACKAGE_GRAPH ->
                     summary.hasRequiredFlowIpcV1_34CurrentAppGeneratedImportsRootPackageGraphTypes();
                 case FLOW_IPC_V1_34 -> summary.hasRequiredFlowIpcV1_34Types();
+                case FLOW_IPC_V1_35_CURRENT_APP_PRODUCTION_RUNTIME_OWNERSHIP ->
+                    summary.hasRequiredFlowIpcV1_35CurrentAppProductionRuntimeOwnershipTypes();
+                case FLOW_IPC_V1_35 -> summary.hasRequiredFlowIpcV1_35Types();
                 case FLOW_IPC_V1_3_FRAMEWORK -> summary.hasRequiredFlowIpcV1_3FrameworkTypes();
             };
         }
@@ -1245,6 +1259,11 @@ public final class DesktopTraceInspector {
                     && line.contains("\"componentFrontendResources\"")
                     && containsCurrentAppGeneratedImportsRootPackageGraphV134Fields(line)) {
                 summary.currentAppGeneratedImportsRootPackageGraphV134ManifestObserved = true;
+            }
+            if (line.contains("\"type\":\"bootstrapResponse\"")
+                    && line.contains("\"componentFrontendResources\"")
+                    && containsCurrentAppProductionRuntimeOwnershipV135Fields(line)) {
+                summary.currentAppProductionRuntimeOwnershipV135ManifestObserved = true;
             }
             if (line.contains("\"type\":\"bootstrapResponse\"")
                     && line.contains("\"componentFrontendResources\"")
@@ -2155,6 +2174,11 @@ public final class DesktopTraceInspector {
                     && containsCurrentAppGeneratedImportsRootPackageGraphV134Fields(line)) {
                 summary.currentAppGeneratedImportsRootPackageGraphV134RequestObserved = true;
             }
+            if (line.contains("\"type\":\"resourceRequest\"")
+                    && containsPath(line, "current-app-frontend/generated/flow/generated-flow-imports.js")
+                    && containsCurrentAppProductionRuntimeOwnershipV135Fields(line)) {
+                summary.currentAppProductionRuntimeOwnershipV135RequestObserved = true;
+            }
             if (line.contains("\"type\":\"resourceResponse\"")
                     && containsPath(line, "current-app-frontend/generated/flow/generated-flow-imports.js")
                     && containsCurrentAppBuildFrontendOutputV132Fields(line)
@@ -2172,6 +2196,12 @@ public final class DesktopTraceInspector {
                     && containsCurrentAppGeneratedImportsRootPackageGraphV134Fields(line)
                     && line.contains("\"bodyRedacted\":true")) {
                 summary.currentAppGeneratedImportsRootPackageGraphV134ResponseObserved = true;
+            }
+            if (line.contains("\"type\":\"resourceResponse\"")
+                    && containsPath(line, "current-app-frontend/generated/flow/generated-flow-imports.js")
+                    && containsCurrentAppProductionRuntimeOwnershipV135Fields(line)
+                    && line.contains("\"bodyRedacted\":true")) {
+                summary.currentAppProductionRuntimeOwnershipV135ResponseObserved = true;
             }
             if (line.contains("\"type\":\"resourceRequest\"")
                     && line.contains("\"purpose\":\"generated-loadondemand-chunk-v1_11\"")
@@ -2874,6 +2904,14 @@ public final class DesktopTraceInspector {
                 summary.currentAppGeneratedImportsRootPackageGraphV134StageObserved = true;
             }
             if (line.contains("\"type\":\"resourceStage\"")
+                    && containsPath(line, "current-app-frontend/generated/flow/generated-flow-imports.js")
+                    && containsCurrentAppProductionRuntimeOwnershipV135Fields(line)
+                    && (line.contains("\"executionStatus\":\"executed\"")
+                            || line.contains("\"executionStatus\":\"strict-blocker\"")
+                            || line.contains("\"executionStatus\":\"staged\""))) {
+                summary.currentAppProductionRuntimeOwnershipV135StageObserved = true;
+            }
+            if (line.contains("\"type\":\"resourceStage\"")
                     && containsPath(line, "current-app-production/VAADIN/build/generated-flow-imports-")
                     && containsCurrentAppGeneratedImportsRootPackageGraphV134Fields(line)
                     && containsLiteralField(line,
@@ -2881,6 +2919,20 @@ public final class DesktopTraceInspector {
                     && containsLiteralField(line,
                             "currentAppGeneratedImportsRootPackageGraphExecuted", "true")) {
                 summary.currentAppGeneratedImportsRootPackageGraphV134SupportExecutedObserved = true;
+            }
+            if (line.contains("\"type\":\"resourceStage\"")
+                    && containsCurrentAppProductionRuntimeOwnershipV135Fields(line)
+                    && containsLiteralField(line,
+                            "currentAppProductionRuntimeOwnershipArtifactsStaged", "true")
+                    && containsLiteralField(line,
+                            "currentAppProductionRuntimeOwnershipPrimaryCandidateSelected", "true")
+                    && containsLiteralField(line,
+                            "currentAppProductionRuntimeOwnershipHandoffReady", "true")
+                    && containsLiteralField(line,
+                            "currentAppProductionRuntimeOwnershipOwnerSideEffectSatisfied", "false")
+                    && containsLiteralField(line,
+                            "currentAppProductionRuntimeOwnershipOwnerReuseSatisfied", "false")) {
+                summary.currentAppProductionRuntimeOwnershipV135HandoffObserved = true;
             }
             if (line.contains("\"type\":\"resourceStage\"")
                     && containsPath(line, "current-app-frontend/generated/flow/chunks/")
@@ -3631,6 +3683,22 @@ public final class DesktopTraceInspector {
                     && containsLiteralField(line,
                             "currentAppGeneratedImportsRootPackageGraphExecuted", "true")) {
                 summary.currentAppGeneratedImportsRootPackageGraphV134DomObserved = true;
+            }
+            if (line.contains("\"type\":\"webview.dom\"")
+                    && containsLiteralField(line,
+                            "currentAppProductionRuntimeOwnershipCandidateObserved", "true")
+                    && containsCurrentAppProductionRuntimeOwnershipV135Fields(line)
+                    && containsLiteralField(line,
+                            "currentAppProductionRuntimeOwnershipArtifactsStaged", "true")
+                    && containsLiteralField(line,
+                            "currentAppProductionRuntimeOwnershipPrimaryCandidateSelected", "true")
+                    && containsLiteralField(line,
+                            "currentAppProductionRuntimeOwnershipHandoffReady", "true")
+                    && containsLiteralField(line,
+                            "currentAppProductionRuntimeOwnershipOwnerSideEffectSatisfied", "false")
+                    && containsLiteralField(line,
+                            "currentAppProductionRuntimeOwnershipOwnerReuseSatisfied", "false")) {
+                summary.currentAppProductionRuntimeOwnershipV135DomObserved = true;
             }
             if (line.contains("\"type\":\"webview.dom\"")
                     && containsLiteralField(line, "generatedLazySourceCurrentBuildNoOpConfirmed", "true")
@@ -4768,6 +4836,53 @@ public final class DesktopTraceInspector {
                 && line.contains("currentAppGeneratedImportsRootNextResolutionStep");
     }
 
+    private static boolean containsCurrentAppProductionRuntimeOwnershipV135Fields(String line) {
+        return containsCurrentAppGeneratedImportsRootPackageGraphV134Fields(line)
+                && containsStringField(line, "currentAppProductionRuntimeOwnershipVersion",
+                        "flow-ipc-current-app-production-runtime-ownership-v1_35")
+                && containsStringField(line, "currentAppProductionRuntimeOwnershipSource",
+                        "current-app-build-frontend-output-v1_32-to-v1_34")
+                && containsStringField(line, "currentAppProductionRuntimeOwnershipPrimaryCandidate",
+                        "current-app-build-frontend-production-runtime")
+                && containsStringField(line, "currentAppProductionRuntimeOwnershipHandoffPolicy",
+                        "current-app-source-root-chunk-plus-production-support-to-owner-runtime-v1_35")
+                && containsStringField(line, "currentAppProductionRuntimeOwnershipSelectedImportsArtifact",
+                        "current-app-frontend/generated/flow/generated-flow-imports.js")
+                && containsStringFieldPrefix(line,
+                        "currentAppProductionRuntimeOwnershipSelectedChunkArtifact",
+                        "current-app-frontend/generated/flow/chunks/")
+                && containsStringFieldPrefix(line,
+                        "currentAppProductionRuntimeOwnershipProductionSupportArtifact",
+                        "current-app-production/VAADIN/build/generated-flow-imports-")
+                && containsStringFieldPrefix(line,
+                        "currentAppProductionRuntimeOwnershipProductionEntryArtifact",
+                        "current-app-production/VAADIN/build/indexhtml-")
+                && line.contains("currentAppProductionRuntimeOwnershipArtifactInventory")
+                && containsLiteralField(line,
+                        "currentAppProductionRuntimeOwnershipRootPackageGraphResolved", "true")
+                && containsLiteralField(line,
+                        "currentAppProductionRuntimeOwnershipChunkPackageGraphResolved", "true")
+                && containsLiteralField(line,
+                        "currentAppProductionRuntimeOwnershipProductionSupportObserved", "true")
+                && containsLiteralField(line,
+                        "currentAppProductionRuntimeOwnershipStatsObserved", "true")
+                && containsLiteralField(line,
+                        "currentAppProductionRuntimeOwnershipProdBundleObserved", "true")
+                && containsLiteralField(line,
+                        "currentAppProductionRuntimeOwnershipHandoffReady", "true")
+                && containsLiteralField(line,
+                        "currentAppProductionRuntimeOwnershipOwnerSideEffectSatisfied", "false")
+                && containsLiteralField(line,
+                        "currentAppProductionRuntimeOwnershipOwnerReuseSatisfied", "false")
+                && containsLiteralField(line,
+                        "currentAppProductionRuntimeOwnershipNoLocalhost", "true")
+                && containsLiteralField(line,
+                        "currentAppProductionRuntimeOwnershipFixtureSubstituted", "false")
+                && containsStringField(line, "currentAppProductionRuntimeOwnershipFailureLayer",
+                        "current-app-production-runtime-ownership-handoff-pending")
+                && line.contains("currentAppProductionRuntimeOwnershipNextResolutionStep");
+    }
+
     private static boolean containsProductionOwnerFailureLayer(String line, String field) {
         return containsStringField(line, field, "production-owner-duplicate-custom-element")
                 || containsStringField(line, field, "production-owner-relative-import-unresolved")
@@ -5268,6 +5383,12 @@ public final class DesktopTraceInspector {
         private boolean currentAppGeneratedImportsRootPackageGraphV134StageObserved;
         private boolean currentAppGeneratedImportsRootPackageGraphV134SupportExecutedObserved;
         private boolean currentAppGeneratedImportsRootPackageGraphV134DomObserved;
+        private boolean currentAppProductionRuntimeOwnershipV135ManifestObserved;
+        private boolean currentAppProductionRuntimeOwnershipV135RequestObserved;
+        private boolean currentAppProductionRuntimeOwnershipV135ResponseObserved;
+        private boolean currentAppProductionRuntimeOwnershipV135StageObserved;
+        private boolean currentAppProductionRuntimeOwnershipV135HandoffObserved;
+        private boolean currentAppProductionRuntimeOwnershipV135DomObserved;
 
         public boolean hasRequiredFlowIpcTypes() {
             return types.keySet().containsAll(FLOW_IPC_REQUIRED_TYPES)
@@ -5815,6 +5936,20 @@ public final class DesktopTraceInspector {
                     && hasRequiredFlowIpcV1_34CurrentAppGeneratedImportsRootPackageGraphTypes();
         }
 
+        public boolean hasRequiredFlowIpcV1_35CurrentAppProductionRuntimeOwnershipTypes() {
+            return currentAppProductionRuntimeOwnershipV135ManifestObserved
+                    && currentAppProductionRuntimeOwnershipV135RequestObserved
+                    && currentAppProductionRuntimeOwnershipV135ResponseObserved
+                    && currentAppProductionRuntimeOwnershipV135StageObserved
+                    && currentAppProductionRuntimeOwnershipV135HandoffObserved
+                    && currentAppProductionRuntimeOwnershipV135DomObserved;
+        }
+
+        public boolean hasRequiredFlowIpcV1_35Types() {
+            return hasRequiredFlowIpcV1_34Types()
+                    && hasRequiredFlowIpcV1_35CurrentAppProductionRuntimeOwnershipTypes();
+        }
+
         private boolean hasCurrentAppBuildFrontendOutputSuccessorEvidence() {
             return currentAppBuildFrontendOutputV132ManifestObserved
                     && currentAppBuildFrontendOutputV132RequestObserved
@@ -6341,6 +6476,15 @@ public final class DesktopTraceInspector {
                     + currentAppGeneratedImportsRootPackageGraphV134StageObserved + "/"
                     + currentAppGeneratedImportsRootPackageGraphV134SupportExecutedObserved + "/"
                     + currentAppGeneratedImportsRootPackageGraphV134DomObserved);
+            System.out.println("Flow IPC v1.35 current app production runtime ownership manifest observed: "
+                    + currentAppProductionRuntimeOwnershipV135ManifestObserved);
+            System.out.println("Flow IPC v1.35 current app production runtime ownership request/response observed: "
+                    + currentAppProductionRuntimeOwnershipV135RequestObserved + "/"
+                    + currentAppProductionRuntimeOwnershipV135ResponseObserved);
+            System.out.println("Flow IPC v1.35 current app production runtime ownership stage/handoff/DOM observed: "
+                    + currentAppProductionRuntimeOwnershipV135StageObserved + "/"
+                    + currentAppProductionRuntimeOwnershipV135HandoffObserved + "/"
+                    + currentAppProductionRuntimeOwnershipV135DomObserved);
             System.out.println("Flow IPC v1.6 TextField graph manifest observed: "
                     + frontendTextFieldV16ManifestObserved);
             System.out.println("Flow IPC v1.6 TextField graph request observed: "

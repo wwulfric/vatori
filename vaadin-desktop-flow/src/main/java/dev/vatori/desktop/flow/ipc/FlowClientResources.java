@@ -108,8 +108,6 @@ final class FlowClientResources {
             "META-INF/vatori/dev-bundle-entry/vaadin-checkbox.js";
     private static final String DEV_BUNDLE_SELECT_ENTRY_JS =
             "META-INF/vatori/dev-bundle-entry/vaadin-select.js";
-    private static final String CURRENT_APP_CONNECTION_INDICATOR_PLACEHOLDER_JS =
-            "META-INF/vatori/current-app-frontend-entry/connection-indicator-placeholder.js";
     private static final String THEME_STATIC_CSS =
             "META-INF/resources/frontend/themes/vatori-flow-ipc-smoke/theme-static.css";
     private static final String FLOW_LAZY_DEPENDENCY_JS =
@@ -532,6 +530,18 @@ final class FlowClientResources {
             "current-app-generated-imports-root-package-graph-resolved-production-owner-pending";
     private static final String CURRENT_APP_GENERATED_IMPORTS_ROOT_NEXT_STEP =
             "promote the current app production generated imports support graph toward production owner-owned runtime side effects, then cover dev-mode/Vite or a supported Vaadin frontend SPI";
+    private static final String CURRENT_APP_PRODUCTION_RUNTIME_OWNERSHIP_VERSION =
+            "flow-ipc-current-app-production-runtime-ownership-v1_35";
+    private static final String CURRENT_APP_PRODUCTION_RUNTIME_OWNERSHIP_SOURCE =
+            "current-app-build-frontend-output-v1_32-to-v1_34";
+    private static final String CURRENT_APP_PRODUCTION_RUNTIME_OWNERSHIP_PRIMARY_CANDIDATE =
+            "current-app-build-frontend-production-runtime";
+    private static final String CURRENT_APP_PRODUCTION_RUNTIME_OWNERSHIP_HANDOFF_POLICY =
+            "current-app-source-root-chunk-plus-production-support-to-owner-runtime-v1_35";
+    private static final String CURRENT_APP_PRODUCTION_RUNTIME_OWNERSHIP_FAILURE_LAYER =
+            "current-app-production-runtime-ownership-handoff-pending";
+    private static final String CURRENT_APP_PRODUCTION_RUNTIME_OWNERSHIP_NEXT_STEP =
+            "connect the current app production runtime candidate to owner import, side-effect and component reuse, or replace the handoff with a supported Vaadin build SPI";
     private static final List<String> PRODUCTION_RUNTIME_OWNER_DEPENDENCY_ARTIFACTS = List.of(
             DEV_BUNDLE_COMMONJS_JS,
             DEV_BUNDLE_INDEX_HTML_JS,
@@ -770,20 +780,6 @@ final class FlowClientResources {
                 }
               }
             }
-            """;
-    private static final String CURRENT_APP_CONNECTION_INDICATOR_PLACEHOLDER_SOURCE = """
-            window.Vaadin = window.Vaadin || {};
-            window.Vaadin.ConnectionIndicator = window.Vaadin.ConnectionIndicator || {
-              create() {},
-              setState() {},
-              loadingStarted() {},
-              loadingFinished() {}
-            };
-            window.VaadinDesktopIpcCurrentAppConnectionIndicatorPlaceholder = {
-              executed: true,
-              source: 'current-app-generated-imports-root-package-placeholder-v1_33'
-            };
-            export {};
             """;
     private static final String CHECKBOX_DEV_BUNDLE_ENTRY_SOURCE = """
             import { c5 as Checkbox } from './indexhtml-BfYYZi8S.js';
@@ -2055,6 +2051,7 @@ final class FlowClientResources {
         attributes.put("currentAppBuildFrontendProdBundlePath", evidence.prodBundlePath());
         attributes.put("currentAppBuildFrontendNoLocalhost", true);
         attributes.put("currentAppBuildFrontendFixtureSubstituted", false);
+        attributes.putAll(currentAppProductionRuntimeOwnershipAttributes(evidence));
         attributes.putAll(frontendBuildPreflightAvailabilityAttributes(
                 buildStep, appOutput, frontendBuildRuntimeSource(buildStep, appOutput)));
         if (importsArtifact) {
@@ -2225,7 +2222,76 @@ final class FlowClientResources {
                 evidence.sourceGeneratedImportsRootFailureLayer());
         attributes.put("currentAppGeneratedImportsRootNextResolutionStep",
                 CURRENT_APP_GENERATED_IMPORTS_ROOT_NEXT_STEP);
+        attributes.putAll(currentAppProductionRuntimeOwnershipAttributes(evidence));
         return attributes;
+    }
+
+    private static Map<String, Object> currentAppProductionRuntimeOwnershipAttributes(
+            CurrentAppBuildFrontendOutputEvidence evidence) {
+        Map<String, Object> attributes = new LinkedHashMap<>();
+        boolean rootResolved = evidence.sourceGeneratedImportsRootUnresolvedSpecifiers().isBlank()
+                && evidence.sourceGeneratedImportsRootProductionSupportObserved()
+                && !evidence.sourceGeneratedImportsRootPlaceholderUsed();
+        boolean chunkResolved = "available".equals(evidence.sourceChunkStatus())
+                && evidence.sourceChunkPackageUnresolvedSpecifiers().isBlank();
+        boolean handoffReady = evidence.sourceGeneratedImportsObserved()
+                && chunkResolved
+                && rootResolved
+                && evidence.productionGeneratedImportsObserved()
+                && evidence.statsObserved()
+                && evidence.prodBundleObserved();
+        attributes.put("currentAppProductionRuntimeOwnershipVersion",
+                CURRENT_APP_PRODUCTION_RUNTIME_OWNERSHIP_VERSION);
+        attributes.put("currentAppProductionRuntimeOwnershipSource",
+                CURRENT_APP_PRODUCTION_RUNTIME_OWNERSHIP_SOURCE);
+        attributes.put("currentAppProductionRuntimeOwnershipPrimaryCandidate",
+                CURRENT_APP_PRODUCTION_RUNTIME_OWNERSHIP_PRIMARY_CANDIDATE);
+        attributes.put("currentAppProductionRuntimeOwnershipHandoffPolicy",
+                CURRENT_APP_PRODUCTION_RUNTIME_OWNERSHIP_HANDOFF_POLICY);
+        attributes.put("currentAppProductionRuntimeOwnershipSelectedImportsArtifact",
+                CURRENT_APP_BUILD_FRONTEND_GENERATED_IMPORTS_JS);
+        attributes.put("currentAppProductionRuntimeOwnershipSelectedChunkArtifact",
+                evidence.sourceChunkVirtualPath());
+        attributes.put("currentAppProductionRuntimeOwnershipProductionSupportArtifact",
+                evidence.sourceGeneratedImportsRootProductionSupportArtifact());
+        attributes.put("currentAppProductionRuntimeOwnershipProductionEntryArtifact",
+                evidence.productionEntryScriptVirtualPath());
+        attributes.put("currentAppProductionRuntimeOwnershipStatsObserved", evidence.statsObserved());
+        attributes.put("currentAppProductionRuntimeOwnershipProdBundleObserved", evidence.prodBundleObserved());
+        attributes.put("currentAppProductionRuntimeOwnershipArtifactInventory",
+                currentAppProductionRuntimeOwnershipArtifactInventory(evidence));
+        attributes.put("currentAppProductionRuntimeOwnershipRootPackageGraphResolved", rootResolved);
+        attributes.put("currentAppProductionRuntimeOwnershipChunkPackageGraphResolved", chunkResolved);
+        attributes.put("currentAppProductionRuntimeOwnershipProductionSupportObserved",
+                evidence.sourceGeneratedImportsRootProductionSupportObserved());
+        attributes.put("currentAppProductionRuntimeOwnershipHandoffReady", handoffReady);
+        attributes.put("currentAppProductionRuntimeOwnershipOwnerSideEffectSatisfied", false);
+        attributes.put("currentAppProductionRuntimeOwnershipOwnerReuseSatisfied", false);
+        attributes.put("currentAppProductionRuntimeOwnershipNoLocalhost", true);
+        attributes.put("currentAppProductionRuntimeOwnershipFixtureSubstituted", false);
+        attributes.put("currentAppProductionRuntimeOwnershipFailureLayer",
+                handoffReady ? CURRENT_APP_PRODUCTION_RUNTIME_OWNERSHIP_FAILURE_LAYER : evidence.failureLayer());
+        attributes.put("currentAppProductionRuntimeOwnershipNextResolutionStep",
+                CURRENT_APP_PRODUCTION_RUNTIME_OWNERSHIP_NEXT_STEP);
+        return attributes;
+    }
+
+    private static String currentAppProductionRuntimeOwnershipArtifactInventory(
+            CurrentAppBuildFrontendOutputEvidence evidence) {
+        List<String> inventory = new ArrayList<>();
+        addNonBlank(inventory, CURRENT_APP_BUILD_FRONTEND_GENERATED_IMPORTS_JS);
+        addNonBlank(inventory, evidence.sourceChunkVirtualPath());
+        addNonBlank(inventory, evidence.sourceGeneratedImportsRootProductionSupportArtifact());
+        addNonBlank(inventory, evidence.productionEntryScriptVirtualPath());
+        inventory.addAll(csvValues(evidence.productionBuildJsVirtualPaths()));
+        addNonBlank(inventory, evidence.prodBundlePath());
+        return String.join(",", inventory.stream().distinct().toList());
+    }
+
+    private static void addNonBlank(List<String> target, String value) {
+        if (value != null && !value.isBlank()) {
+            target.add(value);
+        }
     }
 
     private static Map<String, Object> currentAppProductionBuildAttributes(
@@ -2983,6 +3049,7 @@ final class FlowClientResources {
         attributes.put("currentAppBuildFrontendNextResolutionStep", CURRENT_APP_BUILD_FRONTEND_NEXT_STEP);
         attributes.put("currentAppBuildFrontendNoLocalhost", true);
         attributes.put("currentAppBuildFrontendFixtureSubstituted", false);
+        attributes.putAll(currentAppProductionRuntimeOwnershipAttributes(evidence));
         return attributes;
     }
 

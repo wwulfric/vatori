@@ -40,8 +40,9 @@ v0/v1 runtime 切片走向可产品化桌面框架的最终完成状态。
 - `docs/goal-1_32.md`：Current App Build-Frontend Output Contract，已完成。
 - `docs/goal-1_33.md`：Current App Generated Chunk Package Edge，已完成。
 - `docs/goal-1_34.md`：Current App Generated Imports Root Package Graph，已完成。
+- `docs/goal-1_35.md`：Current App Production Runtime Ownership Handoff，已完成。
 
-当前已完成到 `docs/goal-1_34.md`。v1.31 先把 v1.30 的 offline plugin blocker 推进到
+当前已完成到 `docs/goal-1_35.md`。v1.31 先把 v1.30 的 offline plugin blocker 推进到
 explicit online/local-repo preflight；v1.32 进一步把 blocker 推进到 full
 `build-frontend` 输出层，证明当前 smoke app 已产生真实 source generated imports/chunk、
 production webapp build output 和 `prod.bundle`。v1.33 则把 v1.32 的 generic
@@ -54,10 +55,14 @@ production `indexhtml` module identity，并通过 Flow-client-triggered
 diagnostic placeholder，把 root bare imports 解析到当前 app production
 `generated-flow-imports-*.js` support artifact 及其 production webapp build graph，trace 记录
 placeholder=false、root unresolved specifiers 为空、support artifact staged/executed、root package
-graph executed。当前 accepted remaining blocker 是 production owner-owned runtime / side-effect
-reuse、dev-mode/Vite parity 和 broader component/resource parity。
+graph executed。v1.35 把 v1.32-v1.34 分散的 current-app source/prod artifact 证据收束成
+production runtime ownership handoff contract：trace 证明 source imports/chunk、production support
+artifact、production entry、stats 和 `prod.bundle` 已具备 primary runtime candidate 条件，并记录
+handoffReady=true；同时明确 owner side-effect/reuse=false。当前 accepted remaining blocker 是
+production owner-owned runtime / side-effect reuse、dev-mode/Vite parity 和 broader
+component/resource parity。
 
-后续阶段应继续以 `docs/goal-1_34.md` 等文件拆分，
+后续阶段应继续以 `docs/goal-1_35.md` 等文件拆分，
 每个阶段只拿走本长期目标中的一个可评审切片。不要把本文件改写成短期任务清单；
 它是长期北极星和完成度账本。
 
@@ -447,6 +452,19 @@ reuse、dev-mode/Vite parity 和 broader component/resource parity。
   `currentAppGeneratedImportsRootPlaceholderUsed=false`。v1.34 仍不是完整 frontend/resource pipeline
   parity：production owner side-effect / reuse、dev-mode/Vite execution 和 broader component/resource
   coverage 仍是 blocker。
+- v1.35 已把 current app source/prod build output 收束成 productized runtime ownership handoff
+  candidate：Java manifest/resource response 和 Swift `resourceStage` / `webview.dom` 记录
+  `currentAppProductionRuntimeOwnershipVersion=flow-ipc-current-app-production-runtime-ownership-v1_35`、
+  primary candidate、selected source imports/chunk、production support artifact、production entry、
+  artifact inventory、stats、`prod.bundle`、no-localhost 和 no-fixture proof。Trace 证明
+  `currentAppProductionRuntimeOwnershipArtifactsStaged=true`、
+  `currentAppProductionRuntimeOwnershipPrimaryCandidateSelected=true`、
+  `currentAppProductionRuntimeOwnershipHandoffReady=true`，并明确
+  `currentAppProductionRuntimeOwnershipOwnerSideEffectSatisfied=false`、
+  `currentAppProductionRuntimeOwnershipOwnerReuseSatisfied=false` 和 failure layer
+  `current-app-production-runtime-ownership-handoff-pending`。v1.35 仍不是完整
+  frontend/resource pipeline parity；它把下一步定位到真实 production owner import/side-effect/reuse
+  或受支持 Vaadin build SPI。
 - 当前 app/build 的真实 generated/lazy chunk file parity、production owner import/side-effect success
   和 dev-mode/Vite execution 仍是明确 blocker，不计入最终完成。
 
@@ -543,7 +561,7 @@ reuse、dev-mode/Vite parity 和 broader component/resource parity。
 
 - 基于 v1.22 generated lazy chunk-file positive fixture、v1.23 production owner positive
   runtime fixture、v1.24 closure decision contract、v1.25 packaged frontend baseline 和
-  v1.26-v1.34 当前 app generated/build-frontend output contracts，继续让当前 app/build 产生的
+  v1.26-v1.35 当前 app generated/build-frontend output contracts，继续让当前 app/build 产生的
   真实 generated lazy chunk file 完成执行：在 current app generated imports root package graph 已由
   production support artifact 承载的基础上，接入受支持 Vaadin lazy chunk SPI，或把真实
   production bundle owned execution / dev-mode/Vite execution 从 partial/blocker 推进到真实可执行路径。
@@ -577,11 +595,12 @@ reuse、dev-mode/Vite parity 和 broader component/resource parity。
 
 ## 当前建议的下一阶段
 
-v1.34 已完成 Current App Generated Imports Root Package Graph。下一阶段建议优先把当前
-app/generated root+chunk 证据继续推进到产品化 runtime ownership 或 supported Vaadin build SPI：
+v1.35 已完成 Current App Production Runtime Ownership Handoff。下一阶段建议优先把 handoff
+candidate 真正接入 current app production owner import/side-effect/reuse，或转向 supported
+Vaadin build SPI：
 
-- 评估 production generated imports / `prod.bundle` 是否应成为 primary runtime candidate，
-  或是否需要 packaging-time staged frontend artifact 作为 v0 支持路径。
+- 让当前 app production runtime candidate 进入 owner-first import path，记录 side-effect proof、
+  component reuse decision、失败层和下一步。
 - 接入/评估受支持 Vaadin lazy chunk SPI，把 v1.22 fixture path 推进为真实 app/build path。
 - 真实 production owner side-effect / owner-owned runtime reuse success。
 - Dev-mode/Vite graph execution 或可靠替代模式。

@@ -566,6 +566,18 @@ final class FlowClientResources {
             "current-app-production-owner-component-reuse-pending";
     private static final String CURRENT_APP_PRODUCTION_OWNER_COMPONENT_REUSE_NEXT_STEP =
             "extend current app owner reuse to earlier component paths and broader Vaadin component/resource coverage, then cover dev-mode/Vite parity";
+    private static final String CURRENT_APP_PRODUCTION_OWNER_COMPONENT_REUSE_MATRIX_VERSION =
+            "flow-ipc-current-app-owner-component-reuse-matrix-v1_38";
+    private static final String CURRENT_APP_PRODUCTION_OWNER_COMPONENT_REUSE_MATRIX_SOURCE =
+            "current-app-production-owner-component-reuse-v1_37";
+    private static final String CURRENT_APP_PRODUCTION_OWNER_COMPONENT_REUSE_MATRIX_POLICY =
+            "classify-current-app-owner-reuse-or-focused-fallback-for-covered-components-v1_38";
+    private static final String CURRENT_APP_PRODUCTION_OWNER_COMPONENT_REUSE_MATRIX_EXPECTED_TAGS =
+            "vaadin-big-decimal-field,vaadin-checkbox,vaadin-select,vaadin-text-field";
+    private static final String CURRENT_APP_PRODUCTION_OWNER_COMPONENT_REUSE_MATRIX_FAILURE_LAYER =
+            "current-app-owner-component-reuse-matrix-pending";
+    private static final String CURRENT_APP_PRODUCTION_OWNER_COMPONENT_REUSE_MATRIX_NEXT_STEP =
+            "move current app owner import earlier than covered component focused imports, or switch to a supported Vaadin build/runtime SPI before broadening component parity";
     private static final List<String> PRODUCTION_RUNTIME_OWNER_DEPENDENCY_ARTIFACTS = List.of(
             DEV_BUNDLE_COMMONJS_JS,
             DEV_BUNDLE_INDEX_HTML_JS,
@@ -2356,6 +2368,33 @@ final class FlowClientResources {
                 CURRENT_APP_PRODUCTION_OWNER_COMPONENT_REUSE_NEXT_STEP);
         attributes.put("currentAppProductionOwnerComponentReused", false);
         attributes.put("currentAppProductionOwnerComponentReuseNoLocalhost", true);
+        attributes.put("currentAppProductionOwnerComponentReuseMatrixVersion",
+                CURRENT_APP_PRODUCTION_OWNER_COMPONENT_REUSE_MATRIX_VERSION);
+        attributes.put("currentAppProductionOwnerComponentReuseMatrixSource",
+                CURRENT_APP_PRODUCTION_OWNER_COMPONENT_REUSE_MATRIX_SOURCE);
+        attributes.put("currentAppProductionOwnerComponentReuseMatrixPolicy",
+                CURRENT_APP_PRODUCTION_OWNER_COMPONENT_REUSE_MATRIX_POLICY);
+        attributes.put("currentAppProductionOwnerComponentReuseMatrixExpectedTags",
+                CURRENT_APP_PRODUCTION_OWNER_COMPONENT_REUSE_MATRIX_EXPECTED_TAGS);
+        attributes.put("currentAppProductionOwnerComponentReuseMatrixObservedTags", "");
+        attributes.put("currentAppProductionOwnerComponentReuseMatrixReusedTags", "");
+        attributes.put("currentAppProductionOwnerComponentReuseMatrixFallbackTags", "");
+        attributes.put("currentAppProductionOwnerComponentReuseMatrixSkippedFocusedImports", "");
+        attributes.put("currentAppProductionOwnerComponentReuseMatrixFallbackFocusedImports", "");
+        attributes.put("currentAppProductionOwnerComponentReuseMatrixOrderingBlockers", "");
+        attributes.put("currentAppProductionOwnerComponentReuseMatrixDecision",
+                "pending-current-app-owner-component-reuse-matrix");
+        attributes.put("currentAppProductionOwnerComponentReuseMatrixReason",
+                "covered components must be classified as current app owner reuse or focused fallback");
+        attributes.put("currentAppProductionOwnerComponentReuseMatrixFailureLayer",
+                handoffReady ? CURRENT_APP_PRODUCTION_OWNER_COMPONENT_REUSE_MATRIX_FAILURE_LAYER
+                        : evidence.failureLayer());
+        attributes.put("currentAppProductionOwnerComponentReuseMatrixNextResolutionStep",
+                CURRENT_APP_PRODUCTION_OWNER_COMPONENT_REUSE_MATRIX_NEXT_STEP);
+        attributes.put("currentAppProductionOwnerComponentReuseMatrixComplete", false);
+        attributes.put("currentAppProductionOwnerComponentReuseMatrixTextFieldReuseRetained", false);
+        attributes.put("currentAppProductionOwnerComponentReuseMatrixEarlyFallbackClassified", false);
+        attributes.put("currentAppProductionOwnerComponentReuseMatrixNoLocalhost", true);
         return attributes;
     }
 

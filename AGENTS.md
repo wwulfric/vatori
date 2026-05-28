@@ -185,6 +185,8 @@ bash bin/flow-ipc-trace-inspect --require-flow-ipc-v1_36-current-app-production-
 bash bin/flow-ipc-trace-inspect --require-flow-ipc-v1_36 docs/traces/flow-ipc-v1_36.ndjson
 bash bin/flow-ipc-trace-inspect --require-flow-ipc-v1_37-current-app-production-owner-component-reuse docs/traces/flow-ipc-v1_37.ndjson
 bash bin/flow-ipc-trace-inspect --require-flow-ipc-v1_37 docs/traces/flow-ipc-v1_37.ndjson
+bash bin/flow-ipc-trace-inspect --require-flow-ipc-v1_38-current-app-owner-component-reuse-matrix docs/traces/flow-ipc-v1_38.ndjson
+bash bin/flow-ipc-trace-inspect --require-flow-ipc-v1_38 docs/traces/flow-ipc-v1_38.ndjson
 ```
 
 验证 server-side UIDL writer adapter：
@@ -283,6 +285,6 @@ Vaadin：
 
 1. 在 `vaadin-desktop-host-swift` 跨本地机器稳定后，把它作为默认 host。
 2. 将 Host Protocol v0 trace 推进为 bidirectional command/result transport。
-3. 基于 v1.37 current app production owner TextField reuse，继续推进更早组件执行顺序的泛化 owner reuse，或接入受支持 Vaadin lazy chunk SPI、dev-mode/Vite execution。
+3. 基于 v1.38 current app owner component reuse matrix，继续把早期组件 focused fallback 转换为 owner-ready-before-import 路径，或接入受支持 Vaadin lazy chunk SPI、dev-mode/Vite execution。
 4. 为 Swift host window launch、sidecar cleanup 和 desktop capability call 增加 smoke tests。
 5. 将受控 duplicate/late push probe 推进为 durable queue、ack、reconnect 和 resync 语义。

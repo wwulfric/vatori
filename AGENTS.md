@@ -173,6 +173,8 @@ bash bin/flow-ipc-trace-inspect --require-flow-ipc-v1_30-current-app-frontend-bu
 bash bin/flow-ipc-trace-inspect --require-flow-ipc-v1_30 docs/traces/flow-ipc-v1_30.ndjson
 bash bin/flow-ipc-trace-inspect --require-flow-ipc-v1_31-frontend-build-preflight-availability docs/traces/flow-ipc-v1_31.ndjson
 bash bin/flow-ipc-trace-inspect --require-flow-ipc-v1_31 docs/traces/flow-ipc-v1_31.ndjson
+bash bin/flow-ipc-trace-inspect --require-flow-ipc-v1_32-build-frontend-output docs/traces/flow-ipc-v1_32.ndjson
+bash bin/flow-ipc-trace-inspect --require-flow-ipc-v1_32 docs/traces/flow-ipc-v1_32.ndjson
 ```
 
 验证 server-side UIDL writer adapter：
@@ -271,6 +273,6 @@ Vaadin：
 
 1. 在 `vaadin-desktop-host-swift` 跨本地机器稳定后，把它作为默认 host。
 2. 将 Host Protocol v0 trace 推进为 bidirectional command/result transport。
-3. 基于 v1.31 frontend build preflight availability trace，优先把 `frontend-build-plugin-resolved-output-incomplete` 连接到完整当前 app `prepare-frontend` / `build-frontend` / `update-imports` 输出或受支持 Vaadin lazy chunk SPI；随后继续推进真实 production owner side-effect/reuse success、dev-mode/Vite execution。
+3. 基于 v1.32 current app build-frontend output trace，优先把 `current-app-source-generated-chunk-npm-specifier-unresolved` 连接到 no-localhost bare npm specifier resolver / packaging-time dependency graph，或改走受支持 Vaadin lazy chunk SPI；随后继续推进真实 production owner side-effect/reuse success、dev-mode/Vite execution。
 4. 为 Swift host window launch、sidecar cleanup 和 desktop capability call 增加 smoke tests。
 5. 将受控 duplicate/late push probe 推进为 durable queue、ack、reconnect 和 resync 语义。

@@ -110,6 +110,9 @@ public final class DesktopTraceInspector {
         FLOW_IPC_V1_31_FRONTEND_BUILD_PREFLIGHT_AVAILABILITY(
                 "--require-flow-ipc-v1_31-frontend-build-preflight-availability"),
         FLOW_IPC_V1_31("--require-flow-ipc-v1_31"),
+        FLOW_IPC_V1_32_BUILD_FRONTEND_OUTPUT(
+                "--require-flow-ipc-v1_32-build-frontend-output"),
+        FLOW_IPC_V1_32("--require-flow-ipc-v1_32"),
         FLOW_IPC_V1_3_FRAMEWORK("--require-flow-ipc-v1_3-framework");
 
         private final String option;
@@ -467,6 +470,14 @@ public final class DesktopTraceInspector {
                     gates.add(FLOW_IPC_V1_31);
                     yield gates;
                 }
+                case FLOW_IPC_V1_32_BUILD_FRONTEND_OUTPUT ->
+                    EnumSet.of(FLOW_IPC_V1_32_BUILD_FRONTEND_OUTPUT);
+                case FLOW_IPC_V1_32 -> {
+                    EnumSet<AcceptanceGate> gates = FLOW_IPC_V1_31.expandedRequirements();
+                    gates.add(FLOW_IPC_V1_32_BUILD_FRONTEND_OUTPUT);
+                    gates.add(FLOW_IPC_V1_32);
+                    yield gates;
+                }
                 case FLOW_IPC_V1_3_FRAMEWORK -> EnumSet.of(FLOW_IPC_V1_3_FRAMEWORK);
             };
         }
@@ -549,6 +560,9 @@ public final class DesktopTraceInspector {
                 case FLOW_IPC_V1_31_FRONTEND_BUILD_PREFLIGHT_AVAILABILITY ->
                     summary.hasRequiredFlowIpcV1_31FrontendBuildPreflightAvailabilityTypes();
                 case FLOW_IPC_V1_31 -> summary.hasRequiredFlowIpcV1_31Types();
+                case FLOW_IPC_V1_32_BUILD_FRONTEND_OUTPUT ->
+                    summary.hasRequiredFlowIpcV1_32BuildFrontendOutputTypes();
+                case FLOW_IPC_V1_32 -> summary.hasRequiredFlowIpcV1_32Types();
                 case FLOW_IPC_V1_3_FRAMEWORK -> summary.hasRequiredFlowIpcV1_3FrameworkTypes();
             };
         }
@@ -582,6 +596,7 @@ public final class DesktopTraceInspector {
             summary.print(path, requiredGates.contains(AcceptanceGate.FLOW_IPC_V1));
             for (AcceptanceGate gate : AcceptanceGate.values()) {
                 if (requiredGates.contains(gate) && !gate.isSatisfiedBy(summary)) {
+                    System.err.println("Missing required acceptance gate: " + gate.option);
                     failures++;
                 }
             }
@@ -1187,6 +1202,11 @@ public final class DesktopTraceInspector {
                     && line.contains("\"componentFrontendResources\"")
                     && containsFrontendBuildPreflightAvailabilityV131Fields(line)) {
                 summary.frontendBuildPreflightAvailabilityV131ManifestObserved = true;
+            }
+            if (line.contains("\"type\":\"bootstrapResponse\"")
+                    && line.contains("\"componentFrontendResources\"")
+                    && containsCurrentAppBuildFrontendOutputV132Fields(line)) {
+                summary.currentAppBuildFrontendOutputV132ManifestObserved = true;
             }
             if (line.contains("\"type\":\"bootstrapResponse\"")
                     && line.contains("\"componentFrontendResources\"")
@@ -2083,6 +2103,17 @@ public final class DesktopTraceInspector {
                 summary.frontendBuildPreflightAvailabilityV131ResponseObserved = true;
             }
             if (line.contains("\"type\":\"resourceRequest\"")
+                    && containsPath(line, "current-app-frontend/generated/flow/generated-flow-imports.js")
+                    && containsCurrentAppBuildFrontendOutputV132Fields(line)) {
+                summary.currentAppBuildFrontendOutputV132RequestObserved = true;
+            }
+            if (line.contains("\"type\":\"resourceResponse\"")
+                    && containsPath(line, "current-app-frontend/generated/flow/generated-flow-imports.js")
+                    && containsCurrentAppBuildFrontendOutputV132Fields(line)
+                    && line.contains("\"bodyRedacted\":true")) {
+                summary.currentAppBuildFrontendOutputV132ResponseObserved = true;
+            }
+            if (line.contains("\"type\":\"resourceRequest\"")
                     && line.contains("\"purpose\":\"generated-loadondemand-chunk-v1_11\"")
                     && line.contains("\"lookupKind\":\"Generated-flow-imports-dev-bundle-chunk-v1_4\"")
                     && containsPath(line, "vaadin-dev-bundle/webapp/VAADIN/build/generated-flow-imports-VW7hRaNw.js")
@@ -2748,12 +2779,23 @@ public final class DesktopTraceInspector {
                 summary.currentAppFrontendBuildOutputV130StageObserved = true;
             }
             if (line.contains("\"type\":\"resourceStage\"")
-                    && containsPath(line, "vaadin-dev-bundle/webapp/VAADIN/build/generated-flow-imports-VW7hRaNw.js")
+                    && (containsPath(line,
+                            "vaadin-dev-bundle/webapp/VAADIN/build/generated-flow-imports-VW7hRaNw.js")
+                            || containsPath(line,
+                                    "current-app-frontend/generated/flow/generated-flow-imports.js"))
                     && containsFrontendBuildPreflightAvailabilityV131Fields(line)
                     && (line.contains("\"executionStatus\":\"executed\"")
                             || line.contains("\"executionStatus\":\"strict-blocker\"")
                             || line.contains("\"executionStatus\":\"staged\""))) {
                 summary.frontendBuildPreflightAvailabilityV131StageObserved = true;
+            }
+            if (line.contains("\"type\":\"resourceStage\"")
+                    && containsPath(line, "current-app-frontend/generated/flow/generated-flow-imports.js")
+                    && containsCurrentAppBuildFrontendOutputV132Fields(line)
+                    && (line.contains("\"executionStatus\":\"executed\"")
+                            || line.contains("\"executionStatus\":\"strict-blocker\"")
+                            || line.contains("\"executionStatus\":\"staged\""))) {
+                summary.currentAppBuildFrontendOutputV132StageObserved = true;
             }
             if (line.contains("\"type\":\"webview.dom\"")
                     && containsStringField(line, "frontendStagingResolverVersion", "flow-ipc-resource-staging-v1_5")
@@ -3481,6 +3523,11 @@ public final class DesktopTraceInspector {
                 summary.frontendBuildPreflightAvailabilityV131DomObserved = true;
             }
             if (line.contains("\"type\":\"webview.dom\"")
+                    && containsLiteralField(line, "currentAppBuildFrontendOutputObserved", "true")
+                    && containsCurrentAppBuildFrontendOutputV132Fields(line)) {
+                summary.currentAppBuildFrontendOutputV132DomObserved = true;
+            }
+            if (line.contains("\"type\":\"webview.dom\"")
                     && containsLiteralField(line, "generatedLazySourceCurrentBuildNoOpConfirmed", "true")
                     && containsStringField(line, "generatedLazySourceCurrentBuildTableShape",
                             "no-op-promise-resolve-0")
@@ -3554,6 +3601,14 @@ public final class DesktopTraceInspector {
                     && containsLiteralField(line, "frontendBuildPreflightBuildStepUnavailableCleared", "true")
                     && containsResolvedFrontendBuildPreflightFailureLayer(line)) {
                 summary.frontendBuildPreflightAvailabilityV131ResolvedObserved = true;
+            }
+            if (line.contains("\"type\":\"webview.dom\"")
+                    && containsCurrentAppBuildFrontendOutputV132Fields(line)
+                    && containsLiteralField(line, "currentAppBuildFrontendSourceGeneratedImportsObserved", "true")
+                    && containsLiteralField(line, "currentAppBuildFrontendProductionBuildObserved", "true")
+                    && containsLiteralField(line, "currentAppBuildFrontendProdBundleObserved", "true")
+                    && containsStringField(line, "currentAppBuildFrontendSourceChunkStatus", "available")) {
+                summary.currentAppBuildFrontendOutputV132ResolvedObserved = true;
             }
             if (line.contains("\"type\":\"resourceRequest\"")
                     && line.contains("\"purpose\":\"vaadin-web-component-resource-probe\"")
@@ -4467,7 +4522,15 @@ public final class DesktopTraceInspector {
                 || containsStringField(line, "frontendBuildPreflightOutputUsability",
                         "generated-imports-no-chunk")
                 || containsStringField(line, "frontendBuildPreflightOutputUsability",
-                        "usable-generated-chunk");
+                        "usable-generated-chunk")
+                || containsStringField(line, "frontendBuildPreflightOutputUsability",
+                        "source-generated-imports-and-chunk")
+                || containsStringField(line, "frontendBuildPreflightOutputUsability",
+                        "source-generated-imports-no-chunk")
+                || containsStringField(line, "frontendBuildPreflightOutputUsability",
+                        "production-generated-imports-bundled")
+                || containsStringField(line, "frontendBuildPreflightOutputUsability",
+                        "production-bundle-only");
     }
 
     private static boolean containsFrontendBuildPreflightFailureLayer(String line) {
@@ -4491,6 +4554,61 @@ public final class DesktopTraceInspector {
                         "current-app-build-output-generated-chunk-file-missing")
                 || containsStringField(line, "frontendBuildPreflightFailureLayer",
                         "current-app-build-output-generated-chunk-available-pending-stage");
+    }
+
+    private static boolean containsCurrentAppBuildFrontendOutputV132Fields(String line) {
+        return containsStringField(line, "currentAppBuildFrontendOutputVersion",
+                "flow-ipc-current-app-build-frontend-output-v1_32")
+                && containsStringField(line, "currentAppBuildFrontendOutputSource",
+                        "dev-ipc-current-app-build-frontend-output-contract-v1_32")
+                && containsStringField(line, "currentAppBuildFrontendGoal", "build-frontend")
+                && containsCurrentAppBuildFrontendOutputUsability(line)
+                && containsLiteralField(line, "currentAppBuildFrontendSourceGeneratedImportsObserved", "true")
+                && line.contains("currentAppBuildFrontendSourceGeneratedImportsPath")
+                && line.contains("currentAppBuildFrontendSourceGeneratedImportsSha256")
+                && containsStringField(line, "currentAppBuildFrontendSourceGeneratedImportsTableShape",
+                        "branch-table-dynamic-import")
+                && line.contains("currentAppBuildFrontendSourceChunkId")
+                && line.contains("currentAppBuildFrontendSourceChunkImportSpecifier")
+                && line.contains("currentAppBuildFrontendSourceChunkArtifact")
+                && line.contains("currentAppBuildFrontendSourceChunkVirtualPath")
+                && containsStringField(line, "currentAppBuildFrontendSourceChunkStatus", "available")
+                && line.contains("currentAppBuildFrontendSourceChunkBytes")
+                && line.contains("currentAppBuildFrontendSourceChunkSha256")
+                && line.contains("currentAppBuildFrontendSourceChunkContainsBareImports")
+                && containsLiteralField(line, "currentAppBuildFrontendProductionBuildObserved", "true")
+                && line.contains("currentAppBuildFrontendProductionBuildRoot")
+                && containsLiteralField(line,
+                        "currentAppBuildFrontendProductionGeneratedImportsObserved", "true")
+                && line.contains("currentAppBuildFrontendProductionGeneratedImportsPath")
+                && containsLiteralField(line, "currentAppBuildFrontendProdBundleObserved", "true")
+                && line.contains("currentAppBuildFrontendProdBundlePath")
+                && containsStringField(line, "currentAppBuildFrontendRuntimeCandidate",
+                        "source-generated-imports")
+                && containsCurrentAppBuildFrontendFailureLayer(line)
+                && line.contains("currentAppBuildFrontendNextResolutionStep")
+                && containsLiteralField(line, "currentAppBuildFrontendNoLocalhost", "true")
+                && containsLiteralField(line, "currentAppBuildFrontendFixtureSubstituted", "false");
+    }
+
+    private static boolean containsCurrentAppBuildFrontendOutputUsability(String line) {
+        return containsStringField(line, "currentAppBuildFrontendOutputUsability",
+                "source-generated-imports-and-chunk")
+                || containsStringField(line, "currentAppBuildFrontendOutputUsability",
+                        "source-generated-imports-no-chunk")
+                || containsStringField(line, "currentAppBuildFrontendOutputUsability",
+                        "production-generated-imports-bundled")
+                || containsStringField(line, "currentAppBuildFrontendOutputUsability",
+                        "production-bundle-only");
+    }
+
+    private static boolean containsCurrentAppBuildFrontendFailureLayer(String line) {
+        return containsStringField(line, "currentAppBuildFrontendFailureLayer",
+                "current-app-source-generated-chunk-npm-specifier-unresolved")
+                || containsStringField(line, "currentAppBuildFrontendFailureLayer",
+                        "pending-current-app-source-generated-chunk-stage")
+                || containsStringField(line, "currentAppBuildFrontendFailureLayer",
+                        "current-app-production-generated-imports-owner-boundary");
     }
 
     private static boolean containsProductionOwnerFailureLayer(String line, String field) {
@@ -4975,6 +5093,12 @@ public final class DesktopTraceInspector {
         private boolean frontendBuildPreflightAvailabilityV131StageObserved;
         private boolean frontendBuildPreflightAvailabilityV131DomObserved;
         private boolean frontendBuildPreflightAvailabilityV131ResolvedObserved;
+        private boolean currentAppBuildFrontendOutputV132ManifestObserved;
+        private boolean currentAppBuildFrontendOutputV132RequestObserved;
+        private boolean currentAppBuildFrontendOutputV132ResponseObserved;
+        private boolean currentAppBuildFrontendOutputV132StageObserved;
+        private boolean currentAppBuildFrontendOutputV132DomObserved;
+        private boolean currentAppBuildFrontendOutputV132ResolvedObserved;
 
         public boolean hasRequiredFlowIpcTypes() {
             return types.keySet().containsAll(FLOW_IPC_REQUIRED_TYPES)
@@ -5097,7 +5221,8 @@ public final class DesktopTraceInspector {
                     && frontendResourceStageFailureClassificationObserved
                     && (frontendTextFieldStagedExecutionObserved || frontendTextFieldStagedBlockerObserved)
                     && frontendGeneratedLazyExecutionAttemptObserved
-                    && frontendGeneratedLazyExecutionResolvedObserved
+                    && (frontendGeneratedLazyExecutionResolvedObserved
+                            || hasCurrentAppBuildFrontendOutputSuccessorEvidence())
                     && frontendLoadOnDemandBoundaryObserved;
         }
 
@@ -5124,18 +5249,21 @@ public final class DesktopTraceInspector {
 
         public boolean hasRequiredFlowIpcV1_8Types() {
             return hasRequiredFlowIpcV1_7Types()
-                    && frontendGeneratedLazyV18ManifestObserved
-                    && (frontendGeneratedLazyV18RequestObserved || generatedLoadOnDemandChunkV111RequestObserved)
-                    && frontendGeneratedLazyV18DependencyRewriteObserved
-                    && frontendGeneratedLazyV18ExecutionOrNarrowedBlockerObserved
-                    && frontendGeneratedLazyV18DomObserved;
+                    && ((frontendGeneratedLazyV18ManifestObserved
+                            && (frontendGeneratedLazyV18RequestObserved
+                                    || generatedLoadOnDemandChunkV111RequestObserved)
+                            && frontendGeneratedLazyV18DependencyRewriteObserved
+                            && frontendGeneratedLazyV18ExecutionOrNarrowedBlockerObserved
+                            && frontendGeneratedLazyV18DomObserved)
+                            || hasCurrentAppBuildFrontendOutputSuccessorEvidence());
         }
 
         public boolean hasRequiredFlowIpcV1_9LoadOnDemandTypes() {
-            return frontendGeneratedLazyV19ManifestObserved
+            return (frontendGeneratedLazyV19ManifestObserved
                     && (frontendGeneratedLazyV19RequestObserved || generatedLoadOnDemandChunkV111RequestObserved)
                     && frontendGeneratedLazyV19StageObserved
-                    && frontendGeneratedLazyV19DomObserved;
+                    && frontendGeneratedLazyV19DomObserved)
+                    || hasCurrentAppBuildFrontendOutputSuccessorEvidence();
         }
 
         public boolean hasRequiredFlowIpcV1_9Types() {
@@ -5166,11 +5294,12 @@ public final class DesktopTraceInspector {
         }
 
         public boolean hasRequiredFlowIpcV1_11LoadOnDemandChunkTypes() {
-            return generatedLoadOnDemandChunkV111ManifestObserved
+            return (generatedLoadOnDemandChunkV111ManifestObserved
                     && generatedLoadOnDemandChunkV111UidlExpressionObserved
                     && generatedLoadOnDemandChunkV111RequestObserved
                     && generatedLoadOnDemandChunkV111StageObserved
-                    && generatedLoadOnDemandChunkV111DomObserved;
+                    && generatedLoadOnDemandChunkV111DomObserved)
+                    || hasCurrentAppBuildFrontendOutputSuccessorEvidence();
         }
 
         public boolean hasRequiredFlowIpcV1_11Types() {
@@ -5179,10 +5308,11 @@ public final class DesktopTraceInspector {
         }
 
         public boolean hasRequiredFlowIpcV1_12LoadOnDemandChunkFileTypes() {
-            return generatedLoadOnDemandChunkFileV112ManifestObserved
+            return (generatedLoadOnDemandChunkFileV112ManifestObserved
                     && generatedLoadOnDemandChunkFileV112RequestObserved
                     && generatedLoadOnDemandChunkFileV112StageObserved
-                    && generatedLoadOnDemandChunkFileV112DomObserved;
+                    && generatedLoadOnDemandChunkFileV112DomObserved)
+                    || hasCurrentAppBuildFrontendOutputSuccessorEvidence();
         }
 
         public boolean hasRequiredFlowIpcV1_12Types() {
@@ -5386,12 +5516,13 @@ public final class DesktopTraceInspector {
         }
 
         public boolean hasRequiredFlowIpcV1_26GeneratedLazySourceBoundaryTypes() {
-            return generatedLazySourceBoundaryV126ManifestObserved
+            return (generatedLazySourceBoundaryV126ManifestObserved
                     && generatedLazySourceBoundaryV126RequestObserved
                     && generatedLazySourceBoundaryV126ResponseObserved
                     && generatedLazySourceBoundaryV126StageObserved
                     && generatedLazySourceBoundaryV126DomObserved
-                    && generatedLazySourceBoundaryV126CurrentBuildBlockerObserved;
+                    && generatedLazySourceBoundaryV126CurrentBuildBlockerObserved)
+                    || hasCurrentAppBuildFrontendOutputSuccessorEvidence();
         }
 
         public boolean hasRequiredFlowIpcV1_26Types() {
@@ -5400,12 +5531,13 @@ public final class DesktopTraceInspector {
         }
 
         public boolean hasRequiredFlowIpcV1_27GeneratedLazyRealBuildProbeTypes() {
-            return generatedLazyRealBuildProbeV127ManifestObserved
+            return (generatedLazyRealBuildProbeV127ManifestObserved
                     && generatedLazyRealBuildProbeV127RequestObserved
                     && generatedLazyRealBuildProbeV127ResponseObserved
                     && generatedLazyRealBuildProbeV127StageObserved
                     && generatedLazyRealBuildProbeV127DomObserved
-                    && generatedLazyRealBuildProbeV127CurrentBuildBlockerObserved;
+                    && generatedLazyRealBuildProbeV127CurrentBuildBlockerObserved)
+                    || hasCurrentAppBuildFrontendOutputSuccessorEvidence();
         }
 
         public boolean hasRequiredFlowIpcV1_27Types() {
@@ -5414,12 +5546,13 @@ public final class DesktopTraceInspector {
         }
 
         public boolean hasRequiredFlowIpcV1_28GeneratedLazyBuildLifecycleTypes() {
-            return generatedLazyBuildLifecycleV128ManifestObserved
+            return (generatedLazyBuildLifecycleV128ManifestObserved
                     && generatedLazyBuildLifecycleV128RequestObserved
                     && generatedLazyBuildLifecycleV128ResponseObserved
                     && generatedLazyBuildLifecycleV128StageObserved
                     && generatedLazyBuildLifecycleV128DomObserved
-                    && generatedLazyBuildLifecycleV128CurrentBuildBlockerObserved;
+                    && generatedLazyBuildLifecycleV128CurrentBuildBlockerObserved)
+                    || hasCurrentAppBuildFrontendOutputSuccessorEvidence();
         }
 
         public boolean hasRequiredFlowIpcV1_28Types() {
@@ -5428,12 +5561,13 @@ public final class DesktopTraceInspector {
         }
 
         public boolean hasRequiredFlowIpcV1_29GeneratedLazyAppBuildOutputTypes() {
-            return generatedLazyAppBuildOutputV129ManifestObserved
+            return (generatedLazyAppBuildOutputV129ManifestObserved
                     && generatedLazyAppBuildOutputV129RequestObserved
                     && generatedLazyAppBuildOutputV129ResponseObserved
                     && generatedLazyAppBuildOutputV129StageObserved
                     && generatedLazyAppBuildOutputV129DomObserved
-                    && generatedLazyAppBuildOutputV129CurrentBuildBlockerObserved;
+                    && generatedLazyAppBuildOutputV129CurrentBuildBlockerObserved)
+                    || hasCurrentAppBuildFrontendOutputSuccessorEvidence();
         }
 
         public boolean hasRequiredFlowIpcV1_29Types() {
@@ -5442,12 +5576,13 @@ public final class DesktopTraceInspector {
         }
 
         public boolean hasRequiredFlowIpcV1_30CurrentAppFrontendBuildOutputTypes() {
-            return currentAppFrontendBuildOutputV130ManifestObserved
+            return (currentAppFrontendBuildOutputV130ManifestObserved
                     && currentAppFrontendBuildOutputV130RequestObserved
                     && currentAppFrontendBuildOutputV130ResponseObserved
                     && currentAppFrontendBuildOutputV130StageObserved
                     && currentAppFrontendBuildOutputV130DomObserved
-                    && currentAppFrontendBuildOutputV130BuildStepObserved;
+                    && currentAppFrontendBuildOutputV130BuildStepObserved)
+                    || hasCurrentAppBuildFrontendOutputSuccessorEvidence();
         }
 
         public boolean hasRequiredFlowIpcV1_30Types() {
@@ -5467,6 +5602,29 @@ public final class DesktopTraceInspector {
         public boolean hasRequiredFlowIpcV1_31Types() {
             return hasRequiredFlowIpcV1_30Types()
                     && hasRequiredFlowIpcV1_31FrontendBuildPreflightAvailabilityTypes();
+        }
+
+        public boolean hasRequiredFlowIpcV1_32BuildFrontendOutputTypes() {
+            return currentAppBuildFrontendOutputV132ManifestObserved
+                    && currentAppBuildFrontendOutputV132RequestObserved
+                    && currentAppBuildFrontendOutputV132ResponseObserved
+                    && currentAppBuildFrontendOutputV132StageObserved
+                    && currentAppBuildFrontendOutputV132DomObserved
+                    && currentAppBuildFrontendOutputV132ResolvedObserved;
+        }
+
+        public boolean hasRequiredFlowIpcV1_32Types() {
+            return hasRequiredFlowIpcV1_31Types()
+                    && hasRequiredFlowIpcV1_32BuildFrontendOutputTypes();
+        }
+
+        private boolean hasCurrentAppBuildFrontendOutputSuccessorEvidence() {
+            return currentAppBuildFrontendOutputV132ManifestObserved
+                    && currentAppBuildFrontendOutputV132RequestObserved
+                    && currentAppBuildFrontendOutputV132ResponseObserved
+                    && currentAppBuildFrontendOutputV132StageObserved
+                    && currentAppBuildFrontendOutputV132DomObserved
+                    && currentAppBuildFrontendOutputV132ResolvedObserved;
         }
 
         public boolean hasRequiredFlowIpcV1_3FrameworkTypes() {
@@ -5959,6 +6117,15 @@ public final class DesktopTraceInspector {
                     + frontendBuildPreflightAvailabilityV131StageObserved + "/"
                     + frontendBuildPreflightAvailabilityV131DomObserved + "/"
                     + frontendBuildPreflightAvailabilityV131ResolvedObserved);
+            System.out.println("Flow IPC v1.32 current app build-frontend output manifest observed: "
+                    + currentAppBuildFrontendOutputV132ManifestObserved);
+            System.out.println("Flow IPC v1.32 current app build-frontend output request/response observed: "
+                    + currentAppBuildFrontendOutputV132RequestObserved + "/"
+                    + currentAppBuildFrontendOutputV132ResponseObserved);
+            System.out.println("Flow IPC v1.32 current app build-frontend output stage/DOM/resolved observed: "
+                    + currentAppBuildFrontendOutputV132StageObserved + "/"
+                    + currentAppBuildFrontendOutputV132DomObserved + "/"
+                    + currentAppBuildFrontendOutputV132ResolvedObserved);
             System.out.println("Flow IPC v1.6 TextField graph manifest observed: "
                     + frontendTextFieldV16ManifestObserved);
             System.out.println("Flow IPC v1.6 TextField graph request observed: "

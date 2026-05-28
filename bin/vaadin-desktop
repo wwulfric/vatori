@@ -48,16 +48,41 @@ single_line_log_summary() {
 classify_frontend_build_output_usability() {
   local module_dir="$ROOT/$MODULE"
   local target_dir="$module_dir/target"
+  local source_generated_dir="$module_dir/src/main/frontend/generated/flow"
   if [[ ! -d "$target_dir" ]]; then
+    if [[ -f "$source_generated_dir/generated-flow-imports.js" ]]; then
+      if find "$source_generated_dir/chunks" -type f -name 'chunk-*.js' 2>/dev/null | grep -q .; then
+        printf '%s' "source-generated-imports-and-chunk"
+      else
+        printf '%s' "source-generated-imports-no-chunk"
+      fi
+      return 0
+    fi
     printf '%s' "output-missing"
+    return 0
+  fi
+  if [[ -f "$source_generated_dir/generated-flow-imports.js" ]]; then
+    if find "$source_generated_dir/chunks" -type f -name 'chunk-*.js' 2>/dev/null | grep -q .; then
+      printf '%s' "source-generated-imports-and-chunk"
+    else
+      printf '%s' "source-generated-imports-no-chunk"
+    fi
     return 0
   fi
   if find "$target_dir" -type f -path '*/chunks/chunk-*.js' 2>/dev/null | grep -q .; then
     printf '%s' "usable-generated-chunk"
     return 0
   fi
+  if find "$target_dir/classes/META-INF/VAADIN/webapp/VAADIN/build" -type f -name 'generated-flow-imports*.js' 2>/dev/null | grep -q .; then
+    printf '%s' "production-generated-imports-bundled"
+    return 0
+  fi
   if find "$target_dir" -type f -name 'generated-flow-imports*.js' 2>/dev/null | grep -q .; then
     printf '%s' "generated-imports-no-chunk"
+    return 0
+  fi
+  if [[ -f "$module_dir/src/main/bundles/prod.bundle" ]]; then
+    printf '%s' "production-bundle-only"
     return 0
   fi
   if [[ -d "$module_dir/src/main/frontend/generated" ]] \
@@ -83,10 +108,11 @@ run_flow_ipc_frontend_build_preflight() {
   fi
   export VAADIN_DESKTOP_FLOW_IPC_FRONTEND_BUILD_V1_30=1
   export VAADIN_DESKTOP_FLOW_IPC_FRONTEND_BUILD_V1_31=1
+  export VAADIN_DESKTOP_FLOW_IPC_FRONTEND_BUILD_V1_32=1
   export VAADIN_DESKTOP_FLOW_IPC_FRONTEND_BUILD_STEP_STATUS="skipped"
   export VAADIN_DESKTOP_FLOW_IPC_FRONTEND_BUILD_STEP_EXIT_CODE="-1"
   export VAADIN_DESKTOP_FLOW_IPC_FRONTEND_BUILD_STEP_DURATION_MILLIS="0"
-  export VAADIN_DESKTOP_FLOW_IPC_FRONTEND_BUILD_OUTPUT_ROOTS="$(redact_for_trace "$MODULE/target,$MODULE/frontend/generated,$MODULE/target/frontend/generated,$MODULE/target/classes/META-INF/VAADIN/build")"
+  export VAADIN_DESKTOP_FLOW_IPC_FRONTEND_BUILD_OUTPUT_ROOTS="$(redact_for_trace "$MODULE/src/main/frontend/generated,$MODULE/src/main/bundles,$MODULE/target,$MODULE/target/frontend/generated,$MODULE/target/classes/META-INF/VAADIN/webapp/VAADIN/build,$MODULE/target/classes/META-INF/VAADIN/config")"
   export VAADIN_DESKTOP_FLOW_IPC_FRONTEND_BUILD_STEP_COMMAND=""
   export VAADIN_DESKTOP_FLOW_IPC_FRONTEND_BUILD_STEP_SUMMARY=""
   export VAADIN_DESKTOP_FLOW_IPC_FRONTEND_BUILD_STDOUT_LOG=""
@@ -97,13 +123,21 @@ run_flow_ipc_frontend_build_preflight() {
   export VAADIN_DESKTOP_FLOW_IPC_FRONTEND_BUILD_PLUGIN_RESOLUTION_STATUS="not-attempted"
   export VAADIN_DESKTOP_FLOW_IPC_FRONTEND_BUILD_GOAL_RESULT="skipped"
   export VAADIN_DESKTOP_FLOW_IPC_FRONTEND_BUILD_OUTPUT_USABILITY="not-inspected"
+  local requested_goal="${VAADIN_DESKTOP_FLOW_IPC_FRONTEND_BUILD_GOAL:-prepare-frontend}"
+  if [[ "$requested_goal" != "prepare-frontend" && "$requested_goal" != "build-frontend" ]]; then
+    requested_goal="prepare-frontend"
+  fi
+  export VAADIN_DESKTOP_FLOW_IPC_FRONTEND_BUILD_GOAL_NAME="$requested_goal"
+  export VAADIN_DESKTOP_FLOW_IPC_FRONTEND_BUILD_PRODUCTION_MODE="false"
+  export VAADIN_DESKTOP_FLOW_IPC_FRONTEND_BUILD_FORCE_PRODUCTION_BUILD="false"
+  export VAADIN_DESKTOP_FLOW_IPC_FRONTEND_BUILD_IGNORE_VERSION_CHECKS="false"
   if [[ "${VAADIN_DESKTOP_FLOW_IPC_PREPARE_FRONTEND:-}" != "1" ]]; then
     return 0
   fi
 
   local build_dir="$ROOT/.build/flow-ipc-frontend-build"
-  local stdout_log="$build_dir/prepare-frontend.out.log"
-  local stderr_log="$build_dir/prepare-frontend.err.log"
+  local stdout_log="$build_dir/$requested_goal.out.log"
+  local stderr_log="$build_dir/$requested_goal.err.log"
   mkdir -p "$build_dir"
   : > "$stdout_log"
   : > "$stderr_log"
@@ -131,9 +165,18 @@ run_flow_ipc_frontend_build_preflight() {
     return 0
   fi
 
-  local goal="com.vaadin:vaadin-maven-plugin:${vaadin_version}:prepare-frontend"
+  local goal="com.vaadin:vaadin-maven-plugin:${vaadin_version}:${requested_goal}"
   export VAADIN_DESKTOP_FLOW_IPC_FRONTEND_BUILD_PLUGIN_COORDINATES="com.vaadin:vaadin-maven-plugin:${vaadin_version}"
-  local cmd=(mvn "$maven_mode" "-Dmaven.repo.local=$MAVEN_REPO" -f "$MODULE_POM" -DskipTests "$goal")
+  local cmd=(mvn "$maven_mode" "-Dmaven.repo.local=$MAVEN_REPO" -f "$MODULE_POM" -DskipTests)
+  if [[ "$requested_goal" == "build-frontend" ]]; then
+    export VAADIN_DESKTOP_FLOW_IPC_FRONTEND_BUILD_PRODUCTION_MODE="true"
+    export VAADIN_DESKTOP_FLOW_IPC_FRONTEND_BUILD_FORCE_PRODUCTION_BUILD="true"
+    export VAADIN_DESKTOP_FLOW_IPC_FRONTEND_BUILD_IGNORE_VERSION_CHECKS="true"
+    cmd+=("-Dvaadin.productionMode=true")
+    cmd+=("-Dvaadin.force.production.build=true")
+    cmd+=("-Dfrontend.ignore.version.checks=true")
+  fi
+  cmd+=("$goal")
   local redacted_command
   redacted_command="$(printf '%q ' "${cmd[@]}")"
   redacted_command="$(redact_for_trace "$redacted_command")"
@@ -246,6 +289,11 @@ PLIST
     forward_env_if_set "VAADIN_DESKTOP_FLOW_IPC_PREPARE_FRONTEND"
     forward_env_if_set "VAADIN_DESKTOP_FLOW_IPC_FRONTEND_BUILD_V1_30"
     forward_env_if_set "VAADIN_DESKTOP_FLOW_IPC_FRONTEND_BUILD_V1_31"
+    forward_env_if_set "VAADIN_DESKTOP_FLOW_IPC_FRONTEND_BUILD_V1_32"
+    forward_env_if_set "VAADIN_DESKTOP_FLOW_IPC_FRONTEND_BUILD_GOAL_NAME"
+    forward_env_if_set "VAADIN_DESKTOP_FLOW_IPC_FRONTEND_BUILD_PRODUCTION_MODE"
+    forward_env_if_set "VAADIN_DESKTOP_FLOW_IPC_FRONTEND_BUILD_FORCE_PRODUCTION_BUILD"
+    forward_env_if_set "VAADIN_DESKTOP_FLOW_IPC_FRONTEND_BUILD_IGNORE_VERSION_CHECKS"
     forward_env_if_set "VAADIN_DESKTOP_FLOW_IPC_FRONTEND_BUILD_STEP_COMMAND"
     forward_env_if_set "VAADIN_DESKTOP_FLOW_IPC_FRONTEND_BUILD_STEP_EXIT_CODE"
     forward_env_if_set "VAADIN_DESKTOP_FLOW_IPC_FRONTEND_BUILD_STEP_STATUS"

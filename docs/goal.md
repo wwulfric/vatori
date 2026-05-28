@@ -36,22 +36,23 @@ v0/v1 runtime 切片走向可产品化桌面框架的最终完成状态。
 - `docs/goal-1_28.md`：Generated Lazy Build Lifecycle Trace，已完成。
 - `docs/goal-1_29.md`：Generated Lazy App Build Output Connection，已完成。
 - `docs/goal-1_30.md`：Current App Frontend Build Output Materialization，已完成。
+- `docs/goal-1_31.md`：Frontend Build Preflight Availability，已完成。
+- `docs/goal-1_32.md`：Current App Build-Frontend Output Contract，已完成。
 
-当前已完成到 `docs/goal-1_30.md`。v1.30 已把 v1.29 定位出的
-`app-build-output-missing-generated-imports` 继续推进到当前 app frontend build output
-materialization 证据：`dev-ipc` 可通过
-`VAADIN_DESKTOP_FLOW_IPC_PREPARE_FRONTEND=1` 运行可审计 build preflight，trace 在
+当前已完成到 `docs/goal-1_32.md`。v1.31 先把 v1.30 的 offline plugin blocker 推进到
+explicit online/local-repo preflight：Vaadin Maven plugin 能解析并运行
+`prepare-frontend`，但输出仍是 scaffold。v1.32 进一步把 blocker 推进到 full
+`build-frontend` 输出层：当前 smoke app 已产生真实
+`src/main/frontend/generated/flow/generated-flow-imports.js`、`chunks/chunk-*.js`、
+production webapp build output 和 `src/main/bundles/prod.bundle`，并通过 IPC
 manifest、`resourceRequest`、`resourceResponse`、`resourceStage` 和 `webview.dom`
-中记录 build command、exit/status、stdout/stderr log、output roots、current app
-inventory、generated imports candidates、runtime source、chunk status、failure layer
-和 next step。当前本机离线验收结果收敛为 `build-step-unavailable` /
-`vaadin-frontend-build-step-unavailable`：Vaadin Maven plugin
-`com.vaadin:vaadin-maven-plugin:25.1.5` 不在项目本地 Maven repo 中，offline
-preflight 不能 materialize 当前 app generated imports/chunks。真实 generated chunk、
-production owner-owned runtime 和 dev-mode/Vite parity 仍作为真实 app/build blocker
-保留。
+记录为当前 app generated-lazy runtime candidate。当前 accepted blocker 是
+`current-app-source-generated-chunk-npm-specifier-unresolved`：真实 chunk 文件存在且已进入
+no-localhost resolver/staging 候选路径，但 chunk body 中的 bare npm specifier 尚未由
+runtime/packaging resolver 处理。真实 generated chunk side effect、production owner-owned
+runtime 和 dev-mode/Vite parity 仍作为真实 app/build blocker 保留。
 
-后续阶段应继续以 `docs/goal-1_30.md` 等文件拆分，
+后续阶段应继续以 `docs/goal-1_32.md` 等文件拆分，
 每个阶段只拿走本长期目标中的一个可评审切片。不要把本文件改写成短期任务清单；
 它是长期北极星和完成度账本。
 
@@ -400,6 +401,17 @@ production owner-owned runtime 和 dev-mode/Vite parity 仍作为真实 app/buil
   和 failure layer `frontend-build-plugin-resolved-output-incomplete`。v1.31 不是 real generated
   chunk parity；它证明 Maven plugin availability 不再是当前 blocker，剩余缺口在 full Vaadin
   frontend build/package 输出或受支持 lazy chunk SPI。
+- v1.32 已把 v1.31 的 scaffold-only preflight blocker 推进到 full
+  `build-frontend` output contract：`VAADIN_DESKTOP_FLOW_IPC_FRONTEND_BUILD_GOAL=build-frontend`
+  让 `dev-ipc` 显式运行 Vaadin full frontend build，Java manifest / resource response、
+  Swift `resourceRequest` / `resourceResponse` / `resourceStage` / `webview.dom` 和 inspector gate
+  统一记录 `currentAppBuildFrontendOutputVersion=flow-ipc-current-app-build-frontend-output-v1_32`、
+  selected goal、production flags、output usability、source generated imports/chunk、production
+  generated imports、`prod.bundle`、runtime candidate、failure layer 和 next step。当前验收结果是
+  source generated imports/chunk 和 production output 都可审计，accepted blocker 收敛为
+  `current-app-source-generated-chunk-npm-specifier-unresolved`。v1.32 不是 generated chunk parity；
+  它证明当前 app build output 已经进入 no-localhost resolver/staging 候选路径，剩余缺口在
+  chunk 内 bare npm specifier resolver、production owner side-effect 或受支持 Vaadin build SPI。
 - 当前 app/build 的真实 generated/lazy chunk file parity、production owner import/side-effect success
   和 dev-mode/Vite execution 仍是明确 blocker，不计入最终完成。
 
@@ -496,11 +508,10 @@ production owner-owned runtime 和 dev-mode/Vite parity 仍作为真实 app/buil
 
 - 基于 v1.22 generated lazy chunk-file positive fixture、v1.23 production owner positive
   runtime fixture、v1.24 closure decision contract、v1.25 packaged frontend baseline 和
-  v1.26 generated lazy source boundary、v1.27 generated lazy real build probe、v1.28 build
-  lifecycle trace、v1.29 app build output discovery/fallback contract，继续让当前 app/build
-  产生真实 generated lazy chunk file，连接 scanner output 到 generated-flow-imports 输出，
-  接入受支持 Vaadin lazy chunk SPI，或把真实 production bundle owned execution /
-  dev-mode/Vite execution 从 partial/blocker 推进到真实可执行路径。
+  v1.26-v1.32 当前 app generated/build-frontend output contracts，继续让当前 app/build 产生的
+  真实 generated lazy chunk file 完成执行：连接 chunk 内 bare npm specifier 到 no-localhost
+  resolver / packaging-time dependency graph，接入受支持 Vaadin lazy chunk SPI，或把真实
+  production bundle owned execution / dev-mode/Vite execution 从 partial/blocker 推进到真实可执行路径。
 - 真实 app/build 的 generated/lazy `Flow.loadOnDemand` chunk-file parity，不再停在真实
   generated-flow-imports no-op / missing chunk file blocker，也不只依赖 repository fixture。
 - Production bundle owner import/side-effect success、chunk side-effect ownership、
@@ -531,12 +542,14 @@ production owner-owned runtime 和 dev-mode/Vite parity 仍作为真实 app/buil
 
 ## 当前建议的下一阶段
 
-v1.30 已完成 Current App Frontend Build Output Materialization。下一阶段建议优先把 v1.30
-定位出的 `build-step-unavailable` / `vaadin-frontend-build-step-unavailable` blocker 推进到
-可执行 Vaadin frontend build 输出，或改走受支持 Vaadin lazy chunk SPI：
+v1.32 已完成 Current App Build-Frontend Output Contract。下一阶段建议优先把 v1.32
+定位出的 `current-app-source-generated-chunk-npm-specifier-unresolved` blocker 推进到
+真实当前 app generated chunk execution，或改走 production owner / 受支持 Vaadin lazy chunk SPI：
 
-- 让当前 smoke/framework build 产生真实 generated lazy chunk file，或让 dev-ipc
-  runtime 使用当前 app 的 `prepare-frontend` / `build-frontend` / `update-imports` 输出。
+- 为当前 app source generated chunk 建立 no-localhost bare npm specifier resolver / package graph
+  staging，证明 chunk callback 和 side effect 能在 WebView 中执行。
+- 评估 production generated imports / `prod.bundle` 是否应成为 primary runtime candidate，
+  或是否需要 packaging-time staged frontend artifact 作为 v0 支持路径。
 - 接入/评估受支持 Vaadin lazy chunk SPI，把 v1.22 fixture path 推进为真实 app/build path。
 - 真实 production owner side-effect / owner-owned runtime reuse success。
 - Dev-mode/Vite graph execution 或可靠替代模式。

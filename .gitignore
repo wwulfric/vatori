@@ -10,3 +10,4 @@ target/
 vaadin-desktop-host-tauri/
 **/src/main/frontend/generated/
 **/src/main/frontend/index.html
+**/src/main/bundles/

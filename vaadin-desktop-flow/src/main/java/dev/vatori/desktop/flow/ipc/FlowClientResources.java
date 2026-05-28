@@ -542,6 +542,18 @@ final class FlowClientResources {
             "current-app-production-runtime-ownership-handoff-pending";
     private static final String CURRENT_APP_PRODUCTION_RUNTIME_OWNERSHIP_NEXT_STEP =
             "connect the current app production runtime candidate to owner import, side-effect and component reuse, or replace the handoff with a supported Vaadin build SPI";
+    private static final String CURRENT_APP_PRODUCTION_OWNER_IMPORT_VERSION =
+            "flow-ipc-current-app-production-owner-import-v1_36";
+    private static final String CURRENT_APP_PRODUCTION_OWNER_IMPORT_SOURCE =
+            "current-app-production-runtime-ownership-handoff-v1_35";
+    private static final String CURRENT_APP_PRODUCTION_OWNER_IMPORT_POLICY =
+            "owner-first-current-app-production-entry-import-v1_36";
+    private static final String CURRENT_APP_PRODUCTION_OWNER_IMPORT_EXPECTED_SIDE_EFFECTS =
+            "window.Vaadin,window.Vaadin.Flow,window.Vaadin.Flow.loadOnDemand,customElements:vaadin-vertical-layout|vaadin-text-field|vaadin-checkbox|vaadin-select";
+    private static final String CURRENT_APP_PRODUCTION_OWNER_IMPORT_FAILURE_LAYER =
+            "current-app-production-owner-import-side-effect-pending";
+    private static final String CURRENT_APP_PRODUCTION_OWNER_IMPORT_NEXT_STEP =
+            "make the current app production owner import expose reusable Flow/component side effects, or switch this handoff to a supported Vaadin build/runtime SPI";
     private static final List<String> PRODUCTION_RUNTIME_OWNER_DEPENDENCY_ARTIFACTS = List.of(
             DEV_BUNDLE_COMMONJS_JS,
             DEV_BUNDLE_INDEX_HTML_JS,
@@ -2273,6 +2285,44 @@ final class FlowClientResources {
                 handoffReady ? CURRENT_APP_PRODUCTION_RUNTIME_OWNERSHIP_FAILURE_LAYER : evidence.failureLayer());
         attributes.put("currentAppProductionRuntimeOwnershipNextResolutionStep",
                 CURRENT_APP_PRODUCTION_RUNTIME_OWNERSHIP_NEXT_STEP);
+        attributes.putAll(currentAppProductionOwnerImportAttributes(evidence, handoffReady));
+        return attributes;
+    }
+
+    private static Map<String, Object> currentAppProductionOwnerImportAttributes(
+            CurrentAppBuildFrontendOutputEvidence evidence, boolean handoffReady) {
+        Map<String, Object> attributes = new LinkedHashMap<>();
+        attributes.put("currentAppProductionOwnerImportVersion",
+                CURRENT_APP_PRODUCTION_OWNER_IMPORT_VERSION);
+        attributes.put("currentAppProductionOwnerImportSource",
+                CURRENT_APP_PRODUCTION_OWNER_IMPORT_SOURCE);
+        attributes.put("currentAppProductionOwnerImportPolicy",
+                CURRENT_APP_PRODUCTION_OWNER_IMPORT_POLICY);
+        attributes.put("currentAppProductionOwnerImportCandidate",
+                CURRENT_APP_PRODUCTION_RUNTIME_OWNERSHIP_PRIMARY_CANDIDATE);
+        attributes.put("currentAppProductionOwnerImportArtifact",
+                evidence.productionEntryScriptVirtualPath());
+        attributes.put("currentAppProductionOwnerImportSupportArtifact",
+                evidence.sourceGeneratedImportsRootProductionSupportArtifact());
+        attributes.put("currentAppProductionOwnerImportDependencyPaths",
+                evidence.productionBuildJsVirtualPaths());
+        attributes.put("currentAppProductionOwnerImportExpectedSideEffects",
+                CURRENT_APP_PRODUCTION_OWNER_IMPORT_EXPECTED_SIDE_EFFECTS);
+        attributes.put("currentAppProductionOwnerImportPhase",
+                "after-current-app-generated-root-execution");
+        attributes.put("currentAppProductionOwnerImportHandoffReady", handoffReady);
+        attributes.put("currentAppProductionOwnerImportAttempted", false);
+        attributes.put("currentAppProductionOwnerImported", false);
+        attributes.put("currentAppProductionOwnerImportOverCustomScheme", false);
+        attributes.put("currentAppProductionOwnerImportDependencyStageCount", 0);
+        attributes.put("currentAppProductionOwnerImportSideEffectSatisfied", false);
+        attributes.put("currentAppProductionOwnerImportReuseSatisfied", false);
+        attributes.put("currentAppProductionOwnerImportNoLocalhost", true);
+        attributes.put("currentAppProductionOwnerImportFixtureSubstituted", false);
+        attributes.put("currentAppProductionOwnerImportFailureLayer",
+                handoffReady ? CURRENT_APP_PRODUCTION_OWNER_IMPORT_FAILURE_LAYER : evidence.failureLayer());
+        attributes.put("currentAppProductionOwnerImportNextResolutionStep",
+                CURRENT_APP_PRODUCTION_OWNER_IMPORT_NEXT_STEP);
         return attributes;
     }
 

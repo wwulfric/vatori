@@ -2477,6 +2477,35 @@ final class WebViewHost: NSObject, NSApplicationDelegate, NSWindowDelegate, WKNa
           currentAppProductionRuntimeOwnershipOwnerReuseSatisfied: !!(window.VaadinDesktopIpcDiagnostics && window.VaadinDesktopIpcDiagnostics.currentAppProductionRuntimeOwnershipOwnerReuseSatisfied),
           currentAppProductionRuntimeOwnershipNoLocalhost: !!(window.VaadinDesktopIpcDiagnostics && window.VaadinDesktopIpcDiagnostics.currentAppProductionRuntimeOwnershipNoLocalhost),
           currentAppProductionRuntimeOwnershipFixtureSubstituted: !!(window.VaadinDesktopIpcDiagnostics && window.VaadinDesktopIpcDiagnostics.currentAppProductionRuntimeOwnershipFixtureSubstituted),
+          currentAppProductionOwnerImportObserved: !!(window.VaadinDesktopIpcDiagnostics && window.VaadinDesktopIpcDiagnostics.currentAppProductionOwnerImportObserved),
+          currentAppProductionOwnerImportVersion: window.VaadinDesktopIpcDiagnostics ? window.VaadinDesktopIpcDiagnostics.currentAppProductionOwnerImportVersion : "",
+          currentAppProductionOwnerImportSource: window.VaadinDesktopIpcDiagnostics ? window.VaadinDesktopIpcDiagnostics.currentAppProductionOwnerImportSource : "",
+          currentAppProductionOwnerImportPolicy: window.VaadinDesktopIpcDiagnostics ? window.VaadinDesktopIpcDiagnostics.currentAppProductionOwnerImportPolicy : "",
+          currentAppProductionOwnerImportCandidate: window.VaadinDesktopIpcDiagnostics ? window.VaadinDesktopIpcDiagnostics.currentAppProductionOwnerImportCandidate : "",
+          currentAppProductionOwnerImportArtifact: window.VaadinDesktopIpcDiagnostics ? window.VaadinDesktopIpcDiagnostics.currentAppProductionOwnerImportArtifact : "",
+          currentAppProductionOwnerImportSupportArtifact: window.VaadinDesktopIpcDiagnostics ? window.VaadinDesktopIpcDiagnostics.currentAppProductionOwnerImportSupportArtifact : "",
+          currentAppProductionOwnerImportDependencyPaths: window.VaadinDesktopIpcDiagnostics ? window.VaadinDesktopIpcDiagnostics.currentAppProductionOwnerImportDependencyPaths : "",
+          currentAppProductionOwnerImportExpectedSideEffects: window.VaadinDesktopIpcDiagnostics ? window.VaadinDesktopIpcDiagnostics.currentAppProductionOwnerImportExpectedSideEffects : "",
+          currentAppProductionOwnerImportPhase: window.VaadinDesktopIpcDiagnostics ? window.VaadinDesktopIpcDiagnostics.currentAppProductionOwnerImportPhase : "",
+          currentAppProductionOwnerImportExecutionResult: window.VaadinDesktopIpcDiagnostics ? window.VaadinDesktopIpcDiagnostics.currentAppProductionOwnerImportExecutionResult : "",
+          currentAppProductionOwnerImportSideEffectProof: window.VaadinDesktopIpcDiagnostics ? window.VaadinDesktopIpcDiagnostics.currentAppProductionOwnerImportSideEffectProof : "",
+          currentAppProductionOwnerImportBrowserError: window.VaadinDesktopIpcDiagnostics ? window.VaadinDesktopIpcDiagnostics.currentAppProductionOwnerImportBrowserError : "",
+          currentAppProductionOwnerImportFailureLayer: window.VaadinDesktopIpcDiagnostics ? window.VaadinDesktopIpcDiagnostics.currentAppProductionOwnerImportFailureLayer : "",
+          currentAppProductionOwnerImportNextResolutionStep: window.VaadinDesktopIpcDiagnostics ? window.VaadinDesktopIpcDiagnostics.currentAppProductionOwnerImportNextResolutionStep : "",
+          currentAppProductionOwnerImportModuleIdentity: window.VaadinDesktopIpcDiagnostics ? window.VaadinDesktopIpcDiagnostics.currentAppProductionOwnerImportModuleIdentity : "",
+          currentAppProductionOwnerImportRegistryBefore: window.VaadinDesktopIpcDiagnostics ? window.VaadinDesktopIpcDiagnostics.currentAppProductionOwnerImportRegistryBefore : "",
+          currentAppProductionOwnerImportRegistryAfter: window.VaadinDesktopIpcDiagnostics ? window.VaadinDesktopIpcDiagnostics.currentAppProductionOwnerImportRegistryAfter : "",
+          currentAppProductionOwnerImportVaadinGlobalBefore: window.VaadinDesktopIpcDiagnostics ? window.VaadinDesktopIpcDiagnostics.currentAppProductionOwnerImportVaadinGlobalBefore : "",
+          currentAppProductionOwnerImportVaadinGlobalAfter: window.VaadinDesktopIpcDiagnostics ? window.VaadinDesktopIpcDiagnostics.currentAppProductionOwnerImportVaadinGlobalAfter : "",
+          currentAppProductionOwnerImportHandoffReady: !!(window.VaadinDesktopIpcDiagnostics && window.VaadinDesktopIpcDiagnostics.currentAppProductionOwnerImportHandoffReady),
+          currentAppProductionOwnerImportAttempted: !!(window.VaadinDesktopIpcDiagnostics && window.VaadinDesktopIpcDiagnostics.currentAppProductionOwnerImportAttempted),
+          currentAppProductionOwnerImported: !!(window.VaadinDesktopIpcDiagnostics && window.VaadinDesktopIpcDiagnostics.currentAppProductionOwnerImported),
+          currentAppProductionOwnerImportOverCustomScheme: !!(window.VaadinDesktopIpcDiagnostics && window.VaadinDesktopIpcDiagnostics.currentAppProductionOwnerImportOverCustomScheme),
+          currentAppProductionOwnerImportDependencyStageCount: window.VaadinDesktopIpcDiagnostics ? window.VaadinDesktopIpcDiagnostics.currentAppProductionOwnerImportDependencyStageCount : 0,
+          currentAppProductionOwnerImportSideEffectSatisfied: !!(window.VaadinDesktopIpcDiagnostics && window.VaadinDesktopIpcDiagnostics.currentAppProductionOwnerImportSideEffectSatisfied),
+          currentAppProductionOwnerImportReuseSatisfied: !!(window.VaadinDesktopIpcDiagnostics && window.VaadinDesktopIpcDiagnostics.currentAppProductionOwnerImportReuseSatisfied),
+          currentAppProductionOwnerImportNoLocalhost: !!(window.VaadinDesktopIpcDiagnostics && window.VaadinDesktopIpcDiagnostics.currentAppProductionOwnerImportNoLocalhost),
+          currentAppProductionOwnerImportFixtureSubstituted: !!(window.VaadinDesktopIpcDiagnostics && window.VaadinDesktopIpcDiagnostics.currentAppProductionOwnerImportFixtureSubstituted),
           frontendBuildPreflightAvailabilityObserved: !!(window.VaadinDesktopIpcDiagnostics && window.VaadinDesktopIpcDiagnostics.frontendBuildPreflightAvailabilityObserved),
           frontendBuildPreflightAvailabilityVersion: window.VaadinDesktopIpcDiagnostics ? window.VaadinDesktopIpcDiagnostics.frontendBuildPreflightAvailabilityVersion : "",
           frontendBuildPreflightAvailabilitySource: window.VaadinDesktopIpcDiagnostics ? window.VaadinDesktopIpcDiagnostics.frontendBuildPreflightAvailabilitySource : "",
@@ -3476,6 +3505,9 @@ let flowIpcShell = #"""
       let productionBundleRuntimeOwnerImportStartedPhase = '';
       let productionBundleRuntimeOwnerModuleExports = null;
       var productionBundleRuntimeOwnerOrderingPreflightRecorded = false;
+      let currentAppProductionOwnerImportAttempted = false;
+      let currentAppProductionOwnerImportInProgress = false;
+      let currentAppProductionOwnerModuleExports = null;
       let textFieldDevBundleStageAttempted = false;
       const flowLazyDependencyPendingElements = new Map();
       const pendingFlowClientXhrRequests = new Map();
@@ -3829,6 +3861,35 @@ let flowIpcShell = #"""
         currentAppProductionRuntimeOwnershipOwnerReuseSatisfied: false,
         currentAppProductionRuntimeOwnershipNoLocalhost: false,
         currentAppProductionRuntimeOwnershipFixtureSubstituted: false,
+        currentAppProductionOwnerImportObserved: false,
+        currentAppProductionOwnerImportVersion: '',
+        currentAppProductionOwnerImportSource: '',
+        currentAppProductionOwnerImportPolicy: '',
+        currentAppProductionOwnerImportCandidate: '',
+        currentAppProductionOwnerImportArtifact: '',
+        currentAppProductionOwnerImportSupportArtifact: '',
+        currentAppProductionOwnerImportDependencyPaths: '',
+        currentAppProductionOwnerImportExpectedSideEffects: '',
+        currentAppProductionOwnerImportPhase: '',
+        currentAppProductionOwnerImportExecutionResult: '',
+        currentAppProductionOwnerImportSideEffectProof: '',
+        currentAppProductionOwnerImportBrowserError: '',
+        currentAppProductionOwnerImportFailureLayer: '',
+        currentAppProductionOwnerImportNextResolutionStep: '',
+        currentAppProductionOwnerImportModuleIdentity: '',
+        currentAppProductionOwnerImportRegistryBefore: '',
+        currentAppProductionOwnerImportRegistryAfter: '',
+        currentAppProductionOwnerImportVaadinGlobalBefore: '',
+        currentAppProductionOwnerImportVaadinGlobalAfter: '',
+        currentAppProductionOwnerImportHandoffReady: false,
+        currentAppProductionOwnerImportAttempted: false,
+        currentAppProductionOwnerImported: false,
+        currentAppProductionOwnerImportOverCustomScheme: false,
+        currentAppProductionOwnerImportDependencyStageCount: 0,
+        currentAppProductionOwnerImportSideEffectSatisfied: false,
+        currentAppProductionOwnerImportReuseSatisfied: false,
+        currentAppProductionOwnerImportNoLocalhost: false,
+        currentAppProductionOwnerImportFixtureSubstituted: false,
         frontendBuildPreflightAvailabilityObserved: false,
         frontendBuildPreflightAvailabilityVersion: '',
         frontendBuildPreflightAvailabilitySource: '',
@@ -6180,7 +6241,18 @@ let flowIpcShell = #"""
           ['currentAppProductionRuntimeOwnershipProductionEntryArtifact', 'currentAppProductionRuntimeOwnershipProductionEntryArtifact'],
           ['currentAppProductionRuntimeOwnershipArtifactInventory', 'currentAppProductionRuntimeOwnershipArtifactInventory'],
           ['currentAppProductionRuntimeOwnershipFailureLayer', 'currentAppProductionRuntimeOwnershipFailureLayer'],
-          ['currentAppProductionRuntimeOwnershipNextResolutionStep', 'currentAppProductionRuntimeOwnershipNextResolutionStep']
+          ['currentAppProductionRuntimeOwnershipNextResolutionStep', 'currentAppProductionRuntimeOwnershipNextResolutionStep'],
+          ['currentAppProductionOwnerImportVersion', 'currentAppProductionOwnerImportVersion'],
+          ['currentAppProductionOwnerImportSource', 'currentAppProductionOwnerImportSource'],
+          ['currentAppProductionOwnerImportPolicy', 'currentAppProductionOwnerImportPolicy'],
+          ['currentAppProductionOwnerImportCandidate', 'currentAppProductionOwnerImportCandidate'],
+          ['currentAppProductionOwnerImportArtifact', 'currentAppProductionOwnerImportArtifact'],
+          ['currentAppProductionOwnerImportSupportArtifact', 'currentAppProductionOwnerImportSupportArtifact'],
+          ['currentAppProductionOwnerImportDependencyPaths', 'currentAppProductionOwnerImportDependencyPaths'],
+          ['currentAppProductionOwnerImportExpectedSideEffects', 'currentAppProductionOwnerImportExpectedSideEffects'],
+          ['currentAppProductionOwnerImportPhase', 'currentAppProductionOwnerImportPhase'],
+          ['currentAppProductionOwnerImportFailureLayer', 'currentAppProductionOwnerImportFailureLayer'],
+          ['currentAppProductionOwnerImportNextResolutionStep', 'currentAppProductionOwnerImportNextResolutionStep']
         ]) {
           if (typeof source[sourceKey] === 'string' && source[sourceKey]) {
             window.VaadinDesktopIpcDiagnostics[diagnosticKey] = source[sourceKey];
@@ -6209,7 +6281,15 @@ let flowIpcShell = #"""
           ['currentAppProductionRuntimeOwnershipOwnerSideEffectSatisfied', 'currentAppProductionRuntimeOwnershipOwnerSideEffectSatisfied'],
           ['currentAppProductionRuntimeOwnershipOwnerReuseSatisfied', 'currentAppProductionRuntimeOwnershipOwnerReuseSatisfied'],
           ['currentAppProductionRuntimeOwnershipNoLocalhost', 'currentAppProductionRuntimeOwnershipNoLocalhost'],
-          ['currentAppProductionRuntimeOwnershipFixtureSubstituted', 'currentAppProductionRuntimeOwnershipFixtureSubstituted']
+          ['currentAppProductionRuntimeOwnershipFixtureSubstituted', 'currentAppProductionRuntimeOwnershipFixtureSubstituted'],
+          ['currentAppProductionOwnerImportHandoffReady', 'currentAppProductionOwnerImportHandoffReady'],
+          ['currentAppProductionOwnerImportAttempted', 'currentAppProductionOwnerImportAttempted'],
+          ['currentAppProductionOwnerImported', 'currentAppProductionOwnerImported'],
+          ['currentAppProductionOwnerImportOverCustomScheme', 'currentAppProductionOwnerImportOverCustomScheme'],
+          ['currentAppProductionOwnerImportSideEffectSatisfied', 'currentAppProductionOwnerImportSideEffectSatisfied'],
+          ['currentAppProductionOwnerImportReuseSatisfied', 'currentAppProductionOwnerImportReuseSatisfied'],
+          ['currentAppProductionOwnerImportNoLocalhost', 'currentAppProductionOwnerImportNoLocalhost'],
+          ['currentAppProductionOwnerImportFixtureSubstituted', 'currentAppProductionOwnerImportFixtureSubstituted']
         ]) {
           if (source[sourceKey] === true) {
             window.VaadinDesktopIpcDiagnostics[diagnosticKey] = true;
@@ -6221,12 +6301,17 @@ let flowIpcShell = #"""
           window.VaadinDesktopIpcDiagnostics.currentAppProductionRuntimeOwnershipPrimaryCandidateSelected =
             !!source.currentAppProductionRuntimeOwnershipPrimaryCandidate;
         }
+        if (typeof source.currentAppProductionOwnerImportVersion === 'string'
+            && source.currentAppProductionOwnerImportVersion) {
+          window.VaadinDesktopIpcDiagnostics.currentAppProductionOwnerImportObserved = true;
+        }
         for (const [sourceKey, diagnosticKey] of [
           ['currentAppBuildFrontendSourceGeneratedImportsMtimeMillis', 'currentAppBuildFrontendSourceGeneratedImportsMtimeMillis'],
           ['currentAppBuildFrontendSourceGeneratedImportsBytes', 'currentAppBuildFrontendSourceGeneratedImportsBytes'],
           ['currentAppBuildFrontendSourceChunkBytes', 'currentAppBuildFrontendSourceChunkBytes'],
           ['currentAppBuildFrontendProductionGeneratedImportsBytes', 'currentAppBuildFrontendProductionGeneratedImportsBytes'],
-          ['currentAppBuildFrontendProdBundleBytes', 'currentAppBuildFrontendProdBundleBytes']
+          ['currentAppBuildFrontendProdBundleBytes', 'currentAppBuildFrontendProdBundleBytes'],
+          ['currentAppProductionOwnerImportDependencyStageCount', 'currentAppProductionOwnerImportDependencyStageCount']
         ]) {
           if (Number.isFinite(source[sourceKey])) {
             window.VaadinDesktopIpcDiagnostics[diagnosticKey] = source[sourceKey];
@@ -8609,6 +8694,120 @@ let flowIpcShell = #"""
             extra && extra.currentAppProductionRuntimeOwnershipNextResolutionStep
               ? extra.currentAppProductionRuntimeOwnershipNextResolutionStep
               : (resource.currentAppProductionRuntimeOwnershipNextResolutionStep || ''),
+          currentAppProductionOwnerImportVersion:
+            extra && extra.currentAppProductionOwnerImportVersion
+              ? extra.currentAppProductionOwnerImportVersion
+              : (resource.currentAppProductionOwnerImportVersion || ''),
+          currentAppProductionOwnerImportSource:
+            extra && extra.currentAppProductionOwnerImportSource
+              ? extra.currentAppProductionOwnerImportSource
+              : (resource.currentAppProductionOwnerImportSource || ''),
+          currentAppProductionOwnerImportPolicy:
+            extra && extra.currentAppProductionOwnerImportPolicy
+              ? extra.currentAppProductionOwnerImportPolicy
+              : (resource.currentAppProductionOwnerImportPolicy || ''),
+          currentAppProductionOwnerImportCandidate:
+            extra && extra.currentAppProductionOwnerImportCandidate
+              ? extra.currentAppProductionOwnerImportCandidate
+              : (resource.currentAppProductionOwnerImportCandidate || ''),
+          currentAppProductionOwnerImportArtifact:
+            extra && extra.currentAppProductionOwnerImportArtifact
+              ? extra.currentAppProductionOwnerImportArtifact
+              : (resource.currentAppProductionOwnerImportArtifact || ''),
+          currentAppProductionOwnerImportSupportArtifact:
+            extra && extra.currentAppProductionOwnerImportSupportArtifact
+              ? extra.currentAppProductionOwnerImportSupportArtifact
+              : (resource.currentAppProductionOwnerImportSupportArtifact || ''),
+          currentAppProductionOwnerImportDependencyPaths:
+            extra && extra.currentAppProductionOwnerImportDependencyPaths
+              ? extra.currentAppProductionOwnerImportDependencyPaths
+              : (resource.currentAppProductionOwnerImportDependencyPaths || ''),
+          currentAppProductionOwnerImportExpectedSideEffects:
+            extra && extra.currentAppProductionOwnerImportExpectedSideEffects
+              ? extra.currentAppProductionOwnerImportExpectedSideEffects
+              : (resource.currentAppProductionOwnerImportExpectedSideEffects || ''),
+          currentAppProductionOwnerImportPhase:
+            extra && extra.currentAppProductionOwnerImportPhase
+              ? extra.currentAppProductionOwnerImportPhase
+              : (resource.currentAppProductionOwnerImportPhase || ''),
+          currentAppProductionOwnerImportExecutionResult:
+            extra && extra.currentAppProductionOwnerImportExecutionResult
+              ? extra.currentAppProductionOwnerImportExecutionResult
+              : '',
+          currentAppProductionOwnerImportSideEffectProof:
+            extra && extra.currentAppProductionOwnerImportSideEffectProof
+              ? extra.currentAppProductionOwnerImportSideEffectProof
+              : '',
+          currentAppProductionOwnerImportBrowserError:
+            extra && extra.currentAppProductionOwnerImportBrowserError
+              ? extra.currentAppProductionOwnerImportBrowserError
+              : '',
+          currentAppProductionOwnerImportFailureLayer:
+            extra && extra.currentAppProductionOwnerImportFailureLayer
+              ? extra.currentAppProductionOwnerImportFailureLayer
+              : (resource.currentAppProductionOwnerImportFailureLayer || ''),
+          currentAppProductionOwnerImportNextResolutionStep:
+            extra && extra.currentAppProductionOwnerImportNextResolutionStep
+              ? extra.currentAppProductionOwnerImportNextResolutionStep
+              : (resource.currentAppProductionOwnerImportNextResolutionStep || ''),
+          currentAppProductionOwnerImportModuleIdentity:
+            extra && extra.currentAppProductionOwnerImportModuleIdentity
+              ? extra.currentAppProductionOwnerImportModuleIdentity
+              : '',
+          currentAppProductionOwnerImportRegistryBefore:
+            extra && extra.currentAppProductionOwnerImportRegistryBefore
+              ? extra.currentAppProductionOwnerImportRegistryBefore
+              : '',
+          currentAppProductionOwnerImportRegistryAfter:
+            extra && extra.currentAppProductionOwnerImportRegistryAfter
+              ? extra.currentAppProductionOwnerImportRegistryAfter
+              : '',
+          currentAppProductionOwnerImportVaadinGlobalBefore:
+            extra && extra.currentAppProductionOwnerImportVaadinGlobalBefore
+              ? extra.currentAppProductionOwnerImportVaadinGlobalBefore
+              : '',
+          currentAppProductionOwnerImportVaadinGlobalAfter:
+            extra && extra.currentAppProductionOwnerImportVaadinGlobalAfter
+              ? extra.currentAppProductionOwnerImportVaadinGlobalAfter
+              : '',
+          currentAppProductionOwnerImportHandoffReady:
+            extra && typeof extra.currentAppProductionOwnerImportHandoffReady === 'boolean'
+              ? extra.currentAppProductionOwnerImportHandoffReady
+              : resource.currentAppProductionOwnerImportHandoffReady === true,
+          currentAppProductionOwnerImportAttempted:
+            extra && typeof extra.currentAppProductionOwnerImportAttempted === 'boolean'
+              ? extra.currentAppProductionOwnerImportAttempted
+              : resource.currentAppProductionOwnerImportAttempted === true,
+          currentAppProductionOwnerImported:
+            extra && typeof extra.currentAppProductionOwnerImported === 'boolean'
+              ? extra.currentAppProductionOwnerImported
+              : resource.currentAppProductionOwnerImported === true,
+          currentAppProductionOwnerImportOverCustomScheme:
+            extra && typeof extra.currentAppProductionOwnerImportOverCustomScheme === 'boolean'
+              ? extra.currentAppProductionOwnerImportOverCustomScheme
+              : resource.currentAppProductionOwnerImportOverCustomScheme === true,
+          currentAppProductionOwnerImportDependencyStageCount:
+            extra && Number.isFinite(extra.currentAppProductionOwnerImportDependencyStageCount)
+              ? extra.currentAppProductionOwnerImportDependencyStageCount
+              : (Number.isFinite(resource.currentAppProductionOwnerImportDependencyStageCount)
+                ? resource.currentAppProductionOwnerImportDependencyStageCount
+                : 0),
+          currentAppProductionOwnerImportSideEffectSatisfied:
+            extra && typeof extra.currentAppProductionOwnerImportSideEffectSatisfied === 'boolean'
+              ? extra.currentAppProductionOwnerImportSideEffectSatisfied
+              : resource.currentAppProductionOwnerImportSideEffectSatisfied === true,
+          currentAppProductionOwnerImportReuseSatisfied:
+            extra && typeof extra.currentAppProductionOwnerImportReuseSatisfied === 'boolean'
+              ? extra.currentAppProductionOwnerImportReuseSatisfied
+              : resource.currentAppProductionOwnerImportReuseSatisfied === true,
+          currentAppProductionOwnerImportNoLocalhost:
+            extra && typeof extra.currentAppProductionOwnerImportNoLocalhost === 'boolean'
+              ? extra.currentAppProductionOwnerImportNoLocalhost
+              : resource.currentAppProductionOwnerImportNoLocalhost === true,
+          currentAppProductionOwnerImportFixtureSubstituted:
+            extra && typeof extra.currentAppProductionOwnerImportFixtureSubstituted === 'boolean'
+              ? extra.currentAppProductionOwnerImportFixtureSubstituted
+              : resource.currentAppProductionOwnerImportFixtureSubstituted === true,
           stagedPath: '',
           owner: stageOwner,
           artifactFamily: family,
@@ -11728,6 +11927,22 @@ let flowIpcShell = #"""
             error && error.message ? error.message : String(error);
         }
         try {
+          await maybeImportCurrentAppProductionOwnerFromResource(payload);
+        } catch (error) {
+          const message = error && error.message ? error.message : String(error);
+          const failureExtra = currentAppProductionOwnerImportStageExtra(payload, null, null, 'root', {
+            currentAppProductionOwnerImportAttempted: true,
+            currentAppProductionOwnerImported: false,
+            currentAppProductionOwnerImportOverCustomScheme: true,
+            currentAppProductionOwnerImportExecutionResult:
+              'strict-blocker:current-app-production-owner-browser-import-failed:dispatch',
+            currentAppProductionOwnerImportBrowserError: message,
+            currentAppProductionOwnerImportFailureLayer:
+              'current-app-production-owner-browser-import-failed'
+          });
+          applyCurrentAppProductionOwnerImportDiagnostics(failureExtra);
+        }
+        try {
           await maybeExecuteVaadinWebComponentResource();
         } catch (error) {
           window.VaadinDesktopIpcDiagnostics.vaadinWebComponentResourceExecutionError =
@@ -12932,7 +13147,49 @@ let flowIpcShell = #"""
           currentAppProductionRuntimeOwnershipNextResolutionStep:
             resource.currentAppProductionRuntimeOwnershipNextResolutionStep || '',
           currentAppProductionRuntimeOwnershipArtifactsStaged: false,
-          currentAppProductionRuntimeOwnershipPrimaryCandidateSelected: false
+          currentAppProductionRuntimeOwnershipPrimaryCandidateSelected: false,
+          currentAppProductionOwnerImportVersion:
+            resource.currentAppProductionOwnerImportVersion || '',
+          currentAppProductionOwnerImportSource:
+            resource.currentAppProductionOwnerImportSource || '',
+          currentAppProductionOwnerImportPolicy:
+            resource.currentAppProductionOwnerImportPolicy || '',
+          currentAppProductionOwnerImportCandidate:
+            resource.currentAppProductionOwnerImportCandidate || '',
+          currentAppProductionOwnerImportArtifact:
+            resource.currentAppProductionOwnerImportArtifact || '',
+          currentAppProductionOwnerImportSupportArtifact:
+            resource.currentAppProductionOwnerImportSupportArtifact || '',
+          currentAppProductionOwnerImportDependencyPaths:
+            resource.currentAppProductionOwnerImportDependencyPaths || '',
+          currentAppProductionOwnerImportExpectedSideEffects:
+            resource.currentAppProductionOwnerImportExpectedSideEffects || '',
+          currentAppProductionOwnerImportPhase:
+            resource.currentAppProductionOwnerImportPhase || '',
+          currentAppProductionOwnerImportHandoffReady:
+            resource.currentAppProductionOwnerImportHandoffReady === true,
+          currentAppProductionOwnerImportAttempted:
+            resource.currentAppProductionOwnerImportAttempted === true,
+          currentAppProductionOwnerImported:
+            resource.currentAppProductionOwnerImported === true,
+          currentAppProductionOwnerImportOverCustomScheme:
+            resource.currentAppProductionOwnerImportOverCustomScheme === true,
+          currentAppProductionOwnerImportDependencyStageCount:
+            Number.isFinite(resource.currentAppProductionOwnerImportDependencyStageCount)
+              ? resource.currentAppProductionOwnerImportDependencyStageCount
+              : 0,
+          currentAppProductionOwnerImportSideEffectSatisfied:
+            resource.currentAppProductionOwnerImportSideEffectSatisfied === true,
+          currentAppProductionOwnerImportReuseSatisfied:
+            resource.currentAppProductionOwnerImportReuseSatisfied === true,
+          currentAppProductionOwnerImportNoLocalhost:
+            resource.currentAppProductionOwnerImportNoLocalhost === true,
+          currentAppProductionOwnerImportFixtureSubstituted:
+            resource.currentAppProductionOwnerImportFixtureSubstituted === true,
+          currentAppProductionOwnerImportFailureLayer:
+            resource.currentAppProductionOwnerImportFailureLayer || '',
+          currentAppProductionOwnerImportNextResolutionStep:
+            resource.currentAppProductionOwnerImportNextResolutionStep || ''
         }, extra || {});
       }
 
@@ -13103,6 +13360,356 @@ let flowIpcShell = #"""
       function waitBeforeGeneratedLoadOnDemandRetry(retryAttempt) {
         const delayMillis = 250 * ((retryAttempt || 0) + 1);
         return new Promise((resolve) => setTimeout(resolve, delayMillis));
+      }
+
+      function currentAppProductionOwnerImportResources(stageExtra) {
+        const rootPath = stageExtra.currentAppProductionOwnerImportArtifact
+          || stageExtra.currentAppProductionRuntimeOwnershipProductionEntryArtifact
+          || stageExtra.currentAppGeneratedImportsRootProductionEntryArtifact
+          || '';
+        const root = rootPath ? componentFrontendResourceByPath(rootPath) : null;
+        const dependencyPaths = csvValues(
+          stageExtra.currentAppProductionOwnerImportDependencyPaths
+          || stageExtra.currentAppGeneratedImportsRootProductionBuildArtifacts
+          || stageExtra.currentAppProductionRuntimeOwnershipArtifactInventory
+          || '')
+          .filter((path) => path && path !== rootPath && path.startsWith('current-app-production/VAADIN/build/'));
+        const dependencies = dependencyPaths
+          .map((path) => componentFrontendResourceByPath(path))
+          .filter((resource) => resource && typeof resource.path === 'string');
+        return { root, dependencies, rootPath };
+      }
+
+      function currentAppProductionOwnerImportStageExtra(stageExtra, rootResource, artifactResource, role, extra) {
+        const root = rootResource || {};
+        const artifact = artifactResource || root;
+        return Object.assign({}, stageExtra || {}, {
+          owner: 'current-app-production-owner',
+          resourceNamespace: 'current-app-production-owner',
+          resourcePathMode: 'stable-source-path',
+          cleanupPolicy: 'cleanup-owned-window-lifetime-current-app-production-owner-v1_36',
+          frontendResourceSchemeVersion: 'flow-ipc-resource-scheme-v1_17',
+          frontendResourceLoaderMode: 'custom-scheme-file-backed',
+          frontendResourceSchemeName: 'vatori-resource',
+          frontendResourceSchemeHandlerInstalled: true,
+          frontendResourceLoaderNoLocalhost: true,
+          frontendResourceFileBacked: true,
+          stagingMode: 'custom-scheme',
+          relativeImportBase: artifact.path || root.path || '',
+          relativeImportResolutionMode: 'scheme-url-native-relative-base-current-app-production-owner-v1_36',
+          moduleIdentityStrategy: 'current-app-production-owner-custom-scheme-v1_36',
+          moduleIdentityKey: 'current-app-production-owner-v1_36:' + (artifact.path || root.path || role || ''),
+          importResolutionStrategy: 'current-app-production-owner-custom-scheme-native-relative-base-v1_36',
+          noLocalhostProof: 'current-app-production-owner-custom-scheme-no-localhost-v1_36',
+          currentAppProductionOwnerImportVersion:
+            stageExtra.currentAppProductionOwnerImportVersion
+            || 'flow-ipc-current-app-production-owner-import-v1_36',
+          currentAppProductionOwnerImportSource:
+            stageExtra.currentAppProductionOwnerImportSource
+            || 'current-app-production-runtime-ownership-handoff-v1_35',
+          currentAppProductionOwnerImportPolicy:
+            stageExtra.currentAppProductionOwnerImportPolicy
+            || 'owner-first-current-app-production-entry-import-v1_36',
+          currentAppProductionOwnerImportCandidate:
+            stageExtra.currentAppProductionOwnerImportCandidate
+            || stageExtra.currentAppProductionRuntimeOwnershipPrimaryCandidate
+            || 'current-app-build-frontend-production-runtime',
+          currentAppProductionOwnerImportArtifact:
+            stageExtra.currentAppProductionOwnerImportArtifact
+            || stageExtra.currentAppProductionRuntimeOwnershipProductionEntryArtifact
+            || root.path
+            || '',
+          currentAppProductionOwnerImportSupportArtifact:
+            stageExtra.currentAppProductionOwnerImportSupportArtifact
+            || stageExtra.currentAppProductionRuntimeOwnershipProductionSupportArtifact
+            || stageExtra.currentAppGeneratedImportsRootProductionSupportArtifact
+            || '',
+          currentAppProductionOwnerImportDependencyPaths:
+            stageExtra.currentAppProductionOwnerImportDependencyPaths
+            || stageExtra.currentAppGeneratedImportsRootProductionBuildArtifacts
+            || '',
+          currentAppProductionOwnerImportExpectedSideEffects:
+            stageExtra.currentAppProductionOwnerImportExpectedSideEffects
+            || 'window.Vaadin,window.Vaadin.Flow,window.Vaadin.Flow.loadOnDemand,customElements:vaadin-vertical-layout|vaadin-text-field|vaadin-checkbox|vaadin-select',
+          currentAppProductionOwnerImportPhase:
+            stageExtra.currentAppProductionOwnerImportPhase
+            || 'after-current-app-generated-root-execution',
+          currentAppProductionOwnerImportHandoffReady:
+            stageExtra.currentAppProductionOwnerImportHandoffReady === true
+            || stageExtra.currentAppProductionRuntimeOwnershipHandoffReady === true,
+          currentAppProductionOwnerImportNoLocalhost:
+            stageExtra.currentAppProductionOwnerImportNoLocalhost !== false,
+          currentAppProductionOwnerImportFixtureSubstituted:
+            stageExtra.currentAppProductionOwnerImportFixtureSubstituted === true,
+          currentAppProductionRuntimeOwnershipVersion:
+            stageExtra.currentAppProductionRuntimeOwnershipVersion || '',
+          currentAppProductionRuntimeOwnershipHandoffReady:
+            stageExtra.currentAppProductionRuntimeOwnershipHandoffReady === true,
+          currentAppProductionRuntimeOwnershipOwnerSideEffectSatisfied: false,
+          currentAppProductionRuntimeOwnershipOwnerReuseSatisfied: false,
+          currentAppProductionRuntimeOwnershipNoLocalhost:
+            stageExtra.currentAppProductionRuntimeOwnershipNoLocalhost === true,
+          currentAppProductionRuntimeOwnershipFixtureSubstituted:
+            stageExtra.currentAppProductionRuntimeOwnershipFixtureSubstituted === true
+        }, extra || {});
+      }
+
+      function currentAppProductionOwnerImportResourcesReady(stageExtra) {
+        if (!stageExtra || !stageExtra.currentAppProductionOwnerImportVersion) {
+          return false;
+        }
+        if (stageExtra.currentAppProductionOwnerImportHandoffReady !== true
+            && stageExtra.currentAppProductionRuntimeOwnershipHandoffReady !== true) {
+          return false;
+        }
+        const resources = currentAppProductionOwnerImportResources(stageExtra);
+        if (!resources.root || !componentFrontendResourceBodies.has(resources.root.path)) {
+          return false;
+        }
+        if (resources.dependencies.length === 0) {
+          return false;
+        }
+        for (const dependency of resources.dependencies) {
+          if (!dependency || !componentFrontendResourceBodies.has(dependency.path)) {
+            return false;
+          }
+        }
+        return true;
+      }
+
+      async function maybeImportCurrentAppProductionOwnerFromResource(stageExtra) {
+        if (!currentAppProductionOwnerImportResourcesReady(stageExtra)) {
+          return;
+        }
+        await maybeImportCurrentAppProductionOwner(stageExtra);
+      }
+
+      function currentAppProductionOwnerImportFailure(error) {
+        const message = error && error.message ? error.message : String(error || '');
+        const lower = message.toLowerCase();
+        if (lower.includes('already been defined')
+            || lower.includes('cannot define multiple custom elements')
+            || lower.includes('customelementregistry')) {
+          return 'current-app-production-owner-duplicate-custom-element';
+        }
+        if (lower.includes('failed to resolve module specifier')
+            || lower.includes('failed to fetch dynamically imported module')
+            || lower.includes('module specifier')) {
+          return 'current-app-production-owner-missing-real-artifact';
+        }
+        if (lower.includes('vaadin') && lower.includes('already')) {
+          return 'current-app-production-owner-global-collision';
+        }
+        return 'current-app-production-owner-browser-import-failed';
+      }
+
+      function currentAppProductionOwnerSideEffectDiagnostics(stageExtra, imported, registryBefore, registryAfter,
+          globalBefore, globalAfter, failureLayer) {
+        const expected = stageExtra.currentAppProductionOwnerImportExpectedSideEffects || '';
+        const expectedTags = expected.includes('customElements:')
+          ? expected.substring(expected.indexOf('customElements:') + 'customElements:'.length)
+              .split(',')[0].split('|').map((entry) => entry.trim()).filter((entry) => entry)
+          : ['vaadin-vertical-layout', 'vaadin-text-field', 'vaadin-checkbox', 'vaadin-select'];
+        const observedTags = expectedTags.filter((tag) => !!customElements.get(tag));
+        const missingTags = expectedTags.filter((tag) => !customElements.get(tag));
+        const hasVaadin = !!window.Vaadin;
+        const hasFlow = !!(window.Vaadin && window.Vaadin.Flow);
+        const hasLoadOnDemand = !!(window.Vaadin && window.Vaadin.Flow
+          && typeof window.Vaadin.Flow.loadOnDemand === 'function');
+        const observableOwnerChange = registryBefore !== registryAfter || globalBefore !== globalAfter;
+        const globalsSatisfied = hasVaadin && hasFlow && hasLoadOnDemand;
+        const sideEffectSatisfied = imported === true
+          && observableOwnerChange
+          && globalsSatisfied
+          && missingTags.length === 0;
+        const reuseSatisfied = sideEffectSatisfied
+          && (stageExtra.currentAppProductionOwnerImportPhase || '').includes('before-component');
+        const proof = sideEffectSatisfied
+          ? 'current-app-production-owner-observed-tags=' + observedTags.join('|') + ';global=' + globalAfter
+          : (imported
+            ? 'current-app-production-owner-import-resolved-side-effect-unobservable'
+            : 'current-app-production-owner-import-rejected-before-observable-side-effect');
+        return {
+          currentAppProductionOwnerImportSideEffectProof: proof,
+          currentAppProductionOwnerImportSideEffectSatisfied: sideEffectSatisfied,
+          currentAppProductionOwnerImportReuseSatisfied: reuseSatisfied,
+          currentAppProductionOwnerImportFailureLayer:
+            sideEffectSatisfied ? '' : (failureLayer || 'current-app-production-owner-import-side-effect-pending'),
+          currentAppProductionOwnerImportRegistryBefore: registryBefore || '',
+          currentAppProductionOwnerImportRegistryAfter: registryAfter || '',
+          currentAppProductionOwnerImportVaadinGlobalBefore: globalBefore || '',
+          currentAppProductionOwnerImportVaadinGlobalAfter: globalAfter || '',
+          currentAppProductionRuntimeOwnershipOwnerSideEffectSatisfied: sideEffectSatisfied,
+          currentAppProductionRuntimeOwnershipOwnerReuseSatisfied: reuseSatisfied
+        };
+      }
+
+      function applyCurrentAppProductionOwnerImportDiagnostics(extra) {
+        if (!extra) {
+          return;
+        }
+        const d = window.VaadinDesktopIpcDiagnostics;
+        d.currentAppProductionOwnerImportObserved = true;
+        d.currentAppProductionOwnerImportVersion = extra.currentAppProductionOwnerImportVersion || '';
+        d.currentAppProductionOwnerImportSource = extra.currentAppProductionOwnerImportSource || '';
+        d.currentAppProductionOwnerImportPolicy = extra.currentAppProductionOwnerImportPolicy || '';
+        d.currentAppProductionOwnerImportCandidate = extra.currentAppProductionOwnerImportCandidate || '';
+        d.currentAppProductionOwnerImportArtifact = extra.currentAppProductionOwnerImportArtifact || '';
+        d.currentAppProductionOwnerImportSupportArtifact = extra.currentAppProductionOwnerImportSupportArtifact || '';
+        d.currentAppProductionOwnerImportDependencyPaths = extra.currentAppProductionOwnerImportDependencyPaths || '';
+        d.currentAppProductionOwnerImportExpectedSideEffects = extra.currentAppProductionOwnerImportExpectedSideEffects || '';
+        d.currentAppProductionOwnerImportPhase = extra.currentAppProductionOwnerImportPhase || '';
+        d.currentAppProductionOwnerImportExecutionResult = extra.currentAppProductionOwnerImportExecutionResult || '';
+        d.currentAppProductionOwnerImportSideEffectProof = extra.currentAppProductionOwnerImportSideEffectProof || '';
+        d.currentAppProductionOwnerImportBrowserError = extra.currentAppProductionOwnerImportBrowserError || '';
+        d.currentAppProductionOwnerImportFailureLayer = extra.currentAppProductionOwnerImportFailureLayer || '';
+        d.currentAppProductionOwnerImportNextResolutionStep = extra.currentAppProductionOwnerImportNextResolutionStep || '';
+        d.currentAppProductionOwnerImportModuleIdentity = extra.currentAppProductionOwnerImportModuleIdentity || '';
+        d.currentAppProductionOwnerImportRegistryBefore = extra.currentAppProductionOwnerImportRegistryBefore || '';
+        d.currentAppProductionOwnerImportRegistryAfter = extra.currentAppProductionOwnerImportRegistryAfter || '';
+        d.currentAppProductionOwnerImportVaadinGlobalBefore = extra.currentAppProductionOwnerImportVaadinGlobalBefore || '';
+        d.currentAppProductionOwnerImportVaadinGlobalAfter = extra.currentAppProductionOwnerImportVaadinGlobalAfter || '';
+        d.currentAppProductionOwnerImportHandoffReady =
+          extra.currentAppProductionOwnerImportHandoffReady === true;
+        d.currentAppProductionOwnerImportAttempted =
+          extra.currentAppProductionOwnerImportAttempted === true;
+        d.currentAppProductionOwnerImported =
+          extra.currentAppProductionOwnerImported === true;
+        d.currentAppProductionOwnerImportOverCustomScheme =
+          extra.currentAppProductionOwnerImportOverCustomScheme === true;
+        d.currentAppProductionOwnerImportDependencyStageCount =
+          Number(extra.currentAppProductionOwnerImportDependencyStageCount || 0);
+        d.currentAppProductionOwnerImportSideEffectSatisfied =
+          extra.currentAppProductionOwnerImportSideEffectSatisfied === true;
+        d.currentAppProductionOwnerImportReuseSatisfied =
+          extra.currentAppProductionOwnerImportReuseSatisfied === true;
+        d.currentAppProductionOwnerImportNoLocalhost =
+          extra.currentAppProductionOwnerImportNoLocalhost === true;
+        d.currentAppProductionOwnerImportFixtureSubstituted =
+          extra.currentAppProductionOwnerImportFixtureSubstituted === true;
+        d.currentAppProductionRuntimeOwnershipOwnerSideEffectSatisfied =
+          extra.currentAppProductionRuntimeOwnershipOwnerSideEffectSatisfied === true;
+        d.currentAppProductionRuntimeOwnershipOwnerReuseSatisfied =
+          extra.currentAppProductionRuntimeOwnershipOwnerReuseSatisfied === true;
+      }
+
+      async function maybeImportCurrentAppProductionOwner(stageExtra) {
+        if (currentAppProductionOwnerImportAttempted || currentAppProductionOwnerImportInProgress) {
+          return;
+        }
+        if (!stageExtra || stageExtra.currentAppProductionRuntimeOwnershipHandoffReady !== true) {
+          return;
+        }
+        const resources = currentAppProductionOwnerImportResources(stageExtra);
+        const root = resources.root;
+        const rootSource = root ? (componentFrontendResourceBodies.get(root.path) || '') : '';
+        if (!root || !rootSource) {
+          return;
+        }
+        currentAppProductionOwnerImportInProgress = true;
+        currentAppProductionOwnerImportAttempted = true;
+        installOpaqueOriginStorageFallbacks();
+        installVaadinDevBundleGlobals();
+        const registryBefore = vaadinCustomElementRegistrySnapshot();
+        const globalBefore = vaadinGlobalSnapshot();
+        const rootIdentity = 'current-app-production-owner-v1_36:' + root.path;
+        let rootUrl = '';
+        let stagedDependencyCount = 0;
+        const baseExtra = currentAppProductionOwnerImportStageExtra(stageExtra, root, root, 'root', {
+          currentAppProductionOwnerImportAttempted: true,
+          currentAppProductionOwnerImported: false,
+          currentAppProductionOwnerImportOverCustomScheme: true,
+          currentAppProductionOwnerImportDependencyStageCount: 0,
+          currentAppProductionOwnerImportExecutionResult: 'execution-attempt:' + root.path,
+          currentAppProductionOwnerImportModuleIdentity: rootIdentity,
+          currentAppProductionOwnerImportRegistryBefore: registryBefore,
+          currentAppProductionOwnerImportVaadinGlobalBefore: globalBefore,
+          currentAppProductionOwnerImportFailureLayer:
+            stageExtra.currentAppProductionOwnerImportFailureLayer
+            || 'current-app-production-owner-import-side-effect-pending'
+        });
+        applyCurrentAppProductionOwnerImportDiagnostics(baseExtra);
+        try {
+          for (const dependency of resources.dependencies) {
+            const dependencySource = componentFrontendResourceBodies.get(dependency.path) || '';
+            if (!dependencySource) {
+              continue;
+            }
+            const dependencyExtra = currentAppProductionOwnerImportStageExtra(stageExtra, root, dependency,
+              'dependency', {
+                currentAppProductionOwnerImportAttempted: true,
+                currentAppProductionOwnerImportOverCustomScheme: true,
+                currentAppProductionOwnerImportExecutionResult: 'dependency-staged:' + dependency.path,
+                currentAppProductionOwnerImportModuleIdentity:
+                  'current-app-production-owner-v1_36:' + dependency.path
+              });
+            const dependencyUrl = await stageHostOwnedFrontendArtifact(dependency, dependencySource, 'staged',
+              dependencyExtra);
+            if (dependencyUrl) {
+              stagedDependencyCount += 1;
+              recordFrontendStageOutcome(dependency, dependencyUrl, 'staged', Object.assign({}, dependencyExtra, {
+                currentAppProductionOwnerImportDependencyStageCount: stagedDependencyCount
+              }));
+            }
+          }
+          rootUrl = await stageHostOwnedFrontendArtifact(root, rootSource, 'execution-attempt',
+            Object.assign({}, baseExtra, {
+              currentAppProductionOwnerImportDependencyStageCount: stagedDependencyCount
+            }));
+          if (!rootUrl) {
+            throw new Error('current-app-production-owner-root-stage-url-missing');
+          }
+          currentAppProductionOwnerModuleExports = await import(rootUrl);
+          window.__vatoriCurrentAppProductionOwnerModuleExports = currentAppProductionOwnerModuleExports;
+          const registryAfter = vaadinCustomElementRegistrySnapshot();
+          const globalAfter = vaadinGlobalSnapshot();
+          const sideEffect = currentAppProductionOwnerSideEffectDiagnostics(
+            stageExtra, true, registryBefore, registryAfter, globalBefore, globalAfter, '');
+          const successExtra = currentAppProductionOwnerImportStageExtra(stageExtra, root, root, 'root',
+            Object.assign({}, sideEffect, {
+              currentAppProductionOwnerImportAttempted: true,
+              currentAppProductionOwnerImported: true,
+              currentAppProductionOwnerImportOverCustomScheme: true,
+              currentAppProductionOwnerImportDependencyStageCount: stagedDependencyCount,
+              currentAppProductionOwnerImportExecutionResult:
+                sideEffect.currentAppProductionOwnerImportSideEffectSatisfied
+                  ? 'executed:' + root.path
+                  : 'strict-blocker:' + sideEffect.currentAppProductionOwnerImportFailureLayer + ':' + root.path,
+              currentAppProductionOwnerImportBrowserError: '',
+              currentAppProductionOwnerImportModuleIdentity: rootIdentity,
+              currentAppProductionOwnerImportNextResolutionStep:
+                stageExtra.currentAppProductionOwnerImportNextResolutionStep || ''
+            }));
+          applyCurrentAppProductionOwnerImportDiagnostics(successExtra);
+          recordFrontendStageOutcome(root, rootUrl,
+            sideEffect.currentAppProductionOwnerImportSideEffectSatisfied ? 'executed' : 'strict-blocker',
+            successExtra);
+        } catch (error) {
+          const message = error && error.message ? error.message : String(error);
+          const failureLayer = currentAppProductionOwnerImportFailure(error);
+          const registryAfter = vaadinCustomElementRegistrySnapshot();
+          const globalAfter = vaadinGlobalSnapshot();
+          const sideEffect = currentAppProductionOwnerSideEffectDiagnostics(
+            stageExtra, false, registryBefore, registryAfter, globalBefore, globalAfter, failureLayer);
+          const failureExtra = currentAppProductionOwnerImportStageExtra(stageExtra, root, root, 'root',
+            Object.assign({}, sideEffect, {
+              currentAppProductionOwnerImportAttempted: true,
+              currentAppProductionOwnerImported: false,
+              currentAppProductionOwnerImportOverCustomScheme: true,
+              currentAppProductionOwnerImportDependencyStageCount: stagedDependencyCount,
+              currentAppProductionOwnerImportExecutionResult:
+                'strict-blocker:' + failureLayer + ':' + root.path,
+              currentAppProductionOwnerImportBrowserError: message,
+              currentAppProductionOwnerImportModuleIdentity: rootIdentity,
+              browserError: message,
+              failureLayer
+            }));
+          applyCurrentAppProductionOwnerImportDiagnostics(failureExtra);
+          recordFrontendStageOutcome(root, rootUrl, 'strict-blocker', failureExtra);
+        } finally {
+          currentAppProductionOwnerImportInProgress = false;
+          refreshFrontendStagingDiagnostics();
+        }
       }
 
       async function executeGeneratedLoadOnDemandChunk(chunkId, retryAttempt) {
@@ -13283,6 +13890,9 @@ let flowIpcShell = #"""
               stageExtra.currentAppProductionRuntimeOwnershipFailureLayer || '';
             window.VaadinDesktopIpcDiagnostics.currentAppProductionRuntimeOwnershipNextResolutionStep =
               stageExtra.currentAppProductionRuntimeOwnershipNextResolutionStep || '';
+            if (currentAppProductionRuntimeOwnershipReady) {
+              await maybeImportCurrentAppProductionOwner(stageExtra);
+            }
             if (currentAppChunkPackageEdgeResolved && currentAppChunkResource) {
               recordFrontendStageOutcome(currentAppChunkResource, currentAppChunkUrl, 'executed',
                 generatedLoadOnDemandChunkStageExtra(resource, normalizedChunkId, expression, {
@@ -13303,8 +13913,10 @@ let flowIpcShell = #"""
                     window.VaadinDesktopIpcDiagnostics.currentAppProductionRuntimeOwnershipPrimaryCandidateSelected,
                   currentAppProductionRuntimeOwnershipHandoffReady:
                     window.VaadinDesktopIpcDiagnostics.currentAppProductionRuntimeOwnershipHandoffReady,
-                  currentAppProductionRuntimeOwnershipOwnerSideEffectSatisfied: false,
-                  currentAppProductionRuntimeOwnershipOwnerReuseSatisfied: false,
+                  currentAppProductionRuntimeOwnershipOwnerSideEffectSatisfied:
+                    window.VaadinDesktopIpcDiagnostics.currentAppProductionRuntimeOwnershipOwnerSideEffectSatisfied,
+                  currentAppProductionRuntimeOwnershipOwnerReuseSatisfied:
+                    window.VaadinDesktopIpcDiagnostics.currentAppProductionRuntimeOwnershipOwnerReuseSatisfied,
                   executionResult: 'executed:' + currentAppChunkResource.path
                 }));
             }
@@ -13320,8 +13932,10 @@ let flowIpcShell = #"""
                     window.VaadinDesktopIpcDiagnostics.currentAppProductionRuntimeOwnershipPrimaryCandidateSelected,
                   currentAppProductionRuntimeOwnershipHandoffReady:
                     window.VaadinDesktopIpcDiagnostics.currentAppProductionRuntimeOwnershipHandoffReady,
-                  currentAppProductionRuntimeOwnershipOwnerSideEffectSatisfied: false,
-                  currentAppProductionRuntimeOwnershipOwnerReuseSatisfied: false,
+                  currentAppProductionRuntimeOwnershipOwnerSideEffectSatisfied:
+                    window.VaadinDesktopIpcDiagnostics.currentAppProductionRuntimeOwnershipOwnerSideEffectSatisfied,
+                  currentAppProductionRuntimeOwnershipOwnerReuseSatisfied:
+                    window.VaadinDesktopIpcDiagnostics.currentAppProductionRuntimeOwnershipOwnerReuseSatisfied,
                   executionResult: 'executed:' + currentAppRootSupportResource.path
                 }));
             }
@@ -13351,8 +13965,10 @@ let flowIpcShell = #"""
                   window.VaadinDesktopIpcDiagnostics.currentAppProductionRuntimeOwnershipPrimaryCandidateSelected,
                 currentAppProductionRuntimeOwnershipHandoffReady:
                   window.VaadinDesktopIpcDiagnostics.currentAppProductionRuntimeOwnershipHandoffReady,
-                currentAppProductionRuntimeOwnershipOwnerSideEffectSatisfied: false,
-                currentAppProductionRuntimeOwnershipOwnerReuseSatisfied: false
+                currentAppProductionRuntimeOwnershipOwnerSideEffectSatisfied:
+                  window.VaadinDesktopIpcDiagnostics.currentAppProductionRuntimeOwnershipOwnerSideEffectSatisfied,
+                currentAppProductionRuntimeOwnershipOwnerReuseSatisfied:
+                  window.VaadinDesktopIpcDiagnostics.currentAppProductionRuntimeOwnershipOwnerReuseSatisfied
               }));
             installGeneratedLoadOnDemandChunkBridge(generatedDelegate);
           } catch (error) {

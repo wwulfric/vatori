@@ -168,8 +168,15 @@ visible DOM 为 `Lazy grid fetches: 10, count calls: 1, range: 15-20`。Trace �
 requested viewport、normalized callback result、current-app artifacts、generated imports owner source、
 custom-scheme/no-localhost/no-fixture proof。它仍不是完整 Grid scroll virtualization、Upload/Download、
 theme variants、dev-mode/Vite、installer packaging 或 durable reconnect parity。
+v1.49 在 v1.48 基础上增加 Grid client scroll API probe：Swift host / WebView 不再把直接
+`$server.setViewportRange(...)` 计作新成功，而是调用真实 `framework-lazy-grid.scrollToIndex(45)`。
+Trace 记录 `flow-ipc-grid-scroll-virtualization-v1_49`、client API availability/invocation、
+`triggerSource=client-scroll-api` 的 published viewport RPC、DataProvider lazy fetch 和 report
+patch。真实窗口固定 trace 证明 Vaadin 将该滚动请求规范化为 `60-65` callback fetch，并通过
+`Report Lazy Grid` 更新 visible DOM。它仍是 bounded probe，不是完整 Grid scroll virtualization
+或所有 scroll container 行为 parity。
 
-后续阶段应继续以 `docs/goal-1_49.md` 等文件拆分，
+后续阶段应继续以 `docs/goal-1_50.md` 等文件拆分，
 每个阶段只拿走本长期目标中的一个可评审切片。不要把本文件改写成短期任务清单；
 它是长期北极星和完成度账本。
 
@@ -683,6 +690,13 @@ theme variants、dev-mode/Vite、installer packaging 或 durable reconnect parit
   和 framework app runtime evidence；真实窗口 trace 证明 published RPC、DataProvider fetch、
   report click、UIDL patch 和 visible DOM completion。它仍不是完整 Grid scroll virtualization、
   Upload/Download、theme variants、dev-mode/Vite、installer packaging 或 durable reconnect parity。
+- v1.49 已把 framework validation app 推进到 Grid client scroll API probe contract：
+  `flow-ipc-grid-scroll-virtualization-v1_49` 记录 `scrollToIndex(45)` availability/invocation、
+  current-app source/prod artifacts、generated imports owner source、custom-scheme/no-localhost proof
+  和 framework app runtime evidence；真实窗口 trace 证明 client scroll API 触发 published viewport
+  RPC、DataProvider fetch range `60-65`、report click、UIDL patch 和 visible DOM completion。
+  它仍不是完整 Grid scroll virtualization、Upload/Download、theme variants、dev-mode/Vite、
+  installer packaging 或 durable reconnect parity。
 - 当前 app/build 的真实 generated/lazy chunk file parity 泛化、dev-mode/Vite execution、更深组件资源覆盖、
   installer packaging 和 durable reconnect 仍是明确 blocker，不计入最终完成。
 
@@ -779,7 +793,7 @@ theme variants、dev-mode/Vite、installer packaging 或 durable reconnect parit
 
 - 基于 v1.22 generated lazy chunk-file positive fixture、v1.23 production owner positive
   runtime fixture、v1.24 closure decision contract、v1.25 packaged frontend baseline 和
-  v1.26-v1.48 当前 app generated/build-frontend output 和 framework component behavior contracts，
+  v1.26-v1.49 当前 app generated/build-frontend output 和 framework component behavior contracts，
   继续让当前 app/build 产生的
   真实 generated lazy chunk file 完成执行：在 current app generated imports root package graph 已由
   production support artifact 承载的基础上，接入受支持 Vaadin lazy chunk SPI，或把真实
@@ -827,12 +841,12 @@ theme variants、dev-mode/Vite、installer packaging 或 durable reconnect parit
 
 ## 当前建议的下一阶段
 
-v1.48 已完成 Grid Lazy Data Provider Viewport RPC Contract。下一阶段建议继续沿着更真实的
-component behavior/resource parity 或 dev-mode/Vite 替代路径推进：
+v1.49 已完成 Grid Client Scroll Virtualization Probe Contract。下一阶段建议继续沿着更真实的
+component behavior/resource parity、resource loading parity 或 dev-mode/Vite 替代路径推进：
 
-- 创建 `docs/goal-1_49.md`：在 v1.48 的 Grid lazy DataProvider viewport RPC 基础上选择一个
-  更深切片，例如完整 Grid scroll virtualization、Upload/Download streaming、theme variants，
-  或把 dev-mode/Vite graph execution 收敛为明确替代路径。
+- 创建 `docs/goal-1_50.md`：在 v1.49 的 Grid client scroll API probe 基础上选择一个
+  更深切片，例如完整 Grid scroll container/virtualizer behavior、Upload/Download streaming、
+  theme variants，或把 dev-mode/Vite graph execution 收敛为明确替代路径。
 - 不再把 supported Vaadin lazy chunk SPI 当作当前默认路径；除非上游/本地版本提供稳定 API，否则继续以
   packaging-time `build-frontend` artifacts 作为产品化输入。
 - 真实 production owner-owned runtime reuse success，或把当前 generated imports owner contract 与

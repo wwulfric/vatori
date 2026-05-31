@@ -770,6 +770,31 @@ final class FlowClientResources {
             "full-grid-scroll-virtualization,upload-download,theme-variants,dev-mode-vite-parity,installer-packaging,durable-reconnect";
     private static final String GRID_LAZY_DATA_PROVIDER_NEXT_STEP =
             "turn the callback-backed Grid viewport RPC evidence into full scroll virtualization or move to Upload/Download resource parity";
+    private static final String GRID_SCROLL_VIRTUALIZATION_VERSION =
+            "flow-ipc-grid-scroll-virtualization-v1_49";
+    private static final String GRID_SCROLL_VIRTUALIZATION_SOURCE =
+            "grid-lazy-data-provider-v1_48";
+    private static final String GRID_SCROLL_VIRTUALIZATION_SCOPE =
+            "framework-validation-app-grid-client-scroll-api-probe";
+    private static final String GRID_SCROLL_VIRTUALIZATION_TARGET_TAGS =
+            "vaadin-grid,vaadin-grid-column";
+    private static final String GRID_SCROLL_VIRTUALIZATION_JAVA_CLASSES =
+            "com.vaadin.flow.component.grid.Grid,com.vaadin.flow.data.provider.CallbackDataProvider,com.vaadin.flow.data.provider.DataCommunicator";
+    private static final String GRID_SCROLL_VIRTUALIZATION_COMPONENT_IDS =
+            "framework-lazy-grid,framework-lazy-grid-status,framework-lazy-grid-report";
+    private static final String GRID_SCROLL_VIRTUALIZATION_MODULE_SPECIFIERS =
+            "@vaadin/grid/src/vaadin-grid.js";
+    private static final String GRID_SCROLL_VIRTUALIZATION_CLIENT_API =
+            "scrollToIndex";
+    private static final int GRID_SCROLL_VIRTUALIZATION_REQUESTED_INDEX = 45;
+    private static final String GRID_SCROLL_VIRTUALIZATION_EXPECTED_RESULT =
+            "client-scroll-api-triggers-viewport-rpc-and-lazy-fetch-near-index-45";
+    private static final String GRID_SCROLL_VIRTUALIZATION_ACCEPTABLE_FAILURES =
+            "client-scroll-api-no-viewport-rpc,grid-client-api-missing,data-provider-fetch-not-observed,browser-import-error";
+    private static final String GRID_SCROLL_VIRTUALIZATION_REMAINING_BLOCKERS =
+            "full-grid-scroll-virtualization,upload-download,theme-variants,dev-mode-vite-parity,installer-packaging,durable-reconnect";
+    private static final String GRID_SCROLL_VIRTUALIZATION_NEXT_STEP =
+            "turn the bounded scrollToIndex probe into full Grid scroll container virtualization or move to Upload/Download resource parity";
     private static final List<String> PRODUCTION_RUNTIME_OWNER_DEPENDENCY_ARTIFACTS = List.of(
             DEV_BUNDLE_COMMONJS_JS,
             DEV_BUNDLE_INDEX_HTML_JS,
@@ -2875,6 +2900,95 @@ final class FlowClientResources {
                 GRID_LAZY_DATA_PROVIDER_REMAINING_BLOCKERS);
         attributes.put("gridLazyDataProviderNextResolutionStep",
                 GRID_LAZY_DATA_PROVIDER_NEXT_STEP);
+        attributes.putAll(gridScrollVirtualizationAttributes(evidence, buildStep, selectedArtifacts,
+                handoffReady));
+        return attributes;
+    }
+
+    private static Map<String, Object> gridScrollVirtualizationAttributes(
+            CurrentAppBuildFrontendOutputEvidence evidence,
+            FrontendBuildStepEvidence buildStep,
+            String selectedArtifacts,
+            boolean handoffReady) {
+        Path module = appModuleDirectory();
+        String appShape = packagingRuntimeHandoffAppShape(module);
+        boolean frameworkApp = "framework-validation-app".equals(appShape);
+        Map<String, Object> attributes = new LinkedHashMap<>();
+        attributes.put("gridScrollVirtualizationVersion", GRID_SCROLL_VIRTUALIZATION_VERSION);
+        attributes.put("gridScrollVirtualizationSource", GRID_SCROLL_VIRTUALIZATION_SOURCE);
+        attributes.put("gridScrollVirtualizationScope", GRID_SCROLL_VIRTUALIZATION_SCOPE);
+        attributes.put("gridScrollVirtualizationAppShape", appShape);
+        attributes.put("gridScrollVirtualizationTargetTags", GRID_SCROLL_VIRTUALIZATION_TARGET_TAGS);
+        attributes.put("gridScrollVirtualizationJavaClasses",
+                GRID_SCROLL_VIRTUALIZATION_JAVA_CLASSES);
+        attributes.put("gridScrollVirtualizationComponentIds",
+                GRID_SCROLL_VIRTUALIZATION_COMPONENT_IDS);
+        attributes.put("gridScrollVirtualizationModuleSpecifiers",
+                GRID_SCROLL_VIRTUALIZATION_MODULE_SPECIFIERS);
+        attributes.put("gridScrollVirtualizationClientApi", GRID_SCROLL_VIRTUALIZATION_CLIENT_API);
+        attributes.put("gridScrollVirtualizationRequestedIndex",
+                GRID_SCROLL_VIRTUALIZATION_REQUESTED_INDEX);
+        attributes.put("gridScrollVirtualizationExpectedResult",
+                GRID_SCROLL_VIRTUALIZATION_EXPECTED_RESULT);
+        attributes.put("gridScrollVirtualizationSelectedArtifacts", selectedArtifacts);
+        attributes.put("gridScrollVirtualizationSelectedArtifactCount",
+                csvValues(selectedArtifacts).size());
+        attributes.put("gridScrollVirtualizationGeneratedImportsOwnerSource",
+                CURRENT_APP_GENERATED_IMPORTS_OWNER_RUNTIME_CONTRACT_SOURCE);
+        attributes.put("gridScrollVirtualizationGeneratedImportsOwnerArtifact",
+                CURRENT_APP_BUILD_FRONTEND_GENERATED_IMPORTS_JS);
+        attributes.put("gridScrollVirtualizationProductionSupportArtifact",
+                evidence.sourceGeneratedImportsRootProductionSupportArtifact());
+        attributes.put("gridScrollVirtualizationProductionSupportSha256",
+                evidence.productionGeneratedImportsSha256());
+        attributes.put("gridScrollVirtualizationProductionSupportBytes",
+                evidence.productionGeneratedImportsBytes());
+        attributes.put("gridScrollVirtualizationProductionEntryArtifact",
+                evidence.productionEntryScriptVirtualPath());
+        attributes.put("gridScrollVirtualizationSourceChunkArtifact",
+                evidence.sourceChunkVirtualPath());
+        attributes.put("gridScrollVirtualizationSourceChunkStatus",
+                evidence.sourceChunkStatus());
+        attributes.put("gridScrollVirtualizationResolvedSpecifiers",
+                evidence.sourceGeneratedImportsRootResolvedSpecifiers());
+        attributes.put("gridScrollVirtualizationUnresolvedSpecifiers",
+                evidence.sourceGeneratedImportsRootUnresolvedSpecifiers());
+        attributes.put("gridScrollVirtualizationAllowedSchemes",
+                PACKAGING_FRONTEND_INVENTORY_ALLOWED_SCHEMES);
+        attributes.put("gridScrollVirtualizationIntegrityPolicy",
+                PACKAGING_FRONTEND_INVENTORY_INTEGRITY_POLICY);
+        attributes.put("gridScrollVirtualizationBuildGoal", buildStep.goal());
+        attributes.put("gridScrollVirtualizationBuildStatus", buildStep.status());
+        attributes.put("gridScrollVirtualizationOutputUsability", buildStep.outputUsability());
+        attributes.put("gridScrollVirtualizationFrameworkAppRequired", true);
+        attributes.put("gridScrollVirtualizationFrameworkAppObserved", frameworkApp);
+        attributes.put("gridScrollVirtualizationCliContractEnabled",
+                "1".equals(System.getenv("VAADIN_DESKTOP_FLOW_IPC_FRONTEND_BUILD_V1_49")));
+        attributes.put("gridScrollVirtualizationManifestReady", handoffReady && frameworkApp);
+        attributes.put("gridScrollVirtualizationRuntimeHandoffRequired", true);
+        attributes.put("gridScrollVirtualizationRuntimeHandoffReady", handoffReady);
+        attributes.put("gridScrollVirtualizationRuntimeHandoffSatisfied", false);
+        attributes.put("gridScrollVirtualizationClientApiAvailable", false);
+        attributes.put("gridScrollVirtualizationClientApiInvoked", false);
+        attributes.put("gridScrollVirtualizationPublishedRpcObserved", false);
+        attributes.put("gridScrollVirtualizationCallbackFetchObserved", false);
+        attributes.put("gridScrollVirtualizationFetchRange", "");
+        attributes.put("gridScrollVirtualizationReportEventObserved", false);
+        attributes.put("gridScrollVirtualizationAcceptedBlockerObserved", false);
+        attributes.put("gridScrollVirtualizationStaged", false);
+        attributes.put("gridScrollVirtualizationCustomSchemeObserved", false);
+        attributes.put("gridScrollVirtualizationBlobFallbackObserved", false);
+        attributes.put("gridScrollVirtualizationNoLocalhost", true);
+        attributes.put("gridScrollVirtualizationFixtureSubstituted", false);
+        attributes.put("gridScrollVirtualizationAcceptableFailures",
+                GRID_SCROLL_VIRTUALIZATION_ACCEPTABLE_FAILURES);
+        attributes.put("gridScrollVirtualizationFailureLayer", frameworkApp
+                ? "framework-grid-scroll-virtualization-runtime-validation-pending"
+                : "framework-validation-app-not-selected");
+        attributes.put("gridScrollVirtualizationRemainingBlockers",
+                GRID_SCROLL_VIRTUALIZATION_REMAINING_BLOCKERS);
+        attributes.put("gridScrollVirtualizationNextResolutionStep",
+                GRID_SCROLL_VIRTUALIZATION_NEXT_STEP);
         return attributes;
     }
 

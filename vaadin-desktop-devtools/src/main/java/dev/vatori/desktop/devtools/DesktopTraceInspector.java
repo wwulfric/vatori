@@ -163,6 +163,9 @@ public final class DesktopTraceInspector {
         FLOW_IPC_V1_48_GRID_LAZY_DATA_PROVIDER(
                 "--require-flow-ipc-v1_48-grid-lazy-data-provider"),
         FLOW_IPC_V1_48("--require-flow-ipc-v1_48"),
+        FLOW_IPC_V1_49_GRID_SCROLL_VIRTUALIZATION(
+                "--require-flow-ipc-v1_49-grid-scroll-virtualization"),
+        FLOW_IPC_V1_49("--require-flow-ipc-v1_49"),
         FLOW_IPC_V1_3_FRAMEWORK("--require-flow-ipc-v1_3-framework");
 
         private final String option;
@@ -622,6 +625,11 @@ public final class DesktopTraceInspector {
                 case FLOW_IPC_V1_48 -> EnumSet.of(
                         FLOW_IPC_V1_48_GRID_LAZY_DATA_PROVIDER,
                         FLOW_IPC_V1_48);
+                case FLOW_IPC_V1_49_GRID_SCROLL_VIRTUALIZATION ->
+                    EnumSet.of(FLOW_IPC_V1_49_GRID_SCROLL_VIRTUALIZATION);
+                case FLOW_IPC_V1_49 -> EnumSet.of(
+                        FLOW_IPC_V1_49_GRID_SCROLL_VIRTUALIZATION,
+                        FLOW_IPC_V1_49);
                 case FLOW_IPC_V1_3_FRAMEWORK -> EnumSet.of(FLOW_IPC_V1_3_FRAMEWORK);
             };
         }
@@ -757,6 +765,9 @@ public final class DesktopTraceInspector {
                 case FLOW_IPC_V1_48_GRID_LAZY_DATA_PROVIDER ->
                     summary.hasRequiredFlowIpcV1_48GridLazyDataProviderTypes();
                 case FLOW_IPC_V1_48 -> summary.hasRequiredFlowIpcV1_48Types();
+                case FLOW_IPC_V1_49_GRID_SCROLL_VIRTUALIZATION ->
+                    summary.hasRequiredFlowIpcV1_49GridScrollVirtualizationTypes();
+                case FLOW_IPC_V1_49 -> summary.hasRequiredFlowIpcV1_49Types();
                 case FLOW_IPC_V1_3_FRAMEWORK -> summary.hasRequiredFlowIpcV1_3FrameworkTypes();
             };
         }
@@ -1004,6 +1015,13 @@ public final class DesktopTraceInspector {
                     && line.contains("setViewportRange")
                     && line.contains("com.vaadin.flow.component.grid.Grid")) {
                 summary.frameworkLazyDataProviderBootstrapObserved = true;
+                summary.frameworkGridScrollVirtualizationBootstrapObserved = true;
+            }
+            if (line.contains("dev.vatori.ipcframework.FlowOverIpcFrameworkView")
+                    && line.contains("framework-lazy-grid")
+                    && line.contains("scrollToIndex")
+                    && line.contains("com.vaadin.flow.component.grid.Grid")) {
+                summary.frameworkGridScrollVirtualizationBootstrapObserved = true;
             }
             if (line.contains("\"type\":\"event\"")
                     && line.contains("\"dispatch\":\"flow-client-xhr\"")
@@ -1094,9 +1112,18 @@ public final class DesktopTraceInspector {
             }
             if (line.contains("\"type\":\"event\"")
                     && line.contains("\"dispatch\":\"flow-client-xhr\"")
+                    && line.contains("\"componentId\":\"framework-lazy-grid\"")
+                    && line.contains("\"rpcType\":\"publishedEventHandler\"")
+                    && line.contains("\"event\":\"setViewportRange\"")
+                    && line.contains("\"triggerSource\":\"client-scroll-api\"")) {
+                summary.frameworkGridScrollVirtualizationPublishedRpcObserved = true;
+            }
+            if (line.contains("\"type\":\"event\"")
+                    && line.contains("\"dispatch\":\"flow-client-xhr\"")
                     && line.contains("\"componentId\":\"framework-lazy-grid-report\"")
                     && line.contains("\"event\":\"click\"")) {
                 summary.frameworkLazyDataProviderReportEventRpcObserved = true;
+                summary.frameworkGridScrollVirtualizationReportEventRpcObserved = true;
             }
             if (line.contains("\"type\":\"patch\"")
                     && line.contains("\"source\":\"UidlRequestHandler\"")
@@ -1165,6 +1192,18 @@ public final class DesktopTraceInspector {
                     && line.contains("Lazy grid fetches:")
                     && line.contains("range: 15-20")) {
                 summary.frameworkLazyDataProviderReportPatchObserved = true;
+            }
+            if (line.contains("\"source\":\"UidlRequestHandler\"")
+                    && line.contains("\"reason\":\"event\"")
+                    && line.contains("Lazy grid fetch")
+                    && !line.contains("15-20")) {
+                summary.frameworkGridScrollVirtualizationFetchPatchObserved = true;
+            }
+            if (line.contains("\"source\":\"UidlRequestHandler\"")
+                    && line.contains("\"reason\":\"event\"")
+                    && line.contains("Lazy grid fetches:")
+                    && !line.contains("range: 15-20")) {
+                summary.frameworkGridScrollVirtualizationReportPatchObserved = true;
             }
             if (line.contains("\"type\":\"command\"")
                     && line.contains("\"command\":\"window.setTitle\"")
@@ -1606,6 +1645,11 @@ public final class DesktopTraceInspector {
                     && line.contains("\"componentFrontendResources\"")
                     && containsGridLazyDataProviderV148Fields(line)) {
                 summary.gridLazyDataProviderV148ManifestObserved = true;
+            }
+            if (line.contains("\"type\":\"bootstrapResponse\"")
+                    && line.contains("\"componentFrontendResources\"")
+                    && containsGridScrollVirtualizationV149Fields(line)) {
+                summary.gridScrollVirtualizationV149ManifestObserved = true;
             }
             if (line.contains("\"type\":\"bootstrapResponse\"")
                     && line.contains("\"componentFrontendResources\"")
@@ -3467,6 +3511,14 @@ public final class DesktopTraceInspector {
             }
             if (line.contains("\"type\":\"resourceStage\"")
                     && containsPath(line, "current-app-production/VAADIN/build/generated-flow-imports-")
+                    && containsGridScrollVirtualizationV149Fields(line)
+                    && (line.contains("\"executionStatus\":\"executed\"")
+                            || line.contains("\"executionStatus\":\"strict-blocker\"")
+                            || line.contains("\"executionStatus\":\"staged\""))) {
+                summary.gridScrollVirtualizationV149StageObserved = true;
+            }
+            if (line.contains("\"type\":\"resourceStage\"")
+                    && containsPath(line, "current-app-production/VAADIN/build/generated-flow-imports-")
                     && containsCurrentAppGeneratedImportsRootPackageGraphV134Fields(line)
                     && containsLiteralField(line,
                             "currentAppGeneratedImportsRootProductionSupportExecuted", "true")
@@ -3583,6 +3635,12 @@ public final class DesktopTraceInspector {
                     && containsGridLazyDataProviderV148Complete(line)
                     && line.contains("\"executionStatus\":\"executed\"")) {
                 summary.gridLazyDataProviderV148CompleteStageObserved = true;
+            }
+            if (line.contains("\"type\":\"resourceStage\"")
+                    && containsPath(line, "current-app-production/VAADIN/build/generated-flow-imports-")
+                    && containsGridScrollVirtualizationV149Complete(line)
+                    && line.contains("\"executionStatus\":\"executed\"")) {
+                summary.gridScrollVirtualizationV149CompleteStageObserved = true;
             }
             if (line.contains("\"type\":\"resourceStage\"")
                     && containsPath(line, "current-app-frontend/generated/flow/chunks/")
@@ -4580,6 +4638,17 @@ public final class DesktopTraceInspector {
                 summary.gridLazyDataProviderV148DomObserved = true;
             }
             if (line.contains("\"type\":\"webview.dom\"")
+                    && (containsLiteralField(line, "frameworkGridScrollVirtualizationComplete", "true")
+                            || containsLiteralField(line,
+                                    "frameworkGridScrollVirtualizationAcceptedBlockerObserved",
+                                    "true"))
+                    && containsStringField(line, "frameworkGridScrollVirtualizationVersion",
+                            "flow-ipc-grid-scroll-virtualization-v1_49")
+                    && containsLiteralField(line,
+                            "frameworkGridScrollVirtualizationClientApiInvoked", "true")) {
+                summary.gridScrollVirtualizationV149DomObserved = true;
+            }
+            if (line.contains("\"type\":\"webview.dom\"")
                     && containsLiteralField(line, "generatedLazySourceCurrentBuildNoOpConfirmed", "true")
                     && containsStringField(line, "generatedLazySourceCurrentBuildTableShape",
                             "no-op-promise-resolve-0")
@@ -5076,6 +5145,21 @@ public final class DesktopTraceInspector {
                     && line.contains("Lazy grid fetches:")
                     && line.contains("range: 15-20")) {
                 summary.frameworkLazyDataProviderDomObserved = true;
+            }
+            if (line.contains("\"type\":\"webview.dom\"")
+                    && line.contains("Flow IPC Framework Desk")
+                    && containsLiteralField(line,
+                            "frameworkGridScrollVirtualizationRendered", "true")
+                    && containsLiteralField(line,
+                            "frameworkGridScrollVirtualizationClientApiAvailable", "true")
+                    && containsLiteralField(line,
+                            "frameworkGridScrollVirtualizationClientApiInvoked", "true")
+                    && (containsLiteralField(line,
+                            "frameworkGridScrollVirtualizationComplete", "true")
+                            || containsLiteralField(line,
+                                    "frameworkGridScrollVirtualizationAcceptedBlockerObserved",
+                                    "true"))) {
+                summary.frameworkGridScrollVirtualizationDomObserved = true;
             }
             if (line.contains("\"type\":\"event\"")
                     && line.contains("\"sessionId\":\"flow-ipc-session\"")
@@ -6633,6 +6717,88 @@ public final class DesktopTraceInspector {
                         "gridLazyDataProviderNoLocalhost", "true");
     }
 
+    private static boolean containsGridScrollVirtualizationV149Fields(String line) {
+        return containsStringField(line, "gridScrollVirtualizationVersion",
+                        "flow-ipc-grid-scroll-virtualization-v1_49")
+                && containsStringField(line, "gridScrollVirtualizationSource",
+                        "grid-lazy-data-provider-v1_48")
+                && containsStringField(line, "gridScrollVirtualizationScope",
+                        "framework-validation-app-grid-client-scroll-api-probe")
+                && containsStringField(line, "gridScrollVirtualizationAppShape",
+                        "framework-validation-app")
+                && containsStringField(line, "gridScrollVirtualizationTargetTags",
+                        "vaadin-grid,vaadin-grid-column")
+                && containsStringField(line, "gridScrollVirtualizationJavaClasses",
+                        "com.vaadin.flow.component.grid.Grid,com.vaadin.flow.data.provider.CallbackDataProvider,com.vaadin.flow.data.provider.DataCommunicator")
+                && containsStringField(line, "gridScrollVirtualizationComponentIds",
+                        "framework-lazy-grid,framework-lazy-grid-status,framework-lazy-grid-report")
+                && containsStringField(line, "gridScrollVirtualizationModuleSpecifiers",
+                        "@vaadin/grid/src/vaadin-grid.js")
+                && containsStringField(line, "gridScrollVirtualizationClientApi",
+                        "scrollToIndex")
+                && containsPositiveIntegerField(line, "gridScrollVirtualizationRequestedIndex")
+                && containsStringField(line, "gridScrollVirtualizationExpectedResult",
+                        "client-scroll-api-triggers-viewport-rpc-and-lazy-fetch-near-index-45")
+                && containsStringFieldPrefix(line, "gridScrollVirtualizationSelectedArtifacts",
+                        "current-app-frontend/generated/flow/generated-flow-imports.js")
+                && containsPositiveIntegerField(line,
+                        "gridScrollVirtualizationSelectedArtifactCount")
+                && containsStringField(line, "gridScrollVirtualizationGeneratedImportsOwnerSource",
+                        "current-app-generated-imports-select-owner-coverage-v1_41")
+                && containsStringField(line,
+                        "gridScrollVirtualizationGeneratedImportsOwnerArtifact",
+                        "current-app-frontend/generated/flow/generated-flow-imports.js")
+                && containsStringFieldPrefix(line,
+                        "gridScrollVirtualizationProductionSupportArtifact",
+                        "current-app-production/VAADIN/build/generated-flow-imports-")
+                && line.contains("gridScrollVirtualizationProductionSupportSha256")
+                && containsPositiveIntegerField(line,
+                        "gridScrollVirtualizationProductionSupportBytes")
+                && line.contains("gridScrollVirtualizationProductionEntryArtifact")
+                && containsStringFieldPrefix(line, "gridScrollVirtualizationSourceChunkArtifact",
+                        "current-app-frontend/generated/flow/chunks/chunk-")
+                && containsStringField(line, "gridScrollVirtualizationSourceChunkStatus",
+                        "available")
+                && line.contains("gridScrollVirtualizationResolvedSpecifiers")
+                && line.contains("gridScrollVirtualizationUnresolvedSpecifiers")
+                && containsStringField(line, "gridScrollVirtualizationAllowedSchemes",
+                        "vatori-resource,blob")
+                && containsStringField(line, "gridScrollVirtualizationIntegrityPolicy",
+                        "sha256-and-byte-count-for-selected-artifacts")
+                && containsStringField(line, "gridScrollVirtualizationBuildGoal",
+                        "build-frontend")
+                && containsStringField(line, "gridScrollVirtualizationBuildStatus", "success")
+                && line.contains("gridScrollVirtualizationOutputUsability")
+                && containsLiteralField(line, "gridScrollVirtualizationFrameworkAppRequired",
+                        "true")
+                && containsLiteralField(line, "gridScrollVirtualizationFrameworkAppObserved",
+                        "true")
+                && containsLiteralField(line, "gridScrollVirtualizationCliContractEnabled",
+                        "true")
+                && containsLiteralField(line, "gridScrollVirtualizationManifestReady", "true")
+                && containsLiteralField(line, "gridScrollVirtualizationRuntimeHandoffRequired",
+                        "true")
+                && containsLiteralField(line, "gridScrollVirtualizationRuntimeHandoffReady",
+                        "true")
+                && containsLiteralField(line, "gridScrollVirtualizationNoLocalhost", "true")
+                && containsLiteralField(line, "gridScrollVirtualizationFixtureSubstituted",
+                        "false")
+                && line.contains("gridScrollVirtualizationAcceptableFailures")
+                && line.contains("gridScrollVirtualizationRemainingBlockers")
+                && line.contains("gridScrollVirtualizationNextResolutionStep");
+    }
+
+    private static boolean containsGridScrollVirtualizationV149Complete(String line) {
+        return containsGridScrollVirtualizationV149Fields(line)
+                && containsLiteralField(line,
+                        "gridScrollVirtualizationRuntimeHandoffSatisfied", "true")
+                && containsLiteralField(line, "gridScrollVirtualizationStaged", "true")
+                && containsLiteralField(line,
+                        "gridScrollVirtualizationCustomSchemeObserved", "true")
+                && containsLiteralField(line,
+                        "gridScrollVirtualizationNoLocalhost", "true");
+    }
+
     private static boolean containsProductionOwnerFailureLayer(String line, String field) {
         return containsStringField(line, field, "production-owner-duplicate-custom-element")
                 || containsStringField(line, field, "production-owner-relative-import-unresolved")
@@ -6953,6 +7119,12 @@ public final class DesktopTraceInspector {
         private boolean frameworkLazyDataProviderFetchPatchObserved;
         private boolean frameworkLazyDataProviderReportPatchObserved;
         private boolean frameworkLazyDataProviderDomObserved;
+        private boolean frameworkGridScrollVirtualizationBootstrapObserved;
+        private boolean frameworkGridScrollVirtualizationPublishedRpcObserved;
+        private boolean frameworkGridScrollVirtualizationReportEventRpcObserved;
+        private boolean frameworkGridScrollVirtualizationFetchPatchObserved;
+        private boolean frameworkGridScrollVirtualizationReportPatchObserved;
+        private boolean frameworkGridScrollVirtualizationDomObserved;
         private boolean firstMeaningfulPaintObserved;
         private boolean frontendAssetPipelineV14Observed;
         private boolean frontendArtifactFamilyModelObserved;
@@ -7233,6 +7405,10 @@ public final class DesktopTraceInspector {
         private boolean gridLazyDataProviderV148StageObserved;
         private boolean gridLazyDataProviderV148CompleteStageObserved;
         private boolean gridLazyDataProviderV148DomObserved;
+        private boolean gridScrollVirtualizationV149ManifestObserved;
+        private boolean gridScrollVirtualizationV149StageObserved;
+        private boolean gridScrollVirtualizationV149CompleteStageObserved;
+        private boolean gridScrollVirtualizationV149DomObserved;
 
         public boolean hasRequiredFlowIpcTypes() {
             return types.keySet().containsAll(FLOW_IPC_REQUIRED_TYPES)
@@ -7995,6 +8171,27 @@ public final class DesktopTraceInspector {
             return hasRequiredFlowIpcV1_48GridLazyDataProviderTypes();
         }
 
+        public boolean hasRequiredFlowIpcV1_49GridScrollVirtualizationTypes() {
+            boolean successPath = frameworkGridScrollVirtualizationPublishedRpcObserved
+                    && frameworkGridScrollVirtualizationReportEventRpcObserved
+                    && frameworkGridScrollVirtualizationFetchPatchObserved
+                    && frameworkGridScrollVirtualizationReportPatchObserved;
+            boolean acceptedBlockerPath = gridScrollVirtualizationV149DomObserved
+                    && !successPath;
+            return gridScrollVirtualizationV149ManifestObserved
+                    && gridScrollVirtualizationV149StageObserved
+                    && gridScrollVirtualizationV149CompleteStageObserved
+                    && gridScrollVirtualizationV149DomObserved
+                    && frameworkGridScrollVirtualizationBootstrapObserved
+                    && frameworkGridScrollVirtualizationDomObserved
+                    && (successPath || acceptedBlockerPath)
+                    && hasRequiredFlowIpcV1_48GridLazyDataProviderTypes();
+        }
+
+        public boolean hasRequiredFlowIpcV1_49Types() {
+            return hasRequiredFlowIpcV1_49GridScrollVirtualizationTypes();
+        }
+
         private boolean hasCurrentAppBuildFrontendOutputSuccessorEvidence() {
             return currentAppBuildFrontendOutputV132ManifestObserved
                     && currentAppBuildFrontendOutputV132RequestObserved
@@ -8667,6 +8864,17 @@ public final class DesktopTraceInspector {
                     + frameworkLazyDataProviderPublishedRpcObserved + "/"
                     + frameworkLazyDataProviderFetchPatchObserved + "/"
                     + frameworkLazyDataProviderDomObserved);
+            System.out.println("Flow IPC v1.49 Grid scroll virtualization manifest observed: "
+                    + gridScrollVirtualizationV149ManifestObserved);
+            System.out.println("Flow IPC v1.49 Grid scroll virtualization stage/complete/DOM observed: "
+                    + gridScrollVirtualizationV149StageObserved + "/"
+                    + gridScrollVirtualizationV149CompleteStageObserved + "/"
+                    + gridScrollVirtualizationV149DomObserved);
+            System.out.println("framework Grid scroll virtualization bootstrap/RPC/patch/DOM observed: "
+                    + frameworkGridScrollVirtualizationBootstrapObserved + "/"
+                    + frameworkGridScrollVirtualizationPublishedRpcObserved + "/"
+                    + frameworkGridScrollVirtualizationFetchPatchObserved + "/"
+                    + frameworkGridScrollVirtualizationDomObserved);
             System.out.println("Flow IPC v1.6 TextField graph manifest observed: "
                     + frontendTextFieldV16ManifestObserved);
             System.out.println("Flow IPC v1.6 TextField graph request observed: "

@@ -16,6 +16,7 @@ struct HostConfig {
     var flowIpcAutoComponentMatrix: Bool = false
     var flowIpcAutoDataComponents: Bool = false
     var flowIpcAutoLazyData: Bool = false
+    var flowIpcAutoGridScroll: Bool = false
     var flowIpcAutoShutdown: Bool = false
     var hostNoActivate: Bool = false
     var title: String = "Vaadin Desktop"
@@ -67,6 +68,7 @@ struct HostConfig {
         config.flowIpcAutoComponentMatrix = ProcessInfo.processInfo.environment["VAADIN_DESKTOP_FLOW_IPC_AUTO_COMPONENT_MATRIX"] == "1"
         config.flowIpcAutoDataComponents = ProcessInfo.processInfo.environment["VAADIN_DESKTOP_FLOW_IPC_AUTO_DATA_COMPONENTS"] == "1"
         config.flowIpcAutoLazyData = ProcessInfo.processInfo.environment["VAADIN_DESKTOP_FLOW_IPC_AUTO_LAZY_DATA"] == "1"
+        config.flowIpcAutoGridScroll = ProcessInfo.processInfo.environment["VAADIN_DESKTOP_FLOW_IPC_AUTO_GRID_SCROLL"] == "1"
         config.flowIpcAutoShutdown = ProcessInfo.processInfo.environment["VAADIN_DESKTOP_FLOW_IPC_AUTO_SHUTDOWN"] == "1"
         config.hostNoActivate = ProcessInfo.processInfo.environment["VAADIN_DESKTOP_HOST_NO_ACTIVATE"] == "1"
         return config
@@ -754,6 +756,10 @@ final class WebViewHost: NSObject, NSApplicationDelegate, NSWindowDelegate, WKNa
         }
         if config.flowIpcAutoLazyData {
             let source = "window.__VAADIN_DESKTOP_FLOW_IPC_AUTO_LAZY_DATA__ = true;"
+            userContentController.addUserScript(WKUserScript(source: source, injectionTime: .atDocumentStart, forMainFrameOnly: true))
+        }
+        if config.flowIpcAutoGridScroll {
+            let source = "window.__VAADIN_DESKTOP_FLOW_IPC_AUTO_GRID_SCROLL__ = true;"
             userContentController.addUserScript(WKUserScript(source: source, injectionTime: .atDocumentStart, forMainFrameOnly: true))
         }
         userContentController.add(self, name: "flowIpc")
@@ -2130,10 +2136,14 @@ final class WebViewHost: NSObject, NSApplicationDelegate, NSWindowDelegate, WKNa
             || !!d.frameworkDataComponentMatrixComplete;
           const lazyDataProviderComplete = !window.__VAADIN_DESKTOP_FLOW_IPC_AUTO_LAZY_DATA__
             || !!d.frameworkLazyDataProviderComplete;
+          const gridScrollVirtualizationComplete = !window.__VAADIN_DESKTOP_FLOW_IPC_AUTO_GRID_SCROLL__
+            || !!d.frameworkGridScrollVirtualizationComplete
+            || !!d.frameworkGridScrollVirtualizationAcceptedBlockerObserved;
           const frameworkComplete = !!d.frameworkAppInteractionComplete
             && componentMatrixComplete
             && dataComponentMatrixComplete
-            && lazyDataProviderComplete;
+            && lazyDataProviderComplete
+            && gridScrollVirtualizationComplete;
           const complete = window.__VAADIN_DESKTOP_FLOW_IPC_AUTO_FRAMEWORK_UPDATE__
             ? frameworkComplete
             : smokeComplete;
@@ -2144,6 +2154,7 @@ final class WebViewHost: NSObject, NSApplicationDelegate, NSWindowDelegate, WKNa
             componentMatrixComplete,
             dataComponentMatrixComplete,
             lazyDataProviderComplete,
+            gridScrollVirtualizationComplete,
             click: !!d.flowClientEngineEventPatchConsumed,
             text: !!d.flowClientEngineTextInputEventObserved,
             checkbox: !!d.flowClientEngineCheckboxEventObserved,
@@ -3501,6 +3512,18 @@ final class WebViewHost: NSObject, NSApplicationDelegate, NSWindowDelegate, WKNa
           frameworkLazyDataProviderReportEventRpcObserved: !!(window.VaadinDesktopIpcDiagnostics && window.VaadinDesktopIpcDiagnostics.frameworkLazyDataProviderReportEventRpcObserved),
           frameworkLazyDataProviderReportEventObserved: !!(window.VaadinDesktopIpcDiagnostics && window.VaadinDesktopIpcDiagnostics.frameworkLazyDataProviderReportEventObserved),
           frameworkLazyDataProviderComplete: !!(window.VaadinDesktopIpcDiagnostics && window.VaadinDesktopIpcDiagnostics.frameworkLazyDataProviderComplete),
+          frameworkGridScrollVirtualizationVersion: window.VaadinDesktopIpcDiagnostics ? window.VaadinDesktopIpcDiagnostics.frameworkGridScrollVirtualizationVersion : "",
+          frameworkGridScrollVirtualizationRendered: !!(window.VaadinDesktopIpcDiagnostics && window.VaadinDesktopIpcDiagnostics.frameworkGridScrollVirtualizationRendered),
+          frameworkGridScrollVirtualizationClientApiAvailable: !!(window.VaadinDesktopIpcDiagnostics && window.VaadinDesktopIpcDiagnostics.frameworkGridScrollVirtualizationClientApiAvailable),
+          frameworkGridScrollVirtualizationClientApiInvoked: !!(window.VaadinDesktopIpcDiagnostics && window.VaadinDesktopIpcDiagnostics.frameworkGridScrollVirtualizationClientApiInvoked),
+          frameworkGridScrollVirtualizationPublishedRpcObserved: !!(window.VaadinDesktopIpcDiagnostics && window.VaadinDesktopIpcDiagnostics.frameworkGridScrollVirtualizationPublishedRpcObserved),
+          frameworkGridScrollVirtualizationFetchObserved: !!(window.VaadinDesktopIpcDiagnostics && window.VaadinDesktopIpcDiagnostics.frameworkGridScrollVirtualizationFetchObserved),
+          frameworkGridScrollVirtualizationFetchRange: window.VaadinDesktopIpcDiagnostics ? window.VaadinDesktopIpcDiagnostics.frameworkGridScrollVirtualizationFetchRange : "",
+          frameworkGridScrollVirtualizationReportEventRpcObserved: !!(window.VaadinDesktopIpcDiagnostics && window.VaadinDesktopIpcDiagnostics.frameworkGridScrollVirtualizationReportEventRpcObserved),
+          frameworkGridScrollVirtualizationReportEventObserved: !!(window.VaadinDesktopIpcDiagnostics && window.VaadinDesktopIpcDiagnostics.frameworkGridScrollVirtualizationReportEventObserved),
+          frameworkGridScrollVirtualizationAcceptedBlockerObserved: !!(window.VaadinDesktopIpcDiagnostics && window.VaadinDesktopIpcDiagnostics.frameworkGridScrollVirtualizationAcceptedBlockerObserved),
+          frameworkGridScrollVirtualizationFailureLayer: window.VaadinDesktopIpcDiagnostics ? window.VaadinDesktopIpcDiagnostics.frameworkGridScrollVirtualizationFailureLayer : "",
+          frameworkGridScrollVirtualizationComplete: !!(window.VaadinDesktopIpcDiagnostics && window.VaadinDesktopIpcDiagnostics.frameworkGridScrollVirtualizationComplete),
           frameworkAppFailureReason: window.VaadinDesktopIpcDiagnostics ? window.VaadinDesktopIpcDiagnostics.frameworkAppFailureReason : ""
         })
         """
@@ -4733,6 +4756,59 @@ let flowIpcShell = #"""
         gridLazyDataProviderNextResolutionStep: '',
         gridLazyDataProviderStageExecutionStatus: '',
         gridLazyDataProviderStageScheme: '',
+        gridScrollVirtualizationVersion: '',
+        gridScrollVirtualizationSource: '',
+        gridScrollVirtualizationScope: '',
+        gridScrollVirtualizationAppShape: '',
+        gridScrollVirtualizationTargetTags: '',
+        gridScrollVirtualizationJavaClasses: '',
+        gridScrollVirtualizationComponentIds: '',
+        gridScrollVirtualizationModuleSpecifiers: '',
+        gridScrollVirtualizationClientApi: '',
+        gridScrollVirtualizationRequestedIndex: 0,
+        gridScrollVirtualizationExpectedResult: '',
+        gridScrollVirtualizationSelectedArtifacts: '',
+        gridScrollVirtualizationSelectedArtifactCount: 0,
+        gridScrollVirtualizationGeneratedImportsOwnerSource: '',
+        gridScrollVirtualizationGeneratedImportsOwnerArtifact: '',
+        gridScrollVirtualizationProductionSupportArtifact: '',
+        gridScrollVirtualizationProductionSupportSha256: '',
+        gridScrollVirtualizationProductionSupportBytes: 0,
+        gridScrollVirtualizationProductionEntryArtifact: '',
+        gridScrollVirtualizationSourceChunkArtifact: '',
+        gridScrollVirtualizationSourceChunkStatus: '',
+        gridScrollVirtualizationResolvedSpecifiers: '',
+        gridScrollVirtualizationUnresolvedSpecifiers: '',
+        gridScrollVirtualizationAllowedSchemes: '',
+        gridScrollVirtualizationIntegrityPolicy: '',
+        gridScrollVirtualizationBuildGoal: '',
+        gridScrollVirtualizationBuildStatus: '',
+        gridScrollVirtualizationOutputUsability: '',
+        gridScrollVirtualizationFrameworkAppRequired: false,
+        gridScrollVirtualizationFrameworkAppObserved: false,
+        gridScrollVirtualizationCliContractEnabled: false,
+        gridScrollVirtualizationManifestReady: false,
+        gridScrollVirtualizationRuntimeHandoffRequired: false,
+        gridScrollVirtualizationRuntimeHandoffReady: false,
+        gridScrollVirtualizationRuntimeHandoffSatisfied: false,
+        gridScrollVirtualizationClientApiAvailable: false,
+        gridScrollVirtualizationClientApiInvoked: false,
+        gridScrollVirtualizationPublishedRpcObserved: false,
+        gridScrollVirtualizationCallbackFetchObserved: false,
+        gridScrollVirtualizationFetchRange: '',
+        gridScrollVirtualizationReportEventObserved: false,
+        gridScrollVirtualizationAcceptedBlockerObserved: false,
+        gridScrollVirtualizationStaged: false,
+        gridScrollVirtualizationCustomSchemeObserved: false,
+        gridScrollVirtualizationBlobFallbackObserved: false,
+        gridScrollVirtualizationNoLocalhost: false,
+        gridScrollVirtualizationFixtureSubstituted: false,
+        gridScrollVirtualizationAcceptableFailures: '',
+        gridScrollVirtualizationFailureLayer: '',
+        gridScrollVirtualizationRemainingBlockers: '',
+        gridScrollVirtualizationNextResolutionStep: '',
+        gridScrollVirtualizationStageExecutionStatus: '',
+        gridScrollVirtualizationStageScheme: '',
         frontendBuildPreflightAvailabilityObserved: false,
         frontendBuildPreflightAvailabilityVersion: '',
         frontendBuildPreflightAvailabilitySource: '',
@@ -5343,6 +5419,19 @@ let flowIpcShell = #"""
         frameworkLazyDataProviderReportEventRpcObserved: false,
         frameworkLazyDataProviderReportEventObserved: false,
         frameworkLazyDataProviderComplete: false,
+        frameworkGridScrollVirtualizationVersion: '',
+        frameworkGridScrollVirtualizationRendered: false,
+        frameworkGridScrollVirtualizationClientApiAvailable: false,
+        frameworkGridScrollVirtualizationClientApiInvoked: false,
+        frameworkGridScrollVirtualizationAwaitingRpc: false,
+        frameworkGridScrollVirtualizationPublishedRpcObserved: false,
+        frameworkGridScrollVirtualizationFetchObserved: false,
+        frameworkGridScrollVirtualizationFetchRange: '',
+        frameworkGridScrollVirtualizationReportEventRpcObserved: false,
+        frameworkGridScrollVirtualizationReportEventObserved: false,
+        frameworkGridScrollVirtualizationAcceptedBlockerObserved: false,
+        frameworkGridScrollVirtualizationFailureLayer: '',
+        frameworkGridScrollVirtualizationComplete: false,
         frameworkAppFailureReason: ''
       };
 
@@ -5770,6 +5859,16 @@ let flowIpcShell = #"""
           current ? current + ',' + componentId : componentId;
       }
 
+      function lazyGridRangeFromText(text) {
+        const value = String(text || '');
+        let match = value.match(/range:\s*([0-9]+-[0-9]+)/);
+        if (match && match[1]) {
+          return match[1];
+        }
+        match = value.match(/Lazy grid fetch\s+[0-9]+:\s*([0-9]+-[0-9]+)/);
+        return match && match[1] ? match[1] : '';
+      }
+
       function refreshFrameworkAppDiagnostics() {
         const root = flowClientEngineElementById('framework-root');
         const budget = flowClientEngineElementById('framework-budget');
@@ -5872,6 +5971,23 @@ let flowIpcShell = #"""
           && !!lazyGridStatus;
         window.VaadinDesktopIpcDiagnostics.frameworkLazyDataProviderStatusText =
           lazyGridStatusText;
+        window.VaadinDesktopIpcDiagnostics.frameworkGridScrollVirtualizationVersion =
+          'flow-ipc-grid-scroll-virtualization-v1_49';
+        window.VaadinDesktopIpcDiagnostics.frameworkGridScrollVirtualizationRendered =
+          window.VaadinDesktopIpcDiagnostics.frameworkLazyDataProviderRendered;
+        window.VaadinDesktopIpcDiagnostics.frameworkGridScrollVirtualizationClientApiAvailable =
+          !!lazyGrid && lazyGrid.element && typeof lazyGrid.element.scrollToIndex === 'function';
+        const lazyGridObservedRange = lazyGridRangeFromText(lazyGridStatusText);
+        if (window.VaadinDesktopIpcDiagnostics.frameworkGridScrollVirtualizationClientApiInvoked
+            && lazyGridObservedRange
+            && lazyGridObservedRange !== '15-20') {
+          window.VaadinDesktopIpcDiagnostics.frameworkGridScrollVirtualizationFetchObserved = true;
+          window.VaadinDesktopIpcDiagnostics.frameworkGridScrollVirtualizationFetchRange =
+            lazyGridObservedRange;
+          window.VaadinDesktopIpcDiagnostics.gridScrollVirtualizationCallbackFetchObserved = true;
+          window.VaadinDesktopIpcDiagnostics.gridScrollVirtualizationFetchRange =
+            lazyGridObservedRange;
+        }
         window.VaadinDesktopIpcDiagnostics.frameworkAppUpdatesText = updatesText;
 
         if (componentStatusText.includes('Budget changed: ' + autoFrameworkBudgetValue)) {
@@ -5915,6 +6031,13 @@ let flowIpcShell = #"""
             && lazyGridStatusText.includes('range: 15-20')) {
           window.VaadinDesktopIpcDiagnostics.frameworkLazyDataProviderReportEventObserved = true;
         }
+        if (window.VaadinDesktopIpcDiagnostics.frameworkGridScrollVirtualizationFetchObserved
+            && lazyGridStatusText.includes('Lazy grid fetches:')
+            && lazyGridObservedRange
+            && lazyGridObservedRange === window.VaadinDesktopIpcDiagnostics.frameworkGridScrollVirtualizationFetchRange) {
+          window.VaadinDesktopIpcDiagnostics.frameworkGridScrollVirtualizationReportEventObserved = true;
+          window.VaadinDesktopIpcDiagnostics.gridScrollVirtualizationReportEventObserved = true;
+        }
         window.VaadinDesktopIpcDiagnostics.frameworkAppInteractionComplete =
           window.VaadinDesktopIpcDiagnostics.frameworkAppBudgetEventRpcObserved
           && window.VaadinDesktopIpcDiagnostics.frameworkAppBudgetEventObserved
@@ -5950,13 +6073,31 @@ let flowIpcShell = #"""
         window.VaadinDesktopIpcDiagnostics.gridLazyDataProviderCallbackFetchObserved =
           window.VaadinDesktopIpcDiagnostics.gridLazyDataProviderCallbackFetchObserved
           || window.VaadinDesktopIpcDiagnostics.frameworkLazyDataProviderFetchObserved;
+        window.VaadinDesktopIpcDiagnostics.frameworkGridScrollVirtualizationComplete =
+          window.VaadinDesktopIpcDiagnostics.frameworkGridScrollVirtualizationRendered
+          && window.VaadinDesktopIpcDiagnostics.frameworkGridScrollVirtualizationClientApiAvailable
+          && window.VaadinDesktopIpcDiagnostics.frameworkGridScrollVirtualizationClientApiInvoked
+          && window.VaadinDesktopIpcDiagnostics.frameworkGridScrollVirtualizationPublishedRpcObserved
+          && window.VaadinDesktopIpcDiagnostics.frameworkGridScrollVirtualizationFetchObserved
+          && window.VaadinDesktopIpcDiagnostics.frameworkGridScrollVirtualizationReportEventRpcObserved
+          && window.VaadinDesktopIpcDiagnostics.frameworkGridScrollVirtualizationReportEventObserved;
+        window.VaadinDesktopIpcDiagnostics.gridScrollVirtualizationClientApiAvailable =
+          window.VaadinDesktopIpcDiagnostics.frameworkGridScrollVirtualizationClientApiAvailable;
+        window.VaadinDesktopIpcDiagnostics.gridScrollVirtualizationClientApiInvoked =
+          window.VaadinDesktopIpcDiagnostics.frameworkGridScrollVirtualizationClientApiInvoked;
+        window.VaadinDesktopIpcDiagnostics.gridScrollVirtualizationPublishedRpcObserved =
+          window.VaadinDesktopIpcDiagnostics.gridScrollVirtualizationPublishedRpcObserved
+          || window.VaadinDesktopIpcDiagnostics.frameworkGridScrollVirtualizationPublishedRpcObserved;
         if (window.VaadinDesktopIpcDiagnostics.frameworkAppInteractionComplete
             && (!window.__VAADIN_DESKTOP_FLOW_IPC_AUTO_COMPONENT_MATRIX__
               || window.VaadinDesktopIpcDiagnostics.frameworkComponentMatrixComplete)
             && (!window.__VAADIN_DESKTOP_FLOW_IPC_AUTO_DATA_COMPONENTS__
               || window.VaadinDesktopIpcDiagnostics.frameworkDataComponentMatrixComplete)
             && (!window.__VAADIN_DESKTOP_FLOW_IPC_AUTO_LAZY_DATA__
-              || window.VaadinDesktopIpcDiagnostics.frameworkLazyDataProviderComplete)) {
+              || window.VaadinDesktopIpcDiagnostics.frameworkLazyDataProviderComplete)
+            && (!window.__VAADIN_DESKTOP_FLOW_IPC_AUTO_GRID_SCROLL__
+              || window.VaadinDesktopIpcDiagnostics.frameworkGridScrollVirtualizationComplete
+              || window.VaadinDesktopIpcDiagnostics.frameworkGridScrollVirtualizationAcceptedBlockerObserved)) {
           autoFrameworkUpdateDone = true;
           autoFrameworkUpdateInFlight = false;
         }
@@ -6018,6 +6159,37 @@ let flowIpcShell = #"""
         }
       }
 
+      function sendFrameworkGridScrollClientApi(componentId, index) {
+        const target = flowClientEngineElementById(componentId);
+        const element = target ? target.element : null;
+        window.VaadinDesktopIpcDiagnostics.frameworkGridScrollVirtualizationClientApiAvailable =
+          !!element && typeof element.scrollToIndex === 'function';
+        window.VaadinDesktopIpcDiagnostics.gridScrollVirtualizationClientApiAvailable =
+          window.VaadinDesktopIpcDiagnostics.frameworkGridScrollVirtualizationClientApiAvailable;
+        if (!target || !element || typeof element.scrollToIndex !== 'function'
+            || !window.VaadinDesktopIpcDiagnostics.flowClientEngineXhrBridgeInstalled) {
+          return false;
+        }
+        try {
+          autoFrameworkUpdateInFlight = true;
+          window.VaadinDesktopIpcDiagnostics.frameworkGridScrollVirtualizationClientApiInvoked = true;
+          window.VaadinDesktopIpcDiagnostics.frameworkGridScrollVirtualizationAwaitingRpc = true;
+          window.VaadinDesktopIpcDiagnostics.gridScrollVirtualizationClientApiInvoked = true;
+          window.VaadinDesktopIpcDiagnostics.gridScrollVirtualizationFailureLayer = '';
+          element.scrollToIndex(index);
+          return true;
+        } catch (error) {
+          autoFrameworkUpdateInFlight = false;
+          const message = error && error.message ? error.message : String(error);
+          window.VaadinDesktopIpcDiagnostics.frameworkGridScrollVirtualizationFailureLayer =
+            'grid-client-scroll-api-error:' + message;
+          window.VaadinDesktopIpcDiagnostics.gridScrollVirtualizationFailureLayer =
+            window.VaadinDesktopIpcDiagnostics.frameworkGridScrollVirtualizationFailureLayer;
+          window.VaadinDesktopIpcDiagnostics.frameworkAppFailureReason = message;
+          return false;
+        }
+      }
+
       function frameworkAppStepDone() {
         refreshFrameworkAppDiagnostics();
         if (autoFrameworkUpdateStep === 0) {
@@ -6050,12 +6222,21 @@ let flowIpcShell = #"""
         if (autoFrameworkUpdateStep === 9) {
           return window.VaadinDesktopIpcDiagnostics.frameworkLazyDataProviderPublishedRpcObserved;
         }
-        return window.VaadinDesktopIpcDiagnostics.frameworkLazyDataProviderReportEventObserved;
+        if (autoFrameworkUpdateStep === 10) {
+          return window.VaadinDesktopIpcDiagnostics.frameworkLazyDataProviderReportEventObserved;
+        }
+        if (autoFrameworkUpdateStep === 11) {
+          return window.VaadinDesktopIpcDiagnostics.frameworkGridScrollVirtualizationPublishedRpcObserved
+            || window.VaadinDesktopIpcDiagnostics.frameworkGridScrollVirtualizationAcceptedBlockerObserved;
+        }
+        return window.VaadinDesktopIpcDiagnostics.frameworkGridScrollVirtualizationReportEventObserved
+          || window.VaadinDesktopIpcDiagnostics.frameworkGridScrollVirtualizationAcceptedBlockerObserved;
       }
 
       function advanceFrameworkAppStepIfDone() {
         const stepCount = window.__VAADIN_DESKTOP_FLOW_IPC_AUTO_DATA_COMPONENTS__
-          ? (window.__VAADIN_DESKTOP_FLOW_IPC_AUTO_LAZY_DATA__ ? 11 : 9)
+          ? (window.__VAADIN_DESKTOP_FLOW_IPC_AUTO_GRID_SCROLL__ ? 13
+            : (window.__VAADIN_DESKTOP_FLOW_IPC_AUTO_LAZY_DATA__ ? 11 : 9))
           : (window.__VAADIN_DESKTOP_FLOW_IPC_AUTO_COMPONENT_MATRIX__ ? 7 : 4);
         while (autoFrameworkUpdateStep < stepCount && frameworkAppStepDone()) {
           const completedStep = autoFrameworkUpdateStep;
@@ -6074,7 +6255,10 @@ let flowIpcShell = #"""
               && (!window.__VAADIN_DESKTOP_FLOW_IPC_AUTO_DATA_COMPONENTS__
                 || window.VaadinDesktopIpcDiagnostics.frameworkDataComponentMatrixComplete)
               && (!window.__VAADIN_DESKTOP_FLOW_IPC_AUTO_LAZY_DATA__
-                || window.VaadinDesktopIpcDiagnostics.frameworkLazyDataProviderComplete)) {
+                || window.VaadinDesktopIpcDiagnostics.frameworkLazyDataProviderComplete)
+              && (!window.__VAADIN_DESKTOP_FLOW_IPC_AUTO_GRID_SCROLL__
+                || window.VaadinDesktopIpcDiagnostics.frameworkGridScrollVirtualizationComplete
+                || window.VaadinDesktopIpcDiagnostics.frameworkGridScrollVirtualizationAcceptedBlockerObserved)) {
             autoFrameworkUpdateDone = true;
           }
         }
@@ -6096,6 +6280,21 @@ let flowIpcShell = #"""
           return;
         }
         if (autoFrameworkUpdateAttempts >= 80) {
+          if (autoFrameworkUpdateStep === 11
+              && !window.VaadinDesktopIpcDiagnostics.frameworkGridScrollVirtualizationPublishedRpcObserved) {
+            const failureLayer = window.VaadinDesktopIpcDiagnostics.frameworkGridScrollVirtualizationClientApiInvoked
+              ? 'client-scroll-api-no-viewport-rpc'
+              : 'grid-client-api-missing';
+            window.VaadinDesktopIpcDiagnostics.frameworkGridScrollVirtualizationAcceptedBlockerObserved = true;
+            window.VaadinDesktopIpcDiagnostics.gridScrollVirtualizationAcceptedBlockerObserved = true;
+            window.VaadinDesktopIpcDiagnostics.frameworkGridScrollVirtualizationFailureLayer =
+              failureLayer;
+            window.VaadinDesktopIpcDiagnostics.gridScrollVirtualizationFailureLayer =
+              failureLayer;
+            autoFrameworkUpdateInFlight = false;
+            advanceFrameworkAppStepIfDone();
+            return;
+          }
           window.VaadinDesktopIpcDiagnostics.frameworkAppFailureReason =
             'framework-app-auto-update-step-timeout-' + autoFrameworkUpdateStep;
           return;
@@ -6160,6 +6359,10 @@ let flowIpcShell = #"""
         } else if (autoFrameworkUpdateStep === 9) {
           sent = sendFrameworkPublishedMethod('framework-lazy-grid', 'setViewportRange', [20, 8]);
         } else if (autoFrameworkUpdateStep === 10) {
+          sent = sendFrameworkAppEvent('framework-lazy-grid-report', 'click', {});
+        } else if (autoFrameworkUpdateStep === 11) {
+          sent = sendFrameworkGridScrollClientApi('framework-lazy-grid', 45);
+        } else if (autoFrameworkUpdateStep === 12) {
           sent = sendFrameworkAppEvent('framework-lazy-grid-report', 'click', {});
         }
         if (!sent) {
@@ -6428,6 +6631,9 @@ let flowIpcShell = #"""
                   ? rpc.templateEventMethodName
                   : (type === 'event' ? 'uidl-rpc' : 'resync'));
               const rpcComponentId = rpcNodeId >= 0 ? flowClientElementIdByNodeId(rpcNodeId) : '';
+              const gridScrollClientApiRpc = rpcComponentId === 'framework-lazy-grid'
+                && rpcEventType === 'setViewportRange'
+                && window.VaadinDesktopIpcDiagnostics.frameworkGridScrollVirtualizationAwaitingRpc === true;
               const ipcPayload = {
                 dispatch: 'flow-client-xhr',
                 componentId: rpcComponentId,
@@ -6436,6 +6642,7 @@ let flowIpcShell = #"""
                 event: type === 'event' ? rpcEventType : 'resync',
                 uidlRpc: requestPayload,
                 rpcType: rpc && typeof rpc.type === 'string' ? rpc.type : '',
+                triggerSource: gridScrollClientApiRpc ? 'client-scroll-api' : '',
                 syncId: Number.isInteger(requestPayload.syncId) ? requestPayload.syncId : flowClientState.syncId,
                 clientId: Number.isInteger(requestPayload.clientId) ? requestPayload.clientId : flowClientState.clientId
               };
@@ -6450,7 +6657,8 @@ let flowIpcShell = #"""
                 xhr: this,
                 eventType: rpcEventType,
                 componentId: rpcComponentId,
-                nodeId: rpcNodeId
+                nodeId: rpcNodeId,
+                gridScrollClientApiRpc
               });
             } catch (error) {
               this._fail(error);
@@ -6536,6 +6744,18 @@ let flowIpcShell = #"""
               window.VaadinDesktopIpcDiagnostics.frameworkLazyDataProviderFetchObserved = true;
               window.VaadinDesktopIpcDiagnostics.gridLazyDataProviderCallbackFetchObserved = true;
             }
+            if (pending.gridScrollClientApiRpc) {
+              const scrollRange = lazyGridRangeFromText(body);
+              window.VaadinDesktopIpcDiagnostics.frameworkGridScrollVirtualizationPublishedRpcObserved = true;
+              window.VaadinDesktopIpcDiagnostics.frameworkGridScrollVirtualizationAwaitingRpc = false;
+              window.VaadinDesktopIpcDiagnostics.gridScrollVirtualizationPublishedRpcObserved = true;
+              if (scrollRange && scrollRange !== '15-20') {
+                window.VaadinDesktopIpcDiagnostics.frameworkGridScrollVirtualizationFetchObserved = true;
+                window.VaadinDesktopIpcDiagnostics.frameworkGridScrollVirtualizationFetchRange = scrollRange;
+                window.VaadinDesktopIpcDiagnostics.gridScrollVirtualizationCallbackFetchObserved = true;
+                window.VaadinDesktopIpcDiagnostics.gridScrollVirtualizationFetchRange = scrollRange;
+              }
+            }
             autoFrameworkUpdateInFlight = false;
           }
           if (message.type === 'patch' && message.payload && message.payload.reason === 'event') {
@@ -6602,12 +6822,31 @@ let flowIpcShell = #"""
                   window.VaadinDesktopIpcDiagnostics.frameworkLazyDataProviderFetchObserved = true;
                   window.VaadinDesktopIpcDiagnostics.gridLazyDataProviderCallbackFetchObserved = true;
                 }
+                if (pending.gridScrollClientApiRpc) {
+                  const scrollRange = lazyGridRangeFromText(body);
+                  window.VaadinDesktopIpcDiagnostics.frameworkGridScrollVirtualizationPublishedRpcObserved = true;
+                  window.VaadinDesktopIpcDiagnostics.frameworkGridScrollVirtualizationAwaitingRpc = false;
+                  window.VaadinDesktopIpcDiagnostics.gridScrollVirtualizationPublishedRpcObserved = true;
+                  if (scrollRange && scrollRange !== '15-20') {
+                    window.VaadinDesktopIpcDiagnostics.frameworkGridScrollVirtualizationFetchObserved = true;
+                    window.VaadinDesktopIpcDiagnostics.frameworkGridScrollVirtualizationFetchRange = scrollRange;
+                    window.VaadinDesktopIpcDiagnostics.gridScrollVirtualizationCallbackFetchObserved = true;
+                    window.VaadinDesktopIpcDiagnostics.gridScrollVirtualizationFetchRange = scrollRange;
+                  }
+                }
                 autoFrameworkUpdateInFlight = false;
               } else if (pending.componentId === 'framework-lazy-grid-report') {
                 window.VaadinDesktopIpcDiagnostics.frameworkLazyDataProviderReportEventRpcObserved = true;
                 if (body.includes('Lazy grid fetches:')
                     && body.includes('range: 15-20')) {
                   window.VaadinDesktopIpcDiagnostics.frameworkLazyDataProviderReportEventObserved = true;
+                }
+                if (window.VaadinDesktopIpcDiagnostics.frameworkGridScrollVirtualizationFetchRange
+                    && body.includes('Lazy grid fetches:')
+                    && body.includes('range: ' + window.VaadinDesktopIpcDiagnostics.frameworkGridScrollVirtualizationFetchRange)) {
+                  window.VaadinDesktopIpcDiagnostics.frameworkGridScrollVirtualizationReportEventRpcObserved = true;
+                  window.VaadinDesktopIpcDiagnostics.frameworkGridScrollVirtualizationReportEventObserved = true;
+                  window.VaadinDesktopIpcDiagnostics.gridScrollVirtualizationReportEventObserved = true;
                 }
                 autoFrameworkUpdateInFlight = false;
               }
@@ -9681,7 +9920,111 @@ let flowIpcShell = #"""
           gridLazyDataProviderNextResolutionStep:
             source.gridLazyDataProviderNextResolutionStep || '',
           gridLazyDataProviderStageExecutionStatus: executionStatus || '',
-          gridLazyDataProviderStageScheme: scheme || ''
+          gridLazyDataProviderStageScheme: scheme || '',
+          gridScrollVirtualizationVersion:
+            source.gridScrollVirtualizationVersion || '',
+          gridScrollVirtualizationSource:
+            source.gridScrollVirtualizationSource || '',
+          gridScrollVirtualizationScope:
+            source.gridScrollVirtualizationScope || '',
+          gridScrollVirtualizationAppShape:
+            source.gridScrollVirtualizationAppShape || '',
+          gridScrollVirtualizationTargetTags:
+            source.gridScrollVirtualizationTargetTags || '',
+          gridScrollVirtualizationJavaClasses:
+            source.gridScrollVirtualizationJavaClasses || '',
+          gridScrollVirtualizationComponentIds:
+            source.gridScrollVirtualizationComponentIds || '',
+          gridScrollVirtualizationModuleSpecifiers:
+            source.gridScrollVirtualizationModuleSpecifiers || '',
+          gridScrollVirtualizationClientApi:
+            source.gridScrollVirtualizationClientApi || '',
+          gridScrollVirtualizationRequestedIndex:
+            Number(source.gridScrollVirtualizationRequestedIndex || 0),
+          gridScrollVirtualizationExpectedResult:
+            source.gridScrollVirtualizationExpectedResult || '',
+          gridScrollVirtualizationSelectedArtifacts:
+            source.gridScrollVirtualizationSelectedArtifacts || '',
+          gridScrollVirtualizationSelectedArtifactCount:
+            Number(source.gridScrollVirtualizationSelectedArtifactCount || 0),
+          gridScrollVirtualizationGeneratedImportsOwnerSource:
+            source.gridScrollVirtualizationGeneratedImportsOwnerSource || '',
+          gridScrollVirtualizationGeneratedImportsOwnerArtifact:
+            source.gridScrollVirtualizationGeneratedImportsOwnerArtifact || '',
+          gridScrollVirtualizationProductionSupportArtifact:
+            source.gridScrollVirtualizationProductionSupportArtifact || '',
+          gridScrollVirtualizationProductionSupportSha256:
+            source.gridScrollVirtualizationProductionSupportSha256 || '',
+          gridScrollVirtualizationProductionSupportBytes:
+            Number(source.gridScrollVirtualizationProductionSupportBytes || 0),
+          gridScrollVirtualizationProductionEntryArtifact:
+            source.gridScrollVirtualizationProductionEntryArtifact || '',
+          gridScrollVirtualizationSourceChunkArtifact:
+            source.gridScrollVirtualizationSourceChunkArtifact || '',
+          gridScrollVirtualizationSourceChunkStatus:
+            source.gridScrollVirtualizationSourceChunkStatus || '',
+          gridScrollVirtualizationResolvedSpecifiers:
+            source.gridScrollVirtualizationResolvedSpecifiers || '',
+          gridScrollVirtualizationUnresolvedSpecifiers:
+            typeof source.gridScrollVirtualizationUnresolvedSpecifiers === 'string'
+              ? source.gridScrollVirtualizationUnresolvedSpecifiers
+              : '',
+          gridScrollVirtualizationAllowedSchemes:
+            source.gridScrollVirtualizationAllowedSchemes || '',
+          gridScrollVirtualizationIntegrityPolicy:
+            source.gridScrollVirtualizationIntegrityPolicy || '',
+          gridScrollVirtualizationBuildGoal:
+            source.gridScrollVirtualizationBuildGoal || '',
+          gridScrollVirtualizationBuildStatus:
+            source.gridScrollVirtualizationBuildStatus || '',
+          gridScrollVirtualizationOutputUsability:
+            source.gridScrollVirtualizationOutputUsability || '',
+          gridScrollVirtualizationFrameworkAppRequired:
+            source.gridScrollVirtualizationFrameworkAppRequired === true,
+          gridScrollVirtualizationFrameworkAppObserved:
+            source.gridScrollVirtualizationFrameworkAppObserved === true,
+          gridScrollVirtualizationCliContractEnabled:
+            source.gridScrollVirtualizationCliContractEnabled === true,
+          gridScrollVirtualizationManifestReady:
+            source.gridScrollVirtualizationManifestReady === true,
+          gridScrollVirtualizationRuntimeHandoffRequired:
+            source.gridScrollVirtualizationRuntimeHandoffRequired === true,
+          gridScrollVirtualizationRuntimeHandoffReady:
+            source.gridScrollVirtualizationRuntimeHandoffReady === true,
+          gridScrollVirtualizationRuntimeHandoffSatisfied:
+            runtimeHandoffSatisfied,
+          gridScrollVirtualizationClientApiAvailable:
+            source.gridScrollVirtualizationClientApiAvailable === true,
+          gridScrollVirtualizationClientApiInvoked:
+            source.gridScrollVirtualizationClientApiInvoked === true,
+          gridScrollVirtualizationPublishedRpcObserved:
+            source.gridScrollVirtualizationPublishedRpcObserved === true,
+          gridScrollVirtualizationCallbackFetchObserved:
+            source.gridScrollVirtualizationCallbackFetchObserved === true,
+          gridScrollVirtualizationFetchRange:
+            source.gridScrollVirtualizationFetchRange || '',
+          gridScrollVirtualizationReportEventObserved:
+            source.gridScrollVirtualizationReportEventObserved === true,
+          gridScrollVirtualizationAcceptedBlockerObserved:
+            source.gridScrollVirtualizationAcceptedBlockerObserved === true,
+          gridScrollVirtualizationStaged: true,
+          gridScrollVirtualizationCustomSchemeObserved: customSchemeObserved,
+          gridScrollVirtualizationBlobFallbackObserved: blobFallbackObserved
+            || source.gridScrollVirtualizationBlobFallbackObserved === true,
+          gridScrollVirtualizationNoLocalhost:
+            source.gridScrollVirtualizationNoLocalhost !== false,
+          gridScrollVirtualizationFixtureSubstituted:
+            source.gridScrollVirtualizationFixtureSubstituted === true,
+          gridScrollVirtualizationAcceptableFailures:
+            source.gridScrollVirtualizationAcceptableFailures || '',
+          gridScrollVirtualizationFailureLayer:
+            runtimeHandoffSatisfied ? '' : (source.gridScrollVirtualizationFailureLayer || ''),
+          gridScrollVirtualizationRemainingBlockers:
+            source.gridScrollVirtualizationRemainingBlockers || '',
+          gridScrollVirtualizationNextResolutionStep:
+            source.gridScrollVirtualizationNextResolutionStep || '',
+          gridScrollVirtualizationStageExecutionStatus: executionStatus || '',
+          gridScrollVirtualizationStageScheme: scheme || ''
         };
       }
 
@@ -9833,7 +10176,39 @@ let flowIpcShell = #"""
           'gridLazyDataProviderRemainingBlockers',
           'gridLazyDataProviderNextResolutionStep',
           'gridLazyDataProviderStageExecutionStatus',
-          'gridLazyDataProviderStageScheme'
+          'gridLazyDataProviderStageScheme',
+          'gridScrollVirtualizationVersion',
+          'gridScrollVirtualizationSource',
+          'gridScrollVirtualizationScope',
+          'gridScrollVirtualizationAppShape',
+          'gridScrollVirtualizationTargetTags',
+          'gridScrollVirtualizationJavaClasses',
+          'gridScrollVirtualizationComponentIds',
+          'gridScrollVirtualizationModuleSpecifiers',
+          'gridScrollVirtualizationClientApi',
+          'gridScrollVirtualizationExpectedResult',
+          'gridScrollVirtualizationSelectedArtifacts',
+          'gridScrollVirtualizationGeneratedImportsOwnerSource',
+          'gridScrollVirtualizationGeneratedImportsOwnerArtifact',
+          'gridScrollVirtualizationProductionSupportArtifact',
+          'gridScrollVirtualizationProductionSupportSha256',
+          'gridScrollVirtualizationProductionEntryArtifact',
+          'gridScrollVirtualizationSourceChunkArtifact',
+          'gridScrollVirtualizationSourceChunkStatus',
+          'gridScrollVirtualizationResolvedSpecifiers',
+          'gridScrollVirtualizationUnresolvedSpecifiers',
+          'gridScrollVirtualizationAllowedSchemes',
+          'gridScrollVirtualizationIntegrityPolicy',
+          'gridScrollVirtualizationBuildGoal',
+          'gridScrollVirtualizationBuildStatus',
+          'gridScrollVirtualizationOutputUsability',
+          'gridScrollVirtualizationFetchRange',
+          'gridScrollVirtualizationAcceptableFailures',
+          'gridScrollVirtualizationFailureLayer',
+          'gridScrollVirtualizationRemainingBlockers',
+          'gridScrollVirtualizationNextResolutionStep',
+          'gridScrollVirtualizationStageExecutionStatus',
+          'gridScrollVirtualizationStageScheme'
         ]) {
           d[key] = details[key] || d[key] || '';
         }
@@ -9850,7 +10225,10 @@ let flowIpcShell = #"""
           'dataComponentResourceMatrixSelectedArtifactCount',
           'dataComponentResourceMatrixProductionSupportBytes',
           'gridLazyDataProviderSelectedArtifactCount',
-          'gridLazyDataProviderProductionSupportBytes'
+          'gridLazyDataProviderProductionSupportBytes',
+          'gridScrollVirtualizationRequestedIndex',
+          'gridScrollVirtualizationSelectedArtifactCount',
+          'gridScrollVirtualizationProductionSupportBytes'
         ]) {
           d[key] = Number(details[key] || d[key] || 0);
         }
@@ -9925,7 +10303,25 @@ let flowIpcShell = #"""
           'gridLazyDataProviderCustomSchemeObserved',
           'gridLazyDataProviderBlobFallbackObserved',
           'gridLazyDataProviderNoLocalhost',
-          'gridLazyDataProviderFixtureSubstituted'
+          'gridLazyDataProviderFixtureSubstituted',
+          'gridScrollVirtualizationFrameworkAppRequired',
+          'gridScrollVirtualizationFrameworkAppObserved',
+          'gridScrollVirtualizationCliContractEnabled',
+          'gridScrollVirtualizationManifestReady',
+          'gridScrollVirtualizationRuntimeHandoffRequired',
+          'gridScrollVirtualizationRuntimeHandoffReady',
+          'gridScrollVirtualizationRuntimeHandoffSatisfied',
+          'gridScrollVirtualizationClientApiAvailable',
+          'gridScrollVirtualizationClientApiInvoked',
+          'gridScrollVirtualizationPublishedRpcObserved',
+          'gridScrollVirtualizationCallbackFetchObserved',
+          'gridScrollVirtualizationReportEventObserved',
+          'gridScrollVirtualizationAcceptedBlockerObserved',
+          'gridScrollVirtualizationStaged',
+          'gridScrollVirtualizationCustomSchemeObserved',
+          'gridScrollVirtualizationBlobFallbackObserved',
+          'gridScrollVirtualizationNoLocalhost',
+          'gridScrollVirtualizationFixtureSubstituted'
         ]) {
           d[key] = details[key] === true || d[key] === true;
         }

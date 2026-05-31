@@ -51,8 +51,9 @@ v0/v1 runtime 切片走向可产品化桌面框架的最终完成状态。
 - `docs/goal-1_43.md`：Generated Lazy Chunk SPI Decision Contract，已完成。
 - `docs/goal-1_44.md`：Packaging-Time Frontend Inventory Contract，已完成。
 - `docs/goal-1_45.md`：Packaging Runtime Handoff Reuse Contract，已完成。
+- `docs/goal-1_46.md`：Broader Component Resource Matrix Contract，已完成。
 
-当前已完成到 `docs/goal-1_45.md`。v1.31 先把 v1.30 的 offline plugin blocker 推进到
+当前已完成到 `docs/goal-1_46.md`。v1.31 先把 v1.30 的 offline plugin blocker 推进到
 explicit online/local-repo preflight；v1.32 进一步把 blocker 推进到 full
 `build-frontend` 输出层，证明当前 smoke app 已产生真实 source generated imports/chunk、
 production webapp build output 和 `prod.bundle`。v1.33 则把 v1.32 的 generic
@@ -138,8 +139,17 @@ validation app 使用同一 contract 记录 `packagingRuntimeHandoffReuseAppShap
 并完成真实窗口 BigDecimalField、Checkbox、Select、Button interaction、UIDL patches 和 desktop
 capability command-result path。它仍不是 installer packaging、dev-mode/Vite parity、broad
 component/resource parity 或 durable reconnect。
+v1.46 将 v1.45 的 framework validation path 扩展为 broader component resource matrix contract：
+framework app 新增普通 Flow `ComboBox`、`DatePicker` 和 `Dialog`，manifest/resource response、
+Swift `resourceStage` / `webview.dom` 和 inspector gate 记录
+`flow-ipc-broader-component-resource-matrix-v1_46`、target tags/classes/ids、current-app
+build artifacts、generated imports owner source、resolved/unresolved specifiers、custom-scheme
+loader、sha256/byte-count、no-localhost/no-fixture proof，并验证 ComboBox/DatePicker/Dialog
+事件经 Flow client -> IPC UIDL RPC -> Java listener -> UIDL patch -> visible DOM 成功。它仍不是
+Grid/VirtualList、Upload/Download、Binder validation、theme variants、dev-mode/Vite、installer
+packaging 或 durable reconnect parity。
 
-后续阶段应继续以 `docs/goal-1_46.md` 等文件拆分，
+后续阶段应继续以 `docs/goal-1_47.md` 等文件拆分，
 每个阶段只拿走本长期目标中的一个可评审切片。不要把本文件改写成短期任务清单；
 它是长期北极星和完成度账本。
 
@@ -161,12 +171,12 @@ component/resource parity 或 durable reconnect。
 
 ## 当前基线
 
-截至 goal 1.45，仓库已经证明：
+截至 goal 1.46，仓库已经证明：
 
 - `dev-ipc` 可以启动 no-localhost Flow IPC runtime。
 - 真实 macOS Swift/AppKit/WKWebView 窗口可以运行 Flow IPC smoke app 和 framework
   validation app。
-- Button、BigDecimalField、Checkbox、Select、list/repeated update、desktop capability
+- Button、BigDecimalField、Checkbox、Select、ComboBox、DatePicker、Dialog、list/repeated update、desktop capability
   baseline 都有 trace gate 或 host-log gate 证据。
 - Java sidecar 通过 `UidlWriter`、`UidlRequestHandler`、`ServerRpcHandler`、
   desktop `VaadinRequest` / `VaadinResponse` adapter 切片生成真实 UIDL。
@@ -631,7 +641,13 @@ component/resource parity 或 durable reconnect。
   framework trace 还证明普通 Flow BigDecimalField/Checkbox/Select/Button interaction、UIDL patches
   和 desktop capability command-result path。它仍不是 installer packaging、dev-mode/Vite parity、
   broad component/resource parity 或 durable reconnect。
-- 当前 app/build 的真实 generated/lazy chunk file parity 泛化、dev-mode/Vite execution、更广组件资源覆盖、
+- v1.46 已把 framework validation app 推进到 broader component resource matrix：
+  `flow-ipc-broader-component-resource-matrix-v1_46` 记录 ComboBox、DatePicker 和 Dialog 的
+  tags/classes/ids、current-app source/prod artifacts、generated imports owner source、
+  resolver specifiers、custom-scheme/no-localhost proof 和 framework app runtime evidence；真实窗口
+  trace 证明三者的可见 DOM 与事件/patch 链路成功。它仍不是 Grid/VirtualList、Upload/Download、
+  Binder validation、theme variants、dev-mode/Vite、installer packaging 或 durable reconnect parity。
+- 当前 app/build 的真实 generated/lazy chunk file parity 泛化、dev-mode/Vite execution、更深组件资源覆盖、
   installer packaging 和 durable reconnect 仍是明确 blocker，不计入最终完成。
 
 ## 最终完成标准
@@ -774,11 +790,12 @@ component/resource parity 或 durable reconnect。
 
 ## 当前建议的下一阶段
 
-v1.45 已完成 Packaging Runtime Handoff Reuse Contract。下一阶段建议优先从
-可复用 packaging/runtime handoff 转向更广 component/resource parity 或 dev-mode/Vite 替代路径：
+v1.46 已完成 Broader Component Resource Matrix Contract。下一阶段建议继续沿着更真实的
+component/resource parity 或 dev-mode/Vite 替代路径推进：
 
-- 创建 `docs/goal-1_46.md`：在 v1.45 的 module-relative handoff 基础上选择一个更广
-  component/resource matrix 切片，或把 dev-mode/Vite graph execution 收敛为明确替代路径。
+- 创建 `docs/goal-1_47.md`：在 v1.46 的 ComboBox/DatePicker/Dialog matrix 基础上选择一个更深
+  的 component/resource slice，例如 Grid/VirtualList、Upload/Download、Binder validation、
+  theme variants，或把 dev-mode/Vite graph execution 收敛为明确替代路径。
 - 不再把 supported Vaadin lazy chunk SPI 当作当前默认路径；除非上游/本地版本提供稳定 API，否则继续以
   packaging-time `build-frontend` artifacts 作为产品化输入。
 - 真实 production owner-owned runtime reuse success，或把当前 generated imports owner contract 与

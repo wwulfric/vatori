@@ -2,6 +2,9 @@ package dev.vatori.ipcframework;
 
 import com.vaadin.flow.component.button.Button;
 import com.vaadin.flow.component.checkbox.Checkbox;
+import com.vaadin.flow.component.combobox.ComboBox;
+import com.vaadin.flow.component.datepicker.DatePicker;
+import com.vaadin.flow.component.dialog.Dialog;
 import com.vaadin.flow.component.html.H1;
 import com.vaadin.flow.component.html.Span;
 import com.vaadin.flow.component.orderedlayout.VerticalLayout;
@@ -12,6 +15,7 @@ import dev.vatori.desktop.Desktop;
 import tools.jackson.databind.JsonNode;
 
 import java.math.BigDecimal;
+import java.time.LocalDate;
 
 @Route("")
 @com.vaadin.flow.component.dependency.JavaScript(
@@ -21,6 +25,8 @@ public class FlowOverIpcFrameworkView extends VerticalLayout {
     private final VerticalLayout updateList = new VerticalLayout();
     private int revision;
     private String priorityValue = "standard";
+    private String reviewerValue = "platform";
+    private String dueDateValue = "2026-06-15";
 
     public FlowOverIpcFrameworkView() {
         setId("framework-root");
@@ -45,6 +51,24 @@ public class FlowOverIpcFrameworkView extends VerticalLayout {
         priority.setLabel("Priority");
         priority.setItems("standard", "audit", "deferred");
         priority.setValue(priorityValue);
+
+        ComboBox<String> reviewer = new ComboBox<>("Reviewer");
+        reviewer.setId("framework-reviewer");
+        reviewer.setItems("platform", "desktop", "audit");
+        reviewer.setValue(reviewerValue);
+
+        DatePicker dueDate = new DatePicker("Due date");
+        dueDate.setId("framework-due-date");
+        dueDate.setValue(LocalDate.of(2026, 6, 15));
+
+        Span matrixStatus = new Span("Component matrix: pending");
+        matrixStatus.setId("framework-matrix-status");
+
+        Dialog detailsDialog = new Dialog();
+        detailsDialog.setId("framework-dialog");
+        Span dialogContent = new Span("Dialog details pending");
+        dialogContent.setId("framework-dialog-content");
+        detailsDialog.add(dialogContent);
 
         Span componentStatus = new Span("Components: pending");
         componentStatus.setId("framework-component-status");
@@ -72,6 +96,32 @@ public class FlowOverIpcFrameworkView extends VerticalLayout {
             componentStatus.setText("Priority changed: " + priorityValue);
         }).addEventData("element.value");
 
+        reviewer.getElement().addEventListener("change", event -> {
+            JsonNode valueNode = event.getEventData().get("element.value");
+            String value = valueNode == null ? "" : valueNode.asString();
+            if (!value.isBlank()) {
+                reviewerValue = value;
+            }
+            matrixStatus.setText("Reviewer changed: " + reviewerValue);
+        }).addEventData("element.value");
+
+        dueDate.getElement().addEventListener("change", event -> {
+            JsonNode valueNode = event.getEventData().get("element.value");
+            String value = valueNode == null ? "" : valueNode.asString();
+            if (!value.isBlank()) {
+                dueDateValue = value;
+            }
+            matrixStatus.setText("Due date changed: " + dueDateValue);
+        }).addEventData("element.value");
+
+        Button openDialog = new Button("Open Details", event -> {
+            String text = "Dialog opened: " + reviewerValue + " due " + dueDateValue;
+            dialogContent.setText(text);
+            matrixStatus.setText(text);
+            detailsDialog.open();
+        });
+        openDialog.setId("framework-dialog-open");
+
         Button apply = new Button("Apply Update", event -> {
             revision++;
             String budgetText = budget.getValue() == null ? "unset" : budget.getValue().toPlainString();
@@ -93,7 +143,8 @@ public class FlowOverIpcFrameworkView extends VerticalLayout {
         appendUpdate("Renderer owned by Flow client engine");
         updateList.add(latestUpdate);
 
-        add(title, budget, expedited, priority, apply, status, componentStatus, updateList);
+        add(title, budget, expedited, priority, reviewer, dueDate, openDialog, detailsDialog,
+                apply, status, componentStatus, matrixStatus, updateList);
     }
 
     private void appendUpdate(String text) {

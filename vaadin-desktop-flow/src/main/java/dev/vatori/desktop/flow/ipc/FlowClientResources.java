@@ -704,6 +704,26 @@ final class FlowClientResources {
             "dev-mode-vite-parity,broad-component-resource-parity,installer-packaging,durable-reconnect";
     private static final String PACKAGING_RUNTIME_HANDOFF_REUSE_NEXT_STEP =
             "lift the reusable runtime handoff into packaging artifacts and broaden component/resource coverage beyond the smoke/framework validation matrix";
+    private static final String BROADER_COMPONENT_RESOURCE_MATRIX_VERSION =
+            "flow-ipc-broader-component-resource-matrix-v1_46";
+    private static final String BROADER_COMPONENT_RESOURCE_MATRIX_SOURCE =
+            "packaging-runtime-handoff-reuse-v1_45";
+    private static final String BROADER_COMPONENT_RESOURCE_MATRIX_SCOPE =
+            "framework-validation-app-combobox-datepicker-dialog";
+    private static final String BROADER_COMPONENT_RESOURCE_MATRIX_TARGET_TAGS =
+            "vaadin-combo-box,vaadin-date-picker,vaadin-dialog";
+    private static final String BROADER_COMPONENT_RESOURCE_MATRIX_JAVA_CLASSES =
+            "com.vaadin.flow.component.combobox.ComboBox,com.vaadin.flow.component.datepicker.DatePicker,com.vaadin.flow.component.dialog.Dialog";
+    private static final String BROADER_COMPONENT_RESOURCE_MATRIX_COMPONENT_IDS =
+            "framework-reviewer,framework-due-date,framework-dialog-open,framework-dialog";
+    private static final String BROADER_COMPONENT_RESOURCE_MATRIX_MODULE_SPECIFIERS =
+            "@vaadin/combo-box/src/vaadin-combo-box.js,@vaadin/date-picker/src/vaadin-date-picker.js,@vaadin/dialog/src/vaadin-dialog.js";
+    private static final String BROADER_COMPONENT_RESOURCE_MATRIX_ACCEPTABLE_FAILURES =
+            "component-tag-not-registered,component-event-rpc-missing,component-patch-missing,resource-specifier-unresolved,browser-import-error";
+    private static final String BROADER_COMPONENT_RESOURCE_MATRIX_REMAINING_BLOCKERS =
+            "grid-virtualization,upload-download,binder-validation,theme-variants,dev-mode-vite-parity,installer-packaging,durable-reconnect";
+    private static final String BROADER_COMPONENT_RESOURCE_MATRIX_NEXT_STEP =
+            "turn the framework component matrix into reusable broad component/resource acceptance instead of a three-component validation slice";
     private static final List<String> PRODUCTION_RUNTIME_OWNER_DEPENDENCY_ARTIFACTS = List.of(
             DEV_BUNDLE_COMMONJS_JS,
             DEV_BUNDLE_INDEX_HTML_JS,
@@ -2579,6 +2599,80 @@ final class FlowClientResources {
         attributes.put("packagingRuntimeHandoffReuseCleanupObserved", false);
         attributes.put("packagingRuntimeHandoffReuseNoLocalhost", true);
         attributes.put("packagingRuntimeHandoffReuseFixtureSubstituted", false);
+        attributes.putAll(broaderComponentResourceMatrixAttributes(evidence, buildStep, selectedArtifacts,
+                handoffReady));
+        return attributes;
+    }
+
+    private static Map<String, Object> broaderComponentResourceMatrixAttributes(
+            CurrentAppBuildFrontendOutputEvidence evidence,
+            FrontendBuildStepEvidence buildStep,
+            String selectedArtifacts,
+            boolean handoffReady) {
+        Path module = appModuleDirectory();
+        String appShape = packagingRuntimeHandoffAppShape(module);
+        boolean frameworkApp = "framework-validation-app".equals(appShape);
+        Map<String, Object> attributes = new LinkedHashMap<>();
+        attributes.put("broaderComponentResourceMatrixVersion", BROADER_COMPONENT_RESOURCE_MATRIX_VERSION);
+        attributes.put("broaderComponentResourceMatrixSource", BROADER_COMPONENT_RESOURCE_MATRIX_SOURCE);
+        attributes.put("broaderComponentResourceMatrixScope", BROADER_COMPONENT_RESOURCE_MATRIX_SCOPE);
+        attributes.put("broaderComponentResourceMatrixAppShape", appShape);
+        attributes.put("broaderComponentResourceMatrixTargetTags", BROADER_COMPONENT_RESOURCE_MATRIX_TARGET_TAGS);
+        attributes.put("broaderComponentResourceMatrixJavaClasses", BROADER_COMPONENT_RESOURCE_MATRIX_JAVA_CLASSES);
+        attributes.put("broaderComponentResourceMatrixComponentIds", BROADER_COMPONENT_RESOURCE_MATRIX_COMPONENT_IDS);
+        attributes.put("broaderComponentResourceMatrixModuleSpecifiers",
+                BROADER_COMPONENT_RESOURCE_MATRIX_MODULE_SPECIFIERS);
+        attributes.put("broaderComponentResourceMatrixSelectedArtifacts", selectedArtifacts);
+        attributes.put("broaderComponentResourceMatrixSelectedArtifactCount", csvValues(selectedArtifacts).size());
+        attributes.put("broaderComponentResourceMatrixGeneratedImportsOwnerSource",
+                CURRENT_APP_GENERATED_IMPORTS_OWNER_RUNTIME_CONTRACT_SOURCE);
+        attributes.put("broaderComponentResourceMatrixGeneratedImportsOwnerArtifact",
+                CURRENT_APP_BUILD_FRONTEND_GENERATED_IMPORTS_JS);
+        attributes.put("broaderComponentResourceMatrixProductionSupportArtifact",
+                evidence.sourceGeneratedImportsRootProductionSupportArtifact());
+        attributes.put("broaderComponentResourceMatrixProductionSupportSha256",
+                evidence.productionGeneratedImportsSha256());
+        attributes.put("broaderComponentResourceMatrixProductionSupportBytes",
+                evidence.productionGeneratedImportsBytes());
+        attributes.put("broaderComponentResourceMatrixProductionEntryArtifact",
+                evidence.productionEntryScriptVirtualPath());
+        attributes.put("broaderComponentResourceMatrixSourceChunkArtifact",
+                evidence.sourceChunkVirtualPath());
+        attributes.put("broaderComponentResourceMatrixSourceChunkStatus",
+                evidence.sourceChunkStatus());
+        attributes.put("broaderComponentResourceMatrixResolvedSpecifiers",
+                evidence.sourceGeneratedImportsRootResolvedSpecifiers());
+        attributes.put("broaderComponentResourceMatrixUnresolvedSpecifiers",
+                evidence.sourceGeneratedImportsRootUnresolvedSpecifiers());
+        attributes.put("broaderComponentResourceMatrixAllowedSchemes",
+                PACKAGING_FRONTEND_INVENTORY_ALLOWED_SCHEMES);
+        attributes.put("broaderComponentResourceMatrixIntegrityPolicy",
+                PACKAGING_FRONTEND_INVENTORY_INTEGRITY_POLICY);
+        attributes.put("broaderComponentResourceMatrixBuildGoal", buildStep.goal());
+        attributes.put("broaderComponentResourceMatrixBuildStatus", buildStep.status());
+        attributes.put("broaderComponentResourceMatrixOutputUsability", buildStep.outputUsability());
+        attributes.put("broaderComponentResourceMatrixFrameworkAppRequired", true);
+        attributes.put("broaderComponentResourceMatrixFrameworkAppObserved", frameworkApp);
+        attributes.put("broaderComponentResourceMatrixCliContractEnabled",
+                "1".equals(System.getenv("VAADIN_DESKTOP_FLOW_IPC_FRONTEND_BUILD_V1_46")));
+        attributes.put("broaderComponentResourceMatrixManifestReady", handoffReady && frameworkApp);
+        attributes.put("broaderComponentResourceMatrixRuntimeHandoffRequired", true);
+        attributes.put("broaderComponentResourceMatrixRuntimeHandoffReady", handoffReady);
+        attributes.put("broaderComponentResourceMatrixRuntimeHandoffSatisfied", false);
+        attributes.put("broaderComponentResourceMatrixStaged", false);
+        attributes.put("broaderComponentResourceMatrixCustomSchemeObserved", false);
+        attributes.put("broaderComponentResourceMatrixBlobFallbackObserved", false);
+        attributes.put("broaderComponentResourceMatrixNoLocalhost", true);
+        attributes.put("broaderComponentResourceMatrixFixtureSubstituted", false);
+        attributes.put("broaderComponentResourceMatrixAcceptableFailures",
+                BROADER_COMPONENT_RESOURCE_MATRIX_ACCEPTABLE_FAILURES);
+        attributes.put("broaderComponentResourceMatrixFailureLayer", frameworkApp
+                ? "framework-component-matrix-runtime-validation-pending"
+                : "framework-validation-app-not-selected");
+        attributes.put("broaderComponentResourceMatrixRemainingBlockers",
+                BROADER_COMPONENT_RESOURCE_MATRIX_REMAINING_BLOCKERS);
+        attributes.put("broaderComponentResourceMatrixNextResolutionStep",
+                BROADER_COMPONENT_RESOURCE_MATRIX_NEXT_STEP);
         return attributes;
     }
 

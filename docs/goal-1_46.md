@@ -1,6 +1,6 @@
 # Goal 1.46: Broader Component Resource Matrix Contract
 
-状态：待执行
+状态：已完成
 
 `docs/goal.md` 是长期愿景和完成度账本。v1.45 已经证明 packaging runtime handoff
 不是 strict smoke app 专用：同一 `flow-ipc-packaging-runtime-handoff-reuse-v1_45`
@@ -78,4 +78,33 @@ bash bin/flow-ipc-trace-inspect --require-flow-ipc-v1_46-broader-component-resou
 
 ```text
 feat: add broader component resource matrix contract
+```
+
+## 完成记录
+
+- `test-apps/flow-over-ipc-framework-app` 新增普通 Flow `ComboBox`、`DatePicker` 和
+  `Dialog`，并通过可见 Flow client -> IPC-backed UIDL RPC -> Java listener -> UIDL patch ->
+  visible DOM 链路验证 `Reviewer changed: desktop`、`Due date changed: 2026-06-16`
+  和 `Dialog opened: desktop due 2026-06-16`。
+- Java manifest/resource response、Swift `resourceStage` / `webview.dom` 和 inspector gate
+  新增 `flow-ipc-broader-component-resource-matrix-v1_46` contract，记录目标 tags/classes/ids、
+  current-app build artifacts、generated imports owner source、resolved specifiers、custom-scheme
+  loader、sha256/byte count、no-localhost/no-fixture proof 和 remaining blockers。
+- no-HTTP Flow runtime session 现在在 route/component construction 和 UIDL writer 期间绑定
+  desktop-shaped `UI` / request / response context，并提供最小 `VaadinContext` lookup，以支持
+  Dialog/ComboBox 等更复杂组件路径。
+- 固定 trace 已保存到 `docs/traces/flow-ipc-v1_46-framework.ndjson`。
+
+已执行验收：
+
+```bash
+git diff --check
+bash -n bin/vaadin-desktop
+/usr/bin/swiftc -parse vaadin-desktop-host-swift/Sources/VaadinDesktopHost/main.swift
+mvn -q -o -Dmaven.repo.local=/Users/bytedance/IdeaProjects/vatori/.m2/repository -pl vaadin-desktop-devtools,vaadin-desktop-flow,test-apps/flow-over-ipc-framework-app -am -DskipTests compile
+bash bin/flow-client-resource-smoke
+VAADIN_DESKTOP_MAVEN_OFFLINE=0 VAADIN_DESKTOP_HOST_NO_ACTIVATE=1 VAADIN_DESKTOP_FLOW_IPC_PREPARE_FRONTEND=1 VAADIN_DESKTOP_FLOW_IPC_FRONTEND_BUILD_ONLINE=1 VAADIN_DESKTOP_FLOW_IPC_FRONTEND_BUILD_GOAL=build-frontend VAADIN_DESKTOP_FLOW_IPC_AUTO_FRAMEWORK_UPDATE=1 VAADIN_DESKTOP_FLOW_IPC_AUTO_COMPONENT_MATRIX=1 VAADIN_DESKTOP_FLOW_IPC_AUTO_SHUTDOWN=1 bash bin/vaadin-desktop dev-ipc test-apps/flow-over-ipc-framework-app
+bash bin/flow-ipc-trace-inspect --require-flow-ipc-v1_45-framework-packaging-runtime-handoff-reuse .build/vaadin-desktop-host-swift/host.out.log
+bash bin/flow-ipc-trace-inspect --require-flow-ipc-v1_46-broader-component-resource-matrix .build/vaadin-desktop-host-swift/host.out.log
+bash bin/flow-ipc-trace-inspect --require-flow-ipc-v1_46-broader-component-resource-matrix docs/traces/flow-ipc-v1_46-framework.ndjson
 ```

@@ -215,8 +215,13 @@ final class FlowIpcRuntime {
     private Component instantiateRoute() {
         try {
             return routeClass.getDeclaredConstructor().newInstance();
-        } catch (InstantiationException | IllegalAccessException | InvocationTargetException
-                 | NoSuchMethodException error) {
+        } catch (InvocationTargetException error) {
+            Throwable cause = error.getTargetException();
+            String causeMessage = cause == null ? error.toString()
+                    : cause.getClass().getName() + ": " + cause.getMessage();
+            throw new IllegalStateException("Unable to instantiate Flow IPC route "
+                    + routeClass.getName() + ": " + causeMessage, cause == null ? error : cause);
+        } catch (InstantiationException | IllegalAccessException | NoSuchMethodException error) {
             throw new IllegalStateException("Unable to instantiate Flow IPC route "
                     + routeClass.getName() + ": " + error.getMessage(), error);
         }
@@ -350,12 +355,12 @@ final class FlowIpcRuntime {
 
     private void ensureBootstrapped() {
         if (root == null) {
-            root = instantiateRoute();
             flowSession = DesktopFlowRuntimeSession.create(
                     IPC_SESSION_ID,
                     1,
                     "flow-ipc",
-                    root);
+                    this::instantiateRoute);
+            root = flowSession.root();
         }
         if (flowSession == null) {
             flowSession = DesktopFlowRuntimeSession.create(

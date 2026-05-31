@@ -75,8 +75,29 @@ public final class UidlFlowTransportAdapter implements FlowTransportAdapter {
     @Override
     public String createUidl(UI ui, boolean async, boolean resync) {
         Objects.requireNonNull(ui, "ui");
-        String uidlJson = uidlWriter.createUidl(ui, async, resync).toString();
-        ui.getInternals().setLastRequestResponse(uidlJson);
-        return uidlJson;
+        VaadinSession session = Objects.requireNonNull(ui.getSession(), "ui.session");
+        FlowClientMessage message = new FlowClientMessage(
+                session.getSession() == null ? "" : session.getSession().getId(),
+                ui.getUIId(),
+                "",
+                "",
+                ui.getCsrfToken(),
+                0,
+                resync);
+        DesktopVaadinRequest request = DesktopVaadinRequest.uidl(session, message);
+        DesktopVaadinResponse response = new DesktopVaadinResponse(session.getService());
+
+        Map<Class<?>, CurrentInstance> oldInstances = CurrentInstance.getInstances();
+        CurrentInstance.setCurrent(ui);
+        CurrentInstance.set(VaadinRequest.class, request);
+        CurrentInstance.set(VaadinResponse.class, response);
+        try {
+            String uidlJson = uidlWriter.createUidl(ui, async, resync).toString();
+            ui.getInternals().setLastRequestResponse(uidlJson);
+            return uidlJson;
+        } finally {
+            CurrentInstance.clearAll();
+            CurrentInstance.restoreInstances(oldInstances);
+        }
     }
 }

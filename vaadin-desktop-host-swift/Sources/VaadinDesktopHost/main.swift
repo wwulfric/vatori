@@ -2041,8 +2041,20 @@ final class WebViewHost: NSObject, NSApplicationDelegate, NSWindowDelegate, WKNa
             DispatchQueue.main.asyncAfter(deadline: .now() + 28.0) {
                 self.inspectWebView(webView)
             }
+            DispatchQueue.main.asyncAfter(deadline: .now() + 56.0) {
+                self.inspectWebView(webView)
+            }
+            DispatchQueue.main.asyncAfter(deadline: .now() + 72.0) {
+                self.inspectWebView(webView)
+            }
+            DispatchQueue.main.asyncAfter(deadline: .now() + 96.0) {
+                self.inspectWebView(webView)
+            }
+            DispatchQueue.main.asyncAfter(deadline: .now() + 132.0) {
+                self.inspectWebView(webView)
+            }
         }
-        let snapshotDelay = config.flowIpcAutoFrameworkUpdate ? 29.2 : (extendedFlowIpcVerification ? 42.6 : 5.0)
+        let snapshotDelay = config.flowIpcAutoFrameworkUpdate ? 150.0 : (extendedFlowIpcVerification ? 42.6 : 5.0)
         DispatchQueue.main.asyncAfter(deadline: .now() + snapshotDelay) {
             self.writeSnapshot(webView)
         }
@@ -2063,7 +2075,7 @@ final class WebViewHost: NSObject, NSApplicationDelegate, NSWindowDelegate, WKNa
             return
         }
 
-        let timeoutSeconds = config.flowIpcAutoFrameworkUpdate ? 46.0 : 120.0
+        let timeoutSeconds = config.flowIpcAutoFrameworkUpdate ? 180.0 : 120.0
         let deadline = Date().addingTimeInterval(timeoutSeconds)
         pollAutoShutdownReadiness(webView, deadline: deadline)
     }
@@ -2726,6 +2738,41 @@ final class WebViewHost: NSObject, NSApplicationDelegate, NSWindowDelegate, WKNa
           packagingFrontendInventoryCleanupObserved: !!(window.VaadinDesktopIpcDiagnostics && window.VaadinDesktopIpcDiagnostics.packagingFrontendInventoryCleanupObserved),
           packagingFrontendInventoryNoLocalhost: !!(window.VaadinDesktopIpcDiagnostics && window.VaadinDesktopIpcDiagnostics.packagingFrontendInventoryNoLocalhost),
           packagingFrontendInventoryFixtureSubstituted: !!(window.VaadinDesktopIpcDiagnostics && window.VaadinDesktopIpcDiagnostics.packagingFrontendInventoryFixtureSubstituted),
+          packagingRuntimeHandoffReuseVersion: window.VaadinDesktopIpcDiagnostics ? window.VaadinDesktopIpcDiagnostics.packagingRuntimeHandoffReuseVersion : "",
+          packagingRuntimeHandoffReuseSource: window.VaadinDesktopIpcDiagnostics ? window.VaadinDesktopIpcDiagnostics.packagingRuntimeHandoffReuseSource : "",
+          packagingRuntimeHandoffReuseScope: window.VaadinDesktopIpcDiagnostics ? window.VaadinDesktopIpcDiagnostics.packagingRuntimeHandoffReuseScope : "",
+          packagingRuntimeHandoffReuseModulePath: window.VaadinDesktopIpcDiagnostics ? window.VaadinDesktopIpcDiagnostics.packagingRuntimeHandoffReuseModulePath : "",
+          packagingRuntimeHandoffReuseAppShape: window.VaadinDesktopIpcDiagnostics ? window.VaadinDesktopIpcDiagnostics.packagingRuntimeHandoffReuseAppShape : "",
+          packagingRuntimeHandoffReuseArtifactBasePolicy: window.VaadinDesktopIpcDiagnostics ? window.VaadinDesktopIpcDiagnostics.packagingRuntimeHandoffReuseArtifactBasePolicy : "",
+          packagingRuntimeHandoffReuseRuntimeContracts: window.VaadinDesktopIpcDiagnostics ? window.VaadinDesktopIpcDiagnostics.packagingRuntimeHandoffReuseRuntimeContracts : "",
+          packagingRuntimeHandoffReuseValidationTargets: window.VaadinDesktopIpcDiagnostics ? window.VaadinDesktopIpcDiagnostics.packagingRuntimeHandoffReuseValidationTargets : "",
+          packagingRuntimeHandoffReuseSelectedArtifacts: window.VaadinDesktopIpcDiagnostics ? window.VaadinDesktopIpcDiagnostics.packagingRuntimeHandoffReuseSelectedArtifacts : "",
+          packagingRuntimeHandoffReuseSelectedArtifactCount: window.VaadinDesktopIpcDiagnostics ? Number(window.VaadinDesktopIpcDiagnostics.packagingRuntimeHandoffReuseSelectedArtifactCount || 0) : 0,
+          packagingRuntimeHandoffReuseGeneratedImportsArtifact: window.VaadinDesktopIpcDiagnostics ? window.VaadinDesktopIpcDiagnostics.packagingRuntimeHandoffReuseGeneratedImportsArtifact : "",
+          packagingRuntimeHandoffReuseProductionSupportArtifact: window.VaadinDesktopIpcDiagnostics ? window.VaadinDesktopIpcDiagnostics.packagingRuntimeHandoffReuseProductionSupportArtifact : "",
+          packagingRuntimeHandoffReuseBuildGoal: window.VaadinDesktopIpcDiagnostics ? window.VaadinDesktopIpcDiagnostics.packagingRuntimeHandoffReuseBuildGoal : "",
+          packagingRuntimeHandoffReuseBuildStatus: window.VaadinDesktopIpcDiagnostics ? window.VaadinDesktopIpcDiagnostics.packagingRuntimeHandoffReuseBuildStatus : "",
+          packagingRuntimeHandoffReuseOutputUsability: window.VaadinDesktopIpcDiagnostics ? window.VaadinDesktopIpcDiagnostics.packagingRuntimeHandoffReuseOutputUsability : "",
+          packagingRuntimeHandoffReuseRemainingBlockers: window.VaadinDesktopIpcDiagnostics ? window.VaadinDesktopIpcDiagnostics.packagingRuntimeHandoffReuseRemainingBlockers : "",
+          packagingRuntimeHandoffReuseNextResolutionStep: window.VaadinDesktopIpcDiagnostics ? window.VaadinDesktopIpcDiagnostics.packagingRuntimeHandoffReuseNextResolutionStep : "",
+          packagingRuntimeHandoffReuseStageExecutionStatus: window.VaadinDesktopIpcDiagnostics ? window.VaadinDesktopIpcDiagnostics.packagingRuntimeHandoffReuseStageExecutionStatus : "",
+          packagingRuntimeHandoffReuseStageScheme: window.VaadinDesktopIpcDiagnostics ? window.VaadinDesktopIpcDiagnostics.packagingRuntimeHandoffReuseStageScheme : "",
+          packagingRuntimeHandoffReuseCliContractEnabled: !!(window.VaadinDesktopIpcDiagnostics && window.VaadinDesktopIpcDiagnostics.packagingRuntimeHandoffReuseCliContractEnabled),
+          packagingRuntimeHandoffReuseSameContractAsInventory: !!(window.VaadinDesktopIpcDiagnostics && window.VaadinDesktopIpcDiagnostics.packagingRuntimeHandoffReuseSameContractAsInventory),
+          packagingRuntimeHandoffReuseReusableContract: !!(window.VaadinDesktopIpcDiagnostics && window.VaadinDesktopIpcDiagnostics.packagingRuntimeHandoffReuseReusableContract),
+          packagingRuntimeHandoffReuseModuleRelativeArtifacts: !!(window.VaadinDesktopIpcDiagnostics && window.VaadinDesktopIpcDiagnostics.packagingRuntimeHandoffReuseModuleRelativeArtifacts),
+          packagingRuntimeHandoffReuseSmokeAppSpecific: !!(window.VaadinDesktopIpcDiagnostics && window.VaadinDesktopIpcDiagnostics.packagingRuntimeHandoffReuseSmokeAppSpecific),
+          packagingRuntimeHandoffReuseHostOwnedLoaderRequired: !!(window.VaadinDesktopIpcDiagnostics && window.VaadinDesktopIpcDiagnostics.packagingRuntimeHandoffReuseHostOwnedLoaderRequired),
+          packagingRuntimeHandoffReuseCustomSchemeRequired: !!(window.VaadinDesktopIpcDiagnostics && window.VaadinDesktopIpcDiagnostics.packagingRuntimeHandoffReuseCustomSchemeRequired),
+          packagingRuntimeHandoffReuseManifestReady: !!(window.VaadinDesktopIpcDiagnostics && window.VaadinDesktopIpcDiagnostics.packagingRuntimeHandoffReuseManifestReady),
+          packagingRuntimeHandoffReuseRuntimeHandoffReady: !!(window.VaadinDesktopIpcDiagnostics && window.VaadinDesktopIpcDiagnostics.packagingRuntimeHandoffReuseRuntimeHandoffReady),
+          packagingRuntimeHandoffReuseRuntimeHandoffSatisfied: !!(window.VaadinDesktopIpcDiagnostics && window.VaadinDesktopIpcDiagnostics.packagingRuntimeHandoffReuseRuntimeHandoffSatisfied),
+          packagingRuntimeHandoffReuseStaged: !!(window.VaadinDesktopIpcDiagnostics && window.VaadinDesktopIpcDiagnostics.packagingRuntimeHandoffReuseStaged),
+          packagingRuntimeHandoffReuseCustomSchemeObserved: !!(window.VaadinDesktopIpcDiagnostics && window.VaadinDesktopIpcDiagnostics.packagingRuntimeHandoffReuseCustomSchemeObserved),
+          packagingRuntimeHandoffReuseCacheObserved: !!(window.VaadinDesktopIpcDiagnostics && window.VaadinDesktopIpcDiagnostics.packagingRuntimeHandoffReuseCacheObserved),
+          packagingRuntimeHandoffReuseCleanupObserved: !!(window.VaadinDesktopIpcDiagnostics && window.VaadinDesktopIpcDiagnostics.packagingRuntimeHandoffReuseCleanupObserved),
+          packagingRuntimeHandoffReuseNoLocalhost: !!(window.VaadinDesktopIpcDiagnostics && window.VaadinDesktopIpcDiagnostics.packagingRuntimeHandoffReuseNoLocalhost),
+          packagingRuntimeHandoffReuseFixtureSubstituted: !!(window.VaadinDesktopIpcDiagnostics && window.VaadinDesktopIpcDiagnostics.packagingRuntimeHandoffReuseFixtureSubstituted),
           frontendBuildPreflightAvailabilityObserved: !!(window.VaadinDesktopIpcDiagnostics && window.VaadinDesktopIpcDiagnostics.frontendBuildPreflightAvailabilityObserved),
           frontendBuildPreflightAvailabilityVersion: window.VaadinDesktopIpcDiagnostics ? window.VaadinDesktopIpcDiagnostics.frontendBuildPreflightAvailabilityVersion : "",
           frontendBuildPreflightAvailabilitySource: window.VaadinDesktopIpcDiagnostics ? window.VaadinDesktopIpcDiagnostics.frontendBuildPreflightAvailabilitySource : "",
@@ -3299,6 +3346,11 @@ final class WebViewHost: NSObject, NSApplicationDelegate, NSWindowDelegate, WKNa
           frameworkAppEventPatchCount: window.VaadinDesktopIpcDiagnostics ? window.VaadinDesktopIpcDiagnostics.frameworkAppEventPatchCount : 0,
           frameworkAppEventOrder: window.VaadinDesktopIpcDiagnostics ? window.VaadinDesktopIpcDiagnostics.frameworkAppEventOrder : "",
           frameworkAppInteractionComplete: !!(window.VaadinDesktopIpcDiagnostics && window.VaadinDesktopIpcDiagnostics.frameworkAppInteractionComplete),
+          frameworkAppAutoUpdateStep: window.VaadinDesktopIpcDiagnostics ? window.VaadinDesktopIpcDiagnostics.frameworkAppAutoUpdateStep : 0,
+          frameworkAppAutoUpdateAttempts: window.VaadinDesktopIpcDiagnostics ? window.VaadinDesktopIpcDiagnostics.frameworkAppAutoUpdateAttempts : 0,
+          frameworkAppAutoUpdateInFlight: !!(window.VaadinDesktopIpcDiagnostics && window.VaadinDesktopIpcDiagnostics.frameworkAppAutoUpdateInFlight),
+          frameworkAppAutoUpdateDone: !!(window.VaadinDesktopIpcDiagnostics && window.VaadinDesktopIpcDiagnostics.frameworkAppAutoUpdateDone),
+          frameworkAppAutoUpdateReady: !!(window.VaadinDesktopIpcDiagnostics && window.VaadinDesktopIpcDiagnostics.frameworkAppAutoUpdateReady),
           frameworkAppFailureReason: window.VaadinDesktopIpcDiagnostics ? window.VaadinDesktopIpcDiagnostics.frameworkAppFailureReason : ""
         })
         """
@@ -4359,6 +4411,41 @@ let flowIpcShell = #"""
         packagingFrontendInventoryCleanupObserved: false,
         packagingFrontendInventoryNoLocalhost: false,
         packagingFrontendInventoryFixtureSubstituted: false,
+        packagingRuntimeHandoffReuseVersion: '',
+        packagingRuntimeHandoffReuseSource: '',
+        packagingRuntimeHandoffReuseScope: '',
+        packagingRuntimeHandoffReuseModulePath: '',
+        packagingRuntimeHandoffReuseAppShape: '',
+        packagingRuntimeHandoffReuseArtifactBasePolicy: '',
+        packagingRuntimeHandoffReuseRuntimeContracts: '',
+        packagingRuntimeHandoffReuseValidationTargets: '',
+        packagingRuntimeHandoffReuseSelectedArtifacts: '',
+        packagingRuntimeHandoffReuseSelectedArtifactCount: 0,
+        packagingRuntimeHandoffReuseGeneratedImportsArtifact: '',
+        packagingRuntimeHandoffReuseProductionSupportArtifact: '',
+        packagingRuntimeHandoffReuseBuildGoal: '',
+        packagingRuntimeHandoffReuseBuildStatus: '',
+        packagingRuntimeHandoffReuseOutputUsability: '',
+        packagingRuntimeHandoffReuseRemainingBlockers: '',
+        packagingRuntimeHandoffReuseNextResolutionStep: '',
+        packagingRuntimeHandoffReuseStageExecutionStatus: '',
+        packagingRuntimeHandoffReuseStageScheme: '',
+        packagingRuntimeHandoffReuseCliContractEnabled: false,
+        packagingRuntimeHandoffReuseSameContractAsInventory: false,
+        packagingRuntimeHandoffReuseReusableContract: false,
+        packagingRuntimeHandoffReuseModuleRelativeArtifacts: false,
+        packagingRuntimeHandoffReuseSmokeAppSpecific: false,
+        packagingRuntimeHandoffReuseHostOwnedLoaderRequired: false,
+        packagingRuntimeHandoffReuseCustomSchemeRequired: false,
+        packagingRuntimeHandoffReuseManifestReady: false,
+        packagingRuntimeHandoffReuseRuntimeHandoffReady: false,
+        packagingRuntimeHandoffReuseRuntimeHandoffSatisfied: false,
+        packagingRuntimeHandoffReuseStaged: false,
+        packagingRuntimeHandoffReuseCustomSchemeObserved: false,
+        packagingRuntimeHandoffReuseCacheObserved: false,
+        packagingRuntimeHandoffReuseCleanupObserved: false,
+        packagingRuntimeHandoffReuseNoLocalhost: false,
+        packagingRuntimeHandoffReuseFixtureSubstituted: false,
         frontendBuildPreflightAvailabilityObserved: false,
         frontendBuildPreflightAvailabilityVersion: '',
         frontendBuildPreflightAvailabilitySource: '',
@@ -4929,6 +5016,11 @@ let flowIpcShell = #"""
         frameworkAppEventPatchCount: 0,
         frameworkAppEventOrder: '',
         frameworkAppInteractionComplete: false,
+        frameworkAppAutoUpdateStep: 0,
+        frameworkAppAutoUpdateAttempts: 0,
+        frameworkAppAutoUpdateInFlight: false,
+        frameworkAppAutoUpdateDone: false,
+        frameworkAppAutoUpdateReady: false,
         frameworkAppFailureReason: ''
       };
 
@@ -5368,6 +5460,10 @@ let flowIpcShell = #"""
         const statusText = status ? (status.element.textContent || '') : '';
         const componentStatusText = componentStatus ? (componentStatus.element.textContent || '') : '';
         const updatesText = updates ? (updates.element.textContent || '') : '';
+        window.VaadinDesktopIpcDiagnostics.frameworkAppAutoUpdateStep = autoFrameworkUpdateStep;
+        window.VaadinDesktopIpcDiagnostics.frameworkAppAutoUpdateAttempts = autoFrameworkUpdateAttempts;
+        window.VaadinDesktopIpcDiagnostics.frameworkAppAutoUpdateInFlight = autoFrameworkUpdateInFlight;
+        window.VaadinDesktopIpcDiagnostics.frameworkAppAutoUpdateDone = autoFrameworkUpdateDone;
 
         window.VaadinDesktopIpcDiagnostics.frameworkAppRendered =
           !!root && document.body.textContent.includes('Flow IPC Framework Desk');
@@ -5380,6 +5476,10 @@ let flowIpcShell = #"""
           !!priority && priority.element.tagName.toLowerCase() === 'vaadin-select'
           && !!customElements.get('vaadin-select');
         window.VaadinDesktopIpcDiagnostics.frameworkAppApplyRendered = !!apply;
+        window.VaadinDesktopIpcDiagnostics.frameworkAppAutoUpdateReady =
+          window.VaadinDesktopIpcDiagnostics.frameworkAppRendered
+          && window.VaadinDesktopIpcDiagnostics.flowClientEngineVisibleOwner
+          && window.VaadinDesktopIpcDiagnostics.flowClientEngineXhrBridgeInstalled;
         window.VaadinDesktopIpcDiagnostics.frameworkAppStatusText = statusText;
         window.VaadinDesktopIpcDiagnostics.frameworkAppComponentStatusText = componentStatusText;
         window.VaadinDesktopIpcDiagnostics.frameworkAppUpdatesText = updatesText;
@@ -5466,8 +5566,13 @@ let flowIpcShell = #"""
 
       function advanceFrameworkAppStepIfDone() {
         while (autoFrameworkUpdateStep < 4 && frameworkAppStepDone()) {
+          const completedStep = autoFrameworkUpdateStep;
           autoFrameworkUpdateStep += 1;
           autoFrameworkUpdateAttempts = 0;
+          if (window.VaadinDesktopIpcDiagnostics.frameworkAppFailureReason
+              === 'framework-app-auto-update-step-timeout-' + completedStep) {
+            window.VaadinDesktopIpcDiagnostics.frameworkAppFailureReason = '';
+          }
         }
         if (autoFrameworkUpdateStep >= 4) {
           refreshFrameworkAppDiagnostics();
@@ -5492,7 +5597,7 @@ let flowIpcShell = #"""
         if (autoFrameworkUpdateDone || autoFrameworkUpdateInFlight) {
           return;
         }
-        if (autoFrameworkUpdateAttempts >= 18) {
+        if (autoFrameworkUpdateAttempts >= 80) {
           window.VaadinDesktopIpcDiagnostics.frameworkAppFailureReason =
             'framework-app-auto-update-step-timeout-' + autoFrameworkUpdateStep;
           return;
@@ -8655,7 +8760,70 @@ let flowIpcShell = #"""
           packagingFrontendInventoryFixtureSubstituted:
             source.packagingFrontendInventoryFixtureSubstituted === true,
           packagingFrontendInventoryStageExecutionStatus: executionStatus || '',
-          packagingFrontendInventoryStageScheme: scheme || ''
+          packagingFrontendInventoryStageScheme: scheme || '',
+          packagingRuntimeHandoffReuseVersion: source.packagingRuntimeHandoffReuseVersion || '',
+          packagingRuntimeHandoffReuseSource: source.packagingRuntimeHandoffReuseSource || '',
+          packagingRuntimeHandoffReuseScope: source.packagingRuntimeHandoffReuseScope || '',
+          packagingRuntimeHandoffReuseModulePath: source.packagingRuntimeHandoffReuseModulePath || '',
+          packagingRuntimeHandoffReuseAppShape: source.packagingRuntimeHandoffReuseAppShape || '',
+          packagingRuntimeHandoffReuseArtifactBasePolicy:
+            source.packagingRuntimeHandoffReuseArtifactBasePolicy || '',
+          packagingRuntimeHandoffReuseRuntimeContracts:
+            source.packagingRuntimeHandoffReuseRuntimeContracts || '',
+          packagingRuntimeHandoffReuseValidationTargets:
+            source.packagingRuntimeHandoffReuseValidationTargets || '',
+          packagingRuntimeHandoffReuseSelectedArtifacts:
+            source.packagingRuntimeHandoffReuseSelectedArtifacts || '',
+          packagingRuntimeHandoffReuseSelectedArtifactCount:
+            Number(source.packagingRuntimeHandoffReuseSelectedArtifactCount || 0),
+          packagingRuntimeHandoffReuseGeneratedImportsArtifact:
+            source.packagingRuntimeHandoffReuseGeneratedImportsArtifact || '',
+          packagingRuntimeHandoffReuseProductionSupportArtifact:
+            source.packagingRuntimeHandoffReuseProductionSupportArtifact || '',
+          packagingRuntimeHandoffReuseBuildGoal: source.packagingRuntimeHandoffReuseBuildGoal || '',
+          packagingRuntimeHandoffReuseBuildStatus:
+            source.packagingRuntimeHandoffReuseBuildStatus || '',
+          packagingRuntimeHandoffReuseOutputUsability:
+            source.packagingRuntimeHandoffReuseOutputUsability || '',
+          packagingRuntimeHandoffReuseRemainingBlockers:
+            source.packagingRuntimeHandoffReuseRemainingBlockers || '',
+          packagingRuntimeHandoffReuseNextResolutionStep:
+            source.packagingRuntimeHandoffReuseNextResolutionStep || '',
+          packagingRuntimeHandoffReuseStageExecutionStatus: executionStatus || '',
+          packagingRuntimeHandoffReuseStageScheme: scheme || '',
+          packagingRuntimeHandoffReuseCliContractEnabled:
+            source.packagingRuntimeHandoffReuseCliContractEnabled === true,
+          packagingRuntimeHandoffReuseSameContractAsInventory:
+            source.packagingRuntimeHandoffReuseSameContractAsInventory === true,
+          packagingRuntimeHandoffReuseReusableContract:
+            source.packagingRuntimeHandoffReuseReusableContract === true,
+          packagingRuntimeHandoffReuseModuleRelativeArtifacts:
+            source.packagingRuntimeHandoffReuseModuleRelativeArtifacts === true,
+          packagingRuntimeHandoffReuseSmokeAppSpecific:
+            source.packagingRuntimeHandoffReuseSmokeAppSpecific === true,
+          packagingRuntimeHandoffReuseHostOwnedLoaderRequired:
+            source.packagingRuntimeHandoffReuseHostOwnedLoaderRequired === true,
+          packagingRuntimeHandoffReuseCustomSchemeRequired:
+            source.packagingRuntimeHandoffReuseCustomSchemeRequired === true,
+          packagingRuntimeHandoffReuseManifestReady:
+            source.packagingRuntimeHandoffReuseManifestReady === true,
+          packagingRuntimeHandoffReuseRuntimeHandoffReady:
+            source.packagingRuntimeHandoffReuseRuntimeHandoffReady === true,
+          packagingRuntimeHandoffReuseRuntimeHandoffSatisfied: runtimeHandoffSatisfied,
+          packagingRuntimeHandoffReuseStaged: true,
+          packagingRuntimeHandoffReuseCustomSchemeObserved: customSchemeObserved,
+          packagingRuntimeHandoffReuseCacheObserved:
+            cacheStatus === 'hit'
+            || cacheStatus === 'miss'
+            || source.packagingRuntimeHandoffReuseCacheObserved === true,
+          packagingRuntimeHandoffReuseCleanupObserved:
+            !!source.cleanupPolicy
+            || !!source.packagingRuntimeHandoffReuseCleanupObserved
+            || source.packagingRuntimeHandoffReuseCleanupObserved === true,
+          packagingRuntimeHandoffReuseNoLocalhost:
+            source.packagingRuntimeHandoffReuseNoLocalhost !== false,
+          packagingRuntimeHandoffReuseFixtureSubstituted:
+            source.packagingRuntimeHandoffReuseFixtureSubstituted === true
         };
       }
 
@@ -8699,7 +8867,25 @@ let flowIpcShell = #"""
           'packagingFrontendInventoryRemainingBlockers',
           'packagingFrontendInventoryNextResolutionStep',
           'packagingFrontendInventoryStageExecutionStatus',
-          'packagingFrontendInventoryStageScheme'
+          'packagingFrontendInventoryStageScheme',
+          'packagingRuntimeHandoffReuseVersion',
+          'packagingRuntimeHandoffReuseSource',
+          'packagingRuntimeHandoffReuseScope',
+          'packagingRuntimeHandoffReuseModulePath',
+          'packagingRuntimeHandoffReuseAppShape',
+          'packagingRuntimeHandoffReuseArtifactBasePolicy',
+          'packagingRuntimeHandoffReuseRuntimeContracts',
+          'packagingRuntimeHandoffReuseValidationTargets',
+          'packagingRuntimeHandoffReuseSelectedArtifacts',
+          'packagingRuntimeHandoffReuseGeneratedImportsArtifact',
+          'packagingRuntimeHandoffReuseProductionSupportArtifact',
+          'packagingRuntimeHandoffReuseBuildGoal',
+          'packagingRuntimeHandoffReuseBuildStatus',
+          'packagingRuntimeHandoffReuseOutputUsability',
+          'packagingRuntimeHandoffReuseRemainingBlockers',
+          'packagingRuntimeHandoffReuseNextResolutionStep',
+          'packagingRuntimeHandoffReuseStageExecutionStatus',
+          'packagingRuntimeHandoffReuseStageScheme'
         ]) {
           d[key] = details[key] || d[key] || '';
         }
@@ -8709,7 +8895,8 @@ let flowIpcShell = #"""
           'packagingFrontendInventoryChunkBytes',
           'packagingFrontendInventoryProductionSupportBytes',
           'packagingFrontendInventoryStatsBytes',
-          'packagingFrontendInventoryProdBundleBytes'
+          'packagingFrontendInventoryProdBundleBytes',
+          'packagingRuntimeHandoffReuseSelectedArtifactCount'
         ]) {
           d[key] = Number(details[key] || d[key] || 0);
         }
@@ -8730,7 +8917,23 @@ let flowIpcShell = #"""
           'packagingFrontendInventoryCacheObserved',
           'packagingFrontendInventoryCleanupObserved',
           'packagingFrontendInventoryNoLocalhost',
-          'packagingFrontendInventoryFixtureSubstituted'
+          'packagingFrontendInventoryFixtureSubstituted',
+          'packagingRuntimeHandoffReuseCliContractEnabled',
+          'packagingRuntimeHandoffReuseSameContractAsInventory',
+          'packagingRuntimeHandoffReuseReusableContract',
+          'packagingRuntimeHandoffReuseModuleRelativeArtifacts',
+          'packagingRuntimeHandoffReuseSmokeAppSpecific',
+          'packagingRuntimeHandoffReuseHostOwnedLoaderRequired',
+          'packagingRuntimeHandoffReuseCustomSchemeRequired',
+          'packagingRuntimeHandoffReuseManifestReady',
+          'packagingRuntimeHandoffReuseRuntimeHandoffReady',
+          'packagingRuntimeHandoffReuseRuntimeHandoffSatisfied',
+          'packagingRuntimeHandoffReuseStaged',
+          'packagingRuntimeHandoffReuseCustomSchemeObserved',
+          'packagingRuntimeHandoffReuseCacheObserved',
+          'packagingRuntimeHandoffReuseCleanupObserved',
+          'packagingRuntimeHandoffReuseNoLocalhost',
+          'packagingRuntimeHandoffReuseFixtureSubstituted'
         ]) {
           d[key] = details[key] === true || d[key] === true;
         }

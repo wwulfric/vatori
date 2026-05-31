@@ -688,6 +688,22 @@ final class FlowClientResources {
             "dev-mode-vite-parity,broad-component-resource-parity,installer-packaging,durable-reconnect";
     private static final String PACKAGING_FRONTEND_INVENTORY_NEXT_STEP =
             "turn the framework-managed build-frontend inventory into a reusable packaging/runtime handoff instead of a smoke-app-only trace contract";
+    private static final String PACKAGING_RUNTIME_HANDOFF_REUSE_VERSION =
+            "flow-ipc-packaging-runtime-handoff-reuse-v1_45";
+    private static final String PACKAGING_RUNTIME_HANDOFF_REUSE_SOURCE =
+            "packaging-time-frontend-inventory-v1_44";
+    private static final String PACKAGING_RUNTIME_HANDOFF_REUSE_SCOPE =
+            "module-relative-build-frontend-inventory-to-runtime-owner";
+    private static final String PACKAGING_RUNTIME_HANDOFF_REUSE_ARTIFACT_BASE_POLICY =
+            "module-relative-source-and-target-output";
+    private static final String PACKAGING_RUNTIME_HANDOFF_REUSE_RUNTIME_CONTRACTS =
+            "packaging-inventory-v1_44,generated-imports-owner-runtime-contract-v1_42,host-owned-custom-scheme-loader-v1_17";
+    private static final String PACKAGING_RUNTIME_HANDOFF_REUSE_VALIDATION_TARGETS =
+            "strict-smoke-app,framework-validation-app";
+    private static final String PACKAGING_RUNTIME_HANDOFF_REUSE_REMAINING_BLOCKERS =
+            "dev-mode-vite-parity,broad-component-resource-parity,installer-packaging,durable-reconnect";
+    private static final String PACKAGING_RUNTIME_HANDOFF_REUSE_NEXT_STEP =
+            "lift the reusable runtime handoff into packaging artifacts and broaden component/resource coverage beyond the smoke/framework validation matrix";
     private static final List<String> PRODUCTION_RUNTIME_OWNER_DEPENDENCY_ARTIFACTS = List.of(
             DEV_BUNDLE_COMMONJS_JS,
             DEV_BUNDLE_INDEX_HTML_JS,
@@ -2509,7 +2525,72 @@ final class FlowClientResources {
         attributes.put("packagingFrontendInventoryCleanupObserved", false);
         attributes.put("packagingFrontendInventoryNoLocalhost", true);
         attributes.put("packagingFrontendInventoryFixtureSubstituted", false);
+        attributes.putAll(packagingRuntimeHandoffReuseAttributes(evidence, buildStep, selectedArtifacts,
+                handoffReady));
         return attributes;
+    }
+
+    private static Map<String, Object> packagingRuntimeHandoffReuseAttributes(
+            CurrentAppBuildFrontendOutputEvidence evidence,
+            FrontendBuildStepEvidence buildStep,
+            String selectedArtifacts,
+            boolean handoffReady) {
+        Path module = appModuleDirectory();
+        Map<String, Object> attributes = new LinkedHashMap<>();
+        attributes.put("packagingRuntimeHandoffReuseVersion", PACKAGING_RUNTIME_HANDOFF_REUSE_VERSION);
+        attributes.put("packagingRuntimeHandoffReuseSource", PACKAGING_RUNTIME_HANDOFF_REUSE_SOURCE);
+        attributes.put("packagingRuntimeHandoffReuseScope", PACKAGING_RUNTIME_HANDOFF_REUSE_SCOPE);
+        attributes.put("packagingRuntimeHandoffReuseModulePath", redactLocation(module.toString()));
+        attributes.put("packagingRuntimeHandoffReuseAppShape", packagingRuntimeHandoffAppShape(module));
+        attributes.put("packagingRuntimeHandoffReuseArtifactBasePolicy",
+                PACKAGING_RUNTIME_HANDOFF_REUSE_ARTIFACT_BASE_POLICY);
+        attributes.put("packagingRuntimeHandoffReuseRuntimeContracts",
+                PACKAGING_RUNTIME_HANDOFF_REUSE_RUNTIME_CONTRACTS);
+        attributes.put("packagingRuntimeHandoffReuseValidationTargets",
+                PACKAGING_RUNTIME_HANDOFF_REUSE_VALIDATION_TARGETS);
+        attributes.put("packagingRuntimeHandoffReuseSelectedArtifacts", selectedArtifacts);
+        attributes.put("packagingRuntimeHandoffReuseSelectedArtifactCount",
+                csvValues(selectedArtifacts).size());
+        attributes.put("packagingRuntimeHandoffReuseGeneratedImportsArtifact",
+                CURRENT_APP_BUILD_FRONTEND_GENERATED_IMPORTS_JS);
+        attributes.put("packagingRuntimeHandoffReuseProductionSupportArtifact",
+                evidence.sourceGeneratedImportsRootProductionSupportArtifact());
+        attributes.put("packagingRuntimeHandoffReuseBuildGoal", buildStep.goal());
+        attributes.put("packagingRuntimeHandoffReuseBuildStatus", buildStep.status());
+        attributes.put("packagingRuntimeHandoffReuseOutputUsability", buildStep.outputUsability());
+        attributes.put("packagingRuntimeHandoffReuseRemainingBlockers",
+                PACKAGING_RUNTIME_HANDOFF_REUSE_REMAINING_BLOCKERS);
+        attributes.put("packagingRuntimeHandoffReuseNextResolutionStep",
+                PACKAGING_RUNTIME_HANDOFF_REUSE_NEXT_STEP);
+        attributes.put("packagingRuntimeHandoffReuseCliContractEnabled",
+                "1".equals(System.getenv("VAADIN_DESKTOP_FLOW_IPC_FRONTEND_BUILD_V1_45")));
+        attributes.put("packagingRuntimeHandoffReuseSameContractAsInventory", true);
+        attributes.put("packagingRuntimeHandoffReuseReusableContract", true);
+        attributes.put("packagingRuntimeHandoffReuseModuleRelativeArtifacts", true);
+        attributes.put("packagingRuntimeHandoffReuseSmokeAppSpecific", false);
+        attributes.put("packagingRuntimeHandoffReuseHostOwnedLoaderRequired", true);
+        attributes.put("packagingRuntimeHandoffReuseCustomSchemeRequired", true);
+        attributes.put("packagingRuntimeHandoffReuseManifestReady", handoffReady);
+        attributes.put("packagingRuntimeHandoffReuseRuntimeHandoffReady", handoffReady);
+        attributes.put("packagingRuntimeHandoffReuseRuntimeHandoffSatisfied", false);
+        attributes.put("packagingRuntimeHandoffReuseStaged", false);
+        attributes.put("packagingRuntimeHandoffReuseCustomSchemeObserved", false);
+        attributes.put("packagingRuntimeHandoffReuseCacheObserved", false);
+        attributes.put("packagingRuntimeHandoffReuseCleanupObserved", false);
+        attributes.put("packagingRuntimeHandoffReuseNoLocalhost", true);
+        attributes.put("packagingRuntimeHandoffReuseFixtureSubstituted", false);
+        return attributes;
+    }
+
+    private static String packagingRuntimeHandoffAppShape(Path module) {
+        String path = module.toString().replace('\\', '/');
+        if (path.endsWith("/test-apps/flow-over-ipc-smoke-app")) {
+            return "strict-smoke-app";
+        }
+        if (path.endsWith("/test-apps/flow-over-ipc-framework-app")) {
+            return "framework-validation-app";
+        }
+        return "developer-app";
     }
 
     private static Map<String, Object> currentAppProductionOwnerImportAttributes(

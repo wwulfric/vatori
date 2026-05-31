@@ -149,6 +149,11 @@ public final class DesktopTraceInspector {
         FLOW_IPC_V1_44_PACKAGING_FRONTEND_INVENTORY(
                 "--require-flow-ipc-v1_44-packaging-frontend-inventory"),
         FLOW_IPC_V1_44("--require-flow-ipc-v1_44"),
+        FLOW_IPC_V1_45_PACKAGING_RUNTIME_HANDOFF_REUSE(
+                "--require-flow-ipc-v1_45-packaging-runtime-handoff-reuse"),
+        FLOW_IPC_V1_45_FRAMEWORK_PACKAGING_RUNTIME_HANDOFF_REUSE(
+                "--require-flow-ipc-v1_45-framework-packaging-runtime-handoff-reuse"),
+        FLOW_IPC_V1_45("--require-flow-ipc-v1_45"),
         FLOW_IPC_V1_3_FRAMEWORK("--require-flow-ipc-v1_3-framework");
 
         private final String option;
@@ -586,6 +591,13 @@ public final class DesktopTraceInspector {
                 case FLOW_IPC_V1_44 -> EnumSet.of(
                         FLOW_IPC_V1_44_PACKAGING_FRONTEND_INVENTORY,
                         FLOW_IPC_V1_44);
+                case FLOW_IPC_V1_45_PACKAGING_RUNTIME_HANDOFF_REUSE ->
+                    EnumSet.of(FLOW_IPC_V1_45_PACKAGING_RUNTIME_HANDOFF_REUSE);
+                case FLOW_IPC_V1_45_FRAMEWORK_PACKAGING_RUNTIME_HANDOFF_REUSE ->
+                    EnumSet.of(FLOW_IPC_V1_45_FRAMEWORK_PACKAGING_RUNTIME_HANDOFF_REUSE);
+                case FLOW_IPC_V1_45 -> EnumSet.of(
+                        FLOW_IPC_V1_45_PACKAGING_RUNTIME_HANDOFF_REUSE,
+                        FLOW_IPC_V1_45);
                 case FLOW_IPC_V1_3_FRAMEWORK -> EnumSet.of(FLOW_IPC_V1_3_FRAMEWORK);
             };
         }
@@ -707,6 +719,11 @@ public final class DesktopTraceInspector {
                 case FLOW_IPC_V1_44_PACKAGING_FRONTEND_INVENTORY ->
                     summary.hasRequiredFlowIpcV1_44PackagingFrontendInventoryTypes();
                 case FLOW_IPC_V1_44 -> summary.hasRequiredFlowIpcV1_44Types();
+                case FLOW_IPC_V1_45_PACKAGING_RUNTIME_HANDOFF_REUSE ->
+                    summary.hasRequiredFlowIpcV1_45PackagingRuntimeHandoffReuseTypes();
+                case FLOW_IPC_V1_45_FRAMEWORK_PACKAGING_RUNTIME_HANDOFF_REUSE ->
+                    summary.hasRequiredFlowIpcV1_45FrameworkPackagingRuntimeHandoffReuseTypes();
+                case FLOW_IPC_V1_45 -> summary.hasRequiredFlowIpcV1_45Types();
                 case FLOW_IPC_V1_3_FRAMEWORK -> summary.hasRequiredFlowIpcV1_3FrameworkTypes();
             };
         }
@@ -1413,6 +1430,11 @@ public final class DesktopTraceInspector {
                     && line.contains("\"componentFrontendResources\"")
                     && containsPackagingFrontendInventoryV144Fields(line)) {
                 summary.packagingFrontendInventoryV144ManifestObserved = true;
+            }
+            if (line.contains("\"type\":\"bootstrapResponse\"")
+                    && line.contains("\"componentFrontendResources\"")
+                    && containsPackagingRuntimeHandoffReuseV145Fields(line)) {
+                summary.packagingRuntimeHandoffReuseV145ManifestObserved = true;
             }
             if (line.contains("\"type\":\"bootstrapResponse\"")
                     && line.contains("\"componentFrontendResources\"")
@@ -2373,6 +2395,11 @@ public final class DesktopTraceInspector {
                     && containsPackagingFrontendInventoryV144Fields(line)) {
                 summary.packagingFrontendInventoryV144RequestObserved = true;
             }
+            if (line.contains("\"type\":\"resourceRequest\"")
+                    && containsPath(line, "current-app-production/VAADIN/build/generated-flow-imports-")
+                    && containsPackagingRuntimeHandoffReuseV145Fields(line)) {
+                summary.packagingRuntimeHandoffReuseV145RequestObserved = true;
+            }
             if (line.contains("\"type\":\"resourceResponse\"")
                     && containsPath(line, "current-app-frontend/generated/flow/generated-flow-imports.js")
                     && containsCurrentAppBuildFrontendOutputV132Fields(line)
@@ -2452,6 +2479,12 @@ public final class DesktopTraceInspector {
                     && containsPackagingFrontendInventoryV144Fields(line)
                     && line.contains("\"bodyRedacted\":true")) {
                 summary.packagingFrontendInventoryV144ResponseObserved = true;
+            }
+            if (line.contains("\"type\":\"resourceResponse\"")
+                    && containsPath(line, "current-app-production/VAADIN/build/generated-flow-imports-")
+                    && containsPackagingRuntimeHandoffReuseV145Fields(line)
+                    && line.contains("\"bodyRedacted\":true")) {
+                summary.packagingRuntimeHandoffReuseV145ResponseObserved = true;
             }
             if (line.contains("\"type\":\"resourceRequest\"")
                     && line.contains("\"purpose\":\"generated-loadondemand-chunk-v1_11\"")
@@ -3231,6 +3264,14 @@ public final class DesktopTraceInspector {
             }
             if (line.contains("\"type\":\"resourceStage\"")
                     && containsPath(line, "current-app-production/VAADIN/build/generated-flow-imports-")
+                    && containsPackagingRuntimeHandoffReuseV145Fields(line)
+                    && (line.contains("\"executionStatus\":\"executed\"")
+                            || line.contains("\"executionStatus\":\"strict-blocker\"")
+                            || line.contains("\"executionStatus\":\"staged\""))) {
+                summary.packagingRuntimeHandoffReuseV145StageObserved = true;
+            }
+            if (line.contains("\"type\":\"resourceStage\"")
+                    && containsPath(line, "current-app-production/VAADIN/build/generated-flow-imports-")
                     && containsCurrentAppGeneratedImportsRootPackageGraphV134Fields(line)
                     && containsLiteralField(line,
                             "currentAppGeneratedImportsRootProductionSupportExecuted", "true")
@@ -3323,6 +3364,12 @@ public final class DesktopTraceInspector {
                     && containsPackagingFrontendInventoryV144Complete(line)
                     && line.contains("\"executionStatus\":\"executed\"")) {
                 summary.packagingFrontendInventoryV144CompleteStageObserved = true;
+            }
+            if (line.contains("\"type\":\"resourceStage\"")
+                    && containsPath(line, "current-app-production/VAADIN/build/generated-flow-imports-")
+                    && containsPackagingRuntimeHandoffReuseV145Complete(line)
+                    && line.contains("\"executionStatus\":\"executed\"")) {
+                summary.packagingRuntimeHandoffReuseV145CompleteStageObserved = true;
             }
             if (line.contains("\"type\":\"resourceStage\"")
                     && containsPath(line, "current-app-frontend/generated/flow/chunks/")
@@ -4242,6 +4289,38 @@ public final class DesktopTraceInspector {
                             "Vaadin TextField: Flow IPC typed")
                     && containsStringField(line, "vaadinSelectStatusText", "Vaadin Select: audit")) {
                 summary.packagingFrontendInventoryV144DomObserved = true;
+            }
+            if (line.contains("\"type\":\"webview.dom\"")
+                    && containsCurrentAppGeneratedImportsOwnerRuntimeContractV142DomComplete(line)
+                    && containsPackagingFrontendInventoryV144Complete(line)
+                    && containsPackagingRuntimeHandoffReuseV145Complete(line)
+                    && containsStringField(line, "packagingRuntimeHandoffReuseAppShape", "strict-smoke-app")
+                    && containsStringField(line, "currentAppGeneratedImportsOwnerRuntimeContractReusedTags",
+                            "vaadin-big-decimal-field,vaadin-checkbox,vaadin-select,vaadin-text-field")
+                    && containsStringField(line, "currentAppGeneratedImportsOwnerRuntimeContractFallbackTags", "")
+                    && containsLiteralField(line, "loadOnDemandChunkFileExecuted", "true")
+                    && containsStringField(line, "vaadinWebComponentStatusText",
+                            "Vaadin BigDecimalField: 42.5")
+                    && containsStringField(line, "vaadinSecondWebComponentStatusText",
+                            "Vaadin Checkbox: checked")
+                    && containsStringField(line, "vaadinTextFieldStatusText",
+                            "Vaadin TextField: Flow IPC typed")
+                    && containsStringField(line, "vaadinSelectStatusText", "Vaadin Select: audit")) {
+                summary.packagingRuntimeHandoffReuseV145DomObserved = true;
+            }
+            if (line.contains("\"type\":\"webview.dom\"")
+                    && containsPackagingFrontendInventoryV144Complete(line)
+                    && containsPackagingRuntimeHandoffReuseV145Complete(line)
+                    && containsStringField(line, "packagingRuntimeHandoffReuseAppShape",
+                            "framework-validation-app")
+                    && containsLiteralField(line, "frameworkAppInteractionComplete", "true")
+                    && containsLiteralField(line, "frameworkAppBudgetEventObserved", "true")
+                    && containsLiteralField(line, "frameworkAppCheckboxEventObserved", "true")
+                    && containsLiteralField(line, "frameworkAppSelectEventObserved", "true")
+                    && containsLiteralField(line, "frameworkAppApplyEventObserved", "true")
+                    && line.contains("Revision 1:")
+                    && line.contains("priority audit")) {
+                summary.packagingRuntimeHandoffReuseV145FrameworkDomObserved = true;
             }
             if (line.contains("\"type\":\"webview.dom\"")
                     && containsLiteralField(line, "generatedLazySourceCurrentBuildNoOpConfirmed", "true")
@@ -5967,6 +6046,56 @@ public final class DesktopTraceInspector {
                 && containsLiteralField(line, "packagingFrontendInventoryCleanupObserved", "true");
     }
 
+    private static boolean containsPackagingRuntimeHandoffReuseV145Fields(String line) {
+        return containsStringField(line, "packagingRuntimeHandoffReuseVersion",
+                        "flow-ipc-packaging-runtime-handoff-reuse-v1_45")
+                && containsStringField(line, "packagingRuntimeHandoffReuseSource",
+                        "packaging-time-frontend-inventory-v1_44")
+                && containsStringField(line, "packagingRuntimeHandoffReuseScope",
+                        "module-relative-build-frontend-inventory-to-runtime-owner")
+                && line.contains("packagingRuntimeHandoffReuseModulePath")
+                && line.contains("packagingRuntimeHandoffReuseAppShape")
+                && containsStringField(line, "packagingRuntimeHandoffReuseArtifactBasePolicy",
+                        "module-relative-source-and-target-output")
+                && containsStringField(line, "packagingRuntimeHandoffReuseRuntimeContracts",
+                        "packaging-inventory-v1_44,generated-imports-owner-runtime-contract-v1_42,host-owned-custom-scheme-loader-v1_17")
+                && containsStringField(line, "packagingRuntimeHandoffReuseValidationTargets",
+                        "strict-smoke-app,framework-validation-app")
+                && containsStringFieldPrefix(line, "packagingRuntimeHandoffReuseSelectedArtifacts",
+                        "current-app-frontend/generated/flow/generated-flow-imports.js")
+                && containsPositiveIntegerField(line, "packagingRuntimeHandoffReuseSelectedArtifactCount")
+                && containsStringField(line, "packagingRuntimeHandoffReuseGeneratedImportsArtifact",
+                        "current-app-frontend/generated/flow/generated-flow-imports.js")
+                && containsStringFieldPrefix(line, "packagingRuntimeHandoffReuseProductionSupportArtifact",
+                        "current-app-production/VAADIN/build/generated-flow-imports-")
+                && containsStringField(line, "packagingRuntimeHandoffReuseBuildGoal", "build-frontend")
+                && containsStringField(line, "packagingRuntimeHandoffReuseBuildStatus", "success")
+                && line.contains("packagingRuntimeHandoffReuseOutputUsability")
+                && containsStringField(line, "packagingRuntimeHandoffReuseRemainingBlockers",
+                        "dev-mode-vite-parity,broad-component-resource-parity,installer-packaging,durable-reconnect")
+                && line.contains("packagingRuntimeHandoffReuseNextResolutionStep")
+                && containsLiteralField(line, "packagingRuntimeHandoffReuseCliContractEnabled", "true")
+                && containsLiteralField(line, "packagingRuntimeHandoffReuseSameContractAsInventory", "true")
+                && containsLiteralField(line, "packagingRuntimeHandoffReuseReusableContract", "true")
+                && containsLiteralField(line, "packagingRuntimeHandoffReuseModuleRelativeArtifacts", "true")
+                && containsLiteralField(line, "packagingRuntimeHandoffReuseSmokeAppSpecific", "false")
+                && containsLiteralField(line, "packagingRuntimeHandoffReuseHostOwnedLoaderRequired", "true")
+                && containsLiteralField(line, "packagingRuntimeHandoffReuseCustomSchemeRequired", "true")
+                && containsLiteralField(line, "packagingRuntimeHandoffReuseManifestReady", "true")
+                && containsLiteralField(line, "packagingRuntimeHandoffReuseRuntimeHandoffReady", "true")
+                && containsLiteralField(line, "packagingRuntimeHandoffReuseNoLocalhost", "true")
+                && containsLiteralField(line, "packagingRuntimeHandoffReuseFixtureSubstituted", "false");
+    }
+
+    private static boolean containsPackagingRuntimeHandoffReuseV145Complete(String line) {
+        return containsPackagingRuntimeHandoffReuseV145Fields(line)
+                && containsLiteralField(line, "packagingRuntimeHandoffReuseRuntimeHandoffSatisfied", "true")
+                && containsLiteralField(line, "packagingRuntimeHandoffReuseStaged", "true")
+                && containsLiteralField(line, "packagingRuntimeHandoffReuseCustomSchemeObserved", "true")
+                && containsLiteralField(line, "packagingRuntimeHandoffReuseCacheObserved", "true")
+                && containsLiteralField(line, "packagingRuntimeHandoffReuseCleanupObserved", "true");
+    }
+
     private static boolean containsProductionOwnerFailureLayer(String line, String field) {
         return containsStringField(line, field, "production-owner-duplicate-custom-element")
                 || containsStringField(line, field, "production-owner-relative-import-unresolved")
@@ -6528,6 +6657,13 @@ public final class DesktopTraceInspector {
         private boolean packagingFrontendInventoryV144StageObserved;
         private boolean packagingFrontendInventoryV144CompleteStageObserved;
         private boolean packagingFrontendInventoryV144DomObserved;
+        private boolean packagingRuntimeHandoffReuseV145ManifestObserved;
+        private boolean packagingRuntimeHandoffReuseV145RequestObserved;
+        private boolean packagingRuntimeHandoffReuseV145ResponseObserved;
+        private boolean packagingRuntimeHandoffReuseV145StageObserved;
+        private boolean packagingRuntimeHandoffReuseV145CompleteStageObserved;
+        private boolean packagingRuntimeHandoffReuseV145DomObserved;
+        private boolean packagingRuntimeHandoffReuseV145FrameworkDomObserved;
 
         public boolean hasRequiredFlowIpcTypes() {
             return types.keySet().containsAll(FLOW_IPC_REQUIRED_TYPES)
@@ -7210,6 +7346,30 @@ public final class DesktopTraceInspector {
                     && hasRequiredFlowIpcV1_42GeneratedImportsOwnerRuntimeContractTypes();
         }
 
+        public boolean hasRequiredFlowIpcV1_45PackagingRuntimeHandoffReuseTypes() {
+            return packagingRuntimeHandoffReuseV145ManifestObserved
+                    && packagingRuntimeHandoffReuseV145RequestObserved
+                    && packagingRuntimeHandoffReuseV145ResponseObserved
+                    && packagingRuntimeHandoffReuseV145StageObserved
+                    && packagingRuntimeHandoffReuseV145CompleteStageObserved
+                    && packagingRuntimeHandoffReuseV145DomObserved;
+        }
+
+        public boolean hasRequiredFlowIpcV1_45FrameworkPackagingRuntimeHandoffReuseTypes() {
+            return packagingRuntimeHandoffReuseV145ManifestObserved
+                    && packagingRuntimeHandoffReuseV145RequestObserved
+                    && packagingRuntimeHandoffReuseV145ResponseObserved
+                    && packagingRuntimeHandoffReuseV145StageObserved
+                    && packagingRuntimeHandoffReuseV145CompleteStageObserved
+                    && packagingRuntimeHandoffReuseV145FrameworkDomObserved
+                    && hasRequiredFlowIpcV1_3FrameworkTypes();
+        }
+
+        public boolean hasRequiredFlowIpcV1_45Types() {
+            return hasRequiredFlowIpcV1_45PackagingRuntimeHandoffReuseTypes()
+                    && hasRequiredFlowIpcV1_44Types();
+        }
+
         private boolean hasCurrentAppBuildFrontendOutputSuccessorEvidence() {
             return currentAppBuildFrontendOutputV132ManifestObserved
                     && currentAppBuildFrontendOutputV132RequestObserved
@@ -7827,6 +7987,16 @@ public final class DesktopTraceInspector {
                     + packagingFrontendInventoryV144StageObserved + "/"
                     + packagingFrontendInventoryV144CompleteStageObserved + "/"
                     + packagingFrontendInventoryV144DomObserved);
+            System.out.println("Flow IPC v1.45 packaging runtime handoff reuse manifest observed: "
+                    + packagingRuntimeHandoffReuseV145ManifestObserved);
+            System.out.println("Flow IPC v1.45 packaging runtime handoff reuse request/response observed: "
+                    + packagingRuntimeHandoffReuseV145RequestObserved + "/"
+                    + packagingRuntimeHandoffReuseV145ResponseObserved);
+            System.out.println("Flow IPC v1.45 packaging runtime handoff reuse stage/complete/DOM/framework observed: "
+                    + packagingRuntimeHandoffReuseV145StageObserved + "/"
+                    + packagingRuntimeHandoffReuseV145CompleteStageObserved + "/"
+                    + packagingRuntimeHandoffReuseV145DomObserved + "/"
+                    + packagingRuntimeHandoffReuseV145FrameworkDomObserved);
             System.out.println("Flow IPC v1.6 TextField graph manifest observed: "
                     + frontendTextFieldV16ManifestObserved);
             System.out.println("Flow IPC v1.6 TextField graph request observed: "

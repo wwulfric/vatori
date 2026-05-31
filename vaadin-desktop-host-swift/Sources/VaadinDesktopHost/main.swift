@@ -2670,6 +2670,62 @@ final class WebViewHost: NSObject, NSApplicationDelegate, NSWindowDelegate, WKNa
           generatedLazySpiProdBundleObserved: !!(window.VaadinDesktopIpcDiagnostics && window.VaadinDesktopIpcDiagnostics.generatedLazySpiProdBundleObserved),
           generatedLazySpiNoLocalhost: !!(window.VaadinDesktopIpcDiagnostics && window.VaadinDesktopIpcDiagnostics.generatedLazySpiNoLocalhost),
           generatedLazySpiFixtureSubstituted: !!(window.VaadinDesktopIpcDiagnostics && window.VaadinDesktopIpcDiagnostics.generatedLazySpiFixtureSubstituted),
+          packagingFrontendInventoryVersion: window.VaadinDesktopIpcDiagnostics ? window.VaadinDesktopIpcDiagnostics.packagingFrontendInventoryVersion : "",
+          packagingFrontendInventorySource: window.VaadinDesktopIpcDiagnostics ? window.VaadinDesktopIpcDiagnostics.packagingFrontendInventorySource : "",
+          packagingFrontendInventoryProducer: window.VaadinDesktopIpcDiagnostics ? window.VaadinDesktopIpcDiagnostics.packagingFrontendInventoryProducer : "",
+          packagingFrontendInventoryMode: window.VaadinDesktopIpcDiagnostics ? window.VaadinDesktopIpcDiagnostics.packagingFrontendInventoryMode : "",
+          packagingFrontendInventoryBuildGoal: window.VaadinDesktopIpcDiagnostics ? window.VaadinDesktopIpcDiagnostics.packagingFrontendInventoryBuildGoal : "",
+          packagingFrontendInventoryBuildStatus: window.VaadinDesktopIpcDiagnostics ? window.VaadinDesktopIpcDiagnostics.packagingFrontendInventoryBuildStatus : "",
+          packagingFrontendInventoryBuildGoalResult: window.VaadinDesktopIpcDiagnostics ? window.VaadinDesktopIpcDiagnostics.packagingFrontendInventoryBuildGoalResult : "",
+          packagingFrontendInventoryOutputUsability: window.VaadinDesktopIpcDiagnostics ? window.VaadinDesktopIpcDiagnostics.packagingFrontendInventoryOutputUsability : "",
+          packagingFrontendInventoryOutputRoots: window.VaadinDesktopIpcDiagnostics ? window.VaadinDesktopIpcDiagnostics.packagingFrontendInventoryOutputRoots : "",
+          packagingFrontendInventoryRequiredArtifacts: window.VaadinDesktopIpcDiagnostics ? window.VaadinDesktopIpcDiagnostics.packagingFrontendInventoryRequiredArtifacts : "",
+          packagingFrontendInventorySelectedArtifacts: window.VaadinDesktopIpcDiagnostics ? window.VaadinDesktopIpcDiagnostics.packagingFrontendInventorySelectedArtifacts : "",
+          packagingFrontendInventorySelectedArtifactCount: window.VaadinDesktopIpcDiagnostics ? Number(window.VaadinDesktopIpcDiagnostics.packagingFrontendInventorySelectedArtifactCount || 0) : 0,
+          packagingFrontendInventoryGeneratedImportsArtifact: window.VaadinDesktopIpcDiagnostics ? window.VaadinDesktopIpcDiagnostics.packagingFrontendInventoryGeneratedImportsArtifact : "",
+          packagingFrontendInventoryGeneratedImportsSha256: window.VaadinDesktopIpcDiagnostics ? window.VaadinDesktopIpcDiagnostics.packagingFrontendInventoryGeneratedImportsSha256 : "",
+          packagingFrontendInventoryGeneratedImportsBytes: window.VaadinDesktopIpcDiagnostics ? Number(window.VaadinDesktopIpcDiagnostics.packagingFrontendInventoryGeneratedImportsBytes || 0) : 0,
+          packagingFrontendInventoryChunkArtifact: window.VaadinDesktopIpcDiagnostics ? window.VaadinDesktopIpcDiagnostics.packagingFrontendInventoryChunkArtifact : "",
+          packagingFrontendInventoryChunkSha256: window.VaadinDesktopIpcDiagnostics ? window.VaadinDesktopIpcDiagnostics.packagingFrontendInventoryChunkSha256 : "",
+          packagingFrontendInventoryChunkBytes: window.VaadinDesktopIpcDiagnostics ? Number(window.VaadinDesktopIpcDiagnostics.packagingFrontendInventoryChunkBytes || 0) : 0,
+          packagingFrontendInventoryProductionSupportArtifact: window.VaadinDesktopIpcDiagnostics ? window.VaadinDesktopIpcDiagnostics.packagingFrontendInventoryProductionSupportArtifact : "",
+          packagingFrontendInventoryProductionSupportSha256: window.VaadinDesktopIpcDiagnostics ? window.VaadinDesktopIpcDiagnostics.packagingFrontendInventoryProductionSupportSha256 : "",
+          packagingFrontendInventoryProductionSupportBytes: window.VaadinDesktopIpcDiagnostics ? Number(window.VaadinDesktopIpcDiagnostics.packagingFrontendInventoryProductionSupportBytes || 0) : 0,
+          packagingFrontendInventoryProductionEntryArtifact: window.VaadinDesktopIpcDiagnostics ? window.VaadinDesktopIpcDiagnostics.packagingFrontendInventoryProductionEntryArtifact : "",
+          packagingFrontendInventoryProductionBuildArtifacts: window.VaadinDesktopIpcDiagnostics ? window.VaadinDesktopIpcDiagnostics.packagingFrontendInventoryProductionBuildArtifacts : "",
+          packagingFrontendInventoryStatsPath: window.VaadinDesktopIpcDiagnostics ? window.VaadinDesktopIpcDiagnostics.packagingFrontendInventoryStatsPath : "",
+          packagingFrontendInventoryStatsSha256: window.VaadinDesktopIpcDiagnostics ? window.VaadinDesktopIpcDiagnostics.packagingFrontendInventoryStatsSha256 : "",
+          packagingFrontendInventoryStatsBytes: window.VaadinDesktopIpcDiagnostics ? Number(window.VaadinDesktopIpcDiagnostics.packagingFrontendInventoryStatsBytes || 0) : 0,
+          packagingFrontendInventoryProdBundlePath: window.VaadinDesktopIpcDiagnostics ? window.VaadinDesktopIpcDiagnostics.packagingFrontendInventoryProdBundlePath : "",
+          packagingFrontendInventoryProdBundleSha256: window.VaadinDesktopIpcDiagnostics ? window.VaadinDesktopIpcDiagnostics.packagingFrontendInventoryProdBundleSha256 : "",
+          packagingFrontendInventoryProdBundleBytes: window.VaadinDesktopIpcDiagnostics ? Number(window.VaadinDesktopIpcDiagnostics.packagingFrontendInventoryProdBundleBytes || 0) : 0,
+          packagingFrontendInventoryLoaderPolicy: window.VaadinDesktopIpcDiagnostics ? window.VaadinDesktopIpcDiagnostics.packagingFrontendInventoryLoaderPolicy : "",
+          packagingFrontendInventoryAllowedSchemes: window.VaadinDesktopIpcDiagnostics ? window.VaadinDesktopIpcDiagnostics.packagingFrontendInventoryAllowedSchemes : "",
+          packagingFrontendInventoryIntegrityPolicy: window.VaadinDesktopIpcDiagnostics ? window.VaadinDesktopIpcDiagnostics.packagingFrontendInventoryIntegrityPolicy : "",
+          packagingFrontendInventoryIdentityPolicy: window.VaadinDesktopIpcDiagnostics ? window.VaadinDesktopIpcDiagnostics.packagingFrontendInventoryIdentityPolicy : "",
+          packagingFrontendInventoryCachePolicy: window.VaadinDesktopIpcDiagnostics ? window.VaadinDesktopIpcDiagnostics.packagingFrontendInventoryCachePolicy : "",
+          packagingFrontendInventoryCleanupPolicy: window.VaadinDesktopIpcDiagnostics ? window.VaadinDesktopIpcDiagnostics.packagingFrontendInventoryCleanupPolicy : "",
+          packagingFrontendInventoryRuntimeHandoffPolicy: window.VaadinDesktopIpcDiagnostics ? window.VaadinDesktopIpcDiagnostics.packagingFrontendInventoryRuntimeHandoffPolicy : "",
+          packagingFrontendInventoryProductPathDecision: window.VaadinDesktopIpcDiagnostics ? window.VaadinDesktopIpcDiagnostics.packagingFrontendInventoryProductPathDecision : "",
+          packagingFrontendInventoryRemainingBlockers: window.VaadinDesktopIpcDiagnostics ? window.VaadinDesktopIpcDiagnostics.packagingFrontendInventoryRemainingBlockers : "",
+          packagingFrontendInventoryNextResolutionStep: window.VaadinDesktopIpcDiagnostics ? window.VaadinDesktopIpcDiagnostics.packagingFrontendInventoryNextResolutionStep : "",
+          packagingFrontendInventoryCliContractEnabled: !!(window.VaadinDesktopIpcDiagnostics && window.VaadinDesktopIpcDiagnostics.packagingFrontendInventoryCliContractEnabled),
+          packagingFrontendInventoryBuildFrontendGoalSelected: !!(window.VaadinDesktopIpcDiagnostics && window.VaadinDesktopIpcDiagnostics.packagingFrontendInventoryBuildFrontendGoalSelected),
+          packagingFrontendInventorySourceGeneratedImportsObserved: !!(window.VaadinDesktopIpcDiagnostics && window.VaadinDesktopIpcDiagnostics.packagingFrontendInventorySourceGeneratedImportsObserved),
+          packagingFrontendInventorySourceChunkAvailable: !!(window.VaadinDesktopIpcDiagnostics && window.VaadinDesktopIpcDiagnostics.packagingFrontendInventorySourceChunkAvailable),
+          packagingFrontendInventoryProductionSupportObserved: !!(window.VaadinDesktopIpcDiagnostics && window.VaadinDesktopIpcDiagnostics.packagingFrontendInventoryProductionSupportObserved),
+          packagingFrontendInventoryStatsObserved: !!(window.VaadinDesktopIpcDiagnostics && window.VaadinDesktopIpcDiagnostics.packagingFrontendInventoryStatsObserved),
+          packagingFrontendInventoryProdBundleObserved: !!(window.VaadinDesktopIpcDiagnostics && window.VaadinDesktopIpcDiagnostics.packagingFrontendInventoryProdBundleObserved),
+          packagingFrontendInventoryManifestReady: !!(window.VaadinDesktopIpcDiagnostics && window.VaadinDesktopIpcDiagnostics.packagingFrontendInventoryManifestReady),
+          packagingFrontendInventoryRuntimeHandoffReady: !!(window.VaadinDesktopIpcDiagnostics && window.VaadinDesktopIpcDiagnostics.packagingFrontendInventoryRuntimeHandoffReady),
+          packagingFrontendInventoryRuntimeHandoffSatisfied: !!(window.VaadinDesktopIpcDiagnostics && window.VaadinDesktopIpcDiagnostics.packagingFrontendInventoryRuntimeHandoffSatisfied),
+          packagingFrontendInventoryStaged: !!(window.VaadinDesktopIpcDiagnostics && window.VaadinDesktopIpcDiagnostics.packagingFrontendInventoryStaged),
+          packagingFrontendInventoryCustomSchemeObserved: !!(window.VaadinDesktopIpcDiagnostics && window.VaadinDesktopIpcDiagnostics.packagingFrontendInventoryCustomSchemeObserved),
+          packagingFrontendInventoryBlobFallbackObserved: !!(window.VaadinDesktopIpcDiagnostics && window.VaadinDesktopIpcDiagnostics.packagingFrontendInventoryBlobFallbackObserved),
+          packagingFrontendInventoryCacheObserved: !!(window.VaadinDesktopIpcDiagnostics && window.VaadinDesktopIpcDiagnostics.packagingFrontendInventoryCacheObserved),
+          packagingFrontendInventoryCleanupObserved: !!(window.VaadinDesktopIpcDiagnostics && window.VaadinDesktopIpcDiagnostics.packagingFrontendInventoryCleanupObserved),
+          packagingFrontendInventoryNoLocalhost: !!(window.VaadinDesktopIpcDiagnostics && window.VaadinDesktopIpcDiagnostics.packagingFrontendInventoryNoLocalhost),
+          packagingFrontendInventoryFixtureSubstituted: !!(window.VaadinDesktopIpcDiagnostics && window.VaadinDesktopIpcDiagnostics.packagingFrontendInventoryFixtureSubstituted),
           frontendBuildPreflightAvailabilityObserved: !!(window.VaadinDesktopIpcDiagnostics && window.VaadinDesktopIpcDiagnostics.frontendBuildPreflightAvailabilityObserved),
           frontendBuildPreflightAvailabilityVersion: window.VaadinDesktopIpcDiagnostics ? window.VaadinDesktopIpcDiagnostics.frontendBuildPreflightAvailabilityVersion : "",
           frontendBuildPreflightAvailabilitySource: window.VaadinDesktopIpcDiagnostics ? window.VaadinDesktopIpcDiagnostics.frontendBuildPreflightAvailabilitySource : "",
@@ -4245,6 +4301,64 @@ let flowIpcShell = #"""
         generatedLazySpiProdBundleObserved: false,
         generatedLazySpiNoLocalhost: false,
         generatedLazySpiFixtureSubstituted: false,
+        packagingFrontendInventoryVersion: '',
+        packagingFrontendInventorySource: '',
+        packagingFrontendInventoryProducer: '',
+        packagingFrontendInventoryMode: '',
+        packagingFrontendInventoryBuildGoal: '',
+        packagingFrontendInventoryBuildStatus: '',
+        packagingFrontendInventoryBuildGoalResult: '',
+        packagingFrontendInventoryOutputUsability: '',
+        packagingFrontendInventoryOutputRoots: '',
+        packagingFrontendInventoryRequiredArtifacts: '',
+        packagingFrontendInventorySelectedArtifacts: '',
+        packagingFrontendInventorySelectedArtifactCount: 0,
+        packagingFrontendInventoryGeneratedImportsArtifact: '',
+        packagingFrontendInventoryGeneratedImportsSha256: '',
+        packagingFrontendInventoryGeneratedImportsBytes: 0,
+        packagingFrontendInventoryChunkArtifact: '',
+        packagingFrontendInventoryChunkSha256: '',
+        packagingFrontendInventoryChunkBytes: 0,
+        packagingFrontendInventoryProductionSupportArtifact: '',
+        packagingFrontendInventoryProductionSupportSha256: '',
+        packagingFrontendInventoryProductionSupportBytes: 0,
+        packagingFrontendInventoryProductionEntryArtifact: '',
+        packagingFrontendInventoryProductionBuildArtifacts: '',
+        packagingFrontendInventoryStatsPath: '',
+        packagingFrontendInventoryStatsSha256: '',
+        packagingFrontendInventoryStatsBytes: 0,
+        packagingFrontendInventoryProdBundlePath: '',
+        packagingFrontendInventoryProdBundleSha256: '',
+        packagingFrontendInventoryProdBundleBytes: 0,
+        packagingFrontendInventoryLoaderPolicy: '',
+        packagingFrontendInventoryAllowedSchemes: '',
+        packagingFrontendInventoryIntegrityPolicy: '',
+        packagingFrontendInventoryIdentityPolicy: '',
+        packagingFrontendInventoryCachePolicy: '',
+        packagingFrontendInventoryCleanupPolicy: '',
+        packagingFrontendInventoryRuntimeHandoffPolicy: '',
+        packagingFrontendInventoryProductPathDecision: '',
+        packagingFrontendInventoryRemainingBlockers: '',
+        packagingFrontendInventoryNextResolutionStep: '',
+        packagingFrontendInventoryStageExecutionStatus: '',
+        packagingFrontendInventoryStageScheme: '',
+        packagingFrontendInventoryCliContractEnabled: false,
+        packagingFrontendInventoryBuildFrontendGoalSelected: false,
+        packagingFrontendInventorySourceGeneratedImportsObserved: false,
+        packagingFrontendInventorySourceChunkAvailable: false,
+        packagingFrontendInventoryProductionSupportObserved: false,
+        packagingFrontendInventoryStatsObserved: false,
+        packagingFrontendInventoryProdBundleObserved: false,
+        packagingFrontendInventoryManifestReady: false,
+        packagingFrontendInventoryRuntimeHandoffReady: false,
+        packagingFrontendInventoryRuntimeHandoffSatisfied: false,
+        packagingFrontendInventoryStaged: false,
+        packagingFrontendInventoryCustomSchemeObserved: false,
+        packagingFrontendInventoryBlobFallbackObserved: false,
+        packagingFrontendInventoryCacheObserved: false,
+        packagingFrontendInventoryCleanupObserved: false,
+        packagingFrontendInventoryNoLocalhost: false,
+        packagingFrontendInventoryFixtureSubstituted: false,
         frontendBuildPreflightAvailabilityObserved: false,
         frontendBuildPreflightAvailabilityVersion: '',
         frontendBuildPreflightAvailabilitySource: '',
@@ -8438,6 +8552,190 @@ let flowIpcShell = #"""
           Array.from(frontendModuleIdentityResourcePaths).join(',');
       }
 
+      function packagingFrontendInventoryStageDetails(resource, stagedUrl, executionStatus, cacheStatus, extra) {
+        const source = Object.assign({}, resource || {}, extra || {});
+        if (!source.packagingFrontendInventoryVersion) {
+          return {};
+        }
+        const scheme = stagedUrlScheme(stagedUrl);
+        const customSchemeObserved = scheme === 'vatori-resource'
+          || source.stagingMode === 'custom-scheme'
+          || source.frontendResourceFileBacked === true;
+        const blobFallbackObserved = scheme === 'blob' || source.stagingMode === 'blob-fallback';
+        const runtimeHandoffSatisfied =
+          source.currentAppGeneratedImportsOwnerRuntimeContractSatisfied === true
+          || source.packagingFrontendInventoryRuntimeHandoffSatisfied === true
+          || window.VaadinDesktopIpcDiagnostics.currentAppGeneratedImportsOwnerRuntimeContractSatisfied === true;
+        return {
+          packagingFrontendInventoryVersion: source.packagingFrontendInventoryVersion || '',
+          packagingFrontendInventorySource: source.packagingFrontendInventorySource || '',
+          packagingFrontendInventoryProducer: source.packagingFrontendInventoryProducer || '',
+          packagingFrontendInventoryMode: source.packagingFrontendInventoryMode || '',
+          packagingFrontendInventoryBuildGoal: source.packagingFrontendInventoryBuildGoal || '',
+          packagingFrontendInventoryBuildStatus: source.packagingFrontendInventoryBuildStatus || '',
+          packagingFrontendInventoryBuildGoalResult: source.packagingFrontendInventoryBuildGoalResult || '',
+          packagingFrontendInventoryOutputUsability: source.packagingFrontendInventoryOutputUsability || '',
+          packagingFrontendInventoryOutputRoots: source.packagingFrontendInventoryOutputRoots || '',
+          packagingFrontendInventoryRequiredArtifacts: source.packagingFrontendInventoryRequiredArtifacts || '',
+          packagingFrontendInventorySelectedArtifacts: source.packagingFrontendInventorySelectedArtifacts || '',
+          packagingFrontendInventorySelectedArtifactCount:
+            Number(source.packagingFrontendInventorySelectedArtifactCount || 0),
+          packagingFrontendInventoryGeneratedImportsArtifact:
+            source.packagingFrontendInventoryGeneratedImportsArtifact || '',
+          packagingFrontendInventoryGeneratedImportsSha256:
+            source.packagingFrontendInventoryGeneratedImportsSha256 || '',
+          packagingFrontendInventoryGeneratedImportsBytes:
+            Number(source.packagingFrontendInventoryGeneratedImportsBytes || 0),
+          packagingFrontendInventoryChunkArtifact: source.packagingFrontendInventoryChunkArtifact || '',
+          packagingFrontendInventoryChunkSha256: source.packagingFrontendInventoryChunkSha256 || '',
+          packagingFrontendInventoryChunkBytes: Number(source.packagingFrontendInventoryChunkBytes || 0),
+          packagingFrontendInventoryProductionSupportArtifact:
+            source.packagingFrontendInventoryProductionSupportArtifact || '',
+          packagingFrontendInventoryProductionSupportSha256:
+            source.packagingFrontendInventoryProductionSupportSha256 || '',
+          packagingFrontendInventoryProductionSupportBytes:
+            Number(source.packagingFrontendInventoryProductionSupportBytes || 0),
+          packagingFrontendInventoryProductionEntryArtifact:
+            source.packagingFrontendInventoryProductionEntryArtifact || '',
+          packagingFrontendInventoryProductionBuildArtifacts:
+            source.packagingFrontendInventoryProductionBuildArtifacts || '',
+          packagingFrontendInventoryStatsPath: source.packagingFrontendInventoryStatsPath || '',
+          packagingFrontendInventoryStatsSha256: source.packagingFrontendInventoryStatsSha256 || '',
+          packagingFrontendInventoryStatsBytes: Number(source.packagingFrontendInventoryStatsBytes || 0),
+          packagingFrontendInventoryProdBundlePath: source.packagingFrontendInventoryProdBundlePath || '',
+          packagingFrontendInventoryProdBundleSha256: source.packagingFrontendInventoryProdBundleSha256 || '',
+          packagingFrontendInventoryProdBundleBytes:
+            Number(source.packagingFrontendInventoryProdBundleBytes || 0),
+          packagingFrontendInventoryLoaderPolicy: source.packagingFrontendInventoryLoaderPolicy || '',
+          packagingFrontendInventoryAllowedSchemes: source.packagingFrontendInventoryAllowedSchemes || '',
+          packagingFrontendInventoryIntegrityPolicy: source.packagingFrontendInventoryIntegrityPolicy || '',
+          packagingFrontendInventoryIdentityPolicy: source.packagingFrontendInventoryIdentityPolicy || '',
+          packagingFrontendInventoryCachePolicy: source.packagingFrontendInventoryCachePolicy || '',
+          packagingFrontendInventoryCleanupPolicy: source.packagingFrontendInventoryCleanupPolicy || '',
+          packagingFrontendInventoryRuntimeHandoffPolicy:
+            source.packagingFrontendInventoryRuntimeHandoffPolicy || '',
+          packagingFrontendInventoryProductPathDecision:
+            source.packagingFrontendInventoryProductPathDecision || '',
+          packagingFrontendInventoryRemainingBlockers:
+            source.packagingFrontendInventoryRemainingBlockers || '',
+          packagingFrontendInventoryNextResolutionStep:
+            source.packagingFrontendInventoryNextResolutionStep || '',
+          packagingFrontendInventoryCliContractEnabled:
+            source.packagingFrontendInventoryCliContractEnabled === true,
+          packagingFrontendInventoryBuildFrontendGoalSelected:
+            source.packagingFrontendInventoryBuildFrontendGoalSelected === true,
+          packagingFrontendInventorySourceGeneratedImportsObserved:
+            source.packagingFrontendInventorySourceGeneratedImportsObserved === true,
+          packagingFrontendInventorySourceChunkAvailable:
+            source.packagingFrontendInventorySourceChunkAvailable === true,
+          packagingFrontendInventoryProductionSupportObserved:
+            source.packagingFrontendInventoryProductionSupportObserved === true,
+          packagingFrontendInventoryStatsObserved:
+            source.packagingFrontendInventoryStatsObserved === true,
+          packagingFrontendInventoryProdBundleObserved:
+            source.packagingFrontendInventoryProdBundleObserved === true,
+          packagingFrontendInventoryManifestReady:
+            source.packagingFrontendInventoryManifestReady === true,
+          packagingFrontendInventoryRuntimeHandoffReady:
+            source.packagingFrontendInventoryRuntimeHandoffReady === true,
+          packagingFrontendInventoryRuntimeHandoffSatisfied: runtimeHandoffSatisfied,
+          packagingFrontendInventoryStaged: true,
+          packagingFrontendInventoryCustomSchemeObserved: customSchemeObserved,
+          packagingFrontendInventoryBlobFallbackObserved: blobFallbackObserved
+            || source.packagingFrontendInventoryBlobFallbackObserved === true,
+          packagingFrontendInventoryCacheObserved:
+            cacheStatus === 'hit'
+            || cacheStatus === 'miss'
+            || source.packagingFrontendInventoryCacheObserved === true,
+          packagingFrontendInventoryCleanupObserved:
+            !!source.cleanupPolicy
+            || !!source.packagingFrontendInventoryCleanupPolicy
+            || source.packagingFrontendInventoryCleanupObserved === true,
+          packagingFrontendInventoryNoLocalhost: source.packagingFrontendInventoryNoLocalhost !== false,
+          packagingFrontendInventoryFixtureSubstituted:
+            source.packagingFrontendInventoryFixtureSubstituted === true,
+          packagingFrontendInventoryStageExecutionStatus: executionStatus || '',
+          packagingFrontendInventoryStageScheme: scheme || ''
+        };
+      }
+
+      function applyPackagingFrontendInventoryDiagnostics(details) {
+        if (!details || !details.packagingFrontendInventoryVersion) {
+          return;
+        }
+        const d = window.VaadinDesktopIpcDiagnostics;
+        for (const key of [
+          'packagingFrontendInventoryVersion',
+          'packagingFrontendInventorySource',
+          'packagingFrontendInventoryProducer',
+          'packagingFrontendInventoryMode',
+          'packagingFrontendInventoryBuildGoal',
+          'packagingFrontendInventoryBuildStatus',
+          'packagingFrontendInventoryBuildGoalResult',
+          'packagingFrontendInventoryOutputUsability',
+          'packagingFrontendInventoryOutputRoots',
+          'packagingFrontendInventoryRequiredArtifacts',
+          'packagingFrontendInventorySelectedArtifacts',
+          'packagingFrontendInventoryGeneratedImportsArtifact',
+          'packagingFrontendInventoryGeneratedImportsSha256',
+          'packagingFrontendInventoryChunkArtifact',
+          'packagingFrontendInventoryChunkSha256',
+          'packagingFrontendInventoryProductionSupportArtifact',
+          'packagingFrontendInventoryProductionSupportSha256',
+          'packagingFrontendInventoryProductionEntryArtifact',
+          'packagingFrontendInventoryProductionBuildArtifacts',
+          'packagingFrontendInventoryStatsPath',
+          'packagingFrontendInventoryStatsSha256',
+          'packagingFrontendInventoryProdBundlePath',
+          'packagingFrontendInventoryProdBundleSha256',
+          'packagingFrontendInventoryLoaderPolicy',
+          'packagingFrontendInventoryAllowedSchemes',
+          'packagingFrontendInventoryIntegrityPolicy',
+          'packagingFrontendInventoryIdentityPolicy',
+          'packagingFrontendInventoryCachePolicy',
+          'packagingFrontendInventoryCleanupPolicy',
+          'packagingFrontendInventoryRuntimeHandoffPolicy',
+          'packagingFrontendInventoryProductPathDecision',
+          'packagingFrontendInventoryRemainingBlockers',
+          'packagingFrontendInventoryNextResolutionStep',
+          'packagingFrontendInventoryStageExecutionStatus',
+          'packagingFrontendInventoryStageScheme'
+        ]) {
+          d[key] = details[key] || d[key] || '';
+        }
+        for (const key of [
+          'packagingFrontendInventorySelectedArtifactCount',
+          'packagingFrontendInventoryGeneratedImportsBytes',
+          'packagingFrontendInventoryChunkBytes',
+          'packagingFrontendInventoryProductionSupportBytes',
+          'packagingFrontendInventoryStatsBytes',
+          'packagingFrontendInventoryProdBundleBytes'
+        ]) {
+          d[key] = Number(details[key] || d[key] || 0);
+        }
+        for (const key of [
+          'packagingFrontendInventoryCliContractEnabled',
+          'packagingFrontendInventoryBuildFrontendGoalSelected',
+          'packagingFrontendInventorySourceGeneratedImportsObserved',
+          'packagingFrontendInventorySourceChunkAvailable',
+          'packagingFrontendInventoryProductionSupportObserved',
+          'packagingFrontendInventoryStatsObserved',
+          'packagingFrontendInventoryProdBundleObserved',
+          'packagingFrontendInventoryManifestReady',
+          'packagingFrontendInventoryRuntimeHandoffReady',
+          'packagingFrontendInventoryRuntimeHandoffSatisfied',
+          'packagingFrontendInventoryStaged',
+          'packagingFrontendInventoryCustomSchemeObserved',
+          'packagingFrontendInventoryBlobFallbackObserved',
+          'packagingFrontendInventoryCacheObserved',
+          'packagingFrontendInventoryCleanupObserved',
+          'packagingFrontendInventoryNoLocalhost',
+          'packagingFrontendInventoryFixtureSubstituted'
+        ]) {
+          d[key] = details[key] === true || d[key] === true;
+        }
+      }
+
       function recordFrontendStage(resource, stagedUrl, executionStatus, cacheStatus, extra) {
         if (!resource || typeof resource.path !== 'string' || !resource.path) {
           return;
@@ -8549,7 +8847,10 @@ let flowIpcShell = #"""
           }
         }
         refreshFrontendStagingDiagnostics();
-        sendHostTrace('resourceStage', {
+        const packagingInventoryDetails = packagingFrontendInventoryStageDetails(
+          resource, stagedUrl, executionStatus || 'staged', cacheStatus || '', extra || {});
+        applyPackagingFrontendInventoryDiagnostics(packagingInventoryDetails);
+        sendHostTrace('resourceStage', Object.assign({
           stagingResolverVersion: 'flow-ipc-resource-staging-v1_5',
           frontendResourceSchemeVersion: extra && extra.frontendResourceSchemeVersion
             ? extra.frontendResourceSchemeVersion
@@ -11041,7 +11342,7 @@ let flowIpcShell = #"""
             ? extra.componentProductionOwnerImportOrder
             : (resource.componentProductionOwnerImportOrder || ''),
           moduleIdentityKey: extra && extra.moduleIdentityKey ? extra.moduleIdentityKey : sourcePath
-        });
+        }, packagingInventoryDetails));
       }
 
       function stageFrontendArtifact(resource, body, executionStatus, urlsToRevoke, urlCache, extra) {

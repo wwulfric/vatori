@@ -146,6 +146,9 @@ public final class DesktopTraceInspector {
         FLOW_IPC_V1_43_GENERATED_LAZY_SPI_DECISION(
                 "--require-flow-ipc-v1_43-generated-lazy-spi-decision"),
         FLOW_IPC_V1_43("--require-flow-ipc-v1_43"),
+        FLOW_IPC_V1_44_PACKAGING_FRONTEND_INVENTORY(
+                "--require-flow-ipc-v1_44-packaging-frontend-inventory"),
+        FLOW_IPC_V1_44("--require-flow-ipc-v1_44"),
         FLOW_IPC_V1_3_FRAMEWORK("--require-flow-ipc-v1_3-framework");
 
         private final String option;
@@ -578,6 +581,11 @@ public final class DesktopTraceInspector {
                 case FLOW_IPC_V1_43 -> EnumSet.of(
                         FLOW_IPC_V1_43_GENERATED_LAZY_SPI_DECISION,
                         FLOW_IPC_V1_43);
+                case FLOW_IPC_V1_44_PACKAGING_FRONTEND_INVENTORY ->
+                    EnumSet.of(FLOW_IPC_V1_44_PACKAGING_FRONTEND_INVENTORY);
+                case FLOW_IPC_V1_44 -> EnumSet.of(
+                        FLOW_IPC_V1_44_PACKAGING_FRONTEND_INVENTORY,
+                        FLOW_IPC_V1_44);
                 case FLOW_IPC_V1_3_FRAMEWORK -> EnumSet.of(FLOW_IPC_V1_3_FRAMEWORK);
             };
         }
@@ -696,6 +704,9 @@ public final class DesktopTraceInspector {
                 case FLOW_IPC_V1_43_GENERATED_LAZY_SPI_DECISION ->
                     summary.hasRequiredFlowIpcV1_43GeneratedLazySpiDecisionTypes();
                 case FLOW_IPC_V1_43 -> summary.hasRequiredFlowIpcV1_43Types();
+                case FLOW_IPC_V1_44_PACKAGING_FRONTEND_INVENTORY ->
+                    summary.hasRequiredFlowIpcV1_44PackagingFrontendInventoryTypes();
+                case FLOW_IPC_V1_44 -> summary.hasRequiredFlowIpcV1_44Types();
                 case FLOW_IPC_V1_3_FRAMEWORK -> summary.hasRequiredFlowIpcV1_3FrameworkTypes();
             };
         }
@@ -1397,6 +1408,11 @@ public final class DesktopTraceInspector {
                     && line.contains("\"componentFrontendResources\"")
                     && containsGeneratedLazySpiDecisionV143Fields(line)) {
                 summary.generatedLazySpiDecisionV143ManifestObserved = true;
+            }
+            if (line.contains("\"type\":\"bootstrapResponse\"")
+                    && line.contains("\"componentFrontendResources\"")
+                    && containsPackagingFrontendInventoryV144Fields(line)) {
+                summary.packagingFrontendInventoryV144ManifestObserved = true;
             }
             if (line.contains("\"type\":\"bootstrapResponse\"")
                     && line.contains("\"componentFrontendResources\"")
@@ -2352,6 +2368,11 @@ public final class DesktopTraceInspector {
                     && containsGeneratedLazySpiDecisionV143Fields(line)) {
                 summary.generatedLazySpiDecisionV143RequestObserved = true;
             }
+            if (line.contains("\"type\":\"resourceRequest\"")
+                    && containsPath(line, "current-app-production/VAADIN/build/generated-flow-imports-")
+                    && containsPackagingFrontendInventoryV144Fields(line)) {
+                summary.packagingFrontendInventoryV144RequestObserved = true;
+            }
             if (line.contains("\"type\":\"resourceResponse\"")
                     && containsPath(line, "current-app-frontend/generated/flow/generated-flow-imports.js")
                     && containsCurrentAppBuildFrontendOutputV132Fields(line)
@@ -2425,6 +2446,12 @@ public final class DesktopTraceInspector {
                     && containsGeneratedLazySpiDecisionV143Fields(line)
                     && line.contains("\"bodyRedacted\":true")) {
                 summary.generatedLazySpiDecisionV143ResponseObserved = true;
+            }
+            if (line.contains("\"type\":\"resourceResponse\"")
+                    && containsPath(line, "current-app-production/VAADIN/build/generated-flow-imports-")
+                    && containsPackagingFrontendInventoryV144Fields(line)
+                    && line.contains("\"bodyRedacted\":true")) {
+                summary.packagingFrontendInventoryV144ResponseObserved = true;
             }
             if (line.contains("\"type\":\"resourceRequest\"")
                     && line.contains("\"purpose\":\"generated-loadondemand-chunk-v1_11\"")
@@ -3196,6 +3223,14 @@ public final class DesktopTraceInspector {
             }
             if (line.contains("\"type\":\"resourceStage\"")
                     && containsPath(line, "current-app-production/VAADIN/build/generated-flow-imports-")
+                    && containsPackagingFrontendInventoryV144Fields(line)
+                    && (line.contains("\"executionStatus\":\"executed\"")
+                            || line.contains("\"executionStatus\":\"strict-blocker\"")
+                            || line.contains("\"executionStatus\":\"staged\""))) {
+                summary.packagingFrontendInventoryV144StageObserved = true;
+            }
+            if (line.contains("\"type\":\"resourceStage\"")
+                    && containsPath(line, "current-app-production/VAADIN/build/generated-flow-imports-")
                     && containsCurrentAppGeneratedImportsRootPackageGraphV134Fields(line)
                     && containsLiteralField(line,
                             "currentAppGeneratedImportsRootProductionSupportExecuted", "true")
@@ -3282,6 +3317,12 @@ public final class DesktopTraceInspector {
                     && containsGeneratedLazySpiDecisionV143ChunkExecuted(line)
                     && line.contains("\"executionStatus\":\"executed\"")) {
                 summary.generatedLazySpiDecisionV143CompleteStageObserved = true;
+            }
+            if (line.contains("\"type\":\"resourceStage\"")
+                    && containsPath(line, "current-app-production/VAADIN/build/generated-flow-imports-")
+                    && containsPackagingFrontendInventoryV144Complete(line)
+                    && line.contains("\"executionStatus\":\"executed\"")) {
+                summary.packagingFrontendInventoryV144CompleteStageObserved = true;
             }
             if (line.contains("\"type\":\"resourceStage\"")
                     && containsPath(line, "current-app-frontend/generated/flow/chunks/")
@@ -4181,6 +4222,26 @@ public final class DesktopTraceInspector {
                             "Vaadin TextField: Flow IPC typed")
                     && containsStringField(line, "vaadinSelectStatusText", "Vaadin Select: audit")) {
                 summary.generatedLazySpiDecisionV143DomObserved = true;
+            }
+            if (line.contains("\"type\":\"webview.dom\"")
+                    && containsCurrentAppGeneratedImportsOwnerRuntimeContractV142DomComplete(line)
+                    && containsPackagingFrontendInventoryV144Complete(line)
+                    && containsStringField(line, "currentAppGeneratedImportsOwnerRuntimeContractReusedTags",
+                            "vaadin-big-decimal-field,vaadin-checkbox,vaadin-select,vaadin-text-field")
+                    && containsStringField(line, "currentAppGeneratedImportsOwnerRuntimeContractFallbackTags", "")
+                    && containsLiteralField(line, "loadOnDemandChunkFileExecuted", "true")
+                    && containsLiteralField(line, "vaadinWebComponentTagDefined", "true")
+                    && containsLiteralField(line, "vaadinSecondWebComponentTagDefined", "true")
+                    && containsLiteralField(line, "vaadinTextFieldTagDefined", "true")
+                    && containsLiteralField(line, "vaadinSelectTagDefined", "true")
+                    && containsStringField(line, "vaadinWebComponentStatusText",
+                            "Vaadin BigDecimalField: 42.5")
+                    && containsStringField(line, "vaadinSecondWebComponentStatusText",
+                            "Vaadin Checkbox: checked")
+                    && containsStringField(line, "vaadinTextFieldStatusText",
+                            "Vaadin TextField: Flow IPC typed")
+                    && containsStringField(line, "vaadinSelectStatusText", "Vaadin Select: audit")) {
+                summary.packagingFrontendInventoryV144DomObserved = true;
             }
             if (line.contains("\"type\":\"webview.dom\"")
                     && containsLiteralField(line, "generatedLazySourceCurrentBuildNoOpConfirmed", "true")
@@ -5824,6 +5885,88 @@ public final class DesktopTraceInspector {
                 && containsLiteralField(line, "generatedLazySpiCurrentAppChunkExecuted", "true");
     }
 
+    private static boolean containsPackagingFrontendInventoryV144Fields(String line) {
+        return containsStringField(line, "packagingFrontendInventoryVersion",
+                        "flow-ipc-packaging-time-frontend-inventory-v1_44")
+                && containsStringField(line, "packagingFrontendInventorySource",
+                        "generated-lazy-spi-decision-v1_43")
+                && containsStringField(line, "packagingFrontendInventoryProducer",
+                        "vaadin-maven-plugin-build-frontend")
+                && containsStringField(line, "packagingFrontendInventoryMode",
+                        "framework-managed-current-app-build-output")
+                && containsStringField(line, "packagingFrontendInventoryBuildGoal", "build-frontend")
+                && containsStringField(line, "packagingFrontendInventoryBuildStatus", "success")
+                && containsStringField(line, "packagingFrontendInventoryBuildGoalResult", "success")
+                && line.contains("packagingFrontendInventoryOutputUsability")
+                && containsStringField(line, "packagingFrontendInventoryRequiredArtifacts",
+                        "source-generated-imports,source-generated-chunk,production-generated-imports-support,production-entry,production-build-graph,stats-json,prod-bundle")
+                && containsStringFieldPrefix(line, "packagingFrontendInventorySelectedArtifacts",
+                        "current-app-frontend/generated/flow/generated-flow-imports.js")
+                && containsPositiveIntegerField(line, "packagingFrontendInventorySelectedArtifactCount")
+                && containsStringField(line, "packagingFrontendInventoryGeneratedImportsArtifact",
+                        "current-app-frontend/generated/flow/generated-flow-imports.js")
+                && line.contains("packagingFrontendInventoryGeneratedImportsSha256")
+                && containsPositiveIntegerField(line, "packagingFrontendInventoryGeneratedImportsBytes")
+                && containsStringFieldPrefix(line, "packagingFrontendInventoryChunkArtifact",
+                        "current-app-frontend/generated/flow/chunks/chunk-")
+                && line.contains("packagingFrontendInventoryChunkSha256")
+                && containsPositiveIntegerField(line, "packagingFrontendInventoryChunkBytes")
+                && containsStringFieldPrefix(line, "packagingFrontendInventoryProductionSupportArtifact",
+                        "current-app-production/VAADIN/build/generated-flow-imports-")
+                && line.contains("packagingFrontendInventoryProductionSupportSha256")
+                && containsPositiveIntegerField(line, "packagingFrontendInventoryProductionSupportBytes")
+                && line.contains("packagingFrontendInventoryProductionEntryArtifact")
+                && line.contains("packagingFrontendInventoryProductionBuildArtifacts")
+                && line.contains("packagingFrontendInventoryStatsPath")
+                && line.contains("packagingFrontendInventoryStatsSha256")
+                && containsPositiveIntegerField(line, "packagingFrontendInventoryStatsBytes")
+                && line.contains("packagingFrontendInventoryProdBundlePath")
+                && line.contains("packagingFrontendInventoryProdBundleSha256")
+                && containsPositiveIntegerField(line, "packagingFrontendInventoryProdBundleBytes")
+                && containsStringField(line, "packagingFrontendInventoryLoaderPolicy",
+                        "custom-scheme-file-backed-primary-with-blob-diagnostic-fallback")
+                && containsStringField(line, "packagingFrontendInventoryAllowedSchemes",
+                        "vatori-resource,blob")
+                && containsStringField(line, "packagingFrontendInventoryIntegrityPolicy",
+                        "sha256-and-byte-count-for-selected-artifacts")
+                && containsStringField(line, "packagingFrontendInventoryIdentityPolicy",
+                        "stable-source-path-plus-owner-namespace")
+                && containsStringField(line, "packagingFrontendInventoryCachePolicy",
+                        "window-lifetime-cache-by-stable-resource-path")
+                && containsStringField(line, "packagingFrontendInventoryCleanupPolicy",
+                        "delete-staged-files-on-window-close")
+                && containsStringField(line, "packagingFrontendInventoryRuntimeHandoffPolicy",
+                        "generated-imports-owner-runtime-contract-v1_42")
+                && containsStringField(line, "packagingFrontendInventoryProductPathDecision",
+                        "packaging-time-build-frontend-staging")
+                && containsStringField(line, "packagingFrontendInventoryRemainingBlockers",
+                        "dev-mode-vite-parity,broad-component-resource-parity,installer-packaging,durable-reconnect")
+                && line.contains("packagingFrontendInventoryNextResolutionStep")
+                && containsLiteralField(line, "packagingFrontendInventoryCliContractEnabled", "true")
+                && containsLiteralField(line,
+                        "packagingFrontendInventoryBuildFrontendGoalSelected", "true")
+                && containsLiteralField(line,
+                        "packagingFrontendInventorySourceGeneratedImportsObserved", "true")
+                && containsLiteralField(line, "packagingFrontendInventorySourceChunkAvailable", "true")
+                && containsLiteralField(line,
+                        "packagingFrontendInventoryProductionSupportObserved", "true")
+                && containsLiteralField(line, "packagingFrontendInventoryStatsObserved", "true")
+                && containsLiteralField(line, "packagingFrontendInventoryProdBundleObserved", "true")
+                && containsLiteralField(line, "packagingFrontendInventoryManifestReady", "true")
+                && containsLiteralField(line, "packagingFrontendInventoryRuntimeHandoffReady", "true")
+                && containsLiteralField(line, "packagingFrontendInventoryNoLocalhost", "true")
+                && containsLiteralField(line, "packagingFrontendInventoryFixtureSubstituted", "false");
+    }
+
+    private static boolean containsPackagingFrontendInventoryV144Complete(String line) {
+        return containsPackagingFrontendInventoryV144Fields(line)
+                && containsLiteralField(line, "packagingFrontendInventoryRuntimeHandoffSatisfied", "true")
+                && containsLiteralField(line, "packagingFrontendInventoryStaged", "true")
+                && containsLiteralField(line, "packagingFrontendInventoryCustomSchemeObserved", "true")
+                && containsLiteralField(line, "packagingFrontendInventoryCacheObserved", "true")
+                && containsLiteralField(line, "packagingFrontendInventoryCleanupObserved", "true");
+    }
+
     private static boolean containsProductionOwnerFailureLayer(String line, String field) {
         return containsStringField(line, field, "production-owner-duplicate-custom-element")
                 || containsStringField(line, field, "production-owner-relative-import-unresolved")
@@ -6379,6 +6522,12 @@ public final class DesktopTraceInspector {
         private boolean generatedLazySpiDecisionV143ChunkExecutedObserved;
         private boolean generatedLazySpiDecisionV143CompleteStageObserved;
         private boolean generatedLazySpiDecisionV143DomObserved;
+        private boolean packagingFrontendInventoryV144ManifestObserved;
+        private boolean packagingFrontendInventoryV144RequestObserved;
+        private boolean packagingFrontendInventoryV144ResponseObserved;
+        private boolean packagingFrontendInventoryV144StageObserved;
+        private boolean packagingFrontendInventoryV144CompleteStageObserved;
+        private boolean packagingFrontendInventoryV144DomObserved;
 
         public boolean hasRequiredFlowIpcTypes() {
             return types.keySet().containsAll(FLOW_IPC_REQUIRED_TYPES)
@@ -7047,6 +7196,20 @@ public final class DesktopTraceInspector {
                     && hasRequiredFlowIpcV1_42GeneratedImportsOwnerRuntimeContractTypes();
         }
 
+        public boolean hasRequiredFlowIpcV1_44PackagingFrontendInventoryTypes() {
+            return packagingFrontendInventoryV144ManifestObserved
+                    && packagingFrontendInventoryV144RequestObserved
+                    && packagingFrontendInventoryV144ResponseObserved
+                    && packagingFrontendInventoryV144StageObserved
+                    && packagingFrontendInventoryV144CompleteStageObserved
+                    && packagingFrontendInventoryV144DomObserved;
+        }
+
+        public boolean hasRequiredFlowIpcV1_44Types() {
+            return hasRequiredFlowIpcV1_44PackagingFrontendInventoryTypes()
+                    && hasRequiredFlowIpcV1_42GeneratedImportsOwnerRuntimeContractTypes();
+        }
+
         private boolean hasCurrentAppBuildFrontendOutputSuccessorEvidence() {
             return currentAppBuildFrontendOutputV132ManifestObserved
                     && currentAppBuildFrontendOutputV132RequestObserved
@@ -7655,6 +7818,15 @@ public final class DesktopTraceInspector {
                     + generatedLazySpiDecisionV143ChunkExecutedObserved + "/"
                     + generatedLazySpiDecisionV143CompleteStageObserved + "/"
                     + generatedLazySpiDecisionV143DomObserved);
+            System.out.println("Flow IPC v1.44 packaging frontend inventory manifest observed: "
+                    + packagingFrontendInventoryV144ManifestObserved);
+            System.out.println("Flow IPC v1.44 packaging frontend inventory request/response observed: "
+                    + packagingFrontendInventoryV144RequestObserved + "/"
+                    + packagingFrontendInventoryV144ResponseObserved);
+            System.out.println("Flow IPC v1.44 packaging frontend inventory stage/complete/DOM observed: "
+                    + packagingFrontendInventoryV144StageObserved + "/"
+                    + packagingFrontendInventoryV144CompleteStageObserved + "/"
+                    + packagingFrontendInventoryV144DomObserved);
             System.out.println("Flow IPC v1.6 TextField graph manifest observed: "
                     + frontendTextFieldV16ManifestObserved);
             System.out.println("Flow IPC v1.6 TextField graph request observed: "

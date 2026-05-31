@@ -49,8 +49,9 @@ v0/v1 runtime 切片走向可产品化桌面框架的最终完成状态。
 - `docs/goal-1_41.md`：Current App Generated Imports Select Owner Coverage，已完成。
 - `docs/goal-1_42.md`：Generated Imports Owner Runtime Contract，已完成。
 - `docs/goal-1_43.md`：Generated Lazy Chunk SPI Decision Contract，已完成。
+- `docs/goal-1_44.md`：Packaging-Time Frontend Inventory Contract，已完成。
 
-当前已完成到 `docs/goal-1_43.md`。v1.31 先把 v1.30 的 offline plugin blocker 推进到
+当前已完成到 `docs/goal-1_44.md`。v1.31 先把 v1.30 的 offline plugin blocker 推进到
 explicit online/local-repo preflight；v1.32 进一步把 blocker 推进到 full
 `build-frontend` 输出层，证明当前 smoke app 已产生真实 source generated imports/chunk、
 production webapp build output 和 `prod.bundle`。v1.33 则把 v1.32 的 generic
@@ -115,9 +116,19 @@ imports/chunk artifact integrity、stats / `prod.bundle` proof，以及
 `generatedLazySpiExecutionTrigger=host-decision-audit-probe-not-flow-client-spi` audit probe
 证明 current app generated chunk 可经 no-localhost resolver stage/import，但它没有声明 supported
 Flow-client SPI runtime path 成功；当前 remaining blockers 变为 productized packaging-time frontend
-inventory/staging、dev-mode/Vite parity 和 broader component/resource parity。
+inventory/staging、dev-mode/Vite parity 和 broader component/resource parity。v1.44 将该 product
+path 决策推进为 framework-managed packaging-time frontend inventory contract：manifest /
+resource response / `resourceStage` / `webview.dom` 记录
+`flow-ipc-packaging-time-frontend-inventory-v1_44`、`build-frontend` goal/status/output roots、
+selected source generated imports/chunk、production generated imports support artifact、production
+entry/build graph、stats、`prod.bundle`、sha256/byte count integrity、allowed schemes
+`vatori-resource,blob`、stable source-path identity、window-lifetime cache、close-time cleanup、
+no-localhost/no-fixture proof 和 v1.42 generated imports owner runtime handoff。Trace 证明该
+packaging-time inventory 已通过 host-owned custom-scheme path stage/import 并满足 runtime
+handoff，但它仍不是完整 installer packaging、dev-mode/Vite parity、broad component/resource
+parity 或 durable reconnect。
 
-后续阶段应继续以 `docs/goal-1_44.md` 等文件拆分，
+后续阶段应继续以 `docs/goal-1_45.md` 等文件拆分，
 每个阶段只拿走本长期目标中的一个可评审切片。不要把本文件改写成短期任务清单；
 它是长期北极星和完成度账本。
 
@@ -139,7 +150,7 @@ inventory/staging、dev-mode/Vite parity 和 broader component/resource parity�
 
 ## 当前基线
 
-截至 goal 1.42，仓库已经证明：
+截至 goal 1.44，仓库已经证明：
 
 - `dev-ipc` 可以启动 no-localhost Flow IPC runtime。
 - 真实 macOS Swift/AppKit/WKWebView 窗口可以运行 Flow IPC smoke app 和 framework
@@ -592,9 +603,16 @@ inventory/staging、dev-mode/Vite parity 和 broader component/resource parity�
   `generatedLazySpiFailureLayer=supported-vaadin-lazy-chunk-spi-unavailable` 和
   `generatedLazySpiExecutionTrigger=host-decision-audit-probe-not-flow-client-spi`。Trace 证明当前
   app generated chunk 可被 audit probe 执行，但仍没有 supported Flow-client SPI runtime path。
-- 当前 app/build 的真实 generated/lazy chunk file parity、泛化 owner reuse /
-  packaging-time inventory productization、dev-mode/Vite execution 和更广组件资源覆盖仍是明确
-  blocker，不计入最终完成。
+- v1.44 已把 v1.43 的 packaging-time decision 推进为 framework-managed frontend inventory
+  contract：Java manifest/resource response、Swift `resourceStage` / `webview.dom` 和 inspector gate
+  记录 `packagingFrontendInventoryVersion=flow-ipc-packaging-time-frontend-inventory-v1_44`、
+  `build-frontend` goal/status/output roots、selected source/prod artifacts、stats、`prod.bundle`、
+  sha256/byte count integrity、allowed loader schemes、cache/cleanup policy、no-localhost /
+  no-fixture proof 和 v1.42 generated imports owner runtime handoff。Trace 证明该 inventory 已
+  stage/import 并满足 runtime handoff；它仍不是 installer packaging、dev-mode/Vite parity、
+  broad component/resource parity 或 durable reconnect。
+- 当前 app/build 的真实 generated/lazy chunk file parity 泛化、dev-mode/Vite execution、更广组件资源覆盖、
+  installer packaging 和 durable reconnect 仍是明确 blocker，不计入最终完成。
 
 ## 最终完成标准
 
@@ -689,7 +707,7 @@ inventory/staging、dev-mode/Vite parity 和 broader component/resource parity�
 
 - 基于 v1.22 generated lazy chunk-file positive fixture、v1.23 production owner positive
   runtime fixture、v1.24 closure decision contract、v1.25 packaged frontend baseline 和
-  v1.26-v1.43 当前 app generated/build-frontend output contracts，继续让当前 app/build 产生的
+  v1.26-v1.44 当前 app generated/build-frontend output contracts，继续让当前 app/build 产生的
   真实 generated lazy chunk file 完成执行：在 current app generated imports root package graph 已由
   production support artifact 承载的基础上，接入受支持 Vaadin lazy chunk SPI，或把真实
   production bundle owned execution / dev-mode/Vite execution 从 partial/blocker 推进到真实可执行路径。
@@ -708,7 +726,8 @@ inventory/staging、dev-mode/Vite parity 和 broader component/resource parity�
   `vaadin-select`，四组件 focused imports 全部被 owner side effect 跳过，但这还不是完整
   production/runtime SPI parity；v1.42 已把这条路径提升为明确 generated imports owner runtime
   contract 和 resolver handoff evidence；v1.43 已把 supported Vaadin lazy chunk SPI 评估收敛为
-  `packaging-time-build-frontend-staging` product path，但仍不是完整 production/runtime SPI parity；v1.23 positive fixture 也只能证明基础设施可行，
+  `packaging-time-build-frontend-staging` product path，v1.44 已把该路径产品化为 packaging-time
+  inventory contract，但仍不是完整 production/runtime SPI parity；v1.23 positive fixture 也只能证明基础设施可行，
   不能替代真实 owner parity。
 - Dev-mode/Vite graph execution 或可靠替代模式。
 - Broader Vaadin component parity，尤其是 Grid/VirtualList、ComboBox、DatePicker、
@@ -734,11 +753,11 @@ inventory/staging、dev-mode/Vite parity 和 broader component/resource parity�
 
 ## 当前建议的下一阶段
 
-v1.43 已完成 Generated Lazy Chunk SPI Decision Contract。下一阶段建议优先从
-SPI decision evidence 转向 framework-managed packaging-time frontend inventory：
+v1.44 已完成 Packaging-Time Frontend Inventory Contract。下一阶段建议优先从
+inventory contract 转向可复用 packaging/runtime handoff 或更广 component/resource parity：
 
-- 创建 `docs/goal-1_44.md`：把 `packaging-time-build-frontend-staging` product path 落成
-  CLI/runtime 可审计 inventory contract，覆盖生成、选择、校验、stage、cache 和 cleanup。
+- 创建 `docs/goal-1_45.md`：把 `flow-ipc-packaging-time-frontend-inventory-v1_44` 从 smoke-app trace
+  contract 推进为可复用 packaging/runtime handoff，或选择一个更广 component/resource matrix 切片。
 - 不再把 supported Vaadin lazy chunk SPI 当作当前默认路径；除非上游/本地版本提供稳定 API，否则继续以
   packaging-time `build-frontend` artifacts 作为产品化输入。
 - 真实 production owner-owned runtime reuse success，或把当前 generated imports owner contract 与

@@ -660,6 +660,34 @@ final class FlowClientResources {
             "host-decision-audit-probe-not-flow-client-spi";
     private static final String GENERATED_LAZY_SPI_NEXT_STEP =
             "productize packaging-time build-frontend artifacts as framework-managed staged frontend inventory, or upstream/support a stable Vaadin lazy chunk SPI";
+    private static final String PACKAGING_FRONTEND_INVENTORY_VERSION =
+            "flow-ipc-packaging-time-frontend-inventory-v1_44";
+    private static final String PACKAGING_FRONTEND_INVENTORY_SOURCE =
+            "generated-lazy-spi-decision-v1_43";
+    private static final String PACKAGING_FRONTEND_INVENTORY_PRODUCER =
+            "vaadin-maven-plugin-build-frontend";
+    private static final String PACKAGING_FRONTEND_INVENTORY_MODE =
+            "framework-managed-current-app-build-output";
+    private static final String PACKAGING_FRONTEND_INVENTORY_REQUIRED_ARTIFACTS =
+            "source-generated-imports,source-generated-chunk,production-generated-imports-support,production-entry,production-build-graph,stats-json,prod-bundle";
+    private static final String PACKAGING_FRONTEND_INVENTORY_LOADER_POLICY =
+            "custom-scheme-file-backed-primary-with-blob-diagnostic-fallback";
+    private static final String PACKAGING_FRONTEND_INVENTORY_ALLOWED_SCHEMES =
+            "vatori-resource,blob";
+    private static final String PACKAGING_FRONTEND_INVENTORY_INTEGRITY_POLICY =
+            "sha256-and-byte-count-for-selected-artifacts";
+    private static final String PACKAGING_FRONTEND_INVENTORY_IDENTITY_POLICY =
+            "stable-source-path-plus-owner-namespace";
+    private static final String PACKAGING_FRONTEND_INVENTORY_CACHE_POLICY =
+            "window-lifetime-cache-by-stable-resource-path";
+    private static final String PACKAGING_FRONTEND_INVENTORY_CLEANUP_POLICY =
+            "delete-staged-files-on-window-close";
+    private static final String PACKAGING_FRONTEND_INVENTORY_HANDOFF_POLICY =
+            "generated-imports-owner-runtime-contract-v1_42";
+    private static final String PACKAGING_FRONTEND_INVENTORY_REMAINING_BLOCKERS =
+            "dev-mode-vite-parity,broad-component-resource-parity,installer-packaging,durable-reconnect";
+    private static final String PACKAGING_FRONTEND_INVENTORY_NEXT_STEP =
+            "turn the framework-managed build-frontend inventory into a reusable packaging/runtime handoff instead of a smoke-app-only trace contract";
     private static final List<String> PRODUCTION_RUNTIME_OWNER_DEPENDENCY_ARTIFACTS = List.of(
             DEV_BUNDLE_COMMONJS_JS,
             DEV_BUNDLE_INDEX_HTML_JS,
@@ -2391,7 +2419,96 @@ final class FlowClientResources {
                 handoffReady ? CURRENT_APP_PRODUCTION_RUNTIME_OWNERSHIP_FAILURE_LAYER : evidence.failureLayer());
         attributes.put("currentAppProductionRuntimeOwnershipNextResolutionStep",
                 CURRENT_APP_PRODUCTION_RUNTIME_OWNERSHIP_NEXT_STEP);
+        attributes.putAll(packagingFrontendInventoryAttributes(evidence, handoffReady));
         attributes.putAll(currentAppProductionOwnerImportAttributes(evidence, handoffReady));
+        return attributes;
+    }
+
+    private static Map<String, Object> packagingFrontendInventoryAttributes(
+            CurrentAppBuildFrontendOutputEvidence evidence, boolean handoffReady) {
+        FrontendBuildStepEvidence buildStep = frontendBuildStepEvidence();
+        String selectedArtifacts = currentAppProductionRuntimeOwnershipArtifactInventory(evidence);
+        Map<String, Object> attributes = new LinkedHashMap<>();
+        attributes.put("packagingFrontendInventoryVersion", PACKAGING_FRONTEND_INVENTORY_VERSION);
+        attributes.put("packagingFrontendInventorySource", PACKAGING_FRONTEND_INVENTORY_SOURCE);
+        attributes.put("packagingFrontendInventoryProducer", PACKAGING_FRONTEND_INVENTORY_PRODUCER);
+        attributes.put("packagingFrontendInventoryMode", PACKAGING_FRONTEND_INVENTORY_MODE);
+        attributes.put("packagingFrontendInventoryBuildGoal", buildStep.goal());
+        attributes.put("packagingFrontendInventoryBuildStatus", buildStep.status());
+        attributes.put("packagingFrontendInventoryBuildGoalResult", buildStep.goalResult());
+        attributes.put("packagingFrontendInventoryOutputUsability", buildStep.outputUsability());
+        attributes.put("packagingFrontendInventoryOutputRoots", buildStep.outputRoots());
+        attributes.put("packagingFrontendInventoryRequiredArtifacts",
+                PACKAGING_FRONTEND_INVENTORY_REQUIRED_ARTIFACTS);
+        attributes.put("packagingFrontendInventorySelectedArtifacts", selectedArtifacts);
+        attributes.put("packagingFrontendInventorySelectedArtifactCount",
+                csvValues(selectedArtifacts).size());
+        attributes.put("packagingFrontendInventoryGeneratedImportsArtifact",
+                CURRENT_APP_BUILD_FRONTEND_GENERATED_IMPORTS_JS);
+        attributes.put("packagingFrontendInventoryGeneratedImportsSha256",
+                evidence.sourceGeneratedImportsSha256());
+        attributes.put("packagingFrontendInventoryGeneratedImportsBytes",
+                evidence.sourceGeneratedImportsBytes());
+        attributes.put("packagingFrontendInventoryChunkArtifact", evidence.sourceChunkVirtualPath());
+        attributes.put("packagingFrontendInventoryChunkSha256", evidence.sourceChunkSha256());
+        attributes.put("packagingFrontendInventoryChunkBytes", evidence.sourceChunkBytes());
+        attributes.put("packagingFrontendInventoryProductionSupportArtifact",
+                evidence.sourceGeneratedImportsRootProductionSupportArtifact());
+        attributes.put("packagingFrontendInventoryProductionSupportSha256",
+                evidence.productionGeneratedImportsSha256());
+        attributes.put("packagingFrontendInventoryProductionSupportBytes",
+                evidence.productionGeneratedImportsBytes());
+        attributes.put("packagingFrontendInventoryProductionEntryArtifact",
+                evidence.productionEntryScriptVirtualPath());
+        attributes.put("packagingFrontendInventoryProductionBuildArtifacts",
+                evidence.productionBuildJsVirtualPaths());
+        attributes.put("packagingFrontendInventoryStatsPath", evidence.statsPath());
+        attributes.put("packagingFrontendInventoryStatsSha256", evidence.statsSha256());
+        attributes.put("packagingFrontendInventoryStatsBytes", evidence.statsBytes());
+        attributes.put("packagingFrontendInventoryProdBundlePath", evidence.prodBundlePath());
+        attributes.put("packagingFrontendInventoryProdBundleSha256", evidence.prodBundleSha256());
+        attributes.put("packagingFrontendInventoryProdBundleBytes", evidence.prodBundleBytes());
+        attributes.put("packagingFrontendInventoryLoaderPolicy",
+                PACKAGING_FRONTEND_INVENTORY_LOADER_POLICY);
+        attributes.put("packagingFrontendInventoryAllowedSchemes",
+                PACKAGING_FRONTEND_INVENTORY_ALLOWED_SCHEMES);
+        attributes.put("packagingFrontendInventoryIntegrityPolicy",
+                PACKAGING_FRONTEND_INVENTORY_INTEGRITY_POLICY);
+        attributes.put("packagingFrontendInventoryIdentityPolicy",
+                PACKAGING_FRONTEND_INVENTORY_IDENTITY_POLICY);
+        attributes.put("packagingFrontendInventoryCachePolicy",
+                PACKAGING_FRONTEND_INVENTORY_CACHE_POLICY);
+        attributes.put("packagingFrontendInventoryCleanupPolicy",
+                PACKAGING_FRONTEND_INVENTORY_CLEANUP_POLICY);
+        attributes.put("packagingFrontendInventoryRuntimeHandoffPolicy",
+                PACKAGING_FRONTEND_INVENTORY_HANDOFF_POLICY);
+        attributes.put("packagingFrontendInventoryProductPathDecision", GENERATED_LAZY_SPI_DECISION);
+        attributes.put("packagingFrontendInventoryRemainingBlockers",
+                PACKAGING_FRONTEND_INVENTORY_REMAINING_BLOCKERS);
+        attributes.put("packagingFrontendInventoryNextResolutionStep",
+                PACKAGING_FRONTEND_INVENTORY_NEXT_STEP);
+        attributes.put("packagingFrontendInventoryCliContractEnabled",
+                "1".equals(System.getenv("VAADIN_DESKTOP_FLOW_IPC_FRONTEND_BUILD_V1_44")));
+        attributes.put("packagingFrontendInventoryBuildFrontendGoalSelected",
+                "build-frontend".equals(buildStep.goal()));
+        attributes.put("packagingFrontendInventorySourceGeneratedImportsObserved",
+                evidence.sourceGeneratedImportsObserved());
+        attributes.put("packagingFrontendInventorySourceChunkAvailable",
+                "available".equals(evidence.sourceChunkStatus()));
+        attributes.put("packagingFrontendInventoryProductionSupportObserved",
+                evidence.sourceGeneratedImportsRootProductionSupportObserved());
+        attributes.put("packagingFrontendInventoryStatsObserved", evidence.statsObserved());
+        attributes.put("packagingFrontendInventoryProdBundleObserved", evidence.prodBundleObserved());
+        attributes.put("packagingFrontendInventoryManifestReady", handoffReady);
+        attributes.put("packagingFrontendInventoryRuntimeHandoffReady", handoffReady);
+        attributes.put("packagingFrontendInventoryRuntimeHandoffSatisfied", false);
+        attributes.put("packagingFrontendInventoryStaged", false);
+        attributes.put("packagingFrontendInventoryCustomSchemeObserved", false);
+        attributes.put("packagingFrontendInventoryBlobFallbackObserved", false);
+        attributes.put("packagingFrontendInventoryCacheObserved", false);
+        attributes.put("packagingFrontendInventoryCleanupObserved", false);
+        attributes.put("packagingFrontendInventoryNoLocalhost", true);
+        attributes.put("packagingFrontendInventoryFixtureSubstituted", false);
         return attributes;
     }
 
@@ -3904,6 +4021,8 @@ final class FlowClientResources {
                 productionGeneratedImportsEvidence.sha256(),
                 stats.observed(),
                 stats.path(),
+                stats.bytes(),
+                stats.sha256(),
                 prodBundle.observed(),
                 prodBundle.path(),
                 prodBundle.bytes(),
@@ -4605,6 +4724,8 @@ final class FlowClientResources {
             String productionGeneratedImportsSha256,
             boolean statsObserved,
             String statsPath,
+            int statsBytes,
+            String statsSha256,
             boolean prodBundleObserved,
             String prodBundlePath,
             int prodBundleBytes,

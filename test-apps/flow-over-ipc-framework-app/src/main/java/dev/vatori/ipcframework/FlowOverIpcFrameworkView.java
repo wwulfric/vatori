@@ -6,6 +6,7 @@ import com.vaadin.flow.component.combobox.ComboBox;
 import com.vaadin.flow.component.datepicker.DatePicker;
 import com.vaadin.flow.component.dialog.Dialog;
 import com.vaadin.flow.component.formlayout.FormLayout;
+import com.vaadin.flow.component.html.Anchor;
 import com.vaadin.flow.component.grid.Grid;
 import com.vaadin.flow.component.html.H1;
 import com.vaadin.flow.component.html.Span;
@@ -16,9 +17,11 @@ import com.vaadin.flow.component.textfield.TextField;
 import com.vaadin.flow.component.virtuallist.VirtualList;
 import com.vaadin.flow.data.binder.Binder;
 import com.vaadin.flow.router.Route;
+import com.vaadin.flow.server.StreamResource;
 import dev.vatori.desktop.Desktop;
 import tools.jackson.databind.JsonNode;
 
+import java.nio.charset.StandardCharsets;
 import java.math.BigDecimal;
 import java.time.LocalDate;
 import java.util.List;
@@ -126,6 +129,23 @@ public class FlowOverIpcFrameworkView extends VerticalLayout {
                         + ", count calls: " + lazyGridCountCount.get()
                         + ", range: " + lazyGridLastRange.get()));
         lazyGridReport.setId("framework-lazy-grid-report");
+
+        byte[] streamResourceBytes = """
+                Flow IPC StreamResource v1.50
+                owner=framework-validation-app
+                transport=flow-ipc-resource-request
+                """.getBytes(StandardCharsets.UTF_8);
+        StreamResource streamResource = new StreamResource("flow-ipc-framework-v1_50.txt",
+                (stream, session) -> stream.write(streamResourceBytes));
+        streamResource.setContentType("text/plain; charset=UTF-8");
+        streamResource.setHeader("X-Vatori-Flow-IPC", "stream-resource-v1_50");
+
+        Anchor streamResourceDownload = new Anchor(streamResource, "Download StreamResource");
+        streamResourceDownload.setId("framework-stream-resource-download");
+        streamResourceDownload.getElement().setAttribute("download", true);
+
+        Span streamResourceStatus = new Span("StreamResource: pending");
+        streamResourceStatus.setId("framework-stream-resource-status");
 
         VirtualList<String> virtualList = new VirtualList<>();
         virtualList.setId("framework-virtual-list");
@@ -247,7 +267,8 @@ public class FlowOverIpcFrameworkView extends VerticalLayout {
         updateList.add(latestUpdate);
 
         add(title, budget, expedited, priority, reviewer, dueDate, openDialog, detailsDialog,
-                grid, lazyGrid, lazyGridStatus, lazyGridReport, virtualList, formLayout,
+                grid, lazyGrid, lazyGridStatus, lazyGridReport, streamResourceDownload,
+                streamResourceStatus, virtualList, formLayout,
                 apply, status, componentStatus, matrixStatus,
                 updateList);
     }

@@ -53,8 +53,11 @@ v0/v1 runtime 切片走向可产品化桌面框架的最终完成状态。
 - `docs/goal-1_45.md`：Packaging Runtime Handoff Reuse Contract，已完成。
 - `docs/goal-1_46.md`：Broader Component Resource Matrix Contract，已完成。
 - `docs/goal-1_47.md`：Data Component and Binder Resource Matrix Contract，已完成。
+- `docs/goal-1_48.md`：Grid Lazy DataProvider Viewport RPC Contract，已完成。
+- `docs/goal-1_49.md`：Grid Client Scroll Virtualization Probe Contract，已完成。
+- `docs/goal-1_50.md`：Flow StreamResource Dynamic Download Resource Contract，已完成。
 
-当前已完成到 `docs/goal-1_47.md`。v1.31 先把 v1.30 的 offline plugin blocker 推进到
+当前已完成到 `docs/goal-1_50.md`。v1.31 先把 v1.30 的 offline plugin blocker 推进到
 explicit online/local-repo preflight；v1.32 进一步把 blocker 推进到 full
 `build-frontend` 输出层，证明当前 smoke app 已产生真实 source generated imports/chunk、
 production webapp build output 和 `prod.bundle`。v1.33 则把 v1.32 的 generic
@@ -175,8 +178,17 @@ Trace 记录 `flow-ipc-grid-scroll-virtualization-v1_49`、client API availabili
 patch。真实窗口固定 trace 证明 Vaadin 将该滚动请求规范化为 `60-65` callback fetch，并通过
 `Report Lazy Grid` 更新 visible DOM。它仍是 bounded probe，不是完整 Grid scroll virtualization
 或所有 scroll container 行为 parity。
+v1.50 将 resource resolver 从构建期 frontend artifacts 扩展到真实 Flow 动态资源 URL：
+framework app 暴露普通 `Anchor` + `StreamResource`，WebView 观察 Vaadin 生成的
+`VAADIN/dynamic/resource/...` href 并通过 Flow IPC `resourceRequest` 请求该 path，Java sidecar
+从当前 `VaadinSession.StreamResourceRegistry` 解析真实 `StreamResource`，返回 filename、MIME、
+byte count、sha256、base64/text body、no-localhost/no-fixture proof。Trace 记录
+`flow-ipc-stream-resource-v1_50`，真实窗口固定 trace 证明 body 包含
+`Flow IPC StreamResource v1.50`，且 DOM summary 中 request/response/body/hash 全部 verified。
+它仍不是完整 Upload/Download streaming、Range request、大文件背压、sandbox save/open grants、
+dev-mode/Vite、installer packaging 或 durable reconnect parity。
 
-后续阶段应继续以 `docs/goal-1_50.md` 等文件拆分，
+后续阶段应继续以 `docs/goal-1_51.md` 等文件拆分，
 每个阶段只拿走本长期目标中的一个可评审切片。不要把本文件改写成短期任务清单；
 它是长期北极星和完成度账本。
 
@@ -198,14 +210,15 @@ patch。真实窗口固定 trace 证明 Vaadin 将该滚动请求规范化为 `6
 
 ## 当前基线
 
-截至 goal 1.48，仓库已经证明：
+截至 goal 1.50，仓库已经证明：
 
 - `dev-ipc` 可以启动 no-localhost Flow IPC runtime。
 - 真实 macOS Swift/AppKit/WKWebView 窗口可以运行 Flow IPC smoke app 和 framework
   validation app。
 - Button、BigDecimalField、Checkbox、Select、ComboBox、DatePicker、Dialog、Grid、
   lazy Grid DataProvider viewport RPC、VirtualList、FormLayout/Binder validation、
-  list/repeated update、desktop capability baseline 都有 trace gate 或 host-log gate 证据。
+  Flow `StreamResource` dynamic download、list/repeated update、desktop capability baseline 都有
+  trace gate 或 host-log gate 证据。
 - Java sidecar 通过 `UidlWriter`、`UidlRequestHandler`、`ServerRpcHandler`、
   desktop `VaadinRequest` / `VaadinResponse` adapter 切片生成真实 UIDL。
 - WebView 中可见 Flow client engine 消费 bootstrap、event patch、push 和 resync。
@@ -793,7 +806,7 @@ patch。真实窗口固定 trace 证明 Vaadin 将该滚动请求规范化为 `6
 
 - 基于 v1.22 generated lazy chunk-file positive fixture、v1.23 production owner positive
   runtime fixture、v1.24 closure decision contract、v1.25 packaged frontend baseline 和
-  v1.26-v1.49 当前 app generated/build-frontend output 和 framework component behavior contracts，
+  v1.26-v1.50 当前 app generated/build-frontend output 和 framework component/resource behavior contracts，
   继续让当前 app/build 产生的
   真实 generated lazy chunk file 完成执行：在 current app generated imports root package graph 已由
   production support artifact 承载的基础上，接入受支持 Vaadin lazy chunk SPI，或把真实
@@ -818,7 +831,7 @@ patch。真实窗口固定 trace 证明 Vaadin 将该滚动请求规范化为 `6
   app 上复用，但仍不是完整 production/runtime SPI parity；v1.23 positive fixture 也只能证明基础设施可行，
   不能替代真实 owner parity。
 - Dev-mode/Vite graph execution 或可靠替代模式。
-- Broader Vaadin component parity，尤其是完整 Grid scroll virtualization、Upload/Download、
+- Broader Vaadin component parity，尤其是完整 Grid scroll virtualization、Upload/Download streaming、
   theme variants 和 attach/detach/focus 等组件行为。
 - Durable push queue、ack、reconnect、reload 和 resync 语义。
 - Multi-window / multi-UI / multi-session lifecycle。
@@ -841,12 +854,12 @@ patch。真实窗口固定 trace 证明 Vaadin 将该滚动请求规范化为 `6
 
 ## 当前建议的下一阶段
 
-v1.49 已完成 Grid Client Scroll Virtualization Probe Contract。下一阶段建议继续沿着更真实的
-component behavior/resource parity、resource loading parity 或 dev-mode/Vite 替代路径推进：
+v1.50 已完成 Flow StreamResource Dynamic Download Resource Contract。下一阶段建议继续沿着更真实的
+Upload/Download streaming、resource loading parity、component behavior parity 或 dev-mode/Vite 替代路径推进：
 
-- 创建 `docs/goal-1_50.md`：在 v1.49 的 Grid client scroll API probe 基础上选择一个
-  更深切片，例如完整 Grid scroll container/virtualizer behavior、Upload/Download streaming、
-  theme variants，或把 dev-mode/Vite graph execution 收敛为明确替代路径。
+- 创建 `docs/goal-1_51.md`：在 v1.50 的 StreamResource dynamic download 基础上选择一个
+  更深切片，例如 Upload/Download streaming/backpressure、完整 Grid scroll container/virtualizer
+  behavior、theme variants，或把 dev-mode/Vite graph execution 收敛为明确替代路径。
 - 不再把 supported Vaadin lazy chunk SPI 当作当前默认路径；除非上游/本地版本提供稳定 API，否则继续以
   packaging-time `build-frontend` artifacts 作为产品化输入。
 - 真实 production owner-owned runtime reuse success，或把当前 generated imports owner contract 与

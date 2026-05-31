@@ -27,6 +27,7 @@ final class FlowIpcRuntime {
     static final String PREFIX = "VFIPC1 ";
     private static final String IPC_SESSION_ID = "flow-ipc-session";
     private static final String IPC_UI_ID = "main";
+    private static final String DYNAMIC_RESOURCE_PREFIX = "VAADIN/dynamic/resource/";
 
     private final Class<? extends Component> routeClass;
     private final String route;
@@ -125,11 +126,28 @@ final class FlowIpcRuntime {
         validateEnvelopeScope(json);
         validateSecurityKey(json);
         String path = JsonFields.string(json, "path");
-        if (path == null || path.isBlank() || !flowClientResources.contains(path)) {
+        if (path == null || path.isBlank()) {
             sendError("resourceNotFound", "Unknown Flow IPC resource: " + path, id, correlationId);
             return;
         }
-        Map<String, Object> response = new LinkedHashMap<>(flowClientResources.response(path));
+        Map<String, Object> response;
+        if (isDynamicStreamResourcePath(path)) {
+            response = new LinkedHashMap<>(flowSession.streamResourceResponse(path)
+                    .orElseGet(() -> Map.of(
+                            "path", normalizeDynamicResourcePath(path),
+                            "artifactFamily", "flow-stream-resource",
+                            "dynamicStreamResource", true,
+                            "streamResourceVersion", "flow-ipc-stream-resource-v1_50",
+                            "streamResourceStatus", "not-found",
+                            "streamResourceFailureLayer", "stream-resource-registry-unavailable",
+                            "streamResourceNoLocalhost", true,
+                            "streamResourceFixtureSubstituted", false)));
+        } else if (flowClientResources.contains(path)) {
+            response = new LinkedHashMap<>(flowClientResources.response(path));
+        } else {
+            sendError("resourceNotFound", "Unknown Flow IPC resource: " + path, id, correlationId);
+            return;
+        }
         String purpose = JsonFields.string(json, "purpose");
         if (purpose != null && !purpose.isBlank()) {
             response.put("requestPurpose", purpose);
@@ -140,6 +158,14 @@ final class FlowIpcRuntime {
         }
         send("resourceResponse", nextId("resource"), correlationIdOr(id, correlationId),
                 response);
+    }
+
+    private static boolean isDynamicStreamResourcePath(String path) {
+        return normalizeDynamicResourcePath(path).startsWith(DYNAMIC_RESOURCE_PREFIX);
+    }
+
+    private static String normalizeDynamicResourcePath(String path) {
+        return path != null && path.startsWith("/") ? path.substring(1) : path;
     }
 
     private void handleClientError(String json, String id) {

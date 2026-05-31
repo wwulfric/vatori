@@ -6,9 +6,11 @@ import com.vaadin.flow.di.Lookup;
 import com.vaadin.flow.function.DeploymentConfiguration;
 import com.vaadin.flow.internal.CurrentInstance;
 import com.vaadin.flow.internal.MessageDigestUtil;
+import com.vaadin.flow.server.AbstractStreamResource;
 import com.vaadin.flow.server.PwaRegistry;
 import com.vaadin.flow.server.RouteRegistry;
 import com.vaadin.flow.server.SessionLockCheckStrategy;
+import com.vaadin.flow.server.StreamResource;
 import com.vaadin.flow.server.VaadinContext;
 import com.vaadin.flow.server.VaadinRequest;
 import com.vaadin.flow.server.VaadinResponse;
@@ -19,11 +21,16 @@ import com.vaadin.flow.shared.ApplicationConstants;
 import com.vaadin.flow.shared.communication.PushMode;
 import dev.vatori.desktop.ipc.IpcJson;
 
+import java.io.ByteArrayOutputStream;
 import java.io.File;
 import java.io.IOException;
 import java.io.InputStream;
 import java.lang.reflect.Proxy;
+import java.net.URI;
+import java.net.URISyntaxException;
 import java.net.URL;
+import java.nio.charset.StandardCharsets;
+import java.util.Base64;
 import java.util.Collection;
 import java.util.Collections;
 import java.util.Enumeration;
@@ -31,6 +38,7 @@ import java.util.LinkedHashMap;
 import java.util.List;
 import java.util.Map;
 import java.util.Objects;
+import java.util.Optional;
 import java.util.concurrent.locks.Lock;
 import java.util.concurrent.locks.ReentrantLock;
 import java.util.function.Supplier;
@@ -216,6 +224,60 @@ public final class DesktopFlowRuntimeSession {
         }
     }
 
+    public Optional<Map<String, Object>> streamResourceResponse(String path) {
+        Objects.requireNonNull(path, "path");
+        String normalizedPath = path.startsWith("/") ? path.substring(1) : path;
+        AbstractStreamResource abstractResource;
+        session.lock();
+        try {
+            URI uri = dynamicResourceUri(normalizedPath);
+            abstractResource = session.getResourceRegistry().getResource(uri).orElse(null);
+        } finally {
+            session.unlock();
+        }
+        if (abstractResource == null) {
+            return Optional.empty();
+        }
+        if (!(abstractResource instanceof StreamResource resource)) {
+            throw new IllegalArgumentException("Unsupported Flow IPC dynamic resource type: "
+                    + abstractResource.getClass().getName());
+        }
+
+        byte[] bytes;
+        try (ByteArrayOutputStream output = new ByteArrayOutputStream()) {
+            resource.getWriter().accept(output, session);
+            bytes = output.toByteArray();
+        } catch (IOException error) {
+            throw new IllegalStateException("Unable to read Flow IPC StreamResource: " + error.getMessage(), error);
+        }
+
+        Map<String, Object> payload = new LinkedHashMap<>();
+        payload.put("path", normalizedPath);
+        payload.put("artifactFamily", "flow-stream-resource");
+        payload.put("dynamicStreamResource", true);
+        payload.put("streamResourceVersion", "flow-ipc-stream-resource-v1_50");
+        payload.put("streamResourceRegistrySource", "VaadinSession.StreamResourceRegistry");
+        payload.put("streamResourceTransport", "ipc-resource-request");
+        payload.put("streamResourceNoLocalhost", true);
+        payload.put("streamResourceFixtureSubstituted", false);
+        payload.put("streamResourceStatus", "resolved");
+        payload.put("streamResourcePath", normalizedPath);
+        payload.put("streamResourceFileName", resource.getName());
+        payload.put("streamResourceContentType", contentType(resource));
+        payload.put("streamResourceCacheTime", resource.getCacheTime());
+        payload.put("streamResourceHeaders", resource.getHeaders());
+        payload.put("streamResourceBytes", bytes.length);
+        payload.put("streamResourceSha256", MessageDigestUtil.sha256Hex(bytes));
+        payload.put("streamResourceBodyBase64", Base64.getEncoder().encodeToString(bytes));
+        if (bytes.length <= 4096) {
+            payload.put("streamResourceText", new String(bytes, StandardCharsets.UTF_8));
+        }
+        payload.put("streamResourceFailureLayer", "");
+        payload.put("streamResourceNextResolutionStep",
+                "extend dynamic resource handling toward DownloadHandler, Upload and streaming backpressure");
+        return Optional.of(payload);
+    }
+
     public FlowPatchResponse handleDomEvent(int nodeId, String eventType, int clientToServerMessageId)
             throws IOException {
         String requestBody = """
@@ -268,6 +330,25 @@ public final class DesktopFlowRuntimeSession {
         if (clientToServerMessageId != expectedClientToServerMessageId) {
             throw new IllegalStateException("Flow IPC clientId out of order: expected "
                     + expectedClientToServerMessageId + " but got " + clientToServerMessageId);
+        }
+    }
+
+    private static URI dynamicResourceUri(String path) {
+        try {
+            return new URI(path);
+        } catch (URISyntaxException error) {
+            throw new IllegalArgumentException("Invalid Flow IPC dynamic resource path: " + path, error);
+        }
+    }
+
+    private static String contentType(StreamResource resource) {
+        try {
+            String contentType = resource.getContentTypeResolver().apply(resource, null);
+            return contentType == null || contentType.isBlank()
+                    ? "application/octet-stream"
+                    : contentType;
+        } catch (RuntimeException error) {
+            return "application/octet-stream";
         }
     }
 

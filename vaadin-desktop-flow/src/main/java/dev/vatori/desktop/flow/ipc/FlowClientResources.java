@@ -795,6 +795,30 @@ final class FlowClientResources {
             "full-grid-scroll-virtualization,upload-download,theme-variants,dev-mode-vite-parity,installer-packaging,durable-reconnect";
     private static final String GRID_SCROLL_VIRTUALIZATION_NEXT_STEP =
             "turn the bounded scrollToIndex probe into full Grid scroll container virtualization or move to Upload/Download resource parity";
+    private static final String STREAM_RESOURCE_VERSION =
+            "flow-ipc-stream-resource-v1_50";
+    private static final String STREAM_RESOURCE_SOURCE =
+            "grid-scroll-virtualization-v1_49";
+    private static final String STREAM_RESOURCE_SCOPE =
+            "framework-validation-app-dynamic-stream-resource-download";
+    private static final String STREAM_RESOURCE_JAVA_CLASSES =
+            "com.vaadin.flow.component.html.Anchor,com.vaadin.flow.server.StreamResource,com.vaadin.flow.server.StreamResourceRegistry";
+    private static final String STREAM_RESOURCE_COMPONENT_IDS =
+            "framework-stream-resource-download,framework-stream-resource-status";
+    private static final String STREAM_RESOURCE_DYNAMIC_PATH_PREFIX =
+            "VAADIN/dynamic/resource/";
+    private static final String STREAM_RESOURCE_EXPECTED_FILE =
+            "flow-ipc-framework-v1_50.txt";
+    private static final String STREAM_RESOURCE_EXPECTED_CONTENT_TYPE =
+            "text/plain; charset=UTF-8";
+    private static final String STREAM_RESOURCE_EXPECTED_BODY_MARKER =
+            "Flow IPC StreamResource v1.50";
+    private static final String STREAM_RESOURCE_ACCEPTABLE_FAILURES =
+            "stream-resource-registry-unavailable,dynamic-resource-href-missing,resource-response-missing,body-hash-mismatch";
+    private static final String STREAM_RESOURCE_REMAINING_BLOCKERS =
+            "full-upload-download-streaming,range-requests,large-file-backpressure,theme-variants,dev-mode-vite-parity,installer-packaging,durable-reconnect";
+    private static final String STREAM_RESOURCE_NEXT_STEP =
+            "turn this bounded StreamResource download into Upload/Download streaming and broader dynamic resource parity";
     private static final List<String> PRODUCTION_RUNTIME_OWNER_DEPENDENCY_ARTIFACTS = List.of(
             DEV_BUNDLE_COMMONJS_JS,
             DEV_BUNDLE_INDEX_HTML_JS,
@@ -2989,6 +3013,66 @@ final class FlowClientResources {
                 GRID_SCROLL_VIRTUALIZATION_REMAINING_BLOCKERS);
         attributes.put("gridScrollVirtualizationNextResolutionStep",
                 GRID_SCROLL_VIRTUALIZATION_NEXT_STEP);
+        attributes.putAll(streamResourceAttributes(evidence, buildStep, selectedArtifacts,
+                handoffReady));
+        return attributes;
+    }
+
+    private static Map<String, Object> streamResourceAttributes(
+            CurrentAppBuildFrontendOutputEvidence evidence,
+            FrontendBuildStepEvidence buildStep,
+            String selectedArtifacts,
+            boolean handoffReady) {
+        Path module = appModuleDirectory();
+        String appShape = packagingRuntimeHandoffAppShape(module);
+        boolean frameworkApp = "framework-validation-app".equals(appShape);
+        Map<String, Object> attributes = new LinkedHashMap<>();
+        attributes.put("streamResourceVersion", STREAM_RESOURCE_VERSION);
+        attributes.put("streamResourceSource", STREAM_RESOURCE_SOURCE);
+        attributes.put("streamResourceScope", STREAM_RESOURCE_SCOPE);
+        attributes.put("streamResourceAppShape", appShape);
+        attributes.put("streamResourceJavaClasses", STREAM_RESOURCE_JAVA_CLASSES);
+        attributes.put("streamResourceComponentIds", STREAM_RESOURCE_COMPONENT_IDS);
+        attributes.put("streamResourceDynamicPathPrefix", STREAM_RESOURCE_DYNAMIC_PATH_PREFIX);
+        attributes.put("streamResourceExpectedFile", STREAM_RESOURCE_EXPECTED_FILE);
+        attributes.put("streamResourceExpectedContentType", STREAM_RESOURCE_EXPECTED_CONTENT_TYPE);
+        attributes.put("streamResourceExpectedBodyMarker", STREAM_RESOURCE_EXPECTED_BODY_MARKER);
+        attributes.put("streamResourceSelectedArtifacts", selectedArtifacts);
+        attributes.put("streamResourceSelectedArtifactCount", csvValues(selectedArtifacts).size());
+        attributes.put("streamResourceGeneratedImportsOwnerSource",
+                CURRENT_APP_GENERATED_IMPORTS_OWNER_RUNTIME_CONTRACT_SOURCE);
+        attributes.put("streamResourceGeneratedImportsOwnerArtifact",
+                CURRENT_APP_BUILD_FRONTEND_GENERATED_IMPORTS_JS);
+        attributes.put("streamResourceProductionSupportArtifact",
+                evidence.sourceGeneratedImportsRootProductionSupportArtifact());
+        attributes.put("streamResourceProductionSupportSha256",
+                evidence.productionGeneratedImportsSha256());
+        attributes.put("streamResourceProductionSupportBytes",
+                evidence.productionGeneratedImportsBytes());
+        attributes.put("streamResourceProductionEntryArtifact",
+                evidence.productionEntryScriptVirtualPath());
+        attributes.put("streamResourceBuildGoal", buildStep.goal());
+        attributes.put("streamResourceBuildStatus", buildStep.status());
+        attributes.put("streamResourceOutputUsability", buildStep.outputUsability());
+        attributes.put("streamResourceFrameworkAppRequired", true);
+        attributes.put("streamResourceFrameworkAppObserved", frameworkApp);
+        attributes.put("streamResourceCliContractEnabled",
+                "1".equals(System.getenv("VAADIN_DESKTOP_FLOW_IPC_FRONTEND_BUILD_V1_50")));
+        attributes.put("streamResourceManifestReady", handoffReady && frameworkApp);
+        attributes.put("streamResourceRuntimeHandoffRequired", true);
+        attributes.put("streamResourceRuntimeHandoffReady", handoffReady);
+        attributes.put("streamResourceAnchorHrefObserved", false);
+        attributes.put("streamResourceRequestObserved", false);
+        attributes.put("streamResourceResponseObserved", false);
+        attributes.put("streamResourceBodyVerified", false);
+        attributes.put("streamResourceNoLocalhost", true);
+        attributes.put("streamResourceFixtureSubstituted", false);
+        attributes.put("streamResourceAcceptableFailures", STREAM_RESOURCE_ACCEPTABLE_FAILURES);
+        attributes.put("streamResourceFailureLayer", frameworkApp
+                ? "framework-stream-resource-runtime-validation-pending"
+                : "framework-validation-app-not-selected");
+        attributes.put("streamResourceRemainingBlockers", STREAM_RESOURCE_REMAINING_BLOCKERS);
+        attributes.put("streamResourceNextResolutionStep", STREAM_RESOURCE_NEXT_STEP);
         return attributes;
     }
 

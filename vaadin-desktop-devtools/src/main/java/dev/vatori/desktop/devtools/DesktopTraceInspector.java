@@ -166,6 +166,9 @@ public final class DesktopTraceInspector {
         FLOW_IPC_V1_49_GRID_SCROLL_VIRTUALIZATION(
                 "--require-flow-ipc-v1_49-grid-scroll-virtualization"),
         FLOW_IPC_V1_49("--require-flow-ipc-v1_49"),
+        FLOW_IPC_V1_50_STREAM_RESOURCE(
+                "--require-flow-ipc-v1_50-stream-resource"),
+        FLOW_IPC_V1_50("--require-flow-ipc-v1_50"),
         FLOW_IPC_V1_3_FRAMEWORK("--require-flow-ipc-v1_3-framework");
 
         private final String option;
@@ -630,6 +633,11 @@ public final class DesktopTraceInspector {
                 case FLOW_IPC_V1_49 -> EnumSet.of(
                         FLOW_IPC_V1_49_GRID_SCROLL_VIRTUALIZATION,
                         FLOW_IPC_V1_49);
+                case FLOW_IPC_V1_50_STREAM_RESOURCE ->
+                    EnumSet.of(FLOW_IPC_V1_50_STREAM_RESOURCE);
+                case FLOW_IPC_V1_50 -> EnumSet.of(
+                        FLOW_IPC_V1_50_STREAM_RESOURCE,
+                        FLOW_IPC_V1_50);
                 case FLOW_IPC_V1_3_FRAMEWORK -> EnumSet.of(FLOW_IPC_V1_3_FRAMEWORK);
             };
         }
@@ -768,6 +776,9 @@ public final class DesktopTraceInspector {
                 case FLOW_IPC_V1_49_GRID_SCROLL_VIRTUALIZATION ->
                     summary.hasRequiredFlowIpcV1_49GridScrollVirtualizationTypes();
                 case FLOW_IPC_V1_49 -> summary.hasRequiredFlowIpcV1_49Types();
+                case FLOW_IPC_V1_50_STREAM_RESOURCE ->
+                    summary.hasRequiredFlowIpcV1_50StreamResourceTypes();
+                case FLOW_IPC_V1_50 -> summary.hasRequiredFlowIpcV1_50Types();
                 case FLOW_IPC_V1_3_FRAMEWORK -> summary.hasRequiredFlowIpcV1_3FrameworkTypes();
             };
         }
@@ -1023,6 +1034,13 @@ public final class DesktopTraceInspector {
                     && line.contains("com.vaadin.flow.component.grid.Grid")) {
                 summary.frameworkGridScrollVirtualizationBootstrapObserved = true;
             }
+            if (line.contains("dev.vatori.ipcframework.FlowOverIpcFrameworkView")
+                    && line.contains("framework-stream-resource-download")
+                    && line.contains("framework-stream-resource-status")
+                    && line.contains("com.vaadin.flow.component.html.Anchor")
+                    && line.contains("com.vaadin.flow.server.StreamResource")) {
+                summary.frameworkStreamResourceBootstrapObserved = true;
+            }
             if (line.contains("\"type\":\"event\"")
                     && line.contains("\"dispatch\":\"flow-client-xhr\"")
                     && line.contains("\"attachExistingElementById\"")
@@ -1124,6 +1142,18 @@ public final class DesktopTraceInspector {
                     && line.contains("\"event\":\"click\"")) {
                 summary.frameworkLazyDataProviderReportEventRpcObserved = true;
                 summary.frameworkGridScrollVirtualizationReportEventRpcObserved = true;
+            }
+            if (line.contains("\"type\":\"resourceRequest\"")
+                    && containsStringField(line, "streamResourceVersion",
+                            "flow-ipc-stream-resource-v1_50")
+                    && containsStringField(line, "purpose", "framework-stream-resource-v1_50")
+                    && line.contains("VAADIN/dynamic/resource/")
+                    && line.contains("flow-ipc-framework-v1_50.txt")) {
+                summary.streamResourceV150RequestObserved = true;
+            }
+            if (line.contains("\"type\":\"resourceResponse\"")
+                    && containsStreamResourceV150Response(line)) {
+                summary.streamResourceV150ResponseObserved = true;
             }
             if (line.contains("\"type\":\"patch\"")
                     && line.contains("\"source\":\"UidlRequestHandler\"")
@@ -1650,6 +1680,11 @@ public final class DesktopTraceInspector {
                     && line.contains("\"componentFrontendResources\"")
                     && containsGridScrollVirtualizationV149Fields(line)) {
                 summary.gridScrollVirtualizationV149ManifestObserved = true;
+            }
+            if (line.contains("\"type\":\"bootstrapResponse\"")
+                    && line.contains("\"componentFrontendResources\"")
+                    && containsStreamResourceV150Fields(line)) {
+                summary.streamResourceV150ManifestObserved = true;
             }
             if (line.contains("\"type\":\"bootstrapResponse\"")
                     && line.contains("\"componentFrontendResources\"")
@@ -4649,6 +4684,10 @@ public final class DesktopTraceInspector {
                 summary.gridScrollVirtualizationV149DomObserved = true;
             }
             if (line.contains("\"type\":\"webview.dom\"")
+                    && containsStreamResourceV150Dom(line)) {
+                summary.streamResourceV150DomObserved = true;
+            }
+            if (line.contains("\"type\":\"webview.dom\"")
                     && containsLiteralField(line, "generatedLazySourceCurrentBuildNoOpConfirmed", "true")
                     && containsStringField(line, "generatedLazySourceCurrentBuildTableShape",
                             "no-op-promise-resolve-0")
@@ -5160,6 +5199,21 @@ public final class DesktopTraceInspector {
                                     "frameworkGridScrollVirtualizationAcceptedBlockerObserved",
                                     "true"))) {
                 summary.frameworkGridScrollVirtualizationDomObserved = true;
+            }
+            if (line.contains("\"type\":\"webview.dom\"")
+                    && line.contains("Flow IPC Framework Desk")
+                    && containsLiteralField(line, "frameworkStreamResourceRendered", "true")
+                    && containsLiteralField(line,
+                            "frameworkStreamResourceAnchorHrefObserved", "true")
+                    && containsLiteralField(line,
+                            "frameworkStreamResourceRequestObserved", "true")
+                    && containsLiteralField(line,
+                            "frameworkStreamResourceResponseObserved", "true")
+                    && containsLiteralField(line,
+                            "frameworkStreamResourceBodyVerified", "true")
+                    && containsLiteralField(line,
+                            "frameworkStreamResourceComplete", "true")) {
+                summary.frameworkStreamResourceDomObserved = true;
             }
             if (line.contains("\"type\":\"event\"")
                     && line.contains("\"sessionId\":\"flow-ipc-session\"")
@@ -6799,6 +6853,94 @@ public final class DesktopTraceInspector {
                         "gridScrollVirtualizationNoLocalhost", "true");
     }
 
+    private static boolean containsStreamResourceV150Fields(String line) {
+        return containsStringField(line, "streamResourceVersion",
+                        "flow-ipc-stream-resource-v1_50")
+                && containsStringField(line, "streamResourceSource",
+                        "grid-scroll-virtualization-v1_49")
+                && containsStringField(line, "streamResourceScope",
+                        "framework-validation-app-dynamic-stream-resource-download")
+                && containsStringField(line, "streamResourceAppShape",
+                        "framework-validation-app")
+                && containsStringField(line, "streamResourceJavaClasses",
+                        "com.vaadin.flow.component.html.Anchor,com.vaadin.flow.server.StreamResource,com.vaadin.flow.server.StreamResourceRegistry")
+                && containsStringField(line, "streamResourceComponentIds",
+                        "framework-stream-resource-download,framework-stream-resource-status")
+                && containsStringField(line, "streamResourceDynamicPathPrefix",
+                        "VAADIN/dynamic/resource/")
+                && containsStringField(line, "streamResourceExpectedFile",
+                        "flow-ipc-framework-v1_50.txt")
+                && containsStringField(line, "streamResourceExpectedContentType",
+                        "text/plain; charset=UTF-8")
+                && containsStringField(line, "streamResourceExpectedBodyMarker",
+                        "Flow IPC StreamResource v1.50")
+                && containsStringFieldPrefix(line, "streamResourceSelectedArtifacts",
+                        "current-app-frontend/generated/flow/generated-flow-imports.js")
+                && containsPositiveIntegerField(line, "streamResourceSelectedArtifactCount")
+                && containsStringField(line, "streamResourceGeneratedImportsOwnerSource",
+                        "current-app-generated-imports-select-owner-coverage-v1_41")
+                && containsStringField(line, "streamResourceGeneratedImportsOwnerArtifact",
+                        "current-app-frontend/generated/flow/generated-flow-imports.js")
+                && containsStringFieldPrefix(line, "streamResourceProductionSupportArtifact",
+                        "current-app-production/VAADIN/build/generated-flow-imports-")
+                && line.contains("streamResourceProductionSupportSha256")
+                && containsPositiveIntegerField(line, "streamResourceProductionSupportBytes")
+                && line.contains("streamResourceProductionEntryArtifact")
+                && containsStringField(line, "streamResourceBuildGoal", "build-frontend")
+                && containsStringField(line, "streamResourceBuildStatus", "success")
+                && line.contains("streamResourceOutputUsability")
+                && containsLiteralField(line, "streamResourceFrameworkAppRequired", "true")
+                && containsLiteralField(line, "streamResourceFrameworkAppObserved", "true")
+                && containsLiteralField(line, "streamResourceCliContractEnabled", "true")
+                && containsLiteralField(line, "streamResourceManifestReady", "true")
+                && containsLiteralField(line, "streamResourceRuntimeHandoffRequired", "true")
+                && containsLiteralField(line, "streamResourceRuntimeHandoffReady", "true")
+                && containsLiteralField(line, "streamResourceNoLocalhost", "true")
+                && containsLiteralField(line, "streamResourceFixtureSubstituted", "false")
+                && line.contains("streamResourceAcceptableFailures")
+                && line.contains("streamResourceRemainingBlockers")
+                && line.contains("streamResourceNextResolutionStep");
+    }
+
+    private static boolean containsStreamResourceV150Response(String line) {
+        return containsStringField(line, "streamResourceVersion",
+                        "flow-ipc-stream-resource-v1_50")
+                && containsStringField(line, "artifactFamily", "flow-stream-resource")
+                && containsStringField(line, "streamResourceStatus", "resolved")
+                && containsStringField(line, "streamResourceFileName",
+                        "flow-ipc-framework-v1_50.txt")
+                && containsStringField(line, "streamResourceContentType",
+                        "text/plain; charset=UTF-8")
+                && containsPositiveIntegerField(line, "streamResourceBytes")
+                && line.contains("streamResourceSha256")
+                && line.contains("streamResourceBodyBase64")
+                && line.contains("Flow IPC StreamResource v1.50")
+                && containsLiteralField(line, "dynamicStreamResource", "true")
+                && containsLiteralField(line, "streamResourceNoLocalhost", "true")
+                && containsLiteralField(line, "streamResourceFixtureSubstituted", "false");
+    }
+
+    private static boolean containsStreamResourceV150Dom(String line) {
+        return containsStringField(line, "streamResourceVersion",
+                        "flow-ipc-stream-resource-v1_50")
+                && containsStringField(line, "streamResourceFileName",
+                        "flow-ipc-framework-v1_50.txt")
+                && containsStringField(line, "streamResourceContentType",
+                        "text/plain; charset=UTF-8")
+                && line.contains("streamResourceBodySample")
+                && line.contains("Flow IPC StreamResource v1.50")
+                && line.contains("VAADIN/dynamic/resource/")
+                && containsPositiveIntegerField(line, "streamResourceBytes")
+                && line.contains("streamResourceSha256")
+                && containsLiteralField(line, "streamResourceAnchorHrefObserved", "true")
+                && containsLiteralField(line, "streamResourceRequestObserved", "true")
+                && containsLiteralField(line, "streamResourceResponseObserved", "true")
+                && containsLiteralField(line, "streamResourceBodyVerified", "true")
+                && containsLiteralField(line, "streamResourceNoLocalhost", "true")
+                && containsLiteralField(line, "streamResourceFixtureSubstituted", "false")
+                && containsLiteralField(line, "frameworkStreamResourceComplete", "true");
+    }
+
     private static boolean containsProductionOwnerFailureLayer(String line, String field) {
         return containsStringField(line, field, "production-owner-duplicate-custom-element")
                 || containsStringField(line, field, "production-owner-relative-import-unresolved")
@@ -7125,6 +7267,8 @@ public final class DesktopTraceInspector {
         private boolean frameworkGridScrollVirtualizationFetchPatchObserved;
         private boolean frameworkGridScrollVirtualizationReportPatchObserved;
         private boolean frameworkGridScrollVirtualizationDomObserved;
+        private boolean frameworkStreamResourceBootstrapObserved;
+        private boolean frameworkStreamResourceDomObserved;
         private boolean firstMeaningfulPaintObserved;
         private boolean frontendAssetPipelineV14Observed;
         private boolean frontendArtifactFamilyModelObserved;
@@ -7409,6 +7553,10 @@ public final class DesktopTraceInspector {
         private boolean gridScrollVirtualizationV149StageObserved;
         private boolean gridScrollVirtualizationV149CompleteStageObserved;
         private boolean gridScrollVirtualizationV149DomObserved;
+        private boolean streamResourceV150ManifestObserved;
+        private boolean streamResourceV150RequestObserved;
+        private boolean streamResourceV150ResponseObserved;
+        private boolean streamResourceV150DomObserved;
 
         public boolean hasRequiredFlowIpcTypes() {
             return types.keySet().containsAll(FLOW_IPC_REQUIRED_TYPES)
@@ -8192,6 +8340,19 @@ public final class DesktopTraceInspector {
             return hasRequiredFlowIpcV1_49GridScrollVirtualizationTypes();
         }
 
+        public boolean hasRequiredFlowIpcV1_50StreamResourceTypes() {
+            return streamResourceV150ManifestObserved
+                    && streamResourceV150RequestObserved
+                    && streamResourceV150ResponseObserved
+                    && streamResourceV150DomObserved
+                    && frameworkStreamResourceBootstrapObserved
+                    && frameworkStreamResourceDomObserved;
+        }
+
+        public boolean hasRequiredFlowIpcV1_50Types() {
+            return hasRequiredFlowIpcV1_50StreamResourceTypes();
+        }
+
         private boolean hasCurrentAppBuildFrontendOutputSuccessorEvidence() {
             return currentAppBuildFrontendOutputV132ManifestObserved
                     && currentAppBuildFrontendOutputV132RequestObserved
@@ -8875,6 +9036,14 @@ public final class DesktopTraceInspector {
                     + frameworkGridScrollVirtualizationPublishedRpcObserved + "/"
                     + frameworkGridScrollVirtualizationFetchPatchObserved + "/"
                     + frameworkGridScrollVirtualizationDomObserved);
+            System.out.println("Flow IPC v1.50 StreamResource manifest/request/response/DOM observed: "
+                    + streamResourceV150ManifestObserved + "/"
+                    + streamResourceV150RequestObserved + "/"
+                    + streamResourceV150ResponseObserved + "/"
+                    + streamResourceV150DomObserved);
+            System.out.println("framework StreamResource bootstrap/DOM observed: "
+                    + frameworkStreamResourceBootstrapObserved + "/"
+                    + frameworkStreamResourceDomObserved);
             System.out.println("Flow IPC v1.6 TextField graph manifest observed: "
                     + frontendTextFieldV16ManifestObserved);
             System.out.println("Flow IPC v1.6 TextField graph request observed: "

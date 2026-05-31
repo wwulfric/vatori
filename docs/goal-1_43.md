@@ -1,6 +1,6 @@
 # Goal 1.43: Generated Lazy Chunk SPI Decision Contract
 
-状态：待开始
+状态：已完成
 
 `docs/goal.md` 是长期愿景和完成度账本。v1.42 已把 current app production
 `generated-flow-imports-*.js` support artifact 提升为明确 runtime contract：四个 covered
@@ -87,4 +87,45 @@ bash bin/flow-ipc-trace-inspect --require-flow-ipc-v1_43 docs/traces/flow-ipc-v1
 
 ```text
 feat: add generated lazy SPI decision contract
+```
+
+## 完成记录
+
+- Java manifest/resource response 新增 `flow-ipc-generated-lazy-spi-decision-v1_43`
+  metadata：记录已审计的 Vaadin source/build surfaces、`ChunkInfo` 内部 API 状态、
+  current app generated imports/chunk artifact、sha256/byte count、production support artifact、
+  stats / `prod.bundle`、SPI unavailable reason、selected product path 和下一步。
+- Swift host 在 `resourceRequest` / `resourceResponse` / `resourceStage` / `webview.dom`
+  中传播 v1.43 contract 字段，并执行一次明确标注的
+  `generatedLazySpiExecutionTrigger=host-decision-audit-probe-not-flow-client-spi`
+  audit probe，证明 current app build-frontend chunk 可通过 no-localhost resolver stage/import，
+  但不把它包装成 supported Flow-client SPI runtime path。
+- `DesktopTraceInspector` 新增
+  `--require-flow-ipc-v1_43-generated-lazy-spi-decision` 和 `--require-flow-ipc-v1_43`
+  gates；v1.43 cumulative gate 继续要求 v1.42 generated imports owner runtime contract 通过。
+- 固定 trace 已保存到 `docs/traces/flow-ipc-v1_43.ndjson`。
+
+实际完成结果：当前 Vaadin source/build audit 没有发现可直接依赖的 supported lazy chunk
+runtime SPI；`ChunkInfo` 仍被记录为 internal / may-be-renamed-or-removed。v1.43 将 v1.42 的
+`pending-supported-vaadin-lazy-chunk-spi` placeholder 收敛为
+`generatedLazySpiDecision=packaging-time-build-frontend-staging` 和
+`generatedLazySpiFailureLayer=supported-vaadin-lazy-chunk-spi-unavailable`。这证明下一步产品路径应是
+framework-managed packaging-time `build-frontend` artifact inventory/staging，或推动上游/受支持
+Vaadin SPI；它仍不是完整 frontend/resource pipeline 闭环。
+
+已执行验收：
+
+```bash
+git diff --check
+bash -n bin/vaadin-desktop
+/usr/bin/swiftc -parse vaadin-desktop-host-swift/Sources/VaadinDesktopHost/main.swift
+source /Users/bytedance/.sdkman/bin/sdkman-init.sh
+mvn -q -o -Dmaven.repo.local=/Users/bytedance/IdeaProjects/vatori/.m2/repository -pl vaadin-desktop-devtools,vaadin-desktop-flow,test-apps/flow-over-ipc-smoke-app -am -DskipTests compile
+bash bin/flow-client-resource-smoke
+VAADIN_DESKTOP_MAVEN_OFFLINE=0 VAADIN_DESKTOP_HOST_NO_ACTIVATE=1 VAADIN_DESKTOP_FLOW_IPC_PREPARE_FRONTEND=1 VAADIN_DESKTOP_FLOW_IPC_FRONTEND_BUILD_ONLINE=1 VAADIN_DESKTOP_FLOW_IPC_FRONTEND_BUILD_GOAL=build-frontend VAADIN_DESKTOP_FLOW_IPC_AUTO_CLICK=1 VAADIN_DESKTOP_FLOW_IPC_AUTO_VAADIN_TEXT_FIELD_REAL=1 VAADIN_DESKTOP_FLOW_IPC_AUTO_RESYNC=1 VAADIN_DESKTOP_FLOW_IPC_AUTO_ERROR=1 VAADIN_DESKTOP_FLOW_IPC_AUTO_FILE_DIALOG_CANCEL=1 VAADIN_DESKTOP_FLOW_IPC_AUTO_SHUTDOWN=1 bash bin/vaadin-desktop dev-ipc test-apps/flow-over-ipc-smoke-app
+bash bin/flow-ipc-trace-inspect --require-flow-ipc-v1_43-generated-lazy-spi-decision .build/vaadin-desktop-host-swift/host.out.log
+bash bin/flow-ipc-trace-inspect --require-flow-ipc-v1_43 .build/vaadin-desktop-host-swift/host.out.log
+cp .build/vaadin-desktop-host-swift/host.out.log docs/traces/flow-ipc-v1_43.ndjson
+bash bin/flow-ipc-trace-inspect --require-flow-ipc-v1_43-generated-lazy-spi-decision docs/traces/flow-ipc-v1_43.ndjson
+bash bin/flow-ipc-trace-inspect --require-flow-ipc-v1_43 docs/traces/flow-ipc-v1_43.ndjson
 ```

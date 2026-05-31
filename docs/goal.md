@@ -48,8 +48,9 @@ v0/v1 runtime 切片走向可产品化桌面框架的最终完成状态。
 - `docs/goal-1_40.md`：Current App Generated Imports Owner Side-Effect Candidate，已完成。
 - `docs/goal-1_41.md`：Current App Generated Imports Select Owner Coverage，已完成。
 - `docs/goal-1_42.md`：Generated Imports Owner Runtime Contract，已完成。
+- `docs/goal-1_43.md`：Generated Lazy Chunk SPI Decision Contract，已完成。
 
-当前已完成到 `docs/goal-1_42.md`。v1.31 先把 v1.30 的 offline plugin blocker 推进到
+当前已完成到 `docs/goal-1_43.md`。v1.31 先把 v1.30 的 offline plugin blocker 推进到
 explicit online/local-repo preflight；v1.32 进一步把 blocker 推进到 full
 `build-frontend` 输出层，证明当前 smoke app 已产生真实 source generated imports/chunk、
 production webapp build output 和 `prod.bundle`。v1.33 则把 v1.32 的 generic
@@ -105,8 +106,18 @@ no-fixture proof 和 lazy chunk SPI bridge metadata；trace 证明四个 covered
 contract-driven generated imports owner 输入稳定跳过，fallback tags 为空。当前 accepted remaining
 blockers 仍是真实 app/build generated chunk-file parity、dev-mode/Vite parity、supported Vaadin
 build/runtime SPI 和 broader component/resource parity。
+v1.43 把 v1.42 的 `pending-supported-vaadin-lazy-chunk-spi` placeholder 收敛为可审计决策：
+trace 记录 `flow-ipc-generated-lazy-spi-decision-v1_43`、已审计 source/build surfaces
+`AbstractUpdateImports,FrontendDependencies,ChunkInfo,build-frontend-generated-output,production-stats-json,prod-bundle`、
+`generatedLazySpiChunkInfoApiStatus=internal-may-be-renamed-or-removed`、current app generated
+imports/chunk artifact integrity、stats / `prod.bundle` proof，以及
+`generatedLazySpiDecision=packaging-time-build-frontend-staging`。v1.43 还通过明确标注的
+`generatedLazySpiExecutionTrigger=host-decision-audit-probe-not-flow-client-spi` audit probe
+证明 current app generated chunk 可经 no-localhost resolver stage/import，但它没有声明 supported
+Flow-client SPI runtime path 成功；当前 remaining blockers 变为 productized packaging-time frontend
+inventory/staging、dev-mode/Vite parity 和 broader component/resource parity。
 
-后续阶段应继续以 `docs/goal-1_43.md` 等文件拆分，
+后续阶段应继续以 `docs/goal-1_44.md` 等文件拆分，
 每个阶段只拿走本长期目标中的一个可评审切片。不要把本文件改写成短期任务清单；
 它是长期北极星和完成度账本。
 
@@ -573,8 +584,17 @@ build/runtime SPI 和 broader component/resource parity。
   no-fixture proof 和 lazy chunk SPI bridge metadata。Trace 证明四个 covered components 由该
   contract-driven owner input 跳过 focused imports，fallback tags 为空；它仍不是真实 generated
   chunk parity、dev-mode/Vite parity 或 broad component/resource parity。
+- v1.43 已把 v1.42 的 lazy chunk SPI placeholder 收敛为明确决策 contract：
+  Java manifest/resource response、Swift `resourceStage` / `webview.dom` 和 inspector gate 记录
+  `generatedLazySpiDecisionVersion=flow-ipc-generated-lazy-spi-decision-v1_43`、
+  `generatedLazySpiChunkInfoApiStatus=internal-may-be-renamed-or-removed`、
+  `generatedLazySpiDecision=packaging-time-build-frontend-staging`、
+  `generatedLazySpiFailureLayer=supported-vaadin-lazy-chunk-spi-unavailable` 和
+  `generatedLazySpiExecutionTrigger=host-decision-audit-probe-not-flow-client-spi`。Trace 证明当前
+  app generated chunk 可被 audit probe 执行，但仍没有 supported Flow-client SPI runtime path。
 - 当前 app/build 的真实 generated/lazy chunk file parity、泛化 owner reuse /
-  supported Vaadin build/runtime SPI 和 dev-mode/Vite execution 仍是明确 blocker，不计入最终完成。
+  packaging-time inventory productization、dev-mode/Vite execution 和更广组件资源覆盖仍是明确
+  blocker，不计入最终完成。
 
 ## 最终完成标准
 
@@ -669,7 +689,7 @@ build/runtime SPI 和 broader component/resource parity。
 
 - 基于 v1.22 generated lazy chunk-file positive fixture、v1.23 production owner positive
   runtime fixture、v1.24 closure decision contract、v1.25 packaged frontend baseline 和
-  v1.26-v1.42 当前 app generated/build-frontend output contracts，继续让当前 app/build 产生的
+  v1.26-v1.43 当前 app generated/build-frontend output contracts，继续让当前 app/build 产生的
   真实 generated lazy chunk file 完成执行：在 current app generated imports root package graph 已由
   production support artifact 承载的基础上，接入受支持 Vaadin lazy chunk SPI，或把真实
   production bundle owned execution / dev-mode/Vite execution 从 partial/blocker 推进到真实可执行路径。
@@ -687,7 +707,8 @@ build/runtime SPI 和 broader component/resource parity。
   `vaadin-text-field`；v1.41 进一步让 strict smoke app 的当前 build output 覆盖并复用
   `vaadin-select`，四组件 focused imports 全部被 owner side effect 跳过，但这还不是完整
   production/runtime SPI parity；v1.42 已把这条路径提升为明确 generated imports owner runtime
-  contract 和 resolver handoff evidence，但仍不是完整 production/runtime SPI parity；v1.23 positive fixture 也只能证明基础设施可行，
+  contract 和 resolver handoff evidence；v1.43 已把 supported Vaadin lazy chunk SPI 评估收敛为
+  `packaging-time-build-frontend-staging` product path，但仍不是完整 production/runtime SPI parity；v1.23 positive fixture 也只能证明基础设施可行，
   不能替代真实 owner parity。
 - Dev-mode/Vite graph execution 或可靠替代模式。
 - Broader Vaadin component parity，尤其是 Grid/VirtualList、ComboBox、DatePicker、
@@ -713,15 +734,15 @@ build/runtime SPI 和 broader component/resource parity。
 
 ## 当前建议的下一阶段
 
-v1.42 已完成 Generated Imports Owner Runtime Contract。下一阶段建议优先从
-runtime contract evidence 转向真实 generated chunk / supported Vaadin build SPI：
+v1.43 已完成 Generated Lazy Chunk SPI Decision Contract。下一阶段建议优先从
+SPI decision evidence 转向 framework-managed packaging-time frontend inventory：
 
-- 已创建 `docs/goal-1_43.md`：Generated Lazy Chunk SPI Decision Contract，用于把
-  `pending-supported-vaadin-lazy-chunk-spi` placeholder 推进为可审计的 supported SPI 或
-  packaging-time build output staging 决策。
-- 接入/评估受支持 Vaadin lazy chunk SPI，把 v1.22 fixture path 推进为真实 app/build path。
-- 真实 production owner-owned runtime reuse success，或把当前 generated imports owner contract 与支持的
-  Vaadin runtime/build SPI 对齐。
+- 创建 `docs/goal-1_44.md`：把 `packaging-time-build-frontend-staging` product path 落成
+  CLI/runtime 可审计 inventory contract，覆盖生成、选择、校验、stage、cache 和 cleanup。
+- 不再把 supported Vaadin lazy chunk SPI 当作当前默认路径；除非上游/本地版本提供稳定 API，否则继续以
+  packaging-time `build-frontend` artifacts 作为产品化输入。
+- 真实 production owner-owned runtime reuse success，或把当前 generated imports owner contract 与
+  packaging-time inventory/runtime handoff 对齐。
 - Dev-mode/Vite graph execution 或可靠替代模式。
 - Broader Vaadin component parity，尤其是 Grid/VirtualList、ComboBox、DatePicker、
   Dialog、Upload。

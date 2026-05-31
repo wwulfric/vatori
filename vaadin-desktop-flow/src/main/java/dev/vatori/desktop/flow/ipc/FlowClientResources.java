@@ -635,7 +635,31 @@ final class FlowClientResources {
     private static final String CURRENT_APP_GENERATED_IMPORTS_OWNER_LAZY_CHUNK_BRIDGE_SOURCE =
             "current-app-build-frontend-output-v1_32";
     private static final String CURRENT_APP_GENERATED_IMPORTS_OWNER_LAZY_CHUNK_SPI_DECISION =
-            "pending-supported-vaadin-lazy-chunk-spi";
+            "packaging-time-build-frontend-staging";
+    private static final String GENERATED_LAZY_SPI_DECISION_VERSION =
+            "flow-ipc-generated-lazy-spi-decision-v1_43";
+    private static final String GENERATED_LAZY_SPI_DECISION_SOURCE =
+            "current-app-generated-imports-owner-runtime-contract-v1_42";
+    private static final String GENERATED_LAZY_SPI_AUDITED_SOURCE_SURFACES =
+            "AbstractUpdateImports,FrontendDependencies,ChunkInfo,build-frontend-generated-output,production-stats-json,prod-bundle";
+    private static final String GENERATED_LAZY_SPI_CHUNK_INFO_API_STATUS =
+            "internal-may-be-renamed-or-removed";
+    private static final String GENERATED_LAZY_SPI_REGISTRY_SOURCE =
+            "current-app-build-frontend-output-v1_32";
+    private static final String GENERATED_LAZY_SPI_DECISION =
+            "packaging-time-build-frontend-staging";
+    private static final String GENERATED_LAZY_SPI_UNAVAILABLE_REASON =
+            "vaadin-chunkinfo-internal-no-supported-runtime-spi";
+    private static final String GENERATED_LAZY_SPI_FAILURE_LAYER =
+            "supported-vaadin-lazy-chunk-spi-unavailable";
+    private static final String GENERATED_LAZY_SPI_PRODUCT_PATH =
+            "packaging-time-build-frontend-output-staging";
+    private static final String GENERATED_LAZY_SPI_EXECUTION_EVIDENCE =
+            "current-app-generated-chunk-loadondemand-executed-v1_33";
+    private static final String GENERATED_LAZY_SPI_EXECUTION_TRIGGER =
+            "host-decision-audit-probe-not-flow-client-spi";
+    private static final String GENERATED_LAZY_SPI_NEXT_STEP =
+            "productize packaging-time build-frontend artifacts as framework-managed staged frontend inventory, or upstream/support a stable Vaadin lazy chunk SPI";
     private static final List<String> PRODUCTION_RUNTIME_OWNER_DEPENDENCY_ARTIFACTS = List.of(
             DEV_BUNDLE_COMMONJS_JS,
             DEV_BUNDLE_INDEX_HTML_JS,
@@ -2589,6 +2613,55 @@ final class FlowClientResources {
                 CURRENT_APP_GENERATED_IMPORTS_OWNER_LAZY_CHUNK_SPI_DECISION);
         attributes.put("currentAppGeneratedImportsOwnerLazyChunkBridgeNoLocalhost", true);
         attributes.put("currentAppGeneratedImportsOwnerLazyChunkBridgeFixtureSubstituted", false);
+        attributes.put("generatedLazySpiDecisionVersion", GENERATED_LAZY_SPI_DECISION_VERSION);
+        attributes.put("generatedLazySpiDecisionSource", GENERATED_LAZY_SPI_DECISION_SOURCE);
+        attributes.put("generatedLazySpiAuditedSourceSurfaces",
+                GENERATED_LAZY_SPI_AUDITED_SOURCE_SURFACES);
+        attributes.put("generatedLazySpiChunkInfoApiStatus",
+                GENERATED_LAZY_SPI_CHUNK_INFO_API_STATUS);
+        attributes.put("generatedLazySpiRegistrySource", GENERATED_LAZY_SPI_REGISTRY_SOURCE);
+        attributes.put("generatedLazySpiGeneratedImportsArtifact",
+                CURRENT_APP_BUILD_FRONTEND_GENERATED_IMPORTS_JS);
+        attributes.put("generatedLazySpiGeneratedImportsSha256",
+                evidence.sourceGeneratedImportsSha256());
+        attributes.put("generatedLazySpiGeneratedImportsBytes",
+                evidence.sourceGeneratedImportsBytes());
+        attributes.put("generatedLazySpiGeneratedImportsTableShape",
+                evidence.sourceGeneratedImportsTableShape());
+        attributes.put("generatedLazySpiChunkId", evidence.sourceChunkId());
+        attributes.put("generatedLazySpiChunkImportSpecifier",
+                evidence.sourceChunkImportSpecifier());
+        attributes.put("generatedLazySpiChunkArtifact", evidence.sourceChunkVirtualPath());
+        attributes.put("generatedLazySpiChunkStatus", evidence.sourceChunkStatus());
+        attributes.put("generatedLazySpiChunkSha256", evidence.sourceChunkSha256());
+        attributes.put("generatedLazySpiChunkBytes", evidence.sourceChunkBytes());
+        attributes.put("generatedLazySpiBuildOutputSource", evidence.goal());
+        attributes.put("generatedLazySpiProductionSupportArtifact",
+                evidence.sourceGeneratedImportsRootProductionSupportArtifact());
+        attributes.put("generatedLazySpiStatsPath", evidence.statsPath());
+        attributes.put("generatedLazySpiProdBundlePath", evidence.prodBundlePath());
+        attributes.put("generatedLazySpiDecision", GENERATED_LAZY_SPI_DECISION);
+        attributes.put("generatedLazySpiUnavailableReason",
+                GENERATED_LAZY_SPI_UNAVAILABLE_REASON);
+        attributes.put("generatedLazySpiFailureLayer", GENERATED_LAZY_SPI_FAILURE_LAYER);
+        attributes.put("generatedLazySpiProductPath", GENERATED_LAZY_SPI_PRODUCT_PATH);
+        attributes.put("generatedLazySpiExecutionEvidence", GENERATED_LAZY_SPI_EXECUTION_EVIDENCE);
+        attributes.put("generatedLazySpiExecutionTrigger", GENERATED_LAZY_SPI_EXECUTION_TRIGGER);
+        attributes.put("generatedLazySpiNextResolutionStep", GENERATED_LAZY_SPI_NEXT_STEP);
+        attributes.put("generatedLazySpiAvailable", false);
+        attributes.put("generatedLazySpiRuntimePathSelected", false);
+        attributes.put("generatedLazySpiPackagingTimeStagingSelected", true);
+        attributes.put("generatedLazySpiCurrentAppGeneratedImportsObserved",
+                evidence.sourceGeneratedImportsObserved());
+        attributes.put("generatedLazySpiCurrentAppChunkAvailable",
+                "available".equals(evidence.sourceChunkStatus()));
+        attributes.put("generatedLazySpiCurrentAppChunkExecuted", false);
+        attributes.put("generatedLazySpiProductionSupportObserved",
+                evidence.sourceGeneratedImportsRootProductionSupportObserved());
+        attributes.put("generatedLazySpiStatsObserved", evidence.statsObserved());
+        attributes.put("generatedLazySpiProdBundleObserved", evidence.prodBundleObserved());
+        attributes.put("generatedLazySpiNoLocalhost", true);
+        attributes.put("generatedLazySpiFixtureSubstituted", false);
         return attributes;
     }
 

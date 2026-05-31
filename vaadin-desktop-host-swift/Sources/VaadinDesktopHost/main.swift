@@ -2633,6 +2633,43 @@ final class WebViewHost: NSObject, NSApplicationDelegate, NSWindowDelegate, WKNa
           currentAppGeneratedImportsOwnerLazyChunkBridgeSupportedSpiDecision: window.VaadinDesktopIpcDiagnostics ? window.VaadinDesktopIpcDiagnostics.currentAppGeneratedImportsOwnerLazyChunkBridgeSupportedSpiDecision : "",
           currentAppGeneratedImportsOwnerLazyChunkBridgeNoLocalhost: !!(window.VaadinDesktopIpcDiagnostics && window.VaadinDesktopIpcDiagnostics.currentAppGeneratedImportsOwnerLazyChunkBridgeNoLocalhost),
           currentAppGeneratedImportsOwnerLazyChunkBridgeFixtureSubstituted: !!(window.VaadinDesktopIpcDiagnostics && window.VaadinDesktopIpcDiagnostics.currentAppGeneratedImportsOwnerLazyChunkBridgeFixtureSubstituted),
+          generatedLazySpiDecisionVersion: window.VaadinDesktopIpcDiagnostics ? window.VaadinDesktopIpcDiagnostics.generatedLazySpiDecisionVersion : "",
+          generatedLazySpiDecisionSource: window.VaadinDesktopIpcDiagnostics ? window.VaadinDesktopIpcDiagnostics.generatedLazySpiDecisionSource : "",
+          generatedLazySpiAuditedSourceSurfaces: window.VaadinDesktopIpcDiagnostics ? window.VaadinDesktopIpcDiagnostics.generatedLazySpiAuditedSourceSurfaces : "",
+          generatedLazySpiChunkInfoApiStatus: window.VaadinDesktopIpcDiagnostics ? window.VaadinDesktopIpcDiagnostics.generatedLazySpiChunkInfoApiStatus : "",
+          generatedLazySpiRegistrySource: window.VaadinDesktopIpcDiagnostics ? window.VaadinDesktopIpcDiagnostics.generatedLazySpiRegistrySource : "",
+          generatedLazySpiGeneratedImportsArtifact: window.VaadinDesktopIpcDiagnostics ? window.VaadinDesktopIpcDiagnostics.generatedLazySpiGeneratedImportsArtifact : "",
+          generatedLazySpiGeneratedImportsSha256: window.VaadinDesktopIpcDiagnostics ? window.VaadinDesktopIpcDiagnostics.generatedLazySpiGeneratedImportsSha256 : "",
+          generatedLazySpiGeneratedImportsBytes: window.VaadinDesktopIpcDiagnostics ? Number(window.VaadinDesktopIpcDiagnostics.generatedLazySpiGeneratedImportsBytes || 0) : 0,
+          generatedLazySpiGeneratedImportsTableShape: window.VaadinDesktopIpcDiagnostics ? window.VaadinDesktopIpcDiagnostics.generatedLazySpiGeneratedImportsTableShape : "",
+          generatedLazySpiChunkId: window.VaadinDesktopIpcDiagnostics ? window.VaadinDesktopIpcDiagnostics.generatedLazySpiChunkId : "",
+          generatedLazySpiChunkImportSpecifier: window.VaadinDesktopIpcDiagnostics ? window.VaadinDesktopIpcDiagnostics.generatedLazySpiChunkImportSpecifier : "",
+          generatedLazySpiChunkArtifact: window.VaadinDesktopIpcDiagnostics ? window.VaadinDesktopIpcDiagnostics.generatedLazySpiChunkArtifact : "",
+          generatedLazySpiChunkStatus: window.VaadinDesktopIpcDiagnostics ? window.VaadinDesktopIpcDiagnostics.generatedLazySpiChunkStatus : "",
+          generatedLazySpiChunkSha256: window.VaadinDesktopIpcDiagnostics ? window.VaadinDesktopIpcDiagnostics.generatedLazySpiChunkSha256 : "",
+          generatedLazySpiChunkBytes: window.VaadinDesktopIpcDiagnostics ? Number(window.VaadinDesktopIpcDiagnostics.generatedLazySpiChunkBytes || 0) : 0,
+          generatedLazySpiBuildOutputSource: window.VaadinDesktopIpcDiagnostics ? window.VaadinDesktopIpcDiagnostics.generatedLazySpiBuildOutputSource : "",
+          generatedLazySpiProductionSupportArtifact: window.VaadinDesktopIpcDiagnostics ? window.VaadinDesktopIpcDiagnostics.generatedLazySpiProductionSupportArtifact : "",
+          generatedLazySpiStatsPath: window.VaadinDesktopIpcDiagnostics ? window.VaadinDesktopIpcDiagnostics.generatedLazySpiStatsPath : "",
+          generatedLazySpiProdBundlePath: window.VaadinDesktopIpcDiagnostics ? window.VaadinDesktopIpcDiagnostics.generatedLazySpiProdBundlePath : "",
+          generatedLazySpiDecision: window.VaadinDesktopIpcDiagnostics ? window.VaadinDesktopIpcDiagnostics.generatedLazySpiDecision : "",
+          generatedLazySpiUnavailableReason: window.VaadinDesktopIpcDiagnostics ? window.VaadinDesktopIpcDiagnostics.generatedLazySpiUnavailableReason : "",
+          generatedLazySpiFailureLayer: window.VaadinDesktopIpcDiagnostics ? window.VaadinDesktopIpcDiagnostics.generatedLazySpiFailureLayer : "",
+          generatedLazySpiProductPath: window.VaadinDesktopIpcDiagnostics ? window.VaadinDesktopIpcDiagnostics.generatedLazySpiProductPath : "",
+          generatedLazySpiExecutionEvidence: window.VaadinDesktopIpcDiagnostics ? window.VaadinDesktopIpcDiagnostics.generatedLazySpiExecutionEvidence : "",
+          generatedLazySpiExecutionTrigger: window.VaadinDesktopIpcDiagnostics ? window.VaadinDesktopIpcDiagnostics.generatedLazySpiExecutionTrigger : "",
+          generatedLazySpiNextResolutionStep: window.VaadinDesktopIpcDiagnostics ? window.VaadinDesktopIpcDiagnostics.generatedLazySpiNextResolutionStep : "",
+          generatedLazySpiAvailable: !!(window.VaadinDesktopIpcDiagnostics && window.VaadinDesktopIpcDiagnostics.generatedLazySpiAvailable),
+          generatedLazySpiRuntimePathSelected: !!(window.VaadinDesktopIpcDiagnostics && window.VaadinDesktopIpcDiagnostics.generatedLazySpiRuntimePathSelected),
+          generatedLazySpiPackagingTimeStagingSelected: !!(window.VaadinDesktopIpcDiagnostics && window.VaadinDesktopIpcDiagnostics.generatedLazySpiPackagingTimeStagingSelected),
+          generatedLazySpiCurrentAppGeneratedImportsObserved: !!(window.VaadinDesktopIpcDiagnostics && window.VaadinDesktopIpcDiagnostics.generatedLazySpiCurrentAppGeneratedImportsObserved),
+          generatedLazySpiCurrentAppChunkAvailable: !!(window.VaadinDesktopIpcDiagnostics && window.VaadinDesktopIpcDiagnostics.generatedLazySpiCurrentAppChunkAvailable),
+          generatedLazySpiCurrentAppChunkExecuted: !!(window.VaadinDesktopIpcDiagnostics && window.VaadinDesktopIpcDiagnostics.generatedLazySpiCurrentAppChunkExecuted),
+          generatedLazySpiProductionSupportObserved: !!(window.VaadinDesktopIpcDiagnostics && window.VaadinDesktopIpcDiagnostics.generatedLazySpiProductionSupportObserved),
+          generatedLazySpiStatsObserved: !!(window.VaadinDesktopIpcDiagnostics && window.VaadinDesktopIpcDiagnostics.generatedLazySpiStatsObserved),
+          generatedLazySpiProdBundleObserved: !!(window.VaadinDesktopIpcDiagnostics && window.VaadinDesktopIpcDiagnostics.generatedLazySpiProdBundleObserved),
+          generatedLazySpiNoLocalhost: !!(window.VaadinDesktopIpcDiagnostics && window.VaadinDesktopIpcDiagnostics.generatedLazySpiNoLocalhost),
+          generatedLazySpiFixtureSubstituted: !!(window.VaadinDesktopIpcDiagnostics && window.VaadinDesktopIpcDiagnostics.generatedLazySpiFixtureSubstituted),
           frontendBuildPreflightAvailabilityObserved: !!(window.VaadinDesktopIpcDiagnostics && window.VaadinDesktopIpcDiagnostics.frontendBuildPreflightAvailabilityObserved),
           frontendBuildPreflightAvailabilityVersion: window.VaadinDesktopIpcDiagnostics ? window.VaadinDesktopIpcDiagnostics.frontendBuildPreflightAvailabilityVersion : "",
           frontendBuildPreflightAvailabilitySource: window.VaadinDesktopIpcDiagnostics ? window.VaadinDesktopIpcDiagnostics.frontendBuildPreflightAvailabilitySource : "",
@@ -3649,6 +3686,7 @@ let flowIpcShell = #"""
       let hostResourceStageSequence = 0;
       let generatedLazyBundleExecutionAttempted = false;
       let generatedLazyChunkFileFixtureExecutionAttempted = false;
+      let generatedLazySpiDecisionProbeAttempted = false;
       let productionOwnerPositiveFixtureImportAttempted = false;
       let productionOwnerPositiveFixtureImportInProgress = false;
       const generatedLoadOnDemandChunkPromises = new Map();
@@ -4170,6 +4208,43 @@ let flowIpcShell = #"""
         currentAppGeneratedImportsOwnerLazyChunkBridgeSupportedSpiDecision: '',
         currentAppGeneratedImportsOwnerLazyChunkBridgeNoLocalhost: false,
         currentAppGeneratedImportsOwnerLazyChunkBridgeFixtureSubstituted: false,
+        generatedLazySpiDecisionVersion: '',
+        generatedLazySpiDecisionSource: '',
+        generatedLazySpiAuditedSourceSurfaces: '',
+        generatedLazySpiChunkInfoApiStatus: '',
+        generatedLazySpiRegistrySource: '',
+        generatedLazySpiGeneratedImportsArtifact: '',
+        generatedLazySpiGeneratedImportsSha256: '',
+        generatedLazySpiGeneratedImportsBytes: 0,
+        generatedLazySpiGeneratedImportsTableShape: '',
+        generatedLazySpiChunkId: '',
+        generatedLazySpiChunkImportSpecifier: '',
+        generatedLazySpiChunkArtifact: '',
+        generatedLazySpiChunkStatus: '',
+        generatedLazySpiChunkSha256: '',
+        generatedLazySpiChunkBytes: 0,
+        generatedLazySpiBuildOutputSource: '',
+        generatedLazySpiProductionSupportArtifact: '',
+        generatedLazySpiStatsPath: '',
+        generatedLazySpiProdBundlePath: '',
+        generatedLazySpiDecision: '',
+        generatedLazySpiUnavailableReason: '',
+        generatedLazySpiFailureLayer: '',
+        generatedLazySpiProductPath: '',
+        generatedLazySpiExecutionEvidence: '',
+        generatedLazySpiExecutionTrigger: '',
+        generatedLazySpiNextResolutionStep: '',
+        generatedLazySpiAvailable: false,
+        generatedLazySpiRuntimePathSelected: false,
+        generatedLazySpiPackagingTimeStagingSelected: false,
+        generatedLazySpiCurrentAppGeneratedImportsObserved: false,
+        generatedLazySpiCurrentAppChunkAvailable: false,
+        generatedLazySpiCurrentAppChunkExecuted: false,
+        generatedLazySpiProductionSupportObserved: false,
+        generatedLazySpiStatsObserved: false,
+        generatedLazySpiProdBundleObserved: false,
+        generatedLazySpiNoLocalhost: false,
+        generatedLazySpiFixtureSubstituted: false,
         frontendBuildPreflightAvailabilityObserved: false,
         frontendBuildPreflightAvailabilityVersion: '',
         frontendBuildPreflightAvailabilitySource: '',
@@ -6666,7 +6741,31 @@ let flowIpcShell = #"""
           ['currentAppGeneratedImportsOwnerLazyChunkBridgeChunkArtifact', 'currentAppGeneratedImportsOwnerLazyChunkBridgeChunkArtifact'],
           ['currentAppGeneratedImportsOwnerLazyChunkBridgeChunkStatus', 'currentAppGeneratedImportsOwnerLazyChunkBridgeChunkStatus'],
           ['currentAppGeneratedImportsOwnerLazyChunkBridgeBuildOutputSource', 'currentAppGeneratedImportsOwnerLazyChunkBridgeBuildOutputSource'],
-          ['currentAppGeneratedImportsOwnerLazyChunkBridgeSupportedSpiDecision', 'currentAppGeneratedImportsOwnerLazyChunkBridgeSupportedSpiDecision']
+          ['currentAppGeneratedImportsOwnerLazyChunkBridgeSupportedSpiDecision', 'currentAppGeneratedImportsOwnerLazyChunkBridgeSupportedSpiDecision'],
+          ['generatedLazySpiDecisionVersion', 'generatedLazySpiDecisionVersion'],
+          ['generatedLazySpiDecisionSource', 'generatedLazySpiDecisionSource'],
+          ['generatedLazySpiAuditedSourceSurfaces', 'generatedLazySpiAuditedSourceSurfaces'],
+          ['generatedLazySpiChunkInfoApiStatus', 'generatedLazySpiChunkInfoApiStatus'],
+          ['generatedLazySpiRegistrySource', 'generatedLazySpiRegistrySource'],
+          ['generatedLazySpiGeneratedImportsArtifact', 'generatedLazySpiGeneratedImportsArtifact'],
+          ['generatedLazySpiGeneratedImportsSha256', 'generatedLazySpiGeneratedImportsSha256'],
+          ['generatedLazySpiGeneratedImportsTableShape', 'generatedLazySpiGeneratedImportsTableShape'],
+          ['generatedLazySpiChunkId', 'generatedLazySpiChunkId'],
+          ['generatedLazySpiChunkImportSpecifier', 'generatedLazySpiChunkImportSpecifier'],
+          ['generatedLazySpiChunkArtifact', 'generatedLazySpiChunkArtifact'],
+          ['generatedLazySpiChunkStatus', 'generatedLazySpiChunkStatus'],
+          ['generatedLazySpiChunkSha256', 'generatedLazySpiChunkSha256'],
+          ['generatedLazySpiBuildOutputSource', 'generatedLazySpiBuildOutputSource'],
+          ['generatedLazySpiProductionSupportArtifact', 'generatedLazySpiProductionSupportArtifact'],
+          ['generatedLazySpiStatsPath', 'generatedLazySpiStatsPath'],
+          ['generatedLazySpiProdBundlePath', 'generatedLazySpiProdBundlePath'],
+          ['generatedLazySpiDecision', 'generatedLazySpiDecision'],
+          ['generatedLazySpiUnavailableReason', 'generatedLazySpiUnavailableReason'],
+          ['generatedLazySpiFailureLayer', 'generatedLazySpiFailureLayer'],
+          ['generatedLazySpiProductPath', 'generatedLazySpiProductPath'],
+          ['generatedLazySpiExecutionEvidence', 'generatedLazySpiExecutionEvidence'],
+          ['generatedLazySpiExecutionTrigger', 'generatedLazySpiExecutionTrigger'],
+          ['generatedLazySpiNextResolutionStep', 'generatedLazySpiNextResolutionStep']
         ]) {
           if (typeof source[sourceKey] === 'string' && source[sourceKey]) {
             window.VaadinDesktopIpcDiagnostics[diagnosticKey] = source[sourceKey];
@@ -6732,7 +6831,18 @@ let flowIpcShell = #"""
           ['currentAppGeneratedImportsOwnerRuntimeContractNoLocalhost', 'currentAppGeneratedImportsOwnerRuntimeContractNoLocalhost'],
           ['currentAppGeneratedImportsOwnerRuntimeContractFixtureSubstituted', 'currentAppGeneratedImportsOwnerRuntimeContractFixtureSubstituted'],
           ['currentAppGeneratedImportsOwnerLazyChunkBridgeNoLocalhost', 'currentAppGeneratedImportsOwnerLazyChunkBridgeNoLocalhost'],
-          ['currentAppGeneratedImportsOwnerLazyChunkBridgeFixtureSubstituted', 'currentAppGeneratedImportsOwnerLazyChunkBridgeFixtureSubstituted']
+          ['currentAppGeneratedImportsOwnerLazyChunkBridgeFixtureSubstituted', 'currentAppGeneratedImportsOwnerLazyChunkBridgeFixtureSubstituted'],
+          ['generatedLazySpiAvailable', 'generatedLazySpiAvailable'],
+          ['generatedLazySpiRuntimePathSelected', 'generatedLazySpiRuntimePathSelected'],
+          ['generatedLazySpiPackagingTimeStagingSelected', 'generatedLazySpiPackagingTimeStagingSelected'],
+          ['generatedLazySpiCurrentAppGeneratedImportsObserved', 'generatedLazySpiCurrentAppGeneratedImportsObserved'],
+          ['generatedLazySpiCurrentAppChunkAvailable', 'generatedLazySpiCurrentAppChunkAvailable'],
+          ['generatedLazySpiCurrentAppChunkExecuted', 'generatedLazySpiCurrentAppChunkExecuted'],
+          ['generatedLazySpiProductionSupportObserved', 'generatedLazySpiProductionSupportObserved'],
+          ['generatedLazySpiStatsObserved', 'generatedLazySpiStatsObserved'],
+          ['generatedLazySpiProdBundleObserved', 'generatedLazySpiProdBundleObserved'],
+          ['generatedLazySpiNoLocalhost', 'generatedLazySpiNoLocalhost'],
+          ['generatedLazySpiFixtureSubstituted', 'generatedLazySpiFixtureSubstituted']
         ]) {
           if (source[sourceKey] === true) {
             window.VaadinDesktopIpcDiagnostics[diagnosticKey] = true;
@@ -6755,7 +6865,9 @@ let flowIpcShell = #"""
           ['currentAppBuildFrontendProductionGeneratedImportsBytes', 'currentAppBuildFrontendProductionGeneratedImportsBytes'],
           ['currentAppBuildFrontendProdBundleBytes', 'currentAppBuildFrontendProdBundleBytes'],
           ['currentAppProductionOwnerImportDependencyStageCount', 'currentAppProductionOwnerImportDependencyStageCount'],
-          ['currentAppGeneratedImportsOwnerRuntimeContractSelectedArtifactBytes', 'currentAppGeneratedImportsOwnerRuntimeContractSelectedArtifactBytes']
+          ['currentAppGeneratedImportsOwnerRuntimeContractSelectedArtifactBytes', 'currentAppGeneratedImportsOwnerRuntimeContractSelectedArtifactBytes'],
+          ['generatedLazySpiGeneratedImportsBytes', 'generatedLazySpiGeneratedImportsBytes'],
+          ['generatedLazySpiChunkBytes', 'generatedLazySpiChunkBytes']
         ]) {
           if (Number.isFinite(source[sourceKey])) {
             window.VaadinDesktopIpcDiagnostics[diagnosticKey] = source[sourceKey];
@@ -9755,6 +9867,158 @@ let flowIpcShell = #"""
             extra && typeof extra.currentAppGeneratedImportsOwnerLazyChunkBridgeFixtureSubstituted === 'boolean'
               ? extra.currentAppGeneratedImportsOwnerLazyChunkBridgeFixtureSubstituted
               : resource.currentAppGeneratedImportsOwnerLazyChunkBridgeFixtureSubstituted === true,
+          generatedLazySpiDecisionVersion:
+            extra && extra.generatedLazySpiDecisionVersion
+              ? extra.generatedLazySpiDecisionVersion
+              : (resource.generatedLazySpiDecisionVersion || ''),
+          generatedLazySpiDecisionSource:
+            extra && extra.generatedLazySpiDecisionSource
+              ? extra.generatedLazySpiDecisionSource
+              : (resource.generatedLazySpiDecisionSource || ''),
+          generatedLazySpiAuditedSourceSurfaces:
+            extra && extra.generatedLazySpiAuditedSourceSurfaces
+              ? extra.generatedLazySpiAuditedSourceSurfaces
+              : (resource.generatedLazySpiAuditedSourceSurfaces || ''),
+          generatedLazySpiChunkInfoApiStatus:
+            extra && extra.generatedLazySpiChunkInfoApiStatus
+              ? extra.generatedLazySpiChunkInfoApiStatus
+              : (resource.generatedLazySpiChunkInfoApiStatus || ''),
+          generatedLazySpiRegistrySource:
+            extra && extra.generatedLazySpiRegistrySource
+              ? extra.generatedLazySpiRegistrySource
+              : (resource.generatedLazySpiRegistrySource || ''),
+          generatedLazySpiGeneratedImportsArtifact:
+            extra && extra.generatedLazySpiGeneratedImportsArtifact
+              ? extra.generatedLazySpiGeneratedImportsArtifact
+              : (resource.generatedLazySpiGeneratedImportsArtifact || ''),
+          generatedLazySpiGeneratedImportsSha256:
+            extra && extra.generatedLazySpiGeneratedImportsSha256
+              ? extra.generatedLazySpiGeneratedImportsSha256
+              : (resource.generatedLazySpiGeneratedImportsSha256 || ''),
+          generatedLazySpiGeneratedImportsBytes:
+            extra && Number.isFinite(extra.generatedLazySpiGeneratedImportsBytes)
+              ? extra.generatedLazySpiGeneratedImportsBytes
+              : (Number.isFinite(resource.generatedLazySpiGeneratedImportsBytes)
+                ? resource.generatedLazySpiGeneratedImportsBytes
+                : 0),
+          generatedLazySpiGeneratedImportsTableShape:
+            extra && extra.generatedLazySpiGeneratedImportsTableShape
+              ? extra.generatedLazySpiGeneratedImportsTableShape
+              : (resource.generatedLazySpiGeneratedImportsTableShape || ''),
+          generatedLazySpiChunkId:
+            extra && extra.generatedLazySpiChunkId
+              ? extra.generatedLazySpiChunkId
+              : (resource.generatedLazySpiChunkId || ''),
+          generatedLazySpiChunkImportSpecifier:
+            extra && extra.generatedLazySpiChunkImportSpecifier
+              ? extra.generatedLazySpiChunkImportSpecifier
+              : (resource.generatedLazySpiChunkImportSpecifier || ''),
+          generatedLazySpiChunkArtifact:
+            extra && extra.generatedLazySpiChunkArtifact
+              ? extra.generatedLazySpiChunkArtifact
+              : (resource.generatedLazySpiChunkArtifact || ''),
+          generatedLazySpiChunkStatus:
+            extra && extra.generatedLazySpiChunkStatus
+              ? extra.generatedLazySpiChunkStatus
+              : (resource.generatedLazySpiChunkStatus || ''),
+          generatedLazySpiChunkSha256:
+            extra && extra.generatedLazySpiChunkSha256
+              ? extra.generatedLazySpiChunkSha256
+              : (resource.generatedLazySpiChunkSha256 || ''),
+          generatedLazySpiChunkBytes:
+            extra && Number.isFinite(extra.generatedLazySpiChunkBytes)
+              ? extra.generatedLazySpiChunkBytes
+              : (Number.isFinite(resource.generatedLazySpiChunkBytes)
+                ? resource.generatedLazySpiChunkBytes
+                : 0),
+          generatedLazySpiBuildOutputSource:
+            extra && extra.generatedLazySpiBuildOutputSource
+              ? extra.generatedLazySpiBuildOutputSource
+              : (resource.generatedLazySpiBuildOutputSource || ''),
+          generatedLazySpiProductionSupportArtifact:
+            extra && extra.generatedLazySpiProductionSupportArtifact
+              ? extra.generatedLazySpiProductionSupportArtifact
+              : (resource.generatedLazySpiProductionSupportArtifact || ''),
+          generatedLazySpiStatsPath:
+            extra && extra.generatedLazySpiStatsPath
+              ? extra.generatedLazySpiStatsPath
+              : (resource.generatedLazySpiStatsPath || ''),
+          generatedLazySpiProdBundlePath:
+            extra && extra.generatedLazySpiProdBundlePath
+              ? extra.generatedLazySpiProdBundlePath
+              : (resource.generatedLazySpiProdBundlePath || ''),
+          generatedLazySpiDecision:
+            extra && extra.generatedLazySpiDecision
+              ? extra.generatedLazySpiDecision
+              : (resource.generatedLazySpiDecision || ''),
+          generatedLazySpiUnavailableReason:
+            extra && extra.generatedLazySpiUnavailableReason
+              ? extra.generatedLazySpiUnavailableReason
+              : (resource.generatedLazySpiUnavailableReason || ''),
+          generatedLazySpiFailureLayer:
+            extra && extra.generatedLazySpiFailureLayer
+              ? extra.generatedLazySpiFailureLayer
+              : (resource.generatedLazySpiFailureLayer || ''),
+          generatedLazySpiProductPath:
+            extra && extra.generatedLazySpiProductPath
+              ? extra.generatedLazySpiProductPath
+              : (resource.generatedLazySpiProductPath || ''),
+          generatedLazySpiExecutionEvidence:
+            extra && extra.generatedLazySpiExecutionEvidence
+              ? extra.generatedLazySpiExecutionEvidence
+              : (resource.generatedLazySpiExecutionEvidence || ''),
+          generatedLazySpiExecutionTrigger:
+            extra && extra.generatedLazySpiExecutionTrigger
+              ? extra.generatedLazySpiExecutionTrigger
+              : (resource.generatedLazySpiExecutionTrigger || ''),
+          generatedLazySpiNextResolutionStep:
+            extra && extra.generatedLazySpiNextResolutionStep
+              ? extra.generatedLazySpiNextResolutionStep
+              : (resource.generatedLazySpiNextResolutionStep || ''),
+          generatedLazySpiAvailable:
+            extra && typeof extra.generatedLazySpiAvailable === 'boolean'
+              ? extra.generatedLazySpiAvailable
+              : resource.generatedLazySpiAvailable === true,
+          generatedLazySpiRuntimePathSelected:
+            extra && typeof extra.generatedLazySpiRuntimePathSelected === 'boolean'
+              ? extra.generatedLazySpiRuntimePathSelected
+              : resource.generatedLazySpiRuntimePathSelected === true,
+          generatedLazySpiPackagingTimeStagingSelected:
+            extra && typeof extra.generatedLazySpiPackagingTimeStagingSelected === 'boolean'
+              ? extra.generatedLazySpiPackagingTimeStagingSelected
+              : resource.generatedLazySpiPackagingTimeStagingSelected === true,
+          generatedLazySpiCurrentAppGeneratedImportsObserved:
+            extra && typeof extra.generatedLazySpiCurrentAppGeneratedImportsObserved === 'boolean'
+              ? extra.generatedLazySpiCurrentAppGeneratedImportsObserved
+              : resource.generatedLazySpiCurrentAppGeneratedImportsObserved === true,
+          generatedLazySpiCurrentAppChunkAvailable:
+            extra && typeof extra.generatedLazySpiCurrentAppChunkAvailable === 'boolean'
+              ? extra.generatedLazySpiCurrentAppChunkAvailable
+              : resource.generatedLazySpiCurrentAppChunkAvailable === true,
+          generatedLazySpiCurrentAppChunkExecuted:
+            extra && typeof extra.generatedLazySpiCurrentAppChunkExecuted === 'boolean'
+              ? extra.generatedLazySpiCurrentAppChunkExecuted
+              : resource.generatedLazySpiCurrentAppChunkExecuted === true,
+          generatedLazySpiProductionSupportObserved:
+            extra && typeof extra.generatedLazySpiProductionSupportObserved === 'boolean'
+              ? extra.generatedLazySpiProductionSupportObserved
+              : resource.generatedLazySpiProductionSupportObserved === true,
+          generatedLazySpiStatsObserved:
+            extra && typeof extra.generatedLazySpiStatsObserved === 'boolean'
+              ? extra.generatedLazySpiStatsObserved
+              : resource.generatedLazySpiStatsObserved === true,
+          generatedLazySpiProdBundleObserved:
+            extra && typeof extra.generatedLazySpiProdBundleObserved === 'boolean'
+              ? extra.generatedLazySpiProdBundleObserved
+              : resource.generatedLazySpiProdBundleObserved === true,
+          generatedLazySpiNoLocalhost:
+            extra && typeof extra.generatedLazySpiNoLocalhost === 'boolean'
+              ? extra.generatedLazySpiNoLocalhost
+              : resource.generatedLazySpiNoLocalhost === true,
+          generatedLazySpiFixtureSubstituted:
+            extra && typeof extra.generatedLazySpiFixtureSubstituted === 'boolean'
+              ? extra.generatedLazySpiFixtureSubstituted
+              : resource.generatedLazySpiFixtureSubstituted === true,
           stagedPath: '',
           owner: stageOwner,
           artifactFamily: family,
@@ -12917,6 +13181,18 @@ let flowIpcShell = #"""
             error && error.message ? error.message : String(error);
         }
         try {
+          await maybeExecuteGeneratedLazySpiDecisionProbe();
+        } catch (error) {
+          window.VaadinDesktopIpcDiagnostics.generatedLazySpiCurrentAppChunkExecuted = false;
+          window.VaadinDesktopIpcDiagnostics.loadOnDemandChunkFileExecuted = false;
+          window.VaadinDesktopIpcDiagnostics.loadOnDemandChunkFileExecutionResult =
+            'strict-blocker:generated-lazy-spi-decision-probe-dispatch';
+          window.VaadinDesktopIpcDiagnostics.loadOnDemandChunkFileBrowserError =
+            error && error.message ? error.message : String(error);
+          window.VaadinDesktopIpcDiagnostics.loadOnDemandChunkFileFailureLayer =
+            'generated-lazy-spi-decision-probe-dispatch';
+        }
+        try {
           await maybeImportCurrentAppProductionOwnerFromResource(payload);
         } catch (error) {
           const message = error && error.message ? error.message : String(error);
@@ -12959,6 +13235,18 @@ let flowIpcShell = #"""
             'generated-lazy-chunk-file-fixture-dispatch';
           window.VaadinDesktopIpcDiagnostics.generatedLazyChunkFileFixtureBrowserError =
             error && error.message ? error.message : String(error);
+        }
+        try {
+          await maybeExecuteGeneratedLazySpiDecisionProbe();
+        } catch (error) {
+          window.VaadinDesktopIpcDiagnostics.generatedLazySpiCurrentAppChunkExecuted = false;
+          window.VaadinDesktopIpcDiagnostics.loadOnDemandChunkFileExecuted = false;
+          window.VaadinDesktopIpcDiagnostics.loadOnDemandChunkFileExecutionResult =
+            'strict-blocker:generated-lazy-spi-decision-probe-dispatch';
+          window.VaadinDesktopIpcDiagnostics.loadOnDemandChunkFileBrowserError =
+            error && error.message ? error.message : String(error);
+          window.VaadinDesktopIpcDiagnostics.loadOnDemandChunkFileFailureLayer =
+            'generated-lazy-spi-decision-probe-dispatch';
         }
         try {
           await maybeStageTextFieldDevBundleBlocker();
@@ -13913,6 +14201,30 @@ let flowIpcShell = #"""
         return componentFrontendResources.find((entry) => entry
           && entry.generatedLazyBundleChunk === true
           && entry.artifactFamily === 'generated-lazy'
+          && typeof entry.path === 'string')
+          || null;
+      }
+
+      function generatedLazyBundleResourceForChunk(chunkId) {
+        const normalizedChunkId = String(chunkId || '');
+        if (!normalizedChunkId) {
+          return generatedLazyBundleResource();
+        }
+        return componentFrontendResources.find((entry) => entry
+          && entry.generatedLazyBundleChunk === true
+          && entry.artifactFamily === 'generated-lazy'
+          && typeof entry.path === 'string'
+          && (entry.chunkId === normalizedChunkId
+            || entry.currentAppGeneratedImportsOwnerLazyChunkBridgeChunkId === normalizedChunkId
+            || entry.generatedLazySpiChunkId === normalizedChunkId))
+          || generatedLazyBundleResource();
+      }
+
+      function generatedLazySpiDecisionResource() {
+        return componentFrontendResources.find((entry) => entry
+          && entry.generatedLazyBundleChunk === true
+          && entry.artifactFamily === 'generated-lazy'
+          && entry.generatedLazySpiDecisionVersion === 'flow-ipc-generated-lazy-spi-decision-v1_43'
           && typeof entry.path === 'string')
           || null;
       }
@@ -15037,11 +15349,84 @@ let flowIpcShell = #"""
             stageExtra.currentAppGeneratedImportsOwnerLazyChunkBridgeBuildOutputSource || '',
           currentAppGeneratedImportsOwnerLazyChunkBridgeSupportedSpiDecision:
             stageExtra.currentAppGeneratedImportsOwnerLazyChunkBridgeSupportedSpiDecision
-            || 'pending-supported-vaadin-lazy-chunk-spi',
+            || 'packaging-time-build-frontend-staging',
           currentAppGeneratedImportsOwnerLazyChunkBridgeNoLocalhost:
             stageExtra.currentAppGeneratedImportsOwnerLazyChunkBridgeNoLocalhost !== false,
           currentAppGeneratedImportsOwnerLazyChunkBridgeFixtureSubstituted:
             stageExtra.currentAppGeneratedImportsOwnerLazyChunkBridgeFixtureSubstituted === true,
+          generatedLazySpiDecisionVersion:
+            stageExtra.generatedLazySpiDecisionVersion
+            || 'flow-ipc-generated-lazy-spi-decision-v1_43',
+          generatedLazySpiDecisionSource:
+            stageExtra.generatedLazySpiDecisionSource
+            || 'current-app-generated-imports-owner-runtime-contract-v1_42',
+          generatedLazySpiAuditedSourceSurfaces:
+            stageExtra.generatedLazySpiAuditedSourceSurfaces
+            || 'AbstractUpdateImports,FrontendDependencies,ChunkInfo,build-frontend-generated-output,production-stats-json,prod-bundle',
+          generatedLazySpiChunkInfoApiStatus:
+            stageExtra.generatedLazySpiChunkInfoApiStatus
+            || 'internal-may-be-renamed-or-removed',
+          generatedLazySpiRegistrySource:
+            stageExtra.generatedLazySpiRegistrySource
+            || 'current-app-build-frontend-output-v1_32',
+          generatedLazySpiGeneratedImportsArtifact:
+            stageExtra.generatedLazySpiGeneratedImportsArtifact || '',
+          generatedLazySpiGeneratedImportsSha256:
+            stageExtra.generatedLazySpiGeneratedImportsSha256 || '',
+          generatedLazySpiGeneratedImportsBytes:
+            Number(stageExtra.generatedLazySpiGeneratedImportsBytes || 0),
+          generatedLazySpiGeneratedImportsTableShape:
+            stageExtra.generatedLazySpiGeneratedImportsTableShape || '',
+          generatedLazySpiChunkId: stageExtra.generatedLazySpiChunkId || '',
+          generatedLazySpiChunkImportSpecifier:
+            stageExtra.generatedLazySpiChunkImportSpecifier || '',
+          generatedLazySpiChunkArtifact: stageExtra.generatedLazySpiChunkArtifact || '',
+          generatedLazySpiChunkStatus: stageExtra.generatedLazySpiChunkStatus || '',
+          generatedLazySpiChunkSha256: stageExtra.generatedLazySpiChunkSha256 || '',
+          generatedLazySpiChunkBytes: Number(stageExtra.generatedLazySpiChunkBytes || 0),
+          generatedLazySpiBuildOutputSource:
+            stageExtra.generatedLazySpiBuildOutputSource || '',
+          generatedLazySpiProductionSupportArtifact:
+            stageExtra.generatedLazySpiProductionSupportArtifact || '',
+          generatedLazySpiStatsPath: stageExtra.generatedLazySpiStatsPath || '',
+          generatedLazySpiProdBundlePath: stageExtra.generatedLazySpiProdBundlePath || '',
+          generatedLazySpiDecision:
+            stageExtra.generatedLazySpiDecision || 'packaging-time-build-frontend-staging',
+          generatedLazySpiUnavailableReason:
+            stageExtra.generatedLazySpiUnavailableReason
+            || 'vaadin-chunkinfo-internal-no-supported-runtime-spi',
+          generatedLazySpiFailureLayer:
+            stageExtra.generatedLazySpiFailureLayer
+            || 'supported-vaadin-lazy-chunk-spi-unavailable',
+          generatedLazySpiProductPath:
+            stageExtra.generatedLazySpiProductPath || 'packaging-time-build-frontend-output-staging',
+          generatedLazySpiExecutionEvidence:
+            stageExtra.generatedLazySpiExecutionEvidence
+            || 'current-app-generated-chunk-loadondemand-executed-v1_33',
+          generatedLazySpiExecutionTrigger:
+            stageExtra.generatedLazySpiExecutionTrigger
+            || 'host-decision-audit-probe-not-flow-client-spi',
+          generatedLazySpiNextResolutionStep:
+            stageExtra.generatedLazySpiNextResolutionStep || '',
+          generatedLazySpiAvailable: stageExtra.generatedLazySpiAvailable === true,
+          generatedLazySpiRuntimePathSelected:
+            stageExtra.generatedLazySpiRuntimePathSelected === true,
+          generatedLazySpiPackagingTimeStagingSelected:
+            stageExtra.generatedLazySpiPackagingTimeStagingSelected === true,
+          generatedLazySpiCurrentAppGeneratedImportsObserved:
+            stageExtra.generatedLazySpiCurrentAppGeneratedImportsObserved === true,
+          generatedLazySpiCurrentAppChunkAvailable:
+            stageExtra.generatedLazySpiCurrentAppChunkAvailable === true,
+          generatedLazySpiCurrentAppChunkExecuted:
+            window.VaadinDesktopIpcDiagnostics.loadOnDemandChunkFileExecuted === true
+            || stageExtra.generatedLazySpiCurrentAppChunkExecuted === true,
+          generatedLazySpiProductionSupportObserved:
+            stageExtra.generatedLazySpiProductionSupportObserved === true,
+          generatedLazySpiStatsObserved: stageExtra.generatedLazySpiStatsObserved === true,
+          generatedLazySpiProdBundleObserved: stageExtra.generatedLazySpiProdBundleObserved === true,
+          generatedLazySpiNoLocalhost: stageExtra.generatedLazySpiNoLocalhost !== false,
+          generatedLazySpiFixtureSubstituted:
+            stageExtra.generatedLazySpiFixtureSubstituted === true,
           currentAppProductionOwnerImportSideEffectProof: satisfied
             ? 'current-app-generated-imports-owner-observed-tags=' + observedTags.join('|')
               + ';global=' + globalAfter
@@ -15514,6 +15899,71 @@ let flowIpcShell = #"""
         d.currentAppGeneratedImportsOwnerLazyChunkBridgeFixtureSubstituted =
           extra.currentAppGeneratedImportsOwnerLazyChunkBridgeFixtureSubstituted === true
           || d.currentAppGeneratedImportsOwnerLazyChunkBridgeFixtureSubstituted === true;
+        for (const [extraKey, diagnosticKey] of [
+          ['generatedLazySpiDecisionVersion', 'generatedLazySpiDecisionVersion'],
+          ['generatedLazySpiDecisionSource', 'generatedLazySpiDecisionSource'],
+          ['generatedLazySpiAuditedSourceSurfaces', 'generatedLazySpiAuditedSourceSurfaces'],
+          ['generatedLazySpiChunkInfoApiStatus', 'generatedLazySpiChunkInfoApiStatus'],
+          ['generatedLazySpiRegistrySource', 'generatedLazySpiRegistrySource'],
+          ['generatedLazySpiGeneratedImportsArtifact', 'generatedLazySpiGeneratedImportsArtifact'],
+          ['generatedLazySpiGeneratedImportsSha256', 'generatedLazySpiGeneratedImportsSha256'],
+          ['generatedLazySpiGeneratedImportsTableShape', 'generatedLazySpiGeneratedImportsTableShape'],
+          ['generatedLazySpiChunkId', 'generatedLazySpiChunkId'],
+          ['generatedLazySpiChunkImportSpecifier', 'generatedLazySpiChunkImportSpecifier'],
+          ['generatedLazySpiChunkArtifact', 'generatedLazySpiChunkArtifact'],
+          ['generatedLazySpiChunkStatus', 'generatedLazySpiChunkStatus'],
+          ['generatedLazySpiChunkSha256', 'generatedLazySpiChunkSha256'],
+          ['generatedLazySpiBuildOutputSource', 'generatedLazySpiBuildOutputSource'],
+          ['generatedLazySpiProductionSupportArtifact', 'generatedLazySpiProductionSupportArtifact'],
+          ['generatedLazySpiStatsPath', 'generatedLazySpiStatsPath'],
+          ['generatedLazySpiProdBundlePath', 'generatedLazySpiProdBundlePath'],
+          ['generatedLazySpiDecision', 'generatedLazySpiDecision'],
+          ['generatedLazySpiUnavailableReason', 'generatedLazySpiUnavailableReason'],
+          ['generatedLazySpiFailureLayer', 'generatedLazySpiFailureLayer'],
+          ['generatedLazySpiProductPath', 'generatedLazySpiProductPath'],
+          ['generatedLazySpiExecutionEvidence', 'generatedLazySpiExecutionEvidence'],
+          ['generatedLazySpiExecutionTrigger', 'generatedLazySpiExecutionTrigger'],
+          ['generatedLazySpiNextResolutionStep', 'generatedLazySpiNextResolutionStep']
+        ]) {
+          d[diagnosticKey] = extra[extraKey] || d[diagnosticKey] || '';
+        }
+        d.generatedLazySpiGeneratedImportsBytes =
+          Number(extra.generatedLazySpiGeneratedImportsBytes
+            || d.generatedLazySpiGeneratedImportsBytes
+            || 0);
+        d.generatedLazySpiChunkBytes =
+          Number(extra.generatedLazySpiChunkBytes || d.generatedLazySpiChunkBytes || 0);
+        d.generatedLazySpiAvailable =
+          extra.generatedLazySpiAvailable === true || d.generatedLazySpiAvailable === true;
+        d.generatedLazySpiRuntimePathSelected =
+          extra.generatedLazySpiRuntimePathSelected === true
+          || d.generatedLazySpiRuntimePathSelected === true;
+        d.generatedLazySpiPackagingTimeStagingSelected =
+          extra.generatedLazySpiPackagingTimeStagingSelected === true
+          || d.generatedLazySpiPackagingTimeStagingSelected === true;
+        d.generatedLazySpiCurrentAppGeneratedImportsObserved =
+          extra.generatedLazySpiCurrentAppGeneratedImportsObserved === true
+          || d.generatedLazySpiCurrentAppGeneratedImportsObserved === true;
+        d.generatedLazySpiCurrentAppChunkAvailable =
+          extra.generatedLazySpiCurrentAppChunkAvailable === true
+          || d.generatedLazySpiCurrentAppChunkAvailable === true;
+        d.generatedLazySpiCurrentAppChunkExecuted =
+          extra.generatedLazySpiCurrentAppChunkExecuted === true
+          || d.generatedLazySpiCurrentAppChunkExecuted === true
+          || d.loadOnDemandChunkFileExecuted === true;
+        d.generatedLazySpiProductionSupportObserved =
+          extra.generatedLazySpiProductionSupportObserved === true
+          || d.generatedLazySpiProductionSupportObserved === true;
+        d.generatedLazySpiStatsObserved =
+          extra.generatedLazySpiStatsObserved === true || d.generatedLazySpiStatsObserved === true;
+        d.generatedLazySpiProdBundleObserved =
+          extra.generatedLazySpiProdBundleObserved === true
+          || d.generatedLazySpiProdBundleObserved === true;
+        d.generatedLazySpiNoLocalhost =
+          extra.generatedLazySpiNoLocalhost === true || d.generatedLazySpiNoLocalhost === true;
+        d.generatedLazySpiFixtureSubstituted =
+          extra.generatedLazySpiFixtureSubstituted === true
+          || d.generatedLazySpiFixtureSubstituted === true;
         finalizeCurrentAppGeneratedImportsOwnerSideEffectDiagnostics();
       }
 
@@ -15792,7 +16242,7 @@ let flowIpcShell = #"""
         if (!normalizedChunkId) {
           return 0;
         }
-        const resource = generatedLazyBundleResource();
+        const resource = generatedLazyBundleResourceForChunk(normalizedChunkId);
         if (!resource) {
           window.VaadinDesktopIpcDiagnostics.loadOnDemandChunkExecutionResult =
             'strict-blocker:generated-lazy-resource-missing';
@@ -15891,6 +16341,8 @@ let flowIpcShell = #"""
               stageExtra.generatedLazyChunkFailureLayer;
             window.VaadinDesktopIpcDiagnostics.loadOnDemandChunkFileExecuted =
               currentAppChunkPackageEdgeResolved;
+            window.VaadinDesktopIpcDiagnostics.generatedLazySpiCurrentAppChunkExecuted =
+              currentAppChunkPackageEdgeResolved;
             window.VaadinDesktopIpcDiagnostics.loadOnDemandChunkFileCallbackResolved = true;
             window.VaadinDesktopIpcDiagnostics.loadOnDemandChunkFileExecutionResult =
               currentAppChunkPackageEdgeResolved
@@ -15975,6 +16427,7 @@ let flowIpcShell = #"""
                   generatedLazyChunkResolvedArtifactPath: currentAppChunkResource.path,
                   loadOnDemandChunkFileStageObserved: true,
                   loadOnDemandChunkFileExecuted: true,
+                  generatedLazySpiCurrentAppChunkExecuted: true,
                   loadOnDemandChunkFileCallbackResolved: true,
                   loadOnDemandChunkFileExecutionResult:
                     window.VaadinDesktopIpcDiagnostics.loadOnDemandChunkFileExecutionResult,
@@ -16001,6 +16454,8 @@ let flowIpcShell = #"""
                   generatedLazyChunkResolvedArtifactPath: currentAppRootSupportResource.path,
                   currentAppGeneratedImportsRootProductionSupportExecuted: true,
                   currentAppGeneratedImportsRootPackageGraphExecuted: true,
+                  generatedLazySpiCurrentAppChunkExecuted:
+                    window.VaadinDesktopIpcDiagnostics.generatedLazySpiCurrentAppChunkExecuted,
                   currentAppProductionRuntimeOwnershipArtifactsStaged:
                     window.VaadinDesktopIpcDiagnostics.currentAppProductionRuntimeOwnershipArtifactsStaged,
                   currentAppProductionRuntimeOwnershipPrimaryCandidateSelected:
@@ -16022,6 +16477,8 @@ let flowIpcShell = #"""
                   window.VaadinDesktopIpcDiagnostics.loadOnDemandChunkFileStageObserved,
                 loadOnDemandChunkFileExecuted:
                   window.VaadinDesktopIpcDiagnostics.loadOnDemandChunkFileExecuted,
+                generatedLazySpiCurrentAppChunkExecuted:
+                  window.VaadinDesktopIpcDiagnostics.generatedLazySpiCurrentAppChunkExecuted,
                 loadOnDemandChunkFileCallbackResolved:
                   window.VaadinDesktopIpcDiagnostics.loadOnDemandChunkFileCallbackResolved,
                 loadOnDemandChunkFileExecutionResult:
@@ -16058,6 +16515,7 @@ let flowIpcShell = #"""
             window.VaadinDesktopIpcDiagnostics.loadOnDemandChunkFailureLayer =
               stageExtra.loadOnDemandChunkFailureLayer || 'generated-loadondemand-chunk-browser-execution';
             window.VaadinDesktopIpcDiagnostics.loadOnDemandChunkFileExecuted = false;
+            window.VaadinDesktopIpcDiagnostics.generatedLazySpiCurrentAppChunkExecuted = false;
             window.VaadinDesktopIpcDiagnostics.loadOnDemandChunkFileCallbackResolved = false;
             window.VaadinDesktopIpcDiagnostics.loadOnDemandChunkFileExecutionResult =
               retryable
@@ -16075,6 +16533,7 @@ let flowIpcShell = #"""
                 loadOnDemandChunkFileStageObserved:
                   window.VaadinDesktopIpcDiagnostics.loadOnDemandChunkFileStageObserved,
                 loadOnDemandChunkFileExecuted: false,
+                generatedLazySpiCurrentAppChunkExecuted: false,
                 loadOnDemandChunkFileCallbackResolved: false,
                 loadOnDemandChunkFileBrowserError: message,
                 loadOnDemandChunkFileExecutionResult:
@@ -16100,6 +16559,46 @@ let flowIpcShell = #"""
         })();
         generatedLoadOnDemandChunkPromises.set(executionKey, promise);
         return promise;
+      }
+
+      async function maybeExecuteGeneratedLazySpiDecisionProbe() {
+        if (generatedLazySpiDecisionProbeAttempted
+            || !window.VaadinDesktopIpcDiagnostics.vaadinWebComponentResourceGraphVerified) {
+          return;
+        }
+        const resource = generatedLazySpiDecisionResource();
+        if (!resource) {
+          return;
+        }
+        const chunkId = resource.generatedLazySpiChunkId
+          || resource.currentAppGeneratedImportsOwnerLazyChunkBridgeChunkId
+          || resource.chunkId
+          || '';
+        const chunkPath = resource.generatedLazySpiChunkArtifact
+          || resource.currentAppGeneratedImportsOwnerLazyChunkBridgeChunkArtifact
+          || resource.chunkArtifactPath
+          || '';
+        if (!chunkId || !chunkPath) {
+          return;
+        }
+        const chunkResource = componentFrontendResourceByPath(chunkPath);
+        if (!chunkResource
+            || !componentFrontendResourceBodies.has(resource.path)
+            || !componentFrontendResourceBodies.has(chunkPath)) {
+          return;
+        }
+        generatedLazySpiDecisionProbeAttempted = true;
+        window.VaadinDesktopIpcDiagnostics.generatedLazySpiDecisionVersion =
+          resource.generatedLazySpiDecisionVersion
+          || window.VaadinDesktopIpcDiagnostics.generatedLazySpiDecisionVersion;
+        window.VaadinDesktopIpcDiagnostics.generatedLazySpiDecision =
+          resource.generatedLazySpiDecision
+          || window.VaadinDesktopIpcDiagnostics.generatedLazySpiDecision;
+        window.VaadinDesktopIpcDiagnostics.generatedLazySpiCurrentAppChunkAvailable = true;
+        window.VaadinDesktopIpcDiagnostics.generatedLazySpiCurrentAppChunkExecuted = false;
+        window.VaadinDesktopIpcDiagnostics.loadOnDemandChunkFileExecuted = false;
+        installGeneratedLoadOnDemandChunkBridge();
+        await executeGeneratedLoadOnDemandChunk(chunkId);
       }
 
       function installGeneratedLoadOnDemandChunkBridge(delegate) {

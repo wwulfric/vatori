@@ -143,6 +143,9 @@ public final class DesktopTraceInspector {
         FLOW_IPC_V1_42_GENERATED_IMPORTS_OWNER_RUNTIME_CONTRACT(
                 "--require-flow-ipc-v1_42-generated-imports-owner-runtime-contract"),
         FLOW_IPC_V1_42("--require-flow-ipc-v1_42"),
+        FLOW_IPC_V1_43_GENERATED_LAZY_SPI_DECISION(
+                "--require-flow-ipc-v1_43-generated-lazy-spi-decision"),
+        FLOW_IPC_V1_43("--require-flow-ipc-v1_43"),
         FLOW_IPC_V1_3_FRAMEWORK("--require-flow-ipc-v1_3-framework");
 
         private final String option;
@@ -570,6 +573,11 @@ public final class DesktopTraceInspector {
                 case FLOW_IPC_V1_42 -> EnumSet.of(
                         FLOW_IPC_V1_42_GENERATED_IMPORTS_OWNER_RUNTIME_CONTRACT,
                         FLOW_IPC_V1_42);
+                case FLOW_IPC_V1_43_GENERATED_LAZY_SPI_DECISION ->
+                    EnumSet.of(FLOW_IPC_V1_43_GENERATED_LAZY_SPI_DECISION);
+                case FLOW_IPC_V1_43 -> EnumSet.of(
+                        FLOW_IPC_V1_43_GENERATED_LAZY_SPI_DECISION,
+                        FLOW_IPC_V1_43);
                 case FLOW_IPC_V1_3_FRAMEWORK -> EnumSet.of(FLOW_IPC_V1_3_FRAMEWORK);
             };
         }
@@ -685,6 +693,9 @@ public final class DesktopTraceInspector {
                 case FLOW_IPC_V1_42_GENERATED_IMPORTS_OWNER_RUNTIME_CONTRACT ->
                     summary.hasRequiredFlowIpcV1_42GeneratedImportsOwnerRuntimeContractTypes();
                 case FLOW_IPC_V1_42 -> summary.hasRequiredFlowIpcV1_42Types();
+                case FLOW_IPC_V1_43_GENERATED_LAZY_SPI_DECISION ->
+                    summary.hasRequiredFlowIpcV1_43GeneratedLazySpiDecisionTypes();
+                case FLOW_IPC_V1_43 -> summary.hasRequiredFlowIpcV1_43Types();
                 case FLOW_IPC_V1_3_FRAMEWORK -> summary.hasRequiredFlowIpcV1_3FrameworkTypes();
             };
         }
@@ -1381,6 +1392,11 @@ public final class DesktopTraceInspector {
                     && line.contains("\"componentFrontendResources\"")
                     && containsCurrentAppGeneratedImportsOwnerRuntimeContractV142Fields(line)) {
                 summary.currentAppGeneratedImportsOwnerRuntimeContractV142ManifestObserved = true;
+            }
+            if (line.contains("\"type\":\"bootstrapResponse\"")
+                    && line.contains("\"componentFrontendResources\"")
+                    && containsGeneratedLazySpiDecisionV143Fields(line)) {
+                summary.generatedLazySpiDecisionV143ManifestObserved = true;
             }
             if (line.contains("\"type\":\"bootstrapResponse\"")
                     && line.contains("\"componentFrontendResources\"")
@@ -2331,6 +2347,11 @@ public final class DesktopTraceInspector {
                     && containsCurrentAppGeneratedImportsOwnerRuntimeContractV142Fields(line)) {
                 summary.currentAppGeneratedImportsOwnerRuntimeContractV142RequestObserved = true;
             }
+            if (line.contains("\"type\":\"resourceRequest\"")
+                    && containsPath(line, "current-app-production/VAADIN/build/generated-flow-imports-")
+                    && containsGeneratedLazySpiDecisionV143Fields(line)) {
+                summary.generatedLazySpiDecisionV143RequestObserved = true;
+            }
             if (line.contains("\"type\":\"resourceResponse\"")
                     && containsPath(line, "current-app-frontend/generated/flow/generated-flow-imports.js")
                     && containsCurrentAppBuildFrontendOutputV132Fields(line)
@@ -2398,6 +2419,12 @@ public final class DesktopTraceInspector {
                     && containsCurrentAppGeneratedImportsOwnerRuntimeContractV142Fields(line)
                     && line.contains("\"bodyRedacted\":true")) {
                 summary.currentAppGeneratedImportsOwnerRuntimeContractV142ResponseObserved = true;
+            }
+            if (line.contains("\"type\":\"resourceResponse\"")
+                    && containsPath(line, "current-app-production/VAADIN/build/generated-flow-imports-")
+                    && containsGeneratedLazySpiDecisionV143Fields(line)
+                    && line.contains("\"bodyRedacted\":true")) {
+                summary.generatedLazySpiDecisionV143ResponseObserved = true;
             }
             if (line.contains("\"type\":\"resourceRequest\"")
                     && line.contains("\"purpose\":\"generated-loadondemand-chunk-v1_11\"")
@@ -3161,6 +3188,14 @@ public final class DesktopTraceInspector {
             }
             if (line.contains("\"type\":\"resourceStage\"")
                     && containsPath(line, "current-app-production/VAADIN/build/generated-flow-imports-")
+                    && containsGeneratedLazySpiDecisionV143Fields(line)
+                    && (line.contains("\"executionStatus\":\"executed\"")
+                            || line.contains("\"executionStatus\":\"strict-blocker\"")
+                            || line.contains("\"executionStatus\":\"staged\""))) {
+                summary.generatedLazySpiDecisionV143StageObserved = true;
+            }
+            if (line.contains("\"type\":\"resourceStage\"")
+                    && containsPath(line, "current-app-production/VAADIN/build/generated-flow-imports-")
                     && containsCurrentAppGeneratedImportsRootPackageGraphV134Fields(line)
                     && containsLiteralField(line,
                             "currentAppGeneratedImportsRootProductionSupportExecuted", "true")
@@ -3242,10 +3277,23 @@ public final class DesktopTraceInspector {
                 summary.currentAppGeneratedImportsOwnerRuntimeContractV142CompleteStageObserved = true;
             }
             if (line.contains("\"type\":\"resourceStage\"")
+                    && containsPath(line, "current-app-production/VAADIN/build/generated-flow-imports-")
+                    && containsCurrentAppGeneratedImportsOwnerRuntimeContractV142ImportComplete(line)
+                    && containsGeneratedLazySpiDecisionV143ChunkExecuted(line)
+                    && line.contains("\"executionStatus\":\"executed\"")) {
+                summary.generatedLazySpiDecisionV143CompleteStageObserved = true;
+            }
+            if (line.contains("\"type\":\"resourceStage\"")
                     && containsPath(line, "current-app-frontend/generated/flow/chunks/")
                     && containsCurrentAppGeneratedChunkPackageEdgeV133Fields(line)
                     && containsLiteralField(line, "loadOnDemandChunkFileExecuted", "true")) {
                 summary.currentAppGeneratedChunkPackageEdgeV133ExecutedObserved = true;
+            }
+            if (line.contains("\"type\":\"resourceStage\"")
+                    && containsPath(line, "current-app-frontend/generated/flow/chunks/")
+                    && containsGeneratedLazySpiDecisionV143ChunkExecuted(line)
+                    && containsLiteralField(line, "loadOnDemandChunkFileExecuted", "true")) {
+                summary.generatedLazySpiDecisionV143ChunkExecutedObserved = true;
             }
             if (line.contains("\"type\":\"webview.dom\"")
                     && containsStringField(line, "frontendStagingResolverVersion", "flow-ipc-resource-staging-v1_5")
@@ -4113,6 +4161,26 @@ public final class DesktopTraceInspector {
                     && containsLiteralField(line, "vaadinSelectEventRpcObserved", "true")
                     && containsStringField(line, "vaadinSelectStatusText", "Vaadin Select: audit")) {
                 summary.currentAppGeneratedImportsOwnerRuntimeContractV142DomObserved = true;
+            }
+            if (line.contains("\"type\":\"webview.dom\"")
+                    && containsCurrentAppGeneratedImportsOwnerRuntimeContractV142DomComplete(line)
+                    && containsGeneratedLazySpiDecisionV143ChunkExecuted(line)
+                    && containsStringField(line, "currentAppGeneratedImportsOwnerRuntimeContractReusedTags",
+                            "vaadin-big-decimal-field,vaadin-checkbox,vaadin-select,vaadin-text-field")
+                    && containsStringField(line, "currentAppGeneratedImportsOwnerRuntimeContractFallbackTags", "")
+                    && containsLiteralField(line, "loadOnDemandChunkFileExecuted", "true")
+                    && containsLiteralField(line, "vaadinWebComponentTagDefined", "true")
+                    && containsLiteralField(line, "vaadinSecondWebComponentTagDefined", "true")
+                    && containsLiteralField(line, "vaadinTextFieldTagDefined", "true")
+                    && containsLiteralField(line, "vaadinSelectTagDefined", "true")
+                    && containsStringField(line, "vaadinWebComponentStatusText",
+                            "Vaadin BigDecimalField: 42.5")
+                    && containsStringField(line, "vaadinSecondWebComponentStatusText",
+                            "Vaadin Checkbox: checked")
+                    && containsStringField(line, "vaadinTextFieldStatusText",
+                            "Vaadin TextField: Flow IPC typed")
+                    && containsStringField(line, "vaadinSelectStatusText", "Vaadin Select: audit")) {
+                summary.generatedLazySpiDecisionV143DomObserved = true;
             }
             if (line.contains("\"type\":\"webview.dom\"")
                     && containsLiteralField(line, "generatedLazySourceCurrentBuildNoOpConfirmed", "true")
@@ -5657,8 +5725,12 @@ public final class DesktopTraceInspector {
                 && line.contains("currentAppGeneratedImportsOwnerLazyChunkBridgeChunkStatus")
                 && containsStringField(line, "currentAppGeneratedImportsOwnerLazyChunkBridgeBuildOutputSource",
                         "build-frontend")
-                && containsStringField(line, "currentAppGeneratedImportsOwnerLazyChunkBridgeSupportedSpiDecision",
+                && (containsStringField(line,
+                        "currentAppGeneratedImportsOwnerLazyChunkBridgeSupportedSpiDecision",
                         "pending-supported-vaadin-lazy-chunk-spi")
+                        || containsStringField(line,
+                                "currentAppGeneratedImportsOwnerLazyChunkBridgeSupportedSpiDecision",
+                                "packaging-time-build-frontend-staging"))
                 && containsLiteralField(line,
                         "currentAppGeneratedImportsOwnerLazyChunkBridgeNoLocalhost", "true")
                 && containsLiteralField(line,
@@ -5689,6 +5761,67 @@ public final class DesktopTraceInspector {
                 && containsStringField(line, "currentAppGeneratedImportsOwnerRuntimeContractDecision",
                         "generated-imports-owner-runtime-contract-satisfied")
                 && containsStringField(line, "currentAppGeneratedImportsOwnerRuntimeContractFailureLayer", "");
+    }
+
+    private static boolean containsGeneratedLazySpiDecisionV143Fields(String line) {
+        return containsStringField(line, "generatedLazySpiDecisionVersion",
+                        "flow-ipc-generated-lazy-spi-decision-v1_43")
+                && containsStringField(line, "generatedLazySpiDecisionSource",
+                        "current-app-generated-imports-owner-runtime-contract-v1_42")
+                && containsStringField(line, "generatedLazySpiAuditedSourceSurfaces",
+                        "AbstractUpdateImports,FrontendDependencies,ChunkInfo,build-frontend-generated-output,production-stats-json,prod-bundle")
+                && containsStringField(line, "generatedLazySpiChunkInfoApiStatus",
+                        "internal-may-be-renamed-or-removed")
+                && containsStringField(line, "generatedLazySpiRegistrySource",
+                        "current-app-build-frontend-output-v1_32")
+                && containsStringField(line, "generatedLazySpiGeneratedImportsArtifact",
+                        "current-app-frontend/generated/flow/generated-flow-imports.js")
+                && line.contains("generatedLazySpiGeneratedImportsSha256")
+                && line.contains("generatedLazySpiGeneratedImportsBytes")
+                && containsStringField(line, "generatedLazySpiGeneratedImportsTableShape",
+                        "branch-table-dynamic-import")
+                && line.contains("generatedLazySpiChunkId")
+                && containsStringFieldPrefix(line, "generatedLazySpiChunkImportSpecifier",
+                        "./chunks/chunk-")
+                && containsStringFieldPrefix(line, "generatedLazySpiChunkArtifact",
+                        "current-app-frontend/generated/flow/chunks/chunk-")
+                && containsStringField(line, "generatedLazySpiChunkStatus", "available")
+                && line.contains("generatedLazySpiChunkSha256")
+                && line.contains("generatedLazySpiChunkBytes")
+                && containsStringField(line, "generatedLazySpiBuildOutputSource", "build-frontend")
+                && containsStringFieldPrefix(line, "generatedLazySpiProductionSupportArtifact",
+                        "current-app-production/VAADIN/build/generated-flow-imports-")
+                && line.contains("generatedLazySpiStatsPath")
+                && line.contains("generatedLazySpiProdBundlePath")
+                && containsStringField(line, "generatedLazySpiDecision",
+                        "packaging-time-build-frontend-staging")
+                && containsStringField(line, "generatedLazySpiUnavailableReason",
+                        "vaadin-chunkinfo-internal-no-supported-runtime-spi")
+                && containsStringField(line, "generatedLazySpiFailureLayer",
+                        "supported-vaadin-lazy-chunk-spi-unavailable")
+                && containsStringField(line, "generatedLazySpiProductPath",
+                        "packaging-time-build-frontend-output-staging")
+                && containsStringField(line, "generatedLazySpiExecutionEvidence",
+                        "current-app-generated-chunk-loadondemand-executed-v1_33")
+                && containsStringField(line, "generatedLazySpiExecutionTrigger",
+                        "host-decision-audit-probe-not-flow-client-spi")
+                && line.contains("generatedLazySpiNextResolutionStep")
+                && containsLiteralField(line, "generatedLazySpiAvailable", "false")
+                && containsLiteralField(line, "generatedLazySpiRuntimePathSelected", "false")
+                && containsLiteralField(line, "generatedLazySpiPackagingTimeStagingSelected", "true")
+                && containsLiteralField(line,
+                        "generatedLazySpiCurrentAppGeneratedImportsObserved", "true")
+                && containsLiteralField(line, "generatedLazySpiCurrentAppChunkAvailable", "true")
+                && containsLiteralField(line, "generatedLazySpiProductionSupportObserved", "true")
+                && containsLiteralField(line, "generatedLazySpiStatsObserved", "true")
+                && containsLiteralField(line, "generatedLazySpiProdBundleObserved", "true")
+                && containsLiteralField(line, "generatedLazySpiNoLocalhost", "true")
+                && containsLiteralField(line, "generatedLazySpiFixtureSubstituted", "false");
+    }
+
+    private static boolean containsGeneratedLazySpiDecisionV143ChunkExecuted(String line) {
+        return containsGeneratedLazySpiDecisionV143Fields(line)
+                && containsLiteralField(line, "generatedLazySpiCurrentAppChunkExecuted", "true");
     }
 
     private static boolean containsProductionOwnerFailureLayer(String line, String field) {
@@ -6239,6 +6372,13 @@ public final class DesktopTraceInspector {
         private boolean currentAppGeneratedImportsOwnerRuntimeContractV142StageObserved;
         private boolean currentAppGeneratedImportsOwnerRuntimeContractV142CompleteStageObserved;
         private boolean currentAppGeneratedImportsOwnerRuntimeContractV142DomObserved;
+        private boolean generatedLazySpiDecisionV143ManifestObserved;
+        private boolean generatedLazySpiDecisionV143RequestObserved;
+        private boolean generatedLazySpiDecisionV143ResponseObserved;
+        private boolean generatedLazySpiDecisionV143StageObserved;
+        private boolean generatedLazySpiDecisionV143ChunkExecutedObserved;
+        private boolean generatedLazySpiDecisionV143CompleteStageObserved;
+        private boolean generatedLazySpiDecisionV143DomObserved;
 
         public boolean hasRequiredFlowIpcTypes() {
             return types.keySet().containsAll(FLOW_IPC_REQUIRED_TYPES)
@@ -6892,6 +7032,21 @@ public final class DesktopTraceInspector {
             return hasRequiredFlowIpcV1_42GeneratedImportsOwnerRuntimeContractTypes();
         }
 
+        public boolean hasRequiredFlowIpcV1_43GeneratedLazySpiDecisionTypes() {
+            return generatedLazySpiDecisionV143ManifestObserved
+                    && generatedLazySpiDecisionV143RequestObserved
+                    && generatedLazySpiDecisionV143ResponseObserved
+                    && generatedLazySpiDecisionV143StageObserved
+                    && generatedLazySpiDecisionV143ChunkExecutedObserved
+                    && generatedLazySpiDecisionV143CompleteStageObserved
+                    && generatedLazySpiDecisionV143DomObserved;
+        }
+
+        public boolean hasRequiredFlowIpcV1_43Types() {
+            return hasRequiredFlowIpcV1_43GeneratedLazySpiDecisionTypes()
+                    && hasRequiredFlowIpcV1_42GeneratedImportsOwnerRuntimeContractTypes();
+        }
+
         private boolean hasCurrentAppBuildFrontendOutputSuccessorEvidence() {
             return currentAppBuildFrontendOutputV132ManifestObserved
                     && currentAppBuildFrontendOutputV132RequestObserved
@@ -7490,6 +7645,16 @@ public final class DesktopTraceInspector {
                     + currentAppGeneratedImportsOwnerRuntimeContractV142StageObserved + "/"
                     + currentAppGeneratedImportsOwnerRuntimeContractV142CompleteStageObserved + "/"
                     + currentAppGeneratedImportsOwnerRuntimeContractV142DomObserved);
+            System.out.println("Flow IPC v1.43 generated lazy SPI decision manifest observed: "
+                    + generatedLazySpiDecisionV143ManifestObserved);
+            System.out.println("Flow IPC v1.43 generated lazy SPI decision request/response observed: "
+                    + generatedLazySpiDecisionV143RequestObserved + "/"
+                    + generatedLazySpiDecisionV143ResponseObserved);
+            System.out.println("Flow IPC v1.43 generated lazy SPI decision stage/chunk/complete/DOM observed: "
+                    + generatedLazySpiDecisionV143StageObserved + "/"
+                    + generatedLazySpiDecisionV143ChunkExecutedObserved + "/"
+                    + generatedLazySpiDecisionV143CompleteStageObserved + "/"
+                    + generatedLazySpiDecisionV143DomObserved);
             System.out.println("Flow IPC v1.6 TextField graph manifest observed: "
                     + frontendTextFieldV16ManifestObserved);
             System.out.println("Flow IPC v1.6 TextField graph request observed: "

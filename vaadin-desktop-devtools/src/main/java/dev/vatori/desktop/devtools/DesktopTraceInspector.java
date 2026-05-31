@@ -140,6 +140,9 @@ public final class DesktopTraceInspector {
         FLOW_IPC_V1_41_CURRENT_APP_GENERATED_IMPORTS_SELECT_OWNER_COVERAGE(
                 "--require-flow-ipc-v1_41-current-app-generated-imports-select-owner-coverage"),
         FLOW_IPC_V1_41("--require-flow-ipc-v1_41"),
+        FLOW_IPC_V1_42_GENERATED_IMPORTS_OWNER_RUNTIME_CONTRACT(
+                "--require-flow-ipc-v1_42-generated-imports-owner-runtime-contract"),
+        FLOW_IPC_V1_42("--require-flow-ipc-v1_42"),
         FLOW_IPC_V1_3_FRAMEWORK("--require-flow-ipc-v1_3-framework");
 
         private final String option;
@@ -562,6 +565,11 @@ public final class DesktopTraceInspector {
                 case FLOW_IPC_V1_41 -> EnumSet.of(
                         FLOW_IPC_V1_41_CURRENT_APP_GENERATED_IMPORTS_SELECT_OWNER_COVERAGE,
                         FLOW_IPC_V1_41);
+                case FLOW_IPC_V1_42_GENERATED_IMPORTS_OWNER_RUNTIME_CONTRACT ->
+                    EnumSet.of(FLOW_IPC_V1_42_GENERATED_IMPORTS_OWNER_RUNTIME_CONTRACT);
+                case FLOW_IPC_V1_42 -> EnumSet.of(
+                        FLOW_IPC_V1_42_GENERATED_IMPORTS_OWNER_RUNTIME_CONTRACT,
+                        FLOW_IPC_V1_42);
                 case FLOW_IPC_V1_3_FRAMEWORK -> EnumSet.of(FLOW_IPC_V1_3_FRAMEWORK);
             };
         }
@@ -674,6 +682,9 @@ public final class DesktopTraceInspector {
                 case FLOW_IPC_V1_41_CURRENT_APP_GENERATED_IMPORTS_SELECT_OWNER_COVERAGE ->
                     summary.hasRequiredFlowIpcV1_41CurrentAppGeneratedImportsSelectOwnerCoverageTypes();
                 case FLOW_IPC_V1_41 -> summary.hasRequiredFlowIpcV1_41Types();
+                case FLOW_IPC_V1_42_GENERATED_IMPORTS_OWNER_RUNTIME_CONTRACT ->
+                    summary.hasRequiredFlowIpcV1_42GeneratedImportsOwnerRuntimeContractTypes();
+                case FLOW_IPC_V1_42 -> summary.hasRequiredFlowIpcV1_42Types();
                 case FLOW_IPC_V1_3_FRAMEWORK -> summary.hasRequiredFlowIpcV1_3FrameworkTypes();
             };
         }
@@ -1365,6 +1376,11 @@ public final class DesktopTraceInspector {
                     && line.contains("\"componentFrontendResources\"")
                     && containsCurrentAppGeneratedImportsSelectOwnerCoverageV141Fields(line)) {
                 summary.currentAppGeneratedImportsSelectOwnerCoverageV141ManifestObserved = true;
+            }
+            if (line.contains("\"type\":\"bootstrapResponse\"")
+                    && line.contains("\"componentFrontendResources\"")
+                    && containsCurrentAppGeneratedImportsOwnerRuntimeContractV142Fields(line)) {
+                summary.currentAppGeneratedImportsOwnerRuntimeContractV142ManifestObserved = true;
             }
             if (line.contains("\"type\":\"bootstrapResponse\"")
                     && line.contains("\"componentFrontendResources\"")
@@ -2310,6 +2326,11 @@ public final class DesktopTraceInspector {
                     && containsCurrentAppGeneratedImportsSelectOwnerCoverageV141Fields(line)) {
                 summary.currentAppGeneratedImportsSelectOwnerCoverageV141RequestObserved = true;
             }
+            if (line.contains("\"type\":\"resourceRequest\"")
+                    && containsPath(line, "current-app-production/VAADIN/build/generated-flow-imports-")
+                    && containsCurrentAppGeneratedImportsOwnerRuntimeContractV142Fields(line)) {
+                summary.currentAppGeneratedImportsOwnerRuntimeContractV142RequestObserved = true;
+            }
             if (line.contains("\"type\":\"resourceResponse\"")
                     && containsPath(line, "current-app-frontend/generated/flow/generated-flow-imports.js")
                     && containsCurrentAppBuildFrontendOutputV132Fields(line)
@@ -2371,6 +2392,12 @@ public final class DesktopTraceInspector {
                     && containsCurrentAppGeneratedImportsSelectOwnerCoverageV141Fields(line)
                     && line.contains("\"bodyRedacted\":true")) {
                 summary.currentAppGeneratedImportsSelectOwnerCoverageV141ResponseObserved = true;
+            }
+            if (line.contains("\"type\":\"resourceResponse\"")
+                    && containsPath(line, "current-app-production/VAADIN/build/generated-flow-imports-")
+                    && containsCurrentAppGeneratedImportsOwnerRuntimeContractV142Fields(line)
+                    && line.contains("\"bodyRedacted\":true")) {
+                summary.currentAppGeneratedImportsOwnerRuntimeContractV142ResponseObserved = true;
             }
             if (line.contains("\"type\":\"resourceRequest\"")
                     && line.contains("\"purpose\":\"generated-loadondemand-chunk-v1_11\"")
@@ -3126,6 +3153,14 @@ public final class DesktopTraceInspector {
             }
             if (line.contains("\"type\":\"resourceStage\"")
                     && containsPath(line, "current-app-production/VAADIN/build/generated-flow-imports-")
+                    && containsCurrentAppGeneratedImportsOwnerRuntimeContractV142Fields(line)
+                    && (line.contains("\"executionStatus\":\"executed\"")
+                            || line.contains("\"executionStatus\":\"strict-blocker\"")
+                            || line.contains("\"executionStatus\":\"staged\""))) {
+                summary.currentAppGeneratedImportsOwnerRuntimeContractV142StageObserved = true;
+            }
+            if (line.contains("\"type\":\"resourceStage\"")
+                    && containsPath(line, "current-app-production/VAADIN/build/generated-flow-imports-")
                     && containsCurrentAppGeneratedImportsRootPackageGraphV134Fields(line)
                     && containsLiteralField(line,
                             "currentAppGeneratedImportsRootProductionSupportExecuted", "true")
@@ -3199,6 +3234,12 @@ public final class DesktopTraceInspector {
                     && containsCurrentAppGeneratedImportsSelectOwnerCoverageV141Complete(line)
                     && line.contains("\"executionStatus\":\"executed\"")) {
                 summary.currentAppGeneratedImportsSelectOwnerCoverageV141CompleteStageObserved = true;
+            }
+            if (line.contains("\"type\":\"resourceStage\"")
+                    && containsPath(line, "current-app-production/VAADIN/build/generated-flow-imports-")
+                    && containsCurrentAppGeneratedImportsOwnerRuntimeContractV142ImportComplete(line)
+                    && line.contains("\"executionStatus\":\"executed\"")) {
+                summary.currentAppGeneratedImportsOwnerRuntimeContractV142CompleteStageObserved = true;
             }
             if (line.contains("\"type\":\"resourceStage\"")
                     && containsPath(line, "current-app-frontend/generated/flow/chunks/")
@@ -4050,6 +4091,28 @@ public final class DesktopTraceInspector {
                     && containsStringField(line, "vaadinSelectStatusText", "Vaadin Select: audit")
                     && containsStringField(line, "vaadinSelectPostEventState", "Vaadin Select: audit")) {
                 summary.currentAppGeneratedImportsSelectOwnerCoverageV141DomObserved = true;
+            }
+            if (line.contains("\"type\":\"webview.dom\"")
+                    && containsCurrentAppGeneratedImportsOwnerRuntimeContractV142DomComplete(line)
+                    && containsStringField(line, "currentAppGeneratedImportsOwnerRuntimeContractReusedTags",
+                            "vaadin-big-decimal-field,vaadin-checkbox,vaadin-select,vaadin-text-field")
+                    && containsStringField(line, "currentAppGeneratedImportsOwnerRuntimeContractSkippedFocusedImports",
+                            "META-INF/resources/frontend/vaadin-big-decimal-field.js,META-INF/vatori/dev-bundle-entry/vaadin-checkbox.js,META-INF/vatori/dev-bundle-entry/vaadin-select.js,META-INF/vatori/dev-bundle-entry/vaadin-text-field.js")
+                    && containsStringField(line, "currentAppGeneratedImportsOwnerRuntimeContractFallbackTags", "")
+                    && containsLiteralField(line, "vaadinWebComponentTagDefined", "true")
+                    && containsLiteralField(line, "vaadinSecondWebComponentTagDefined", "true")
+                    && containsLiteralField(line, "vaadinTextFieldTagDefined", "true")
+                    && containsLiteralField(line, "vaadinSelectTagDefined", "true")
+                    && containsStringField(line, "vaadinWebComponentStatusText",
+                            "Vaadin BigDecimalField: 42.5")
+                    && containsStringField(line, "vaadinSecondWebComponentStatusText",
+                            "Vaadin Checkbox: checked")
+                    && containsStringField(line, "vaadinTextFieldStatusText",
+                            "Vaadin TextField: Flow IPC typed")
+                    && containsLiteralField(line, "vaadinSelectRendered", "true")
+                    && containsLiteralField(line, "vaadinSelectEventRpcObserved", "true")
+                    && containsStringField(line, "vaadinSelectStatusText", "Vaadin Select: audit")) {
+                summary.currentAppGeneratedImportsOwnerRuntimeContractV142DomObserved = true;
             }
             if (line.contains("\"type\":\"webview.dom\"")
                     && containsLiteralField(line, "generatedLazySourceCurrentBuildNoOpConfirmed", "true")
@@ -5554,6 +5617,80 @@ public final class DesktopTraceInspector {
                 && line.contains("currentAppGeneratedImportsOwnerSideEffectVaadinGlobalAfter");
     }
 
+    private static boolean containsCurrentAppGeneratedImportsOwnerRuntimeContractV142Fields(String line) {
+        return containsStringField(line, "currentAppGeneratedImportsOwnerRuntimeContractVersion",
+                        "flow-ipc-current-app-generated-imports-owner-runtime-contract-v1_42")
+                && containsStringField(line, "currentAppGeneratedImportsOwnerRuntimeContractSource",
+                        "current-app-generated-imports-select-owner-coverage-v1_41")
+                && containsStringField(line, "currentAppGeneratedImportsOwnerRuntimeContractArtifactSource",
+                        "current-app-production-build-frontend-generated-imports-support-artifact")
+                && containsStringFieldPrefix(line, "currentAppGeneratedImportsOwnerRuntimeContractSelectedArtifact",
+                        "current-app-production/VAADIN/build/generated-flow-imports-")
+                && line.contains("currentAppGeneratedImportsOwnerRuntimeContractSelectedArtifactSha256")
+                && line.contains("currentAppGeneratedImportsOwnerRuntimeContractSelectedArtifactBytes")
+                && containsStringField(line, "currentAppGeneratedImportsOwnerRuntimeContractExpectedTags",
+                        "vaadin-big-decimal-field,vaadin-checkbox,vaadin-select,vaadin-text-field")
+                && containsStringField(line, "currentAppGeneratedImportsOwnerRuntimeContractCoveredTags",
+                        "vaadin-big-decimal-field,vaadin-checkbox,vaadin-select,vaadin-text-field")
+                && containsStringField(line, "currentAppGeneratedImportsOwnerRuntimeContractOwnerPriority",
+                        "before-covered-focused-component-imports")
+                && containsStringField(line, "currentAppGeneratedImportsOwnerRuntimeContractSkipPolicy",
+                        "skip-covered-focused-imports-when-owner-side-effect-satisfied")
+                && containsStringField(line, "currentAppGeneratedImportsOwnerRuntimeContractFallbackPolicy",
+                        "strict-blocker-with-focused-fallback-diagnostics")
+                && containsStringField(line, "currentAppGeneratedImportsOwnerRuntimeContractResolverHandoff",
+                        "component-resolver-owned-input")
+                && line.contains("currentAppGeneratedImportsOwnerRuntimeContractDecision")
+                && line.contains("currentAppGeneratedImportsOwnerRuntimeContractFailureLayer")
+                && line.contains("currentAppGeneratedImportsOwnerRuntimeContractNextResolutionStep")
+                && containsLiteralField(line,
+                        "currentAppGeneratedImportsOwnerRuntimeContractNoLocalhost", "true")
+                && containsLiteralField(line,
+                        "currentAppGeneratedImportsOwnerRuntimeContractFixtureSubstituted", "false")
+                && containsStringField(line, "currentAppGeneratedImportsOwnerLazyChunkBridgeVersion",
+                        "flow-ipc-current-app-generated-imports-owner-lazy-chunk-bridge-v1_42")
+                && containsStringField(line, "currentAppGeneratedImportsOwnerLazyChunkBridgeSource",
+                        "current-app-build-frontend-output-v1_32")
+                && line.contains("currentAppGeneratedImportsOwnerLazyChunkBridgeGeneratedImportsTableShape")
+                && line.contains("currentAppGeneratedImportsOwnerLazyChunkBridgeChunkId")
+                && line.contains("currentAppGeneratedImportsOwnerLazyChunkBridgeChunkArtifact")
+                && line.contains("currentAppGeneratedImportsOwnerLazyChunkBridgeChunkStatus")
+                && containsStringField(line, "currentAppGeneratedImportsOwnerLazyChunkBridgeBuildOutputSource",
+                        "build-frontend")
+                && containsStringField(line, "currentAppGeneratedImportsOwnerLazyChunkBridgeSupportedSpiDecision",
+                        "pending-supported-vaadin-lazy-chunk-spi")
+                && containsLiteralField(line,
+                        "currentAppGeneratedImportsOwnerLazyChunkBridgeNoLocalhost", "true")
+                && containsLiteralField(line,
+                        "currentAppGeneratedImportsOwnerLazyChunkBridgeFixtureSubstituted", "false");
+    }
+
+    private static boolean containsCurrentAppGeneratedImportsOwnerRuntimeContractV142ImportComplete(String line) {
+        return containsCurrentAppGeneratedImportsOwnerRuntimeContractV142Fields(line)
+                && containsLiteralField(line,
+                        "currentAppGeneratedImportsOwnerRuntimeContractAttempted", "true")
+                && containsLiteralField(line,
+                        "currentAppGeneratedImportsOwnerRuntimeContractImported", "true")
+                && containsLiteralField(line,
+                        "currentAppGeneratedImportsOwnerRuntimeContractSatisfied", "true")
+                && containsStringField(line, "currentAppGeneratedImportsOwnerRuntimeContractObservedTags",
+                        "vaadin-big-decimal-field,vaadin-checkbox,vaadin-select,vaadin-text-field")
+                && containsStringField(line, "currentAppGeneratedImportsOwnerRuntimeContractFallbackTags", "")
+                && containsStringFieldPrefix(line, "currentAppGeneratedImportsOwnerRuntimeContractModuleIdentity",
+                        "current-app-generated-imports-owner-runtime-contract-v1_42:");
+    }
+
+    private static boolean containsCurrentAppGeneratedImportsOwnerRuntimeContractV142DomComplete(String line) {
+        return containsCurrentAppGeneratedImportsOwnerRuntimeContractV142ImportComplete(line)
+                && containsLiteralField(line,
+                        "currentAppGeneratedImportsOwnerRuntimeContractResolverHandoffSatisfied", "true")
+                && containsLiteralField(line,
+                        "currentAppGeneratedImportsOwnerRuntimeContractFocusedImportsSkipped", "true")
+                && containsStringField(line, "currentAppGeneratedImportsOwnerRuntimeContractDecision",
+                        "generated-imports-owner-runtime-contract-satisfied")
+                && containsStringField(line, "currentAppGeneratedImportsOwnerRuntimeContractFailureLayer", "");
+    }
+
     private static boolean containsProductionOwnerFailureLayer(String line, String field) {
         return containsStringField(line, field, "production-owner-duplicate-custom-element")
                 || containsStringField(line, field, "production-owner-relative-import-unresolved")
@@ -6096,6 +6233,12 @@ public final class DesktopTraceInspector {
         private boolean currentAppGeneratedImportsSelectOwnerCoverageV141StageObserved;
         private boolean currentAppGeneratedImportsSelectOwnerCoverageV141CompleteStageObserved;
         private boolean currentAppGeneratedImportsSelectOwnerCoverageV141DomObserved;
+        private boolean currentAppGeneratedImportsOwnerRuntimeContractV142ManifestObserved;
+        private boolean currentAppGeneratedImportsOwnerRuntimeContractV142RequestObserved;
+        private boolean currentAppGeneratedImportsOwnerRuntimeContractV142ResponseObserved;
+        private boolean currentAppGeneratedImportsOwnerRuntimeContractV142StageObserved;
+        private boolean currentAppGeneratedImportsOwnerRuntimeContractV142CompleteStageObserved;
+        private boolean currentAppGeneratedImportsOwnerRuntimeContractV142DomObserved;
 
         public boolean hasRequiredFlowIpcTypes() {
             return types.keySet().containsAll(FLOW_IPC_REQUIRED_TYPES)
@@ -6736,6 +6879,19 @@ public final class DesktopTraceInspector {
             return hasRequiredFlowIpcV1_41CurrentAppGeneratedImportsSelectOwnerCoverageTypes();
         }
 
+        public boolean hasRequiredFlowIpcV1_42GeneratedImportsOwnerRuntimeContractTypes() {
+            return currentAppGeneratedImportsOwnerRuntimeContractV142ManifestObserved
+                    && currentAppGeneratedImportsOwnerRuntimeContractV142RequestObserved
+                    && currentAppGeneratedImportsOwnerRuntimeContractV142ResponseObserved
+                    && currentAppGeneratedImportsOwnerRuntimeContractV142StageObserved
+                    && currentAppGeneratedImportsOwnerRuntimeContractV142CompleteStageObserved
+                    && currentAppGeneratedImportsOwnerRuntimeContractV142DomObserved;
+        }
+
+        public boolean hasRequiredFlowIpcV1_42Types() {
+            return hasRequiredFlowIpcV1_42GeneratedImportsOwnerRuntimeContractTypes();
+        }
+
         private boolean hasCurrentAppBuildFrontendOutputSuccessorEvidence() {
             return currentAppBuildFrontendOutputV132ManifestObserved
                     && currentAppBuildFrontendOutputV132RequestObserved
@@ -7325,6 +7481,15 @@ public final class DesktopTraceInspector {
                     + currentAppGeneratedImportsSelectOwnerCoverageV141StageObserved + "/"
                     + currentAppGeneratedImportsSelectOwnerCoverageV141CompleteStageObserved + "/"
                     + currentAppGeneratedImportsSelectOwnerCoverageV141DomObserved);
+            System.out.println("Flow IPC v1.42 generated imports owner runtime contract manifest observed: "
+                    + currentAppGeneratedImportsOwnerRuntimeContractV142ManifestObserved);
+            System.out.println("Flow IPC v1.42 generated imports owner runtime contract request/response observed: "
+                    + currentAppGeneratedImportsOwnerRuntimeContractV142RequestObserved + "/"
+                    + currentAppGeneratedImportsOwnerRuntimeContractV142ResponseObserved);
+            System.out.println("Flow IPC v1.42 generated imports owner runtime contract stage/complete/DOM observed: "
+                    + currentAppGeneratedImportsOwnerRuntimeContractV142StageObserved + "/"
+                    + currentAppGeneratedImportsOwnerRuntimeContractV142CompleteStageObserved + "/"
+                    + currentAppGeneratedImportsOwnerRuntimeContractV142DomObserved);
             System.out.println("Flow IPC v1.6 TextField graph manifest observed: "
                     + frontendTextFieldV16ManifestObserved);
             System.out.println("Flow IPC v1.6 TextField graph request observed: "

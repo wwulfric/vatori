@@ -612,6 +612,30 @@ final class FlowClientResources {
             "current-app-generated-imports-select-owner-coverage-pending";
     private static final String CURRENT_APP_GENERATED_IMPORTS_OWNER_SIDE_EFFECT_NEXT_STEP =
             "promote four-tag current app generated imports side effects into the owner runtime contract, then broaden component/resource coverage and dev-mode/Vite parity";
+    private static final String CURRENT_APP_GENERATED_IMPORTS_OWNER_RUNTIME_CONTRACT_VERSION =
+            "flow-ipc-current-app-generated-imports-owner-runtime-contract-v1_42";
+    private static final String CURRENT_APP_GENERATED_IMPORTS_OWNER_RUNTIME_CONTRACT_SOURCE =
+            "current-app-generated-imports-select-owner-coverage-v1_41";
+    private static final String CURRENT_APP_GENERATED_IMPORTS_OWNER_RUNTIME_CONTRACT_ARTIFACT_SOURCE =
+            "current-app-production-build-frontend-generated-imports-support-artifact";
+    private static final String CURRENT_APP_GENERATED_IMPORTS_OWNER_RUNTIME_CONTRACT_OWNER_PRIORITY =
+            "before-covered-focused-component-imports";
+    private static final String CURRENT_APP_GENERATED_IMPORTS_OWNER_RUNTIME_CONTRACT_SKIP_POLICY =
+            "skip-covered-focused-imports-when-owner-side-effect-satisfied";
+    private static final String CURRENT_APP_GENERATED_IMPORTS_OWNER_RUNTIME_CONTRACT_FALLBACK_POLICY =
+            "strict-blocker-with-focused-fallback-diagnostics";
+    private static final String CURRENT_APP_GENERATED_IMPORTS_OWNER_RUNTIME_CONTRACT_RESOLVER_HANDOFF =
+            "component-resolver-owned-input";
+    private static final String CURRENT_APP_GENERATED_IMPORTS_OWNER_RUNTIME_CONTRACT_FAILURE_LAYER =
+            "current-app-generated-imports-owner-runtime-contract-pending";
+    private static final String CURRENT_APP_GENERATED_IMPORTS_OWNER_RUNTIME_CONTRACT_NEXT_STEP =
+            "connect this owner contract to real generated lazy chunk SPI, dev-mode/Vite parity, and broader component/resource coverage";
+    private static final String CURRENT_APP_GENERATED_IMPORTS_OWNER_LAZY_CHUNK_BRIDGE_VERSION =
+            "flow-ipc-current-app-generated-imports-owner-lazy-chunk-bridge-v1_42";
+    private static final String CURRENT_APP_GENERATED_IMPORTS_OWNER_LAZY_CHUNK_BRIDGE_SOURCE =
+            "current-app-build-frontend-output-v1_32";
+    private static final String CURRENT_APP_GENERATED_IMPORTS_OWNER_LAZY_CHUNK_SPI_DECISION =
+            "pending-supported-vaadin-lazy-chunk-spi";
     private static final List<String> PRODUCTION_RUNTIME_OWNER_DEPENDENCY_ARTIFACTS = List.of(
             DEV_BUNDLE_COMMONJS_JS,
             DEV_BUNDLE_INDEX_HTML_JS,
@@ -2503,6 +2527,68 @@ final class FlowClientResources {
         attributes.put("currentAppGeneratedImportsOwnerSideEffectLoadOnDemandPresent", false);
         attributes.put("currentAppGeneratedImportsOwnerSideEffectNoLocalhost", true);
         attributes.put("currentAppGeneratedImportsOwnerSideEffectFixtureSubstituted", false);
+        attributes.put("currentAppGeneratedImportsOwnerRuntimeContractVersion",
+                CURRENT_APP_GENERATED_IMPORTS_OWNER_RUNTIME_CONTRACT_VERSION);
+        attributes.put("currentAppGeneratedImportsOwnerRuntimeContractSource",
+                CURRENT_APP_GENERATED_IMPORTS_OWNER_RUNTIME_CONTRACT_SOURCE);
+        attributes.put("currentAppGeneratedImportsOwnerRuntimeContractArtifactSource",
+                CURRENT_APP_GENERATED_IMPORTS_OWNER_RUNTIME_CONTRACT_ARTIFACT_SOURCE);
+        attributes.put("currentAppGeneratedImportsOwnerRuntimeContractSelectedArtifact",
+                evidence.sourceGeneratedImportsRootProductionSupportArtifact());
+        attributes.put("currentAppGeneratedImportsOwnerRuntimeContractSelectedArtifactSha256",
+                evidence.productionGeneratedImportsSha256());
+        attributes.put("currentAppGeneratedImportsOwnerRuntimeContractSelectedArtifactBytes",
+                evidence.productionGeneratedImportsBytes());
+        attributes.put("currentAppGeneratedImportsOwnerRuntimeContractExpectedTags",
+                CURRENT_APP_GENERATED_IMPORTS_OWNER_SIDE_EFFECT_EXPECTED_TAGS);
+        attributes.put("currentAppGeneratedImportsOwnerRuntimeContractCoveredTags",
+                CURRENT_APP_GENERATED_IMPORTS_OWNER_SIDE_EFFECT_COVERED_TAGS);
+        attributes.put("currentAppGeneratedImportsOwnerRuntimeContractOwnerPriority",
+                CURRENT_APP_GENERATED_IMPORTS_OWNER_RUNTIME_CONTRACT_OWNER_PRIORITY);
+        attributes.put("currentAppGeneratedImportsOwnerRuntimeContractSkipPolicy",
+                CURRENT_APP_GENERATED_IMPORTS_OWNER_RUNTIME_CONTRACT_SKIP_POLICY);
+        attributes.put("currentAppGeneratedImportsOwnerRuntimeContractFallbackPolicy",
+                CURRENT_APP_GENERATED_IMPORTS_OWNER_RUNTIME_CONTRACT_FALLBACK_POLICY);
+        attributes.put("currentAppGeneratedImportsOwnerRuntimeContractResolverHandoff",
+                CURRENT_APP_GENERATED_IMPORTS_OWNER_RUNTIME_CONTRACT_RESOLVER_HANDOFF);
+        attributes.put("currentAppGeneratedImportsOwnerRuntimeContractDecision",
+                "pending-current-app-generated-imports-owner-runtime-contract");
+        attributes.put("currentAppGeneratedImportsOwnerRuntimeContractFailureLayer",
+                handoffReady ? CURRENT_APP_GENERATED_IMPORTS_OWNER_RUNTIME_CONTRACT_FAILURE_LAYER
+                        : evidence.failureLayer());
+        attributes.put("currentAppGeneratedImportsOwnerRuntimeContractNextResolutionStep",
+                CURRENT_APP_GENERATED_IMPORTS_OWNER_RUNTIME_CONTRACT_NEXT_STEP);
+        attributes.put("currentAppGeneratedImportsOwnerRuntimeContractAttempted", false);
+        attributes.put("currentAppGeneratedImportsOwnerRuntimeContractImported", false);
+        attributes.put("currentAppGeneratedImportsOwnerRuntimeContractSatisfied", false);
+        attributes.put("currentAppGeneratedImportsOwnerRuntimeContractResolverHandoffSatisfied", false);
+        attributes.put("currentAppGeneratedImportsOwnerRuntimeContractFocusedImportsSkipped", false);
+        attributes.put("currentAppGeneratedImportsOwnerRuntimeContractNoLocalhost", true);
+        attributes.put("currentAppGeneratedImportsOwnerRuntimeContractFixtureSubstituted", false);
+        attributes.put("currentAppGeneratedImportsOwnerRuntimeContractObservedTags", "");
+        attributes.put("currentAppGeneratedImportsOwnerRuntimeContractReusedTags", "");
+        attributes.put("currentAppGeneratedImportsOwnerRuntimeContractSkippedFocusedImports", "");
+        attributes.put("currentAppGeneratedImportsOwnerRuntimeContractFallbackTags", "");
+        attributes.put("currentAppGeneratedImportsOwnerRuntimeContractBrowserError", "");
+        attributes.put("currentAppGeneratedImportsOwnerRuntimeContractModuleIdentity", "");
+        attributes.put("currentAppGeneratedImportsOwnerLazyChunkBridgeVersion",
+                CURRENT_APP_GENERATED_IMPORTS_OWNER_LAZY_CHUNK_BRIDGE_VERSION);
+        attributes.put("currentAppGeneratedImportsOwnerLazyChunkBridgeSource",
+                CURRENT_APP_GENERATED_IMPORTS_OWNER_LAZY_CHUNK_BRIDGE_SOURCE);
+        attributes.put("currentAppGeneratedImportsOwnerLazyChunkBridgeGeneratedImportsTableShape",
+                evidence.sourceGeneratedImportsTableShape());
+        attributes.put("currentAppGeneratedImportsOwnerLazyChunkBridgeChunkId",
+                evidence.sourceChunkId());
+        attributes.put("currentAppGeneratedImportsOwnerLazyChunkBridgeChunkArtifact",
+                evidence.sourceChunkVirtualPath());
+        attributes.put("currentAppGeneratedImportsOwnerLazyChunkBridgeChunkStatus",
+                evidence.sourceChunkStatus());
+        attributes.put("currentAppGeneratedImportsOwnerLazyChunkBridgeBuildOutputSource",
+                evidence.goal());
+        attributes.put("currentAppGeneratedImportsOwnerLazyChunkBridgeSupportedSpiDecision",
+                CURRENT_APP_GENERATED_IMPORTS_OWNER_LAZY_CHUNK_SPI_DECISION);
+        attributes.put("currentAppGeneratedImportsOwnerLazyChunkBridgeNoLocalhost", true);
+        attributes.put("currentAppGeneratedImportsOwnerLazyChunkBridgeFixtureSubstituted", false);
         return attributes;
     }
 

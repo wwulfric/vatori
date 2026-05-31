@@ -1,6 +1,6 @@
 # Goal 1.42: Generated Imports Owner Runtime Contract
 
-状态：待开始
+状态：已完成
 
 `docs/goal.md` 是长期愿景和完成度账本。v1.41 已证明 strict smoke app 的当前
 `build-frontend` output 可以通过 production `generated-flow-imports-*.js` support artifact
@@ -88,4 +88,33 @@ bash bin/flow-ipc-trace-inspect --require-flow-ipc-v1_42 docs/traces/flow-ipc-v1
 
 ```text
 feat: promote generated imports owner runtime contract
+```
+
+## 完成记录
+
+- Java manifest / resource response 已声明
+  `flow-ipc-current-app-generated-imports-owner-runtime-contract-v1_42`，包含 selected generated imports
+  support artifact、artifact source、integrity、covered tags、owner priority、skip/fallback policy、
+  resolver handoff、no-localhost/no-fixture proof，以及 lazy chunk SPI bridge metadata。
+- Swift host 将 current app production `generated-flow-imports-*.js` support artifact 作为 v1.42
+  runtime contract owner 输入导入，并在 `resourceStage` / `webview.dom` 记录 attempted/imported/satisfied、
+  module identity、observed/reused/skipped/fallback tags、resolver handoff satisfied 和 focused imports skipped。
+- `DesktopTraceInspector` 新增
+  `--require-flow-ipc-v1_42-generated-imports-owner-runtime-contract` 和
+  `--require-flow-ipc-v1_42` gates；固定 trace 保存到 `docs/traces/flow-ipc-v1_42.ndjson`。
+
+已执行验收：
+
+```bash
+git diff --check
+bash -n bin/vaadin-desktop
+/usr/bin/swiftc -parse vaadin-desktop-host-swift/Sources/VaadinDesktopHost/main.swift
+source /Users/bytedance/.sdkman/bin/sdkman-init.sh
+mvn -q -o -Dmaven.repo.local=/Users/bytedance/IdeaProjects/vatori/.m2/repository -pl vaadin-desktop-devtools,vaadin-desktop-flow,test-apps/flow-over-ipc-smoke-app -am -DskipTests compile
+bash bin/flow-client-resource-smoke
+VAADIN_DESKTOP_MAVEN_OFFLINE=0 VAADIN_DESKTOP_HOST_NO_ACTIVATE=1 VAADIN_DESKTOP_FLOW_IPC_PREPARE_FRONTEND=1 VAADIN_DESKTOP_FLOW_IPC_FRONTEND_BUILD_ONLINE=1 VAADIN_DESKTOP_FLOW_IPC_FRONTEND_BUILD_GOAL=build-frontend VAADIN_DESKTOP_FLOW_IPC_AUTO_CLICK=1 VAADIN_DESKTOP_FLOW_IPC_AUTO_VAADIN_TEXT_FIELD_REAL=1 VAADIN_DESKTOP_FLOW_IPC_AUTO_RESYNC=1 VAADIN_DESKTOP_FLOW_IPC_AUTO_ERROR=1 VAADIN_DESKTOP_FLOW_IPC_AUTO_FILE_DIALOG_CANCEL=1 VAADIN_DESKTOP_FLOW_IPC_AUTO_SHUTDOWN=1 bash bin/vaadin-desktop dev-ipc test-apps/flow-over-ipc-smoke-app
+bash bin/flow-ipc-trace-inspect --require-flow-ipc-v1_42-generated-imports-owner-runtime-contract .build/vaadin-desktop-host-swift/host.out.log
+bash bin/flow-ipc-trace-inspect --require-flow-ipc-v1_42 .build/vaadin-desktop-host-swift/host.out.log
+bash bin/flow-ipc-trace-inspect --require-flow-ipc-v1_42-generated-imports-owner-runtime-contract docs/traces/flow-ipc-v1_42.ndjson
+bash bin/flow-ipc-trace-inspect --require-flow-ipc-v1_42 docs/traces/flow-ipc-v1_42.ndjson
 ```

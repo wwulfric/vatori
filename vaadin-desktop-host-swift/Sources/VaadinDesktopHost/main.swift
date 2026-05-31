@@ -2595,6 +2595,44 @@ final class WebViewHost: NSObject, NSApplicationDelegate, NSWindowDelegate, WKNa
           currentAppGeneratedImportsOwnerSideEffectLoadOnDemandPresent: !!(window.VaadinDesktopIpcDiagnostics && window.VaadinDesktopIpcDiagnostics.currentAppGeneratedImportsOwnerSideEffectLoadOnDemandPresent),
           currentAppGeneratedImportsOwnerSideEffectNoLocalhost: !!(window.VaadinDesktopIpcDiagnostics && window.VaadinDesktopIpcDiagnostics.currentAppGeneratedImportsOwnerSideEffectNoLocalhost),
           currentAppGeneratedImportsOwnerSideEffectFixtureSubstituted: !!(window.VaadinDesktopIpcDiagnostics && window.VaadinDesktopIpcDiagnostics.currentAppGeneratedImportsOwnerSideEffectFixtureSubstituted),
+          currentAppGeneratedImportsOwnerRuntimeContractVersion: window.VaadinDesktopIpcDiagnostics ? window.VaadinDesktopIpcDiagnostics.currentAppGeneratedImportsOwnerRuntimeContractVersion : "",
+          currentAppGeneratedImportsOwnerRuntimeContractSource: window.VaadinDesktopIpcDiagnostics ? window.VaadinDesktopIpcDiagnostics.currentAppGeneratedImportsOwnerRuntimeContractSource : "",
+          currentAppGeneratedImportsOwnerRuntimeContractArtifactSource: window.VaadinDesktopIpcDiagnostics ? window.VaadinDesktopIpcDiagnostics.currentAppGeneratedImportsOwnerRuntimeContractArtifactSource : "",
+          currentAppGeneratedImportsOwnerRuntimeContractSelectedArtifact: window.VaadinDesktopIpcDiagnostics ? window.VaadinDesktopIpcDiagnostics.currentAppGeneratedImportsOwnerRuntimeContractSelectedArtifact : "",
+          currentAppGeneratedImportsOwnerRuntimeContractSelectedArtifactSha256: window.VaadinDesktopIpcDiagnostics ? window.VaadinDesktopIpcDiagnostics.currentAppGeneratedImportsOwnerRuntimeContractSelectedArtifactSha256 : "",
+          currentAppGeneratedImportsOwnerRuntimeContractSelectedArtifactBytes: window.VaadinDesktopIpcDiagnostics ? Number(window.VaadinDesktopIpcDiagnostics.currentAppGeneratedImportsOwnerRuntimeContractSelectedArtifactBytes || 0) : 0,
+          currentAppGeneratedImportsOwnerRuntimeContractExpectedTags: window.VaadinDesktopIpcDiagnostics ? window.VaadinDesktopIpcDiagnostics.currentAppGeneratedImportsOwnerRuntimeContractExpectedTags : "",
+          currentAppGeneratedImportsOwnerRuntimeContractCoveredTags: window.VaadinDesktopIpcDiagnostics ? window.VaadinDesktopIpcDiagnostics.currentAppGeneratedImportsOwnerRuntimeContractCoveredTags : "",
+          currentAppGeneratedImportsOwnerRuntimeContractOwnerPriority: window.VaadinDesktopIpcDiagnostics ? window.VaadinDesktopIpcDiagnostics.currentAppGeneratedImportsOwnerRuntimeContractOwnerPriority : "",
+          currentAppGeneratedImportsOwnerRuntimeContractSkipPolicy: window.VaadinDesktopIpcDiagnostics ? window.VaadinDesktopIpcDiagnostics.currentAppGeneratedImportsOwnerRuntimeContractSkipPolicy : "",
+          currentAppGeneratedImportsOwnerRuntimeContractFallbackPolicy: window.VaadinDesktopIpcDiagnostics ? window.VaadinDesktopIpcDiagnostics.currentAppGeneratedImportsOwnerRuntimeContractFallbackPolicy : "",
+          currentAppGeneratedImportsOwnerRuntimeContractResolverHandoff: window.VaadinDesktopIpcDiagnostics ? window.VaadinDesktopIpcDiagnostics.currentAppGeneratedImportsOwnerRuntimeContractResolverHandoff : "",
+          currentAppGeneratedImportsOwnerRuntimeContractObservedTags: window.VaadinDesktopIpcDiagnostics ? window.VaadinDesktopIpcDiagnostics.currentAppGeneratedImportsOwnerRuntimeContractObservedTags : "",
+          currentAppGeneratedImportsOwnerRuntimeContractReusedTags: window.VaadinDesktopIpcDiagnostics ? window.VaadinDesktopIpcDiagnostics.currentAppGeneratedImportsOwnerRuntimeContractReusedTags : "",
+          currentAppGeneratedImportsOwnerRuntimeContractSkippedFocusedImports: window.VaadinDesktopIpcDiagnostics ? window.VaadinDesktopIpcDiagnostics.currentAppGeneratedImportsOwnerRuntimeContractSkippedFocusedImports : "",
+          currentAppGeneratedImportsOwnerRuntimeContractFallbackTags: window.VaadinDesktopIpcDiagnostics ? window.VaadinDesktopIpcDiagnostics.currentAppGeneratedImportsOwnerRuntimeContractFallbackTags : "",
+          currentAppGeneratedImportsOwnerRuntimeContractDecision: window.VaadinDesktopIpcDiagnostics ? window.VaadinDesktopIpcDiagnostics.currentAppGeneratedImportsOwnerRuntimeContractDecision : "",
+          currentAppGeneratedImportsOwnerRuntimeContractFailureLayer: window.VaadinDesktopIpcDiagnostics ? window.VaadinDesktopIpcDiagnostics.currentAppGeneratedImportsOwnerRuntimeContractFailureLayer : "",
+          currentAppGeneratedImportsOwnerRuntimeContractNextResolutionStep: window.VaadinDesktopIpcDiagnostics ? window.VaadinDesktopIpcDiagnostics.currentAppGeneratedImportsOwnerRuntimeContractNextResolutionStep : "",
+          currentAppGeneratedImportsOwnerRuntimeContractBrowserError: window.VaadinDesktopIpcDiagnostics ? window.VaadinDesktopIpcDiagnostics.currentAppGeneratedImportsOwnerRuntimeContractBrowserError : "",
+          currentAppGeneratedImportsOwnerRuntimeContractModuleIdentity: window.VaadinDesktopIpcDiagnostics ? window.VaadinDesktopIpcDiagnostics.currentAppGeneratedImportsOwnerRuntimeContractModuleIdentity : "",
+          currentAppGeneratedImportsOwnerRuntimeContractAttempted: !!(window.VaadinDesktopIpcDiagnostics && window.VaadinDesktopIpcDiagnostics.currentAppGeneratedImportsOwnerRuntimeContractAttempted),
+          currentAppGeneratedImportsOwnerRuntimeContractImported: !!(window.VaadinDesktopIpcDiagnostics && window.VaadinDesktopIpcDiagnostics.currentAppGeneratedImportsOwnerRuntimeContractImported),
+          currentAppGeneratedImportsOwnerRuntimeContractSatisfied: !!(window.VaadinDesktopIpcDiagnostics && window.VaadinDesktopIpcDiagnostics.currentAppGeneratedImportsOwnerRuntimeContractSatisfied),
+          currentAppGeneratedImportsOwnerRuntimeContractResolverHandoffSatisfied: !!(window.VaadinDesktopIpcDiagnostics && window.VaadinDesktopIpcDiagnostics.currentAppGeneratedImportsOwnerRuntimeContractResolverHandoffSatisfied),
+          currentAppGeneratedImportsOwnerRuntimeContractFocusedImportsSkipped: !!(window.VaadinDesktopIpcDiagnostics && window.VaadinDesktopIpcDiagnostics.currentAppGeneratedImportsOwnerRuntimeContractFocusedImportsSkipped),
+          currentAppGeneratedImportsOwnerRuntimeContractNoLocalhost: !!(window.VaadinDesktopIpcDiagnostics && window.VaadinDesktopIpcDiagnostics.currentAppGeneratedImportsOwnerRuntimeContractNoLocalhost),
+          currentAppGeneratedImportsOwnerRuntimeContractFixtureSubstituted: !!(window.VaadinDesktopIpcDiagnostics && window.VaadinDesktopIpcDiagnostics.currentAppGeneratedImportsOwnerRuntimeContractFixtureSubstituted),
+          currentAppGeneratedImportsOwnerLazyChunkBridgeVersion: window.VaadinDesktopIpcDiagnostics ? window.VaadinDesktopIpcDiagnostics.currentAppGeneratedImportsOwnerLazyChunkBridgeVersion : "",
+          currentAppGeneratedImportsOwnerLazyChunkBridgeSource: window.VaadinDesktopIpcDiagnostics ? window.VaadinDesktopIpcDiagnostics.currentAppGeneratedImportsOwnerLazyChunkBridgeSource : "",
+          currentAppGeneratedImportsOwnerLazyChunkBridgeGeneratedImportsTableShape: window.VaadinDesktopIpcDiagnostics ? window.VaadinDesktopIpcDiagnostics.currentAppGeneratedImportsOwnerLazyChunkBridgeGeneratedImportsTableShape : "",
+          currentAppGeneratedImportsOwnerLazyChunkBridgeChunkId: window.VaadinDesktopIpcDiagnostics ? window.VaadinDesktopIpcDiagnostics.currentAppGeneratedImportsOwnerLazyChunkBridgeChunkId : "",
+          currentAppGeneratedImportsOwnerLazyChunkBridgeChunkArtifact: window.VaadinDesktopIpcDiagnostics ? window.VaadinDesktopIpcDiagnostics.currentAppGeneratedImportsOwnerLazyChunkBridgeChunkArtifact : "",
+          currentAppGeneratedImportsOwnerLazyChunkBridgeChunkStatus: window.VaadinDesktopIpcDiagnostics ? window.VaadinDesktopIpcDiagnostics.currentAppGeneratedImportsOwnerLazyChunkBridgeChunkStatus : "",
+          currentAppGeneratedImportsOwnerLazyChunkBridgeBuildOutputSource: window.VaadinDesktopIpcDiagnostics ? window.VaadinDesktopIpcDiagnostics.currentAppGeneratedImportsOwnerLazyChunkBridgeBuildOutputSource : "",
+          currentAppGeneratedImportsOwnerLazyChunkBridgeSupportedSpiDecision: window.VaadinDesktopIpcDiagnostics ? window.VaadinDesktopIpcDiagnostics.currentAppGeneratedImportsOwnerLazyChunkBridgeSupportedSpiDecision : "",
+          currentAppGeneratedImportsOwnerLazyChunkBridgeNoLocalhost: !!(window.VaadinDesktopIpcDiagnostics && window.VaadinDesktopIpcDiagnostics.currentAppGeneratedImportsOwnerLazyChunkBridgeNoLocalhost),
+          currentAppGeneratedImportsOwnerLazyChunkBridgeFixtureSubstituted: !!(window.VaadinDesktopIpcDiagnostics && window.VaadinDesktopIpcDiagnostics.currentAppGeneratedImportsOwnerLazyChunkBridgeFixtureSubstituted),
           frontendBuildPreflightAvailabilityObserved: !!(window.VaadinDesktopIpcDiagnostics && window.VaadinDesktopIpcDiagnostics.frontendBuildPreflightAvailabilityObserved),
           frontendBuildPreflightAvailabilityVersion: window.VaadinDesktopIpcDiagnostics ? window.VaadinDesktopIpcDiagnostics.frontendBuildPreflightAvailabilityVersion : "",
           frontendBuildPreflightAvailabilitySource: window.VaadinDesktopIpcDiagnostics ? window.VaadinDesktopIpcDiagnostics.frontendBuildPreflightAvailabilitySource : "",
@@ -4094,6 +4132,44 @@ let flowIpcShell = #"""
         currentAppGeneratedImportsOwnerSideEffectLoadOnDemandPresent: false,
         currentAppGeneratedImportsOwnerSideEffectNoLocalhost: false,
         currentAppGeneratedImportsOwnerSideEffectFixtureSubstituted: false,
+        currentAppGeneratedImportsOwnerRuntimeContractVersion: '',
+        currentAppGeneratedImportsOwnerRuntimeContractSource: '',
+        currentAppGeneratedImportsOwnerRuntimeContractArtifactSource: '',
+        currentAppGeneratedImportsOwnerRuntimeContractSelectedArtifact: '',
+        currentAppGeneratedImportsOwnerRuntimeContractSelectedArtifactSha256: '',
+        currentAppGeneratedImportsOwnerRuntimeContractSelectedArtifactBytes: 0,
+        currentAppGeneratedImportsOwnerRuntimeContractExpectedTags: '',
+        currentAppGeneratedImportsOwnerRuntimeContractCoveredTags: '',
+        currentAppGeneratedImportsOwnerRuntimeContractOwnerPriority: '',
+        currentAppGeneratedImportsOwnerRuntimeContractSkipPolicy: '',
+        currentAppGeneratedImportsOwnerRuntimeContractFallbackPolicy: '',
+        currentAppGeneratedImportsOwnerRuntimeContractResolverHandoff: '',
+        currentAppGeneratedImportsOwnerRuntimeContractObservedTags: '',
+        currentAppGeneratedImportsOwnerRuntimeContractReusedTags: '',
+        currentAppGeneratedImportsOwnerRuntimeContractSkippedFocusedImports: '',
+        currentAppGeneratedImportsOwnerRuntimeContractFallbackTags: '',
+        currentAppGeneratedImportsOwnerRuntimeContractDecision: '',
+        currentAppGeneratedImportsOwnerRuntimeContractFailureLayer: '',
+        currentAppGeneratedImportsOwnerRuntimeContractNextResolutionStep: '',
+        currentAppGeneratedImportsOwnerRuntimeContractBrowserError: '',
+        currentAppGeneratedImportsOwnerRuntimeContractModuleIdentity: '',
+        currentAppGeneratedImportsOwnerRuntimeContractAttempted: false,
+        currentAppGeneratedImportsOwnerRuntimeContractImported: false,
+        currentAppGeneratedImportsOwnerRuntimeContractSatisfied: false,
+        currentAppGeneratedImportsOwnerRuntimeContractResolverHandoffSatisfied: false,
+        currentAppGeneratedImportsOwnerRuntimeContractFocusedImportsSkipped: false,
+        currentAppGeneratedImportsOwnerRuntimeContractNoLocalhost: false,
+        currentAppGeneratedImportsOwnerRuntimeContractFixtureSubstituted: false,
+        currentAppGeneratedImportsOwnerLazyChunkBridgeVersion: '',
+        currentAppGeneratedImportsOwnerLazyChunkBridgeSource: '',
+        currentAppGeneratedImportsOwnerLazyChunkBridgeGeneratedImportsTableShape: '',
+        currentAppGeneratedImportsOwnerLazyChunkBridgeChunkId: '',
+        currentAppGeneratedImportsOwnerLazyChunkBridgeChunkArtifact: '',
+        currentAppGeneratedImportsOwnerLazyChunkBridgeChunkStatus: '',
+        currentAppGeneratedImportsOwnerLazyChunkBridgeBuildOutputSource: '',
+        currentAppGeneratedImportsOwnerLazyChunkBridgeSupportedSpiDecision: '',
+        currentAppGeneratedImportsOwnerLazyChunkBridgeNoLocalhost: false,
+        currentAppGeneratedImportsOwnerLazyChunkBridgeFixtureSubstituted: false,
         frontendBuildPreflightAvailabilityObserved: false,
         frontendBuildPreflightAvailabilityVersion: '',
         frontendBuildPreflightAvailabilitySource: '',
@@ -6562,7 +6638,35 @@ let flowIpcShell = #"""
           ['currentAppGeneratedImportsOwnerSideEffectRegistryBefore', 'currentAppGeneratedImportsOwnerSideEffectRegistryBefore'],
           ['currentAppGeneratedImportsOwnerSideEffectRegistryAfter', 'currentAppGeneratedImportsOwnerSideEffectRegistryAfter'],
           ['currentAppGeneratedImportsOwnerSideEffectVaadinGlobalBefore', 'currentAppGeneratedImportsOwnerSideEffectVaadinGlobalBefore'],
-          ['currentAppGeneratedImportsOwnerSideEffectVaadinGlobalAfter', 'currentAppGeneratedImportsOwnerSideEffectVaadinGlobalAfter']
+          ['currentAppGeneratedImportsOwnerSideEffectVaadinGlobalAfter', 'currentAppGeneratedImportsOwnerSideEffectVaadinGlobalAfter'],
+          ['currentAppGeneratedImportsOwnerRuntimeContractVersion', 'currentAppGeneratedImportsOwnerRuntimeContractVersion'],
+          ['currentAppGeneratedImportsOwnerRuntimeContractSource', 'currentAppGeneratedImportsOwnerRuntimeContractSource'],
+          ['currentAppGeneratedImportsOwnerRuntimeContractArtifactSource', 'currentAppGeneratedImportsOwnerRuntimeContractArtifactSource'],
+          ['currentAppGeneratedImportsOwnerRuntimeContractSelectedArtifact', 'currentAppGeneratedImportsOwnerRuntimeContractSelectedArtifact'],
+          ['currentAppGeneratedImportsOwnerRuntimeContractSelectedArtifactSha256', 'currentAppGeneratedImportsOwnerRuntimeContractSelectedArtifactSha256'],
+          ['currentAppGeneratedImportsOwnerRuntimeContractExpectedTags', 'currentAppGeneratedImportsOwnerRuntimeContractExpectedTags'],
+          ['currentAppGeneratedImportsOwnerRuntimeContractCoveredTags', 'currentAppGeneratedImportsOwnerRuntimeContractCoveredTags'],
+          ['currentAppGeneratedImportsOwnerRuntimeContractOwnerPriority', 'currentAppGeneratedImportsOwnerRuntimeContractOwnerPriority'],
+          ['currentAppGeneratedImportsOwnerRuntimeContractSkipPolicy', 'currentAppGeneratedImportsOwnerRuntimeContractSkipPolicy'],
+          ['currentAppGeneratedImportsOwnerRuntimeContractFallbackPolicy', 'currentAppGeneratedImportsOwnerRuntimeContractFallbackPolicy'],
+          ['currentAppGeneratedImportsOwnerRuntimeContractResolverHandoff', 'currentAppGeneratedImportsOwnerRuntimeContractResolverHandoff'],
+          ['currentAppGeneratedImportsOwnerRuntimeContractObservedTags', 'currentAppGeneratedImportsOwnerRuntimeContractObservedTags'],
+          ['currentAppGeneratedImportsOwnerRuntimeContractReusedTags', 'currentAppGeneratedImportsOwnerRuntimeContractReusedTags'],
+          ['currentAppGeneratedImportsOwnerRuntimeContractSkippedFocusedImports', 'currentAppGeneratedImportsOwnerRuntimeContractSkippedFocusedImports'],
+          ['currentAppGeneratedImportsOwnerRuntimeContractFallbackTags', 'currentAppGeneratedImportsOwnerRuntimeContractFallbackTags'],
+          ['currentAppGeneratedImportsOwnerRuntimeContractDecision', 'currentAppGeneratedImportsOwnerRuntimeContractDecision'],
+          ['currentAppGeneratedImportsOwnerRuntimeContractFailureLayer', 'currentAppGeneratedImportsOwnerRuntimeContractFailureLayer'],
+          ['currentAppGeneratedImportsOwnerRuntimeContractNextResolutionStep', 'currentAppGeneratedImportsOwnerRuntimeContractNextResolutionStep'],
+          ['currentAppGeneratedImportsOwnerRuntimeContractBrowserError', 'currentAppGeneratedImportsOwnerRuntimeContractBrowserError'],
+          ['currentAppGeneratedImportsOwnerRuntimeContractModuleIdentity', 'currentAppGeneratedImportsOwnerRuntimeContractModuleIdentity'],
+          ['currentAppGeneratedImportsOwnerLazyChunkBridgeVersion', 'currentAppGeneratedImportsOwnerLazyChunkBridgeVersion'],
+          ['currentAppGeneratedImportsOwnerLazyChunkBridgeSource', 'currentAppGeneratedImportsOwnerLazyChunkBridgeSource'],
+          ['currentAppGeneratedImportsOwnerLazyChunkBridgeGeneratedImportsTableShape', 'currentAppGeneratedImportsOwnerLazyChunkBridgeGeneratedImportsTableShape'],
+          ['currentAppGeneratedImportsOwnerLazyChunkBridgeChunkId', 'currentAppGeneratedImportsOwnerLazyChunkBridgeChunkId'],
+          ['currentAppGeneratedImportsOwnerLazyChunkBridgeChunkArtifact', 'currentAppGeneratedImportsOwnerLazyChunkBridgeChunkArtifact'],
+          ['currentAppGeneratedImportsOwnerLazyChunkBridgeChunkStatus', 'currentAppGeneratedImportsOwnerLazyChunkBridgeChunkStatus'],
+          ['currentAppGeneratedImportsOwnerLazyChunkBridgeBuildOutputSource', 'currentAppGeneratedImportsOwnerLazyChunkBridgeBuildOutputSource'],
+          ['currentAppGeneratedImportsOwnerLazyChunkBridgeSupportedSpiDecision', 'currentAppGeneratedImportsOwnerLazyChunkBridgeSupportedSpiDecision']
         ]) {
           if (typeof source[sourceKey] === 'string' && source[sourceKey]) {
             window.VaadinDesktopIpcDiagnostics[diagnosticKey] = source[sourceKey];
@@ -6619,7 +6723,16 @@ let flowIpcShell = #"""
           ['currentAppGeneratedImportsOwnerSideEffectPartialReuseSatisfied', 'currentAppGeneratedImportsOwnerSideEffectPartialReuseSatisfied'],
           ['currentAppGeneratedImportsOwnerSideEffectLoadOnDemandPresent', 'currentAppGeneratedImportsOwnerSideEffectLoadOnDemandPresent'],
           ['currentAppGeneratedImportsOwnerSideEffectNoLocalhost', 'currentAppGeneratedImportsOwnerSideEffectNoLocalhost'],
-          ['currentAppGeneratedImportsOwnerSideEffectFixtureSubstituted', 'currentAppGeneratedImportsOwnerSideEffectFixtureSubstituted']
+          ['currentAppGeneratedImportsOwnerSideEffectFixtureSubstituted', 'currentAppGeneratedImportsOwnerSideEffectFixtureSubstituted'],
+          ['currentAppGeneratedImportsOwnerRuntimeContractAttempted', 'currentAppGeneratedImportsOwnerRuntimeContractAttempted'],
+          ['currentAppGeneratedImportsOwnerRuntimeContractImported', 'currentAppGeneratedImportsOwnerRuntimeContractImported'],
+          ['currentAppGeneratedImportsOwnerRuntimeContractSatisfied', 'currentAppGeneratedImportsOwnerRuntimeContractSatisfied'],
+          ['currentAppGeneratedImportsOwnerRuntimeContractResolverHandoffSatisfied', 'currentAppGeneratedImportsOwnerRuntimeContractResolverHandoffSatisfied'],
+          ['currentAppGeneratedImportsOwnerRuntimeContractFocusedImportsSkipped', 'currentAppGeneratedImportsOwnerRuntimeContractFocusedImportsSkipped'],
+          ['currentAppGeneratedImportsOwnerRuntimeContractNoLocalhost', 'currentAppGeneratedImportsOwnerRuntimeContractNoLocalhost'],
+          ['currentAppGeneratedImportsOwnerRuntimeContractFixtureSubstituted', 'currentAppGeneratedImportsOwnerRuntimeContractFixtureSubstituted'],
+          ['currentAppGeneratedImportsOwnerLazyChunkBridgeNoLocalhost', 'currentAppGeneratedImportsOwnerLazyChunkBridgeNoLocalhost'],
+          ['currentAppGeneratedImportsOwnerLazyChunkBridgeFixtureSubstituted', 'currentAppGeneratedImportsOwnerLazyChunkBridgeFixtureSubstituted']
         ]) {
           if (source[sourceKey] === true) {
             window.VaadinDesktopIpcDiagnostics[diagnosticKey] = true;
@@ -6641,7 +6754,8 @@ let flowIpcShell = #"""
           ['currentAppBuildFrontendSourceChunkBytes', 'currentAppBuildFrontendSourceChunkBytes'],
           ['currentAppBuildFrontendProductionGeneratedImportsBytes', 'currentAppBuildFrontendProductionGeneratedImportsBytes'],
           ['currentAppBuildFrontendProdBundleBytes', 'currentAppBuildFrontendProdBundleBytes'],
-          ['currentAppProductionOwnerImportDependencyStageCount', 'currentAppProductionOwnerImportDependencyStageCount']
+          ['currentAppProductionOwnerImportDependencyStageCount', 'currentAppProductionOwnerImportDependencyStageCount'],
+          ['currentAppGeneratedImportsOwnerRuntimeContractSelectedArtifactBytes', 'currentAppGeneratedImportsOwnerRuntimeContractSelectedArtifactBytes']
         ]) {
           if (Number.isFinite(source[sourceKey])) {
             window.VaadinDesktopIpcDiagnostics[diagnosticKey] = source[sourceKey];
@@ -9487,6 +9601,160 @@ let flowIpcShell = #"""
             extra && typeof extra.currentAppGeneratedImportsOwnerSideEffectFixtureSubstituted === 'boolean'
               ? extra.currentAppGeneratedImportsOwnerSideEffectFixtureSubstituted
               : resource.currentAppGeneratedImportsOwnerSideEffectFixtureSubstituted === true,
+          currentAppGeneratedImportsOwnerRuntimeContractVersion:
+            extra && extra.currentAppGeneratedImportsOwnerRuntimeContractVersion
+              ? extra.currentAppGeneratedImportsOwnerRuntimeContractVersion
+              : (resource.currentAppGeneratedImportsOwnerRuntimeContractVersion || ''),
+          currentAppGeneratedImportsOwnerRuntimeContractSource:
+            extra && extra.currentAppGeneratedImportsOwnerRuntimeContractSource
+              ? extra.currentAppGeneratedImportsOwnerRuntimeContractSource
+              : (resource.currentAppGeneratedImportsOwnerRuntimeContractSource || ''),
+          currentAppGeneratedImportsOwnerRuntimeContractArtifactSource:
+            extra && extra.currentAppGeneratedImportsOwnerRuntimeContractArtifactSource
+              ? extra.currentAppGeneratedImportsOwnerRuntimeContractArtifactSource
+              : (resource.currentAppGeneratedImportsOwnerRuntimeContractArtifactSource || ''),
+          currentAppGeneratedImportsOwnerRuntimeContractSelectedArtifact:
+            extra && extra.currentAppGeneratedImportsOwnerRuntimeContractSelectedArtifact
+              ? extra.currentAppGeneratedImportsOwnerRuntimeContractSelectedArtifact
+              : (resource.currentAppGeneratedImportsOwnerRuntimeContractSelectedArtifact || ''),
+          currentAppGeneratedImportsOwnerRuntimeContractSelectedArtifactSha256:
+            extra && extra.currentAppGeneratedImportsOwnerRuntimeContractSelectedArtifactSha256
+              ? extra.currentAppGeneratedImportsOwnerRuntimeContractSelectedArtifactSha256
+              : (resource.currentAppGeneratedImportsOwnerRuntimeContractSelectedArtifactSha256 || ''),
+          currentAppGeneratedImportsOwnerRuntimeContractSelectedArtifactBytes:
+            extra && Number.isFinite(extra.currentAppGeneratedImportsOwnerRuntimeContractSelectedArtifactBytes)
+              ? extra.currentAppGeneratedImportsOwnerRuntimeContractSelectedArtifactBytes
+              : (Number.isFinite(resource.currentAppGeneratedImportsOwnerRuntimeContractSelectedArtifactBytes)
+                ? resource.currentAppGeneratedImportsOwnerRuntimeContractSelectedArtifactBytes
+                : 0),
+          currentAppGeneratedImportsOwnerRuntimeContractExpectedTags:
+            extra && extra.currentAppGeneratedImportsOwnerRuntimeContractExpectedTags
+              ? extra.currentAppGeneratedImportsOwnerRuntimeContractExpectedTags
+              : (resource.currentAppGeneratedImportsOwnerRuntimeContractExpectedTags || ''),
+          currentAppGeneratedImportsOwnerRuntimeContractCoveredTags:
+            extra && extra.currentAppGeneratedImportsOwnerRuntimeContractCoveredTags
+              ? extra.currentAppGeneratedImportsOwnerRuntimeContractCoveredTags
+              : (resource.currentAppGeneratedImportsOwnerRuntimeContractCoveredTags || ''),
+          currentAppGeneratedImportsOwnerRuntimeContractOwnerPriority:
+            extra && extra.currentAppGeneratedImportsOwnerRuntimeContractOwnerPriority
+              ? extra.currentAppGeneratedImportsOwnerRuntimeContractOwnerPriority
+              : (resource.currentAppGeneratedImportsOwnerRuntimeContractOwnerPriority || ''),
+          currentAppGeneratedImportsOwnerRuntimeContractSkipPolicy:
+            extra && extra.currentAppGeneratedImportsOwnerRuntimeContractSkipPolicy
+              ? extra.currentAppGeneratedImportsOwnerRuntimeContractSkipPolicy
+              : (resource.currentAppGeneratedImportsOwnerRuntimeContractSkipPolicy || ''),
+          currentAppGeneratedImportsOwnerRuntimeContractFallbackPolicy:
+            extra && extra.currentAppGeneratedImportsOwnerRuntimeContractFallbackPolicy
+              ? extra.currentAppGeneratedImportsOwnerRuntimeContractFallbackPolicy
+              : (resource.currentAppGeneratedImportsOwnerRuntimeContractFallbackPolicy || ''),
+          currentAppGeneratedImportsOwnerRuntimeContractResolverHandoff:
+            extra && extra.currentAppGeneratedImportsOwnerRuntimeContractResolverHandoff
+              ? extra.currentAppGeneratedImportsOwnerRuntimeContractResolverHandoff
+              : (resource.currentAppGeneratedImportsOwnerRuntimeContractResolverHandoff || ''),
+          currentAppGeneratedImportsOwnerRuntimeContractObservedTags:
+            extra && extra.currentAppGeneratedImportsOwnerRuntimeContractObservedTags
+              ? extra.currentAppGeneratedImportsOwnerRuntimeContractObservedTags
+              : (resource.currentAppGeneratedImportsOwnerRuntimeContractObservedTags || ''),
+          currentAppGeneratedImportsOwnerRuntimeContractReusedTags:
+            extra && extra.currentAppGeneratedImportsOwnerRuntimeContractReusedTags
+              ? extra.currentAppGeneratedImportsOwnerRuntimeContractReusedTags
+              : (resource.currentAppGeneratedImportsOwnerRuntimeContractReusedTags || ''),
+          currentAppGeneratedImportsOwnerRuntimeContractSkippedFocusedImports:
+            extra && extra.currentAppGeneratedImportsOwnerRuntimeContractSkippedFocusedImports
+              ? extra.currentAppGeneratedImportsOwnerRuntimeContractSkippedFocusedImports
+              : (resource.currentAppGeneratedImportsOwnerRuntimeContractSkippedFocusedImports || ''),
+          currentAppGeneratedImportsOwnerRuntimeContractFallbackTags:
+            extra && extra.currentAppGeneratedImportsOwnerRuntimeContractFallbackTags
+              ? extra.currentAppGeneratedImportsOwnerRuntimeContractFallbackTags
+              : (resource.currentAppGeneratedImportsOwnerRuntimeContractFallbackTags || ''),
+          currentAppGeneratedImportsOwnerRuntimeContractDecision:
+            extra && extra.currentAppGeneratedImportsOwnerRuntimeContractDecision
+              ? extra.currentAppGeneratedImportsOwnerRuntimeContractDecision
+              : (resource.currentAppGeneratedImportsOwnerRuntimeContractDecision || ''),
+          currentAppGeneratedImportsOwnerRuntimeContractFailureLayer:
+            extra && extra.currentAppGeneratedImportsOwnerRuntimeContractFailureLayer
+              ? extra.currentAppGeneratedImportsOwnerRuntimeContractFailureLayer
+              : (resource.currentAppGeneratedImportsOwnerRuntimeContractFailureLayer || ''),
+          currentAppGeneratedImportsOwnerRuntimeContractNextResolutionStep:
+            extra && extra.currentAppGeneratedImportsOwnerRuntimeContractNextResolutionStep
+              ? extra.currentAppGeneratedImportsOwnerRuntimeContractNextResolutionStep
+              : (resource.currentAppGeneratedImportsOwnerRuntimeContractNextResolutionStep || ''),
+          currentAppGeneratedImportsOwnerRuntimeContractBrowserError:
+            extra && extra.currentAppGeneratedImportsOwnerRuntimeContractBrowserError
+              ? extra.currentAppGeneratedImportsOwnerRuntimeContractBrowserError
+              : '',
+          currentAppGeneratedImportsOwnerRuntimeContractModuleIdentity:
+            extra && extra.currentAppGeneratedImportsOwnerRuntimeContractModuleIdentity
+              ? extra.currentAppGeneratedImportsOwnerRuntimeContractModuleIdentity
+              : '',
+          currentAppGeneratedImportsOwnerRuntimeContractAttempted:
+            extra && typeof extra.currentAppGeneratedImportsOwnerRuntimeContractAttempted === 'boolean'
+              ? extra.currentAppGeneratedImportsOwnerRuntimeContractAttempted
+              : resource.currentAppGeneratedImportsOwnerRuntimeContractAttempted === true,
+          currentAppGeneratedImportsOwnerRuntimeContractImported:
+            extra && typeof extra.currentAppGeneratedImportsOwnerRuntimeContractImported === 'boolean'
+              ? extra.currentAppGeneratedImportsOwnerRuntimeContractImported
+              : resource.currentAppGeneratedImportsOwnerRuntimeContractImported === true,
+          currentAppGeneratedImportsOwnerRuntimeContractSatisfied:
+            extra && typeof extra.currentAppGeneratedImportsOwnerRuntimeContractSatisfied === 'boolean'
+              ? extra.currentAppGeneratedImportsOwnerRuntimeContractSatisfied
+              : resource.currentAppGeneratedImportsOwnerRuntimeContractSatisfied === true,
+          currentAppGeneratedImportsOwnerRuntimeContractResolverHandoffSatisfied:
+            extra && typeof extra.currentAppGeneratedImportsOwnerRuntimeContractResolverHandoffSatisfied === 'boolean'
+              ? extra.currentAppGeneratedImportsOwnerRuntimeContractResolverHandoffSatisfied
+              : resource.currentAppGeneratedImportsOwnerRuntimeContractResolverHandoffSatisfied === true,
+          currentAppGeneratedImportsOwnerRuntimeContractFocusedImportsSkipped:
+            extra && typeof extra.currentAppGeneratedImportsOwnerRuntimeContractFocusedImportsSkipped === 'boolean'
+              ? extra.currentAppGeneratedImportsOwnerRuntimeContractFocusedImportsSkipped
+              : resource.currentAppGeneratedImportsOwnerRuntimeContractFocusedImportsSkipped === true,
+          currentAppGeneratedImportsOwnerRuntimeContractNoLocalhost:
+            extra && typeof extra.currentAppGeneratedImportsOwnerRuntimeContractNoLocalhost === 'boolean'
+              ? extra.currentAppGeneratedImportsOwnerRuntimeContractNoLocalhost
+              : resource.currentAppGeneratedImportsOwnerRuntimeContractNoLocalhost === true,
+          currentAppGeneratedImportsOwnerRuntimeContractFixtureSubstituted:
+            extra && typeof extra.currentAppGeneratedImportsOwnerRuntimeContractFixtureSubstituted === 'boolean'
+              ? extra.currentAppGeneratedImportsOwnerRuntimeContractFixtureSubstituted
+              : resource.currentAppGeneratedImportsOwnerRuntimeContractFixtureSubstituted === true,
+          currentAppGeneratedImportsOwnerLazyChunkBridgeVersion:
+            extra && extra.currentAppGeneratedImportsOwnerLazyChunkBridgeVersion
+              ? extra.currentAppGeneratedImportsOwnerLazyChunkBridgeVersion
+              : (resource.currentAppGeneratedImportsOwnerLazyChunkBridgeVersion || ''),
+          currentAppGeneratedImportsOwnerLazyChunkBridgeSource:
+            extra && extra.currentAppGeneratedImportsOwnerLazyChunkBridgeSource
+              ? extra.currentAppGeneratedImportsOwnerLazyChunkBridgeSource
+              : (resource.currentAppGeneratedImportsOwnerLazyChunkBridgeSource || ''),
+          currentAppGeneratedImportsOwnerLazyChunkBridgeGeneratedImportsTableShape:
+            extra && extra.currentAppGeneratedImportsOwnerLazyChunkBridgeGeneratedImportsTableShape
+              ? extra.currentAppGeneratedImportsOwnerLazyChunkBridgeGeneratedImportsTableShape
+              : (resource.currentAppGeneratedImportsOwnerLazyChunkBridgeGeneratedImportsTableShape || ''),
+          currentAppGeneratedImportsOwnerLazyChunkBridgeChunkId:
+            extra && extra.currentAppGeneratedImportsOwnerLazyChunkBridgeChunkId
+              ? extra.currentAppGeneratedImportsOwnerLazyChunkBridgeChunkId
+              : (resource.currentAppGeneratedImportsOwnerLazyChunkBridgeChunkId || ''),
+          currentAppGeneratedImportsOwnerLazyChunkBridgeChunkArtifact:
+            extra && extra.currentAppGeneratedImportsOwnerLazyChunkBridgeChunkArtifact
+              ? extra.currentAppGeneratedImportsOwnerLazyChunkBridgeChunkArtifact
+              : (resource.currentAppGeneratedImportsOwnerLazyChunkBridgeChunkArtifact || ''),
+          currentAppGeneratedImportsOwnerLazyChunkBridgeChunkStatus:
+            extra && extra.currentAppGeneratedImportsOwnerLazyChunkBridgeChunkStatus
+              ? extra.currentAppGeneratedImportsOwnerLazyChunkBridgeChunkStatus
+              : (resource.currentAppGeneratedImportsOwnerLazyChunkBridgeChunkStatus || ''),
+          currentAppGeneratedImportsOwnerLazyChunkBridgeBuildOutputSource:
+            extra && extra.currentAppGeneratedImportsOwnerLazyChunkBridgeBuildOutputSource
+              ? extra.currentAppGeneratedImportsOwnerLazyChunkBridgeBuildOutputSource
+              : (resource.currentAppGeneratedImportsOwnerLazyChunkBridgeBuildOutputSource || ''),
+          currentAppGeneratedImportsOwnerLazyChunkBridgeSupportedSpiDecision:
+            extra && extra.currentAppGeneratedImportsOwnerLazyChunkBridgeSupportedSpiDecision
+              ? extra.currentAppGeneratedImportsOwnerLazyChunkBridgeSupportedSpiDecision
+              : (resource.currentAppGeneratedImportsOwnerLazyChunkBridgeSupportedSpiDecision || ''),
+          currentAppGeneratedImportsOwnerLazyChunkBridgeNoLocalhost:
+            extra && typeof extra.currentAppGeneratedImportsOwnerLazyChunkBridgeNoLocalhost === 'boolean'
+              ? extra.currentAppGeneratedImportsOwnerLazyChunkBridgeNoLocalhost
+              : resource.currentAppGeneratedImportsOwnerLazyChunkBridgeNoLocalhost === true,
+          currentAppGeneratedImportsOwnerLazyChunkBridgeFixtureSubstituted:
+            extra && typeof extra.currentAppGeneratedImportsOwnerLazyChunkBridgeFixtureSubstituted === 'boolean'
+              ? extra.currentAppGeneratedImportsOwnerLazyChunkBridgeFixtureSubstituted
+              : resource.currentAppGeneratedImportsOwnerLazyChunkBridgeFixtureSubstituted === true,
           stagedPath: '',
           owner: stageOwner,
           artifactFamily: family,
@@ -14648,6 +14916,7 @@ let flowIpcShell = #"""
           : (imported
             ? 'current app production generated imports support artifact imported but did not expose all expected tags/globals'
             : 'current app production generated imports support artifact import failed before reusable side effects');
+        const runtimeContractSatisfied = satisfied && fallbackTags.length === 0;
         return {
           currentAppGeneratedImportsOwnerSideEffectVersion:
             stageExtra.currentAppGeneratedImportsOwnerSideEffectVersion
@@ -14694,6 +14963,85 @@ let flowIpcShell = #"""
             stageExtra.currentAppGeneratedImportsOwnerSideEffectNoLocalhost !== false,
           currentAppGeneratedImportsOwnerSideEffectFixtureSubstituted:
             stageExtra.currentAppGeneratedImportsOwnerSideEffectFixtureSubstituted === true,
+          currentAppGeneratedImportsOwnerRuntimeContractVersion:
+            stageExtra.currentAppGeneratedImportsOwnerRuntimeContractVersion
+            || 'flow-ipc-current-app-generated-imports-owner-runtime-contract-v1_42',
+          currentAppGeneratedImportsOwnerRuntimeContractSource:
+            stageExtra.currentAppGeneratedImportsOwnerRuntimeContractSource
+            || 'current-app-generated-imports-select-owner-coverage-v1_41',
+          currentAppGeneratedImportsOwnerRuntimeContractArtifactSource:
+            stageExtra.currentAppGeneratedImportsOwnerRuntimeContractArtifactSource
+            || 'current-app-production-build-frontend-generated-imports-support-artifact',
+          currentAppGeneratedImportsOwnerRuntimeContractSelectedArtifact:
+            stageExtra.currentAppGeneratedImportsOwnerRuntimeContractSelectedArtifact
+            || stageExtra.currentAppGeneratedImportsOwnerSideEffectArtifact
+            || stageExtra.currentAppProductionOwnerImportSupportArtifact
+            || '',
+          currentAppGeneratedImportsOwnerRuntimeContractSelectedArtifactSha256:
+            stageExtra.currentAppGeneratedImportsOwnerRuntimeContractSelectedArtifactSha256 || '',
+          currentAppGeneratedImportsOwnerRuntimeContractSelectedArtifactBytes:
+            Number(stageExtra.currentAppGeneratedImportsOwnerRuntimeContractSelectedArtifactBytes || 0),
+          currentAppGeneratedImportsOwnerRuntimeContractExpectedTags: expectedTags.join(','),
+          currentAppGeneratedImportsOwnerRuntimeContractCoveredTags: coveredTags.join(','),
+          currentAppGeneratedImportsOwnerRuntimeContractOwnerPriority:
+            stageExtra.currentAppGeneratedImportsOwnerRuntimeContractOwnerPriority
+            || 'before-covered-focused-component-imports',
+          currentAppGeneratedImportsOwnerRuntimeContractSkipPolicy:
+            stageExtra.currentAppGeneratedImportsOwnerRuntimeContractSkipPolicy
+            || 'skip-covered-focused-imports-when-owner-side-effect-satisfied',
+          currentAppGeneratedImportsOwnerRuntimeContractFallbackPolicy:
+            stageExtra.currentAppGeneratedImportsOwnerRuntimeContractFallbackPolicy
+            || 'strict-blocker-with-focused-fallback-diagnostics',
+          currentAppGeneratedImportsOwnerRuntimeContractResolverHandoff:
+            stageExtra.currentAppGeneratedImportsOwnerRuntimeContractResolverHandoff
+            || 'component-resolver-owned-input',
+          currentAppGeneratedImportsOwnerRuntimeContractObservedTags: observedTags.join(','),
+          currentAppGeneratedImportsOwnerRuntimeContractReusedTags: '',
+          currentAppGeneratedImportsOwnerRuntimeContractSkippedFocusedImports: '',
+          currentAppGeneratedImportsOwnerRuntimeContractFallbackTags: fallbackTags.join(','),
+          currentAppGeneratedImportsOwnerRuntimeContractDecision:
+            runtimeContractSatisfied
+              ? 'generated-imports-owner-runtime-contract-imported'
+              : 'generated-imports-owner-runtime-contract-pending-resolver-handoff',
+          currentAppGeneratedImportsOwnerRuntimeContractFailureLayer:
+            runtimeContractSatisfied ? '' : (fallbackLayer || 'current-app-generated-imports-owner-runtime-contract-pending'),
+          currentAppGeneratedImportsOwnerRuntimeContractNextResolutionStep:
+            stageExtra.currentAppGeneratedImportsOwnerRuntimeContractNextResolutionStep || '',
+          currentAppGeneratedImportsOwnerRuntimeContractBrowserError: browserError || '',
+          currentAppGeneratedImportsOwnerRuntimeContractModuleIdentity:
+            stageExtra.currentAppGeneratedImportsOwnerRuntimeContractModuleIdentity || '',
+          currentAppGeneratedImportsOwnerRuntimeContractAttempted: true,
+          currentAppGeneratedImportsOwnerRuntimeContractImported: imported === true,
+          currentAppGeneratedImportsOwnerRuntimeContractSatisfied: runtimeContractSatisfied,
+          currentAppGeneratedImportsOwnerRuntimeContractResolverHandoffSatisfied: false,
+          currentAppGeneratedImportsOwnerRuntimeContractFocusedImportsSkipped: false,
+          currentAppGeneratedImportsOwnerRuntimeContractNoLocalhost:
+            stageExtra.currentAppGeneratedImportsOwnerRuntimeContractNoLocalhost !== false,
+          currentAppGeneratedImportsOwnerRuntimeContractFixtureSubstituted:
+            stageExtra.currentAppGeneratedImportsOwnerRuntimeContractFixtureSubstituted === true,
+          currentAppGeneratedImportsOwnerLazyChunkBridgeVersion:
+            stageExtra.currentAppGeneratedImportsOwnerLazyChunkBridgeVersion
+            || 'flow-ipc-current-app-generated-imports-owner-lazy-chunk-bridge-v1_42',
+          currentAppGeneratedImportsOwnerLazyChunkBridgeSource:
+            stageExtra.currentAppGeneratedImportsOwnerLazyChunkBridgeSource
+            || 'current-app-build-frontend-output-v1_32',
+          currentAppGeneratedImportsOwnerLazyChunkBridgeGeneratedImportsTableShape:
+            stageExtra.currentAppGeneratedImportsOwnerLazyChunkBridgeGeneratedImportsTableShape || '',
+          currentAppGeneratedImportsOwnerLazyChunkBridgeChunkId:
+            stageExtra.currentAppGeneratedImportsOwnerLazyChunkBridgeChunkId || '',
+          currentAppGeneratedImportsOwnerLazyChunkBridgeChunkArtifact:
+            stageExtra.currentAppGeneratedImportsOwnerLazyChunkBridgeChunkArtifact || '',
+          currentAppGeneratedImportsOwnerLazyChunkBridgeChunkStatus:
+            stageExtra.currentAppGeneratedImportsOwnerLazyChunkBridgeChunkStatus || '',
+          currentAppGeneratedImportsOwnerLazyChunkBridgeBuildOutputSource:
+            stageExtra.currentAppGeneratedImportsOwnerLazyChunkBridgeBuildOutputSource || '',
+          currentAppGeneratedImportsOwnerLazyChunkBridgeSupportedSpiDecision:
+            stageExtra.currentAppGeneratedImportsOwnerLazyChunkBridgeSupportedSpiDecision
+            || 'pending-supported-vaadin-lazy-chunk-spi',
+          currentAppGeneratedImportsOwnerLazyChunkBridgeNoLocalhost:
+            stageExtra.currentAppGeneratedImportsOwnerLazyChunkBridgeNoLocalhost !== false,
+          currentAppGeneratedImportsOwnerLazyChunkBridgeFixtureSubstituted:
+            stageExtra.currentAppGeneratedImportsOwnerLazyChunkBridgeFixtureSubstituted === true,
           currentAppProductionOwnerImportSideEffectProof: satisfied
             ? 'current-app-generated-imports-owner-observed-tags=' + observedTags.join('|')
               + ';global=' + globalAfter
@@ -14733,6 +15081,38 @@ let flowIpcShell = #"""
         d.currentAppGeneratedImportsOwnerSideEffectReason =
           'current app generated imports owner reused all covered component tags before focused imports';
         d.currentAppGeneratedImportsOwnerSideEffectFailureLayer = '';
+        d.currentAppGeneratedImportsOwnerRuntimeContractVersion =
+          d.currentAppGeneratedImportsOwnerRuntimeContractVersion
+          || 'flow-ipc-current-app-generated-imports-owner-runtime-contract-v1_42';
+        d.currentAppGeneratedImportsOwnerRuntimeContractSource =
+          d.currentAppGeneratedImportsOwnerRuntimeContractSource
+          || 'current-app-generated-imports-select-owner-coverage-v1_41';
+        d.currentAppGeneratedImportsOwnerRuntimeContractExpectedTags =
+          d.currentAppGeneratedImportsOwnerRuntimeContractExpectedTags
+          || d.currentAppGeneratedImportsOwnerSideEffectExpectedTags
+          || coveredTags.join(',');
+        d.currentAppGeneratedImportsOwnerRuntimeContractCoveredTags =
+          d.currentAppGeneratedImportsOwnerRuntimeContractCoveredTags
+          || d.currentAppGeneratedImportsOwnerSideEffectCoveredTags
+          || coveredTags.join(',');
+        d.currentAppGeneratedImportsOwnerRuntimeContractObservedTags =
+          mergeCsv(d.currentAppGeneratedImportsOwnerRuntimeContractObservedTags, observedTags);
+        d.currentAppGeneratedImportsOwnerRuntimeContractReusedTags =
+          mergeCsv(d.currentAppGeneratedImportsOwnerRuntimeContractReusedTags, reusedTags);
+        d.currentAppGeneratedImportsOwnerRuntimeContractSkippedFocusedImports =
+          mergeCsv(d.currentAppGeneratedImportsOwnerRuntimeContractSkippedFocusedImports,
+            csvValues(d.currentAppGeneratedImportsOwnerSideEffectSkippedFocusedImports || ''));
+        d.currentAppGeneratedImportsOwnerRuntimeContractFallbackTags = '';
+        d.currentAppGeneratedImportsOwnerRuntimeContractDecision =
+          'generated-imports-owner-runtime-contract-satisfied';
+        d.currentAppGeneratedImportsOwnerRuntimeContractFailureLayer = '';
+        d.currentAppGeneratedImportsOwnerRuntimeContractAttempted = true;
+        d.currentAppGeneratedImportsOwnerRuntimeContractImported = true;
+        d.currentAppGeneratedImportsOwnerRuntimeContractSatisfied = true;
+        d.currentAppGeneratedImportsOwnerRuntimeContractResolverHandoffSatisfied = true;
+        d.currentAppGeneratedImportsOwnerRuntimeContractFocusedImportsSkipped = true;
+        d.currentAppGeneratedImportsOwnerRuntimeContractNoLocalhost = true;
+        d.currentAppGeneratedImportsOwnerRuntimeContractFixtureSubstituted = false;
       }
 
       function applyCurrentAppProductionOwnerImportDiagnostics(extra) {
@@ -14992,6 +15372,148 @@ let flowIpcShell = #"""
         d.currentAppGeneratedImportsOwnerSideEffectFixtureSubstituted =
           extra.currentAppGeneratedImportsOwnerSideEffectFixtureSubstituted === true
           || d.currentAppGeneratedImportsOwnerSideEffectFixtureSubstituted === true;
+        d.currentAppGeneratedImportsOwnerRuntimeContractVersion =
+          extra.currentAppGeneratedImportsOwnerRuntimeContractVersion
+          || d.currentAppGeneratedImportsOwnerRuntimeContractVersion
+          || '';
+        d.currentAppGeneratedImportsOwnerRuntimeContractSource =
+          extra.currentAppGeneratedImportsOwnerRuntimeContractSource
+          || d.currentAppGeneratedImportsOwnerRuntimeContractSource
+          || '';
+        d.currentAppGeneratedImportsOwnerRuntimeContractArtifactSource =
+          extra.currentAppGeneratedImportsOwnerRuntimeContractArtifactSource
+          || d.currentAppGeneratedImportsOwnerRuntimeContractArtifactSource
+          || '';
+        d.currentAppGeneratedImportsOwnerRuntimeContractSelectedArtifact =
+          extra.currentAppGeneratedImportsOwnerRuntimeContractSelectedArtifact
+          || d.currentAppGeneratedImportsOwnerRuntimeContractSelectedArtifact
+          || '';
+        d.currentAppGeneratedImportsOwnerRuntimeContractSelectedArtifactSha256 =
+          extra.currentAppGeneratedImportsOwnerRuntimeContractSelectedArtifactSha256
+          || d.currentAppGeneratedImportsOwnerRuntimeContractSelectedArtifactSha256
+          || '';
+        d.currentAppGeneratedImportsOwnerRuntimeContractSelectedArtifactBytes =
+          Number(extra.currentAppGeneratedImportsOwnerRuntimeContractSelectedArtifactBytes
+            || d.currentAppGeneratedImportsOwnerRuntimeContractSelectedArtifactBytes
+            || 0);
+        d.currentAppGeneratedImportsOwnerRuntimeContractExpectedTags =
+          extra.currentAppGeneratedImportsOwnerRuntimeContractExpectedTags
+          || d.currentAppGeneratedImportsOwnerRuntimeContractExpectedTags
+          || '';
+        d.currentAppGeneratedImportsOwnerRuntimeContractCoveredTags =
+          extra.currentAppGeneratedImportsOwnerRuntimeContractCoveredTags
+          || d.currentAppGeneratedImportsOwnerRuntimeContractCoveredTags
+          || '';
+        d.currentAppGeneratedImportsOwnerRuntimeContractOwnerPriority =
+          extra.currentAppGeneratedImportsOwnerRuntimeContractOwnerPriority
+          || d.currentAppGeneratedImportsOwnerRuntimeContractOwnerPriority
+          || '';
+        d.currentAppGeneratedImportsOwnerRuntimeContractSkipPolicy =
+          extra.currentAppGeneratedImportsOwnerRuntimeContractSkipPolicy
+          || d.currentAppGeneratedImportsOwnerRuntimeContractSkipPolicy
+          || '';
+        d.currentAppGeneratedImportsOwnerRuntimeContractFallbackPolicy =
+          extra.currentAppGeneratedImportsOwnerRuntimeContractFallbackPolicy
+          || d.currentAppGeneratedImportsOwnerRuntimeContractFallbackPolicy
+          || '';
+        d.currentAppGeneratedImportsOwnerRuntimeContractResolverHandoff =
+          extra.currentAppGeneratedImportsOwnerRuntimeContractResolverHandoff
+          || d.currentAppGeneratedImportsOwnerRuntimeContractResolverHandoff
+          || '';
+        d.currentAppGeneratedImportsOwnerRuntimeContractObservedTags =
+          mergeCsv(d.currentAppGeneratedImportsOwnerRuntimeContractObservedTags,
+            csvValues(extra.currentAppGeneratedImportsOwnerRuntimeContractObservedTags));
+        d.currentAppGeneratedImportsOwnerRuntimeContractReusedTags =
+          mergeCsv(d.currentAppGeneratedImportsOwnerRuntimeContractReusedTags,
+            csvValues(extra.currentAppGeneratedImportsOwnerRuntimeContractReusedTags));
+        d.currentAppGeneratedImportsOwnerRuntimeContractSkippedFocusedImports =
+          mergeCsv(d.currentAppGeneratedImportsOwnerRuntimeContractSkippedFocusedImports,
+            csvValues(extra.currentAppGeneratedImportsOwnerRuntimeContractSkippedFocusedImports));
+        d.currentAppGeneratedImportsOwnerRuntimeContractFallbackTags =
+          mergeCsv(d.currentAppGeneratedImportsOwnerRuntimeContractFallbackTags,
+            csvValues(extra.currentAppGeneratedImportsOwnerRuntimeContractFallbackTags));
+        d.currentAppGeneratedImportsOwnerRuntimeContractDecision =
+          extra.currentAppGeneratedImportsOwnerRuntimeContractDecision
+          || d.currentAppGeneratedImportsOwnerRuntimeContractDecision
+          || '';
+        d.currentAppGeneratedImportsOwnerRuntimeContractFailureLayer =
+          extra.currentAppGeneratedImportsOwnerRuntimeContractSatisfied === true
+          && !extra.currentAppGeneratedImportsOwnerRuntimeContractFailureLayer
+            ? ''
+            : (extra.currentAppGeneratedImportsOwnerRuntimeContractFailureLayer
+              || d.currentAppGeneratedImportsOwnerRuntimeContractFailureLayer
+              || '');
+        d.currentAppGeneratedImportsOwnerRuntimeContractNextResolutionStep =
+          extra.currentAppGeneratedImportsOwnerRuntimeContractNextResolutionStep
+          || d.currentAppGeneratedImportsOwnerRuntimeContractNextResolutionStep
+          || '';
+        d.currentAppGeneratedImportsOwnerRuntimeContractBrowserError =
+          extra.currentAppGeneratedImportsOwnerRuntimeContractBrowserError
+          || d.currentAppGeneratedImportsOwnerRuntimeContractBrowserError
+          || '';
+        d.currentAppGeneratedImportsOwnerRuntimeContractModuleIdentity =
+          extra.currentAppGeneratedImportsOwnerRuntimeContractModuleIdentity
+          || d.currentAppGeneratedImportsOwnerRuntimeContractModuleIdentity
+          || '';
+        d.currentAppGeneratedImportsOwnerRuntimeContractAttempted =
+          extra.currentAppGeneratedImportsOwnerRuntimeContractAttempted === true
+          || d.currentAppGeneratedImportsOwnerRuntimeContractAttempted === true;
+        d.currentAppGeneratedImportsOwnerRuntimeContractImported =
+          extra.currentAppGeneratedImportsOwnerRuntimeContractImported === true
+          || d.currentAppGeneratedImportsOwnerRuntimeContractImported === true;
+        d.currentAppGeneratedImportsOwnerRuntimeContractSatisfied =
+          extra.currentAppGeneratedImportsOwnerRuntimeContractSatisfied === true
+          || d.currentAppGeneratedImportsOwnerRuntimeContractSatisfied === true;
+        d.currentAppGeneratedImportsOwnerRuntimeContractResolverHandoffSatisfied =
+          extra.currentAppGeneratedImportsOwnerRuntimeContractResolverHandoffSatisfied === true
+          || d.currentAppGeneratedImportsOwnerRuntimeContractResolverHandoffSatisfied === true;
+        d.currentAppGeneratedImportsOwnerRuntimeContractFocusedImportsSkipped =
+          extra.currentAppGeneratedImportsOwnerRuntimeContractFocusedImportsSkipped === true
+          || d.currentAppGeneratedImportsOwnerRuntimeContractFocusedImportsSkipped === true;
+        d.currentAppGeneratedImportsOwnerRuntimeContractNoLocalhost =
+          extra.currentAppGeneratedImportsOwnerRuntimeContractNoLocalhost === true
+          || d.currentAppGeneratedImportsOwnerRuntimeContractNoLocalhost === true;
+        d.currentAppGeneratedImportsOwnerRuntimeContractFixtureSubstituted =
+          extra.currentAppGeneratedImportsOwnerRuntimeContractFixtureSubstituted === true
+          || d.currentAppGeneratedImportsOwnerRuntimeContractFixtureSubstituted === true;
+        d.currentAppGeneratedImportsOwnerLazyChunkBridgeVersion =
+          extra.currentAppGeneratedImportsOwnerLazyChunkBridgeVersion
+          || d.currentAppGeneratedImportsOwnerLazyChunkBridgeVersion
+          || '';
+        d.currentAppGeneratedImportsOwnerLazyChunkBridgeSource =
+          extra.currentAppGeneratedImportsOwnerLazyChunkBridgeSource
+          || d.currentAppGeneratedImportsOwnerLazyChunkBridgeSource
+          || '';
+        d.currentAppGeneratedImportsOwnerLazyChunkBridgeGeneratedImportsTableShape =
+          extra.currentAppGeneratedImportsOwnerLazyChunkBridgeGeneratedImportsTableShape
+          || d.currentAppGeneratedImportsOwnerLazyChunkBridgeGeneratedImportsTableShape
+          || '';
+        d.currentAppGeneratedImportsOwnerLazyChunkBridgeChunkId =
+          extra.currentAppGeneratedImportsOwnerLazyChunkBridgeChunkId
+          || d.currentAppGeneratedImportsOwnerLazyChunkBridgeChunkId
+          || '';
+        d.currentAppGeneratedImportsOwnerLazyChunkBridgeChunkArtifact =
+          extra.currentAppGeneratedImportsOwnerLazyChunkBridgeChunkArtifact
+          || d.currentAppGeneratedImportsOwnerLazyChunkBridgeChunkArtifact
+          || '';
+        d.currentAppGeneratedImportsOwnerLazyChunkBridgeChunkStatus =
+          extra.currentAppGeneratedImportsOwnerLazyChunkBridgeChunkStatus
+          || d.currentAppGeneratedImportsOwnerLazyChunkBridgeChunkStatus
+          || '';
+        d.currentAppGeneratedImportsOwnerLazyChunkBridgeBuildOutputSource =
+          extra.currentAppGeneratedImportsOwnerLazyChunkBridgeBuildOutputSource
+          || d.currentAppGeneratedImportsOwnerLazyChunkBridgeBuildOutputSource
+          || '';
+        d.currentAppGeneratedImportsOwnerLazyChunkBridgeSupportedSpiDecision =
+          extra.currentAppGeneratedImportsOwnerLazyChunkBridgeSupportedSpiDecision
+          || d.currentAppGeneratedImportsOwnerLazyChunkBridgeSupportedSpiDecision
+          || '';
+        d.currentAppGeneratedImportsOwnerLazyChunkBridgeNoLocalhost =
+          extra.currentAppGeneratedImportsOwnerLazyChunkBridgeNoLocalhost === true
+          || d.currentAppGeneratedImportsOwnerLazyChunkBridgeNoLocalhost === true;
+        d.currentAppGeneratedImportsOwnerLazyChunkBridgeFixtureSubstituted =
+          extra.currentAppGeneratedImportsOwnerLazyChunkBridgeFixtureSubstituted === true
+          || d.currentAppGeneratedImportsOwnerLazyChunkBridgeFixtureSubstituted === true;
         finalizeCurrentAppGeneratedImportsOwnerSideEffectDiagnostics();
       }
 
@@ -15080,6 +15602,7 @@ let flowIpcShell = #"""
           const supportSource = support ? (componentFrontendResourceBodies.get(support.path) || '') : '';
           if (support && supportSource) {
             const supportIdentity = 'current-app-generated-imports-select-owner-v1_41:' + support.path;
+            const runtimeContractIdentity = 'current-app-generated-imports-owner-runtime-contract-v1_42:' + support.path;
             const supportRegistryBefore = vaadinCustomElementRegistrySnapshot();
             const supportGlobalBefore = vaadinGlobalSnapshot();
             const supportBaseExtra = currentAppProductionOwnerImportStageExtra(stageExtra, root, support,
@@ -15089,6 +15612,9 @@ let flowIpcShell = #"""
                 currentAppGeneratedImportsOwnerSideEffectExecutionResult:
                   'execution-attempt:' + support.path,
                 currentAppGeneratedImportsOwnerSideEffectModuleIdentity: supportIdentity,
+                currentAppGeneratedImportsOwnerRuntimeContractAttempted: true,
+                currentAppGeneratedImportsOwnerRuntimeContractImported: false,
+                currentAppGeneratedImportsOwnerRuntimeContractModuleIdentity: runtimeContractIdentity,
                 currentAppGeneratedImportsOwnerSideEffectRegistryBefore: supportRegistryBefore,
                 currentAppGeneratedImportsOwnerSideEffectVaadinGlobalBefore: supportGlobalBefore,
                 currentAppProductionOwnerEarlyImportRequestBeforeCoveredComponents:
@@ -15122,7 +15648,9 @@ let flowIpcShell = #"""
                       + generatedImportsOwnerSideEffect.currentAppGeneratedImportsOwnerSideEffectFailureLayer
                       + ':' + support.path,
                 currentAppGeneratedImportsOwnerSideEffectModuleIdentity: supportIdentity,
+                currentAppGeneratedImportsOwnerRuntimeContractModuleIdentity: runtimeContractIdentity,
                 currentAppGeneratedImportsOwnerSideEffectImported: true,
+                currentAppGeneratedImportsOwnerRuntimeContractImported: true,
                 currentAppProductionOwnerImportAttempted: true,
                 currentAppProductionOwnerImported: true,
                 currentAppProductionOwnerImportOverCustomScheme: true,
@@ -15160,9 +15688,14 @@ let flowIpcShell = #"""
                       + generatedImportsOwnerSideEffect.currentAppGeneratedImportsOwnerSideEffectFailureLayer
                       + ':' + support.path,
                 currentAppGeneratedImportsOwnerSideEffectModuleIdentity: supportIdentity,
+                currentAppGeneratedImportsOwnerRuntimeContractModuleIdentity: runtimeContractIdentity,
                 currentAppGeneratedImportsOwnerSideEffectImported:
                   generatedImportsOwnerSideEffect.currentAppGeneratedImportsOwnerSideEffectSatisfied === true,
+                currentAppGeneratedImportsOwnerRuntimeContractImported:
+                  generatedImportsOwnerSideEffect.currentAppGeneratedImportsOwnerSideEffectSatisfied === true,
                 currentAppGeneratedImportsOwnerSideEffectBrowserError:
+                  duplicateRegistrationSatisfied ? '' : supportMessage,
+                currentAppGeneratedImportsOwnerRuntimeContractBrowserError:
                   duplicateRegistrationSatisfied ? '' : supportMessage,
                 browserError: duplicateRegistrationSatisfied ? '' : supportMessage,
                 currentAppProductionOwnerImportAttempted: true,

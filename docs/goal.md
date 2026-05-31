@@ -716,10 +716,12 @@ build/runtime SPI 和 broader component/resource parity。
 v1.42 已完成 Generated Imports Owner Runtime Contract。下一阶段建议优先从
 runtime contract evidence 转向真实 generated chunk / supported Vaadin build SPI：
 
+- 已创建 `docs/goal-1_43.md`：Generated Lazy Chunk SPI Decision Contract，用于把
+  `pending-supported-vaadin-lazy-chunk-spi` placeholder 推进为可审计的 supported SPI 或
+  packaging-time build output staging 决策。
 - 接入/评估受支持 Vaadin lazy chunk SPI，把 v1.22 fixture path 推进为真实 app/build path。
 - 真实 production owner-owned runtime reuse success，或把当前 generated imports owner contract 与支持的
   Vaadin runtime/build SPI 对齐。
-- 真实 production owner-owned runtime reuse success。
 - Dev-mode/Vite graph execution 或可靠替代模式。
 - Broader Vaadin component parity，尤其是 Grid/VirtualList、ComboBox、DatePicker、
   Dialog、Upload。

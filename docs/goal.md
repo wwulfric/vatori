@@ -46,8 +46,9 @@ v0/v1 runtime 切片走向可产品化桌面框架的最终完成状态。
 - `docs/goal-1_38.md`：Current App Owner Component Reuse Matrix，已完成。
 - `docs/goal-1_39.md`：Current App Owner Early Import Ordering，已完成。
 - `docs/goal-1_40.md`：Current App Generated Imports Owner Side-Effect Candidate，已完成。
+- `docs/goal-1_41.md`：Current App Generated Imports Select Owner Coverage，已完成。
 
-当前已完成到 `docs/goal-1_40.md`。v1.31 先把 v1.30 的 offline plugin blocker 推进到
+当前已完成到 `docs/goal-1_41.md`。v1.31 先把 v1.30 的 offline plugin blocker 推进到
 explicit online/local-repo preflight；v1.32 进一步把 blocker 推进到 full
 `build-frontend` 输出层，证明当前 smoke app 已产生真实 source generated imports/chunk、
 production webapp build output 和 `prod.bundle`。v1.33 则把 v1.32 的 generic
@@ -87,11 +88,17 @@ imports 前通过 `vatori-resource://` import 该 support artifact，trace 记�
 `currentAppGeneratedImportsOwnerSideEffectObservedTags=vaadin-big-decimal-field,vaadin-checkbox,vaadin-text-field`
 和 skipped focused imports；BigDecimalField、Checkbox、TextField 可见事件链继续通过，`vaadin-select`
 被明确记录为 fallback。当前 accepted remaining blockers 是
-remaining current app owner tag coverage / `vaadin-select` custom element compatibility / supported Vaadin build SPI、
-真实 app/build generated chunk-file parity、
-dev-mode/Vite parity 和 broader component/resource parity。
+remaining current app owner tag coverage / `vaadin-select` custom element compatibility / supported Vaadin build SPI。
+v1.41 随后把 strict smoke app 自身扩展为普通 Flow `Select` 输入，使当前 app
+`build-frontend` output 的 production `generated-flow-imports-*.js` support artifact 能注册并复用
+`vaadin-select`。Trace 记录
+`flow-ipc-current-app-generated-imports-select-owner-coverage-v1_41`、
+`currentAppGeneratedImportsOwnerSideEffectObservedTags=vaadin-big-decimal-field,vaadin-checkbox,vaadin-select,vaadin-text-field`、
+四个 focused imports 全部 skipped、fallback tags 为空，并验证可见 Select event path 更新为
+`Vaadin Select: audit`。当前 accepted remaining blockers 是真实 app/build generated chunk-file parity、
+dev-mode/Vite parity、supported Vaadin build/runtime SPI 和 broader component/resource parity。
 
-后续阶段应继续以 `docs/goal-1_41.md` 等文件拆分，
+后续阶段应继续以 `docs/goal-1_42.md` 等文件拆分，
 每个阶段只拿走本长期目标中的一个可评审切片。不要把本文件改写成短期任务清单；
 它是长期北极星和完成度账本。
 
@@ -113,7 +120,7 @@ dev-mode/Vite parity 和 broader component/resource parity。
 
 ## 当前基线
 
-截至 goal 1.39，仓库已经证明：
+截至 goal 1.41，仓库已经证明：
 
 - `dev-ipc` 可以启动 no-localhost Flow IPC runtime。
 - 真实 macOS Swift/AppKit/WKWebView 窗口可以运行 Flow IPC smoke app 和 framework
@@ -543,8 +550,15 @@ dev-mode/Vite parity 和 broader component/resource parity。
   fallback focused import。v1.40 仍不是完整 frontend/resource pipeline parity；它证明了一个真实
   current-app owner side-effect source，并把剩余问题缩小到未覆盖 tag、真实 generated chunk parity、
   supported Vaadin build/runtime SPI、dev-mode/Vite 和更广组件资源覆盖。
-- 当前 app/build 的真实 generated/lazy chunk file parity、remaining current app owner tag coverage /
-  泛化 owner reuse 和 dev-mode/Vite execution 仍是明确 blocker，不计入最终完成。
+- v1.41 已把 `vaadin-select` 纳入 strict smoke app 的普通 Flow component 输入，并证明当前 app
+  production `generated-flow-imports-*.js` support artifact 可同时注册
+  `vaadin-big-decimal-field`、`vaadin-checkbox`、`vaadin-select` 和 `vaadin-text-field`。Trace 记录
+  `currentAppGeneratedImportsOwnerSideEffectVersion=flow-ipc-current-app-generated-imports-select-owner-coverage-v1_41`、
+  四个 covered focused imports 全部跳过、fallback tags 为空，并验证 `Select` change event
+  通过 Java listener / UIDL patch 更新可见 DOM 为 `Vaadin Select: audit`。v1.41 仍不是完整
+  frontend/resource pipeline parity；它消除了 strict smoke app 的 Select owner coverage gap。
+- 当前 app/build 的真实 generated/lazy chunk file parity、泛化 owner reuse /
+  supported Vaadin build/runtime SPI 和 dev-mode/Vite execution 仍是明确 blocker，不计入最终完成。
 
 ## 最终完成标准
 
@@ -654,8 +668,9 @@ dev-mode/Vite parity 和 broader component/resource parity。
   v1.39 已证明 owner 能在 covered component focused imports 前提前 import，但该 side effect
   仍未暴露可复用 covered tags；v1.40 已证明当前 app production `generated-flow-imports-*.js`
   support artifact 可注册并复用 `vaadin-big-decimal-field`、`vaadin-checkbox` 和
-  `vaadin-text-field`，但 `vaadin-select` 仍是 fallback，且这还不是完整 production/runtime SPI
-  parity；v1.23 positive fixture 也只能证明基础设施可行，
+  `vaadin-text-field`；v1.41 进一步让 strict smoke app 的当前 build output 覆盖并复用
+  `vaadin-select`，四组件 focused imports 全部被 owner side effect 跳过，但这还不是完整
+  production/runtime SPI parity；v1.23 positive fixture 也只能证明基础设施可行，
   不能替代真实 owner parity。
 - Dev-mode/Vite graph execution 或可靠替代模式。
 - Broader Vaadin component parity，尤其是 Grid/VirtualList、ComboBox、DatePicker、
@@ -681,12 +696,12 @@ dev-mode/Vite parity 和 broader component/resource parity。
 
 ## 当前建议的下一阶段
 
-v1.40 已完成 Current App Generated Imports Owner Side-Effect Candidate。下一阶段建议优先处理
-generated imports owner 仍未覆盖的 product blocker，或转向 supported Vaadin build SPI：
+v1.41 已完成 Current App Generated Imports Select Owner Coverage。下一阶段建议优先从
+component owner coverage 转向真实 generated chunk / supported Vaadin build SPI：
 
-- 分析 `vaadin-select` fallback / duplicate-definition 兼容层，把 blocker 收敛到具体 tag coverage、
-  custom element compatibility 或具体 Vaadin build/runtime SPI。
 - 接入/评估受支持 Vaadin lazy chunk SPI，把 v1.22 fixture path 推进为真实 app/build path。
+- 把四组件 generated imports owner side effect 提升为稳定 owner runtime contract，而不是仅作为
+  smoke trace candidate。
 - 真实 production owner-owned runtime reuse success。
 - Dev-mode/Vite graph execution 或可靠替代模式。
 - Broader Vaadin component parity，尤其是 Grid/VirtualList、ComboBox、DatePicker、

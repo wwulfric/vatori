@@ -7,6 +7,7 @@ import com.vaadin.flow.component.html.H1;
 import com.vaadin.flow.component.html.Input;
 import com.vaadin.flow.component.html.Span;
 import com.vaadin.flow.component.orderedlayout.VerticalLayout;
+import com.vaadin.flow.component.select.Select;
 import com.vaadin.flow.component.textfield.BigDecimalField;
 import com.vaadin.flow.component.textfield.TextField;
 import com.vaadin.flow.router.Route;
@@ -122,6 +123,19 @@ public class FlowOverIpcSmokeView extends VerticalLayout {
             vaadinCheckboxStatus.setText("Vaadin Checkbox: " + (checked ? "checked" : "unchecked"));
         }).addEventData("element.checked");
 
+        Select<String> vaadinSelect = new Select<>();
+        vaadinSelect.setId("ipc-vaadin-select");
+        vaadinSelect.setLabel("Vaadin Select over IPC");
+        vaadinSelect.setItems("standard", "audit", "deferred");
+        vaadinSelect.setValue("standard");
+        Span vaadinSelectStatus = new Span("Vaadin Select: pending");
+        vaadinSelectStatus.setId("ipc-vaadin-select-status");
+        vaadinSelect.getElement().addEventListener("change", event -> {
+            JsonNode valueNode = event.getEventData().get("element.value");
+            String value = valueNode == null ? "" : valueNode.asString();
+            vaadinSelectStatus.setText("Vaadin Select: " + value);
+        }).addEventData("element.value");
+
         VerticalLayout eventMatrix = new VerticalLayout();
         eventMatrix.setId("ipc-event-matrix");
         eventMatrix.setPadding(false);
@@ -130,7 +144,8 @@ public class FlowOverIpcSmokeView extends VerticalLayout {
                 textInput, textStatus, checkbox, checkboxStatus,
                 bigDecimalField, bigDecimalStatus,
                 textField, textFieldStatus,
-                vaadinCheckbox, vaadinCheckboxStatus);
+                vaadinCheckbox, vaadinCheckboxStatus,
+                vaadinSelect, vaadinSelectStatus);
         add(eventMatrix);
     }
 

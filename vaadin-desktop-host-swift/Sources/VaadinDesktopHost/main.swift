@@ -2082,6 +2082,7 @@ final class WebViewHost: NSObject, NSApplicationDelegate, NSWindowDelegate, WKNa
               && !!d.vaadinWebComponentEventRpcObserved
               && !!d.vaadinTextFieldEventRpcObserved
               && !!d.vaadinSecondWebComponentEventRpcObserved
+              && !!d.vaadinSelectEventRpcObserved
             ))
             && (!window.__VAADIN_DESKTOP_FLOW_IPC_AUTO_RESYNC__ || !!d.flowClientEngineResyncPatchConsumed)
             && (!window.__VAADIN_DESKTOP_FLOW_IPC_AUTO_ERROR__ || !!d.flowClientEngineErrorReported)
@@ -2107,6 +2108,7 @@ final class WebViewHost: NSObject, NSApplicationDelegate, NSWindowDelegate, WKNa
             bigDecimal: !!d.vaadinWebComponentEventRpcObserved,
             textField: !!d.vaadinTextFieldEventRpcObserved,
             vaadinCheckbox: !!d.vaadinSecondWebComponentEventRpcObserved,
+            vaadinSelect: !!d.vaadinSelectEventRpcObserved,
             resync: !!d.flowClientEngineResyncPatchConsumed,
             error: !!d.flowClientEngineErrorReported,
             flowGraph: !!d.flowClientResourceExecutionClassificationComplete,
@@ -3051,6 +3053,19 @@ final class WebViewHost: NSObject, NSApplicationDelegate, NSWindowDelegate, WKNa
           vaadinTextFieldStatusText: window.VaadinDesktopIpcDiagnostics ? window.VaadinDesktopIpcDiagnostics.vaadinTextFieldStatusText : "",
           vaadinTextFieldPostEventState: window.VaadinDesktopIpcDiagnostics ? window.VaadinDesktopIpcDiagnostics.vaadinTextFieldPostEventState : "",
           vaadinTextFieldFailureReason: window.VaadinDesktopIpcDiagnostics ? window.VaadinDesktopIpcDiagnostics.vaadinTextFieldFailureReason : "",
+          vaadinSelectRendered: !!(window.VaadinDesktopIpcDiagnostics && window.VaadinDesktopIpcDiagnostics.vaadinSelectRendered),
+          vaadinSelectRenderedTag: window.VaadinDesktopIpcDiagnostics ? window.VaadinDesktopIpcDiagnostics.vaadinSelectRenderedTag : "",
+          vaadinSelectRenderedValue: window.VaadinDesktopIpcDiagnostics ? window.VaadinDesktopIpcDiagnostics.vaadinSelectRenderedValue : "",
+          vaadinSelectTagDefined: !!(window.VaadinDesktopIpcDiagnostics && window.VaadinDesktopIpcDiagnostics.vaadinSelectTagDefined),
+          vaadinSelectEventDispatchMode: window.VaadinDesktopIpcDiagnostics ? window.VaadinDesktopIpcDiagnostics.vaadinSelectEventDispatchMode : "",
+          vaadinSelectEventObserved: !!(window.VaadinDesktopIpcDiagnostics && window.VaadinDesktopIpcDiagnostics.vaadinSelectEventObserved),
+          vaadinSelectEventRpcObserved: !!(window.VaadinDesktopIpcDiagnostics && window.VaadinDesktopIpcDiagnostics.vaadinSelectEventRpcObserved),
+          vaadinSelectEventComponentId: window.VaadinDesktopIpcDiagnostics ? window.VaadinDesktopIpcDiagnostics.vaadinSelectEventComponentId : "",
+          vaadinSelectEventType: window.VaadinDesktopIpcDiagnostics ? window.VaadinDesktopIpcDiagnostics.vaadinSelectEventType : "",
+          vaadinSelectEventValue: window.VaadinDesktopIpcDiagnostics ? window.VaadinDesktopIpcDiagnostics.vaadinSelectEventValue : "",
+          vaadinSelectStatusText: window.VaadinDesktopIpcDiagnostics ? window.VaadinDesktopIpcDiagnostics.vaadinSelectStatusText : "",
+          vaadinSelectPostEventState: window.VaadinDesktopIpcDiagnostics ? window.VaadinDesktopIpcDiagnostics.vaadinSelectPostEventState : "",
+          vaadinSelectFailureReason: window.VaadinDesktopIpcDiagnostics ? window.VaadinDesktopIpcDiagnostics.vaadinSelectFailureReason : "",
           flowClientEngineResourceLoaded: !!(window.VaadinDesktopIpcDiagnostics && window.VaadinDesktopIpcDiagnostics.flowClientEngineResourceLoaded),
           flowClientEngineResourcePath: window.VaadinDesktopIpcDiagnostics ? window.VaadinDesktopIpcDiagnostics.flowClientEngineResourcePath : "",
           flowClientEngineResourceBytes: window.VaadinDesktopIpcDiagnostics ? window.VaadinDesktopIpcDiagnostics.flowClientEngineResourceBytes : 0,
@@ -3429,6 +3444,7 @@ let flowIpcShell = #"""
       let autoVaadinWebComponentValue = '42.5';
       let autoVaadinTextFieldValue = 'Flow IPC typed';
       let autoVaadinCheckboxValue = true;
+      let autoVaadinSelectValue = 'audit';
       let autoComponentEventRetryLimit = 30;
       let autoComponentEventDelayMs = 140;
       let autoComponentEventRetryMs = 80;
@@ -3499,6 +3515,19 @@ let flowIpcShell = #"""
             if (element.inputElement) {
               element.inputElement.checked = autoVaadinCheckboxValue;
             }
+          }
+        },
+        {
+          key: 'vaadin-select',
+          id: 'ipc-vaadin-select',
+          eventType: 'change',
+          value: autoVaadinSelectValue,
+          data: () => ({ 'element.value': autoVaadinSelectValue }),
+          requiresComponentResource: true,
+          requiredTag: 'vaadin-select',
+          dispatchDomEvent: true,
+          prepare: (element) => {
+            element.value = autoVaadinSelectValue;
           }
         }
       ];
@@ -4518,6 +4547,19 @@ let flowIpcShell = #"""
         vaadinTextFieldStatusText: '',
         vaadinTextFieldPostEventState: '',
         vaadinTextFieldFailureReason: '',
+        vaadinSelectRendered: false,
+        vaadinSelectRenderedTag: '',
+        vaadinSelectRenderedValue: '',
+        vaadinSelectTagDefined: false,
+        vaadinSelectEventDispatchMode: '',
+        vaadinSelectEventObserved: false,
+        vaadinSelectEventRpcObserved: false,
+        vaadinSelectEventComponentId: '',
+        vaadinSelectEventType: '',
+        vaadinSelectEventValue: '',
+        vaadinSelectStatusText: '',
+        vaadinSelectPostEventState: '',
+        vaadinSelectFailureReason: '',
         flowClientEngineResourceLoaded: false,
         flowClientEngineResourcePath: '',
         flowClientEngineResourceBytes: 0,
@@ -5469,9 +5511,12 @@ let flowIpcShell = #"""
               window.VaadinDesktopIpcDiagnostics.flowClientEngineXhrRequestObserved = true;
               window.VaadinDesktopIpcDiagnostics.flowClientEngineXhrLastClientId = Number.isInteger(requestPayload.clientId) ? requestPayload.clientId : -1;
               const type = requestPayload.resynchronize === true ? 'resync' : 'event';
-              const rpc = Array.isArray(requestPayload.rpc)
-                ? requestPayload.rpc.find((entry) => entry && entry.type === 'event')
-                : null;
+              const eventRpcs = Array.isArray(requestPayload.rpc)
+                ? requestPayload.rpc.filter((entry) => entry && entry.type === 'event')
+                : [];
+              const rpc = eventRpcs.find((entry) => entry.event === 'change')
+                || eventRpcs[0]
+                || null;
               const rpcNodeId = rpc && Number.isInteger(rpc.node) ? rpc.node : -1;
               const rpcEventType = rpc && typeof rpc.event === 'string' ? rpc.event : (type === 'event' ? 'uidl-rpc' : 'resync');
               const rpcComponentId = rpcNodeId >= 0 ? flowClientElementIdByNodeId(rpcNodeId) : '';
@@ -5659,6 +5704,14 @@ let flowIpcShell = #"""
                 window.VaadinDesktopIpcDiagnostics.vaadinSecondWebComponentEventType = pending.eventType;
                 window.VaadinDesktopIpcDiagnostics.vaadinSecondWebComponentEventValue = String(autoVaadinCheckboxValue);
                 window.VaadinDesktopIpcDiagnostics.vaadinSecondWebComponentPostEventState = 'Vaadin Checkbox: checked';
+              } else if (pending.componentId === 'ipc-vaadin-select') {
+                window.VaadinDesktopIpcDiagnostics.vaadinSelectEventRpcObserved = true;
+                window.VaadinDesktopIpcDiagnostics.vaadinSelectEventObserved = true;
+                window.VaadinDesktopIpcDiagnostics.vaadinSelectEventComponentId = pending.componentId;
+                window.VaadinDesktopIpcDiagnostics.vaadinSelectEventType = pending.eventType;
+                window.VaadinDesktopIpcDiagnostics.vaadinSelectEventValue = autoVaadinSelectValue;
+                window.VaadinDesktopIpcDiagnostics.vaadinSelectPostEventState =
+                  'Vaadin Select: ' + autoVaadinSelectValue;
               }
               advanceAutoComponentEventAfterPatch(pending.componentId);
             }
@@ -5777,6 +5830,13 @@ let flowIpcShell = #"""
           window.VaadinDesktopIpcDiagnostics.vaadinTextFieldEventValue = String(descriptor.value);
           return;
         }
+        if (descriptor.key === 'vaadin-select') {
+          window.VaadinDesktopIpcDiagnostics.vaadinSelectEventDispatchMode = 'dom-event';
+          window.VaadinDesktopIpcDiagnostics.vaadinSelectEventComponentId = descriptor.id;
+          window.VaadinDesktopIpcDiagnostics.vaadinSelectEventType = descriptor.eventType;
+          window.VaadinDesktopIpcDiagnostics.vaadinSelectEventValue = String(descriptor.value);
+          return;
+        }
         window.VaadinDesktopIpcDiagnostics.vaadinWebComponentEventDispatchMode = 'dom-event';
         window.VaadinDesktopIpcDiagnostics.vaadinWebComponentEventComponentId = descriptor.id;
         window.VaadinDesktopIpcDiagnostics.vaadinWebComponentEventType = descriptor.eventType;
@@ -5788,6 +5848,8 @@ let flowIpcShell = #"""
           window.VaadinDesktopIpcDiagnostics.vaadinSecondWebComponentEventObserved = true;
         } else if (descriptor.key === 'vaadin-text-field') {
           window.VaadinDesktopIpcDiagnostics.vaadinTextFieldEventObserved = true;
+        } else if (descriptor.key === 'vaadin-select') {
+          window.VaadinDesktopIpcDiagnostics.vaadinSelectEventObserved = true;
         } else {
           window.VaadinDesktopIpcDiagnostics.vaadinWebComponentEventObserved = true;
         }
@@ -5813,6 +5875,12 @@ let flowIpcShell = #"""
             && (patchObserved
               || window.VaadinDesktopIpcDiagnostics.vaadinTextFieldEventObserved
               || window.VaadinDesktopIpcDiagnostics.vaadinTextFieldPostEventState.includes(autoVaadinTextFieldValue));
+        }
+        if (descriptor.key === 'vaadin-select') {
+          return window.VaadinDesktopIpcDiagnostics.vaadinSelectEventRpcObserved
+            && (patchObserved
+              || window.VaadinDesktopIpcDiagnostics.vaadinSelectEventObserved
+              || window.VaadinDesktopIpcDiagnostics.vaadinSelectPostEventState.includes(autoVaadinSelectValue));
         }
         return window.VaadinDesktopIpcDiagnostics.vaadinWebComponentEventRpcObserved
           && (patchObserved
@@ -11953,6 +12021,8 @@ let flowIpcShell = #"""
             'ipc-vaadin-text-field-status',
             'ipc-vaadin-checkbox',
             'ipc-vaadin-checkbox-status',
+            'ipc-vaadin-select',
+            'ipc-vaadin-select-status',
             'ipc-push-status',
             'ipc-push-order-status'
           ];
@@ -12093,6 +12163,26 @@ let flowIpcShell = #"""
             }
           } catch (_) {
             window.VaadinDesktopIpcDiagnostics.vaadinSecondWebComponentRendered = false;
+          }
+          try {
+            const selectTarget = flowClientEngineElementById('ipc-vaadin-select');
+            const selectElement = selectTarget ? selectTarget.element : null;
+            const selectStatus = flowClientEngineElementById('ipc-vaadin-select-status');
+            const selectStatusText = selectStatus ? (selectStatus.element.textContent || '') : '';
+            window.VaadinDesktopIpcDiagnostics.vaadinSelectRendered = !!selectElement;
+            window.VaadinDesktopIpcDiagnostics.vaadinSelectRenderedTag =
+              selectElement ? selectElement.tagName.toLowerCase() : '';
+            window.VaadinDesktopIpcDiagnostics.vaadinSelectRenderedValue =
+              selectElement && typeof selectElement.value !== 'undefined' ? String(selectElement.value || '') : '';
+            window.VaadinDesktopIpcDiagnostics.vaadinSelectTagDefined =
+              !!customElements.get('vaadin-select');
+            window.VaadinDesktopIpcDiagnostics.vaadinSelectStatusText = selectStatusText;
+            window.VaadinDesktopIpcDiagnostics.vaadinSelectPostEventState = selectStatusText;
+            if (selectStatusText.includes('Vaadin Select: ' + autoVaadinSelectValue)) {
+              window.VaadinDesktopIpcDiagnostics.vaadinSelectEventObserved = true;
+            }
+          } catch (_) {
+            window.VaadinDesktopIpcDiagnostics.vaadinSelectRendered = false;
           }
           }
         } catch (error) {
@@ -14317,13 +14407,13 @@ let flowIpcShell = #"""
             stageExtra.currentAppProductionOwnerEarlyImportFixtureSubstituted === true,
           currentAppGeneratedImportsOwnerSideEffectVersion:
             stageExtra.currentAppGeneratedImportsOwnerSideEffectVersion
-            || 'flow-ipc-current-app-generated-imports-owner-side-effect-v1_40',
+            || 'flow-ipc-current-app-generated-imports-select-owner-coverage-v1_41',
           currentAppGeneratedImportsOwnerSideEffectSource:
             stageExtra.currentAppGeneratedImportsOwnerSideEffectSource
-            || 'current-app-owner-early-import-v1_39',
+            || 'current-app-generated-imports-owner-side-effect-v1_40',
           currentAppGeneratedImportsOwnerSideEffectPolicy:
             stageExtra.currentAppGeneratedImportsOwnerSideEffectPolicy
-            || 'import-current-app-production-generated-imports-before-covered-components-v1_40',
+            || 'cover-current-app-production-generated-imports-select-before-components-v1_41',
           currentAppGeneratedImportsOwnerSideEffectCandidate:
             stageExtra.currentAppGeneratedImportsOwnerSideEffectCandidate
             || 'current-app-production-generated-imports-support-artifact',
@@ -14334,13 +14424,13 @@ let flowIpcShell = #"""
             || '',
           currentAppGeneratedImportsOwnerSideEffectExpectedTags:
             stageExtra.currentAppGeneratedImportsOwnerSideEffectExpectedTags
-            || 'vaadin-big-decimal-field,vaadin-checkbox,vaadin-text-field',
+            || 'vaadin-big-decimal-field,vaadin-checkbox,vaadin-select,vaadin-text-field',
           currentAppGeneratedImportsOwnerSideEffectCoveredTags:
             stageExtra.currentAppGeneratedImportsOwnerSideEffectCoveredTags
             || 'vaadin-big-decimal-field,vaadin-checkbox,vaadin-select,vaadin-text-field',
           currentAppGeneratedImportsOwnerSideEffectKnownMissingTags:
             stageExtra.currentAppGeneratedImportsOwnerSideEffectKnownMissingTags
-            || 'vaadin-select',
+            || '',
           currentAppGeneratedImportsOwnerSideEffectExpectedGlobals:
             stageExtra.currentAppGeneratedImportsOwnerSideEffectExpectedGlobals
             || 'window.Vaadin,window.Vaadin.Flow,window.Vaadin.Flow.loadOnDemand',
@@ -14366,10 +14456,10 @@ let flowIpcShell = #"""
             || 'current app production generated imports support artifact must be imported before focused component imports',
           currentAppGeneratedImportsOwnerSideEffectFailureLayer:
             stageExtra.currentAppGeneratedImportsOwnerSideEffectFailureLayer
-            || 'current-app-generated-imports-owner-side-effect-pending',
+            || 'current-app-generated-imports-select-owner-coverage-pending',
           currentAppGeneratedImportsOwnerSideEffectNextResolutionStep:
             stageExtra.currentAppGeneratedImportsOwnerSideEffectNextResolutionStep
-            || 'promote reusable current app generated imports side effects into the owner runtime contract, then replace remaining focused fallbacks with supported Vaadin build/runtime SPI coverage',
+            || 'promote four-tag current app generated imports side effects into the owner runtime contract, then broaden component/resource coverage and dev-mode/Vite parity',
           currentAppGeneratedImportsOwnerSideEffectAttempted:
             stageExtra.currentAppGeneratedImportsOwnerSideEffectAttempted === true,
           currentAppGeneratedImportsOwnerSideEffectImported:
@@ -14509,12 +14599,12 @@ let flowIpcShell = #"""
           registryAfter, globalBefore, globalAfter, failureLayer, browserError) {
         const expectedTags = csvValues(
           stageExtra.currentAppGeneratedImportsOwnerSideEffectExpectedTags
-          || 'vaadin-big-decimal-field,vaadin-checkbox,vaadin-text-field');
+          || 'vaadin-big-decimal-field,vaadin-checkbox,vaadin-select,vaadin-text-field');
         const coveredTags = csvValues(
           stageExtra.currentAppGeneratedImportsOwnerSideEffectCoveredTags
           || 'vaadin-big-decimal-field,vaadin-checkbox,vaadin-select,vaadin-text-field');
         const knownMissingTags = csvValues(
-          stageExtra.currentAppGeneratedImportsOwnerSideEffectKnownMissingTags || 'vaadin-select');
+          stageExtra.currentAppGeneratedImportsOwnerSideEffectKnownMissingTags || '');
         const observedTags = coveredTags.filter((tag) => !!customElements.get(tag));
         const missingExpectedTags = expectedTags.filter((tag) => !customElements.get(tag));
         const fallbackTags = coveredTags.filter((tag) => !observedTags.includes(tag));
@@ -14545,7 +14635,7 @@ let flowIpcShell = #"""
           ? (fallbackTags.length > 0
             ? 'current-app-generated-imports-owner-partial-tag-coverage'
             : '')
-          : (failureLayer || 'current-app-generated-imports-owner-side-effect-pending');
+          : (failureLayer || 'current-app-generated-imports-select-owner-coverage-pending');
         const decision = satisfied
           ? (fallbackTags.length > 0
             ? 'generated-imports-owner-reused-observed-tags-with-focused-fallbacks'
@@ -14561,13 +14651,13 @@ let flowIpcShell = #"""
         return {
           currentAppGeneratedImportsOwnerSideEffectVersion:
             stageExtra.currentAppGeneratedImportsOwnerSideEffectVersion
-            || 'flow-ipc-current-app-generated-imports-owner-side-effect-v1_40',
+            || 'flow-ipc-current-app-generated-imports-select-owner-coverage-v1_41',
           currentAppGeneratedImportsOwnerSideEffectSource:
             stageExtra.currentAppGeneratedImportsOwnerSideEffectSource
-            || 'current-app-owner-early-import-v1_39',
+            || 'current-app-generated-imports-owner-side-effect-v1_40',
           currentAppGeneratedImportsOwnerSideEffectPolicy:
             stageExtra.currentAppGeneratedImportsOwnerSideEffectPolicy
-            || 'import-current-app-production-generated-imports-before-covered-components-v1_40',
+            || 'cover-current-app-production-generated-imports-select-before-components-v1_41',
           currentAppGeneratedImportsOwnerSideEffectCandidate:
             stageExtra.currentAppGeneratedImportsOwnerSideEffectCandidate
             || 'current-app-production-generated-imports-support-artifact',
@@ -14616,6 +14706,33 @@ let flowIpcShell = #"""
           currentAppProductionOwnerEarlyImportSideEffectSatisfied: satisfied,
           currentAppProductionOwnerEarlyImportPartialReuseSatisfied: partialReuse
         };
+      }
+
+      function finalizeCurrentAppGeneratedImportsOwnerSideEffectDiagnostics() {
+        const d = window.VaadinDesktopIpcDiagnostics || {};
+        const coveredTags = csvValues(d.currentAppGeneratedImportsOwnerSideEffectCoveredTags || '');
+        if (coveredTags.length === 0) {
+          return;
+        }
+        const observedTags = csvValues(d.currentAppGeneratedImportsOwnerSideEffectObservedTags || '');
+        const reusedTags = csvValues(d.currentAppGeneratedImportsOwnerSideEffectReusedTags || '');
+        const fallbackTags = csvValues(d.currentAppGeneratedImportsOwnerSideEffectFallbackTags || '');
+        const fallbackImports =
+          csvValues(d.currentAppGeneratedImportsOwnerSideEffectFallbackFocusedImports || '');
+        const allCoveredTagsReused = d.currentAppGeneratedImportsOwnerSideEffectImported === true
+          && d.currentAppGeneratedImportsOwnerSideEffectSatisfied === true
+          && d.currentAppGeneratedImportsOwnerSideEffectNoLocalhost === true
+          && coveredTags.every((tag) => observedTags.includes(tag) && reusedTags.includes(tag))
+          && fallbackTags.length === 0
+          && fallbackImports.length === 0;
+        if (!allCoveredTagsReused) {
+          return;
+        }
+        d.currentAppGeneratedImportsOwnerSideEffectDecision =
+          'generated-imports-owner-reused-covered-tags';
+        d.currentAppGeneratedImportsOwnerSideEffectReason =
+          'current app generated imports owner reused all covered component tags before focused imports';
+        d.currentAppGeneratedImportsOwnerSideEffectFailureLayer = '';
       }
 
       function applyCurrentAppProductionOwnerImportDiagnostics(extra) {
@@ -14875,6 +14992,7 @@ let flowIpcShell = #"""
         d.currentAppGeneratedImportsOwnerSideEffectFixtureSubstituted =
           extra.currentAppGeneratedImportsOwnerSideEffectFixtureSubstituted === true
           || d.currentAppGeneratedImportsOwnerSideEffectFixtureSubstituted === true;
+        finalizeCurrentAppGeneratedImportsOwnerSideEffectDiagnostics();
       }
 
       async function maybeImportCurrentAppProductionOwner(stageExtra) {
@@ -14961,7 +15079,7 @@ let flowIpcShell = #"""
           const support = currentAppGeneratedImportsOwnerSideEffectResource(stageExtra);
           const supportSource = support ? (componentFrontendResourceBodies.get(support.path) || '') : '';
           if (support && supportSource) {
-            const supportIdentity = 'current-app-generated-imports-owner-v1_40:' + support.path;
+            const supportIdentity = 'current-app-generated-imports-select-owner-v1_41:' + support.path;
             const supportRegistryBefore = vaadinCustomElementRegistrySnapshot();
             const supportGlobalBefore = vaadinGlobalSnapshot();
             const supportBaseExtra = currentAppProductionOwnerImportStageExtra(stageExtra, root, support,
@@ -15023,24 +15141,40 @@ let flowIpcShell = #"""
                 : String(supportError);
               const supportRegistryAfter = vaadinCustomElementRegistrySnapshot();
               const supportGlobalAfter = vaadinGlobalSnapshot();
+              const duplicateRegistrationSatisfied =
+                supportMessage.includes('already been registered')
+                && ['vaadin-big-decimal-field', 'vaadin-checkbox', 'vaadin-select', 'vaadin-text-field']
+                  .every((tag) => !!customElements.get(tag))
+                && !!(window.Vaadin && window.Vaadin.Flow
+                  && typeof window.Vaadin.Flow.loadOnDemand === 'function');
               generatedImportsOwnerSideEffect = currentAppGeneratedImportsOwnerSideEffectDiagnostics(
-                stageExtra, false, supportRegistryBefore, supportRegistryAfter, supportGlobalBefore,
-                supportGlobalAfter, currentAppProductionOwnerImportFailure(supportError), supportMessage);
+                stageExtra, duplicateRegistrationSatisfied, supportRegistryBefore, supportRegistryAfter,
+                supportGlobalBefore, supportGlobalAfter,
+                duplicateRegistrationSatisfied ? '' : currentAppProductionOwnerImportFailure(supportError),
+                duplicateRegistrationSatisfied ? '' : supportMessage);
               generatedImportsOwnerSideEffect = Object.assign({}, generatedImportsOwnerSideEffect, {
                 currentAppGeneratedImportsOwnerSideEffectExecutionResult:
-                  'strict-blocker:'
-                  + generatedImportsOwnerSideEffect.currentAppGeneratedImportsOwnerSideEffectFailureLayer
-                  + ':' + support.path,
+                  generatedImportsOwnerSideEffect.currentAppGeneratedImportsOwnerSideEffectSatisfied
+                    ? 'executed-existing-registration:' + support.path
+                    : 'strict-blocker:'
+                      + generatedImportsOwnerSideEffect.currentAppGeneratedImportsOwnerSideEffectFailureLayer
+                      + ':' + support.path,
                 currentAppGeneratedImportsOwnerSideEffectModuleIdentity: supportIdentity,
-                currentAppGeneratedImportsOwnerSideEffectBrowserError: supportMessage,
-                browserError: supportMessage,
+                currentAppGeneratedImportsOwnerSideEffectImported:
+                  generatedImportsOwnerSideEffect.currentAppGeneratedImportsOwnerSideEffectSatisfied === true,
+                currentAppGeneratedImportsOwnerSideEffectBrowserError:
+                  duplicateRegistrationSatisfied ? '' : supportMessage,
+                browserError: duplicateRegistrationSatisfied ? '' : supportMessage,
                 currentAppProductionOwnerImportAttempted: true,
                 currentAppProductionOwnerImported: true,
                 currentAppProductionOwnerImportOverCustomScheme: true,
                 currentAppProductionOwnerImportDependencyStageCount: stagedDependencyCount
               });
               applyCurrentAppProductionOwnerImportDiagnostics(generatedImportsOwnerSideEffect);
-              recordFrontendStageOutcome(support, supportUrl, 'strict-blocker',
+              recordFrontendStageOutcome(support, supportUrl,
+                generatedImportsOwnerSideEffect.currentAppGeneratedImportsOwnerSideEffectSatisfied
+                  ? 'executed'
+                  : 'strict-blocker',
                 currentAppProductionOwnerImportStageExtra(stageExtra, root, support, 'support',
                   generatedImportsOwnerSideEffect));
             }
@@ -16659,15 +16793,15 @@ let flowIpcShell = #"""
           currentAppGeneratedImportsOwnerSideEffectVersion:
             resource.currentAppGeneratedImportsOwnerSideEffectVersion
             || window.VaadinDesktopIpcDiagnostics.currentAppGeneratedImportsOwnerSideEffectVersion
-            || 'flow-ipc-current-app-generated-imports-owner-side-effect-v1_40',
+            || 'flow-ipc-current-app-generated-imports-select-owner-coverage-v1_41',
           currentAppGeneratedImportsOwnerSideEffectSource:
             resource.currentAppGeneratedImportsOwnerSideEffectSource
             || window.VaadinDesktopIpcDiagnostics.currentAppGeneratedImportsOwnerSideEffectSource
-            || 'current-app-owner-early-import-v1_39',
+            || 'current-app-generated-imports-owner-side-effect-v1_40',
           currentAppGeneratedImportsOwnerSideEffectPolicy:
             resource.currentAppGeneratedImportsOwnerSideEffectPolicy
             || window.VaadinDesktopIpcDiagnostics.currentAppGeneratedImportsOwnerSideEffectPolicy
-            || 'import-current-app-production-generated-imports-before-covered-components-v1_40',
+            || 'cover-current-app-production-generated-imports-select-before-components-v1_41',
           currentAppGeneratedImportsOwnerSideEffectCandidate:
             resource.currentAppGeneratedImportsOwnerSideEffectCandidate
             || window.VaadinDesktopIpcDiagnostics.currentAppGeneratedImportsOwnerSideEffectCandidate
@@ -17213,6 +17347,7 @@ let flowIpcShell = #"""
         window.VaadinDesktopIpcDiagnostics.currentAppGeneratedImportsOwnerSideEffectFixtureSubstituted =
           details.currentAppGeneratedImportsOwnerSideEffectFixtureSubstituted === true
           || window.VaadinDesktopIpcDiagnostics.currentAppGeneratedImportsOwnerSideEffectFixtureSubstituted === true;
+        finalizeCurrentAppGeneratedImportsOwnerSideEffectDiagnostics();
       }
 
       function recordProductionOwnerOrderingPreflight(resource, source, preflight, phase) {

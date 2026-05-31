@@ -593,25 +593,25 @@ final class FlowClientResources {
     private static final String CURRENT_APP_PRODUCTION_OWNER_EARLY_IMPORT_NEXT_STEP =
             "move remaining owner-ready focused fallback tags to a supported Vaadin build/runtime SPI or broaden current app owner tag coverage";
     private static final String CURRENT_APP_GENERATED_IMPORTS_OWNER_SIDE_EFFECT_VERSION =
-            "flow-ipc-current-app-generated-imports-owner-side-effect-v1_40";
+            "flow-ipc-current-app-generated-imports-select-owner-coverage-v1_41";
     private static final String CURRENT_APP_GENERATED_IMPORTS_OWNER_SIDE_EFFECT_SOURCE =
-            "current-app-owner-early-import-v1_39";
+            "current-app-generated-imports-owner-side-effect-v1_40";
     private static final String CURRENT_APP_GENERATED_IMPORTS_OWNER_SIDE_EFFECT_POLICY =
-            "import-current-app-production-generated-imports-before-covered-components-v1_40";
+            "cover-current-app-production-generated-imports-select-before-components-v1_41";
     private static final String CURRENT_APP_GENERATED_IMPORTS_OWNER_SIDE_EFFECT_CANDIDATE =
             "current-app-production-generated-imports-support-artifact";
     private static final String CURRENT_APP_GENERATED_IMPORTS_OWNER_SIDE_EFFECT_EXPECTED_TAGS =
-            "vaadin-big-decimal-field,vaadin-checkbox,vaadin-text-field";
+            "vaadin-big-decimal-field,vaadin-checkbox,vaadin-select,vaadin-text-field";
     private static final String CURRENT_APP_GENERATED_IMPORTS_OWNER_SIDE_EFFECT_COVERED_TAGS =
             "vaadin-big-decimal-field,vaadin-checkbox,vaadin-select,vaadin-text-field";
     private static final String CURRENT_APP_GENERATED_IMPORTS_OWNER_SIDE_EFFECT_KNOWN_MISSING_TAGS =
-            "vaadin-select";
+            "";
     private static final String CURRENT_APP_GENERATED_IMPORTS_OWNER_SIDE_EFFECT_EXPECTED_GLOBALS =
             "window.Vaadin,window.Vaadin.Flow,window.Vaadin.Flow.loadOnDemand";
     private static final String CURRENT_APP_GENERATED_IMPORTS_OWNER_SIDE_EFFECT_FAILURE_LAYER =
-            "current-app-generated-imports-owner-side-effect-pending";
+            "current-app-generated-imports-select-owner-coverage-pending";
     private static final String CURRENT_APP_GENERATED_IMPORTS_OWNER_SIDE_EFFECT_NEXT_STEP =
-            "promote reusable current app generated imports side effects into the owner runtime contract, then replace remaining focused fallbacks with supported Vaadin build/runtime SPI coverage";
+            "promote four-tag current app generated imports side effects into the owner runtime contract, then broaden component/resource coverage and dev-mode/Vite parity";
     private static final List<String> PRODUCTION_RUNTIME_OWNER_DEPENDENCY_ARTIFACTS = List.of(
             DEV_BUNDLE_COMMONJS_JS,
             DEV_BUNDLE_INDEX_HTML_JS,
@@ -3633,17 +3633,18 @@ final class FlowClientResources {
             }
         }
 
-        Path productionBuildRoot = productionBuildRootPath(module);
-        boolean productionBuildObserved = Files.isDirectory(productionBuildRoot);
-        Path productionGeneratedImports = findFirstFile(productionBuildRoot, "generated-flow-imports", ".js");
-        FileEvidence productionGeneratedImportsEvidence = fileEvidence(productionGeneratedImports);
         Path statsPath = module.resolve("target/classes/META-INF/VAADIN/config/stats.json").normalize();
         FileEvidence stats = fileEvidence(statsPath);
         FileEvidence prodBundle = fileEvidence(module.resolve("src/main/bundles/prod.bundle").normalize());
+        Path productionBuildRoot = productionBuildRootPath(module);
+        boolean productionBuildObserved = Files.isDirectory(productionBuildRoot);
+        String productionEntryScriptVirtualPath = currentAppProductionEntryScriptVirtualPath(statsPath);
+        Path productionGeneratedImports = findProductionGeneratedImports(
+                productionBuildRoot, productionEntryScriptVirtualPath);
+        FileEvidence productionGeneratedImportsEvidence = fileEvidence(productionGeneratedImports);
         String productionBuildJsVirtualPaths = currentAppProductionBuildVirtualPaths(productionBuildRoot);
         String productionGeneratedImportsVirtualPath = productionGeneratedImports == null
                 ? "" : currentAppProductionBuildVirtualPath(productionGeneratedImports);
-        String productionEntryScriptVirtualPath = currentAppProductionEntryScriptVirtualPath(statsPath);
         String statsBundleImports = String.join(",", statsBundleImports(statsPath));
         List<String> sourceRootBareSpecifiers = csvValues(sourceGeneratedImportsRootBareImportSpecifiers);
         boolean rootProductionSupportObserved = productionGeneratedImportsEvidence.observed()
@@ -3835,15 +3836,29 @@ final class FlowClientResources {
         }
     }
 
-    private static Path findFirstFile(Path root, String prefix, String suffix) {
+    private static Path findProductionGeneratedImports(Path root, String productionEntryScriptVirtualPath) {
         if (root == null || !Files.isDirectory(root)) {
             return null;
         }
         try (Stream<Path> stream = Files.find(root, 2,
                 (path, attributes) -> attributes.isRegularFile()
-                        && path.getFileName().toString().startsWith(prefix)
-                        && path.getFileName().toString().endsWith(suffix))) {
-            return stream.findFirst().orElse(null);
+                        && path.getFileName().toString().startsWith("generated-flow-imports")
+                        && path.getFileName().toString().endsWith(".js"))) {
+            List<Path> candidates = stream.sorted().toList();
+            String entryFileName = fileName(productionEntryScriptVirtualPath);
+            if (!entryFileName.isBlank()) {
+                String importNeedle = "./" + entryFileName;
+                for (Path candidate : candidates) {
+                    try {
+                        if (Files.readString(candidate, StandardCharsets.UTF_8).contains(importNeedle)) {
+                            return candidate;
+                        }
+                    } catch (IOException ignored) {
+                        // Fall through to the deterministic first candidate when a body is unreadable.
+                    }
+                }
+            }
+            return candidates.isEmpty() ? null : candidates.get(0);
         } catch (IOException ignored) {
             return null;
         }

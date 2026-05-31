@@ -15,6 +15,7 @@ struct HostConfig {
     var flowIpcAutoFrameworkUpdate: Bool = false
     var flowIpcAutoComponentMatrix: Bool = false
     var flowIpcAutoDataComponents: Bool = false
+    var flowIpcAutoLazyData: Bool = false
     var flowIpcAutoShutdown: Bool = false
     var hostNoActivate: Bool = false
     var title: String = "Vaadin Desktop"
@@ -65,6 +66,7 @@ struct HostConfig {
         config.flowIpcAutoFrameworkUpdate = ProcessInfo.processInfo.environment["VAADIN_DESKTOP_FLOW_IPC_AUTO_FRAMEWORK_UPDATE"] == "1"
         config.flowIpcAutoComponentMatrix = ProcessInfo.processInfo.environment["VAADIN_DESKTOP_FLOW_IPC_AUTO_COMPONENT_MATRIX"] == "1"
         config.flowIpcAutoDataComponents = ProcessInfo.processInfo.environment["VAADIN_DESKTOP_FLOW_IPC_AUTO_DATA_COMPONENTS"] == "1"
+        config.flowIpcAutoLazyData = ProcessInfo.processInfo.environment["VAADIN_DESKTOP_FLOW_IPC_AUTO_LAZY_DATA"] == "1"
         config.flowIpcAutoShutdown = ProcessInfo.processInfo.environment["VAADIN_DESKTOP_FLOW_IPC_AUTO_SHUTDOWN"] == "1"
         config.hostNoActivate = ProcessInfo.processInfo.environment["VAADIN_DESKTOP_HOST_NO_ACTIVATE"] == "1"
         return config
@@ -748,6 +750,10 @@ final class WebViewHost: NSObject, NSApplicationDelegate, NSWindowDelegate, WKNa
         }
         if config.flowIpcAutoDataComponents {
             let source = "window.__VAADIN_DESKTOP_FLOW_IPC_AUTO_DATA_COMPONENTS__ = true;"
+            userContentController.addUserScript(WKUserScript(source: source, injectionTime: .atDocumentStart, forMainFrameOnly: true))
+        }
+        if config.flowIpcAutoLazyData {
+            let source = "window.__VAADIN_DESKTOP_FLOW_IPC_AUTO_LAZY_DATA__ = true;"
             userContentController.addUserScript(WKUserScript(source: source, injectionTime: .atDocumentStart, forMainFrameOnly: true))
         }
         userContentController.add(self, name: "flowIpc")
@@ -2122,9 +2128,12 @@ final class WebViewHost: NSObject, NSApplicationDelegate, NSWindowDelegate, WKNa
             || !!d.frameworkComponentMatrixComplete;
           const dataComponentMatrixComplete = !window.__VAADIN_DESKTOP_FLOW_IPC_AUTO_DATA_COMPONENTS__
             || !!d.frameworkDataComponentMatrixComplete;
+          const lazyDataProviderComplete = !window.__VAADIN_DESKTOP_FLOW_IPC_AUTO_LAZY_DATA__
+            || !!d.frameworkLazyDataProviderComplete;
           const frameworkComplete = !!d.frameworkAppInteractionComplete
             && componentMatrixComplete
-            && dataComponentMatrixComplete;
+            && dataComponentMatrixComplete
+            && lazyDataProviderComplete;
           const complete = window.__VAADIN_DESKTOP_FLOW_IPC_AUTO_FRAMEWORK_UPDATE__
             ? frameworkComplete
             : smokeComplete;
@@ -2134,6 +2143,7 @@ final class WebViewHost: NSObject, NSApplicationDelegate, NSWindowDelegate, WKNa
             frameworkComplete,
             componentMatrixComplete,
             dataComponentMatrixComplete,
+            lazyDataProviderComplete,
             click: !!d.flowClientEngineEventPatchConsumed,
             text: !!d.flowClientEngineTextInputEventObserved,
             checkbox: !!d.flowClientEngineCheckboxEventObserved,
@@ -3482,6 +3492,15 @@ final class WebViewHost: NSObject, NSApplicationDelegate, NSWindowDelegate, WKNa
           frameworkDataComponentMatrixValidateEventRpcObserved: !!(window.VaadinDesktopIpcDiagnostics && window.VaadinDesktopIpcDiagnostics.frameworkDataComponentMatrixValidateEventRpcObserved),
           frameworkDataComponentMatrixValidateEventObserved: !!(window.VaadinDesktopIpcDiagnostics && window.VaadinDesktopIpcDiagnostics.frameworkDataComponentMatrixValidateEventObserved),
           frameworkDataComponentMatrixComplete: !!(window.VaadinDesktopIpcDiagnostics && window.VaadinDesktopIpcDiagnostics.frameworkDataComponentMatrixComplete),
+          frameworkLazyDataProviderVersion: window.VaadinDesktopIpcDiagnostics ? window.VaadinDesktopIpcDiagnostics.frameworkLazyDataProviderVersion : "",
+          frameworkLazyDataProviderRendered: !!(window.VaadinDesktopIpcDiagnostics && window.VaadinDesktopIpcDiagnostics.frameworkLazyDataProviderRendered),
+          frameworkLazyDataProviderGridRendered: !!(window.VaadinDesktopIpcDiagnostics && window.VaadinDesktopIpcDiagnostics.frameworkLazyDataProviderGridRendered),
+          frameworkLazyDataProviderStatusText: window.VaadinDesktopIpcDiagnostics ? window.VaadinDesktopIpcDiagnostics.frameworkLazyDataProviderStatusText : "",
+          frameworkLazyDataProviderPublishedRpcObserved: !!(window.VaadinDesktopIpcDiagnostics && window.VaadinDesktopIpcDiagnostics.frameworkLazyDataProviderPublishedRpcObserved),
+          frameworkLazyDataProviderFetchObserved: !!(window.VaadinDesktopIpcDiagnostics && window.VaadinDesktopIpcDiagnostics.frameworkLazyDataProviderFetchObserved),
+          frameworkLazyDataProviderReportEventRpcObserved: !!(window.VaadinDesktopIpcDiagnostics && window.VaadinDesktopIpcDiagnostics.frameworkLazyDataProviderReportEventRpcObserved),
+          frameworkLazyDataProviderReportEventObserved: !!(window.VaadinDesktopIpcDiagnostics && window.VaadinDesktopIpcDiagnostics.frameworkLazyDataProviderReportEventObserved),
+          frameworkLazyDataProviderComplete: !!(window.VaadinDesktopIpcDiagnostics && window.VaadinDesktopIpcDiagnostics.frameworkLazyDataProviderComplete),
           frameworkAppFailureReason: window.VaadinDesktopIpcDiagnostics ? window.VaadinDesktopIpcDiagnostics.frameworkAppFailureReason : ""
         })
         """
@@ -4666,6 +4685,54 @@ let flowIpcShell = #"""
         dataComponentResourceMatrixNextResolutionStep: '',
         dataComponentResourceMatrixStageExecutionStatus: '',
         dataComponentResourceMatrixStageScheme: '',
+        gridLazyDataProviderVersion: '',
+        gridLazyDataProviderSource: '',
+        gridLazyDataProviderScope: '',
+        gridLazyDataProviderAppShape: '',
+        gridLazyDataProviderTargetTags: '',
+        gridLazyDataProviderJavaClasses: '',
+        gridLazyDataProviderComponentIds: '',
+        gridLazyDataProviderModuleSpecifiers: '',
+        gridLazyDataProviderPublishedMethod: '',
+        gridLazyDataProviderViewportRange: '',
+        gridLazyDataProviderExpectedResult: '',
+        gridLazyDataProviderSelectedArtifacts: '',
+        gridLazyDataProviderSelectedArtifactCount: 0,
+        gridLazyDataProviderGeneratedImportsOwnerSource: '',
+        gridLazyDataProviderGeneratedImportsOwnerArtifact: '',
+        gridLazyDataProviderProductionSupportArtifact: '',
+        gridLazyDataProviderProductionSupportSha256: '',
+        gridLazyDataProviderProductionSupportBytes: 0,
+        gridLazyDataProviderProductionEntryArtifact: '',
+        gridLazyDataProviderSourceChunkArtifact: '',
+        gridLazyDataProviderSourceChunkStatus: '',
+        gridLazyDataProviderResolvedSpecifiers: '',
+        gridLazyDataProviderUnresolvedSpecifiers: '',
+        gridLazyDataProviderAllowedSchemes: '',
+        gridLazyDataProviderIntegrityPolicy: '',
+        gridLazyDataProviderBuildGoal: '',
+        gridLazyDataProviderBuildStatus: '',
+        gridLazyDataProviderOutputUsability: '',
+        gridLazyDataProviderFrameworkAppRequired: false,
+        gridLazyDataProviderFrameworkAppObserved: false,
+        gridLazyDataProviderCliContractEnabled: false,
+        gridLazyDataProviderManifestReady: false,
+        gridLazyDataProviderRuntimeHandoffRequired: false,
+        gridLazyDataProviderRuntimeHandoffReady: false,
+        gridLazyDataProviderRuntimeHandoffSatisfied: false,
+        gridLazyDataProviderPublishedRpcObserved: false,
+        gridLazyDataProviderCallbackFetchObserved: false,
+        gridLazyDataProviderStaged: false,
+        gridLazyDataProviderCustomSchemeObserved: false,
+        gridLazyDataProviderBlobFallbackObserved: false,
+        gridLazyDataProviderNoLocalhost: false,
+        gridLazyDataProviderFixtureSubstituted: false,
+        gridLazyDataProviderAcceptableFailures: '',
+        gridLazyDataProviderFailureLayer: '',
+        gridLazyDataProviderRemainingBlockers: '',
+        gridLazyDataProviderNextResolutionStep: '',
+        gridLazyDataProviderStageExecutionStatus: '',
+        gridLazyDataProviderStageScheme: '',
         frontendBuildPreflightAvailabilityObserved: false,
         frontendBuildPreflightAvailabilityVersion: '',
         frontendBuildPreflightAvailabilitySource: '',
@@ -5267,6 +5334,15 @@ let flowIpcShell = #"""
         frameworkDataComponentMatrixValidateEventRpcObserved: false,
         frameworkDataComponentMatrixValidateEventObserved: false,
         frameworkDataComponentMatrixComplete: false,
+        frameworkLazyDataProviderVersion: '',
+        frameworkLazyDataProviderRendered: false,
+        frameworkLazyDataProviderGridRendered: false,
+        frameworkLazyDataProviderStatusText: '',
+        frameworkLazyDataProviderPublishedRpcObserved: false,
+        frameworkLazyDataProviderFetchObserved: false,
+        frameworkLazyDataProviderReportEventRpcObserved: false,
+        frameworkLazyDataProviderReportEventObserved: false,
+        frameworkLazyDataProviderComplete: false,
         frameworkAppFailureReason: ''
       };
 
@@ -5709,6 +5785,9 @@ let flowIpcShell = #"""
         const ownerName = flowClientEngineElementById('framework-owner-name');
         const validationAction = flowClientEngineElementById('framework-validation-action');
         const validationStatus = flowClientEngineElementById('framework-validation-status');
+        const lazyGrid = flowClientEngineElementById('framework-lazy-grid');
+        const lazyGridStatus = flowClientEngineElementById('framework-lazy-grid-status');
+        const lazyGridReport = flowClientEngineElementById('framework-lazy-grid-report');
         const apply = flowClientEngineElementById('framework-apply');
         const status = flowClientEngineElementById('framework-status');
         const componentStatus = flowClientEngineElementById('framework-component-status');
@@ -5718,6 +5797,7 @@ let flowIpcShell = #"""
         const componentStatusText = componentStatus ? (componentStatus.element.textContent || '') : '';
         const matrixStatusText = matrixStatus ? (matrixStatus.element.textContent || '') : '';
         const validationStatusText = validationStatus ? (validationStatus.element.textContent || '') : '';
+        const lazyGridStatusText = lazyGridStatus ? (lazyGridStatus.element.textContent || '') : '';
         const updatesText = updates ? (updates.element.textContent || '') : '';
         window.VaadinDesktopIpcDiagnostics.frameworkAppAutoUpdateStep = autoFrameworkUpdateStep;
         window.VaadinDesktopIpcDiagnostics.frameworkAppAutoUpdateAttempts = autoFrameworkUpdateAttempts;
@@ -5781,6 +5861,17 @@ let flowIpcShell = #"""
         window.VaadinDesktopIpcDiagnostics.frameworkComponentMatrixStatusText = matrixStatusText;
         window.VaadinDesktopIpcDiagnostics.frameworkDataComponentMatrixValidationStatusText =
           validationStatusText;
+        window.VaadinDesktopIpcDiagnostics.frameworkLazyDataProviderVersion =
+          'flow-ipc-grid-lazy-data-provider-v1_48';
+        window.VaadinDesktopIpcDiagnostics.frameworkLazyDataProviderGridRendered =
+          !!lazyGrid && lazyGrid.element.tagName.toLowerCase() === 'vaadin-grid'
+          && !!lazyGridReport
+          && !!customElements.get('vaadin-grid');
+        window.VaadinDesktopIpcDiagnostics.frameworkLazyDataProviderRendered =
+          window.VaadinDesktopIpcDiagnostics.frameworkLazyDataProviderGridRendered
+          && !!lazyGridStatus;
+        window.VaadinDesktopIpcDiagnostics.frameworkLazyDataProviderStatusText =
+          lazyGridStatusText;
         window.VaadinDesktopIpcDiagnostics.frameworkAppUpdatesText = updatesText;
 
         if (componentStatusText.includes('Budget changed: ' + autoFrameworkBudgetValue)) {
@@ -5814,6 +5905,16 @@ let flowIpcShell = #"""
         if (validationStatusText.includes('Validation accepted: ' + autoFrameworkOwnerValue)) {
           window.VaadinDesktopIpcDiagnostics.frameworkDataComponentMatrixValidateEventObserved = true;
         }
+        if (lazyGridStatusText.includes('range: 15-20')
+            || lazyGridStatusText.includes('Lazy grid fetch')
+            && lazyGridStatusText.includes('15-20')) {
+          window.VaadinDesktopIpcDiagnostics.frameworkLazyDataProviderFetchObserved = true;
+          window.VaadinDesktopIpcDiagnostics.gridLazyDataProviderCallbackFetchObserved = true;
+        }
+        if (lazyGridStatusText.includes('Lazy grid fetches:')
+            && lazyGridStatusText.includes('range: 15-20')) {
+          window.VaadinDesktopIpcDiagnostics.frameworkLazyDataProviderReportEventObserved = true;
+        }
         window.VaadinDesktopIpcDiagnostics.frameworkAppInteractionComplete =
           window.VaadinDesktopIpcDiagnostics.frameworkAppBudgetEventRpcObserved
           && window.VaadinDesktopIpcDiagnostics.frameworkAppBudgetEventObserved
@@ -5837,11 +5938,25 @@ let flowIpcShell = #"""
           && window.VaadinDesktopIpcDiagnostics.frameworkDataComponentMatrixOwnerEventObserved
           && window.VaadinDesktopIpcDiagnostics.frameworkDataComponentMatrixValidateEventRpcObserved
           && window.VaadinDesktopIpcDiagnostics.frameworkDataComponentMatrixValidateEventObserved;
+        window.VaadinDesktopIpcDiagnostics.frameworkLazyDataProviderComplete =
+          window.VaadinDesktopIpcDiagnostics.frameworkLazyDataProviderRendered
+          && window.VaadinDesktopIpcDiagnostics.frameworkLazyDataProviderPublishedRpcObserved
+          && window.VaadinDesktopIpcDiagnostics.frameworkLazyDataProviderFetchObserved
+          && window.VaadinDesktopIpcDiagnostics.frameworkLazyDataProviderReportEventRpcObserved
+          && window.VaadinDesktopIpcDiagnostics.frameworkLazyDataProviderReportEventObserved;
+        window.VaadinDesktopIpcDiagnostics.gridLazyDataProviderPublishedRpcObserved =
+          window.VaadinDesktopIpcDiagnostics.gridLazyDataProviderPublishedRpcObserved
+          || window.VaadinDesktopIpcDiagnostics.frameworkLazyDataProviderPublishedRpcObserved;
+        window.VaadinDesktopIpcDiagnostics.gridLazyDataProviderCallbackFetchObserved =
+          window.VaadinDesktopIpcDiagnostics.gridLazyDataProviderCallbackFetchObserved
+          || window.VaadinDesktopIpcDiagnostics.frameworkLazyDataProviderFetchObserved;
         if (window.VaadinDesktopIpcDiagnostics.frameworkAppInteractionComplete
             && (!window.__VAADIN_DESKTOP_FLOW_IPC_AUTO_COMPONENT_MATRIX__
               || window.VaadinDesktopIpcDiagnostics.frameworkComponentMatrixComplete)
             && (!window.__VAADIN_DESKTOP_FLOW_IPC_AUTO_DATA_COMPONENTS__
-              || window.VaadinDesktopIpcDiagnostics.frameworkDataComponentMatrixComplete)) {
+              || window.VaadinDesktopIpcDiagnostics.frameworkDataComponentMatrixComplete)
+            && (!window.__VAADIN_DESKTOP_FLOW_IPC_AUTO_LAZY_DATA__
+              || window.VaadinDesktopIpcDiagnostics.frameworkLazyDataProviderComplete)) {
           autoFrameworkUpdateDone = true;
           autoFrameworkUpdateInFlight = false;
         }
@@ -5883,6 +5998,26 @@ let flowIpcShell = #"""
         }
       }
 
+      function sendFrameworkPublishedMethod(componentId, methodName, args) {
+        const target = flowClientEngineElementById(componentId);
+        const element = target ? target.element : null;
+        const server = element && element.$server ? element.$server : null;
+        if (!target || !server || typeof server[methodName] !== 'function'
+            || !window.VaadinDesktopIpcDiagnostics.flowClientEngineXhrBridgeInstalled) {
+          return false;
+        }
+        try {
+          autoFrameworkUpdateInFlight = true;
+          server[methodName].apply(server, Array.isArray(args) ? args : []);
+          return true;
+        } catch (error) {
+          autoFrameworkUpdateInFlight = false;
+          window.VaadinDesktopIpcDiagnostics.frameworkAppFailureReason =
+            error && error.message ? error.message : String(error);
+          return false;
+        }
+      }
+
       function frameworkAppStepDone() {
         refreshFrameworkAppDiagnostics();
         if (autoFrameworkUpdateStep === 0) {
@@ -5909,12 +6044,18 @@ let flowIpcShell = #"""
         if (autoFrameworkUpdateStep === 7) {
           return window.VaadinDesktopIpcDiagnostics.frameworkDataComponentMatrixOwnerEventObserved;
         }
-        return window.VaadinDesktopIpcDiagnostics.frameworkDataComponentMatrixValidateEventObserved;
+        if (autoFrameworkUpdateStep === 8) {
+          return window.VaadinDesktopIpcDiagnostics.frameworkDataComponentMatrixValidateEventObserved;
+        }
+        if (autoFrameworkUpdateStep === 9) {
+          return window.VaadinDesktopIpcDiagnostics.frameworkLazyDataProviderPublishedRpcObserved;
+        }
+        return window.VaadinDesktopIpcDiagnostics.frameworkLazyDataProviderReportEventObserved;
       }
 
       function advanceFrameworkAppStepIfDone() {
         const stepCount = window.__VAADIN_DESKTOP_FLOW_IPC_AUTO_DATA_COMPONENTS__
-          ? 9
+          ? (window.__VAADIN_DESKTOP_FLOW_IPC_AUTO_LAZY_DATA__ ? 11 : 9)
           : (window.__VAADIN_DESKTOP_FLOW_IPC_AUTO_COMPONENT_MATRIX__ ? 7 : 4);
         while (autoFrameworkUpdateStep < stepCount && frameworkAppStepDone()) {
           const completedStep = autoFrameworkUpdateStep;
@@ -5931,7 +6072,9 @@ let flowIpcShell = #"""
               && (!window.__VAADIN_DESKTOP_FLOW_IPC_AUTO_COMPONENT_MATRIX__
                 || window.VaadinDesktopIpcDiagnostics.frameworkComponentMatrixComplete)
               && (!window.__VAADIN_DESKTOP_FLOW_IPC_AUTO_DATA_COMPONENTS__
-                || window.VaadinDesktopIpcDiagnostics.frameworkDataComponentMatrixComplete)) {
+                || window.VaadinDesktopIpcDiagnostics.frameworkDataComponentMatrixComplete)
+              && (!window.__VAADIN_DESKTOP_FLOW_IPC_AUTO_LAZY_DATA__
+                || window.VaadinDesktopIpcDiagnostics.frameworkLazyDataProviderComplete)) {
             autoFrameworkUpdateDone = true;
           }
         }
@@ -6014,6 +6157,10 @@ let flowIpcShell = #"""
             });
         } else if (autoFrameworkUpdateStep === 8) {
           sent = sendFrameworkAppEvent('framework-validation-action', 'click', {});
+        } else if (autoFrameworkUpdateStep === 9) {
+          sent = sendFrameworkPublishedMethod('framework-lazy-grid', 'setViewportRange', [20, 8]);
+        } else if (autoFrameworkUpdateStep === 10) {
+          sent = sendFrameworkAppEvent('framework-lazy-grid-report', 'click', {});
         }
         if (!sent) {
           setTimeout(scheduleAutoFrameworkUpdate, 160);
@@ -6267,11 +6414,19 @@ let flowIpcShell = #"""
               const eventRpcs = Array.isArray(requestPayload.rpc)
                 ? requestPayload.rpc.filter((entry) => entry && entry.type === 'event')
                 : [];
+              const publishedRpcs = Array.isArray(requestPayload.rpc)
+                ? requestPayload.rpc.filter((entry) => entry && entry.type === 'publishedEventHandler')
+                : [];
               const rpc = eventRpcs.find((entry) => entry.event === 'change')
                 || eventRpcs[0]
+                || publishedRpcs[0]
                 || null;
               const rpcNodeId = rpc && Number.isInteger(rpc.node) ? rpc.node : -1;
-              const rpcEventType = rpc && typeof rpc.event === 'string' ? rpc.event : (type === 'event' ? 'uidl-rpc' : 'resync');
+              const rpcEventType = rpc && typeof rpc.event === 'string'
+                ? rpc.event
+                : (rpc && typeof rpc.templateEventMethodName === 'string'
+                  ? rpc.templateEventMethodName
+                  : (type === 'event' ? 'uidl-rpc' : 'resync'));
               const rpcComponentId = rpcNodeId >= 0 ? flowClientElementIdByNodeId(rpcNodeId) : '';
               const ipcPayload = {
                 dispatch: 'flow-client-xhr',
@@ -6280,6 +6435,7 @@ let flowIpcShell = #"""
                 securityKey,
                 event: type === 'event' ? rpcEventType : 'resync',
                 uidlRpc: requestPayload,
+                rpcType: rpc && typeof rpc.type === 'string' ? rpc.type : '',
                 syncId: Number.isInteger(requestPayload.syncId) ? requestPayload.syncId : flowClientState.syncId,
                 clientId: Number.isInteger(requestPayload.clientId) ? requestPayload.clientId : flowClientState.clientId
               };
@@ -6371,6 +6527,17 @@ let flowIpcShell = #"""
           : '';
         if (body) {
           window.VaadinDesktopIpcDiagnostics.flowClientEngineXhrResponseObserved = true;
+          if (pending.componentId === 'framework-lazy-grid'
+              && pending.eventType === 'setViewportRange') {
+            window.VaadinDesktopIpcDiagnostics.frameworkLazyDataProviderPublishedRpcObserved = true;
+            window.VaadinDesktopIpcDiagnostics.gridLazyDataProviderPublishedRpcObserved = true;
+            if (body.includes('Lazy grid fetch')
+                && body.includes('15-20')) {
+              window.VaadinDesktopIpcDiagnostics.frameworkLazyDataProviderFetchObserved = true;
+              window.VaadinDesktopIpcDiagnostics.gridLazyDataProviderCallbackFetchObserved = true;
+            }
+            autoFrameworkUpdateInFlight = false;
+          }
           if (message.type === 'patch' && message.payload && message.payload.reason === 'event') {
             if (pending.componentId && pending.componentId.startsWith('framework-')) {
               window.VaadinDesktopIpcDiagnostics.frameworkAppEventPatchCount += 1;
@@ -6424,6 +6591,23 @@ let flowIpcShell = #"""
                 window.VaadinDesktopIpcDiagnostics.frameworkDataComponentMatrixValidateEventRpcObserved = true;
                 if (body.includes('Validation accepted: ' + autoFrameworkOwnerValue)) {
                   window.VaadinDesktopIpcDiagnostics.frameworkDataComponentMatrixValidateEventObserved = true;
+                }
+                autoFrameworkUpdateInFlight = false;
+              } else if (pending.componentId === 'framework-lazy-grid'
+                  && pending.eventType === 'setViewportRange') {
+                window.VaadinDesktopIpcDiagnostics.frameworkLazyDataProviderPublishedRpcObserved = true;
+                window.VaadinDesktopIpcDiagnostics.gridLazyDataProviderPublishedRpcObserved = true;
+                if (body.includes('Lazy grid fetch')
+                    && body.includes('15-20')) {
+                  window.VaadinDesktopIpcDiagnostics.frameworkLazyDataProviderFetchObserved = true;
+                  window.VaadinDesktopIpcDiagnostics.gridLazyDataProviderCallbackFetchObserved = true;
+                }
+                autoFrameworkUpdateInFlight = false;
+              } else if (pending.componentId === 'framework-lazy-grid-report') {
+                window.VaadinDesktopIpcDiagnostics.frameworkLazyDataProviderReportEventRpcObserved = true;
+                if (body.includes('Lazy grid fetches:')
+                    && body.includes('range: 15-20')) {
+                  window.VaadinDesktopIpcDiagnostics.frameworkLazyDataProviderReportEventObserved = true;
                 }
                 autoFrameworkUpdateInFlight = false;
               }
@@ -9403,7 +9587,101 @@ let flowIpcShell = #"""
           dataComponentResourceMatrixNextResolutionStep:
             source.dataComponentResourceMatrixNextResolutionStep || '',
           dataComponentResourceMatrixStageExecutionStatus: executionStatus || '',
-          dataComponentResourceMatrixStageScheme: scheme || ''
+          dataComponentResourceMatrixStageScheme: scheme || '',
+          gridLazyDataProviderVersion:
+            source.gridLazyDataProviderVersion || '',
+          gridLazyDataProviderSource:
+            source.gridLazyDataProviderSource || '',
+          gridLazyDataProviderScope:
+            source.gridLazyDataProviderScope || '',
+          gridLazyDataProviderAppShape:
+            source.gridLazyDataProviderAppShape || '',
+          gridLazyDataProviderTargetTags:
+            source.gridLazyDataProviderTargetTags || '',
+          gridLazyDataProviderJavaClasses:
+            source.gridLazyDataProviderJavaClasses || '',
+          gridLazyDataProviderComponentIds:
+            source.gridLazyDataProviderComponentIds || '',
+          gridLazyDataProviderModuleSpecifiers:
+            source.gridLazyDataProviderModuleSpecifiers || '',
+          gridLazyDataProviderPublishedMethod:
+            source.gridLazyDataProviderPublishedMethod || '',
+          gridLazyDataProviderViewportRange:
+            source.gridLazyDataProviderViewportRange || '',
+          gridLazyDataProviderExpectedResult:
+            source.gridLazyDataProviderExpectedResult || '',
+          gridLazyDataProviderSelectedArtifacts:
+            source.gridLazyDataProviderSelectedArtifacts || '',
+          gridLazyDataProviderSelectedArtifactCount:
+            Number(source.gridLazyDataProviderSelectedArtifactCount || 0),
+          gridLazyDataProviderGeneratedImportsOwnerSource:
+            source.gridLazyDataProviderGeneratedImportsOwnerSource || '',
+          gridLazyDataProviderGeneratedImportsOwnerArtifact:
+            source.gridLazyDataProviderGeneratedImportsOwnerArtifact || '',
+          gridLazyDataProviderProductionSupportArtifact:
+            source.gridLazyDataProviderProductionSupportArtifact || '',
+          gridLazyDataProviderProductionSupportSha256:
+            source.gridLazyDataProviderProductionSupportSha256 || '',
+          gridLazyDataProviderProductionSupportBytes:
+            Number(source.gridLazyDataProviderProductionSupportBytes || 0),
+          gridLazyDataProviderProductionEntryArtifact:
+            source.gridLazyDataProviderProductionEntryArtifact || '',
+          gridLazyDataProviderSourceChunkArtifact:
+            source.gridLazyDataProviderSourceChunkArtifact || '',
+          gridLazyDataProviderSourceChunkStatus:
+            source.gridLazyDataProviderSourceChunkStatus || '',
+          gridLazyDataProviderResolvedSpecifiers:
+            source.gridLazyDataProviderResolvedSpecifiers || '',
+          gridLazyDataProviderUnresolvedSpecifiers:
+            typeof source.gridLazyDataProviderUnresolvedSpecifiers === 'string'
+              ? source.gridLazyDataProviderUnresolvedSpecifiers
+              : '',
+          gridLazyDataProviderAllowedSchemes:
+            source.gridLazyDataProviderAllowedSchemes || '',
+          gridLazyDataProviderIntegrityPolicy:
+            source.gridLazyDataProviderIntegrityPolicy || '',
+          gridLazyDataProviderBuildGoal:
+            source.gridLazyDataProviderBuildGoal || '',
+          gridLazyDataProviderBuildStatus:
+            source.gridLazyDataProviderBuildStatus || '',
+          gridLazyDataProviderOutputUsability:
+            source.gridLazyDataProviderOutputUsability || '',
+          gridLazyDataProviderFrameworkAppRequired:
+            source.gridLazyDataProviderFrameworkAppRequired === true,
+          gridLazyDataProviderFrameworkAppObserved:
+            source.gridLazyDataProviderFrameworkAppObserved === true,
+          gridLazyDataProviderCliContractEnabled:
+            source.gridLazyDataProviderCliContractEnabled === true,
+          gridLazyDataProviderManifestReady:
+            source.gridLazyDataProviderManifestReady === true,
+          gridLazyDataProviderRuntimeHandoffRequired:
+            source.gridLazyDataProviderRuntimeHandoffRequired === true,
+          gridLazyDataProviderRuntimeHandoffReady:
+            source.gridLazyDataProviderRuntimeHandoffReady === true,
+          gridLazyDataProviderRuntimeHandoffSatisfied:
+            runtimeHandoffSatisfied,
+          gridLazyDataProviderPublishedRpcObserved:
+            source.gridLazyDataProviderPublishedRpcObserved === true,
+          gridLazyDataProviderCallbackFetchObserved:
+            source.gridLazyDataProviderCallbackFetchObserved === true,
+          gridLazyDataProviderStaged: true,
+          gridLazyDataProviderCustomSchemeObserved: customSchemeObserved,
+          gridLazyDataProviderBlobFallbackObserved: blobFallbackObserved
+            || source.gridLazyDataProviderBlobFallbackObserved === true,
+          gridLazyDataProviderNoLocalhost:
+            source.gridLazyDataProviderNoLocalhost !== false,
+          gridLazyDataProviderFixtureSubstituted:
+            source.gridLazyDataProviderFixtureSubstituted === true,
+          gridLazyDataProviderAcceptableFailures:
+            source.gridLazyDataProviderAcceptableFailures || '',
+          gridLazyDataProviderFailureLayer:
+            runtimeHandoffSatisfied ? '' : (source.gridLazyDataProviderFailureLayer || ''),
+          gridLazyDataProviderRemainingBlockers:
+            source.gridLazyDataProviderRemainingBlockers || '',
+          gridLazyDataProviderNextResolutionStep:
+            source.gridLazyDataProviderNextResolutionStep || '',
+          gridLazyDataProviderStageExecutionStatus: executionStatus || '',
+          gridLazyDataProviderStageScheme: scheme || ''
         };
       }
 
@@ -9523,7 +9801,39 @@ let flowIpcShell = #"""
           'dataComponentResourceMatrixRemainingBlockers',
           'dataComponentResourceMatrixNextResolutionStep',
           'dataComponentResourceMatrixStageExecutionStatus',
-          'dataComponentResourceMatrixStageScheme'
+          'dataComponentResourceMatrixStageScheme',
+          'gridLazyDataProviderVersion',
+          'gridLazyDataProviderSource',
+          'gridLazyDataProviderScope',
+          'gridLazyDataProviderAppShape',
+          'gridLazyDataProviderTargetTags',
+          'gridLazyDataProviderJavaClasses',
+          'gridLazyDataProviderComponentIds',
+          'gridLazyDataProviderModuleSpecifiers',
+          'gridLazyDataProviderPublishedMethod',
+          'gridLazyDataProviderViewportRange',
+          'gridLazyDataProviderExpectedResult',
+          'gridLazyDataProviderSelectedArtifacts',
+          'gridLazyDataProviderGeneratedImportsOwnerSource',
+          'gridLazyDataProviderGeneratedImportsOwnerArtifact',
+          'gridLazyDataProviderProductionSupportArtifact',
+          'gridLazyDataProviderProductionSupportSha256',
+          'gridLazyDataProviderProductionEntryArtifact',
+          'gridLazyDataProviderSourceChunkArtifact',
+          'gridLazyDataProviderSourceChunkStatus',
+          'gridLazyDataProviderResolvedSpecifiers',
+          'gridLazyDataProviderUnresolvedSpecifiers',
+          'gridLazyDataProviderAllowedSchemes',
+          'gridLazyDataProviderIntegrityPolicy',
+          'gridLazyDataProviderBuildGoal',
+          'gridLazyDataProviderBuildStatus',
+          'gridLazyDataProviderOutputUsability',
+          'gridLazyDataProviderAcceptableFailures',
+          'gridLazyDataProviderFailureLayer',
+          'gridLazyDataProviderRemainingBlockers',
+          'gridLazyDataProviderNextResolutionStep',
+          'gridLazyDataProviderStageExecutionStatus',
+          'gridLazyDataProviderStageScheme'
         ]) {
           d[key] = details[key] || d[key] || '';
         }
@@ -9538,7 +9848,9 @@ let flowIpcShell = #"""
           'broaderComponentResourceMatrixSelectedArtifactCount',
           'broaderComponentResourceMatrixProductionSupportBytes',
           'dataComponentResourceMatrixSelectedArtifactCount',
-          'dataComponentResourceMatrixProductionSupportBytes'
+          'dataComponentResourceMatrixProductionSupportBytes',
+          'gridLazyDataProviderSelectedArtifactCount',
+          'gridLazyDataProviderProductionSupportBytes'
         ]) {
           d[key] = Number(details[key] || d[key] || 0);
         }
@@ -9599,7 +9911,21 @@ let flowIpcShell = #"""
           'dataComponentResourceMatrixCustomSchemeObserved',
           'dataComponentResourceMatrixBlobFallbackObserved',
           'dataComponentResourceMatrixNoLocalhost',
-          'dataComponentResourceMatrixFixtureSubstituted'
+          'dataComponentResourceMatrixFixtureSubstituted',
+          'gridLazyDataProviderFrameworkAppRequired',
+          'gridLazyDataProviderFrameworkAppObserved',
+          'gridLazyDataProviderCliContractEnabled',
+          'gridLazyDataProviderManifestReady',
+          'gridLazyDataProviderRuntimeHandoffRequired',
+          'gridLazyDataProviderRuntimeHandoffReady',
+          'gridLazyDataProviderRuntimeHandoffSatisfied',
+          'gridLazyDataProviderPublishedRpcObserved',
+          'gridLazyDataProviderCallbackFetchObserved',
+          'gridLazyDataProviderStaged',
+          'gridLazyDataProviderCustomSchemeObserved',
+          'gridLazyDataProviderBlobFallbackObserved',
+          'gridLazyDataProviderNoLocalhost',
+          'gridLazyDataProviderFixtureSubstituted'
         ]) {
           d[key] = details[key] === true || d[key] === true;
         }

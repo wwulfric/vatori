@@ -158,8 +158,18 @@ proof，并验证 owner change + validate click 经 Flow client -> IPC UIDL RPC 
 UIDL patch -> visible DOM 更新为 `Validation accepted: Ava Desktop`。它仍不是完整 Grid
 virtualization、lazy data provider、Upload/Download、theme variants、dev-mode/Vite、installer
 packaging 或 durable reconnect parity。
+v1.48 把 v1.47 的 Grid 覆盖继续推进到 callback-backed lazy DataProvider viewport RPC：
+framework app 新增第二个普通 Flow `Grid<WorkItem>`，通过 `setItems(fetch, count)` 记录
+fetch/count callbacks；Swift host 以真实 Flow published server method 调用
+`framework-lazy-grid.$server.setViewportRange(20, 8)`，Java `DataCommunicator` 按 Grid page/cache
+语义归一化并触发 `15-20` callback fetch，随后 `Report Lazy Grid` click 经 UIDL patch 更新
+visible DOM 为 `Lazy grid fetches: 10, count calls: 1, range: 15-20`。Trace 记录
+`flow-ipc-grid-lazy-data-provider-v1_48`、target tags/classes/ids、published method、
+requested viewport、normalized callback result、current-app artifacts、generated imports owner source、
+custom-scheme/no-localhost/no-fixture proof。它仍不是完整 Grid scroll virtualization、Upload/Download、
+theme variants、dev-mode/Vite、installer packaging 或 durable reconnect parity。
 
-后续阶段应继续以 `docs/goal-1_48.md` 等文件拆分，
+后续阶段应继续以 `docs/goal-1_49.md` 等文件拆分，
 每个阶段只拿走本长期目标中的一个可评审切片。不要把本文件改写成短期任务清单；
 它是长期北极星和完成度账本。
 
@@ -181,14 +191,14 @@ packaging 或 durable reconnect parity。
 
 ## 当前基线
 
-截至 goal 1.47，仓库已经证明：
+截至 goal 1.48，仓库已经证明：
 
 - `dev-ipc` 可以启动 no-localhost Flow IPC runtime。
 - 真实 macOS Swift/AppKit/WKWebView 窗口可以运行 Flow IPC smoke app 和 framework
   validation app。
 - Button、BigDecimalField、Checkbox、Select、ComboBox、DatePicker、Dialog、Grid、
-  VirtualList、FormLayout/Binder validation、list/repeated update、desktop capability
-  baseline 都有 trace gate 或 host-log gate 证据。
+  lazy Grid DataProvider viewport RPC、VirtualList、FormLayout/Binder validation、
+  list/repeated update、desktop capability baseline 都有 trace gate 或 host-log gate 证据。
 - Java sidecar 通过 `UidlWriter`、`UidlRequestHandler`、`ServerRpcHandler`、
   desktop `VaadinRequest` / `VaadinResponse` adapter 切片生成真实 UIDL。
 - WebView 中可见 Flow client engine 消费 bootstrap、event patch、push 和 resync。
@@ -666,6 +676,13 @@ packaging 或 durable reconnect parity。
   change + validate click 经过 Java Binder validation 后更新可见 DOM。它仍不是完整 Grid
   virtualization、lazy data provider、Upload/Download、theme variants、dev-mode/Vite、
   installer packaging 或 durable reconnect parity。
+- v1.48 已把 framework validation app 推进到 Grid lazy DataProvider viewport RPC contract：
+  `flow-ipc-grid-lazy-data-provider-v1_48` 记录 callback-backed Grid、published
+  `setViewportRange` method、requested viewport `20:8`、normalized callback range `15-20`、
+  current-app source/prod artifacts、generated imports owner source、custom-scheme/no-localhost proof
+  和 framework app runtime evidence；真实窗口 trace 证明 published RPC、DataProvider fetch、
+  report click、UIDL patch 和 visible DOM completion。它仍不是完整 Grid scroll virtualization、
+  Upload/Download、theme variants、dev-mode/Vite、installer packaging 或 durable reconnect parity。
 - 当前 app/build 的真实 generated/lazy chunk file parity 泛化、dev-mode/Vite execution、更深组件资源覆盖、
   installer packaging 和 durable reconnect 仍是明确 blocker，不计入最终完成。
 
@@ -762,7 +779,8 @@ packaging 或 durable reconnect parity。
 
 - 基于 v1.22 generated lazy chunk-file positive fixture、v1.23 production owner positive
   runtime fixture、v1.24 closure decision contract、v1.25 packaged frontend baseline 和
-  v1.26-v1.45 当前 app generated/build-frontend output contracts，继续让当前 app/build 产生的
+  v1.26-v1.48 当前 app generated/build-frontend output 和 framework component behavior contracts，
+  继续让当前 app/build 产生的
   真实 generated lazy chunk file 完成执行：在 current app generated imports root package graph 已由
   production support artifact 承载的基础上，接入受支持 Vaadin lazy chunk SPI，或把真实
   production bundle owned execution / dev-mode/Vite execution 从 partial/blocker 推进到真实可执行路径。
@@ -786,8 +804,8 @@ packaging 或 durable reconnect parity。
   app 上复用，但仍不是完整 production/runtime SPI parity；v1.23 positive fixture 也只能证明基础设施可行，
   不能替代真实 owner parity。
 - Dev-mode/Vite graph execution 或可靠替代模式。
-- Broader Vaadin component parity，尤其是更深 Grid virtualization / lazy data provider、
-  Upload/Download、theme variants 和 attach/detach/focus 等组件行为。
+- Broader Vaadin component parity，尤其是完整 Grid scroll virtualization、Upload/Download、
+  theme variants 和 attach/detach/focus 等组件行为。
 - Durable push queue、ack、reconnect、reload 和 resync 语义。
 - Multi-window / multi-UI / multi-session lifecycle。
 - Host-side smoke tests：window launch、activation、sidecar cleanup、capability calls。
@@ -809,17 +827,17 @@ packaging 或 durable reconnect parity。
 
 ## 当前建议的下一阶段
 
-v1.47 已完成 Data Component and Binder Resource Matrix Contract。下一阶段建议继续沿着更真实的
+v1.48 已完成 Grid Lazy Data Provider Viewport RPC Contract。下一阶段建议继续沿着更真实的
 component behavior/resource parity 或 dev-mode/Vite 替代路径推进：
 
-- 创建 `docs/goal-1_48.md`：在 v1.47 的 bounded Grid/VirtualList/FormLayout/Binder matrix
-  基础上选择一个更深切片，例如 Grid virtualization/lazy data provider、Upload/Download streaming、
-  theme variants，或把 dev-mode/Vite graph execution 收敛为明确替代路径。
+- 创建 `docs/goal-1_49.md`：在 v1.48 的 Grid lazy DataProvider viewport RPC 基础上选择一个
+  更深切片，例如完整 Grid scroll virtualization、Upload/Download streaming、theme variants，
+  或把 dev-mode/Vite graph execution 收敛为明确替代路径。
 - 不再把 supported Vaadin lazy chunk SPI 当作当前默认路径；除非上游/本地版本提供稳定 API，否则继续以
   packaging-time `build-frontend` artifacts 作为产品化输入。
 - 真实 production owner-owned runtime reuse success，或把当前 generated imports owner contract 与
   packaging-time inventory/runtime handoff 对齐。
 - Dev-mode/Vite graph execution 或可靠替代模式。
-- Broader Vaadin component parity，尤其是更深 Grid/VirtualList behavior、Upload/Download、
+- Broader Vaadin component parity，尤其是完整 Grid/VirtualList behavior、Upload/Download、
   theme variants 和 attach/detach/focus。
 - Durable push / reconnect / resync、Swift host tests / default-host readiness、打包和更新。

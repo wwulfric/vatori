@@ -744,6 +744,32 @@ final class FlowClientResources {
             "full-grid-virtualization,lazy-data-provider,upload-download,theme-variants,dev-mode-vite-parity,installer-packaging,durable-reconnect";
     private static final String DATA_COMPONENT_RESOURCE_MATRIX_NEXT_STEP =
             "turn bounded data and binder component evidence into deeper Grid/VirtualList virtualization or Upload/Download resource parity";
+    private static final String GRID_LAZY_DATA_PROVIDER_VERSION =
+            "flow-ipc-grid-lazy-data-provider-v1_48";
+    private static final String GRID_LAZY_DATA_PROVIDER_SOURCE =
+            "data-component-resource-matrix-v1_47";
+    private static final String GRID_LAZY_DATA_PROVIDER_SCOPE =
+            "framework-validation-app-grid-callback-data-provider-viewport-rpc";
+    private static final String GRID_LAZY_DATA_PROVIDER_TARGET_TAGS =
+            "vaadin-grid,vaadin-grid-column";
+    private static final String GRID_LAZY_DATA_PROVIDER_JAVA_CLASSES =
+            "com.vaadin.flow.component.grid.Grid,com.vaadin.flow.data.provider.CallbackDataProvider,com.vaadin.flow.data.provider.DataCommunicator";
+    private static final String GRID_LAZY_DATA_PROVIDER_COMPONENT_IDS =
+            "framework-lazy-grid,framework-lazy-grid-status,framework-lazy-grid-report";
+    private static final String GRID_LAZY_DATA_PROVIDER_MODULE_SPECIFIERS =
+            "@vaadin/grid/src/vaadin-grid.js";
+    private static final String GRID_LAZY_DATA_PROVIDER_PUBLISHED_METHOD =
+            "setViewportRange";
+    private static final String GRID_LAZY_DATA_PROVIDER_VIEWPORT_RANGE =
+            "20:8";
+    private static final String GRID_LAZY_DATA_PROVIDER_EXPECTED_RESULT =
+            "callback-backed-grid-fetch-normalized-range-15-20-after-viewport-20-8";
+    private static final String GRID_LAZY_DATA_PROVIDER_ACCEPTABLE_FAILURES =
+            "published-server-method-rpc-missing,data-provider-fetch-not-observed,grid-row-virtualization-dom-not-materialized,browser-import-error";
+    private static final String GRID_LAZY_DATA_PROVIDER_REMAINING_BLOCKERS =
+            "full-grid-scroll-virtualization,upload-download,theme-variants,dev-mode-vite-parity,installer-packaging,durable-reconnect";
+    private static final String GRID_LAZY_DATA_PROVIDER_NEXT_STEP =
+            "turn the callback-backed Grid viewport RPC evidence into full scroll virtualization or move to Upload/Download resource parity";
     private static final List<String> PRODUCTION_RUNTIME_OWNER_DEPENDENCY_ARTIFACTS = List.of(
             DEV_BUNDLE_COMMONJS_JS,
             DEV_BUNDLE_INDEX_HTML_JS,
@@ -2767,6 +2793,88 @@ final class FlowClientResources {
                 DATA_COMPONENT_RESOURCE_MATRIX_REMAINING_BLOCKERS);
         attributes.put("dataComponentResourceMatrixNextResolutionStep",
                 DATA_COMPONENT_RESOURCE_MATRIX_NEXT_STEP);
+        attributes.putAll(gridLazyDataProviderAttributes(evidence, buildStep, selectedArtifacts,
+                handoffReady));
+        return attributes;
+    }
+
+    private static Map<String, Object> gridLazyDataProviderAttributes(
+            CurrentAppBuildFrontendOutputEvidence evidence,
+            FrontendBuildStepEvidence buildStep,
+            String selectedArtifacts,
+            boolean handoffReady) {
+        Path module = appModuleDirectory();
+        String appShape = packagingRuntimeHandoffAppShape(module);
+        boolean frameworkApp = "framework-validation-app".equals(appShape);
+        Map<String, Object> attributes = new LinkedHashMap<>();
+        attributes.put("gridLazyDataProviderVersion", GRID_LAZY_DATA_PROVIDER_VERSION);
+        attributes.put("gridLazyDataProviderSource", GRID_LAZY_DATA_PROVIDER_SOURCE);
+        attributes.put("gridLazyDataProviderScope", GRID_LAZY_DATA_PROVIDER_SCOPE);
+        attributes.put("gridLazyDataProviderAppShape", appShape);
+        attributes.put("gridLazyDataProviderTargetTags", GRID_LAZY_DATA_PROVIDER_TARGET_TAGS);
+        attributes.put("gridLazyDataProviderJavaClasses", GRID_LAZY_DATA_PROVIDER_JAVA_CLASSES);
+        attributes.put("gridLazyDataProviderComponentIds", GRID_LAZY_DATA_PROVIDER_COMPONENT_IDS);
+        attributes.put("gridLazyDataProviderModuleSpecifiers",
+                GRID_LAZY_DATA_PROVIDER_MODULE_SPECIFIERS);
+        attributes.put("gridLazyDataProviderPublishedMethod",
+                GRID_LAZY_DATA_PROVIDER_PUBLISHED_METHOD);
+        attributes.put("gridLazyDataProviderViewportRange",
+                GRID_LAZY_DATA_PROVIDER_VIEWPORT_RANGE);
+        attributes.put("gridLazyDataProviderExpectedResult",
+                GRID_LAZY_DATA_PROVIDER_EXPECTED_RESULT);
+        attributes.put("gridLazyDataProviderSelectedArtifacts", selectedArtifacts);
+        attributes.put("gridLazyDataProviderSelectedArtifactCount", csvValues(selectedArtifacts).size());
+        attributes.put("gridLazyDataProviderGeneratedImportsOwnerSource",
+                CURRENT_APP_GENERATED_IMPORTS_OWNER_RUNTIME_CONTRACT_SOURCE);
+        attributes.put("gridLazyDataProviderGeneratedImportsOwnerArtifact",
+                CURRENT_APP_BUILD_FRONTEND_GENERATED_IMPORTS_JS);
+        attributes.put("gridLazyDataProviderProductionSupportArtifact",
+                evidence.sourceGeneratedImportsRootProductionSupportArtifact());
+        attributes.put("gridLazyDataProviderProductionSupportSha256",
+                evidence.productionGeneratedImportsSha256());
+        attributes.put("gridLazyDataProviderProductionSupportBytes",
+                evidence.productionGeneratedImportsBytes());
+        attributes.put("gridLazyDataProviderProductionEntryArtifact",
+                evidence.productionEntryScriptVirtualPath());
+        attributes.put("gridLazyDataProviderSourceChunkArtifact",
+                evidence.sourceChunkVirtualPath());
+        attributes.put("gridLazyDataProviderSourceChunkStatus",
+                evidence.sourceChunkStatus());
+        attributes.put("gridLazyDataProviderResolvedSpecifiers",
+                evidence.sourceGeneratedImportsRootResolvedSpecifiers());
+        attributes.put("gridLazyDataProviderUnresolvedSpecifiers",
+                evidence.sourceGeneratedImportsRootUnresolvedSpecifiers());
+        attributes.put("gridLazyDataProviderAllowedSchemes",
+                PACKAGING_FRONTEND_INVENTORY_ALLOWED_SCHEMES);
+        attributes.put("gridLazyDataProviderIntegrityPolicy",
+                PACKAGING_FRONTEND_INVENTORY_INTEGRITY_POLICY);
+        attributes.put("gridLazyDataProviderBuildGoal", buildStep.goal());
+        attributes.put("gridLazyDataProviderBuildStatus", buildStep.status());
+        attributes.put("gridLazyDataProviderOutputUsability", buildStep.outputUsability());
+        attributes.put("gridLazyDataProviderFrameworkAppRequired", true);
+        attributes.put("gridLazyDataProviderFrameworkAppObserved", frameworkApp);
+        attributes.put("gridLazyDataProviderCliContractEnabled",
+                "1".equals(System.getenv("VAADIN_DESKTOP_FLOW_IPC_FRONTEND_BUILD_V1_48")));
+        attributes.put("gridLazyDataProviderManifestReady", handoffReady && frameworkApp);
+        attributes.put("gridLazyDataProviderRuntimeHandoffRequired", true);
+        attributes.put("gridLazyDataProviderRuntimeHandoffReady", handoffReady);
+        attributes.put("gridLazyDataProviderRuntimeHandoffSatisfied", false);
+        attributes.put("gridLazyDataProviderPublishedRpcObserved", false);
+        attributes.put("gridLazyDataProviderCallbackFetchObserved", false);
+        attributes.put("gridLazyDataProviderStaged", false);
+        attributes.put("gridLazyDataProviderCustomSchemeObserved", false);
+        attributes.put("gridLazyDataProviderBlobFallbackObserved", false);
+        attributes.put("gridLazyDataProviderNoLocalhost", true);
+        attributes.put("gridLazyDataProviderFixtureSubstituted", false);
+        attributes.put("gridLazyDataProviderAcceptableFailures",
+                GRID_LAZY_DATA_PROVIDER_ACCEPTABLE_FAILURES);
+        attributes.put("gridLazyDataProviderFailureLayer", frameworkApp
+                ? "framework-grid-lazy-data-provider-runtime-validation-pending"
+                : "framework-validation-app-not-selected");
+        attributes.put("gridLazyDataProviderRemainingBlockers",
+                GRID_LAZY_DATA_PROVIDER_REMAINING_BLOCKERS);
+        attributes.put("gridLazyDataProviderNextResolutionStep",
+                GRID_LAZY_DATA_PROVIDER_NEXT_STEP);
         return attributes;
     }
 

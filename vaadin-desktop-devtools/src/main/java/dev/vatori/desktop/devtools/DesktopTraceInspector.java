@@ -160,6 +160,9 @@ public final class DesktopTraceInspector {
         FLOW_IPC_V1_47_DATA_COMPONENT_RESOURCE_MATRIX(
                 "--require-flow-ipc-v1_47-data-component-resource-matrix"),
         FLOW_IPC_V1_47("--require-flow-ipc-v1_47"),
+        FLOW_IPC_V1_48_GRID_LAZY_DATA_PROVIDER(
+                "--require-flow-ipc-v1_48-grid-lazy-data-provider"),
+        FLOW_IPC_V1_48("--require-flow-ipc-v1_48"),
         FLOW_IPC_V1_3_FRAMEWORK("--require-flow-ipc-v1_3-framework");
 
         private final String option;
@@ -614,6 +617,11 @@ public final class DesktopTraceInspector {
                 case FLOW_IPC_V1_47 -> EnumSet.of(
                         FLOW_IPC_V1_47_DATA_COMPONENT_RESOURCE_MATRIX,
                         FLOW_IPC_V1_47);
+                case FLOW_IPC_V1_48_GRID_LAZY_DATA_PROVIDER ->
+                    EnumSet.of(FLOW_IPC_V1_48_GRID_LAZY_DATA_PROVIDER);
+                case FLOW_IPC_V1_48 -> EnumSet.of(
+                        FLOW_IPC_V1_48_GRID_LAZY_DATA_PROVIDER,
+                        FLOW_IPC_V1_48);
                 case FLOW_IPC_V1_3_FRAMEWORK -> EnumSet.of(FLOW_IPC_V1_3_FRAMEWORK);
             };
         }
@@ -746,6 +754,9 @@ public final class DesktopTraceInspector {
                 case FLOW_IPC_V1_47_DATA_COMPONENT_RESOURCE_MATRIX ->
                     summary.hasRequiredFlowIpcV1_47DataComponentResourceMatrixTypes();
                 case FLOW_IPC_V1_47 -> summary.hasRequiredFlowIpcV1_47Types();
+                case FLOW_IPC_V1_48_GRID_LAZY_DATA_PROVIDER ->
+                    summary.hasRequiredFlowIpcV1_48GridLazyDataProviderTypes();
+                case FLOW_IPC_V1_48 -> summary.hasRequiredFlowIpcV1_48Types();
                 case FLOW_IPC_V1_3_FRAMEWORK -> summary.hasRequiredFlowIpcV1_3FrameworkTypes();
             };
         }
@@ -986,6 +997,14 @@ public final class DesktopTraceInspector {
                     && line.contains("com.vaadin.flow.component.textfield.TextField")) {
                 summary.frameworkDataComponentMatrixBootstrapObserved = true;
             }
+            if (line.contains("dev.vatori.ipcframework.FlowOverIpcFrameworkView")
+                    && line.contains("framework-lazy-grid")
+                    && line.contains("framework-lazy-grid-status")
+                    && line.contains("framework-lazy-grid-report")
+                    && line.contains("setViewportRange")
+                    && line.contains("com.vaadin.flow.component.grid.Grid")) {
+                summary.frameworkLazyDataProviderBootstrapObserved = true;
+            }
             if (line.contains("\"type\":\"event\"")
                     && line.contains("\"dispatch\":\"flow-client-xhr\"")
                     && line.contains("\"attachExistingElementById\"")
@@ -1063,6 +1082,22 @@ public final class DesktopTraceInspector {
                     && line.contains("\"event\":\"click\"")) {
                 summary.frameworkDataComponentMatrixValidateEventRpcObserved = true;
             }
+            if (line.contains("\"type\":\"event\"")
+                    && line.contains("\"dispatch\":\"flow-client-xhr\"")
+                    && line.contains("\"componentId\":\"framework-lazy-grid\"")
+                    && line.contains("\"rpcType\":\"publishedEventHandler\"")
+                    && line.contains("\"event\":\"setViewportRange\"")
+                    && line.contains("\"templateEventMethodName\":\"setViewportRange\"")
+                    && line.contains("20")
+                    && line.contains("8")) {
+                summary.frameworkLazyDataProviderPublishedRpcObserved = true;
+            }
+            if (line.contains("\"type\":\"event\"")
+                    && line.contains("\"dispatch\":\"flow-client-xhr\"")
+                    && line.contains("\"componentId\":\"framework-lazy-grid-report\"")
+                    && line.contains("\"event\":\"click\"")) {
+                summary.frameworkLazyDataProviderReportEventRpcObserved = true;
+            }
             if (line.contains("\"type\":\"patch\"")
                     && line.contains("\"source\":\"UidlRequestHandler\"")
                     && line.contains("\"reason\":\"event\"")
@@ -1118,6 +1153,18 @@ public final class DesktopTraceInspector {
                     && line.contains("\"reason\":\"event\"")
                     && line.contains("Validation accepted: Ava Desktop")) {
                 summary.frameworkDataComponentMatrixValidatePatchObserved = true;
+            }
+            if (line.contains("\"source\":\"UidlRequestHandler\"")
+                    && line.contains("\"reason\":\"event\"")
+                    && line.contains("Lazy grid fetch")
+                    && line.contains("15-20")) {
+                summary.frameworkLazyDataProviderFetchPatchObserved = true;
+            }
+            if (line.contains("\"source\":\"UidlRequestHandler\"")
+                    && line.contains("\"reason\":\"event\"")
+                    && line.contains("Lazy grid fetches:")
+                    && line.contains("range: 15-20")) {
+                summary.frameworkLazyDataProviderReportPatchObserved = true;
             }
             if (line.contains("\"type\":\"command\"")
                     && line.contains("\"command\":\"window.setTitle\"")
@@ -1554,6 +1601,11 @@ public final class DesktopTraceInspector {
                     && line.contains("\"componentFrontendResources\"")
                     && containsDataComponentResourceMatrixV147Fields(line)) {
                 summary.dataComponentResourceMatrixV147ManifestObserved = true;
+            }
+            if (line.contains("\"type\":\"bootstrapResponse\"")
+                    && line.contains("\"componentFrontendResources\"")
+                    && containsGridLazyDataProviderV148Fields(line)) {
+                summary.gridLazyDataProviderV148ManifestObserved = true;
             }
             if (line.contains("\"type\":\"bootstrapResponse\"")
                     && line.contains("\"componentFrontendResources\"")
@@ -3407,6 +3459,14 @@ public final class DesktopTraceInspector {
             }
             if (line.contains("\"type\":\"resourceStage\"")
                     && containsPath(line, "current-app-production/VAADIN/build/generated-flow-imports-")
+                    && containsGridLazyDataProviderV148Fields(line)
+                    && (line.contains("\"executionStatus\":\"executed\"")
+                            || line.contains("\"executionStatus\":\"strict-blocker\"")
+                            || line.contains("\"executionStatus\":\"staged\""))) {
+                summary.gridLazyDataProviderV148StageObserved = true;
+            }
+            if (line.contains("\"type\":\"resourceStage\"")
+                    && containsPath(line, "current-app-production/VAADIN/build/generated-flow-imports-")
                     && containsCurrentAppGeneratedImportsRootPackageGraphV134Fields(line)
                     && containsLiteralField(line,
                             "currentAppGeneratedImportsRootProductionSupportExecuted", "true")
@@ -3517,6 +3577,12 @@ public final class DesktopTraceInspector {
                     && containsDataComponentResourceMatrixV147Complete(line)
                     && line.contains("\"executionStatus\":\"executed\"")) {
                 summary.dataComponentResourceMatrixV147CompleteStageObserved = true;
+            }
+            if (line.contains("\"type\":\"resourceStage\"")
+                    && containsPath(line, "current-app-production/VAADIN/build/generated-flow-imports-")
+                    && containsGridLazyDataProviderV148Complete(line)
+                    && line.contains("\"executionStatus\":\"executed\"")) {
+                summary.gridLazyDataProviderV148CompleteStageObserved = true;
             }
             if (line.contains("\"type\":\"resourceStage\"")
                     && containsPath(line, "current-app-frontend/generated/flow/chunks/")
@@ -4501,6 +4567,19 @@ public final class DesktopTraceInspector {
                 summary.dataComponentResourceMatrixV147DomObserved = true;
             }
             if (line.contains("\"type\":\"webview.dom\"")
+                    && containsDataComponentResourceMatrixV147Complete(line)
+                    && containsLiteralField(line, "frameworkLazyDataProviderComplete", "true")
+                    && containsStringField(line, "frameworkLazyDataProviderVersion",
+                            "flow-ipc-grid-lazy-data-provider-v1_48")
+                    && containsLiteralField(line, "frameworkLazyDataProviderGridRendered", "true")
+                    && containsLiteralField(line, "frameworkLazyDataProviderPublishedRpcObserved", "true")
+                    && containsLiteralField(line, "frameworkLazyDataProviderFetchObserved", "true")
+                    && containsLiteralField(line, "frameworkLazyDataProviderReportEventObserved", "true")
+                    && line.contains("Lazy grid fetches:")
+                    && line.contains("range: 15-20")) {
+                summary.gridLazyDataProviderV148DomObserved = true;
+            }
+            if (line.contains("\"type\":\"webview.dom\"")
                     && containsLiteralField(line, "generatedLazySourceCurrentBuildNoOpConfirmed", "true")
                     && containsStringField(line, "generatedLazySourceCurrentBuildTableShape",
                             "no-op-promise-resolve-0")
@@ -4984,6 +5063,19 @@ public final class DesktopTraceInspector {
                     && line.contains("framework-owner-name")
                     && line.contains("Validation accepted: Ava Desktop")) {
                 summary.frameworkDataComponentMatrixDomObserved = true;
+            }
+            if (line.contains("\"type\":\"webview.dom\"")
+                    && line.contains("Flow IPC Framework Desk")
+                    && containsLiteralField(line, "frameworkLazyDataProviderRendered", "true")
+                    && containsLiteralField(line, "frameworkLazyDataProviderGridRendered", "true")
+                    && containsLiteralField(line, "frameworkLazyDataProviderPublishedRpcObserved", "true")
+                    && containsLiteralField(line, "frameworkLazyDataProviderFetchObserved", "true")
+                    && containsLiteralField(line, "frameworkLazyDataProviderReportEventRpcObserved", "true")
+                    && containsLiteralField(line, "frameworkLazyDataProviderReportEventObserved", "true")
+                    && containsLiteralField(line, "frameworkLazyDataProviderComplete", "true")
+                    && line.contains("Lazy grid fetches:")
+                    && line.contains("range: 15-20")) {
+                summary.frameworkLazyDataProviderDomObserved = true;
             }
             if (line.contains("\"type\":\"event\"")
                     && line.contains("\"sessionId\":\"flow-ipc-session\"")
@@ -6462,6 +6554,85 @@ public final class DesktopTraceInspector {
                         "dataComponentResourceMatrixNoLocalhost", "true");
     }
 
+    private static boolean containsGridLazyDataProviderV148Fields(String line) {
+        return containsStringField(line, "gridLazyDataProviderVersion",
+                        "flow-ipc-grid-lazy-data-provider-v1_48")
+                && containsStringField(line, "gridLazyDataProviderSource",
+                        "data-component-resource-matrix-v1_47")
+                && containsStringField(line, "gridLazyDataProviderScope",
+                        "framework-validation-app-grid-callback-data-provider-viewport-rpc")
+                && containsStringField(line, "gridLazyDataProviderAppShape",
+                        "framework-validation-app")
+                && containsStringField(line, "gridLazyDataProviderTargetTags",
+                        "vaadin-grid,vaadin-grid-column")
+                && containsStringField(line, "gridLazyDataProviderJavaClasses",
+                        "com.vaadin.flow.component.grid.Grid,com.vaadin.flow.data.provider.CallbackDataProvider,com.vaadin.flow.data.provider.DataCommunicator")
+                && containsStringField(line, "gridLazyDataProviderComponentIds",
+                        "framework-lazy-grid,framework-lazy-grid-status,framework-lazy-grid-report")
+                && containsStringField(line, "gridLazyDataProviderModuleSpecifiers",
+                        "@vaadin/grid/src/vaadin-grid.js")
+                && containsStringField(line, "gridLazyDataProviderPublishedMethod", "setViewportRange")
+                && containsStringField(line, "gridLazyDataProviderViewportRange", "20:8")
+                && containsStringField(line, "gridLazyDataProviderExpectedResult",
+                        "callback-backed-grid-fetch-normalized-range-15-20-after-viewport-20-8")
+                && containsStringFieldPrefix(line, "gridLazyDataProviderSelectedArtifacts",
+                        "current-app-frontend/generated/flow/generated-flow-imports.js")
+                && containsPositiveIntegerField(line, "gridLazyDataProviderSelectedArtifactCount")
+                && containsStringField(line, "gridLazyDataProviderGeneratedImportsOwnerSource",
+                        "current-app-generated-imports-select-owner-coverage-v1_41")
+                && containsStringField(line, "gridLazyDataProviderGeneratedImportsOwnerArtifact",
+                        "current-app-frontend/generated/flow/generated-flow-imports.js")
+                && containsStringFieldPrefix(line,
+                        "gridLazyDataProviderProductionSupportArtifact",
+                        "current-app-production/VAADIN/build/generated-flow-imports-")
+                && line.contains("gridLazyDataProviderProductionSupportSha256")
+                && containsPositiveIntegerField(line,
+                        "gridLazyDataProviderProductionSupportBytes")
+                && line.contains("gridLazyDataProviderProductionEntryArtifact")
+                && containsStringFieldPrefix(line, "gridLazyDataProviderSourceChunkArtifact",
+                        "current-app-frontend/generated/flow/chunks/chunk-")
+                && containsStringField(line, "gridLazyDataProviderSourceChunkStatus",
+                        "available")
+                && line.contains("gridLazyDataProviderResolvedSpecifiers")
+                && line.contains("gridLazyDataProviderUnresolvedSpecifiers")
+                && containsStringField(line, "gridLazyDataProviderAllowedSchemes",
+                        "vatori-resource,blob")
+                && containsStringField(line, "gridLazyDataProviderIntegrityPolicy",
+                        "sha256-and-byte-count-for-selected-artifacts")
+                && containsStringField(line, "gridLazyDataProviderBuildGoal",
+                        "build-frontend")
+                && containsStringField(line, "gridLazyDataProviderBuildStatus", "success")
+                && line.contains("gridLazyDataProviderOutputUsability")
+                && containsLiteralField(line, "gridLazyDataProviderFrameworkAppRequired",
+                        "true")
+                && containsLiteralField(line, "gridLazyDataProviderFrameworkAppObserved",
+                        "true")
+                && containsLiteralField(line, "gridLazyDataProviderCliContractEnabled",
+                        "true")
+                && containsLiteralField(line, "gridLazyDataProviderManifestReady", "true")
+                && containsLiteralField(line, "gridLazyDataProviderRuntimeHandoffRequired",
+                        "true")
+                && containsLiteralField(line, "gridLazyDataProviderRuntimeHandoffReady",
+                        "true")
+                && containsLiteralField(line, "gridLazyDataProviderNoLocalhost", "true")
+                && containsLiteralField(line, "gridLazyDataProviderFixtureSubstituted",
+                        "false")
+                && line.contains("gridLazyDataProviderAcceptableFailures")
+                && line.contains("gridLazyDataProviderRemainingBlockers")
+                && line.contains("gridLazyDataProviderNextResolutionStep");
+    }
+
+    private static boolean containsGridLazyDataProviderV148Complete(String line) {
+        return containsGridLazyDataProviderV148Fields(line)
+                && containsLiteralField(line,
+                        "gridLazyDataProviderRuntimeHandoffSatisfied", "true")
+                && containsLiteralField(line, "gridLazyDataProviderStaged", "true")
+                && containsLiteralField(line,
+                        "gridLazyDataProviderCustomSchemeObserved", "true")
+                && containsLiteralField(line,
+                        "gridLazyDataProviderNoLocalhost", "true");
+    }
+
     private static boolean containsProductionOwnerFailureLayer(String line, String field) {
         return containsStringField(line, field, "production-owner-duplicate-custom-element")
                 || containsStringField(line, field, "production-owner-relative-import-unresolved")
@@ -6776,6 +6947,12 @@ public final class DesktopTraceInspector {
         private boolean frameworkDataComponentMatrixOwnerPatchObserved;
         private boolean frameworkDataComponentMatrixValidatePatchObserved;
         private boolean frameworkDataComponentMatrixDomObserved;
+        private boolean frameworkLazyDataProviderBootstrapObserved;
+        private boolean frameworkLazyDataProviderPublishedRpcObserved;
+        private boolean frameworkLazyDataProviderReportEventRpcObserved;
+        private boolean frameworkLazyDataProviderFetchPatchObserved;
+        private boolean frameworkLazyDataProviderReportPatchObserved;
+        private boolean frameworkLazyDataProviderDomObserved;
         private boolean firstMeaningfulPaintObserved;
         private boolean frontendAssetPipelineV14Observed;
         private boolean frontendArtifactFamilyModelObserved;
@@ -7052,6 +7229,10 @@ public final class DesktopTraceInspector {
         private boolean dataComponentResourceMatrixV147StageObserved;
         private boolean dataComponentResourceMatrixV147CompleteStageObserved;
         private boolean dataComponentResourceMatrixV147DomObserved;
+        private boolean gridLazyDataProviderV148ManifestObserved;
+        private boolean gridLazyDataProviderV148StageObserved;
+        private boolean gridLazyDataProviderV148CompleteStageObserved;
+        private boolean gridLazyDataProviderV148DomObserved;
 
         public boolean hasRequiredFlowIpcTypes() {
             return types.keySet().containsAll(FLOW_IPC_REQUIRED_TYPES)
@@ -7796,6 +7977,24 @@ public final class DesktopTraceInspector {
             return hasRequiredFlowIpcV1_47DataComponentResourceMatrixTypes();
         }
 
+        public boolean hasRequiredFlowIpcV1_48GridLazyDataProviderTypes() {
+            return gridLazyDataProviderV148ManifestObserved
+                    && gridLazyDataProviderV148StageObserved
+                    && gridLazyDataProviderV148CompleteStageObserved
+                    && gridLazyDataProviderV148DomObserved
+                    && frameworkLazyDataProviderBootstrapObserved
+                    && frameworkLazyDataProviderPublishedRpcObserved
+                    && frameworkLazyDataProviderReportEventRpcObserved
+                    && frameworkLazyDataProviderFetchPatchObserved
+                    && frameworkLazyDataProviderReportPatchObserved
+                    && frameworkLazyDataProviderDomObserved
+                    && hasRequiredFlowIpcV1_47DataComponentResourceMatrixTypes();
+        }
+
+        public boolean hasRequiredFlowIpcV1_48Types() {
+            return hasRequiredFlowIpcV1_48GridLazyDataProviderTypes();
+        }
+
         private boolean hasCurrentAppBuildFrontendOutputSuccessorEvidence() {
             return currentAppBuildFrontendOutputV132ManifestObserved
                     && currentAppBuildFrontendOutputV132RequestObserved
@@ -8457,6 +8656,17 @@ public final class DesktopTraceInspector {
                     + dataComponentResourceMatrixV147StageObserved + "/"
                     + dataComponentResourceMatrixV147CompleteStageObserved + "/"
                     + dataComponentResourceMatrixV147DomObserved);
+            System.out.println("Flow IPC v1.48 Grid lazy data provider manifest observed: "
+                    + gridLazyDataProviderV148ManifestObserved);
+            System.out.println("Flow IPC v1.48 Grid lazy data provider stage/complete/DOM observed: "
+                    + gridLazyDataProviderV148StageObserved + "/"
+                    + gridLazyDataProviderV148CompleteStageObserved + "/"
+                    + gridLazyDataProviderV148DomObserved);
+            System.out.println("framework lazy data provider bootstrap/RPC/patch/DOM observed: "
+                    + frameworkLazyDataProviderBootstrapObserved + "/"
+                    + frameworkLazyDataProviderPublishedRpcObserved + "/"
+                    + frameworkLazyDataProviderFetchPatchObserved + "/"
+                    + frameworkLazyDataProviderDomObserved);
             System.out.println("Flow IPC v1.6 TextField graph manifest observed: "
                     + frontendTextFieldV16ManifestObserved);
             System.out.println("Flow IPC v1.6 TextField graph request observed: "

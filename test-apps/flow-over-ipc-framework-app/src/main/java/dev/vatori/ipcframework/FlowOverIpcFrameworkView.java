@@ -22,6 +22,9 @@ import tools.jackson.databind.JsonNode;
 import java.math.BigDecimal;
 import java.time.LocalDate;
 import java.util.List;
+import java.util.concurrent.atomic.AtomicInteger;
+import java.util.concurrent.atomic.AtomicReference;
+import java.util.stream.IntStream;
 
 @Route("")
 @com.vaadin.flow.component.dependency.JavaScript(
@@ -74,6 +77,15 @@ public class FlowOverIpcFrameworkView extends VerticalLayout {
                 new WorkItem("A-100", "platform", "queued"),
                 new WorkItem("A-101", "desktop", "review"),
                 new WorkItem("A-102", "audit", "ready"));
+        List<WorkItem> lazyWorkItems = IntStream.rangeClosed(1, 80)
+                .mapToObj(index -> new WorkItem("L-" + String.format("%03d", index),
+                        switch (index % 3) {
+                            case 0 -> "platform";
+                            case 1 -> "desktop";
+                            default -> "audit";
+                        },
+                        "page-" + ((index - 1) / 10)))
+                .toList();
 
         Grid<WorkItem> grid = new Grid<>(WorkItem.class, false);
         grid.setId("framework-grid");
@@ -82,6 +94,38 @@ public class FlowOverIpcFrameworkView extends VerticalLayout {
         grid.addColumn(WorkItem::state).setHeader("State");
         grid.setItems(workItems);
         grid.setAllRowsVisible(true);
+
+        Span lazyGridStatus = new Span("Lazy grid: pending");
+        lazyGridStatus.setId("framework-lazy-grid-status");
+        AtomicInteger lazyGridFetchCount = new AtomicInteger();
+        AtomicInteger lazyGridCountCount = new AtomicInteger();
+        AtomicReference<String> lazyGridLastRange = new AtomicReference<>("pending");
+
+        Grid<WorkItem> lazyGrid = new Grid<>(WorkItem.class, false);
+        lazyGrid.setId("framework-lazy-grid");
+        lazyGrid.addColumn(WorkItem::id).setHeader("Lazy ticket");
+        lazyGrid.addColumn(WorkItem::owner).setHeader("Lazy owner");
+        lazyGrid.addColumn(WorkItem::state).setHeader("Lazy state");
+        lazyGrid.setPageSize(5);
+        lazyGrid.setHeight("220px");
+        lazyGrid.setItems(query -> {
+            int offset = query.getOffset();
+            int limit = query.getLimit();
+            int end = Math.min(offset + limit, lazyWorkItems.size());
+            int fetchCount = lazyGridFetchCount.incrementAndGet();
+            lazyGridLastRange.set(offset + "-" + end);
+            lazyGridStatus.setText("Lazy grid fetch " + fetchCount + ": " + offset + "-" + end);
+            return lazyWorkItems.stream().skip(offset).limit(limit);
+        }, query -> {
+            lazyGridCountCount.incrementAndGet();
+            return lazyWorkItems.size();
+        });
+
+        Button lazyGridReport = new Button("Report Lazy Grid", event ->
+                lazyGridStatus.setText("Lazy grid fetches: " + lazyGridFetchCount.get()
+                        + ", count calls: " + lazyGridCountCount.get()
+                        + ", range: " + lazyGridLastRange.get()));
+        lazyGridReport.setId("framework-lazy-grid-report");
 
         VirtualList<String> virtualList = new VirtualList<>();
         virtualList.setId("framework-virtual-list");
@@ -203,7 +247,8 @@ public class FlowOverIpcFrameworkView extends VerticalLayout {
         updateList.add(latestUpdate);
 
         add(title, budget, expedited, priority, reviewer, dueDate, openDialog, detailsDialog,
-                grid, virtualList, formLayout, apply, status, componentStatus, matrixStatus,
+                grid, lazyGrid, lazyGridStatus, lazyGridReport, virtualList, formLayout,
+                apply, status, componentStatus, matrixStatus,
                 updateList);
     }
 

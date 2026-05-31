@@ -2559,6 +2559,40 @@ final class WebViewHost: NSObject, NSApplicationDelegate, NSWindowDelegate, WKNa
           currentAppProductionOwnerEarlyImportPartialReuseSatisfied: !!(window.VaadinDesktopIpcDiagnostics && window.VaadinDesktopIpcDiagnostics.currentAppProductionOwnerEarlyImportPartialReuseSatisfied),
           currentAppProductionOwnerEarlyImportNoLocalhost: !!(window.VaadinDesktopIpcDiagnostics && window.VaadinDesktopIpcDiagnostics.currentAppProductionOwnerEarlyImportNoLocalhost),
           currentAppProductionOwnerEarlyImportFixtureSubstituted: !!(window.VaadinDesktopIpcDiagnostics && window.VaadinDesktopIpcDiagnostics.currentAppProductionOwnerEarlyImportFixtureSubstituted),
+          currentAppGeneratedImportsOwnerSideEffectVersion: window.VaadinDesktopIpcDiagnostics ? window.VaadinDesktopIpcDiagnostics.currentAppGeneratedImportsOwnerSideEffectVersion : "",
+          currentAppGeneratedImportsOwnerSideEffectSource: window.VaadinDesktopIpcDiagnostics ? window.VaadinDesktopIpcDiagnostics.currentAppGeneratedImportsOwnerSideEffectSource : "",
+          currentAppGeneratedImportsOwnerSideEffectPolicy: window.VaadinDesktopIpcDiagnostics ? window.VaadinDesktopIpcDiagnostics.currentAppGeneratedImportsOwnerSideEffectPolicy : "",
+          currentAppGeneratedImportsOwnerSideEffectCandidate: window.VaadinDesktopIpcDiagnostics ? window.VaadinDesktopIpcDiagnostics.currentAppGeneratedImportsOwnerSideEffectCandidate : "",
+          currentAppGeneratedImportsOwnerSideEffectArtifact: window.VaadinDesktopIpcDiagnostics ? window.VaadinDesktopIpcDiagnostics.currentAppGeneratedImportsOwnerSideEffectArtifact : "",
+          currentAppGeneratedImportsOwnerSideEffectExpectedTags: window.VaadinDesktopIpcDiagnostics ? window.VaadinDesktopIpcDiagnostics.currentAppGeneratedImportsOwnerSideEffectExpectedTags : "",
+          currentAppGeneratedImportsOwnerSideEffectCoveredTags: window.VaadinDesktopIpcDiagnostics ? window.VaadinDesktopIpcDiagnostics.currentAppGeneratedImportsOwnerSideEffectCoveredTags : "",
+          currentAppGeneratedImportsOwnerSideEffectKnownMissingTags: window.VaadinDesktopIpcDiagnostics ? window.VaadinDesktopIpcDiagnostics.currentAppGeneratedImportsOwnerSideEffectKnownMissingTags : "",
+          currentAppGeneratedImportsOwnerSideEffectExpectedGlobals: window.VaadinDesktopIpcDiagnostics ? window.VaadinDesktopIpcDiagnostics.currentAppGeneratedImportsOwnerSideEffectExpectedGlobals : "",
+          currentAppGeneratedImportsOwnerSideEffectPhase: window.VaadinDesktopIpcDiagnostics ? window.VaadinDesktopIpcDiagnostics.currentAppGeneratedImportsOwnerSideEffectPhase : "",
+          currentAppGeneratedImportsOwnerSideEffectObservedTags: window.VaadinDesktopIpcDiagnostics ? window.VaadinDesktopIpcDiagnostics.currentAppGeneratedImportsOwnerSideEffectObservedTags : "",
+          currentAppGeneratedImportsOwnerSideEffectMissingTags: window.VaadinDesktopIpcDiagnostics ? window.VaadinDesktopIpcDiagnostics.currentAppGeneratedImportsOwnerSideEffectMissingTags : "",
+          currentAppGeneratedImportsOwnerSideEffectReusedTags: window.VaadinDesktopIpcDiagnostics ? window.VaadinDesktopIpcDiagnostics.currentAppGeneratedImportsOwnerSideEffectReusedTags : "",
+          currentAppGeneratedImportsOwnerSideEffectSkippedFocusedImports: window.VaadinDesktopIpcDiagnostics ? window.VaadinDesktopIpcDiagnostics.currentAppGeneratedImportsOwnerSideEffectSkippedFocusedImports : "",
+          currentAppGeneratedImportsOwnerSideEffectFallbackTags: window.VaadinDesktopIpcDiagnostics ? window.VaadinDesktopIpcDiagnostics.currentAppGeneratedImportsOwnerSideEffectFallbackTags : "",
+          currentAppGeneratedImportsOwnerSideEffectFallbackFocusedImports: window.VaadinDesktopIpcDiagnostics ? window.VaadinDesktopIpcDiagnostics.currentAppGeneratedImportsOwnerSideEffectFallbackFocusedImports : "",
+          currentAppGeneratedImportsOwnerSideEffectDecision: window.VaadinDesktopIpcDiagnostics ? window.VaadinDesktopIpcDiagnostics.currentAppGeneratedImportsOwnerSideEffectDecision : "",
+          currentAppGeneratedImportsOwnerSideEffectReason: window.VaadinDesktopIpcDiagnostics ? window.VaadinDesktopIpcDiagnostics.currentAppGeneratedImportsOwnerSideEffectReason : "",
+          currentAppGeneratedImportsOwnerSideEffectFailureLayer: window.VaadinDesktopIpcDiagnostics ? window.VaadinDesktopIpcDiagnostics.currentAppGeneratedImportsOwnerSideEffectFailureLayer : "",
+          currentAppGeneratedImportsOwnerSideEffectNextResolutionStep: window.VaadinDesktopIpcDiagnostics ? window.VaadinDesktopIpcDiagnostics.currentAppGeneratedImportsOwnerSideEffectNextResolutionStep : "",
+          currentAppGeneratedImportsOwnerSideEffectExecutionResult: window.VaadinDesktopIpcDiagnostics ? window.VaadinDesktopIpcDiagnostics.currentAppGeneratedImportsOwnerSideEffectExecutionResult : "",
+          currentAppGeneratedImportsOwnerSideEffectModuleIdentity: window.VaadinDesktopIpcDiagnostics ? window.VaadinDesktopIpcDiagnostics.currentAppGeneratedImportsOwnerSideEffectModuleIdentity : "",
+          currentAppGeneratedImportsOwnerSideEffectBrowserError: window.VaadinDesktopIpcDiagnostics ? window.VaadinDesktopIpcDiagnostics.currentAppGeneratedImportsOwnerSideEffectBrowserError : "",
+          currentAppGeneratedImportsOwnerSideEffectRegistryBefore: window.VaadinDesktopIpcDiagnostics ? window.VaadinDesktopIpcDiagnostics.currentAppGeneratedImportsOwnerSideEffectRegistryBefore : "",
+          currentAppGeneratedImportsOwnerSideEffectRegistryAfter: window.VaadinDesktopIpcDiagnostics ? window.VaadinDesktopIpcDiagnostics.currentAppGeneratedImportsOwnerSideEffectRegistryAfter : "",
+          currentAppGeneratedImportsOwnerSideEffectVaadinGlobalBefore: window.VaadinDesktopIpcDiagnostics ? window.VaadinDesktopIpcDiagnostics.currentAppGeneratedImportsOwnerSideEffectVaadinGlobalBefore : "",
+          currentAppGeneratedImportsOwnerSideEffectVaadinGlobalAfter: window.VaadinDesktopIpcDiagnostics ? window.VaadinDesktopIpcDiagnostics.currentAppGeneratedImportsOwnerSideEffectVaadinGlobalAfter : "",
+          currentAppGeneratedImportsOwnerSideEffectAttempted: !!(window.VaadinDesktopIpcDiagnostics && window.VaadinDesktopIpcDiagnostics.currentAppGeneratedImportsOwnerSideEffectAttempted),
+          currentAppGeneratedImportsOwnerSideEffectImported: !!(window.VaadinDesktopIpcDiagnostics && window.VaadinDesktopIpcDiagnostics.currentAppGeneratedImportsOwnerSideEffectImported),
+          currentAppGeneratedImportsOwnerSideEffectSatisfied: !!(window.VaadinDesktopIpcDiagnostics && window.VaadinDesktopIpcDiagnostics.currentAppGeneratedImportsOwnerSideEffectSatisfied),
+          currentAppGeneratedImportsOwnerSideEffectPartialReuseSatisfied: !!(window.VaadinDesktopIpcDiagnostics && window.VaadinDesktopIpcDiagnostics.currentAppGeneratedImportsOwnerSideEffectPartialReuseSatisfied),
+          currentAppGeneratedImportsOwnerSideEffectLoadOnDemandPresent: !!(window.VaadinDesktopIpcDiagnostics && window.VaadinDesktopIpcDiagnostics.currentAppGeneratedImportsOwnerSideEffectLoadOnDemandPresent),
+          currentAppGeneratedImportsOwnerSideEffectNoLocalhost: !!(window.VaadinDesktopIpcDiagnostics && window.VaadinDesktopIpcDiagnostics.currentAppGeneratedImportsOwnerSideEffectNoLocalhost),
+          currentAppGeneratedImportsOwnerSideEffectFixtureSubstituted: !!(window.VaadinDesktopIpcDiagnostics && window.VaadinDesktopIpcDiagnostics.currentAppGeneratedImportsOwnerSideEffectFixtureSubstituted),
           frontendBuildPreflightAvailabilityObserved: !!(window.VaadinDesktopIpcDiagnostics && window.VaadinDesktopIpcDiagnostics.frontendBuildPreflightAvailabilityObserved),
           frontendBuildPreflightAvailabilityVersion: window.VaadinDesktopIpcDiagnostics ? window.VaadinDesktopIpcDiagnostics.frontendBuildPreflightAvailabilityVersion : "",
           frontendBuildPreflightAvailabilitySource: window.VaadinDesktopIpcDiagnostics ? window.VaadinDesktopIpcDiagnostics.frontendBuildPreflightAvailabilitySource : "",
@@ -3997,6 +4031,40 @@ let flowIpcShell = #"""
         currentAppProductionOwnerEarlyImportPartialReuseSatisfied: false,
         currentAppProductionOwnerEarlyImportNoLocalhost: false,
         currentAppProductionOwnerEarlyImportFixtureSubstituted: false,
+        currentAppGeneratedImportsOwnerSideEffectVersion: '',
+        currentAppGeneratedImportsOwnerSideEffectSource: '',
+        currentAppGeneratedImportsOwnerSideEffectPolicy: '',
+        currentAppGeneratedImportsOwnerSideEffectCandidate: '',
+        currentAppGeneratedImportsOwnerSideEffectArtifact: '',
+        currentAppGeneratedImportsOwnerSideEffectExpectedTags: '',
+        currentAppGeneratedImportsOwnerSideEffectCoveredTags: '',
+        currentAppGeneratedImportsOwnerSideEffectKnownMissingTags: '',
+        currentAppGeneratedImportsOwnerSideEffectExpectedGlobals: '',
+        currentAppGeneratedImportsOwnerSideEffectPhase: '',
+        currentAppGeneratedImportsOwnerSideEffectObservedTags: '',
+        currentAppGeneratedImportsOwnerSideEffectMissingTags: '',
+        currentAppGeneratedImportsOwnerSideEffectReusedTags: '',
+        currentAppGeneratedImportsOwnerSideEffectSkippedFocusedImports: '',
+        currentAppGeneratedImportsOwnerSideEffectFallbackTags: '',
+        currentAppGeneratedImportsOwnerSideEffectFallbackFocusedImports: '',
+        currentAppGeneratedImportsOwnerSideEffectDecision: '',
+        currentAppGeneratedImportsOwnerSideEffectReason: '',
+        currentAppGeneratedImportsOwnerSideEffectFailureLayer: '',
+        currentAppGeneratedImportsOwnerSideEffectNextResolutionStep: '',
+        currentAppGeneratedImportsOwnerSideEffectExecutionResult: '',
+        currentAppGeneratedImportsOwnerSideEffectModuleIdentity: '',
+        currentAppGeneratedImportsOwnerSideEffectBrowserError: '',
+        currentAppGeneratedImportsOwnerSideEffectRegistryBefore: '',
+        currentAppGeneratedImportsOwnerSideEffectRegistryAfter: '',
+        currentAppGeneratedImportsOwnerSideEffectVaadinGlobalBefore: '',
+        currentAppGeneratedImportsOwnerSideEffectVaadinGlobalAfter: '',
+        currentAppGeneratedImportsOwnerSideEffectAttempted: false,
+        currentAppGeneratedImportsOwnerSideEffectImported: false,
+        currentAppGeneratedImportsOwnerSideEffectSatisfied: false,
+        currentAppGeneratedImportsOwnerSideEffectPartialReuseSatisfied: false,
+        currentAppGeneratedImportsOwnerSideEffectLoadOnDemandPresent: false,
+        currentAppGeneratedImportsOwnerSideEffectNoLocalhost: false,
+        currentAppGeneratedImportsOwnerSideEffectFixtureSubstituted: false,
         frontendBuildPreflightAvailabilityObserved: false,
         frontendBuildPreflightAvailabilityVersion: '',
         frontendBuildPreflightAvailabilitySource: '',
@@ -6399,7 +6467,34 @@ let flowIpcShell = #"""
           ['currentAppProductionOwnerEarlyImportDecision', 'currentAppProductionOwnerEarlyImportDecision'],
           ['currentAppProductionOwnerEarlyImportReason', 'currentAppProductionOwnerEarlyImportReason'],
           ['currentAppProductionOwnerEarlyImportFailureLayer', 'currentAppProductionOwnerEarlyImportFailureLayer'],
-          ['currentAppProductionOwnerEarlyImportNextResolutionStep', 'currentAppProductionOwnerEarlyImportNextResolutionStep']
+          ['currentAppProductionOwnerEarlyImportNextResolutionStep', 'currentAppProductionOwnerEarlyImportNextResolutionStep'],
+          ['currentAppGeneratedImportsOwnerSideEffectVersion', 'currentAppGeneratedImportsOwnerSideEffectVersion'],
+          ['currentAppGeneratedImportsOwnerSideEffectSource', 'currentAppGeneratedImportsOwnerSideEffectSource'],
+          ['currentAppGeneratedImportsOwnerSideEffectPolicy', 'currentAppGeneratedImportsOwnerSideEffectPolicy'],
+          ['currentAppGeneratedImportsOwnerSideEffectCandidate', 'currentAppGeneratedImportsOwnerSideEffectCandidate'],
+          ['currentAppGeneratedImportsOwnerSideEffectArtifact', 'currentAppGeneratedImportsOwnerSideEffectArtifact'],
+          ['currentAppGeneratedImportsOwnerSideEffectExpectedTags', 'currentAppGeneratedImportsOwnerSideEffectExpectedTags'],
+          ['currentAppGeneratedImportsOwnerSideEffectCoveredTags', 'currentAppGeneratedImportsOwnerSideEffectCoveredTags'],
+          ['currentAppGeneratedImportsOwnerSideEffectKnownMissingTags', 'currentAppGeneratedImportsOwnerSideEffectKnownMissingTags'],
+          ['currentAppGeneratedImportsOwnerSideEffectExpectedGlobals', 'currentAppGeneratedImportsOwnerSideEffectExpectedGlobals'],
+          ['currentAppGeneratedImportsOwnerSideEffectPhase', 'currentAppGeneratedImportsOwnerSideEffectPhase'],
+          ['currentAppGeneratedImportsOwnerSideEffectObservedTags', 'currentAppGeneratedImportsOwnerSideEffectObservedTags'],
+          ['currentAppGeneratedImportsOwnerSideEffectMissingTags', 'currentAppGeneratedImportsOwnerSideEffectMissingTags'],
+          ['currentAppGeneratedImportsOwnerSideEffectReusedTags', 'currentAppGeneratedImportsOwnerSideEffectReusedTags'],
+          ['currentAppGeneratedImportsOwnerSideEffectSkippedFocusedImports', 'currentAppGeneratedImportsOwnerSideEffectSkippedFocusedImports'],
+          ['currentAppGeneratedImportsOwnerSideEffectFallbackTags', 'currentAppGeneratedImportsOwnerSideEffectFallbackTags'],
+          ['currentAppGeneratedImportsOwnerSideEffectFallbackFocusedImports', 'currentAppGeneratedImportsOwnerSideEffectFallbackFocusedImports'],
+          ['currentAppGeneratedImportsOwnerSideEffectDecision', 'currentAppGeneratedImportsOwnerSideEffectDecision'],
+          ['currentAppGeneratedImportsOwnerSideEffectReason', 'currentAppGeneratedImportsOwnerSideEffectReason'],
+          ['currentAppGeneratedImportsOwnerSideEffectFailureLayer', 'currentAppGeneratedImportsOwnerSideEffectFailureLayer'],
+          ['currentAppGeneratedImportsOwnerSideEffectNextResolutionStep', 'currentAppGeneratedImportsOwnerSideEffectNextResolutionStep'],
+          ['currentAppGeneratedImportsOwnerSideEffectExecutionResult', 'currentAppGeneratedImportsOwnerSideEffectExecutionResult'],
+          ['currentAppGeneratedImportsOwnerSideEffectModuleIdentity', 'currentAppGeneratedImportsOwnerSideEffectModuleIdentity'],
+          ['currentAppGeneratedImportsOwnerSideEffectBrowserError', 'currentAppGeneratedImportsOwnerSideEffectBrowserError'],
+          ['currentAppGeneratedImportsOwnerSideEffectRegistryBefore', 'currentAppGeneratedImportsOwnerSideEffectRegistryBefore'],
+          ['currentAppGeneratedImportsOwnerSideEffectRegistryAfter', 'currentAppGeneratedImportsOwnerSideEffectRegistryAfter'],
+          ['currentAppGeneratedImportsOwnerSideEffectVaadinGlobalBefore', 'currentAppGeneratedImportsOwnerSideEffectVaadinGlobalBefore'],
+          ['currentAppGeneratedImportsOwnerSideEffectVaadinGlobalAfter', 'currentAppGeneratedImportsOwnerSideEffectVaadinGlobalAfter']
         ]) {
           if (typeof source[sourceKey] === 'string' && source[sourceKey]) {
             window.VaadinDesktopIpcDiagnostics[diagnosticKey] = source[sourceKey];
@@ -6449,7 +6544,14 @@ let flowIpcShell = #"""
           ['currentAppProductionOwnerEarlyImportSideEffectSatisfied', 'currentAppProductionOwnerEarlyImportSideEffectSatisfied'],
           ['currentAppProductionOwnerEarlyImportPartialReuseSatisfied', 'currentAppProductionOwnerEarlyImportPartialReuseSatisfied'],
           ['currentAppProductionOwnerEarlyImportNoLocalhost', 'currentAppProductionOwnerEarlyImportNoLocalhost'],
-          ['currentAppProductionOwnerEarlyImportFixtureSubstituted', 'currentAppProductionOwnerEarlyImportFixtureSubstituted']
+          ['currentAppProductionOwnerEarlyImportFixtureSubstituted', 'currentAppProductionOwnerEarlyImportFixtureSubstituted'],
+          ['currentAppGeneratedImportsOwnerSideEffectAttempted', 'currentAppGeneratedImportsOwnerSideEffectAttempted'],
+          ['currentAppGeneratedImportsOwnerSideEffectImported', 'currentAppGeneratedImportsOwnerSideEffectImported'],
+          ['currentAppGeneratedImportsOwnerSideEffectSatisfied', 'currentAppGeneratedImportsOwnerSideEffectSatisfied'],
+          ['currentAppGeneratedImportsOwnerSideEffectPartialReuseSatisfied', 'currentAppGeneratedImportsOwnerSideEffectPartialReuseSatisfied'],
+          ['currentAppGeneratedImportsOwnerSideEffectLoadOnDemandPresent', 'currentAppGeneratedImportsOwnerSideEffectLoadOnDemandPresent'],
+          ['currentAppGeneratedImportsOwnerSideEffectNoLocalhost', 'currentAppGeneratedImportsOwnerSideEffectNoLocalhost'],
+          ['currentAppGeneratedImportsOwnerSideEffectFixtureSubstituted', 'currentAppGeneratedImportsOwnerSideEffectFixtureSubstituted']
         ]) {
           if (source[sourceKey] === true) {
             window.VaadinDesktopIpcDiagnostics[diagnosticKey] = true;
@@ -9181,6 +9283,142 @@ let flowIpcShell = #"""
             extra && typeof extra.currentAppProductionOwnerEarlyImportFixtureSubstituted === 'boolean'
               ? extra.currentAppProductionOwnerEarlyImportFixtureSubstituted
               : resource.currentAppProductionOwnerEarlyImportFixtureSubstituted === true,
+          currentAppGeneratedImportsOwnerSideEffectVersion:
+            extra && extra.currentAppGeneratedImportsOwnerSideEffectVersion
+              ? extra.currentAppGeneratedImportsOwnerSideEffectVersion
+              : (resource.currentAppGeneratedImportsOwnerSideEffectVersion || ''),
+          currentAppGeneratedImportsOwnerSideEffectSource:
+            extra && extra.currentAppGeneratedImportsOwnerSideEffectSource
+              ? extra.currentAppGeneratedImportsOwnerSideEffectSource
+              : (resource.currentAppGeneratedImportsOwnerSideEffectSource || ''),
+          currentAppGeneratedImportsOwnerSideEffectPolicy:
+            extra && extra.currentAppGeneratedImportsOwnerSideEffectPolicy
+              ? extra.currentAppGeneratedImportsOwnerSideEffectPolicy
+              : (resource.currentAppGeneratedImportsOwnerSideEffectPolicy || ''),
+          currentAppGeneratedImportsOwnerSideEffectCandidate:
+            extra && extra.currentAppGeneratedImportsOwnerSideEffectCandidate
+              ? extra.currentAppGeneratedImportsOwnerSideEffectCandidate
+              : (resource.currentAppGeneratedImportsOwnerSideEffectCandidate || ''),
+          currentAppGeneratedImportsOwnerSideEffectArtifact:
+            extra && extra.currentAppGeneratedImportsOwnerSideEffectArtifact
+              ? extra.currentAppGeneratedImportsOwnerSideEffectArtifact
+              : (resource.currentAppGeneratedImportsOwnerSideEffectArtifact || ''),
+          currentAppGeneratedImportsOwnerSideEffectExpectedTags:
+            extra && extra.currentAppGeneratedImportsOwnerSideEffectExpectedTags
+              ? extra.currentAppGeneratedImportsOwnerSideEffectExpectedTags
+              : (resource.currentAppGeneratedImportsOwnerSideEffectExpectedTags || ''),
+          currentAppGeneratedImportsOwnerSideEffectCoveredTags:
+            extra && extra.currentAppGeneratedImportsOwnerSideEffectCoveredTags
+              ? extra.currentAppGeneratedImportsOwnerSideEffectCoveredTags
+              : (resource.currentAppGeneratedImportsOwnerSideEffectCoveredTags || ''),
+          currentAppGeneratedImportsOwnerSideEffectKnownMissingTags:
+            extra && extra.currentAppGeneratedImportsOwnerSideEffectKnownMissingTags
+              ? extra.currentAppGeneratedImportsOwnerSideEffectKnownMissingTags
+              : (resource.currentAppGeneratedImportsOwnerSideEffectKnownMissingTags || ''),
+          currentAppGeneratedImportsOwnerSideEffectExpectedGlobals:
+            extra && extra.currentAppGeneratedImportsOwnerSideEffectExpectedGlobals
+              ? extra.currentAppGeneratedImportsOwnerSideEffectExpectedGlobals
+              : (resource.currentAppGeneratedImportsOwnerSideEffectExpectedGlobals || ''),
+          currentAppGeneratedImportsOwnerSideEffectPhase:
+            extra && extra.currentAppGeneratedImportsOwnerSideEffectPhase
+              ? extra.currentAppGeneratedImportsOwnerSideEffectPhase
+              : (resource.currentAppGeneratedImportsOwnerSideEffectPhase || ''),
+          currentAppGeneratedImportsOwnerSideEffectObservedTags:
+            extra && extra.currentAppGeneratedImportsOwnerSideEffectObservedTags
+              ? extra.currentAppGeneratedImportsOwnerSideEffectObservedTags
+              : (resource.currentAppGeneratedImportsOwnerSideEffectObservedTags || ''),
+          currentAppGeneratedImportsOwnerSideEffectMissingTags:
+            extra && extra.currentAppGeneratedImportsOwnerSideEffectMissingTags
+              ? extra.currentAppGeneratedImportsOwnerSideEffectMissingTags
+              : (resource.currentAppGeneratedImportsOwnerSideEffectMissingTags || ''),
+          currentAppGeneratedImportsOwnerSideEffectReusedTags:
+            extra && extra.currentAppGeneratedImportsOwnerSideEffectReusedTags
+              ? extra.currentAppGeneratedImportsOwnerSideEffectReusedTags
+              : (resource.currentAppGeneratedImportsOwnerSideEffectReusedTags || ''),
+          currentAppGeneratedImportsOwnerSideEffectSkippedFocusedImports:
+            extra && extra.currentAppGeneratedImportsOwnerSideEffectSkippedFocusedImports
+              ? extra.currentAppGeneratedImportsOwnerSideEffectSkippedFocusedImports
+              : (resource.currentAppGeneratedImportsOwnerSideEffectSkippedFocusedImports || ''),
+          currentAppGeneratedImportsOwnerSideEffectFallbackTags:
+            extra && extra.currentAppGeneratedImportsOwnerSideEffectFallbackTags
+              ? extra.currentAppGeneratedImportsOwnerSideEffectFallbackTags
+              : (resource.currentAppGeneratedImportsOwnerSideEffectFallbackTags || ''),
+          currentAppGeneratedImportsOwnerSideEffectFallbackFocusedImports:
+            extra && extra.currentAppGeneratedImportsOwnerSideEffectFallbackFocusedImports
+              ? extra.currentAppGeneratedImportsOwnerSideEffectFallbackFocusedImports
+              : (resource.currentAppGeneratedImportsOwnerSideEffectFallbackFocusedImports || ''),
+          currentAppGeneratedImportsOwnerSideEffectDecision:
+            extra && extra.currentAppGeneratedImportsOwnerSideEffectDecision
+              ? extra.currentAppGeneratedImportsOwnerSideEffectDecision
+              : (resource.currentAppGeneratedImportsOwnerSideEffectDecision || ''),
+          currentAppGeneratedImportsOwnerSideEffectReason:
+            extra && extra.currentAppGeneratedImportsOwnerSideEffectReason
+              ? extra.currentAppGeneratedImportsOwnerSideEffectReason
+              : (resource.currentAppGeneratedImportsOwnerSideEffectReason || ''),
+          currentAppGeneratedImportsOwnerSideEffectFailureLayer:
+            extra && extra.currentAppGeneratedImportsOwnerSideEffectFailureLayer
+              ? extra.currentAppGeneratedImportsOwnerSideEffectFailureLayer
+              : (resource.currentAppGeneratedImportsOwnerSideEffectFailureLayer || ''),
+          currentAppGeneratedImportsOwnerSideEffectNextResolutionStep:
+            extra && extra.currentAppGeneratedImportsOwnerSideEffectNextResolutionStep
+              ? extra.currentAppGeneratedImportsOwnerSideEffectNextResolutionStep
+              : (resource.currentAppGeneratedImportsOwnerSideEffectNextResolutionStep || ''),
+          currentAppGeneratedImportsOwnerSideEffectExecutionResult:
+            extra && extra.currentAppGeneratedImportsOwnerSideEffectExecutionResult
+              ? extra.currentAppGeneratedImportsOwnerSideEffectExecutionResult
+              : '',
+          currentAppGeneratedImportsOwnerSideEffectModuleIdentity:
+            extra && extra.currentAppGeneratedImportsOwnerSideEffectModuleIdentity
+              ? extra.currentAppGeneratedImportsOwnerSideEffectModuleIdentity
+              : '',
+          currentAppGeneratedImportsOwnerSideEffectBrowserError:
+            extra && extra.currentAppGeneratedImportsOwnerSideEffectBrowserError
+              ? extra.currentAppGeneratedImportsOwnerSideEffectBrowserError
+              : '',
+          currentAppGeneratedImportsOwnerSideEffectRegistryBefore:
+            extra && extra.currentAppGeneratedImportsOwnerSideEffectRegistryBefore
+              ? extra.currentAppGeneratedImportsOwnerSideEffectRegistryBefore
+              : '',
+          currentAppGeneratedImportsOwnerSideEffectRegistryAfter:
+            extra && extra.currentAppGeneratedImportsOwnerSideEffectRegistryAfter
+              ? extra.currentAppGeneratedImportsOwnerSideEffectRegistryAfter
+              : '',
+          currentAppGeneratedImportsOwnerSideEffectVaadinGlobalBefore:
+            extra && extra.currentAppGeneratedImportsOwnerSideEffectVaadinGlobalBefore
+              ? extra.currentAppGeneratedImportsOwnerSideEffectVaadinGlobalBefore
+              : '',
+          currentAppGeneratedImportsOwnerSideEffectVaadinGlobalAfter:
+            extra && extra.currentAppGeneratedImportsOwnerSideEffectVaadinGlobalAfter
+              ? extra.currentAppGeneratedImportsOwnerSideEffectVaadinGlobalAfter
+              : '',
+          currentAppGeneratedImportsOwnerSideEffectAttempted:
+            extra && typeof extra.currentAppGeneratedImportsOwnerSideEffectAttempted === 'boolean'
+              ? extra.currentAppGeneratedImportsOwnerSideEffectAttempted
+              : resource.currentAppGeneratedImportsOwnerSideEffectAttempted === true,
+          currentAppGeneratedImportsOwnerSideEffectImported:
+            extra && typeof extra.currentAppGeneratedImportsOwnerSideEffectImported === 'boolean'
+              ? extra.currentAppGeneratedImportsOwnerSideEffectImported
+              : resource.currentAppGeneratedImportsOwnerSideEffectImported === true,
+          currentAppGeneratedImportsOwnerSideEffectSatisfied:
+            extra && typeof extra.currentAppGeneratedImportsOwnerSideEffectSatisfied === 'boolean'
+              ? extra.currentAppGeneratedImportsOwnerSideEffectSatisfied
+              : resource.currentAppGeneratedImportsOwnerSideEffectSatisfied === true,
+          currentAppGeneratedImportsOwnerSideEffectPartialReuseSatisfied:
+            extra && typeof extra.currentAppGeneratedImportsOwnerSideEffectPartialReuseSatisfied === 'boolean'
+              ? extra.currentAppGeneratedImportsOwnerSideEffectPartialReuseSatisfied
+              : resource.currentAppGeneratedImportsOwnerSideEffectPartialReuseSatisfied === true,
+          currentAppGeneratedImportsOwnerSideEffectLoadOnDemandPresent:
+            extra && typeof extra.currentAppGeneratedImportsOwnerSideEffectLoadOnDemandPresent === 'boolean'
+              ? extra.currentAppGeneratedImportsOwnerSideEffectLoadOnDemandPresent
+              : resource.currentAppGeneratedImportsOwnerSideEffectLoadOnDemandPresent === true,
+          currentAppGeneratedImportsOwnerSideEffectNoLocalhost:
+            extra && typeof extra.currentAppGeneratedImportsOwnerSideEffectNoLocalhost === 'boolean'
+              ? extra.currentAppGeneratedImportsOwnerSideEffectNoLocalhost
+              : resource.currentAppGeneratedImportsOwnerSideEffectNoLocalhost === true,
+          currentAppGeneratedImportsOwnerSideEffectFixtureSubstituted:
+            extra && typeof extra.currentAppGeneratedImportsOwnerSideEffectFixtureSubstituted === 'boolean'
+              ? extra.currentAppGeneratedImportsOwnerSideEffectFixtureSubstituted
+              : resource.currentAppGeneratedImportsOwnerSideEffectFixtureSubstituted === true,
           stagedPath: '',
           owner: stageOwner,
           artifactFamily: family,
@@ -12670,7 +12908,15 @@ let flowIpcShell = #"""
 
       function currentAppProductionOwnerReusableTags() {
         const earlyTags = currentAppProductionOwnerEarlyImportReusableTags();
-        return earlyTags.length > 0 ? earlyTags : currentAppProductionOwnerComponentReuseExpectedTags();
+        const diagnostics = window.VaadinDesktopIpcDiagnostics || {};
+        const generatedImportsTags =
+          diagnostics.currentAppGeneratedImportsOwnerSideEffectSatisfied === true
+          && diagnostics.currentAppGeneratedImportsOwnerSideEffectImported === true
+          && diagnostics.currentAppGeneratedImportsOwnerSideEffectNoLocalhost === true
+            ? csvValues(diagnostics.currentAppGeneratedImportsOwnerSideEffectObservedTags || '')
+            : [];
+        const baseTags = earlyTags.length > 0 ? earlyTags : currentAppProductionOwnerComponentReuseExpectedTags();
+        return csvValues(mergeCsv(baseTags.join(','), generatedImportsTags));
       }
 
       function currentAppProductionOwnerComponentOwnsTag(tag) {
@@ -14069,6 +14315,75 @@ let flowIpcShell = #"""
             stageExtra.currentAppProductionOwnerEarlyImportNoLocalhost !== false,
           currentAppProductionOwnerEarlyImportFixtureSubstituted:
             stageExtra.currentAppProductionOwnerEarlyImportFixtureSubstituted === true,
+          currentAppGeneratedImportsOwnerSideEffectVersion:
+            stageExtra.currentAppGeneratedImportsOwnerSideEffectVersion
+            || 'flow-ipc-current-app-generated-imports-owner-side-effect-v1_40',
+          currentAppGeneratedImportsOwnerSideEffectSource:
+            stageExtra.currentAppGeneratedImportsOwnerSideEffectSource
+            || 'current-app-owner-early-import-v1_39',
+          currentAppGeneratedImportsOwnerSideEffectPolicy:
+            stageExtra.currentAppGeneratedImportsOwnerSideEffectPolicy
+            || 'import-current-app-production-generated-imports-before-covered-components-v1_40',
+          currentAppGeneratedImportsOwnerSideEffectCandidate:
+            stageExtra.currentAppGeneratedImportsOwnerSideEffectCandidate
+            || 'current-app-production-generated-imports-support-artifact',
+          currentAppGeneratedImportsOwnerSideEffectArtifact:
+            stageExtra.currentAppGeneratedImportsOwnerSideEffectArtifact
+            || stageExtra.currentAppProductionOwnerImportSupportArtifact
+            || stageExtra.currentAppGeneratedImportsRootProductionSupportArtifact
+            || '',
+          currentAppGeneratedImportsOwnerSideEffectExpectedTags:
+            stageExtra.currentAppGeneratedImportsOwnerSideEffectExpectedTags
+            || 'vaadin-big-decimal-field,vaadin-checkbox,vaadin-text-field',
+          currentAppGeneratedImportsOwnerSideEffectCoveredTags:
+            stageExtra.currentAppGeneratedImportsOwnerSideEffectCoveredTags
+            || 'vaadin-big-decimal-field,vaadin-checkbox,vaadin-select,vaadin-text-field',
+          currentAppGeneratedImportsOwnerSideEffectKnownMissingTags:
+            stageExtra.currentAppGeneratedImportsOwnerSideEffectKnownMissingTags
+            || 'vaadin-select',
+          currentAppGeneratedImportsOwnerSideEffectExpectedGlobals:
+            stageExtra.currentAppGeneratedImportsOwnerSideEffectExpectedGlobals
+            || 'window.Vaadin,window.Vaadin.Flow,window.Vaadin.Flow.loadOnDemand',
+          currentAppGeneratedImportsOwnerSideEffectPhase:
+            stageExtra.currentAppGeneratedImportsOwnerSideEffectPhase || 'before-component-imports',
+          currentAppGeneratedImportsOwnerSideEffectObservedTags:
+            stageExtra.currentAppGeneratedImportsOwnerSideEffectObservedTags || '',
+          currentAppGeneratedImportsOwnerSideEffectMissingTags:
+            stageExtra.currentAppGeneratedImportsOwnerSideEffectMissingTags || '',
+          currentAppGeneratedImportsOwnerSideEffectReusedTags:
+            stageExtra.currentAppGeneratedImportsOwnerSideEffectReusedTags || '',
+          currentAppGeneratedImportsOwnerSideEffectSkippedFocusedImports:
+            stageExtra.currentAppGeneratedImportsOwnerSideEffectSkippedFocusedImports || '',
+          currentAppGeneratedImportsOwnerSideEffectFallbackTags:
+            stageExtra.currentAppGeneratedImportsOwnerSideEffectFallbackTags || '',
+          currentAppGeneratedImportsOwnerSideEffectFallbackFocusedImports:
+            stageExtra.currentAppGeneratedImportsOwnerSideEffectFallbackFocusedImports || '',
+          currentAppGeneratedImportsOwnerSideEffectDecision:
+            stageExtra.currentAppGeneratedImportsOwnerSideEffectDecision
+            || 'pending-current-app-generated-imports-owner-side-effect',
+          currentAppGeneratedImportsOwnerSideEffectReason:
+            stageExtra.currentAppGeneratedImportsOwnerSideEffectReason
+            || 'current app production generated imports support artifact must be imported before focused component imports',
+          currentAppGeneratedImportsOwnerSideEffectFailureLayer:
+            stageExtra.currentAppGeneratedImportsOwnerSideEffectFailureLayer
+            || 'current-app-generated-imports-owner-side-effect-pending',
+          currentAppGeneratedImportsOwnerSideEffectNextResolutionStep:
+            stageExtra.currentAppGeneratedImportsOwnerSideEffectNextResolutionStep
+            || 'promote reusable current app generated imports side effects into the owner runtime contract, then replace remaining focused fallbacks with supported Vaadin build/runtime SPI coverage',
+          currentAppGeneratedImportsOwnerSideEffectAttempted:
+            stageExtra.currentAppGeneratedImportsOwnerSideEffectAttempted === true,
+          currentAppGeneratedImportsOwnerSideEffectImported:
+            stageExtra.currentAppGeneratedImportsOwnerSideEffectImported === true,
+          currentAppGeneratedImportsOwnerSideEffectSatisfied:
+            stageExtra.currentAppGeneratedImportsOwnerSideEffectSatisfied === true,
+          currentAppGeneratedImportsOwnerSideEffectPartialReuseSatisfied:
+            stageExtra.currentAppGeneratedImportsOwnerSideEffectPartialReuseSatisfied === true,
+          currentAppGeneratedImportsOwnerSideEffectLoadOnDemandPresent:
+            stageExtra.currentAppGeneratedImportsOwnerSideEffectLoadOnDemandPresent === true,
+          currentAppGeneratedImportsOwnerSideEffectNoLocalhost:
+            stageExtra.currentAppGeneratedImportsOwnerSideEffectNoLocalhost !== false,
+          currentAppGeneratedImportsOwnerSideEffectFixtureSubstituted:
+            stageExtra.currentAppGeneratedImportsOwnerSideEffectFixtureSubstituted === true,
           currentAppProductionRuntimeOwnershipVersion:
             stageExtra.currentAppProductionRuntimeOwnershipVersion || '',
           currentAppProductionRuntimeOwnershipHandoffReady:
@@ -14173,6 +14488,133 @@ let flowIpcShell = #"""
           currentAppProductionRuntimeOwnershipOwnerReuseSatisfied: reuseSatisfied,
           currentAppProductionOwnerEarlyImportSideEffectSatisfied: sideEffectSatisfied,
           currentAppProductionOwnerEarlyImportPartialReuseSatisfied: reuseSatisfied
+        };
+      }
+
+      function currentAppGeneratedImportsOwnerSideEffectResource(stageExtra) {
+        const artifact = stageExtra && typeof stageExtra.currentAppGeneratedImportsOwnerSideEffectArtifact === 'string'
+          ? stageExtra.currentAppGeneratedImportsOwnerSideEffectArtifact
+          : '';
+        const support = artifact
+          || (stageExtra && stageExtra.currentAppProductionOwnerImportSupportArtifact)
+          || (stageExtra && stageExtra.currentAppGeneratedImportsRootProductionSupportArtifact)
+          || '';
+        if (!support) {
+          return null;
+        }
+        return componentFrontendResourceByPath(support);
+      }
+
+      function currentAppGeneratedImportsOwnerSideEffectDiagnostics(stageExtra, imported, registryBefore,
+          registryAfter, globalBefore, globalAfter, failureLayer, browserError) {
+        const expectedTags = csvValues(
+          stageExtra.currentAppGeneratedImportsOwnerSideEffectExpectedTags
+          || 'vaadin-big-decimal-field,vaadin-checkbox,vaadin-text-field');
+        const coveredTags = csvValues(
+          stageExtra.currentAppGeneratedImportsOwnerSideEffectCoveredTags
+          || 'vaadin-big-decimal-field,vaadin-checkbox,vaadin-select,vaadin-text-field');
+        const knownMissingTags = csvValues(
+          stageExtra.currentAppGeneratedImportsOwnerSideEffectKnownMissingTags || 'vaadin-select');
+        const observedTags = coveredTags.filter((tag) => !!customElements.get(tag));
+        const missingExpectedTags = expectedTags.filter((tag) => !customElements.get(tag));
+        const fallbackTags = coveredTags.filter((tag) => !observedTags.includes(tag));
+        const expectedGlobals = csvValues(
+          stageExtra.currentAppGeneratedImportsOwnerSideEffectExpectedGlobals
+          || 'window.Vaadin,window.Vaadin.Flow,window.Vaadin.Flow.loadOnDemand');
+        const hasVaadin = !!window.Vaadin;
+        const hasFlow = !!(window.Vaadin && window.Vaadin.Flow);
+        const hasLoadOnDemand = !!(window.Vaadin && window.Vaadin.Flow
+          && typeof window.Vaadin.Flow.loadOnDemand === 'function');
+        const missingGlobals = expectedGlobals.filter((globalName) => {
+          if (globalName === 'window.Vaadin') {
+            return !hasVaadin;
+          }
+          if (globalName === 'window.Vaadin.Flow') {
+            return !hasFlow;
+          }
+          if (globalName === 'window.Vaadin.Flow.loadOnDemand') {
+            return !hasLoadOnDemand;
+          }
+          return false;
+        });
+        const satisfied = imported === true
+          && missingExpectedTags.length === 0
+          && missingGlobals.length === 0;
+        const partialReuse = imported === true && observedTags.length > 0 && hasLoadOnDemand;
+        const fallbackLayer = satisfied
+          ? (fallbackTags.length > 0
+            ? 'current-app-generated-imports-owner-partial-tag-coverage'
+            : '')
+          : (failureLayer || 'current-app-generated-imports-owner-side-effect-pending');
+        const decision = satisfied
+          ? (fallbackTags.length > 0
+            ? 'generated-imports-owner-reused-observed-tags-with-focused-fallbacks'
+            : 'generated-imports-owner-reused-covered-tags')
+          : (imported
+            ? 'generated-imports-owner-imported-without-required-side-effects'
+            : 'generated-imports-owner-import-failed');
+        const reason = satisfied
+          ? 'current app production generated imports support artifact registered reusable component tags and installed Flow.loadOnDemand'
+          : (imported
+            ? 'current app production generated imports support artifact imported but did not expose all expected tags/globals'
+            : 'current app production generated imports support artifact import failed before reusable side effects');
+        return {
+          currentAppGeneratedImportsOwnerSideEffectVersion:
+            stageExtra.currentAppGeneratedImportsOwnerSideEffectVersion
+            || 'flow-ipc-current-app-generated-imports-owner-side-effect-v1_40',
+          currentAppGeneratedImportsOwnerSideEffectSource:
+            stageExtra.currentAppGeneratedImportsOwnerSideEffectSource
+            || 'current-app-owner-early-import-v1_39',
+          currentAppGeneratedImportsOwnerSideEffectPolicy:
+            stageExtra.currentAppGeneratedImportsOwnerSideEffectPolicy
+            || 'import-current-app-production-generated-imports-before-covered-components-v1_40',
+          currentAppGeneratedImportsOwnerSideEffectCandidate:
+            stageExtra.currentAppGeneratedImportsOwnerSideEffectCandidate
+            || 'current-app-production-generated-imports-support-artifact',
+          currentAppGeneratedImportsOwnerSideEffectArtifact:
+            stageExtra.currentAppGeneratedImportsOwnerSideEffectArtifact
+            || stageExtra.currentAppProductionOwnerImportSupportArtifact
+            || '',
+          currentAppGeneratedImportsOwnerSideEffectExpectedTags: expectedTags.join(','),
+          currentAppGeneratedImportsOwnerSideEffectCoveredTags: coveredTags.join(','),
+          currentAppGeneratedImportsOwnerSideEffectKnownMissingTags: knownMissingTags.join(','),
+          currentAppGeneratedImportsOwnerSideEffectExpectedGlobals: expectedGlobals.join(','),
+          currentAppGeneratedImportsOwnerSideEffectPhase:
+            stageExtra.currentAppGeneratedImportsOwnerSideEffectPhase || 'before-component-imports',
+          currentAppGeneratedImportsOwnerSideEffectObservedTags: observedTags.join(','),
+          currentAppGeneratedImportsOwnerSideEffectMissingTags:
+            missingExpectedTags.concat(missingGlobals).join(','),
+          currentAppGeneratedImportsOwnerSideEffectFallbackTags: fallbackTags.join(','),
+          currentAppGeneratedImportsOwnerSideEffectDecision: decision,
+          currentAppGeneratedImportsOwnerSideEffectReason: reason,
+          currentAppGeneratedImportsOwnerSideEffectFailureLayer: fallbackLayer,
+          currentAppGeneratedImportsOwnerSideEffectNextResolutionStep:
+            stageExtra.currentAppGeneratedImportsOwnerSideEffectNextResolutionStep || '',
+          currentAppGeneratedImportsOwnerSideEffectRegistryBefore: registryBefore || '',
+          currentAppGeneratedImportsOwnerSideEffectRegistryAfter: registryAfter || '',
+          currentAppGeneratedImportsOwnerSideEffectVaadinGlobalBefore: globalBefore || '',
+          currentAppGeneratedImportsOwnerSideEffectVaadinGlobalAfter: globalAfter || '',
+          currentAppGeneratedImportsOwnerSideEffectBrowserError: browserError || '',
+          currentAppGeneratedImportsOwnerSideEffectAttempted: true,
+          currentAppGeneratedImportsOwnerSideEffectImported: imported === true,
+          currentAppGeneratedImportsOwnerSideEffectSatisfied: satisfied,
+          currentAppGeneratedImportsOwnerSideEffectPartialReuseSatisfied: partialReuse,
+          currentAppGeneratedImportsOwnerSideEffectLoadOnDemandPresent: hasLoadOnDemand,
+          currentAppGeneratedImportsOwnerSideEffectNoLocalhost:
+            stageExtra.currentAppGeneratedImportsOwnerSideEffectNoLocalhost !== false,
+          currentAppGeneratedImportsOwnerSideEffectFixtureSubstituted:
+            stageExtra.currentAppGeneratedImportsOwnerSideEffectFixtureSubstituted === true,
+          currentAppProductionOwnerImportSideEffectProof: satisfied
+            ? 'current-app-generated-imports-owner-observed-tags=' + observedTags.join('|')
+              + ';global=' + globalAfter
+            : '',
+          currentAppProductionOwnerImportSideEffectSatisfied: satisfied,
+          currentAppProductionOwnerImportReuseSatisfied: partialReuse,
+          currentAppProductionRuntimeOwnershipOwnerSideEffectSatisfied: satisfied,
+          currentAppProductionRuntimeOwnershipOwnerReuseSatisfied: partialReuse,
+          currentAppProductionOwnerEarlyImportReusableTags: observedTags.join(','),
+          currentAppProductionOwnerEarlyImportSideEffectSatisfied: satisfied,
+          currentAppProductionOwnerEarlyImportPartialReuseSatisfied: partialReuse
         };
       }
 
@@ -14307,6 +14749,132 @@ let flowIpcShell = #"""
         d.currentAppProductionOwnerEarlyImportFixtureSubstituted =
           extra.currentAppProductionOwnerEarlyImportFixtureSubstituted === true
           || d.currentAppProductionOwnerEarlyImportFixtureSubstituted === true;
+        d.currentAppGeneratedImportsOwnerSideEffectVersion =
+          extra.currentAppGeneratedImportsOwnerSideEffectVersion
+          || d.currentAppGeneratedImportsOwnerSideEffectVersion
+          || '';
+        d.currentAppGeneratedImportsOwnerSideEffectSource =
+          extra.currentAppGeneratedImportsOwnerSideEffectSource
+          || d.currentAppGeneratedImportsOwnerSideEffectSource
+          || '';
+        d.currentAppGeneratedImportsOwnerSideEffectPolicy =
+          extra.currentAppGeneratedImportsOwnerSideEffectPolicy
+          || d.currentAppGeneratedImportsOwnerSideEffectPolicy
+          || '';
+        d.currentAppGeneratedImportsOwnerSideEffectCandidate =
+          extra.currentAppGeneratedImportsOwnerSideEffectCandidate
+          || d.currentAppGeneratedImportsOwnerSideEffectCandidate
+          || '';
+        d.currentAppGeneratedImportsOwnerSideEffectArtifact =
+          extra.currentAppGeneratedImportsOwnerSideEffectArtifact
+          || d.currentAppGeneratedImportsOwnerSideEffectArtifact
+          || '';
+        d.currentAppGeneratedImportsOwnerSideEffectExpectedTags =
+          extra.currentAppGeneratedImportsOwnerSideEffectExpectedTags
+          || d.currentAppGeneratedImportsOwnerSideEffectExpectedTags
+          || '';
+        d.currentAppGeneratedImportsOwnerSideEffectCoveredTags =
+          extra.currentAppGeneratedImportsOwnerSideEffectCoveredTags
+          || d.currentAppGeneratedImportsOwnerSideEffectCoveredTags
+          || '';
+        d.currentAppGeneratedImportsOwnerSideEffectKnownMissingTags =
+          extra.currentAppGeneratedImportsOwnerSideEffectKnownMissingTags
+          || d.currentAppGeneratedImportsOwnerSideEffectKnownMissingTags
+          || '';
+        d.currentAppGeneratedImportsOwnerSideEffectExpectedGlobals =
+          extra.currentAppGeneratedImportsOwnerSideEffectExpectedGlobals
+          || d.currentAppGeneratedImportsOwnerSideEffectExpectedGlobals
+          || '';
+        d.currentAppGeneratedImportsOwnerSideEffectPhase =
+          extra.currentAppGeneratedImportsOwnerSideEffectPhase
+          || d.currentAppGeneratedImportsOwnerSideEffectPhase
+          || '';
+        d.currentAppGeneratedImportsOwnerSideEffectObservedTags =
+          mergeCsv(d.currentAppGeneratedImportsOwnerSideEffectObservedTags,
+            csvValues(extra.currentAppGeneratedImportsOwnerSideEffectObservedTags));
+        d.currentAppGeneratedImportsOwnerSideEffectMissingTags =
+          mergeCsv(d.currentAppGeneratedImportsOwnerSideEffectMissingTags,
+            csvValues(extra.currentAppGeneratedImportsOwnerSideEffectMissingTags));
+        d.currentAppGeneratedImportsOwnerSideEffectReusedTags =
+          mergeCsv(d.currentAppGeneratedImportsOwnerSideEffectReusedTags,
+            csvValues(extra.currentAppGeneratedImportsOwnerSideEffectReusedTags));
+        d.currentAppGeneratedImportsOwnerSideEffectSkippedFocusedImports =
+          mergeCsv(d.currentAppGeneratedImportsOwnerSideEffectSkippedFocusedImports,
+            csvValues(extra.currentAppGeneratedImportsOwnerSideEffectSkippedFocusedImports));
+        d.currentAppGeneratedImportsOwnerSideEffectFallbackTags =
+          mergeCsv(d.currentAppGeneratedImportsOwnerSideEffectFallbackTags,
+            csvValues(extra.currentAppGeneratedImportsOwnerSideEffectFallbackTags));
+        d.currentAppGeneratedImportsOwnerSideEffectFallbackFocusedImports =
+          mergeCsv(d.currentAppGeneratedImportsOwnerSideEffectFallbackFocusedImports,
+            csvValues(extra.currentAppGeneratedImportsOwnerSideEffectFallbackFocusedImports));
+        d.currentAppGeneratedImportsOwnerSideEffectDecision =
+          extra.currentAppGeneratedImportsOwnerSideEffectDecision
+          || d.currentAppGeneratedImportsOwnerSideEffectDecision
+          || '';
+        d.currentAppGeneratedImportsOwnerSideEffectReason =
+          extra.currentAppGeneratedImportsOwnerSideEffectReason
+          || d.currentAppGeneratedImportsOwnerSideEffectReason
+          || '';
+        d.currentAppGeneratedImportsOwnerSideEffectFailureLayer =
+          extra.currentAppGeneratedImportsOwnerSideEffectSatisfied === true
+          && !extra.currentAppGeneratedImportsOwnerSideEffectFailureLayer
+            ? ''
+            : (extra.currentAppGeneratedImportsOwnerSideEffectFailureLayer
+              || d.currentAppGeneratedImportsOwnerSideEffectFailureLayer
+              || '');
+        d.currentAppGeneratedImportsOwnerSideEffectNextResolutionStep =
+          extra.currentAppGeneratedImportsOwnerSideEffectNextResolutionStep
+          || d.currentAppGeneratedImportsOwnerSideEffectNextResolutionStep
+          || '';
+        d.currentAppGeneratedImportsOwnerSideEffectExecutionResult =
+          extra.currentAppGeneratedImportsOwnerSideEffectExecutionResult
+          || d.currentAppGeneratedImportsOwnerSideEffectExecutionResult
+          || '';
+        d.currentAppGeneratedImportsOwnerSideEffectModuleIdentity =
+          extra.currentAppGeneratedImportsOwnerSideEffectModuleIdentity
+          || d.currentAppGeneratedImportsOwnerSideEffectModuleIdentity
+          || '';
+        d.currentAppGeneratedImportsOwnerSideEffectBrowserError =
+          extra.currentAppGeneratedImportsOwnerSideEffectBrowserError
+          || d.currentAppGeneratedImportsOwnerSideEffectBrowserError
+          || '';
+        d.currentAppGeneratedImportsOwnerSideEffectRegistryBefore =
+          extra.currentAppGeneratedImportsOwnerSideEffectRegistryBefore
+          || d.currentAppGeneratedImportsOwnerSideEffectRegistryBefore
+          || '';
+        d.currentAppGeneratedImportsOwnerSideEffectRegistryAfter =
+          extra.currentAppGeneratedImportsOwnerSideEffectRegistryAfter
+          || d.currentAppGeneratedImportsOwnerSideEffectRegistryAfter
+          || '';
+        d.currentAppGeneratedImportsOwnerSideEffectVaadinGlobalBefore =
+          extra.currentAppGeneratedImportsOwnerSideEffectVaadinGlobalBefore
+          || d.currentAppGeneratedImportsOwnerSideEffectVaadinGlobalBefore
+          || '';
+        d.currentAppGeneratedImportsOwnerSideEffectVaadinGlobalAfter =
+          extra.currentAppGeneratedImportsOwnerSideEffectVaadinGlobalAfter
+          || d.currentAppGeneratedImportsOwnerSideEffectVaadinGlobalAfter
+          || '';
+        d.currentAppGeneratedImportsOwnerSideEffectAttempted =
+          extra.currentAppGeneratedImportsOwnerSideEffectAttempted === true
+          || d.currentAppGeneratedImportsOwnerSideEffectAttempted === true;
+        d.currentAppGeneratedImportsOwnerSideEffectImported =
+          extra.currentAppGeneratedImportsOwnerSideEffectImported === true
+          || d.currentAppGeneratedImportsOwnerSideEffectImported === true;
+        d.currentAppGeneratedImportsOwnerSideEffectSatisfied =
+          extra.currentAppGeneratedImportsOwnerSideEffectSatisfied === true
+          || d.currentAppGeneratedImportsOwnerSideEffectSatisfied === true;
+        d.currentAppGeneratedImportsOwnerSideEffectPartialReuseSatisfied =
+          extra.currentAppGeneratedImportsOwnerSideEffectPartialReuseSatisfied === true
+          || d.currentAppGeneratedImportsOwnerSideEffectPartialReuseSatisfied === true;
+        d.currentAppGeneratedImportsOwnerSideEffectLoadOnDemandPresent =
+          extra.currentAppGeneratedImportsOwnerSideEffectLoadOnDemandPresent === true
+          || d.currentAppGeneratedImportsOwnerSideEffectLoadOnDemandPresent === true;
+        d.currentAppGeneratedImportsOwnerSideEffectNoLocalhost =
+          extra.currentAppGeneratedImportsOwnerSideEffectNoLocalhost === true
+          || d.currentAppGeneratedImportsOwnerSideEffectNoLocalhost === true;
+        d.currentAppGeneratedImportsOwnerSideEffectFixtureSubstituted =
+          extra.currentAppGeneratedImportsOwnerSideEffectFixtureSubstituted === true
+          || d.currentAppGeneratedImportsOwnerSideEffectFixtureSubstituted === true;
       }
 
       async function maybeImportCurrentAppProductionOwner(stageExtra) {
@@ -14389,10 +14957,101 @@ let flowIpcShell = #"""
           }
           currentAppProductionOwnerModuleExports = await import(rootUrl);
           window.__vatoriCurrentAppProductionOwnerModuleExports = currentAppProductionOwnerModuleExports;
+          let generatedImportsOwnerSideEffect = null;
+          const support = currentAppGeneratedImportsOwnerSideEffectResource(stageExtra);
+          const supportSource = support ? (componentFrontendResourceBodies.get(support.path) || '') : '';
+          if (support && supportSource) {
+            const supportIdentity = 'current-app-generated-imports-owner-v1_40:' + support.path;
+            const supportRegistryBefore = vaadinCustomElementRegistrySnapshot();
+            const supportGlobalBefore = vaadinGlobalSnapshot();
+            const supportBaseExtra = currentAppProductionOwnerImportStageExtra(stageExtra, root, support,
+              'support', {
+                currentAppGeneratedImportsOwnerSideEffectAttempted: true,
+                currentAppGeneratedImportsOwnerSideEffectImported: false,
+                currentAppGeneratedImportsOwnerSideEffectExecutionResult:
+                  'execution-attempt:' + support.path,
+                currentAppGeneratedImportsOwnerSideEffectModuleIdentity: supportIdentity,
+                currentAppGeneratedImportsOwnerSideEffectRegistryBefore: supportRegistryBefore,
+                currentAppGeneratedImportsOwnerSideEffectVaadinGlobalBefore: supportGlobalBefore,
+                currentAppProductionOwnerEarlyImportRequestBeforeCoveredComponents:
+                  earlyImportBeforeCoveredComponents,
+                currentAppProductionOwnerEarlyImportAttempted: true,
+                currentAppProductionOwnerEarlyImported: true,
+                currentAppProductionOwnerImportAttempted: true,
+                currentAppProductionOwnerImported: true,
+                currentAppProductionOwnerImportOverCustomScheme: true,
+                currentAppProductionOwnerImportDependencyStageCount: stagedDependencyCount
+              });
+            applyCurrentAppProductionOwnerImportDiagnostics(supportBaseExtra);
+            let supportUrl = '';
+            try {
+              supportUrl = await stageHostOwnedFrontendArtifact(support, supportSource, 'execution-attempt',
+                supportBaseExtra);
+              if (!supportUrl) {
+                throw new Error('current-app-generated-imports-owner-stage-url-missing');
+              }
+              window.__vatoriCurrentAppGeneratedImportsOwnerModuleExports = await import(supportUrl);
+              const supportRegistryAfter = vaadinCustomElementRegistrySnapshot();
+              const supportGlobalAfter = vaadinGlobalSnapshot();
+              generatedImportsOwnerSideEffect = currentAppGeneratedImportsOwnerSideEffectDiagnostics(
+                stageExtra, true, supportRegistryBefore, supportRegistryAfter, supportGlobalBefore,
+                supportGlobalAfter, '', '');
+              generatedImportsOwnerSideEffect = Object.assign({}, generatedImportsOwnerSideEffect, {
+                currentAppGeneratedImportsOwnerSideEffectExecutionResult:
+                  generatedImportsOwnerSideEffect.currentAppGeneratedImportsOwnerSideEffectSatisfied
+                    ? 'executed:' + support.path
+                    : 'strict-blocker:'
+                      + generatedImportsOwnerSideEffect.currentAppGeneratedImportsOwnerSideEffectFailureLayer
+                      + ':' + support.path,
+                currentAppGeneratedImportsOwnerSideEffectModuleIdentity: supportIdentity,
+                currentAppGeneratedImportsOwnerSideEffectImported: true,
+                currentAppProductionOwnerImportAttempted: true,
+                currentAppProductionOwnerImported: true,
+                currentAppProductionOwnerImportOverCustomScheme: true,
+                currentAppProductionOwnerImportDependencyStageCount: stagedDependencyCount
+              });
+              applyCurrentAppProductionOwnerImportDiagnostics(generatedImportsOwnerSideEffect);
+              recordFrontendStageOutcome(support, supportUrl,
+                generatedImportsOwnerSideEffect.currentAppGeneratedImportsOwnerSideEffectSatisfied
+                  ? 'executed'
+                  : 'strict-blocker',
+                currentAppProductionOwnerImportStageExtra(stageExtra, root, support, 'support',
+                  generatedImportsOwnerSideEffect));
+            } catch (supportError) {
+              const supportMessage = supportError && supportError.message
+                ? supportError.message
+                : String(supportError);
+              const supportRegistryAfter = vaadinCustomElementRegistrySnapshot();
+              const supportGlobalAfter = vaadinGlobalSnapshot();
+              generatedImportsOwnerSideEffect = currentAppGeneratedImportsOwnerSideEffectDiagnostics(
+                stageExtra, false, supportRegistryBefore, supportRegistryAfter, supportGlobalBefore,
+                supportGlobalAfter, currentAppProductionOwnerImportFailure(supportError), supportMessage);
+              generatedImportsOwnerSideEffect = Object.assign({}, generatedImportsOwnerSideEffect, {
+                currentAppGeneratedImportsOwnerSideEffectExecutionResult:
+                  'strict-blocker:'
+                  + generatedImportsOwnerSideEffect.currentAppGeneratedImportsOwnerSideEffectFailureLayer
+                  + ':' + support.path,
+                currentAppGeneratedImportsOwnerSideEffectModuleIdentity: supportIdentity,
+                currentAppGeneratedImportsOwnerSideEffectBrowserError: supportMessage,
+                browserError: supportMessage,
+                currentAppProductionOwnerImportAttempted: true,
+                currentAppProductionOwnerImported: true,
+                currentAppProductionOwnerImportOverCustomScheme: true,
+                currentAppProductionOwnerImportDependencyStageCount: stagedDependencyCount
+              });
+              applyCurrentAppProductionOwnerImportDiagnostics(generatedImportsOwnerSideEffect);
+              recordFrontendStageOutcome(support, supportUrl, 'strict-blocker',
+                currentAppProductionOwnerImportStageExtra(stageExtra, root, support, 'support',
+                  generatedImportsOwnerSideEffect));
+            }
+          }
           const registryAfter = vaadinCustomElementRegistrySnapshot();
           const globalAfter = vaadinGlobalSnapshot();
-          const sideEffect = currentAppProductionOwnerSideEffectDiagnostics(
+          let sideEffect = currentAppProductionOwnerSideEffectDiagnostics(
             stageExtra, true, registryBefore, registryAfter, globalBefore, globalAfter, '');
+          if (generatedImportsOwnerSideEffect) {
+            sideEffect = Object.assign({}, sideEffect, generatedImportsOwnerSideEffect);
+          }
           const successExtra = currentAppProductionOwnerImportStageExtra(stageExtra, root, root, 'root',
             Object.assign({}, sideEffect, {
               currentAppProductionOwnerImportAttempted: true,
@@ -15753,6 +16412,18 @@ let flowIpcShell = #"""
           window.VaadinDesktopIpcDiagnostics.currentAppProductionOwnerImportFailureLayer
           || window.VaadinDesktopIpcDiagnostics.currentAppProductionOwnerComponentReuseFailureLayer
           || '';
+        const generatedImportsOwnerObservedTags =
+          csvValues(window.VaadinDesktopIpcDiagnostics.currentAppGeneratedImportsOwnerSideEffectObservedTags || '');
+        const generatedImportsOwnerCoveredTags =
+          csvValues(window.VaadinDesktopIpcDiagnostics.currentAppGeneratedImportsOwnerSideEffectCoveredTags || '');
+        const generatedImportsOwnerSatisfied =
+          window.VaadinDesktopIpcDiagnostics.currentAppGeneratedImportsOwnerSideEffectSatisfied === true;
+        const generatedImportsOwnerReusableTags =
+          generatedImportsOwnerSatisfied ? generatedImportsOwnerObservedTags : [];
+        const generatedImportsOwnerCoversTag =
+          generatedImportsOwnerSatisfied
+          && componentTag
+          && generatedImportsOwnerObservedTags.includes(componentTag);
         const ownerHasTag = ownerOwnedRuntimeSatisfied
           && ownerSideEffectSatisfied
           && componentTag
@@ -15944,8 +16615,11 @@ let flowIpcShell = #"""
           currentAppProductionOwnerEarlyImportPhase:
             resource.currentAppProductionOwnerEarlyImportPhase || 'before-component-imports',
           currentAppProductionOwnerEarlyImportReusableTags:
-            resource.currentAppProductionOwnerEarlyImportReusableTags
-            || 'vaadin-checkbox,vaadin-select,vaadin-text-field',
+            mergeCsv(
+              resource.currentAppProductionOwnerEarlyImportReusableTags
+                || window.VaadinDesktopIpcDiagnostics.currentAppProductionOwnerEarlyImportReusableTags
+                || 'vaadin-checkbox,vaadin-select,vaadin-text-field',
+              generatedImportsOwnerReusableTags),
           currentAppProductionOwnerEarlyImportCoveredTags:
             resource.currentAppProductionOwnerEarlyImportCoveredTags || matrixExpectedTags.join(','),
           currentAppProductionOwnerEarlyImportReusedTags:
@@ -15981,7 +16655,96 @@ let flowIpcShell = #"""
           currentAppProductionOwnerEarlyImportNoLocalhost:
             window.VaadinDesktopIpcDiagnostics.currentAppProductionOwnerEarlyImportNoLocalhost === true,
           currentAppProductionOwnerEarlyImportFixtureSubstituted:
-            window.VaadinDesktopIpcDiagnostics.currentAppProductionOwnerEarlyImportFixtureSubstituted === true
+            window.VaadinDesktopIpcDiagnostics.currentAppProductionOwnerEarlyImportFixtureSubstituted === true,
+          currentAppGeneratedImportsOwnerSideEffectVersion:
+            resource.currentAppGeneratedImportsOwnerSideEffectVersion
+            || window.VaadinDesktopIpcDiagnostics.currentAppGeneratedImportsOwnerSideEffectVersion
+            || 'flow-ipc-current-app-generated-imports-owner-side-effect-v1_40',
+          currentAppGeneratedImportsOwnerSideEffectSource:
+            resource.currentAppGeneratedImportsOwnerSideEffectSource
+            || window.VaadinDesktopIpcDiagnostics.currentAppGeneratedImportsOwnerSideEffectSource
+            || 'current-app-owner-early-import-v1_39',
+          currentAppGeneratedImportsOwnerSideEffectPolicy:
+            resource.currentAppGeneratedImportsOwnerSideEffectPolicy
+            || window.VaadinDesktopIpcDiagnostics.currentAppGeneratedImportsOwnerSideEffectPolicy
+            || 'import-current-app-production-generated-imports-before-covered-components-v1_40',
+          currentAppGeneratedImportsOwnerSideEffectCandidate:
+            resource.currentAppGeneratedImportsOwnerSideEffectCandidate
+            || window.VaadinDesktopIpcDiagnostics.currentAppGeneratedImportsOwnerSideEffectCandidate
+            || 'current-app-production-generated-imports-support-artifact',
+          currentAppGeneratedImportsOwnerSideEffectArtifact:
+            resource.currentAppGeneratedImportsOwnerSideEffectArtifact
+            || window.VaadinDesktopIpcDiagnostics.currentAppGeneratedImportsOwnerSideEffectArtifact
+            || '',
+          currentAppGeneratedImportsOwnerSideEffectExpectedTags:
+            resource.currentAppGeneratedImportsOwnerSideEffectExpectedTags
+            || window.VaadinDesktopIpcDiagnostics.currentAppGeneratedImportsOwnerSideEffectExpectedTags
+            || '',
+          currentAppGeneratedImportsOwnerSideEffectCoveredTags:
+            resource.currentAppGeneratedImportsOwnerSideEffectCoveredTags
+            || window.VaadinDesktopIpcDiagnostics.currentAppGeneratedImportsOwnerSideEffectCoveredTags
+            || '',
+          currentAppGeneratedImportsOwnerSideEffectKnownMissingTags:
+            resource.currentAppGeneratedImportsOwnerSideEffectKnownMissingTags
+            || window.VaadinDesktopIpcDiagnostics.currentAppGeneratedImportsOwnerSideEffectKnownMissingTags
+            || '',
+          currentAppGeneratedImportsOwnerSideEffectExpectedGlobals:
+            resource.currentAppGeneratedImportsOwnerSideEffectExpectedGlobals
+            || window.VaadinDesktopIpcDiagnostics.currentAppGeneratedImportsOwnerSideEffectExpectedGlobals
+            || '',
+          currentAppGeneratedImportsOwnerSideEffectPhase:
+            resource.currentAppGeneratedImportsOwnerSideEffectPhase
+            || window.VaadinDesktopIpcDiagnostics.currentAppGeneratedImportsOwnerSideEffectPhase
+            || 'before-component-imports',
+          currentAppGeneratedImportsOwnerSideEffectObservedTags:
+            window.VaadinDesktopIpcDiagnostics.currentAppGeneratedImportsOwnerSideEffectObservedTags || '',
+          currentAppGeneratedImportsOwnerSideEffectMissingTags:
+            window.VaadinDesktopIpcDiagnostics.currentAppGeneratedImportsOwnerSideEffectMissingTags || '',
+          currentAppGeneratedImportsOwnerSideEffectReusedTags:
+            generatedImportsOwnerCoversTag ? componentTag : '',
+          currentAppGeneratedImportsOwnerSideEffectSkippedFocusedImports:
+            generatedImportsOwnerCoversTag ? (resource.path || '') : '',
+          currentAppGeneratedImportsOwnerSideEffectFallbackTags:
+            componentTag && generatedImportsOwnerCoveredTags.includes(componentTag)
+              && !generatedImportsOwnerCoversTag ? componentTag : '',
+          currentAppGeneratedImportsOwnerSideEffectFallbackFocusedImports:
+            componentTag && generatedImportsOwnerCoveredTags.includes(componentTag)
+              && !generatedImportsOwnerCoversTag ? (resource.path || '') : '',
+          currentAppGeneratedImportsOwnerSideEffectDecision:
+            generatedImportsOwnerCoversTag
+              ? 'generated-imports-owner-reused-focused-import-skipped'
+              : (componentTag && generatedImportsOwnerCoveredTags.includes(componentTag)
+                ? 'generated-imports-owner-focused-fallback-tag-unowned'
+                : (window.VaadinDesktopIpcDiagnostics.currentAppGeneratedImportsOwnerSideEffectDecision || '')),
+          currentAppGeneratedImportsOwnerSideEffectReason:
+            generatedImportsOwnerCoversTag
+              ? 'current app generated imports owner registered ' + componentTag + ' before focused import'
+              : (componentTag && generatedImportsOwnerCoveredTags.includes(componentTag)
+                ? 'current app generated imports owner did not register ' + componentTag + ' before focused import'
+                : (window.VaadinDesktopIpcDiagnostics.currentAppGeneratedImportsOwnerSideEffectReason || '')),
+          currentAppGeneratedImportsOwnerSideEffectFailureLayer:
+            generatedImportsOwnerCoversTag
+              ? ''
+              : (componentTag && generatedImportsOwnerCoveredTags.includes(componentTag)
+                ? 'current-app-generated-imports-owner-tag-coverage-pending'
+                : (window.VaadinDesktopIpcDiagnostics.currentAppGeneratedImportsOwnerSideEffectFailureLayer || '')),
+          currentAppGeneratedImportsOwnerSideEffectNextResolutionStep:
+            resource.currentAppGeneratedImportsOwnerSideEffectNextResolutionStep
+            || window.VaadinDesktopIpcDiagnostics.currentAppGeneratedImportsOwnerSideEffectNextResolutionStep
+            || '',
+          currentAppGeneratedImportsOwnerSideEffectAttempted:
+            window.VaadinDesktopIpcDiagnostics.currentAppGeneratedImportsOwnerSideEffectAttempted === true,
+          currentAppGeneratedImportsOwnerSideEffectImported:
+            window.VaadinDesktopIpcDiagnostics.currentAppGeneratedImportsOwnerSideEffectImported === true,
+          currentAppGeneratedImportsOwnerSideEffectSatisfied: generatedImportsOwnerSatisfied,
+          currentAppGeneratedImportsOwnerSideEffectPartialReuseSatisfied:
+            window.VaadinDesktopIpcDiagnostics.currentAppGeneratedImportsOwnerSideEffectPartialReuseSatisfied === true,
+          currentAppGeneratedImportsOwnerSideEffectLoadOnDemandPresent:
+            window.VaadinDesktopIpcDiagnostics.currentAppGeneratedImportsOwnerSideEffectLoadOnDemandPresent === true,
+          currentAppGeneratedImportsOwnerSideEffectNoLocalhost:
+            window.VaadinDesktopIpcDiagnostics.currentAppGeneratedImportsOwnerSideEffectNoLocalhost === true,
+          currentAppGeneratedImportsOwnerSideEffectFixtureSubstituted:
+            window.VaadinDesktopIpcDiagnostics.currentAppGeneratedImportsOwnerSideEffectFixtureSubstituted === true
         };
         applyComponentProductionOwnerReuseDiagnostics(details);
         const matrixDiagnostics = window.VaadinDesktopIpcDiagnostics || {};
@@ -16346,6 +17109,110 @@ let flowIpcShell = #"""
         window.VaadinDesktopIpcDiagnostics.currentAppProductionOwnerEarlyImportFixtureSubstituted =
           details.currentAppProductionOwnerEarlyImportFixtureSubstituted === true
           || window.VaadinDesktopIpcDiagnostics.currentAppProductionOwnerEarlyImportFixtureSubstituted === true;
+        window.VaadinDesktopIpcDiagnostics.currentAppGeneratedImportsOwnerSideEffectVersion =
+          details.currentAppGeneratedImportsOwnerSideEffectVersion
+          || window.VaadinDesktopIpcDiagnostics.currentAppGeneratedImportsOwnerSideEffectVersion
+          || '';
+        window.VaadinDesktopIpcDiagnostics.currentAppGeneratedImportsOwnerSideEffectSource =
+          details.currentAppGeneratedImportsOwnerSideEffectSource
+          || window.VaadinDesktopIpcDiagnostics.currentAppGeneratedImportsOwnerSideEffectSource
+          || '';
+        window.VaadinDesktopIpcDiagnostics.currentAppGeneratedImportsOwnerSideEffectPolicy =
+          details.currentAppGeneratedImportsOwnerSideEffectPolicy
+          || window.VaadinDesktopIpcDiagnostics.currentAppGeneratedImportsOwnerSideEffectPolicy
+          || '';
+        window.VaadinDesktopIpcDiagnostics.currentAppGeneratedImportsOwnerSideEffectCandidate =
+          details.currentAppGeneratedImportsOwnerSideEffectCandidate
+          || window.VaadinDesktopIpcDiagnostics.currentAppGeneratedImportsOwnerSideEffectCandidate
+          || '';
+        window.VaadinDesktopIpcDiagnostics.currentAppGeneratedImportsOwnerSideEffectArtifact =
+          details.currentAppGeneratedImportsOwnerSideEffectArtifact
+          || window.VaadinDesktopIpcDiagnostics.currentAppGeneratedImportsOwnerSideEffectArtifact
+          || '';
+        window.VaadinDesktopIpcDiagnostics.currentAppGeneratedImportsOwnerSideEffectExpectedTags =
+          details.currentAppGeneratedImportsOwnerSideEffectExpectedTags
+          || window.VaadinDesktopIpcDiagnostics.currentAppGeneratedImportsOwnerSideEffectExpectedTags
+          || '';
+        window.VaadinDesktopIpcDiagnostics.currentAppGeneratedImportsOwnerSideEffectCoveredTags =
+          details.currentAppGeneratedImportsOwnerSideEffectCoveredTags
+          || window.VaadinDesktopIpcDiagnostics.currentAppGeneratedImportsOwnerSideEffectCoveredTags
+          || '';
+        window.VaadinDesktopIpcDiagnostics.currentAppGeneratedImportsOwnerSideEffectKnownMissingTags =
+          details.currentAppGeneratedImportsOwnerSideEffectKnownMissingTags
+          || window.VaadinDesktopIpcDiagnostics.currentAppGeneratedImportsOwnerSideEffectKnownMissingTags
+          || '';
+        window.VaadinDesktopIpcDiagnostics.currentAppGeneratedImportsOwnerSideEffectExpectedGlobals =
+          details.currentAppGeneratedImportsOwnerSideEffectExpectedGlobals
+          || window.VaadinDesktopIpcDiagnostics.currentAppGeneratedImportsOwnerSideEffectExpectedGlobals
+          || '';
+        window.VaadinDesktopIpcDiagnostics.currentAppGeneratedImportsOwnerSideEffectPhase =
+          details.currentAppGeneratedImportsOwnerSideEffectPhase
+          || window.VaadinDesktopIpcDiagnostics.currentAppGeneratedImportsOwnerSideEffectPhase
+          || '';
+        window.VaadinDesktopIpcDiagnostics.currentAppGeneratedImportsOwnerSideEffectObservedTags =
+          mergeCsv(
+            window.VaadinDesktopIpcDiagnostics.currentAppGeneratedImportsOwnerSideEffectObservedTags,
+            csvValues(details.currentAppGeneratedImportsOwnerSideEffectObservedTags));
+        window.VaadinDesktopIpcDiagnostics.currentAppGeneratedImportsOwnerSideEffectMissingTags =
+          mergeCsv(
+            window.VaadinDesktopIpcDiagnostics.currentAppGeneratedImportsOwnerSideEffectMissingTags,
+            csvValues(details.currentAppGeneratedImportsOwnerSideEffectMissingTags));
+        window.VaadinDesktopIpcDiagnostics.currentAppGeneratedImportsOwnerSideEffectReusedTags =
+          mergeCsv(
+            window.VaadinDesktopIpcDiagnostics.currentAppGeneratedImportsOwnerSideEffectReusedTags,
+            csvValues(details.currentAppGeneratedImportsOwnerSideEffectReusedTags));
+        window.VaadinDesktopIpcDiagnostics.currentAppGeneratedImportsOwnerSideEffectSkippedFocusedImports =
+          mergeCsv(
+            window.VaadinDesktopIpcDiagnostics.currentAppGeneratedImportsOwnerSideEffectSkippedFocusedImports,
+            csvValues(details.currentAppGeneratedImportsOwnerSideEffectSkippedFocusedImports));
+        window.VaadinDesktopIpcDiagnostics.currentAppGeneratedImportsOwnerSideEffectFallbackTags =
+          mergeCsv(
+            window.VaadinDesktopIpcDiagnostics.currentAppGeneratedImportsOwnerSideEffectFallbackTags,
+            csvValues(details.currentAppGeneratedImportsOwnerSideEffectFallbackTags));
+        window.VaadinDesktopIpcDiagnostics.currentAppGeneratedImportsOwnerSideEffectFallbackFocusedImports =
+          mergeCsv(
+            window.VaadinDesktopIpcDiagnostics.currentAppGeneratedImportsOwnerSideEffectFallbackFocusedImports,
+            csvValues(details.currentAppGeneratedImportsOwnerSideEffectFallbackFocusedImports));
+        window.VaadinDesktopIpcDiagnostics.currentAppGeneratedImportsOwnerSideEffectDecision =
+          details.currentAppGeneratedImportsOwnerSideEffectDecision
+          || window.VaadinDesktopIpcDiagnostics.currentAppGeneratedImportsOwnerSideEffectDecision
+          || '';
+        window.VaadinDesktopIpcDiagnostics.currentAppGeneratedImportsOwnerSideEffectReason =
+          details.currentAppGeneratedImportsOwnerSideEffectReason
+          || window.VaadinDesktopIpcDiagnostics.currentAppGeneratedImportsOwnerSideEffectReason
+          || '';
+        window.VaadinDesktopIpcDiagnostics.currentAppGeneratedImportsOwnerSideEffectFailureLayer =
+          details.currentAppGeneratedImportsOwnerSideEffectSatisfied === true
+          && !details.currentAppGeneratedImportsOwnerSideEffectFailureLayer
+            ? ''
+            : (details.currentAppGeneratedImportsOwnerSideEffectFailureLayer
+              || window.VaadinDesktopIpcDiagnostics.currentAppGeneratedImportsOwnerSideEffectFailureLayer
+              || '');
+        window.VaadinDesktopIpcDiagnostics.currentAppGeneratedImportsOwnerSideEffectNextResolutionStep =
+          details.currentAppGeneratedImportsOwnerSideEffectNextResolutionStep
+          || window.VaadinDesktopIpcDiagnostics.currentAppGeneratedImportsOwnerSideEffectNextResolutionStep
+          || '';
+        window.VaadinDesktopIpcDiagnostics.currentAppGeneratedImportsOwnerSideEffectAttempted =
+          details.currentAppGeneratedImportsOwnerSideEffectAttempted === true
+          || window.VaadinDesktopIpcDiagnostics.currentAppGeneratedImportsOwnerSideEffectAttempted === true;
+        window.VaadinDesktopIpcDiagnostics.currentAppGeneratedImportsOwnerSideEffectImported =
+          details.currentAppGeneratedImportsOwnerSideEffectImported === true
+          || window.VaadinDesktopIpcDiagnostics.currentAppGeneratedImportsOwnerSideEffectImported === true;
+        window.VaadinDesktopIpcDiagnostics.currentAppGeneratedImportsOwnerSideEffectSatisfied =
+          details.currentAppGeneratedImportsOwnerSideEffectSatisfied === true
+          || window.VaadinDesktopIpcDiagnostics.currentAppGeneratedImportsOwnerSideEffectSatisfied === true;
+        window.VaadinDesktopIpcDiagnostics.currentAppGeneratedImportsOwnerSideEffectPartialReuseSatisfied =
+          details.currentAppGeneratedImportsOwnerSideEffectPartialReuseSatisfied === true
+          || window.VaadinDesktopIpcDiagnostics.currentAppGeneratedImportsOwnerSideEffectPartialReuseSatisfied === true;
+        window.VaadinDesktopIpcDiagnostics.currentAppGeneratedImportsOwnerSideEffectLoadOnDemandPresent =
+          details.currentAppGeneratedImportsOwnerSideEffectLoadOnDemandPresent === true
+          || window.VaadinDesktopIpcDiagnostics.currentAppGeneratedImportsOwnerSideEffectLoadOnDemandPresent === true;
+        window.VaadinDesktopIpcDiagnostics.currentAppGeneratedImportsOwnerSideEffectNoLocalhost =
+          details.currentAppGeneratedImportsOwnerSideEffectNoLocalhost === true
+          || window.VaadinDesktopIpcDiagnostics.currentAppGeneratedImportsOwnerSideEffectNoLocalhost === true;
+        window.VaadinDesktopIpcDiagnostics.currentAppGeneratedImportsOwnerSideEffectFixtureSubstituted =
+          details.currentAppGeneratedImportsOwnerSideEffectFixtureSubstituted === true
+          || window.VaadinDesktopIpcDiagnostics.currentAppGeneratedImportsOwnerSideEffectFixtureSubstituted === true;
       }
 
       function recordProductionOwnerOrderingPreflight(resource, source, preflight, phase) {

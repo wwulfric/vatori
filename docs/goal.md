@@ -45,8 +45,9 @@ v0/v1 runtime 切片走向可产品化桌面框架的最终完成状态。
 - `docs/goal-1_37.md`：Current App Production Owner Component Reuse，已完成。
 - `docs/goal-1_38.md`：Current App Owner Component Reuse Matrix，已完成。
 - `docs/goal-1_39.md`：Current App Owner Early Import Ordering，已完成。
+- `docs/goal-1_40.md`：Current App Generated Imports Owner Side-Effect Candidate，已完成。
 
-当前已完成到 `docs/goal-1_39.md`。v1.31 先把 v1.30 的 offline plugin blocker 推进到
+当前已完成到 `docs/goal-1_40.md`。v1.31 先把 v1.30 的 offline plugin blocker 推进到
 explicit online/local-repo preflight；v1.32 进一步把 blocker 推进到 full
 `build-frontend` 输出层，证明当前 smoke app 已产生真实 source generated imports/chunk、
 production webapp build output 和 `prod.bundle`。v1.33 则把 v1.32 的 generic
@@ -78,12 +79,19 @@ import，TextField 则复用 owner 并跳过 focused import。v1.39 将 current 
 请求、stage 和 import 前移到 covered component focused imports 之前，trace 证明
 `currentAppProductionOwnerEarlyImported=true`，但当前 app production owner side effect 仍无法提供
 可复用 tag，最终 accepted decision 是
-`early-import-owner-imported-before-components-side-effect-not-reusable`。当前 accepted remaining blockers 是
-current app owner side-effect tag coverage / custom element compatibility / supported Vaadin build SPI、
+`early-import-owner-imported-before-components-side-effect-not-reusable`。v1.40 继续验证更精确的
+current app production `generated-flow-imports-*.js` support artifact：host 在 covered focused
+imports 前通过 `vatori-resource://` import 该 support artifact，trace 记录
+`flow-ipc-current-app-generated-imports-owner-side-effect-v1_40`、
+`currentAppGeneratedImportsOwnerSideEffectImported=true`、
+`currentAppGeneratedImportsOwnerSideEffectObservedTags=vaadin-big-decimal-field,vaadin-checkbox,vaadin-text-field`
+和 skipped focused imports；BigDecimalField、Checkbox、TextField 可见事件链继续通过，`vaadin-select`
+被明确记录为 fallback。当前 accepted remaining blockers 是
+remaining current app owner tag coverage / `vaadin-select` custom element compatibility / supported Vaadin build SPI、
 真实 app/build generated chunk-file parity、
 dev-mode/Vite parity 和 broader component/resource parity。
 
-后续阶段应继续以 `docs/goal-1_40.md` 等文件拆分，
+后续阶段应继续以 `docs/goal-1_41.md` 等文件拆分，
 每个阶段只拿走本长期目标中的一个可评审切片。不要把本文件改写成短期任务清单；
 它是长期北极星和完成度账本。
 
@@ -524,7 +532,18 @@ dev-mode/Vite parity 和 broader component/resource parity。
   focused fallback，blocker 从 v1.38 的 owner-not-ready ordering 层收敛为
   current app owner side-effect 不可复用 / 需要支持的 Vaadin build/runtime SPI。v1.39 仍不是完整
   frontend/resource pipeline parity。
-- 当前 app/build 的真实 generated/lazy chunk file parity、current app owner side-effect 可复用性 /
+- v1.40 已把 v1.39 的 generic production entry side-effect blocker 收敛到 current app production
+  `generated-flow-imports-*.js` support artifact：Java manifest/resource response 和 Swift
+  `resourceRequest` / `resourceStage` / `webview.dom` 记录
+  `currentAppGeneratedImportsOwnerSideEffectVersion=flow-ipc-current-app-generated-imports-owner-side-effect-v1_40`、
+  support artifact、module identity、registry/global before/after、`loadOnDemand` status、
+  no-localhost/no-fixture proof、observed/reused/skipped/fallback tags。Trace 证明
+  `vaadin-big-decimal-field`、`vaadin-checkbox` 和 `vaadin-text-field` 由 generated imports owner
+  注册并跳过 focused imports，且三条可见事件链继续通过；`vaadin-select` 仍被明确记录为
+  fallback focused import。v1.40 仍不是完整 frontend/resource pipeline parity；它证明了一个真实
+  current-app owner side-effect source，并把剩余问题缩小到未覆盖 tag、真实 generated chunk parity、
+  supported Vaadin build/runtime SPI、dev-mode/Vite 和更广组件资源覆盖。
+- 当前 app/build 的真实 generated/lazy chunk file parity、remaining current app owner tag coverage /
   泛化 owner reuse 和 dev-mode/Vite execution 仍是明确 blocker，不计入最终完成。
 
 ## 最终完成标准
@@ -620,7 +639,7 @@ dev-mode/Vite parity 和 broader component/resource parity。
 
 - 基于 v1.22 generated lazy chunk-file positive fixture、v1.23 production owner positive
   runtime fixture、v1.24 closure decision contract、v1.25 packaged frontend baseline 和
-  v1.26-v1.39 当前 app generated/build-frontend output contracts，继续让当前 app/build 产生的
+  v1.26-v1.40 当前 app generated/build-frontend output contracts，继续让当前 app/build 产生的
   真实 generated lazy chunk file 完成执行：在 current app generated imports root package graph 已由
   production support artifact 承载的基础上，接入受支持 Vaadin lazy chunk SPI，或把真实
   production bundle owned execution / dev-mode/Vite execution 从 partial/blocker 推进到真实可执行路径。
@@ -633,7 +652,10 @@ dev-mode/Vite parity 和 broader component/resource parity。
   v1.37 已证明 `vaadin-text-field` 可复用 current app owner side effect 并跳过 focused import；
   v1.38 已把四个 covered component tag 分类成 TextField owner reuse 加早期组件 focused fallback，
   v1.39 已证明 owner 能在 covered component focused imports 前提前 import，但该 side effect
-  仍未暴露可复用 covered tags；这还不是更早组件执行顺序的泛化 owner reuse，v1.23 positive fixture 也只能证明基础设施可行，
+  仍未暴露可复用 covered tags；v1.40 已证明当前 app production `generated-flow-imports-*.js`
+  support artifact 可注册并复用 `vaadin-big-decimal-field`、`vaadin-checkbox` 和
+  `vaadin-text-field`，但 `vaadin-select` 仍是 fallback，且这还不是完整 production/runtime SPI
+  parity；v1.23 positive fixture 也只能证明基础设施可行，
   不能替代真实 owner parity。
 - Dev-mode/Vite graph execution 或可靠替代模式。
 - Broader Vaadin component parity，尤其是 Grid/VirtualList、ComboBox、DatePicker、
@@ -659,11 +681,11 @@ dev-mode/Vite parity 和 broader component/resource parity。
 
 ## 当前建议的下一阶段
 
-v1.39 已完成 Current App Owner Early Import Ordering。下一阶段建议优先处理 owner 已提前 import 但
-side effect 不可复用的 product blocker，或转向 supported Vaadin build SPI：
+v1.40 已完成 Current App Generated Imports Owner Side-Effect Candidate。下一阶段建议优先处理
+generated imports owner 仍未覆盖的 product blocker，或转向 supported Vaadin build SPI：
 
-- 分析 current app production owner import 后为何未暴露可复用 covered tags，把 blocker 收敛到
-  side-effect tag coverage、custom element compatibility 或具体 Vaadin build/runtime SPI。
+- 分析 `vaadin-select` fallback / duplicate-definition 兼容层，把 blocker 收敛到具体 tag coverage、
+  custom element compatibility 或具体 Vaadin build/runtime SPI。
 - 接入/评估受支持 Vaadin lazy chunk SPI，把 v1.22 fixture path 推进为真实 app/build path。
 - 真实 production owner-owned runtime reuse success。
 - Dev-mode/Vite graph execution 或可靠替代模式。

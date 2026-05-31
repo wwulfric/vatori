@@ -592,6 +592,26 @@ final class FlowClientResources {
             "current-app-production-owner-early-import-pending";
     private static final String CURRENT_APP_PRODUCTION_OWNER_EARLY_IMPORT_NEXT_STEP =
             "move remaining owner-ready focused fallback tags to a supported Vaadin build/runtime SPI or broaden current app owner tag coverage";
+    private static final String CURRENT_APP_GENERATED_IMPORTS_OWNER_SIDE_EFFECT_VERSION =
+            "flow-ipc-current-app-generated-imports-owner-side-effect-v1_40";
+    private static final String CURRENT_APP_GENERATED_IMPORTS_OWNER_SIDE_EFFECT_SOURCE =
+            "current-app-owner-early-import-v1_39";
+    private static final String CURRENT_APP_GENERATED_IMPORTS_OWNER_SIDE_EFFECT_POLICY =
+            "import-current-app-production-generated-imports-before-covered-components-v1_40";
+    private static final String CURRENT_APP_GENERATED_IMPORTS_OWNER_SIDE_EFFECT_CANDIDATE =
+            "current-app-production-generated-imports-support-artifact";
+    private static final String CURRENT_APP_GENERATED_IMPORTS_OWNER_SIDE_EFFECT_EXPECTED_TAGS =
+            "vaadin-big-decimal-field,vaadin-checkbox,vaadin-text-field";
+    private static final String CURRENT_APP_GENERATED_IMPORTS_OWNER_SIDE_EFFECT_COVERED_TAGS =
+            "vaadin-big-decimal-field,vaadin-checkbox,vaadin-select,vaadin-text-field";
+    private static final String CURRENT_APP_GENERATED_IMPORTS_OWNER_SIDE_EFFECT_KNOWN_MISSING_TAGS =
+            "vaadin-select";
+    private static final String CURRENT_APP_GENERATED_IMPORTS_OWNER_SIDE_EFFECT_EXPECTED_GLOBALS =
+            "window.Vaadin,window.Vaadin.Flow,window.Vaadin.Flow.loadOnDemand";
+    private static final String CURRENT_APP_GENERATED_IMPORTS_OWNER_SIDE_EFFECT_FAILURE_LAYER =
+            "current-app-generated-imports-owner-side-effect-pending";
+    private static final String CURRENT_APP_GENERATED_IMPORTS_OWNER_SIDE_EFFECT_NEXT_STEP =
+            "promote reusable current app generated imports side effects into the owner runtime contract, then replace remaining focused fallbacks with supported Vaadin build/runtime SPI coverage";
     private static final List<String> PRODUCTION_RUNTIME_OWNER_DEPENDENCY_ARTIFACTS = List.of(
             DEV_BUNDLE_COMMONJS_JS,
             DEV_BUNDLE_INDEX_HTML_JS,
@@ -2441,6 +2461,48 @@ final class FlowClientResources {
         attributes.put("currentAppProductionOwnerEarlyImportPartialReuseSatisfied", false);
         attributes.put("currentAppProductionOwnerEarlyImportNoLocalhost", true);
         attributes.put("currentAppProductionOwnerEarlyImportFixtureSubstituted", false);
+        attributes.put("currentAppGeneratedImportsOwnerSideEffectVersion",
+                CURRENT_APP_GENERATED_IMPORTS_OWNER_SIDE_EFFECT_VERSION);
+        attributes.put("currentAppGeneratedImportsOwnerSideEffectSource",
+                CURRENT_APP_GENERATED_IMPORTS_OWNER_SIDE_EFFECT_SOURCE);
+        attributes.put("currentAppGeneratedImportsOwnerSideEffectPolicy",
+                CURRENT_APP_GENERATED_IMPORTS_OWNER_SIDE_EFFECT_POLICY);
+        attributes.put("currentAppGeneratedImportsOwnerSideEffectCandidate",
+                CURRENT_APP_GENERATED_IMPORTS_OWNER_SIDE_EFFECT_CANDIDATE);
+        attributes.put("currentAppGeneratedImportsOwnerSideEffectArtifact",
+                evidence.sourceGeneratedImportsRootProductionSupportArtifact());
+        attributes.put("currentAppGeneratedImportsOwnerSideEffectExpectedTags",
+                CURRENT_APP_GENERATED_IMPORTS_OWNER_SIDE_EFFECT_EXPECTED_TAGS);
+        attributes.put("currentAppGeneratedImportsOwnerSideEffectCoveredTags",
+                CURRENT_APP_GENERATED_IMPORTS_OWNER_SIDE_EFFECT_COVERED_TAGS);
+        attributes.put("currentAppGeneratedImportsOwnerSideEffectKnownMissingTags",
+                CURRENT_APP_GENERATED_IMPORTS_OWNER_SIDE_EFFECT_KNOWN_MISSING_TAGS);
+        attributes.put("currentAppGeneratedImportsOwnerSideEffectExpectedGlobals",
+                CURRENT_APP_GENERATED_IMPORTS_OWNER_SIDE_EFFECT_EXPECTED_GLOBALS);
+        attributes.put("currentAppGeneratedImportsOwnerSideEffectPhase",
+                CURRENT_APP_PRODUCTION_OWNER_EARLY_IMPORT_PHASE);
+        attributes.put("currentAppGeneratedImportsOwnerSideEffectObservedTags", "");
+        attributes.put("currentAppGeneratedImportsOwnerSideEffectMissingTags", "");
+        attributes.put("currentAppGeneratedImportsOwnerSideEffectReusedTags", "");
+        attributes.put("currentAppGeneratedImportsOwnerSideEffectSkippedFocusedImports", "");
+        attributes.put("currentAppGeneratedImportsOwnerSideEffectFallbackTags", "");
+        attributes.put("currentAppGeneratedImportsOwnerSideEffectFallbackFocusedImports", "");
+        attributes.put("currentAppGeneratedImportsOwnerSideEffectDecision",
+                "pending-current-app-generated-imports-owner-side-effect");
+        attributes.put("currentAppGeneratedImportsOwnerSideEffectReason",
+                "current app production generated imports support artifact must be imported before focused component imports");
+        attributes.put("currentAppGeneratedImportsOwnerSideEffectFailureLayer",
+                handoffReady ? CURRENT_APP_GENERATED_IMPORTS_OWNER_SIDE_EFFECT_FAILURE_LAYER
+                        : evidence.failureLayer());
+        attributes.put("currentAppGeneratedImportsOwnerSideEffectNextResolutionStep",
+                CURRENT_APP_GENERATED_IMPORTS_OWNER_SIDE_EFFECT_NEXT_STEP);
+        attributes.put("currentAppGeneratedImportsOwnerSideEffectAttempted", false);
+        attributes.put("currentAppGeneratedImportsOwnerSideEffectImported", false);
+        attributes.put("currentAppGeneratedImportsOwnerSideEffectSatisfied", false);
+        attributes.put("currentAppGeneratedImportsOwnerSideEffectPartialReuseSatisfied", false);
+        attributes.put("currentAppGeneratedImportsOwnerSideEffectLoadOnDemandPresent", false);
+        attributes.put("currentAppGeneratedImportsOwnerSideEffectNoLocalhost", true);
+        attributes.put("currentAppGeneratedImportsOwnerSideEffectFixtureSubstituted", false);
         return attributes;
     }
 

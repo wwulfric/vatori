@@ -5,17 +5,23 @@ import com.vaadin.flow.component.checkbox.Checkbox;
 import com.vaadin.flow.component.combobox.ComboBox;
 import com.vaadin.flow.component.datepicker.DatePicker;
 import com.vaadin.flow.component.dialog.Dialog;
+import com.vaadin.flow.component.formlayout.FormLayout;
+import com.vaadin.flow.component.grid.Grid;
 import com.vaadin.flow.component.html.H1;
 import com.vaadin.flow.component.html.Span;
 import com.vaadin.flow.component.orderedlayout.VerticalLayout;
 import com.vaadin.flow.component.select.Select;
 import com.vaadin.flow.component.textfield.BigDecimalField;
+import com.vaadin.flow.component.textfield.TextField;
+import com.vaadin.flow.component.virtuallist.VirtualList;
+import com.vaadin.flow.data.binder.Binder;
 import com.vaadin.flow.router.Route;
 import dev.vatori.desktop.Desktop;
 import tools.jackson.databind.JsonNode;
 
 import java.math.BigDecimal;
 import java.time.LocalDate;
+import java.util.List;
 
 @Route("")
 @com.vaadin.flow.component.dependency.JavaScript(
@@ -63,6 +69,59 @@ public class FlowOverIpcFrameworkView extends VerticalLayout {
 
         Span matrixStatus = new Span("Component matrix: pending");
         matrixStatus.setId("framework-matrix-status");
+
+        List<WorkItem> workItems = List.of(
+                new WorkItem("A-100", "platform", "queued"),
+                new WorkItem("A-101", "desktop", "review"),
+                new WorkItem("A-102", "audit", "ready"));
+
+        Grid<WorkItem> grid = new Grid<>(WorkItem.class, false);
+        grid.setId("framework-grid");
+        grid.addColumn(WorkItem::id).setHeader("Ticket");
+        grid.addColumn(WorkItem::owner).setHeader("Owner");
+        grid.addColumn(WorkItem::state).setHeader("State");
+        grid.setItems(workItems);
+        grid.setAllRowsVisible(true);
+
+        VirtualList<String> virtualList = new VirtualList<>();
+        virtualList.setId("framework-virtual-list");
+        virtualList.setItems(List.of("Queue alpha", "Queue beta", "Queue release"));
+        virtualList.setRenderer(item -> item);
+
+        OwnerForm ownerForm = new OwnerForm();
+        ownerForm.setOwner("platform");
+        Binder<OwnerForm> binder = new Binder<>(OwnerForm.class);
+        TextField ownerName = new TextField("Owner name");
+        ownerName.setId("framework-owner-name");
+        ownerName.setValue(ownerForm.getOwner());
+        binder.forField(ownerName)
+                .withValidator(value -> value != null && value.trim().length() >= 3,
+                        "Owner name must have at least three characters")
+                .bind(OwnerForm::getOwner, OwnerForm::setOwner);
+        binder.setBean(ownerForm);
+
+        Span validationStatus = new Span("Validation: pending");
+        validationStatus.setId("framework-validation-status");
+
+        ownerName.getElement().addEventListener("change", event -> {
+            JsonNode valueNode = event.getEventData().get("element.value");
+            String value = valueNode == null ? "" : valueNode.asString();
+            ownerName.setValue(value);
+        }).addEventData("element.value");
+
+        Button validateOwner = new Button("Validate Owner", event -> {
+            if (binder.writeBeanIfValid(ownerForm)) {
+                validationStatus.setText("Validation accepted: " + ownerForm.getOwner());
+            } else {
+                validationStatus.setText("Validation rejected");
+            }
+        });
+        validateOwner.setId("framework-validation-action");
+
+        FormLayout formLayout = new FormLayout();
+        formLayout.setId("framework-form-layout");
+        formLayout.addFormItem(ownerName, "Owner");
+        formLayout.add(validateOwner, validationStatus);
 
         Dialog detailsDialog = new Dialog();
         detailsDialog.setId("framework-dialog");
@@ -144,10 +203,26 @@ public class FlowOverIpcFrameworkView extends VerticalLayout {
         updateList.add(latestUpdate);
 
         add(title, budget, expedited, priority, reviewer, dueDate, openDialog, detailsDialog,
-                apply, status, componentStatus, matrixStatus, updateList);
+                grid, virtualList, formLayout, apply, status, componentStatus, matrixStatus,
+                updateList);
     }
 
     private void appendUpdate(String text) {
         updateList.add(new Span(text));
+    }
+
+    private record WorkItem(String id, String owner, String state) {
+    }
+
+    public static final class OwnerForm {
+        private String owner;
+
+        public String getOwner() {
+            return owner;
+        }
+
+        public void setOwner(String owner) {
+            this.owner = owner;
+        }
     }
 }

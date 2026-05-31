@@ -157,6 +157,9 @@ public final class DesktopTraceInspector {
         FLOW_IPC_V1_46_BROADER_COMPONENT_RESOURCE_MATRIX(
                 "--require-flow-ipc-v1_46-broader-component-resource-matrix"),
         FLOW_IPC_V1_46("--require-flow-ipc-v1_46"),
+        FLOW_IPC_V1_47_DATA_COMPONENT_RESOURCE_MATRIX(
+                "--require-flow-ipc-v1_47-data-component-resource-matrix"),
+        FLOW_IPC_V1_47("--require-flow-ipc-v1_47"),
         FLOW_IPC_V1_3_FRAMEWORK("--require-flow-ipc-v1_3-framework");
 
         private final String option;
@@ -606,6 +609,11 @@ public final class DesktopTraceInspector {
                 case FLOW_IPC_V1_46 -> EnumSet.of(
                         FLOW_IPC_V1_46_BROADER_COMPONENT_RESOURCE_MATRIX,
                         FLOW_IPC_V1_46);
+                case FLOW_IPC_V1_47_DATA_COMPONENT_RESOURCE_MATRIX ->
+                    EnumSet.of(FLOW_IPC_V1_47_DATA_COMPONENT_RESOURCE_MATRIX);
+                case FLOW_IPC_V1_47 -> EnumSet.of(
+                        FLOW_IPC_V1_47_DATA_COMPONENT_RESOURCE_MATRIX,
+                        FLOW_IPC_V1_47);
                 case FLOW_IPC_V1_3_FRAMEWORK -> EnumSet.of(FLOW_IPC_V1_3_FRAMEWORK);
             };
         }
@@ -735,6 +743,9 @@ public final class DesktopTraceInspector {
                 case FLOW_IPC_V1_46_BROADER_COMPONENT_RESOURCE_MATRIX ->
                     summary.hasRequiredFlowIpcV1_46BroaderComponentResourceMatrixTypes();
                 case FLOW_IPC_V1_46 -> summary.hasRequiredFlowIpcV1_46Types();
+                case FLOW_IPC_V1_47_DATA_COMPONENT_RESOURCE_MATRIX ->
+                    summary.hasRequiredFlowIpcV1_47DataComponentResourceMatrixTypes();
+                case FLOW_IPC_V1_47 -> summary.hasRequiredFlowIpcV1_47Types();
                 case FLOW_IPC_V1_3_FRAMEWORK -> summary.hasRequiredFlowIpcV1_3FrameworkTypes();
             };
         }
@@ -961,6 +972,20 @@ public final class DesktopTraceInspector {
                     && line.contains("com.vaadin.flow.component.dialog.Dialog")) {
                 summary.frameworkComponentMatrixBootstrapObserved = true;
             }
+            if (line.contains("dev.vatori.ipcframework.FlowOverIpcFrameworkView")
+                    && line.contains("framework-grid")
+                    && line.contains("framework-virtual-list")
+                    && line.contains("framework-form-layout")
+                    && line.contains("framework-owner-name")
+                    && line.contains("framework-validation-action")
+                    && line.contains("framework-validation-status")
+                    && line.contains("com.vaadin.flow.component.grid.Grid")
+                    && line.contains("com.vaadin.flow.component.virtuallist.VirtualList")
+                    && line.contains("com.vaadin.flow.component.formlayout.FormLayout")
+                    && line.contains("com.vaadin.flow.data.binder.Binder")
+                    && line.contains("com.vaadin.flow.component.textfield.TextField")) {
+                summary.frameworkDataComponentMatrixBootstrapObserved = true;
+            }
             if (line.contains("\"type\":\"event\"")
                     && line.contains("\"dispatch\":\"flow-client-xhr\"")
                     && line.contains("\"attachExistingElementById\"")
@@ -1025,6 +1050,19 @@ public final class DesktopTraceInspector {
                     && line.contains("\"event\":\"click\"")) {
                 summary.frameworkComponentMatrixDialogEventRpcObserved = true;
             }
+            if (line.contains("\"type\":\"event\"")
+                    && line.contains("\"dispatch\":\"flow-client-xhr\"")
+                    && line.contains("\"componentId\":\"framework-owner-name\"")
+                    && line.contains("\"event\":\"change\"")
+                    && line.contains("\"element.value\":\"Ava Desktop\"")) {
+                summary.frameworkDataComponentMatrixOwnerEventRpcObserved = true;
+            }
+            if (line.contains("\"type\":\"event\"")
+                    && line.contains("\"dispatch\":\"flow-client-xhr\"")
+                    && line.contains("\"componentId\":\"framework-validation-action\"")
+                    && line.contains("\"event\":\"click\"")) {
+                summary.frameworkDataComponentMatrixValidateEventRpcObserved = true;
+            }
             if (line.contains("\"type\":\"patch\"")
                     && line.contains("\"source\":\"UidlRequestHandler\"")
                     && line.contains("\"reason\":\"event\"")
@@ -1068,6 +1106,18 @@ public final class DesktopTraceInspector {
                     && line.contains("\"reason\":\"event\"")
                     && line.contains("Dialog opened: desktop due 2026-06-16")) {
                 summary.frameworkComponentMatrixDialogPatchObserved = true;
+            }
+            if (line.contains("\"type\":\"patch\"")
+                    && line.contains("\"source\":\"UidlRequestHandler\"")
+                    && line.contains("\"reason\":\"event\"")
+                    && line.contains("Ava Desktop")) {
+                summary.frameworkDataComponentMatrixOwnerPatchObserved = true;
+            }
+            if (line.contains("\"type\":\"patch\"")
+                    && line.contains("\"source\":\"UidlRequestHandler\"")
+                    && line.contains("\"reason\":\"event\"")
+                    && line.contains("Validation accepted: Ava Desktop")) {
+                summary.frameworkDataComponentMatrixValidatePatchObserved = true;
             }
             if (line.contains("\"type\":\"command\"")
                     && line.contains("\"command\":\"window.setTitle\"")
@@ -1499,6 +1549,11 @@ public final class DesktopTraceInspector {
                     && line.contains("\"componentFrontendResources\"")
                     && containsBroaderComponentResourceMatrixV146Fields(line)) {
                 summary.broaderComponentResourceMatrixV146ManifestObserved = true;
+            }
+            if (line.contains("\"type\":\"bootstrapResponse\"")
+                    && line.contains("\"componentFrontendResources\"")
+                    && containsDataComponentResourceMatrixV147Fields(line)) {
+                summary.dataComponentResourceMatrixV147ManifestObserved = true;
             }
             if (line.contains("\"type\":\"bootstrapResponse\"")
                     && line.contains("\"componentFrontendResources\"")
@@ -3344,6 +3399,14 @@ public final class DesktopTraceInspector {
             }
             if (line.contains("\"type\":\"resourceStage\"")
                     && containsPath(line, "current-app-production/VAADIN/build/generated-flow-imports-")
+                    && containsDataComponentResourceMatrixV147Fields(line)
+                    && (line.contains("\"executionStatus\":\"executed\"")
+                            || line.contains("\"executionStatus\":\"strict-blocker\"")
+                            || line.contains("\"executionStatus\":\"staged\""))) {
+                summary.dataComponentResourceMatrixV147StageObserved = true;
+            }
+            if (line.contains("\"type\":\"resourceStage\"")
+                    && containsPath(line, "current-app-production/VAADIN/build/generated-flow-imports-")
                     && containsCurrentAppGeneratedImportsRootPackageGraphV134Fields(line)
                     && containsLiteralField(line,
                             "currentAppGeneratedImportsRootProductionSupportExecuted", "true")
@@ -3448,6 +3511,12 @@ public final class DesktopTraceInspector {
                     && containsBroaderComponentResourceMatrixV146Complete(line)
                     && line.contains("\"executionStatus\":\"executed\"")) {
                 summary.broaderComponentResourceMatrixV146CompleteStageObserved = true;
+            }
+            if (line.contains("\"type\":\"resourceStage\"")
+                    && containsPath(line, "current-app-production/VAADIN/build/generated-flow-imports-")
+                    && containsDataComponentResourceMatrixV147Complete(line)
+                    && line.contains("\"executionStatus\":\"executed\"")) {
+                summary.dataComponentResourceMatrixV147CompleteStageObserved = true;
             }
             if (line.contains("\"type\":\"resourceStage\"")
                     && containsPath(line, "current-app-frontend/generated/flow/chunks/")
@@ -4415,6 +4484,23 @@ public final class DesktopTraceInspector {
                 summary.broaderComponentResourceMatrixV146DomObserved = true;
             }
             if (line.contains("\"type\":\"webview.dom\"")
+                    && containsBroaderComponentResourceMatrixV146Complete(line)
+                    && containsDataComponentResourceMatrixV147Complete(line)
+                    && containsStringField(line, "dataComponentResourceMatrixAppShape",
+                            "framework-validation-app")
+                    && containsLiteralField(line, "frameworkDataComponentMatrixComplete", "true")
+                    && containsStringField(line, "frameworkDataComponentMatrixVersion",
+                            "flow-ipc-data-component-resource-matrix-v1_47")
+                    && containsLiteralField(line, "frameworkDataComponentMatrixGridRendered", "true")
+                    && containsLiteralField(line, "frameworkDataComponentMatrixVirtualListRendered", "true")
+                    && containsLiteralField(line, "frameworkDataComponentMatrixFormLayoutRendered", "true")
+                    && containsLiteralField(line, "frameworkDataComponentMatrixOwnerFieldRendered", "true")
+                    && containsLiteralField(line, "frameworkDataComponentMatrixOwnerEventObserved", "true")
+                    && containsLiteralField(line, "frameworkDataComponentMatrixValidateEventObserved", "true")
+                    && line.contains("Validation accepted: Ava Desktop")) {
+                summary.dataComponentResourceMatrixV147DomObserved = true;
+            }
+            if (line.contains("\"type\":\"webview.dom\"")
                     && containsLiteralField(line, "generatedLazySourceCurrentBuildNoOpConfirmed", "true")
                     && containsStringField(line, "generatedLazySourceCurrentBuildTableShape",
                             "no-op-promise-resolve-0")
@@ -4879,6 +4965,25 @@ public final class DesktopTraceInspector {
                     && line.contains("framework-dialog-open")
                     && line.contains("Dialog opened: desktop due 2026-06-16")) {
                 summary.frameworkComponentMatrixDomObserved = true;
+            }
+            if (line.contains("\"type\":\"webview.dom\"")
+                    && line.contains("Flow IPC Framework Desk")
+                    && containsLiteralField(line, "frameworkDataComponentMatrixRendered", "true")
+                    && containsLiteralField(line, "frameworkDataComponentMatrixGridRendered", "true")
+                    && containsLiteralField(line, "frameworkDataComponentMatrixVirtualListRendered", "true")
+                    && containsLiteralField(line, "frameworkDataComponentMatrixFormLayoutRendered", "true")
+                    && containsLiteralField(line, "frameworkDataComponentMatrixOwnerFieldRendered", "true")
+                    && containsLiteralField(line, "frameworkDataComponentMatrixOwnerEventRpcObserved", "true")
+                    && containsLiteralField(line, "frameworkDataComponentMatrixOwnerEventObserved", "true")
+                    && containsLiteralField(line, "frameworkDataComponentMatrixValidateEventRpcObserved", "true")
+                    && containsLiteralField(line, "frameworkDataComponentMatrixValidateEventObserved", "true")
+                    && containsLiteralField(line, "frameworkDataComponentMatrixComplete", "true")
+                    && line.contains("framework-grid")
+                    && line.contains("framework-virtual-list")
+                    && line.contains("framework-form-layout")
+                    && line.contains("framework-owner-name")
+                    && line.contains("Validation accepted: Ava Desktop")) {
+                summary.frameworkDataComponentMatrixDomObserved = true;
             }
             if (line.contains("\"type\":\"event\"")
                     && line.contains("\"sessionId\":\"flow-ipc-session\"")
@@ -6282,6 +6387,81 @@ public final class DesktopTraceInspector {
                         "broaderComponentResourceMatrixNoLocalhost", "true");
     }
 
+    private static boolean containsDataComponentResourceMatrixV147Fields(String line) {
+        return containsStringField(line, "dataComponentResourceMatrixVersion",
+                        "flow-ipc-data-component-resource-matrix-v1_47")
+                && containsStringField(line, "dataComponentResourceMatrixSource",
+                        "broader-component-resource-matrix-v1_46")
+                && containsStringField(line, "dataComponentResourceMatrixScope",
+                        "framework-validation-app-grid-virtual-list-form-binder")
+                && containsStringField(line, "dataComponentResourceMatrixAppShape",
+                        "framework-validation-app")
+                && containsStringField(line, "dataComponentResourceMatrixTargetTags",
+                        "vaadin-grid,vaadin-grid-column,vaadin-virtual-list,vaadin-form-layout,vaadin-text-field")
+                && containsStringField(line, "dataComponentResourceMatrixJavaClasses",
+                        "com.vaadin.flow.component.grid.Grid,com.vaadin.flow.component.virtuallist.VirtualList,com.vaadin.flow.component.formlayout.FormLayout,com.vaadin.flow.data.binder.Binder,com.vaadin.flow.component.textfield.TextField")
+                && containsStringField(line, "dataComponentResourceMatrixComponentIds",
+                        "framework-grid,framework-virtual-list,framework-form-layout,framework-owner-name,framework-validation-action,framework-validation-status")
+                && containsStringField(line, "dataComponentResourceMatrixModuleSpecifiers",
+                        "@vaadin/grid/src/vaadin-grid.js,@vaadin/virtual-list/src/vaadin-virtual-list.js,@vaadin/form-layout/src/vaadin-form-layout.js,@vaadin/text-field/src/vaadin-text-field.js")
+                && containsStringFieldPrefix(line, "dataComponentResourceMatrixSelectedArtifacts",
+                        "current-app-frontend/generated/flow/generated-flow-imports.js")
+                && containsPositiveIntegerField(line, "dataComponentResourceMatrixSelectedArtifactCount")
+                && containsStringField(line, "dataComponentResourceMatrixGeneratedImportsOwnerSource",
+                        "current-app-generated-imports-select-owner-coverage-v1_41")
+                && containsStringField(line, "dataComponentResourceMatrixGeneratedImportsOwnerArtifact",
+                        "current-app-frontend/generated/flow/generated-flow-imports.js")
+                && containsStringFieldPrefix(line,
+                        "dataComponentResourceMatrixProductionSupportArtifact",
+                        "current-app-production/VAADIN/build/generated-flow-imports-")
+                && line.contains("dataComponentResourceMatrixProductionSupportSha256")
+                && containsPositiveIntegerField(line,
+                        "dataComponentResourceMatrixProductionSupportBytes")
+                && line.contains("dataComponentResourceMatrixProductionEntryArtifact")
+                && containsStringFieldPrefix(line, "dataComponentResourceMatrixSourceChunkArtifact",
+                        "current-app-frontend/generated/flow/chunks/chunk-")
+                && containsStringField(line, "dataComponentResourceMatrixSourceChunkStatus",
+                        "available")
+                && line.contains("dataComponentResourceMatrixResolvedSpecifiers")
+                && line.contains("dataComponentResourceMatrixUnresolvedSpecifiers")
+                && containsStringField(line, "dataComponentResourceMatrixAllowedSchemes",
+                        "vatori-resource,blob")
+                && containsStringField(line, "dataComponentResourceMatrixIntegrityPolicy",
+                        "sha256-and-byte-count-for-selected-artifacts")
+                && containsStringField(line, "dataComponentResourceMatrixBuildGoal",
+                        "build-frontend")
+                && containsStringField(line, "dataComponentResourceMatrixBuildStatus", "success")
+                && line.contains("dataComponentResourceMatrixOutputUsability")
+                && containsLiteralField(line, "dataComponentResourceMatrixFrameworkAppRequired",
+                        "true")
+                && containsLiteralField(line, "dataComponentResourceMatrixFrameworkAppObserved",
+                        "true")
+                && containsLiteralField(line, "dataComponentResourceMatrixCliContractEnabled",
+                        "true")
+                && containsLiteralField(line, "dataComponentResourceMatrixManifestReady", "true")
+                && containsLiteralField(line, "dataComponentResourceMatrixRuntimeHandoffRequired",
+                        "true")
+                && containsLiteralField(line, "dataComponentResourceMatrixRuntimeHandoffReady",
+                        "true")
+                && containsLiteralField(line, "dataComponentResourceMatrixNoLocalhost", "true")
+                && containsLiteralField(line, "dataComponentResourceMatrixFixtureSubstituted",
+                        "false")
+                && line.contains("dataComponentResourceMatrixAcceptableFailures")
+                && line.contains("dataComponentResourceMatrixRemainingBlockers")
+                && line.contains("dataComponentResourceMatrixNextResolutionStep");
+    }
+
+    private static boolean containsDataComponentResourceMatrixV147Complete(String line) {
+        return containsDataComponentResourceMatrixV147Fields(line)
+                && containsLiteralField(line,
+                        "dataComponentResourceMatrixRuntimeHandoffSatisfied", "true")
+                && containsLiteralField(line, "dataComponentResourceMatrixStaged", "true")
+                && containsLiteralField(line,
+                        "dataComponentResourceMatrixCustomSchemeObserved", "true")
+                && containsLiteralField(line,
+                        "dataComponentResourceMatrixNoLocalhost", "true");
+    }
+
     private static boolean containsProductionOwnerFailureLayer(String line, String field) {
         return containsStringField(line, field, "production-owner-duplicate-custom-element")
                 || containsStringField(line, field, "production-owner-relative-import-unresolved")
@@ -6590,6 +6770,12 @@ public final class DesktopTraceInspector {
         private boolean frameworkComponentMatrixDueDatePatchObserved;
         private boolean frameworkComponentMatrixDialogPatchObserved;
         private boolean frameworkComponentMatrixDomObserved;
+        private boolean frameworkDataComponentMatrixBootstrapObserved;
+        private boolean frameworkDataComponentMatrixOwnerEventRpcObserved;
+        private boolean frameworkDataComponentMatrixValidateEventRpcObserved;
+        private boolean frameworkDataComponentMatrixOwnerPatchObserved;
+        private boolean frameworkDataComponentMatrixValidatePatchObserved;
+        private boolean frameworkDataComponentMatrixDomObserved;
         private boolean firstMeaningfulPaintObserved;
         private boolean frontendAssetPipelineV14Observed;
         private boolean frontendArtifactFamilyModelObserved;
@@ -6862,6 +7048,10 @@ public final class DesktopTraceInspector {
         private boolean broaderComponentResourceMatrixV146StageObserved;
         private boolean broaderComponentResourceMatrixV146CompleteStageObserved;
         private boolean broaderComponentResourceMatrixV146DomObserved;
+        private boolean dataComponentResourceMatrixV147ManifestObserved;
+        private boolean dataComponentResourceMatrixV147StageObserved;
+        private boolean dataComponentResourceMatrixV147CompleteStageObserved;
+        private boolean dataComponentResourceMatrixV147DomObserved;
 
         public boolean hasRequiredFlowIpcTypes() {
             return types.keySet().containsAll(FLOW_IPC_REQUIRED_TYPES)
@@ -7588,6 +7778,24 @@ public final class DesktopTraceInspector {
             return hasRequiredFlowIpcV1_46BroaderComponentResourceMatrixTypes();
         }
 
+        public boolean hasRequiredFlowIpcV1_47DataComponentResourceMatrixTypes() {
+            return dataComponentResourceMatrixV147ManifestObserved
+                    && dataComponentResourceMatrixV147StageObserved
+                    && dataComponentResourceMatrixV147CompleteStageObserved
+                    && dataComponentResourceMatrixV147DomObserved
+                    && frameworkDataComponentMatrixBootstrapObserved
+                    && frameworkDataComponentMatrixOwnerEventRpcObserved
+                    && frameworkDataComponentMatrixValidateEventRpcObserved
+                    && frameworkDataComponentMatrixOwnerPatchObserved
+                    && frameworkDataComponentMatrixValidatePatchObserved
+                    && frameworkDataComponentMatrixDomObserved
+                    && hasRequiredFlowIpcV1_46BroaderComponentResourceMatrixTypes();
+        }
+
+        public boolean hasRequiredFlowIpcV1_47Types() {
+            return hasRequiredFlowIpcV1_47DataComponentResourceMatrixTypes();
+        }
+
         private boolean hasCurrentAppBuildFrontendOutputSuccessorEvidence() {
             return currentAppBuildFrontendOutputV132ManifestObserved
                     && currentAppBuildFrontendOutputV132RequestObserved
@@ -7811,6 +8019,16 @@ public final class DesktopTraceInspector {
                     + frameworkComponentMatrixDialogPatchObserved);
             System.out.println("framework component matrix DOM observed: "
                     + frameworkComponentMatrixDomObserved);
+            System.out.println("framework data component matrix bootstrap observed: "
+                    + frameworkDataComponentMatrixBootstrapObserved);
+            System.out.println("framework data component matrix event RPC observed: "
+                    + frameworkDataComponentMatrixOwnerEventRpcObserved + "/"
+                    + frameworkDataComponentMatrixValidateEventRpcObserved);
+            System.out.println("framework data component matrix patch observed: "
+                    + frameworkDataComponentMatrixOwnerPatchObserved + "/"
+                    + frameworkDataComponentMatrixValidatePatchObserved);
+            System.out.println("framework data component matrix DOM observed: "
+                    + frameworkDataComponentMatrixDomObserved);
             System.out.println("Flow IPC v1.4 frontend asset pipeline observed: "
                     + frontendAssetPipelineV14Observed);
             System.out.println("Flow IPC v1.4 frontend artifact families observed: "
@@ -8233,6 +8451,12 @@ public final class DesktopTraceInspector {
                     + broaderComponentResourceMatrixV146StageObserved + "/"
                     + broaderComponentResourceMatrixV146CompleteStageObserved + "/"
                     + broaderComponentResourceMatrixV146DomObserved);
+            System.out.println("Flow IPC v1.47 data component resource matrix manifest observed: "
+                    + dataComponentResourceMatrixV147ManifestObserved);
+            System.out.println("Flow IPC v1.47 data component resource matrix stage/complete/DOM observed: "
+                    + dataComponentResourceMatrixV147StageObserved + "/"
+                    + dataComponentResourceMatrixV147CompleteStageObserved + "/"
+                    + dataComponentResourceMatrixV147DomObserved);
             System.out.println("Flow IPC v1.6 TextField graph manifest observed: "
                     + frontendTextFieldV16ManifestObserved);
             System.out.println("Flow IPC v1.6 TextField graph request observed: "

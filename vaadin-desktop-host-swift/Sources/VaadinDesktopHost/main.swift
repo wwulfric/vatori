@@ -14,6 +14,7 @@ struct HostConfig {
     var flowIpcAutoVaadinTextField: Bool = false
     var flowIpcAutoFrameworkUpdate: Bool = false
     var flowIpcAutoComponentMatrix: Bool = false
+    var flowIpcAutoDataComponents: Bool = false
     var flowIpcAutoShutdown: Bool = false
     var hostNoActivate: Bool = false
     var title: String = "Vaadin Desktop"
@@ -63,6 +64,7 @@ struct HostConfig {
             || config.flowIpcAutoClick
         config.flowIpcAutoFrameworkUpdate = ProcessInfo.processInfo.environment["VAADIN_DESKTOP_FLOW_IPC_AUTO_FRAMEWORK_UPDATE"] == "1"
         config.flowIpcAutoComponentMatrix = ProcessInfo.processInfo.environment["VAADIN_DESKTOP_FLOW_IPC_AUTO_COMPONENT_MATRIX"] == "1"
+        config.flowIpcAutoDataComponents = ProcessInfo.processInfo.environment["VAADIN_DESKTOP_FLOW_IPC_AUTO_DATA_COMPONENTS"] == "1"
         config.flowIpcAutoShutdown = ProcessInfo.processInfo.environment["VAADIN_DESKTOP_FLOW_IPC_AUTO_SHUTDOWN"] == "1"
         config.hostNoActivate = ProcessInfo.processInfo.environment["VAADIN_DESKTOP_HOST_NO_ACTIVATE"] == "1"
         return config
@@ -742,6 +744,10 @@ final class WebViewHost: NSObject, NSApplicationDelegate, NSWindowDelegate, WKNa
         }
         if config.flowIpcAutoComponentMatrix {
             let source = "window.__VAADIN_DESKTOP_FLOW_IPC_AUTO_COMPONENT_MATRIX__ = true;"
+            userContentController.addUserScript(WKUserScript(source: source, injectionTime: .atDocumentStart, forMainFrameOnly: true))
+        }
+        if config.flowIpcAutoDataComponents {
+            let source = "window.__VAADIN_DESKTOP_FLOW_IPC_AUTO_DATA_COMPONENTS__ = true;"
             userContentController.addUserScript(WKUserScript(source: source, injectionTime: .atDocumentStart, forMainFrameOnly: true))
         }
         userContentController.add(self, name: "flowIpc")
@@ -2114,7 +2120,11 @@ final class WebViewHost: NSObject, NSApplicationDelegate, NSWindowDelegate, WKNa
             && !!d.frontendStagingObserved;
           const componentMatrixComplete = !window.__VAADIN_DESKTOP_FLOW_IPC_AUTO_COMPONENT_MATRIX__
             || !!d.frameworkComponentMatrixComplete;
-          const frameworkComplete = !!d.frameworkAppInteractionComplete && componentMatrixComplete;
+          const dataComponentMatrixComplete = !window.__VAADIN_DESKTOP_FLOW_IPC_AUTO_DATA_COMPONENTS__
+            || !!d.frameworkDataComponentMatrixComplete;
+          const frameworkComplete = !!d.frameworkAppInteractionComplete
+            && componentMatrixComplete
+            && dataComponentMatrixComplete;
           const complete = window.__VAADIN_DESKTOP_FLOW_IPC_AUTO_FRAMEWORK_UPDATE__
             ? frameworkComplete
             : smokeComplete;
@@ -2123,6 +2133,7 @@ final class WebViewHost: NSObject, NSApplicationDelegate, NSWindowDelegate, WKNa
             smokeComplete,
             frameworkComplete,
             componentMatrixComplete,
+            dataComponentMatrixComplete,
             click: !!d.flowClientEngineEventPatchConsumed,
             text: !!d.flowClientEngineTextInputEventObserved,
             checkbox: !!d.flowClientEngineCheckboxEventObserved,
@@ -2825,6 +2836,48 @@ final class WebViewHost: NSObject, NSApplicationDelegate, NSWindowDelegate, WKNa
           broaderComponentResourceMatrixNextResolutionStep: window.VaadinDesktopIpcDiagnostics ? window.VaadinDesktopIpcDiagnostics.broaderComponentResourceMatrixNextResolutionStep : "",
           broaderComponentResourceMatrixStageExecutionStatus: window.VaadinDesktopIpcDiagnostics ? window.VaadinDesktopIpcDiagnostics.broaderComponentResourceMatrixStageExecutionStatus : "",
           broaderComponentResourceMatrixStageScheme: window.VaadinDesktopIpcDiagnostics ? window.VaadinDesktopIpcDiagnostics.broaderComponentResourceMatrixStageScheme : "",
+          dataComponentResourceMatrixVersion: window.VaadinDesktopIpcDiagnostics ? window.VaadinDesktopIpcDiagnostics.dataComponentResourceMatrixVersion : "",
+          dataComponentResourceMatrixSource: window.VaadinDesktopIpcDiagnostics ? window.VaadinDesktopIpcDiagnostics.dataComponentResourceMatrixSource : "",
+          dataComponentResourceMatrixScope: window.VaadinDesktopIpcDiagnostics ? window.VaadinDesktopIpcDiagnostics.dataComponentResourceMatrixScope : "",
+          dataComponentResourceMatrixAppShape: window.VaadinDesktopIpcDiagnostics ? window.VaadinDesktopIpcDiagnostics.dataComponentResourceMatrixAppShape : "",
+          dataComponentResourceMatrixTargetTags: window.VaadinDesktopIpcDiagnostics ? window.VaadinDesktopIpcDiagnostics.dataComponentResourceMatrixTargetTags : "",
+          dataComponentResourceMatrixJavaClasses: window.VaadinDesktopIpcDiagnostics ? window.VaadinDesktopIpcDiagnostics.dataComponentResourceMatrixJavaClasses : "",
+          dataComponentResourceMatrixComponentIds: window.VaadinDesktopIpcDiagnostics ? window.VaadinDesktopIpcDiagnostics.dataComponentResourceMatrixComponentIds : "",
+          dataComponentResourceMatrixModuleSpecifiers: window.VaadinDesktopIpcDiagnostics ? window.VaadinDesktopIpcDiagnostics.dataComponentResourceMatrixModuleSpecifiers : "",
+          dataComponentResourceMatrixSelectedArtifacts: window.VaadinDesktopIpcDiagnostics ? window.VaadinDesktopIpcDiagnostics.dataComponentResourceMatrixSelectedArtifacts : "",
+          dataComponentResourceMatrixSelectedArtifactCount: window.VaadinDesktopIpcDiagnostics ? Number(window.VaadinDesktopIpcDiagnostics.dataComponentResourceMatrixSelectedArtifactCount || 0) : 0,
+          dataComponentResourceMatrixGeneratedImportsOwnerSource: window.VaadinDesktopIpcDiagnostics ? window.VaadinDesktopIpcDiagnostics.dataComponentResourceMatrixGeneratedImportsOwnerSource : "",
+          dataComponentResourceMatrixGeneratedImportsOwnerArtifact: window.VaadinDesktopIpcDiagnostics ? window.VaadinDesktopIpcDiagnostics.dataComponentResourceMatrixGeneratedImportsOwnerArtifact : "",
+          dataComponentResourceMatrixProductionSupportArtifact: window.VaadinDesktopIpcDiagnostics ? window.VaadinDesktopIpcDiagnostics.dataComponentResourceMatrixProductionSupportArtifact : "",
+          dataComponentResourceMatrixProductionSupportSha256: window.VaadinDesktopIpcDiagnostics ? window.VaadinDesktopIpcDiagnostics.dataComponentResourceMatrixProductionSupportSha256 : "",
+          dataComponentResourceMatrixProductionSupportBytes: window.VaadinDesktopIpcDiagnostics ? Number(window.VaadinDesktopIpcDiagnostics.dataComponentResourceMatrixProductionSupportBytes || 0) : 0,
+          dataComponentResourceMatrixProductionEntryArtifact: window.VaadinDesktopIpcDiagnostics ? window.VaadinDesktopIpcDiagnostics.dataComponentResourceMatrixProductionEntryArtifact : "",
+          dataComponentResourceMatrixSourceChunkArtifact: window.VaadinDesktopIpcDiagnostics ? window.VaadinDesktopIpcDiagnostics.dataComponentResourceMatrixSourceChunkArtifact : "",
+          dataComponentResourceMatrixSourceChunkStatus: window.VaadinDesktopIpcDiagnostics ? window.VaadinDesktopIpcDiagnostics.dataComponentResourceMatrixSourceChunkStatus : "",
+          dataComponentResourceMatrixResolvedSpecifiers: window.VaadinDesktopIpcDiagnostics ? window.VaadinDesktopIpcDiagnostics.dataComponentResourceMatrixResolvedSpecifiers : "",
+          dataComponentResourceMatrixUnresolvedSpecifiers: window.VaadinDesktopIpcDiagnostics ? window.VaadinDesktopIpcDiagnostics.dataComponentResourceMatrixUnresolvedSpecifiers : "",
+          dataComponentResourceMatrixAllowedSchemes: window.VaadinDesktopIpcDiagnostics ? window.VaadinDesktopIpcDiagnostics.dataComponentResourceMatrixAllowedSchemes : "",
+          dataComponentResourceMatrixIntegrityPolicy: window.VaadinDesktopIpcDiagnostics ? window.VaadinDesktopIpcDiagnostics.dataComponentResourceMatrixIntegrityPolicy : "",
+          dataComponentResourceMatrixBuildGoal: window.VaadinDesktopIpcDiagnostics ? window.VaadinDesktopIpcDiagnostics.dataComponentResourceMatrixBuildGoal : "",
+          dataComponentResourceMatrixBuildStatus: window.VaadinDesktopIpcDiagnostics ? window.VaadinDesktopIpcDiagnostics.dataComponentResourceMatrixBuildStatus : "",
+          dataComponentResourceMatrixOutputUsability: window.VaadinDesktopIpcDiagnostics ? window.VaadinDesktopIpcDiagnostics.dataComponentResourceMatrixOutputUsability : "",
+          dataComponentResourceMatrixFrameworkAppRequired: !!(window.VaadinDesktopIpcDiagnostics && window.VaadinDesktopIpcDiagnostics.dataComponentResourceMatrixFrameworkAppRequired),
+          dataComponentResourceMatrixFrameworkAppObserved: !!(window.VaadinDesktopIpcDiagnostics && window.VaadinDesktopIpcDiagnostics.dataComponentResourceMatrixFrameworkAppObserved),
+          dataComponentResourceMatrixCliContractEnabled: !!(window.VaadinDesktopIpcDiagnostics && window.VaadinDesktopIpcDiagnostics.dataComponentResourceMatrixCliContractEnabled),
+          dataComponentResourceMatrixManifestReady: !!(window.VaadinDesktopIpcDiagnostics && window.VaadinDesktopIpcDiagnostics.dataComponentResourceMatrixManifestReady),
+          dataComponentResourceMatrixRuntimeHandoffRequired: !!(window.VaadinDesktopIpcDiagnostics && window.VaadinDesktopIpcDiagnostics.dataComponentResourceMatrixRuntimeHandoffRequired),
+          dataComponentResourceMatrixRuntimeHandoffReady: !!(window.VaadinDesktopIpcDiagnostics && window.VaadinDesktopIpcDiagnostics.dataComponentResourceMatrixRuntimeHandoffReady),
+          dataComponentResourceMatrixRuntimeHandoffSatisfied: !!(window.VaadinDesktopIpcDiagnostics && window.VaadinDesktopIpcDiagnostics.dataComponentResourceMatrixRuntimeHandoffSatisfied),
+          dataComponentResourceMatrixStaged: !!(window.VaadinDesktopIpcDiagnostics && window.VaadinDesktopIpcDiagnostics.dataComponentResourceMatrixStaged),
+          dataComponentResourceMatrixCustomSchemeObserved: !!(window.VaadinDesktopIpcDiagnostics && window.VaadinDesktopIpcDiagnostics.dataComponentResourceMatrixCustomSchemeObserved),
+          dataComponentResourceMatrixNoLocalhost: !!(window.VaadinDesktopIpcDiagnostics && window.VaadinDesktopIpcDiagnostics.dataComponentResourceMatrixNoLocalhost),
+          dataComponentResourceMatrixFixtureSubstituted: !!(window.VaadinDesktopIpcDiagnostics && window.VaadinDesktopIpcDiagnostics.dataComponentResourceMatrixFixtureSubstituted),
+          dataComponentResourceMatrixAcceptableFailures: window.VaadinDesktopIpcDiagnostics ? window.VaadinDesktopIpcDiagnostics.dataComponentResourceMatrixAcceptableFailures : "",
+          dataComponentResourceMatrixFailureLayer: window.VaadinDesktopIpcDiagnostics ? window.VaadinDesktopIpcDiagnostics.dataComponentResourceMatrixFailureLayer : "",
+          dataComponentResourceMatrixRemainingBlockers: window.VaadinDesktopIpcDiagnostics ? window.VaadinDesktopIpcDiagnostics.dataComponentResourceMatrixRemainingBlockers : "",
+          dataComponentResourceMatrixNextResolutionStep: window.VaadinDesktopIpcDiagnostics ? window.VaadinDesktopIpcDiagnostics.dataComponentResourceMatrixNextResolutionStep : "",
+          dataComponentResourceMatrixStageExecutionStatus: window.VaadinDesktopIpcDiagnostics ? window.VaadinDesktopIpcDiagnostics.dataComponentResourceMatrixStageExecutionStatus : "",
+          dataComponentResourceMatrixStageScheme: window.VaadinDesktopIpcDiagnostics ? window.VaadinDesktopIpcDiagnostics.dataComponentResourceMatrixStageScheme : "",
           frontendBuildPreflightAvailabilityObserved: !!(window.VaadinDesktopIpcDiagnostics && window.VaadinDesktopIpcDiagnostics.frontendBuildPreflightAvailabilityObserved),
           frontendBuildPreflightAvailabilityVersion: window.VaadinDesktopIpcDiagnostics ? window.VaadinDesktopIpcDiagnostics.frontendBuildPreflightAvailabilityVersion : "",
           frontendBuildPreflightAvailabilitySource: window.VaadinDesktopIpcDiagnostics ? window.VaadinDesktopIpcDiagnostics.frontendBuildPreflightAvailabilitySource : "",
@@ -3417,6 +3470,18 @@ final class WebViewHost: NSObject, NSApplicationDelegate, NSWindowDelegate, WKNa
           frameworkComponentMatrixDialogEventRpcObserved: !!(window.VaadinDesktopIpcDiagnostics && window.VaadinDesktopIpcDiagnostics.frameworkComponentMatrixDialogEventRpcObserved),
           frameworkComponentMatrixDialogEventObserved: !!(window.VaadinDesktopIpcDiagnostics && window.VaadinDesktopIpcDiagnostics.frameworkComponentMatrixDialogEventObserved),
           frameworkComponentMatrixComplete: !!(window.VaadinDesktopIpcDiagnostics && window.VaadinDesktopIpcDiagnostics.frameworkComponentMatrixComplete),
+          frameworkDataComponentMatrixVersion: window.VaadinDesktopIpcDiagnostics ? window.VaadinDesktopIpcDiagnostics.frameworkDataComponentMatrixVersion : "",
+          frameworkDataComponentMatrixRendered: !!(window.VaadinDesktopIpcDiagnostics && window.VaadinDesktopIpcDiagnostics.frameworkDataComponentMatrixRendered),
+          frameworkDataComponentMatrixGridRendered: !!(window.VaadinDesktopIpcDiagnostics && window.VaadinDesktopIpcDiagnostics.frameworkDataComponentMatrixGridRendered),
+          frameworkDataComponentMatrixVirtualListRendered: !!(window.VaadinDesktopIpcDiagnostics && window.VaadinDesktopIpcDiagnostics.frameworkDataComponentMatrixVirtualListRendered),
+          frameworkDataComponentMatrixFormLayoutRendered: !!(window.VaadinDesktopIpcDiagnostics && window.VaadinDesktopIpcDiagnostics.frameworkDataComponentMatrixFormLayoutRendered),
+          frameworkDataComponentMatrixOwnerFieldRendered: !!(window.VaadinDesktopIpcDiagnostics && window.VaadinDesktopIpcDiagnostics.frameworkDataComponentMatrixOwnerFieldRendered),
+          frameworkDataComponentMatrixValidationStatusText: window.VaadinDesktopIpcDiagnostics ? window.VaadinDesktopIpcDiagnostics.frameworkDataComponentMatrixValidationStatusText : "",
+          frameworkDataComponentMatrixOwnerEventRpcObserved: !!(window.VaadinDesktopIpcDiagnostics && window.VaadinDesktopIpcDiagnostics.frameworkDataComponentMatrixOwnerEventRpcObserved),
+          frameworkDataComponentMatrixOwnerEventObserved: !!(window.VaadinDesktopIpcDiagnostics && window.VaadinDesktopIpcDiagnostics.frameworkDataComponentMatrixOwnerEventObserved),
+          frameworkDataComponentMatrixValidateEventRpcObserved: !!(window.VaadinDesktopIpcDiagnostics && window.VaadinDesktopIpcDiagnostics.frameworkDataComponentMatrixValidateEventRpcObserved),
+          frameworkDataComponentMatrixValidateEventObserved: !!(window.VaadinDesktopIpcDiagnostics && window.VaadinDesktopIpcDiagnostics.frameworkDataComponentMatrixValidateEventObserved),
+          frameworkDataComponentMatrixComplete: !!(window.VaadinDesktopIpcDiagnostics && window.VaadinDesktopIpcDiagnostics.frameworkDataComponentMatrixComplete),
           frameworkAppFailureReason: window.VaadinDesktopIpcDiagnostics ? window.VaadinDesktopIpcDiagnostics.frameworkAppFailureReason : ""
         })
         """
@@ -3788,6 +3853,7 @@ let flowIpcShell = #"""
       const autoFrameworkPriorityValue = 'audit';
       const autoFrameworkReviewerValue = 'desktop';
       const autoFrameworkDueDateValue = '2026-06-16';
+      const autoFrameworkOwnerValue = 'Ava Desktop';
       let autoFrameworkUpdateStep = 0;
       let autoFrameworkUpdateAttempts = 0;
       let autoFrameworkUpdateInFlight = false;
@@ -4557,6 +4623,49 @@ let flowIpcShell = #"""
         broaderComponentResourceMatrixNextResolutionStep: '',
         broaderComponentResourceMatrixStageExecutionStatus: '',
         broaderComponentResourceMatrixStageScheme: '',
+        dataComponentResourceMatrixVersion: '',
+        dataComponentResourceMatrixSource: '',
+        dataComponentResourceMatrixScope: '',
+        dataComponentResourceMatrixAppShape: '',
+        dataComponentResourceMatrixTargetTags: '',
+        dataComponentResourceMatrixJavaClasses: '',
+        dataComponentResourceMatrixComponentIds: '',
+        dataComponentResourceMatrixModuleSpecifiers: '',
+        dataComponentResourceMatrixSelectedArtifacts: '',
+        dataComponentResourceMatrixSelectedArtifactCount: 0,
+        dataComponentResourceMatrixGeneratedImportsOwnerSource: '',
+        dataComponentResourceMatrixGeneratedImportsOwnerArtifact: '',
+        dataComponentResourceMatrixProductionSupportArtifact: '',
+        dataComponentResourceMatrixProductionSupportSha256: '',
+        dataComponentResourceMatrixProductionSupportBytes: 0,
+        dataComponentResourceMatrixProductionEntryArtifact: '',
+        dataComponentResourceMatrixSourceChunkArtifact: '',
+        dataComponentResourceMatrixSourceChunkStatus: '',
+        dataComponentResourceMatrixResolvedSpecifiers: '',
+        dataComponentResourceMatrixUnresolvedSpecifiers: '',
+        dataComponentResourceMatrixAllowedSchemes: '',
+        dataComponentResourceMatrixIntegrityPolicy: '',
+        dataComponentResourceMatrixBuildGoal: '',
+        dataComponentResourceMatrixBuildStatus: '',
+        dataComponentResourceMatrixOutputUsability: '',
+        dataComponentResourceMatrixFrameworkAppRequired: false,
+        dataComponentResourceMatrixFrameworkAppObserved: false,
+        dataComponentResourceMatrixCliContractEnabled: false,
+        dataComponentResourceMatrixManifestReady: false,
+        dataComponentResourceMatrixRuntimeHandoffRequired: false,
+        dataComponentResourceMatrixRuntimeHandoffReady: false,
+        dataComponentResourceMatrixRuntimeHandoffSatisfied: false,
+        dataComponentResourceMatrixStaged: false,
+        dataComponentResourceMatrixCustomSchemeObserved: false,
+        dataComponentResourceMatrixBlobFallbackObserved: false,
+        dataComponentResourceMatrixNoLocalhost: false,
+        dataComponentResourceMatrixFixtureSubstituted: false,
+        dataComponentResourceMatrixAcceptableFailures: '',
+        dataComponentResourceMatrixFailureLayer: '',
+        dataComponentResourceMatrixRemainingBlockers: '',
+        dataComponentResourceMatrixNextResolutionStep: '',
+        dataComponentResourceMatrixStageExecutionStatus: '',
+        dataComponentResourceMatrixStageScheme: '',
         frontendBuildPreflightAvailabilityObserved: false,
         frontendBuildPreflightAvailabilityVersion: '',
         frontendBuildPreflightAvailabilitySource: '',
@@ -5146,6 +5255,18 @@ let flowIpcShell = #"""
         frameworkComponentMatrixDialogEventRpcObserved: false,
         frameworkComponentMatrixDialogEventObserved: false,
         frameworkComponentMatrixComplete: false,
+        frameworkDataComponentMatrixVersion: '',
+        frameworkDataComponentMatrixRendered: false,
+        frameworkDataComponentMatrixGridRendered: false,
+        frameworkDataComponentMatrixVirtualListRendered: false,
+        frameworkDataComponentMatrixFormLayoutRendered: false,
+        frameworkDataComponentMatrixOwnerFieldRendered: false,
+        frameworkDataComponentMatrixValidationStatusText: '',
+        frameworkDataComponentMatrixOwnerEventRpcObserved: false,
+        frameworkDataComponentMatrixOwnerEventObserved: false,
+        frameworkDataComponentMatrixValidateEventRpcObserved: false,
+        frameworkDataComponentMatrixValidateEventObserved: false,
+        frameworkDataComponentMatrixComplete: false,
         frameworkAppFailureReason: ''
       };
 
@@ -5582,6 +5703,12 @@ let flowIpcShell = #"""
         const dueDate = flowClientEngineElementById('framework-due-date');
         const dialogOpen = flowClientEngineElementById('framework-dialog-open');
         const dialog = flowClientEngineElementById('framework-dialog');
+        const grid = flowClientEngineElementById('framework-grid');
+        const virtualList = flowClientEngineElementById('framework-virtual-list');
+        const formLayout = flowClientEngineElementById('framework-form-layout');
+        const ownerName = flowClientEngineElementById('framework-owner-name');
+        const validationAction = flowClientEngineElementById('framework-validation-action');
+        const validationStatus = flowClientEngineElementById('framework-validation-status');
         const apply = flowClientEngineElementById('framework-apply');
         const status = flowClientEngineElementById('framework-status');
         const componentStatus = flowClientEngineElementById('framework-component-status');
@@ -5590,6 +5717,7 @@ let flowIpcShell = #"""
         const statusText = status ? (status.element.textContent || '') : '';
         const componentStatusText = componentStatus ? (componentStatus.element.textContent || '') : '';
         const matrixStatusText = matrixStatus ? (matrixStatus.element.textContent || '') : '';
+        const validationStatusText = validationStatus ? (validationStatus.element.textContent || '') : '';
         const updatesText = updates ? (updates.element.textContent || '') : '';
         window.VaadinDesktopIpcDiagnostics.frameworkAppAutoUpdateStep = autoFrameworkUpdateStep;
         window.VaadinDesktopIpcDiagnostics.frameworkAppAutoUpdateAttempts = autoFrameworkUpdateAttempts;
@@ -5624,6 +5752,26 @@ let flowIpcShell = #"""
           window.VaadinDesktopIpcDiagnostics.frameworkComponentMatrixReviewerRendered
           && window.VaadinDesktopIpcDiagnostics.frameworkComponentMatrixDueDateRendered
           && window.VaadinDesktopIpcDiagnostics.frameworkComponentMatrixDialogButtonRendered;
+        window.VaadinDesktopIpcDiagnostics.frameworkDataComponentMatrixVersion =
+          'flow-ipc-data-component-resource-matrix-v1_47';
+        window.VaadinDesktopIpcDiagnostics.frameworkDataComponentMatrixGridRendered =
+          !!grid && grid.element.tagName.toLowerCase() === 'vaadin-grid'
+          && !!customElements.get('vaadin-grid');
+        window.VaadinDesktopIpcDiagnostics.frameworkDataComponentMatrixVirtualListRendered =
+          !!virtualList && virtualList.element.tagName.toLowerCase() === 'vaadin-virtual-list'
+          && !!customElements.get('vaadin-virtual-list');
+        window.VaadinDesktopIpcDiagnostics.frameworkDataComponentMatrixFormLayoutRendered =
+          !!formLayout && formLayout.element.tagName.toLowerCase() === 'vaadin-form-layout'
+          && !!customElements.get('vaadin-form-layout');
+        window.VaadinDesktopIpcDiagnostics.frameworkDataComponentMatrixOwnerFieldRendered =
+          !!ownerName && ownerName.element.tagName.toLowerCase() === 'vaadin-text-field'
+          && !!validationAction
+          && !!customElements.get('vaadin-text-field');
+        window.VaadinDesktopIpcDiagnostics.frameworkDataComponentMatrixRendered =
+          window.VaadinDesktopIpcDiagnostics.frameworkDataComponentMatrixGridRendered
+          && window.VaadinDesktopIpcDiagnostics.frameworkDataComponentMatrixVirtualListRendered
+          && window.VaadinDesktopIpcDiagnostics.frameworkDataComponentMatrixFormLayoutRendered
+          && window.VaadinDesktopIpcDiagnostics.frameworkDataComponentMatrixOwnerFieldRendered;
         window.VaadinDesktopIpcDiagnostics.frameworkAppAutoUpdateReady =
           window.VaadinDesktopIpcDiagnostics.frameworkAppRendered
           && window.VaadinDesktopIpcDiagnostics.flowClientEngineVisibleOwner
@@ -5631,6 +5779,8 @@ let flowIpcShell = #"""
         window.VaadinDesktopIpcDiagnostics.frameworkAppStatusText = statusText;
         window.VaadinDesktopIpcDiagnostics.frameworkAppComponentStatusText = componentStatusText;
         window.VaadinDesktopIpcDiagnostics.frameworkComponentMatrixStatusText = matrixStatusText;
+        window.VaadinDesktopIpcDiagnostics.frameworkDataComponentMatrixValidationStatusText =
+          validationStatusText;
         window.VaadinDesktopIpcDiagnostics.frameworkAppUpdatesText = updatesText;
 
         if (componentStatusText.includes('Budget changed: ' + autoFrameworkBudgetValue)) {
@@ -5658,6 +5808,12 @@ let flowIpcShell = #"""
             + ' due ' + autoFrameworkDueDateValue)) {
           window.VaadinDesktopIpcDiagnostics.frameworkComponentMatrixDialogEventObserved = true;
         }
+        if (ownerName && ownerName.element && ownerName.element.value === autoFrameworkOwnerValue) {
+          window.VaadinDesktopIpcDiagnostics.frameworkDataComponentMatrixOwnerEventObserved = true;
+        }
+        if (validationStatusText.includes('Validation accepted: ' + autoFrameworkOwnerValue)) {
+          window.VaadinDesktopIpcDiagnostics.frameworkDataComponentMatrixValidateEventObserved = true;
+        }
         window.VaadinDesktopIpcDiagnostics.frameworkAppInteractionComplete =
           window.VaadinDesktopIpcDiagnostics.frameworkAppBudgetEventRpcObserved
           && window.VaadinDesktopIpcDiagnostics.frameworkAppBudgetEventObserved
@@ -5675,9 +5831,17 @@ let flowIpcShell = #"""
           && window.VaadinDesktopIpcDiagnostics.frameworkComponentMatrixDueDateEventObserved
           && window.VaadinDesktopIpcDiagnostics.frameworkComponentMatrixDialogEventRpcObserved
           && window.VaadinDesktopIpcDiagnostics.frameworkComponentMatrixDialogEventObserved;
+        window.VaadinDesktopIpcDiagnostics.frameworkDataComponentMatrixComplete =
+          window.VaadinDesktopIpcDiagnostics.frameworkDataComponentMatrixRendered
+          && window.VaadinDesktopIpcDiagnostics.frameworkDataComponentMatrixOwnerEventRpcObserved
+          && window.VaadinDesktopIpcDiagnostics.frameworkDataComponentMatrixOwnerEventObserved
+          && window.VaadinDesktopIpcDiagnostics.frameworkDataComponentMatrixValidateEventRpcObserved
+          && window.VaadinDesktopIpcDiagnostics.frameworkDataComponentMatrixValidateEventObserved;
         if (window.VaadinDesktopIpcDiagnostics.frameworkAppInteractionComplete
             && (!window.__VAADIN_DESKTOP_FLOW_IPC_AUTO_COMPONENT_MATRIX__
-              || window.VaadinDesktopIpcDiagnostics.frameworkComponentMatrixComplete)) {
+              || window.VaadinDesktopIpcDiagnostics.frameworkComponentMatrixComplete)
+            && (!window.__VAADIN_DESKTOP_FLOW_IPC_AUTO_DATA_COMPONENTS__
+              || window.VaadinDesktopIpcDiagnostics.frameworkDataComponentMatrixComplete)) {
           autoFrameworkUpdateDone = true;
           autoFrameworkUpdateInFlight = false;
         }
@@ -5739,11 +5903,19 @@ let flowIpcShell = #"""
         if (autoFrameworkUpdateStep === 5) {
           return window.VaadinDesktopIpcDiagnostics.frameworkComponentMatrixDueDateEventObserved;
         }
-        return window.VaadinDesktopIpcDiagnostics.frameworkComponentMatrixDialogEventObserved;
+        if (autoFrameworkUpdateStep === 6) {
+          return window.VaadinDesktopIpcDiagnostics.frameworkComponentMatrixDialogEventObserved;
+        }
+        if (autoFrameworkUpdateStep === 7) {
+          return window.VaadinDesktopIpcDiagnostics.frameworkDataComponentMatrixOwnerEventObserved;
+        }
+        return window.VaadinDesktopIpcDiagnostics.frameworkDataComponentMatrixValidateEventObserved;
       }
 
       function advanceFrameworkAppStepIfDone() {
-        const stepCount = window.__VAADIN_DESKTOP_FLOW_IPC_AUTO_COMPONENT_MATRIX__ ? 7 : 4;
+        const stepCount = window.__VAADIN_DESKTOP_FLOW_IPC_AUTO_DATA_COMPONENTS__
+          ? 9
+          : (window.__VAADIN_DESKTOP_FLOW_IPC_AUTO_COMPONENT_MATRIX__ ? 7 : 4);
         while (autoFrameworkUpdateStep < stepCount && frameworkAppStepDone()) {
           const completedStep = autoFrameworkUpdateStep;
           autoFrameworkUpdateStep += 1;
@@ -5757,7 +5929,9 @@ let flowIpcShell = #"""
           refreshFrameworkAppDiagnostics();
           if (window.VaadinDesktopIpcDiagnostics.frameworkAppInteractionComplete
               && (!window.__VAADIN_DESKTOP_FLOW_IPC_AUTO_COMPONENT_MATRIX__
-                || window.VaadinDesktopIpcDiagnostics.frameworkComponentMatrixComplete)) {
+                || window.VaadinDesktopIpcDiagnostics.frameworkComponentMatrixComplete)
+              && (!window.__VAADIN_DESKTOP_FLOW_IPC_AUTO_DATA_COMPONENTS__
+                || window.VaadinDesktopIpcDiagnostics.frameworkDataComponentMatrixComplete)) {
             autoFrameworkUpdateDone = true;
           }
         }
@@ -5829,6 +6003,17 @@ let flowIpcShell = #"""
             });
         } else if (autoFrameworkUpdateStep === 6) {
           sent = sendFrameworkAppEvent('framework-dialog-open', 'click', {});
+        } else if (autoFrameworkUpdateStep === 7) {
+          sent = sendFrameworkAppEvent('framework-owner-name', 'change',
+            { 'element.value': autoFrameworkOwnerValue },
+            (element) => {
+              element.value = autoFrameworkOwnerValue;
+              if (element.inputElement) {
+                element.inputElement.value = autoFrameworkOwnerValue;
+              }
+            });
+        } else if (autoFrameworkUpdateStep === 8) {
+          sent = sendFrameworkAppEvent('framework-validation-action', 'click', {});
         }
         if (!sent) {
           setTimeout(scheduleAutoFrameworkUpdate, 160);
@@ -6228,6 +6413,17 @@ let flowIpcShell = #"""
                 if (body.includes('Dialog opened: ' + autoFrameworkReviewerValue)
                     && body.includes('due ' + autoFrameworkDueDateValue)) {
                   window.VaadinDesktopIpcDiagnostics.frameworkComponentMatrixDialogEventObserved = true;
+                }
+                autoFrameworkUpdateInFlight = false;
+              } else if (pending.componentId === 'framework-owner-name') {
+                window.VaadinDesktopIpcDiagnostics.frameworkDataComponentMatrixOwnerEventRpcObserved = true;
+                if (body.includes(autoFrameworkOwnerValue)) {
+                  window.VaadinDesktopIpcDiagnostics.frameworkDataComponentMatrixOwnerEventObserved = true;
+                }
+              } else if (pending.componentId === 'framework-validation-action') {
+                window.VaadinDesktopIpcDiagnostics.frameworkDataComponentMatrixValidateEventRpcObserved = true;
+                if (body.includes('Validation accepted: ' + autoFrameworkOwnerValue)) {
+                  window.VaadinDesktopIpcDiagnostics.frameworkDataComponentMatrixValidateEventObserved = true;
                 }
                 autoFrameworkUpdateInFlight = false;
               }
@@ -9123,7 +9319,91 @@ let flowIpcShell = #"""
           broaderComponentResourceMatrixNextResolutionStep:
             source.broaderComponentResourceMatrixNextResolutionStep || '',
           broaderComponentResourceMatrixStageExecutionStatus: executionStatus || '',
-          broaderComponentResourceMatrixStageScheme: scheme || ''
+          broaderComponentResourceMatrixStageScheme: scheme || '',
+          dataComponentResourceMatrixVersion:
+            source.dataComponentResourceMatrixVersion || '',
+          dataComponentResourceMatrixSource:
+            source.dataComponentResourceMatrixSource || '',
+          dataComponentResourceMatrixScope:
+            source.dataComponentResourceMatrixScope || '',
+          dataComponentResourceMatrixAppShape:
+            source.dataComponentResourceMatrixAppShape || '',
+          dataComponentResourceMatrixTargetTags:
+            source.dataComponentResourceMatrixTargetTags || '',
+          dataComponentResourceMatrixJavaClasses:
+            source.dataComponentResourceMatrixJavaClasses || '',
+          dataComponentResourceMatrixComponentIds:
+            source.dataComponentResourceMatrixComponentIds || '',
+          dataComponentResourceMatrixModuleSpecifiers:
+            source.dataComponentResourceMatrixModuleSpecifiers || '',
+          dataComponentResourceMatrixSelectedArtifacts:
+            source.dataComponentResourceMatrixSelectedArtifacts || '',
+          dataComponentResourceMatrixSelectedArtifactCount:
+            Number(source.dataComponentResourceMatrixSelectedArtifactCount || 0),
+          dataComponentResourceMatrixGeneratedImportsOwnerSource:
+            source.dataComponentResourceMatrixGeneratedImportsOwnerSource || '',
+          dataComponentResourceMatrixGeneratedImportsOwnerArtifact:
+            source.dataComponentResourceMatrixGeneratedImportsOwnerArtifact || '',
+          dataComponentResourceMatrixProductionSupportArtifact:
+            source.dataComponentResourceMatrixProductionSupportArtifact || '',
+          dataComponentResourceMatrixProductionSupportSha256:
+            source.dataComponentResourceMatrixProductionSupportSha256 || '',
+          dataComponentResourceMatrixProductionSupportBytes:
+            Number(source.dataComponentResourceMatrixProductionSupportBytes || 0),
+          dataComponentResourceMatrixProductionEntryArtifact:
+            source.dataComponentResourceMatrixProductionEntryArtifact || '',
+          dataComponentResourceMatrixSourceChunkArtifact:
+            source.dataComponentResourceMatrixSourceChunkArtifact || '',
+          dataComponentResourceMatrixSourceChunkStatus:
+            source.dataComponentResourceMatrixSourceChunkStatus || '',
+          dataComponentResourceMatrixResolvedSpecifiers:
+            source.dataComponentResourceMatrixResolvedSpecifiers || '',
+          dataComponentResourceMatrixUnresolvedSpecifiers:
+            typeof source.dataComponentResourceMatrixUnresolvedSpecifiers === 'string'
+              ? source.dataComponentResourceMatrixUnresolvedSpecifiers
+              : '',
+          dataComponentResourceMatrixAllowedSchemes:
+            source.dataComponentResourceMatrixAllowedSchemes || '',
+          dataComponentResourceMatrixIntegrityPolicy:
+            source.dataComponentResourceMatrixIntegrityPolicy || '',
+          dataComponentResourceMatrixBuildGoal:
+            source.dataComponentResourceMatrixBuildGoal || '',
+          dataComponentResourceMatrixBuildStatus:
+            source.dataComponentResourceMatrixBuildStatus || '',
+          dataComponentResourceMatrixOutputUsability:
+            source.dataComponentResourceMatrixOutputUsability || '',
+          dataComponentResourceMatrixFrameworkAppRequired:
+            source.dataComponentResourceMatrixFrameworkAppRequired === true,
+          dataComponentResourceMatrixFrameworkAppObserved:
+            source.dataComponentResourceMatrixFrameworkAppObserved === true,
+          dataComponentResourceMatrixCliContractEnabled:
+            source.dataComponentResourceMatrixCliContractEnabled === true,
+          dataComponentResourceMatrixManifestReady:
+            source.dataComponentResourceMatrixManifestReady === true,
+          dataComponentResourceMatrixRuntimeHandoffRequired:
+            source.dataComponentResourceMatrixRuntimeHandoffRequired === true,
+          dataComponentResourceMatrixRuntimeHandoffReady:
+            source.dataComponentResourceMatrixRuntimeHandoffReady === true,
+          dataComponentResourceMatrixRuntimeHandoffSatisfied:
+            runtimeHandoffSatisfied,
+          dataComponentResourceMatrixStaged: true,
+          dataComponentResourceMatrixCustomSchemeObserved: customSchemeObserved,
+          dataComponentResourceMatrixBlobFallbackObserved: blobFallbackObserved
+            || source.dataComponentResourceMatrixBlobFallbackObserved === true,
+          dataComponentResourceMatrixNoLocalhost:
+            source.dataComponentResourceMatrixNoLocalhost !== false,
+          dataComponentResourceMatrixFixtureSubstituted:
+            source.dataComponentResourceMatrixFixtureSubstituted === true,
+          dataComponentResourceMatrixAcceptableFailures:
+            source.dataComponentResourceMatrixAcceptableFailures || '',
+          dataComponentResourceMatrixFailureLayer:
+            runtimeHandoffSatisfied ? '' : (source.dataComponentResourceMatrixFailureLayer || ''),
+          dataComponentResourceMatrixRemainingBlockers:
+            source.dataComponentResourceMatrixRemainingBlockers || '',
+          dataComponentResourceMatrixNextResolutionStep:
+            source.dataComponentResourceMatrixNextResolutionStep || '',
+          dataComponentResourceMatrixStageExecutionStatus: executionStatus || '',
+          dataComponentResourceMatrixStageScheme: scheme || ''
         };
       }
 
@@ -9214,7 +9494,36 @@ let flowIpcShell = #"""
           'broaderComponentResourceMatrixRemainingBlockers',
           'broaderComponentResourceMatrixNextResolutionStep',
           'broaderComponentResourceMatrixStageExecutionStatus',
-          'broaderComponentResourceMatrixStageScheme'
+          'broaderComponentResourceMatrixStageScheme',
+          'dataComponentResourceMatrixVersion',
+          'dataComponentResourceMatrixSource',
+          'dataComponentResourceMatrixScope',
+          'dataComponentResourceMatrixAppShape',
+          'dataComponentResourceMatrixTargetTags',
+          'dataComponentResourceMatrixJavaClasses',
+          'dataComponentResourceMatrixComponentIds',
+          'dataComponentResourceMatrixModuleSpecifiers',
+          'dataComponentResourceMatrixSelectedArtifacts',
+          'dataComponentResourceMatrixGeneratedImportsOwnerSource',
+          'dataComponentResourceMatrixGeneratedImportsOwnerArtifact',
+          'dataComponentResourceMatrixProductionSupportArtifact',
+          'dataComponentResourceMatrixProductionSupportSha256',
+          'dataComponentResourceMatrixProductionEntryArtifact',
+          'dataComponentResourceMatrixSourceChunkArtifact',
+          'dataComponentResourceMatrixSourceChunkStatus',
+          'dataComponentResourceMatrixResolvedSpecifiers',
+          'dataComponentResourceMatrixUnresolvedSpecifiers',
+          'dataComponentResourceMatrixAllowedSchemes',
+          'dataComponentResourceMatrixIntegrityPolicy',
+          'dataComponentResourceMatrixBuildGoal',
+          'dataComponentResourceMatrixBuildStatus',
+          'dataComponentResourceMatrixOutputUsability',
+          'dataComponentResourceMatrixAcceptableFailures',
+          'dataComponentResourceMatrixFailureLayer',
+          'dataComponentResourceMatrixRemainingBlockers',
+          'dataComponentResourceMatrixNextResolutionStep',
+          'dataComponentResourceMatrixStageExecutionStatus',
+          'dataComponentResourceMatrixStageScheme'
         ]) {
           d[key] = details[key] || d[key] || '';
         }
@@ -9227,7 +9536,9 @@ let flowIpcShell = #"""
           'packagingFrontendInventoryProdBundleBytes',
           'packagingRuntimeHandoffReuseSelectedArtifactCount',
           'broaderComponentResourceMatrixSelectedArtifactCount',
-          'broaderComponentResourceMatrixProductionSupportBytes'
+          'broaderComponentResourceMatrixProductionSupportBytes',
+          'dataComponentResourceMatrixSelectedArtifactCount',
+          'dataComponentResourceMatrixProductionSupportBytes'
         ]) {
           d[key] = Number(details[key] || d[key] || 0);
         }
@@ -9276,7 +9587,19 @@ let flowIpcShell = #"""
           'broaderComponentResourceMatrixCustomSchemeObserved',
           'broaderComponentResourceMatrixBlobFallbackObserved',
           'broaderComponentResourceMatrixNoLocalhost',
-          'broaderComponentResourceMatrixFixtureSubstituted'
+          'broaderComponentResourceMatrixFixtureSubstituted',
+          'dataComponentResourceMatrixFrameworkAppRequired',
+          'dataComponentResourceMatrixFrameworkAppObserved',
+          'dataComponentResourceMatrixCliContractEnabled',
+          'dataComponentResourceMatrixManifestReady',
+          'dataComponentResourceMatrixRuntimeHandoffRequired',
+          'dataComponentResourceMatrixRuntimeHandoffReady',
+          'dataComponentResourceMatrixRuntimeHandoffSatisfied',
+          'dataComponentResourceMatrixStaged',
+          'dataComponentResourceMatrixCustomSchemeObserved',
+          'dataComponentResourceMatrixBlobFallbackObserved',
+          'dataComponentResourceMatrixNoLocalhost',
+          'dataComponentResourceMatrixFixtureSubstituted'
         ]) {
           d[key] = details[key] === true || d[key] === true;
         }

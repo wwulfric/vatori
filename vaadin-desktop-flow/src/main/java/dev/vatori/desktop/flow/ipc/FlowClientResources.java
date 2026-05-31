@@ -724,6 +724,26 @@ final class FlowClientResources {
             "grid-virtualization,upload-download,binder-validation,theme-variants,dev-mode-vite-parity,installer-packaging,durable-reconnect";
     private static final String BROADER_COMPONENT_RESOURCE_MATRIX_NEXT_STEP =
             "turn the framework component matrix into reusable broad component/resource acceptance instead of a three-component validation slice";
+    private static final String DATA_COMPONENT_RESOURCE_MATRIX_VERSION =
+            "flow-ipc-data-component-resource-matrix-v1_47";
+    private static final String DATA_COMPONENT_RESOURCE_MATRIX_SOURCE =
+            "broader-component-resource-matrix-v1_46";
+    private static final String DATA_COMPONENT_RESOURCE_MATRIX_SCOPE =
+            "framework-validation-app-grid-virtual-list-form-binder";
+    private static final String DATA_COMPONENT_RESOURCE_MATRIX_TARGET_TAGS =
+            "vaadin-grid,vaadin-grid-column,vaadin-virtual-list,vaadin-form-layout,vaadin-text-field";
+    private static final String DATA_COMPONENT_RESOURCE_MATRIX_JAVA_CLASSES =
+            "com.vaadin.flow.component.grid.Grid,com.vaadin.flow.component.virtuallist.VirtualList,com.vaadin.flow.component.formlayout.FormLayout,com.vaadin.flow.data.binder.Binder,com.vaadin.flow.component.textfield.TextField";
+    private static final String DATA_COMPONENT_RESOURCE_MATRIX_COMPONENT_IDS =
+            "framework-grid,framework-virtual-list,framework-form-layout,framework-owner-name,framework-validation-action,framework-validation-status";
+    private static final String DATA_COMPONENT_RESOURCE_MATRIX_MODULE_SPECIFIERS =
+            "@vaadin/grid/src/vaadin-grid.js,@vaadin/virtual-list/src/vaadin-virtual-list.js,@vaadin/form-layout/src/vaadin-form-layout.js,@vaadin/text-field/src/vaadin-text-field.js";
+    private static final String DATA_COMPONENT_RESOURCE_MATRIX_ACCEPTABLE_FAILURES =
+            "grid-virtualized-rows-not-materialized,virtual-list-item-renderer-pending,data-provider-rpc-boundary,resource-specifier-unresolved,browser-import-error";
+    private static final String DATA_COMPONENT_RESOURCE_MATRIX_REMAINING_BLOCKERS =
+            "full-grid-virtualization,lazy-data-provider,upload-download,theme-variants,dev-mode-vite-parity,installer-packaging,durable-reconnect";
+    private static final String DATA_COMPONENT_RESOURCE_MATRIX_NEXT_STEP =
+            "turn bounded data and binder component evidence into deeper Grid/VirtualList virtualization or Upload/Download resource parity";
     private static final List<String> PRODUCTION_RUNTIME_OWNER_DEPENDENCY_ARTIFACTS = List.of(
             DEV_BUNDLE_COMMONJS_JS,
             DEV_BUNDLE_INDEX_HTML_JS,
@@ -2673,6 +2693,80 @@ final class FlowClientResources {
                 BROADER_COMPONENT_RESOURCE_MATRIX_REMAINING_BLOCKERS);
         attributes.put("broaderComponentResourceMatrixNextResolutionStep",
                 BROADER_COMPONENT_RESOURCE_MATRIX_NEXT_STEP);
+        attributes.putAll(dataComponentResourceMatrixAttributes(evidence, buildStep, selectedArtifacts,
+                handoffReady));
+        return attributes;
+    }
+
+    private static Map<String, Object> dataComponentResourceMatrixAttributes(
+            CurrentAppBuildFrontendOutputEvidence evidence,
+            FrontendBuildStepEvidence buildStep,
+            String selectedArtifacts,
+            boolean handoffReady) {
+        Path module = appModuleDirectory();
+        String appShape = packagingRuntimeHandoffAppShape(module);
+        boolean frameworkApp = "framework-validation-app".equals(appShape);
+        Map<String, Object> attributes = new LinkedHashMap<>();
+        attributes.put("dataComponentResourceMatrixVersion", DATA_COMPONENT_RESOURCE_MATRIX_VERSION);
+        attributes.put("dataComponentResourceMatrixSource", DATA_COMPONENT_RESOURCE_MATRIX_SOURCE);
+        attributes.put("dataComponentResourceMatrixScope", DATA_COMPONENT_RESOURCE_MATRIX_SCOPE);
+        attributes.put("dataComponentResourceMatrixAppShape", appShape);
+        attributes.put("dataComponentResourceMatrixTargetTags", DATA_COMPONENT_RESOURCE_MATRIX_TARGET_TAGS);
+        attributes.put("dataComponentResourceMatrixJavaClasses", DATA_COMPONENT_RESOURCE_MATRIX_JAVA_CLASSES);
+        attributes.put("dataComponentResourceMatrixComponentIds", DATA_COMPONENT_RESOURCE_MATRIX_COMPONENT_IDS);
+        attributes.put("dataComponentResourceMatrixModuleSpecifiers",
+                DATA_COMPONENT_RESOURCE_MATRIX_MODULE_SPECIFIERS);
+        attributes.put("dataComponentResourceMatrixSelectedArtifacts", selectedArtifacts);
+        attributes.put("dataComponentResourceMatrixSelectedArtifactCount", csvValues(selectedArtifacts).size());
+        attributes.put("dataComponentResourceMatrixGeneratedImportsOwnerSource",
+                CURRENT_APP_GENERATED_IMPORTS_OWNER_RUNTIME_CONTRACT_SOURCE);
+        attributes.put("dataComponentResourceMatrixGeneratedImportsOwnerArtifact",
+                CURRENT_APP_BUILD_FRONTEND_GENERATED_IMPORTS_JS);
+        attributes.put("dataComponentResourceMatrixProductionSupportArtifact",
+                evidence.sourceGeneratedImportsRootProductionSupportArtifact());
+        attributes.put("dataComponentResourceMatrixProductionSupportSha256",
+                evidence.productionGeneratedImportsSha256());
+        attributes.put("dataComponentResourceMatrixProductionSupportBytes",
+                evidence.productionGeneratedImportsBytes());
+        attributes.put("dataComponentResourceMatrixProductionEntryArtifact",
+                evidence.productionEntryScriptVirtualPath());
+        attributes.put("dataComponentResourceMatrixSourceChunkArtifact",
+                evidence.sourceChunkVirtualPath());
+        attributes.put("dataComponentResourceMatrixSourceChunkStatus",
+                evidence.sourceChunkStatus());
+        attributes.put("dataComponentResourceMatrixResolvedSpecifiers",
+                evidence.sourceGeneratedImportsRootResolvedSpecifiers());
+        attributes.put("dataComponentResourceMatrixUnresolvedSpecifiers",
+                evidence.sourceGeneratedImportsRootUnresolvedSpecifiers());
+        attributes.put("dataComponentResourceMatrixAllowedSchemes",
+                PACKAGING_FRONTEND_INVENTORY_ALLOWED_SCHEMES);
+        attributes.put("dataComponentResourceMatrixIntegrityPolicy",
+                PACKAGING_FRONTEND_INVENTORY_INTEGRITY_POLICY);
+        attributes.put("dataComponentResourceMatrixBuildGoal", buildStep.goal());
+        attributes.put("dataComponentResourceMatrixBuildStatus", buildStep.status());
+        attributes.put("dataComponentResourceMatrixOutputUsability", buildStep.outputUsability());
+        attributes.put("dataComponentResourceMatrixFrameworkAppRequired", true);
+        attributes.put("dataComponentResourceMatrixFrameworkAppObserved", frameworkApp);
+        attributes.put("dataComponentResourceMatrixCliContractEnabled",
+                "1".equals(System.getenv("VAADIN_DESKTOP_FLOW_IPC_FRONTEND_BUILD_V1_47")));
+        attributes.put("dataComponentResourceMatrixManifestReady", handoffReady && frameworkApp);
+        attributes.put("dataComponentResourceMatrixRuntimeHandoffRequired", true);
+        attributes.put("dataComponentResourceMatrixRuntimeHandoffReady", handoffReady);
+        attributes.put("dataComponentResourceMatrixRuntimeHandoffSatisfied", false);
+        attributes.put("dataComponentResourceMatrixStaged", false);
+        attributes.put("dataComponentResourceMatrixCustomSchemeObserved", false);
+        attributes.put("dataComponentResourceMatrixBlobFallbackObserved", false);
+        attributes.put("dataComponentResourceMatrixNoLocalhost", true);
+        attributes.put("dataComponentResourceMatrixFixtureSubstituted", false);
+        attributes.put("dataComponentResourceMatrixAcceptableFailures",
+                DATA_COMPONENT_RESOURCE_MATRIX_ACCEPTABLE_FAILURES);
+        attributes.put("dataComponentResourceMatrixFailureLayer", frameworkApp
+                ? "framework-data-component-matrix-runtime-validation-pending"
+                : "framework-validation-app-not-selected");
+        attributes.put("dataComponentResourceMatrixRemainingBlockers",
+                DATA_COMPONENT_RESOURCE_MATRIX_REMAINING_BLOCKERS);
+        attributes.put("dataComponentResourceMatrixNextResolutionStep",
+                DATA_COMPONENT_RESOURCE_MATRIX_NEXT_STEP);
         return attributes;
     }
 

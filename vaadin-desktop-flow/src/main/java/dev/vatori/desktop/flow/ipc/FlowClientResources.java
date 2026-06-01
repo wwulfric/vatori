@@ -859,6 +859,32 @@ final class FlowClientResources {
             "full-upload-download-streaming,parallel-chunk-backpressure,retry-resume,progress-cancellation,downloadhandler-parity,upload-receiver-parity,theme-variants,dev-mode-vite-parity,installer-packaging,durable-reconnect";
     private static final String STREAM_RESOURCE_CHUNKS_NEXT_STEP =
             "turn bounded sequential chunk evidence into generalized streaming with retry/resume, progress, cancellation and OS file grants";
+    private static final String UPLOAD_RECEIVER_VERSION =
+            "flow-ipc-upload-receiver-v1_53";
+    private static final String UPLOAD_RECEIVER_SOURCE =
+            "stream-resource-chunks-v1_52";
+    private static final String UPLOAD_RECEIVER_SCOPE =
+            "framework-validation-app-upload-element-request-handler-bounded-raw-body";
+    private static final String UPLOAD_RECEIVER_JAVA_CLASSES =
+            "com.vaadin.flow.component.upload.Upload,com.vaadin.flow.server.streams.UploadHandler,com.vaadin.flow.server.StreamResourceRegistry.ElementStreamResource";
+    private static final String UPLOAD_RECEIVER_COMPONENT_IDS =
+            "framework-upload,framework-upload-status";
+    private static final String UPLOAD_RECEIVER_DYNAMIC_PATH_PREFIX =
+            "VAADIN/dynamic/resource/";
+    private static final String UPLOAD_RECEIVER_EXPECTED_FILE =
+            "flow-ipc-upload-v1_53.txt";
+    private static final String UPLOAD_RECEIVER_EXPECTED_CONTENT_TYPE =
+            "text/plain; charset=UTF-8";
+    private static final String UPLOAD_RECEIVER_EXPECTED_BODY_MARKER =
+            "Flow IPC Upload v1.53";
+    private static final String UPLOAD_RECEIVER_TRANSPORT =
+            "ipc-upload-request-raw-xhr-compatible";
+    private static final String UPLOAD_RECEIVER_ACCEPTABLE_FAILURES =
+            "upload-target-missing,upload-resource-registry-unavailable,upload-resource-not-element-request-handler,upload-handler-error,uidl-patch-missing";
+    private static final String UPLOAD_RECEIVER_REMAINING_BLOCKERS =
+            "multipart-upload-parity,multi-file-upload,large-file-backpressure,progress-cancellation,retry-resume,downloadhandler-parity,theme-variants,dev-mode-vite-parity,installer-packaging,durable-reconnect";
+    private static final String UPLOAD_RECEIVER_NEXT_STEP =
+            "turn bounded raw UploadHandler evidence into multipart/progress/cancel Upload parity and generalized streaming";
     private static final List<String> PRODUCTION_RUNTIME_OWNER_DEPENDENCY_ARTIFACTS = List.of(
             DEV_BUNDLE_COMMONJS_JS,
             DEV_BUNDLE_INDEX_HTML_JS,
@@ -3251,6 +3277,69 @@ final class FlowClientResources {
         attributes.put("streamResourceChunksRemainingBlockers",
                 STREAM_RESOURCE_CHUNKS_REMAINING_BLOCKERS);
         attributes.put("streamResourceChunksNextResolutionStep", STREAM_RESOURCE_CHUNKS_NEXT_STEP);
+        attributes.putAll(uploadReceiverAttributes(evidence, buildStep, selectedArtifacts,
+                handoffReady));
+        return attributes;
+    }
+
+    private static Map<String, Object> uploadReceiverAttributes(
+            CurrentAppBuildFrontendOutputEvidence evidence,
+            FrontendBuildStepEvidence buildStep,
+            String selectedArtifacts,
+            boolean handoffReady) {
+        Path module = appModuleDirectory();
+        String appShape = packagingRuntimeHandoffAppShape(module);
+        boolean frameworkApp = "framework-validation-app".equals(appShape);
+        Map<String, Object> attributes = new LinkedHashMap<>();
+        attributes.put("uploadReceiverVersion", UPLOAD_RECEIVER_VERSION);
+        attributes.put("uploadReceiverSource", UPLOAD_RECEIVER_SOURCE);
+        attributes.put("uploadReceiverScope", UPLOAD_RECEIVER_SCOPE);
+        attributes.put("uploadReceiverAppShape", appShape);
+        attributes.put("uploadReceiverJavaClasses", UPLOAD_RECEIVER_JAVA_CLASSES);
+        attributes.put("uploadReceiverComponentIds", UPLOAD_RECEIVER_COMPONENT_IDS);
+        attributes.put("uploadReceiverDynamicPathPrefix", UPLOAD_RECEIVER_DYNAMIC_PATH_PREFIX);
+        attributes.put("uploadReceiverExpectedFile", UPLOAD_RECEIVER_EXPECTED_FILE);
+        attributes.put("uploadReceiverExpectedContentType", UPLOAD_RECEIVER_EXPECTED_CONTENT_TYPE);
+        attributes.put("uploadReceiverExpectedBodyMarker", UPLOAD_RECEIVER_EXPECTED_BODY_MARKER);
+        attributes.put("uploadReceiverTransport", UPLOAD_RECEIVER_TRANSPORT);
+        attributes.put("uploadReceiverSelectedArtifacts", selectedArtifacts);
+        attributes.put("uploadReceiverSelectedArtifactCount", csvValues(selectedArtifacts).size());
+        attributes.put("uploadReceiverGeneratedImportsOwnerSource",
+                CURRENT_APP_GENERATED_IMPORTS_OWNER_RUNTIME_CONTRACT_SOURCE);
+        attributes.put("uploadReceiverGeneratedImportsOwnerArtifact",
+                CURRENT_APP_BUILD_FRONTEND_GENERATED_IMPORTS_JS);
+        attributes.put("uploadReceiverProductionSupportArtifact",
+                evidence.sourceGeneratedImportsRootProductionSupportArtifact());
+        attributes.put("uploadReceiverProductionSupportSha256",
+                evidence.productionGeneratedImportsSha256());
+        attributes.put("uploadReceiverProductionSupportBytes",
+                evidence.productionGeneratedImportsBytes());
+        attributes.put("uploadReceiverProductionEntryArtifact",
+                evidence.productionEntryScriptVirtualPath());
+        attributes.put("uploadReceiverBuildGoal", buildStep.goal());
+        attributes.put("uploadReceiverBuildStatus", buildStep.status());
+        attributes.put("uploadReceiverOutputUsability", buildStep.outputUsability());
+        attributes.put("uploadReceiverFrameworkAppRequired", true);
+        attributes.put("uploadReceiverFrameworkAppObserved", frameworkApp);
+        attributes.put("uploadReceiverCliContractEnabled",
+                "1".equals(System.getenv("VAADIN_DESKTOP_FLOW_IPC_FRONTEND_BUILD_V1_53")));
+        attributes.put("uploadReceiverManifestReady", handoffReady && frameworkApp);
+        attributes.put("uploadReceiverRuntimeHandoffRequired", true);
+        attributes.put("uploadReceiverRuntimeHandoffReady", handoffReady);
+        attributes.put("uploadReceiverTargetHrefObserved", false);
+        attributes.put("uploadReceiverRequestObserved", false);
+        attributes.put("uploadReceiverResponseObserved", false);
+        attributes.put("uploadReceiverPatchObserved", false);
+        attributes.put("uploadReceiverBodyVerified", false);
+        attributes.put("uploadReceiverMultipartParity", false);
+        attributes.put("uploadReceiverNoLocalhost", true);
+        attributes.put("uploadReceiverFixtureSubstituted", false);
+        attributes.put("uploadReceiverAcceptableFailures", UPLOAD_RECEIVER_ACCEPTABLE_FAILURES);
+        attributes.put("uploadReceiverFailureLayer", frameworkApp
+                ? "framework-upload-receiver-runtime-validation-pending"
+                : "framework-validation-app-not-selected");
+        attributes.put("uploadReceiverRemainingBlockers", UPLOAD_RECEIVER_REMAINING_BLOCKERS);
+        attributes.put("uploadReceiverNextResolutionStep", UPLOAD_RECEIVER_NEXT_STEP);
         return attributes;
     }
 

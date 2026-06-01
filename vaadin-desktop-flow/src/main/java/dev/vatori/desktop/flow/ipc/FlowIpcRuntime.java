@@ -16,6 +16,7 @@ import java.io.IOException;
 import java.io.InputStreamReader;
 import java.lang.reflect.InvocationTargetException;
 import java.nio.charset.StandardCharsets;
+import java.util.Base64;
 import java.util.LinkedHashMap;
 import java.util.Map;
 import java.util.Objects;
@@ -81,6 +82,7 @@ final class FlowIpcRuntime {
             switch (type == null ? "" : type) {
                 case "bootstrapRequest" -> bootstrap(json, id, correlationId);
                 case "resourceRequest" -> handleResourceRequest(json, id, correlationId);
+                case "uploadRequest" -> handleUploadRequest(json, id, correlationId);
                 case "event" -> handleEvent(json, id, correlationId);
                 case "resync" -> handleResync(json, id, correlationId);
                 case "error" -> handleClientError(json, id);
@@ -191,6 +193,46 @@ final class FlowIpcRuntime {
 
     private static String normalizeDynamicResourcePath(String path) {
         return path != null && path.startsWith("/") ? path.substring(1) : path;
+    }
+
+    private void handleUploadRequest(String json, String id, String correlationId) {
+        ensureBootstrapped();
+        validateEnvelopeScope(json);
+        validateSecurityKey(json);
+        String path = JsonFields.string(json, "path");
+        if (path == null || path.isBlank()) {
+            sendError("uploadTargetNotFound", "Unknown Flow IPC upload target: " + path, id, correlationId);
+            return;
+        }
+        String fileName = JsonFields.string(json, "uploadFileName");
+        if (fileName == null || fileName.isBlank()) {
+            fileName = "flow-ipc-upload-v1_53.txt";
+        }
+        String contentType = JsonFields.string(json, "uploadContentType");
+        if (contentType == null || contentType.isBlank()) {
+            contentType = "application/octet-stream";
+        }
+        String bodyBase64 = JsonFields.string(json, "uploadBodyBase64");
+        byte[] bytes = bodyBase64 == null || bodyBase64.isBlank()
+                ? new byte[0]
+                : Base64.getDecoder().decode(bodyBase64);
+        DesktopFlowRuntimeSession.FlowUploadResponse response =
+                flowSession.uploadResourceResponse(path, fileName, contentType, bytes);
+        Map<String, Object> payload = new LinkedHashMap<>(response.payload());
+        String purpose = JsonFields.string(json, "purpose");
+        if (purpose != null && !purpose.isBlank()) {
+            payload.put("requestPurpose", purpose);
+        }
+        String lookupKind = JsonFields.string(json, "lookupKind");
+        if (lookupKind != null && !lookupKind.isBlank()) {
+            payload.put("lookupKind", lookupKind);
+        }
+        payload.put("uploadReceiverRequestBodyBase64Observed", bodyBase64 != null && !bodyBase64.isBlank());
+        payload.put("uploadReceiverRequestBodyRedacted", false);
+        send("uploadResponse", nextId("upload"), correlationIdOr(id, correlationId), payload);
+        if (response.patch() != null) {
+            sendPatch("upload", id, correlationId, response.patch(), "flow-ipc-upload-resource");
+        }
     }
 
     private void handleClientError(String json, String id) {
@@ -466,7 +508,7 @@ final class FlowIpcRuntime {
     }
 
     private long send(String type, String id, String correlationId, Map<String, Object> payload) {
-        Map<String, Object> sequencedPayload = new LinkedHashMap<>(payload);
+        Map<String, Object> sequencedPayload = nullSafePayload(payload);
         long nextServerSequence = serverSequence.incrementAndGet();
         sequencedPayload.put("serverSequence", nextServerSequence);
         sequencedPayload.put("serverSequenceScope", "java-sidecar-to-webview");
@@ -475,6 +517,12 @@ final class FlowIpcRuntime {
         System.out.println(PREFIX + IpcJson.stringify(envelope));
         System.out.flush();
         return nextServerSequence;
+    }
+
+    private static Map<String, Object> nullSafePayload(Map<String, Object> payload) {
+        Map<String, Object> copy = new LinkedHashMap<>();
+        payload.forEach((key, value) -> copy.put(key, Objects.requireNonNullElse(value, "")));
+        return copy;
     }
 
     private void sendError(String code, String message, String id, String correlationId) {

@@ -175,6 +175,9 @@ public final class DesktopTraceInspector {
         FLOW_IPC_V1_52_STREAM_RESOURCE_CHUNKS(
                 "--require-flow-ipc-v1_52-stream-resource-chunks"),
         FLOW_IPC_V1_52("--require-flow-ipc-v1_52"),
+        FLOW_IPC_V1_53_UPLOAD_RECEIVER(
+                "--require-flow-ipc-v1_53-upload-receiver"),
+        FLOW_IPC_V1_53("--require-flow-ipc-v1_53"),
         FLOW_IPC_V1_3_FRAMEWORK("--require-flow-ipc-v1_3-framework");
 
         private final String option;
@@ -654,6 +657,11 @@ public final class DesktopTraceInspector {
                 case FLOW_IPC_V1_52 -> EnumSet.of(
                         FLOW_IPC_V1_52_STREAM_RESOURCE_CHUNKS,
                         FLOW_IPC_V1_52);
+                case FLOW_IPC_V1_53_UPLOAD_RECEIVER ->
+                    EnumSet.of(FLOW_IPC_V1_53_UPLOAD_RECEIVER);
+                case FLOW_IPC_V1_53 -> EnumSet.of(
+                        FLOW_IPC_V1_53_UPLOAD_RECEIVER,
+                        FLOW_IPC_V1_53);
                 case FLOW_IPC_V1_3_FRAMEWORK -> EnumSet.of(FLOW_IPC_V1_3_FRAMEWORK);
             };
         }
@@ -801,6 +809,9 @@ public final class DesktopTraceInspector {
                 case FLOW_IPC_V1_52_STREAM_RESOURCE_CHUNKS ->
                     summary.hasRequiredFlowIpcV1_52StreamResourceChunksTypes();
                 case FLOW_IPC_V1_52 -> summary.hasRequiredFlowIpcV1_52Types();
+                case FLOW_IPC_V1_53_UPLOAD_RECEIVER ->
+                    summary.hasRequiredFlowIpcV1_53UploadReceiverTypes();
+                case FLOW_IPC_V1_53 -> summary.hasRequiredFlowIpcV1_53Types();
                 case FLOW_IPC_V1_3_FRAMEWORK -> summary.hasRequiredFlowIpcV1_3FrameworkTypes();
             };
         }
@@ -1077,6 +1088,13 @@ public final class DesktopTraceInspector {
                     && line.contains("com.vaadin.flow.server.StreamResource")) {
                 summary.frameworkStreamResourceChunksBootstrapObserved = true;
             }
+            if (line.contains("dev.vatori.ipcframework.FlowOverIpcFrameworkView")
+                    && line.contains("framework-upload")
+                    && line.contains("framework-upload-status")
+                    && line.contains("com.vaadin.flow.component.upload.Upload")
+                    && line.contains("com.vaadin.flow.server.streams.UploadHandler")) {
+                summary.frameworkUploadReceiverBootstrapObserved = true;
+            }
             if (line.contains("\"type\":\"event\"")
                     && line.contains("\"dispatch\":\"flow-client-xhr\"")
                     && line.contains("\"attachExistingElementById\"")
@@ -1218,6 +1236,23 @@ public final class DesktopTraceInspector {
                     && containsStreamResourceChunksV152Response(line)) {
                 summary.streamResourceChunksV152ResponseObserved = true;
             }
+            if (line.contains("\"type\":\"uploadRequest\"")
+                    && containsStringField(line, "uploadReceiverVersion",
+                            "flow-ipc-upload-receiver-v1_53")
+                    && containsStringField(line, "purpose", "framework-upload-receiver-v1_53")
+                    && containsStringField(line, "uploadFileName",
+                            "flow-ipc-upload-v1_53.txt")
+                    && containsStringField(line, "uploadContentType",
+                            "text/plain; charset=UTF-8")
+                    && containsLiteralField(line, "dynamicUploadResource", "true")
+                    && containsPositiveIntegerField(line, "uploadBodyBytes")
+                    && line.contains("VAADIN/dynamic/resource/")) {
+                summary.uploadReceiverV153RequestObserved = true;
+            }
+            if (line.contains("\"type\":\"uploadResponse\"")
+                    && containsUploadReceiverV153Response(line)) {
+                summary.uploadReceiverV153ResponseObserved = true;
+            }
             if (line.contains("\"type\":\"patch\"")
                     && line.contains("\"source\":\"UidlRequestHandler\"")
                     && line.contains("\"reason\":\"event\"")
@@ -1297,6 +1332,14 @@ public final class DesktopTraceInspector {
                     && line.contains("Lazy grid fetches:")
                     && !line.contains("range: 15-20")) {
                 summary.frameworkGridScrollVirtualizationReportPatchObserved = true;
+            }
+            if (line.contains("\"type\":\"patch\"")
+                    && line.contains("\"source\":\"UidlRequestHandler\"")
+                    && line.contains("\"reason\":\"upload\"")
+                    && line.contains("\"eventDispatch\":\"flow-ipc-upload-resource\"")
+                    && line.contains("Upload received: flow-ipc-upload-v1_53.txt")
+                    && line.contains("marker=true")) {
+                summary.uploadReceiverV153PatchObserved = true;
             }
             if (line.contains("\"type\":\"command\"")
                     && line.contains("\"command\":\"window.setTitle\"")
@@ -1758,6 +1801,11 @@ public final class DesktopTraceInspector {
                     && line.contains("\"componentFrontendResources\"")
                     && containsStreamResourceChunksV152Fields(line)) {
                 summary.streamResourceChunksV152ManifestObserved = true;
+            }
+            if (line.contains("\"type\":\"bootstrapResponse\"")
+                    && line.contains("\"componentFrontendResources\"")
+                    && containsUploadReceiverV153Fields(line)) {
+                summary.uploadReceiverV153ManifestObserved = true;
             }
             if (line.contains("\"type\":\"bootstrapResponse\"")
                     && line.contains("\"componentFrontendResources\"")
@@ -4770,6 +4818,11 @@ public final class DesktopTraceInspector {
                 summary.frameworkStreamResourceChunksDomObserved = true;
             }
             if (line.contains("\"type\":\"webview.dom\"")
+                    && containsUploadReceiverV153Dom(line)) {
+                summary.uploadReceiverV153DomObserved = true;
+                summary.frameworkUploadReceiverDomObserved = true;
+            }
+            if (line.contains("\"type\":\"webview.dom\"")
                     && containsLiteralField(line, "generatedLazySourceCurrentBuildNoOpConfirmed", "true")
                     && containsStringField(line, "generatedLazySourceCurrentBuildTableShape",
                             "no-op-promise-resolve-0")
@@ -7268,6 +7321,126 @@ public final class DesktopTraceInspector {
                 && containsLiteralField(line, "frameworkStreamResourceChunksComplete", "true");
     }
 
+    private static boolean containsUploadReceiverV153Fields(String line) {
+        return containsStringField(line, "uploadReceiverVersion",
+                        "flow-ipc-upload-receiver-v1_53")
+                && containsStringField(line, "uploadReceiverSource",
+                        "stream-resource-chunks-v1_52")
+                && containsStringField(line, "uploadReceiverScope",
+                        "framework-validation-app-upload-element-request-handler-bounded-raw-body")
+                && containsStringField(line, "uploadReceiverAppShape",
+                        "framework-validation-app")
+                && containsStringField(line, "uploadReceiverJavaClasses",
+                        "com.vaadin.flow.component.upload.Upload,com.vaadin.flow.server.streams.UploadHandler,com.vaadin.flow.server.StreamResourceRegistry.ElementStreamResource")
+                && containsStringField(line, "uploadReceiverComponentIds",
+                        "framework-upload,framework-upload-status")
+                && containsStringField(line, "uploadReceiverDynamicPathPrefix",
+                        "VAADIN/dynamic/resource/")
+                && containsStringField(line, "uploadReceiverExpectedFile",
+                        "flow-ipc-upload-v1_53.txt")
+                && containsStringField(line, "uploadReceiverExpectedContentType",
+                        "text/plain; charset=UTF-8")
+                && containsStringField(line, "uploadReceiverExpectedBodyMarker",
+                        "Flow IPC Upload v1.53")
+                && containsStringField(line, "uploadReceiverTransport",
+                        "ipc-upload-request-raw-xhr-compatible")
+                && containsStringFieldPrefix(line, "uploadReceiverSelectedArtifacts",
+                        "current-app-frontend/generated/flow/generated-flow-imports.js")
+                && containsPositiveIntegerField(line, "uploadReceiverSelectedArtifactCount")
+                && containsStringField(line, "uploadReceiverGeneratedImportsOwnerSource",
+                        "current-app-generated-imports-select-owner-coverage-v1_41")
+                && containsStringField(line, "uploadReceiverGeneratedImportsOwnerArtifact",
+                        "current-app-frontend/generated/flow/generated-flow-imports.js")
+                && containsStringFieldPrefix(line, "uploadReceiverProductionSupportArtifact",
+                        "current-app-production/VAADIN/build/generated-flow-imports-")
+                && line.contains("uploadReceiverProductionSupportSha256")
+                && containsPositiveIntegerField(line, "uploadReceiverProductionSupportBytes")
+                && line.contains("uploadReceiverProductionEntryArtifact")
+                && containsStringField(line, "uploadReceiverBuildGoal", "build-frontend")
+                && containsStringField(line, "uploadReceiverBuildStatus", "success")
+                && line.contains("uploadReceiverOutputUsability")
+                && containsLiteralField(line, "uploadReceiverFrameworkAppRequired", "true")
+                && containsLiteralField(line, "uploadReceiverFrameworkAppObserved", "true")
+                && containsLiteralField(line, "uploadReceiverCliContractEnabled", "true")
+                && containsLiteralField(line, "uploadReceiverManifestReady", "true")
+                && containsLiteralField(line, "uploadReceiverRuntimeHandoffRequired", "true")
+                && containsLiteralField(line, "uploadReceiverRuntimeHandoffReady", "true")
+                && containsLiteralField(line, "uploadReceiverMultipartParity", "false")
+                && containsLiteralField(line, "uploadReceiverNoLocalhost", "true")
+                && containsLiteralField(line, "uploadReceiverFixtureSubstituted", "false")
+                && line.contains("uploadReceiverAcceptableFailures")
+                && line.contains("uploadReceiverRemainingBlockers")
+                && line.contains("uploadReceiverNextResolutionStep");
+    }
+
+    private static boolean containsUploadReceiverV153Response(String line) {
+        return containsStringField(line, "uploadReceiverVersion",
+                        "flow-ipc-upload-receiver-v1_53")
+                && containsStringField(line, "artifactFamily", "flow-upload-receiver")
+                && containsStringField(line, "requestPurpose",
+                        "framework-upload-receiver-v1_53")
+                && containsStringField(line, "lookupKind",
+                        "Flow-Upload-ElementRequestHandler-receiver-v1_53")
+                && containsStringField(line, "uploadReceiverRegistrySource",
+                        "VaadinSession.StreamResourceRegistry")
+                && line.contains("ElementStreamResource")
+                && line.contains("UploadHandler")
+                && containsStringField(line, "uploadReceiverTransport",
+                        "ipc-upload-request-raw-xhr-compatible")
+                && containsStringField(line, "uploadReceiverStatus", "resolved")
+                && containsStringField(line, "uploadReceiverFileName",
+                        "flow-ipc-upload-v1_53.txt")
+                && containsStringField(line, "uploadReceiverContentType",
+                        "text/plain; charset=UTF-8")
+                && containsPositiveIntegerField(line, "uploadReceiverBytes")
+                && line.contains("uploadReceiverSha256")
+                && containsPositiveIntegerField(line, "uploadReceiverResponseStatusCode")
+                && containsLiteralField(line, "uploadReceiverPatchContainsChanges", "true")
+                && containsLiteralField(line, "uploadReceiverPatchContainsStatus", "true")
+                && containsLiteralField(line, "uploadReceiverNoLocalhost", "true")
+                && containsLiteralField(line, "uploadReceiverFixtureSubstituted", "false")
+                && containsLiteralField(line, "uploadReceiverMultipartParity", "false")
+                && containsLiteralField(line, "uploadReceiverRequestBodyBase64Observed", "true")
+                && containsLiteralField(line, "uploadReceiverRequestBodyRedacted", "false")
+                && line.contains("VAADIN/dynamic/resource/");
+    }
+
+    private static boolean containsUploadReceiverV153Dom(String line) {
+        return containsStringField(line, "uploadReceiverVersion",
+                        "flow-ipc-upload-receiver-v1_53")
+                && line.contains("VAADIN/dynamic/resource/")
+                && containsStringField(line, "uploadReceiverFileName",
+                        "flow-ipc-upload-v1_53.txt")
+                && containsStringField(line, "uploadReceiverContentType",
+                        "text/plain; charset=UTF-8")
+                && containsPositiveIntegerField(line, "uploadReceiverBytes")
+                && line.contains("uploadReceiverSha256")
+                && line.contains("ElementStreamResource")
+                && line.contains("UploadHandler")
+                && containsPositiveIntegerField(line, "uploadReceiverResponseStatusCode")
+                && containsLiteralField(line, "uploadReceiverTargetHrefObserved", "true")
+                && containsLiteralField(line, "uploadReceiverRequestObserved", "true")
+                && containsLiteralField(line, "uploadReceiverResponseObserved", "true")
+                && containsLiteralField(line, "uploadReceiverPatchObserved", "true")
+                && containsLiteralField(line, "uploadReceiverBodyVerified", "true")
+                && containsLiteralField(line, "uploadReceiverNoLocalhost", "true")
+                && containsLiteralField(line, "uploadReceiverFixtureSubstituted", "false")
+                && containsLiteralField(line, "uploadReceiverMultipartParity", "false")
+                && line.contains("Upload received: flow-ipc-upload-v1_53.txt")
+                && line.contains("marker=true")
+                && containsStringField(line, "frameworkUploadReceiverVersion",
+                        "flow-ipc-upload-receiver-v1_53")
+                && containsLiteralField(line, "frameworkUploadReceiverRendered", "true")
+                && containsLiteralField(line, "frameworkUploadReceiverTargetHrefObserved",
+                        "true")
+                && containsLiteralField(line, "frameworkUploadReceiverRequestObserved", "true")
+                && containsLiteralField(line, "frameworkUploadReceiverResponseObserved",
+                        "true")
+                && containsLiteralField(line, "frameworkUploadReceiverPatchObserved", "true")
+                && containsLiteralField(line, "frameworkUploadReceiverBodyVerified", "true")
+                && containsLiteralField(line, "frameworkUploadReceiverComplete", "true");
+    }
+
     private static boolean containsProductionOwnerFailureLayer(String line, String field) {
         return containsStringField(line, field, "production-owner-duplicate-custom-element")
                 || containsStringField(line, field, "production-owner-relative-import-unresolved")
@@ -7600,6 +7773,8 @@ public final class DesktopTraceInspector {
         private boolean frameworkStreamResourceRangeDomObserved;
         private boolean frameworkStreamResourceChunksBootstrapObserved;
         private boolean frameworkStreamResourceChunksDomObserved;
+        private boolean frameworkUploadReceiverBootstrapObserved;
+        private boolean frameworkUploadReceiverDomObserved;
         private boolean firstMeaningfulPaintObserved;
         private boolean frontendAssetPipelineV14Observed;
         private boolean frontendArtifactFamilyModelObserved;
@@ -7896,6 +8071,11 @@ public final class DesktopTraceInspector {
         private boolean streamResourceChunksV152RequestObserved;
         private boolean streamResourceChunksV152ResponseObserved;
         private boolean streamResourceChunksV152DomObserved;
+        private boolean uploadReceiverV153ManifestObserved;
+        private boolean uploadReceiverV153RequestObserved;
+        private boolean uploadReceiverV153ResponseObserved;
+        private boolean uploadReceiverV153PatchObserved;
+        private boolean uploadReceiverV153DomObserved;
 
         public boolean hasRequiredFlowIpcTypes() {
             return types.keySet().containsAll(FLOW_IPC_REQUIRED_TYPES)
@@ -8718,6 +8898,21 @@ public final class DesktopTraceInspector {
             return hasRequiredFlowIpcV1_52StreamResourceChunksTypes();
         }
 
+        public boolean hasRequiredFlowIpcV1_53UploadReceiverTypes() {
+            return uploadReceiverV153ManifestObserved
+                    && uploadReceiverV153RequestObserved
+                    && uploadReceiverV153ResponseObserved
+                    && uploadReceiverV153PatchObserved
+                    && uploadReceiverV153DomObserved
+                    && frameworkUploadReceiverBootstrapObserved
+                    && frameworkUploadReceiverDomObserved
+                    && hasRequiredFlowIpcV1_52StreamResourceChunksTypes();
+        }
+
+        public boolean hasRequiredFlowIpcV1_53Types() {
+            return hasRequiredFlowIpcV1_53UploadReceiverTypes();
+        }
+
         private boolean hasCurrentAppBuildFrontendOutputSuccessorEvidence() {
             return currentAppBuildFrontendOutputV132ManifestObserved
                     && currentAppBuildFrontendOutputV132RequestObserved
@@ -9425,6 +9620,15 @@ public final class DesktopTraceInspector {
             System.out.println("framework StreamResource chunks bootstrap/DOM observed: "
                     + frameworkStreamResourceChunksBootstrapObserved + "/"
                     + frameworkStreamResourceChunksDomObserved);
+            System.out.println("Flow IPC v1.53 Upload receiver manifest/request/response/patch/DOM observed: "
+                    + uploadReceiverV153ManifestObserved + "/"
+                    + uploadReceiverV153RequestObserved + "/"
+                    + uploadReceiverV153ResponseObserved + "/"
+                    + uploadReceiverV153PatchObserved + "/"
+                    + uploadReceiverV153DomObserved);
+            System.out.println("framework Upload receiver bootstrap/DOM observed: "
+                    + frameworkUploadReceiverBootstrapObserved + "/"
+                    + frameworkUploadReceiverDomObserved);
             System.out.println("Flow IPC v1.6 TextField graph manifest observed: "
                     + frontendTextFieldV16ManifestObserved);
             System.out.println("Flow IPC v1.6 TextField graph request observed: "

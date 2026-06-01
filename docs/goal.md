@@ -58,8 +58,9 @@ v0/v1 runtime 切片走向可产品化桌面框架的最终完成状态。
 - `docs/goal-1_50.md`：Flow StreamResource Dynamic Download Resource Contract，已完成。
 - `docs/goal-1_51.md`：Flow StreamResource Binary Range Download Contract，已完成。
 - `docs/goal-1_52.md`：Flow StreamResource Sequential Chunk Download Contract，已完成。
+- `docs/goal-1_53.md`：Flow Upload ElementRequestHandler Receiver Contract，已完成。
 
-当前已完成到 `docs/goal-1_52.md`。v1.31 先把 v1.30 的 offline plugin blocker 推进到
+当前已完成到 `docs/goal-1_53.md`。v1.31 先把 v1.30 的 offline plugin blocker 推进到
 explicit online/local-repo preflight；v1.32 进一步把 blocker 推进到 full
 `build-frontend` 输出层，证明当前 smoke app 已产生真实 source generated imports/chunk、
 production webapp build output 和 `prod.bundle`。v1.33 则把 v1.32 的 generic
@@ -211,9 +212,18 @@ Trace 记录 `flow-ipc-stream-resource-chunks-v1_52`，真实窗口固定 trace 
 verified chunk count、aggregate bytes、full-body-omitted、no-localhost/no-fixture metadata 全部
 verified。它仍不是完整 Vaadin `Upload` / generalized `DownloadHandler`、parallel chunk、
 retry/resume、progress、cancel、OS save/open panel、sandbox grants、dev-mode/Vite、installer
-packaging 或 durable reconnect parity。
+packaging 或 durable reconnect parity。v1.53 将 resource pipeline 推到上传方向：framework app
+新增普通 Flow `Upload` 组件，host 观察真实 `vaadin-upload` target dynamic resource href，
+通过 Flow IPC 发送 bounded raw upload request；Java sidecar 从当前
+`VaadinSession.StreamResourceRegistry` 解析真实
+`StreamResourceRegistry.ElementStreamResource`，调用真实 `UploadHandler`，并用 UIDL patch 更新
+可见 DOM。Trace 记录 `flow-ipc-upload-receiver-v1_53`、target/request/response/patch/body/status
+verified、文件名、content type、byte count、sha256、handler/resource type、no-localhost 和
+no-fixture proof。它仍不是 multipart upload parity、多文件/大文件 streaming、progress、cancel、
+retry/resume、backpressure、OS open/save panel、sandbox grants、dev-mode/Vite、installer packaging
+或 durable reconnect parity。
 
-后续阶段应继续以 `docs/goal-1_53.md` 等文件拆分，
+后续阶段应继续以 `docs/goal-1_54.md` 等文件拆分，
 每个阶段只拿走本长期目标中的一个可评审切片。不要把本文件改写成短期任务清单；
 它是长期北极星和完成度账本。
 
@@ -235,14 +245,15 @@ packaging 或 durable reconnect parity。
 
 ## 当前基线
 
-截至 goal 1.52，仓库已经证明：
+截至 goal 1.53，仓库已经证明：
 
 - `dev-ipc` 可以启动 no-localhost Flow IPC runtime。
 - 真实 macOS Swift/AppKit/WKWebView 窗口可以运行 Flow IPC smoke app 和 framework
   validation app。
 - Button、BigDecimalField、Checkbox、Select、ComboBox、DatePicker、Dialog、Grid、
   lazy Grid DataProvider viewport RPC、VirtualList、FormLayout/Binder validation、
-  Flow `StreamResource` dynamic download、binary range download 和 sequential chunk download、
+  Flow `StreamResource` dynamic download、binary range download、sequential chunk download、
+  bounded Flow `Upload` receiver、
   list/repeated update、desktop capability baseline 都有
   trace gate 或 host-log gate 证据。
 - Java sidecar 通过 `UidlWriter`、`UidlRequestHandler`、`ServerRpcHandler`、
@@ -832,7 +843,7 @@ packaging 或 durable reconnect parity。
 
 - 基于 v1.22 generated lazy chunk-file positive fixture、v1.23 production owner positive
   runtime fixture、v1.24 closure decision contract、v1.25 packaged frontend baseline 和
-  v1.26-v1.52 当前 app generated/build-frontend output 和 framework component/resource behavior contracts，
+  v1.26-v1.53 当前 app generated/build-frontend output 和 framework component/resource behavior contracts，
   继续让当前 app/build 产生的
   真实 generated lazy chunk file 完成执行：在 current app generated imports root package graph 已由
   production support artifact 承载的基础上，接入受支持 Vaadin lazy chunk SPI，或把真实
@@ -880,11 +891,11 @@ packaging 或 durable reconnect parity。
 
 ## 当前建议的下一阶段
 
-v1.52 已完成 Flow StreamResource Sequential Chunk Download Contract。下一阶段建议继续沿着更真实的
+v1.53 已完成 Flow Upload ElementRequestHandler Receiver Contract。下一阶段建议继续沿着更真实的
 Upload/Download streaming、resource loading parity、component behavior parity 或 dev-mode/Vite 替代路径推进：
 
-- 创建 `docs/goal-1_53.md`：在 v1.52 的 sequential StreamResource chunk download 基础上选择一个
-  更深切片，例如 Upload component event/resource path、DownloadHandler/save-open grants、完整 Grid scroll
+- 创建 `docs/goal-1_54.md`：在 v1.53 的 bounded Upload receiver 基础上选择一个
+  更深切片，例如 Upload multipart/progress/cancel path、DownloadHandler/save-open grants、完整 Grid scroll
   container/virtualizer behavior、theme variants，或把 dev-mode/Vite graph execution 收敛为明确替代路径。
 - 不再把 supported Vaadin lazy chunk SPI 当作当前默认路径；除非上游/本地版本提供稳定 API，否则继续以
   packaging-time `build-frontend` artifacts 作为产品化输入。

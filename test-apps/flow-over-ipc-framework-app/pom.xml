@@ -53,6 +53,10 @@
             <groupId>com.vaadin</groupId>
             <artifactId>vaadin-form-layout-flow</artifactId>
         </dependency>
+        <dependency>
+            <groupId>com.vaadin</groupId>
+            <artifactId>vaadin-upload-flow</artifactId>
+        </dependency>
     </dependencies>
     <build>
         <plugins>

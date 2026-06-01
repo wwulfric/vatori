@@ -11,6 +11,7 @@ import com.vaadin.flow.server.PwaRegistry;
 import com.vaadin.flow.server.RouteRegistry;
 import com.vaadin.flow.server.SessionLockCheckStrategy;
 import com.vaadin.flow.server.StreamResource;
+import com.vaadin.flow.server.StreamResourceRegistry.ElementStreamResource;
 import com.vaadin.flow.server.VaadinContext;
 import com.vaadin.flow.server.VaadinRequest;
 import com.vaadin.flow.server.VaadinResponse;
@@ -225,6 +226,118 @@ public final class DesktopFlowRuntimeSession {
         }
     }
 
+    public FlowUploadResponse uploadResourceResponse(String path, String fileName, String contentType, byte[] bytes) {
+        Objects.requireNonNull(path, "path");
+        byte[] uploadBytes = bytes == null ? new byte[0] : bytes.clone();
+        String normalizedPath = path.startsWith("/") ? path.substring(1) : path;
+        session.lock();
+        try {
+            URI uri = dynamicResourceUri(normalizedPath);
+            AbstractStreamResource abstractResource = session.getResourceRegistry().getResource(uri).orElse(null);
+            if (abstractResource == null) {
+                return new FlowUploadResponse(uploadFailurePayload(normalizedPath, fileName, contentType, uploadBytes,
+                        "not-found", "upload-resource-registry-unavailable", ""), null);
+            }
+            if (!(abstractResource instanceof ElementStreamResource elementResource)) {
+                return new FlowUploadResponse(uploadFailurePayload(normalizedPath, fileName, contentType, uploadBytes,
+                        abstractResource.getClass().getName(), "upload-resource-not-element-request-handler", ""), null);
+            }
+
+            DesktopVaadinRequest request = DesktopVaadinRequest.upload(session, sessionId, uiId, normalizedPath,
+                    uploadBytes, fileName, contentType);
+            DesktopVaadinResponse response = new DesktopVaadinResponse(session.getService());
+            Map<Class<?>, CurrentInstance> oldInstances = CurrentInstance.getInstances();
+            CurrentInstance.setCurrent(ui);
+            CurrentInstance.set(VaadinRequest.class, request);
+            CurrentInstance.set(VaadinResponse.class, response);
+            try {
+                elementResource.getElementRequestHandler().handleRequest(request, response, session,
+                        elementResource.getOwner());
+                String uidlJson = uidlAdapter.createUidl(ui, false, false);
+                observeSyncId(uidlJson);
+                FlowPatchResponse patch = new FlowPatchResponse(
+                        sessionId,
+                        uiId,
+                        uidlJson,
+                        "application/json; charset=UTF-8",
+                        response.statusCode(),
+                        response.headers(),
+                        true,
+                        false);
+                Map<String, Object> payload = new LinkedHashMap<>();
+                payload.put("path", normalizedPath);
+                payload.put("artifactFamily", "flow-upload-receiver");
+                payload.put("dynamicUploadResource", true);
+                payload.put("uploadReceiverVersion", "flow-ipc-upload-receiver-v1_53");
+                payload.put("uploadReceiverRegistrySource", "VaadinSession.StreamResourceRegistry");
+                payload.put("uploadReceiverResourceType", ElementStreamResource.class.getName());
+                payload.put("uploadReceiverConcreteResourceType", abstractResource.getClass().getName());
+                payload.put("uploadReceiverHandlerType",
+                        elementResource.getElementRequestHandler().getClass().getName());
+                payload.put("uploadReceiverOwnerNodeId", elementResource.getOwner().getNode().getId());
+                payload.put("uploadReceiverTransport", "ipc-upload-request-raw-xhr-compatible");
+                payload.put("uploadReceiverNoLocalhost", true);
+                payload.put("uploadReceiverFixtureSubstituted", false);
+                payload.put("uploadReceiverMultipartParity", false);
+                payload.put("uploadReceiverStatus", response.statusCode() >= 200 && response.statusCode() < 300
+                        ? "resolved"
+                        : "response-status-" + response.statusCode());
+                payload.put("uploadReceiverFileName", fileName);
+                payload.put("uploadReceiverContentType", contentType);
+                payload.put("uploadReceiverBytes", uploadBytes.length);
+                payload.put("uploadReceiverSha256", MessageDigestUtil.sha256Hex(uploadBytes));
+                payload.put("uploadReceiverResponseStatusCode", response.statusCode());
+                payload.put("uploadReceiverResponseContentType", Objects.toString(response.contentType(), ""));
+                payload.put("uploadReceiverResponseHeaders", response.headers());
+                payload.put("uploadReceiverResponseBody", Objects.toString(response.bodyAsString(), ""));
+                payload.put("uploadReceiverPatchContainsChanges", uidlJson.contains("\"changes\""));
+                payload.put("uploadReceiverPatchContainsStatus",
+                        uidlJson.contains("Upload received: " + fileName));
+                payload.put("uploadReceiverFailureLayer", "");
+                payload.put("uploadReceiverNextResolutionStep",
+                        "extend raw UploadHandler path toward multipart/progress/cancel/backpressure parity");
+                return new FlowUploadResponse(payload, patch);
+            } catch (IOException error) {
+                throw new IllegalStateException("Unable to dispatch Flow IPC upload resource: "
+                        + error.getMessage(), error);
+            } finally {
+                CurrentInstance.clearAll();
+                CurrentInstance.restoreInstances(oldInstances);
+            }
+        } finally {
+            session.unlock();
+        }
+    }
+
+    private static Map<String, Object> uploadFailurePayload(String normalizedPath, String fileName, String contentType,
+                                                           byte[] uploadBytes, String resourceType,
+                                                           String failureLayer, String responseBody) {
+        Map<String, Object> payload = new LinkedHashMap<>();
+        payload.put("path", normalizedPath);
+        payload.put("artifactFamily", "flow-upload-receiver");
+        payload.put("dynamicUploadResource", true);
+        payload.put("uploadReceiverVersion", "flow-ipc-upload-receiver-v1_53");
+        payload.put("uploadReceiverRegistrySource", "VaadinSession.StreamResourceRegistry");
+        payload.put("uploadReceiverResourceType", resourceType);
+        payload.put("uploadReceiverTransport", "ipc-upload-request-raw-xhr-compatible");
+        payload.put("uploadReceiverHandlerType", "");
+        payload.put("uploadReceiverResponseStatusCode", 0);
+        payload.put("uploadReceiverResponseContentType", "");
+        payload.put("uploadReceiverNoLocalhost", true);
+        payload.put("uploadReceiverFixtureSubstituted", false);
+        payload.put("uploadReceiverMultipartParity", false);
+        payload.put("uploadReceiverStatus", "not-resolved");
+        payload.put("uploadReceiverFileName", fileName);
+        payload.put("uploadReceiverContentType", contentType);
+        payload.put("uploadReceiverBytes", uploadBytes.length);
+        payload.put("uploadReceiverSha256", MessageDigestUtil.sha256Hex(uploadBytes));
+        payload.put("uploadReceiverResponseBody", responseBody);
+        payload.put("uploadReceiverFailureLayer", failureLayer);
+        payload.put("uploadReceiverNextResolutionStep",
+                "resolve vaadin-upload target to ElementStreamResource and invoke UploadHandler");
+        return payload;
+    }
+
     public Optional<Map<String, Object>> streamResourceResponse(String path, int rangeStart, int rangeEndInclusive) {
         Objects.requireNonNull(path, "path");
         String normalizedPath = path.startsWith("/") ? path.substring(1) : path;
@@ -424,6 +537,9 @@ public final class DesktopFlowRuntimeSession {
         }
         Matcher matcher = Pattern.compile(String.format(JSON_INT_FIELD.pattern(), Pattern.quote(field))).matcher(json);
         return matcher.find() ? Integer.parseInt(matcher.group(1)) : null;
+    }
+
+    public record FlowUploadResponse(Map<String, Object> payload, FlowPatchResponse patch) {
     }
 
     private static final class DesktopFlowVaadinService extends VaadinService {

@@ -14,10 +14,12 @@ import com.vaadin.flow.component.orderedlayout.VerticalLayout;
 import com.vaadin.flow.component.select.Select;
 import com.vaadin.flow.component.textfield.BigDecimalField;
 import com.vaadin.flow.component.textfield.TextField;
+import com.vaadin.flow.component.upload.Upload;
 import com.vaadin.flow.component.virtuallist.VirtualList;
 import com.vaadin.flow.data.binder.Binder;
 import com.vaadin.flow.router.Route;
 import com.vaadin.flow.server.StreamResource;
+import com.vaadin.flow.server.streams.UploadHandler;
 import dev.vatori.desktop.Desktop;
 import tools.jackson.databind.JsonNode;
 
@@ -163,6 +165,22 @@ public class FlowOverIpcFrameworkView extends VerticalLayout {
         Span streamResourceChunksStatus = new Span("StreamResource chunks: pending");
         streamResourceChunksStatus.setId("framework-stream-resource-chunks-status");
 
+        Span uploadStatus = new Span("Upload receiver: pending");
+        uploadStatus.setId("framework-upload-status");
+        Upload upload = new Upload(UploadHandler.inMemory((metadata, bytes) -> {
+            String body = new String(bytes, StandardCharsets.UTF_8);
+            boolean marker = body.contains("Flow IPC Upload v1.53");
+            uploadStatus.setText("Upload received: " + metadata.fileName()
+                    + " bytes=" + bytes.length
+                    + " marker=" + marker
+                    + " contentType=" + metadata.contentType());
+        }));
+        upload.setId("framework-upload");
+        upload.setMaxFiles(1);
+        upload.setMaxFileSize(512);
+        upload.setAcceptedFileTypes("text/plain", ".txt");
+        upload.setAutoUpload(false);
+
         VirtualList<String> virtualList = new VirtualList<>();
         virtualList.setId("framework-virtual-list");
         virtualList.setItems(List.of("Queue alpha", "Queue beta", "Queue release"));
@@ -285,7 +303,7 @@ public class FlowOverIpcFrameworkView extends VerticalLayout {
         add(title, budget, expedited, priority, reviewer, dueDate, openDialog, detailsDialog,
                 grid, lazyGrid, lazyGridStatus, lazyGridReport, streamResourceDownload,
                 streamResourceStatus, streamResourceRangeDownload, streamResourceRangeStatus,
-                streamResourceChunksStatus, virtualList, formLayout,
+                streamResourceChunksStatus, upload, uploadStatus, virtualList, formLayout,
                 apply, status, componentStatus, matrixStatus,
                 updateList);
     }

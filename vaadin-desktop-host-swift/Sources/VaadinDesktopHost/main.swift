@@ -18,6 +18,7 @@ struct HostConfig {
     var flowIpcAutoLazyData: Bool = false
     var flowIpcAutoGridScroll: Bool = false
     var flowIpcAutoStreamResource: Bool = false
+    var flowIpcAutoStreamResourceRange: Bool = false
     var flowIpcAutoShutdown: Bool = false
     var hostNoActivate: Bool = false
     var title: String = "Vaadin Desktop"
@@ -71,6 +72,7 @@ struct HostConfig {
         config.flowIpcAutoLazyData = ProcessInfo.processInfo.environment["VAADIN_DESKTOP_FLOW_IPC_AUTO_LAZY_DATA"] == "1"
         config.flowIpcAutoGridScroll = ProcessInfo.processInfo.environment["VAADIN_DESKTOP_FLOW_IPC_AUTO_GRID_SCROLL"] == "1"
         config.flowIpcAutoStreamResource = ProcessInfo.processInfo.environment["VAADIN_DESKTOP_FLOW_IPC_AUTO_STREAM_RESOURCE"] == "1"
+        config.flowIpcAutoStreamResourceRange = ProcessInfo.processInfo.environment["VAADIN_DESKTOP_FLOW_IPC_AUTO_STREAM_RESOURCE_RANGE"] == "1"
         config.flowIpcAutoShutdown = ProcessInfo.processInfo.environment["VAADIN_DESKTOP_FLOW_IPC_AUTO_SHUTDOWN"] == "1"
         config.hostNoActivate = ProcessInfo.processInfo.environment["VAADIN_DESKTOP_HOST_NO_ACTIVATE"] == "1"
         return config
@@ -766,6 +768,10 @@ final class WebViewHost: NSObject, NSApplicationDelegate, NSWindowDelegate, WKNa
         }
         if config.flowIpcAutoStreamResource {
             let source = "window.__VAADIN_DESKTOP_FLOW_IPC_AUTO_STREAM_RESOURCE__ = true;"
+            userContentController.addUserScript(WKUserScript(source: source, injectionTime: .atDocumentStart, forMainFrameOnly: true))
+        }
+        if config.flowIpcAutoStreamResourceRange {
+            let source = "window.__VAADIN_DESKTOP_FLOW_IPC_AUTO_STREAM_RESOURCE_RANGE__ = true;"
             userContentController.addUserScript(WKUserScript(source: source, injectionTime: .atDocumentStart, forMainFrameOnly: true))
         }
         userContentController.add(self, name: "flowIpc")
@@ -2147,12 +2153,15 @@ final class WebViewHost: NSObject, NSApplicationDelegate, NSWindowDelegate, WKNa
             || !!d.frameworkGridScrollVirtualizationAcceptedBlockerObserved;
           const streamResourceComplete = !window.__VAADIN_DESKTOP_FLOW_IPC_AUTO_STREAM_RESOURCE__
             || !!d.frameworkStreamResourceComplete;
+          const streamResourceRangeComplete = !window.__VAADIN_DESKTOP_FLOW_IPC_AUTO_STREAM_RESOURCE_RANGE__
+            || !!d.frameworkStreamResourceRangeComplete;
           const frameworkComplete = !!d.frameworkAppInteractionComplete
             && componentMatrixComplete
             && dataComponentMatrixComplete
             && lazyDataProviderComplete
             && gridScrollVirtualizationComplete
-            && streamResourceComplete;
+            && streamResourceComplete
+            && streamResourceRangeComplete;
           const complete = window.__VAADIN_DESKTOP_FLOW_IPC_AUTO_FRAMEWORK_UPDATE__
             ? frameworkComplete
             : smokeComplete;
@@ -2165,6 +2174,7 @@ final class WebViewHost: NSObject, NSApplicationDelegate, NSWindowDelegate, WKNa
             lazyDataProviderComplete,
             gridScrollVirtualizationComplete,
             streamResourceComplete,
+            streamResourceRangeComplete,
             click: !!d.flowClientEngineEventPatchConsumed,
             text: !!d.flowClientEngineTextInputEventObserved,
             checkbox: !!d.flowClientEngineCheckboxEventObserved,
@@ -3548,6 +3558,26 @@ final class WebViewHost: NSObject, NSApplicationDelegate, NSWindowDelegate, WKNa
           streamResourceNoLocalhost: !!(window.VaadinDesktopIpcDiagnostics && window.VaadinDesktopIpcDiagnostics.streamResourceNoLocalhost),
           streamResourceFixtureSubstituted: !!(window.VaadinDesktopIpcDiagnostics && window.VaadinDesktopIpcDiagnostics.streamResourceFixtureSubstituted),
           streamResourceFailureLayer: window.VaadinDesktopIpcDiagnostics ? window.VaadinDesktopIpcDiagnostics.streamResourceFailureLayer : "",
+          streamResourceRangeVersion: window.VaadinDesktopIpcDiagnostics ? window.VaadinDesktopIpcDiagnostics.streamResourceRangeVersion : "",
+          streamResourceRangeAnchorHref: window.VaadinDesktopIpcDiagnostics ? window.VaadinDesktopIpcDiagnostics.streamResourceRangeAnchorHref : "",
+          streamResourceRangeAnchorHrefObserved: !!(window.VaadinDesktopIpcDiagnostics && window.VaadinDesktopIpcDiagnostics.streamResourceRangeAnchorHrefObserved),
+          streamResourceRangeRequestObserved: !!(window.VaadinDesktopIpcDiagnostics && window.VaadinDesktopIpcDiagnostics.streamResourceRangeRequestObserved),
+          streamResourceRangeResponseObserved: !!(window.VaadinDesktopIpcDiagnostics && window.VaadinDesktopIpcDiagnostics.streamResourceRangeResponseObserved),
+          streamResourceRangeBodyVerified: !!(window.VaadinDesktopIpcDiagnostics && window.VaadinDesktopIpcDiagnostics.streamResourceRangeBodyVerified),
+          streamResourceRangeBodySample: window.VaadinDesktopIpcDiagnostics ? window.VaadinDesktopIpcDiagnostics.streamResourceRangeBodySample : "",
+          streamResourceRangeFileName: window.VaadinDesktopIpcDiagnostics ? window.VaadinDesktopIpcDiagnostics.streamResourceRangeFileName : "",
+          streamResourceRangeContentType: window.VaadinDesktopIpcDiagnostics ? window.VaadinDesktopIpcDiagnostics.streamResourceRangeContentType : "",
+          streamResourceRangeStart: window.VaadinDesktopIpcDiagnostics ? window.VaadinDesktopIpcDiagnostics.streamResourceRangeStart : 0,
+          streamResourceRangeEndInclusive: window.VaadinDesktopIpcDiagnostics ? window.VaadinDesktopIpcDiagnostics.streamResourceRangeEndInclusive : 0,
+          streamResourceRangeBytes: window.VaadinDesktopIpcDiagnostics ? window.VaadinDesktopIpcDiagnostics.streamResourceRangeBytes : 0,
+          streamResourceRangeSha256: window.VaadinDesktopIpcDiagnostics ? window.VaadinDesktopIpcDiagnostics.streamResourceRangeSha256 : "",
+          streamResourceRangeFullBytes: window.VaadinDesktopIpcDiagnostics ? window.VaadinDesktopIpcDiagnostics.streamResourceRangeFullBytes : 0,
+          streamResourceRangeFullSha256: window.VaadinDesktopIpcDiagnostics ? window.VaadinDesktopIpcDiagnostics.streamResourceRangeFullSha256 : "",
+          streamResourceRangeFullBodyOmitted: !!(window.VaadinDesktopIpcDiagnostics && window.VaadinDesktopIpcDiagnostics.streamResourceRangeFullBodyOmitted),
+          streamResourceRangeResponseMode: window.VaadinDesktopIpcDiagnostics ? window.VaadinDesktopIpcDiagnostics.streamResourceRangeResponseMode : "",
+          streamResourceRangeNoLocalhost: !!(window.VaadinDesktopIpcDiagnostics && window.VaadinDesktopIpcDiagnostics.streamResourceRangeNoLocalhost),
+          streamResourceRangeFixtureSubstituted: !!(window.VaadinDesktopIpcDiagnostics && window.VaadinDesktopIpcDiagnostics.streamResourceRangeFixtureSubstituted),
+          streamResourceRangeFailureLayer: window.VaadinDesktopIpcDiagnostics ? window.VaadinDesktopIpcDiagnostics.streamResourceRangeFailureLayer : "",
           frameworkStreamResourceVersion: window.VaadinDesktopIpcDiagnostics ? window.VaadinDesktopIpcDiagnostics.frameworkStreamResourceVersion : "",
           frameworkStreamResourceRendered: !!(window.VaadinDesktopIpcDiagnostics && window.VaadinDesktopIpcDiagnostics.frameworkStreamResourceRendered),
           frameworkStreamResourceAnchorHrefObserved: !!(window.VaadinDesktopIpcDiagnostics && window.VaadinDesktopIpcDiagnostics.frameworkStreamResourceAnchorHrefObserved),
@@ -3555,6 +3585,13 @@ final class WebViewHost: NSObject, NSApplicationDelegate, NSWindowDelegate, WKNa
           frameworkStreamResourceResponseObserved: !!(window.VaadinDesktopIpcDiagnostics && window.VaadinDesktopIpcDiagnostics.frameworkStreamResourceResponseObserved),
           frameworkStreamResourceBodyVerified: !!(window.VaadinDesktopIpcDiagnostics && window.VaadinDesktopIpcDiagnostics.frameworkStreamResourceBodyVerified),
           frameworkStreamResourceComplete: !!(window.VaadinDesktopIpcDiagnostics && window.VaadinDesktopIpcDiagnostics.frameworkStreamResourceComplete),
+          frameworkStreamResourceRangeVersion: window.VaadinDesktopIpcDiagnostics ? window.VaadinDesktopIpcDiagnostics.frameworkStreamResourceRangeVersion : "",
+          frameworkStreamResourceRangeRendered: !!(window.VaadinDesktopIpcDiagnostics && window.VaadinDesktopIpcDiagnostics.frameworkStreamResourceRangeRendered),
+          frameworkStreamResourceRangeAnchorHrefObserved: !!(window.VaadinDesktopIpcDiagnostics && window.VaadinDesktopIpcDiagnostics.frameworkStreamResourceRangeAnchorHrefObserved),
+          frameworkStreamResourceRangeRequestObserved: !!(window.VaadinDesktopIpcDiagnostics && window.VaadinDesktopIpcDiagnostics.frameworkStreamResourceRangeRequestObserved),
+          frameworkStreamResourceRangeResponseObserved: !!(window.VaadinDesktopIpcDiagnostics && window.VaadinDesktopIpcDiagnostics.frameworkStreamResourceRangeResponseObserved),
+          frameworkStreamResourceRangeBodyVerified: !!(window.VaadinDesktopIpcDiagnostics && window.VaadinDesktopIpcDiagnostics.frameworkStreamResourceRangeBodyVerified),
+          frameworkStreamResourceRangeComplete: !!(window.VaadinDesktopIpcDiagnostics && window.VaadinDesktopIpcDiagnostics.frameworkStreamResourceRangeComplete),
           frameworkAppFailureReason: window.VaadinDesktopIpcDiagnostics ? window.VaadinDesktopIpcDiagnostics.frameworkAppFailureReason : ""
         })
         """
@@ -3933,6 +3970,7 @@ let flowIpcShell = #"""
       let autoFrameworkUpdateDone = false;
       let autoFrameworkUpdateInterval = null;
       let frameworkStreamResourceRequestSent = false;
+      let frameworkStreamResourceRangeRequestSent = false;
       let autoResyncDone = false;
       let autoErrorProbeDone = false;
       const flowBootstrapAppId = 'ROOT-2521314';
@@ -4884,6 +4922,26 @@ let flowIpcShell = #"""
         streamResourceFailureLayer: '',
         streamResourceRemainingBlockers: '',
         streamResourceNextResolutionStep: '',
+        streamResourceRangeVersion: '',
+        streamResourceRangeAnchorHref: '',
+        streamResourceRangeAnchorHrefObserved: false,
+        streamResourceRangeRequestObserved: false,
+        streamResourceRangeResponseObserved: false,
+        streamResourceRangeBodyVerified: false,
+        streamResourceRangeBodySample: '',
+        streamResourceRangeFileName: '',
+        streamResourceRangeContentType: '',
+        streamResourceRangeStart: 0,
+        streamResourceRangeEndInclusive: 0,
+        streamResourceRangeBytes: 0,
+        streamResourceRangeSha256: '',
+        streamResourceRangeFullBytes: 0,
+        streamResourceRangeFullSha256: '',
+        streamResourceRangeFullBodyOmitted: false,
+        streamResourceRangeResponseMode: '',
+        streamResourceRangeNoLocalhost: false,
+        streamResourceRangeFixtureSubstituted: false,
+        streamResourceRangeFailureLayer: '',
         frameworkStreamResourceVersion: '',
         frameworkStreamResourceRendered: false,
         frameworkStreamResourceAnchorHrefObserved: false,
@@ -4891,6 +4949,13 @@ let flowIpcShell = #"""
         frameworkStreamResourceResponseObserved: false,
         frameworkStreamResourceBodyVerified: false,
         frameworkStreamResourceComplete: false,
+        frameworkStreamResourceRangeVersion: '',
+        frameworkStreamResourceRangeRendered: false,
+        frameworkStreamResourceRangeAnchorHrefObserved: false,
+        frameworkStreamResourceRangeRequestObserved: false,
+        frameworkStreamResourceRangeResponseObserved: false,
+        frameworkStreamResourceRangeBodyVerified: false,
+        frameworkStreamResourceRangeComplete: false,
         frontendBuildPreflightAvailabilityObserved: false,
         frontendBuildPreflightAvailabilityVersion: '',
         frontendBuildPreflightAvailabilitySource: '',
@@ -5557,6 +5622,26 @@ let flowIpcShell = #"""
         streamResourceFailureLayer: '',
         streamResourceRemainingBlockers: '',
         streamResourceNextResolutionStep: '',
+        streamResourceRangeVersion: '',
+        streamResourceRangeAnchorHref: '',
+        streamResourceRangeAnchorHrefObserved: false,
+        streamResourceRangeRequestObserved: false,
+        streamResourceRangeResponseObserved: false,
+        streamResourceRangeBodyVerified: false,
+        streamResourceRangeBodySample: '',
+        streamResourceRangeFileName: '',
+        streamResourceRangeContentType: '',
+        streamResourceRangeStart: 0,
+        streamResourceRangeEndInclusive: 0,
+        streamResourceRangeBytes: 0,
+        streamResourceRangeSha256: '',
+        streamResourceRangeFullBytes: 0,
+        streamResourceRangeFullSha256: '',
+        streamResourceRangeFullBodyOmitted: false,
+        streamResourceRangeResponseMode: '',
+        streamResourceRangeNoLocalhost: false,
+        streamResourceRangeFixtureSubstituted: false,
+        streamResourceRangeFailureLayer: '',
         frameworkStreamResourceVersion: '',
         frameworkStreamResourceRendered: false,
         frameworkStreamResourceAnchorHrefObserved: false,
@@ -5564,6 +5649,13 @@ let flowIpcShell = #"""
         frameworkStreamResourceResponseObserved: false,
         frameworkStreamResourceBodyVerified: false,
         frameworkStreamResourceComplete: false,
+        frameworkStreamResourceRangeVersion: '',
+        frameworkStreamResourceRangeRendered: false,
+        frameworkStreamResourceRangeAnchorHrefObserved: false,
+        frameworkStreamResourceRangeRequestObserved: false,
+        frameworkStreamResourceRangeResponseObserved: false,
+        frameworkStreamResourceRangeBodyVerified: false,
+        frameworkStreamResourceRangeComplete: false,
         frameworkAppFailureReason: ''
       };
 
@@ -6050,6 +6142,48 @@ let flowIpcShell = #"""
         });
       }
 
+      function requestFrameworkStreamResourceRangeIfReady() {
+        if (frameworkStreamResourceRangeRequestSent
+            || window.VaadinDesktopIpcDiagnostics.frameworkStreamResourceRangeComplete) {
+          return;
+        }
+        const anchorRef = flowClientEngineElementById('framework-stream-resource-range-download');
+        const anchor = anchorRef && anchorRef.element
+          ? anchorRef.element
+          : document.getElementById('framework-stream-resource-range-download');
+        const path = anchor ? normalizeFrameworkStreamResourceHref(anchor.getAttribute('href') || '') : '';
+        if (!path || !path.includes('VAADIN/dynamic/resource/')) {
+          window.VaadinDesktopIpcDiagnostics.streamResourceRangeFailureLayer =
+            'dynamic-resource-href-missing';
+          return;
+        }
+        const securityKey = flowClientState.securityKey || flowClientState.csrfToken;
+        if (!securityKey) {
+          return;
+        }
+        frameworkStreamResourceRangeRequestSent = true;
+        window.VaadinDesktopIpcDiagnostics.streamResourceRangeVersion =
+          'flow-ipc-stream-resource-range-v1_51';
+        window.VaadinDesktopIpcDiagnostics.streamResourceRangeAnchorHref = path;
+        window.VaadinDesktopIpcDiagnostics.streamResourceRangeAnchorHrefObserved = true;
+        window.VaadinDesktopIpcDiagnostics.frameworkStreamResourceRangeAnchorHrefObserved = true;
+        window.VaadinDesktopIpcDiagnostics.streamResourceRangeRequestObserved = true;
+        window.VaadinDesktopIpcDiagnostics.frameworkStreamResourceRangeRequestObserved = true;
+        send('resourceRequest', {
+          purpose: 'framework-stream-resource-range-v1_51',
+          lookupKind: 'Flow-StreamResource-binary-range-download-v1_51',
+          path,
+          expectedFileName: 'flow-ipc-framework-v1_51.bin',
+          expectedBodyMarker: 'Flow IPC Binary StreamResource v1.51',
+          streamResourceVersion: 'flow-ipc-stream-resource-range-v1_51',
+          dynamicStreamResource: true,
+          streamResourceRangeStart: 0,
+          streamResourceRangeEndInclusive: 255,
+          streamResourceRangeHeader: 'bytes=0-255',
+          securityKey
+        });
+      }
+
       function refreshFrameworkAppDiagnostics() {
         const root = flowClientEngineElementById('framework-root');
         const budget = flowClientEngineElementById('framework-budget');
@@ -6072,6 +6206,10 @@ let flowIpcShell = #"""
           || { element: document.getElementById('framework-stream-resource-download') };
         const streamResourceStatus = flowClientEngineElementById('framework-stream-resource-status')
           || { element: document.getElementById('framework-stream-resource-status') };
+        const streamResourceRangeDownload = flowClientEngineElementById('framework-stream-resource-range-download')
+          || { element: document.getElementById('framework-stream-resource-range-download') };
+        const streamResourceRangeStatus = flowClientEngineElementById('framework-stream-resource-range-status')
+          || { element: document.getElementById('framework-stream-resource-range-status') };
         const apply = flowClientEngineElementById('framework-apply');
         const status = flowClientEngineElementById('framework-status');
         const componentStatus = flowClientEngineElementById('framework-component-status');
@@ -6084,6 +6222,9 @@ let flowIpcShell = #"""
         const lazyGridStatusText = lazyGridStatus ? (lazyGridStatus.element.textContent || '') : '';
         const streamResourceHref = streamResourceDownload && streamResourceDownload.element
           ? normalizeFrameworkStreamResourceHref(streamResourceDownload.element.getAttribute('href') || '')
+          : '';
+        const streamResourceRangeHref = streamResourceRangeDownload && streamResourceRangeDownload.element
+          ? normalizeFrameworkStreamResourceHref(streamResourceRangeDownload.element.getAttribute('href') || '')
           : '';
         const updatesText = updates ? (updates.element.textContent || '') : '';
         window.VaadinDesktopIpcDiagnostics.frameworkAppAutoUpdateStep = autoFrameworkUpdateStep;
@@ -6177,6 +6318,19 @@ let flowIpcShell = #"""
           window.VaadinDesktopIpcDiagnostics.streamResourceAnchorHrefObserved;
         if (window.__VAADIN_DESKTOP_FLOW_IPC_AUTO_STREAM_RESOURCE__) {
           requestFrameworkStreamResourceIfReady();
+        }
+        window.VaadinDesktopIpcDiagnostics.frameworkStreamResourceRangeVersion =
+          'flow-ipc-stream-resource-range-v1_51';
+        window.VaadinDesktopIpcDiagnostics.frameworkStreamResourceRangeRendered =
+          !!streamResourceRangeDownload && !!streamResourceRangeDownload.element
+          && !!streamResourceRangeStatus && !!streamResourceRangeStatus.element;
+        window.VaadinDesktopIpcDiagnostics.streamResourceRangeAnchorHref = streamResourceRangeHref;
+        window.VaadinDesktopIpcDiagnostics.streamResourceRangeAnchorHrefObserved =
+          !!streamResourceRangeHref && streamResourceRangeHref.includes('VAADIN/dynamic/resource/');
+        window.VaadinDesktopIpcDiagnostics.frameworkStreamResourceRangeAnchorHrefObserved =
+          window.VaadinDesktopIpcDiagnostics.streamResourceRangeAnchorHrefObserved;
+        if (window.__VAADIN_DESKTOP_FLOW_IPC_AUTO_STREAM_RESOURCE_RANGE__) {
+          requestFrameworkStreamResourceRangeIfReady();
         }
         const lazyGridObservedRange = lazyGridRangeFromText(lazyGridStatusText);
         if (window.VaadinDesktopIpcDiagnostics.frameworkGridScrollVirtualizationClientApiInvoked
@@ -6288,6 +6442,12 @@ let flowIpcShell = #"""
           && window.VaadinDesktopIpcDiagnostics.frameworkStreamResourceRequestObserved
           && window.VaadinDesktopIpcDiagnostics.frameworkStreamResourceResponseObserved
           && window.VaadinDesktopIpcDiagnostics.frameworkStreamResourceBodyVerified;
+        window.VaadinDesktopIpcDiagnostics.frameworkStreamResourceRangeComplete =
+          window.VaadinDesktopIpcDiagnostics.frameworkStreamResourceRangeRendered
+          && window.VaadinDesktopIpcDiagnostics.frameworkStreamResourceRangeAnchorHrefObserved
+          && window.VaadinDesktopIpcDiagnostics.frameworkStreamResourceRangeRequestObserved
+          && window.VaadinDesktopIpcDiagnostics.frameworkStreamResourceRangeResponseObserved
+          && window.VaadinDesktopIpcDiagnostics.frameworkStreamResourceRangeBodyVerified;
         window.VaadinDesktopIpcDiagnostics.gridScrollVirtualizationClientApiAvailable =
           window.VaadinDesktopIpcDiagnostics.frameworkGridScrollVirtualizationClientApiAvailable;
         window.VaadinDesktopIpcDiagnostics.gridScrollVirtualizationClientApiInvoked =
@@ -6306,7 +6466,9 @@ let flowIpcShell = #"""
               || window.VaadinDesktopIpcDiagnostics.frameworkGridScrollVirtualizationComplete
               || window.VaadinDesktopIpcDiagnostics.frameworkGridScrollVirtualizationAcceptedBlockerObserved)
             && (!window.__VAADIN_DESKTOP_FLOW_IPC_AUTO_STREAM_RESOURCE__
-              || window.VaadinDesktopIpcDiagnostics.frameworkStreamResourceComplete)) {
+              || window.VaadinDesktopIpcDiagnostics.frameworkStreamResourceComplete)
+            && (!window.__VAADIN_DESKTOP_FLOW_IPC_AUTO_STREAM_RESOURCE_RANGE__
+              || window.VaadinDesktopIpcDiagnostics.frameworkStreamResourceRangeComplete)) {
           autoFrameworkUpdateDone = true;
           autoFrameworkUpdateInFlight = false;
         }
@@ -6469,7 +6631,9 @@ let flowIpcShell = #"""
                 || window.VaadinDesktopIpcDiagnostics.frameworkGridScrollVirtualizationComplete
                 || window.VaadinDesktopIpcDiagnostics.frameworkGridScrollVirtualizationAcceptedBlockerObserved)
               && (!window.__VAADIN_DESKTOP_FLOW_IPC_AUTO_STREAM_RESOURCE__
-                || window.VaadinDesktopIpcDiagnostics.frameworkStreamResourceComplete)) {
+                || window.VaadinDesktopIpcDiagnostics.frameworkStreamResourceComplete)
+              && (!window.__VAADIN_DESKTOP_FLOW_IPC_AUTO_STREAM_RESOURCE_RANGE__
+                || window.VaadinDesktopIpcDiagnostics.frameworkStreamResourceRangeComplete)) {
             autoFrameworkUpdateDone = true;
           }
         }
@@ -14946,7 +15110,79 @@ let flowIpcShell = #"""
         trace.textContent = bodyVerified ? 'stream resource verified' : 'stream resource unverified';
       }
 
+      function handleStreamResourceRangeResponse(payload) {
+        let body = '';
+        try {
+          body = typeof payload.streamResourceRangeBodyBase64 === 'string'
+            ? atob(payload.streamResourceRangeBodyBase64)
+            : (typeof payload.streamResourceBodyBase64 === 'string'
+              ? atob(payload.streamResourceBodyBase64)
+              : '');
+        } catch (_) {
+          body = '';
+        }
+        const marker = payload.expectedBodyMarker || 'Flow IPC Binary StreamResource v1.51';
+        const fileName = payload.streamResourceFileName || '';
+        const contentType = payload.streamResourceContentType || '';
+        const rangeBytes = Number(payload.streamResourceRangeBytes || 0);
+        const fullBytes = Number(payload.streamResourceFullBytes || 0);
+        const start = Number(payload.streamResourceRangeStart || 0);
+        const endInclusive = Number(payload.streamResourceRangeEndInclusive || 0);
+        const resolved = payload.streamResourceStatus === 'partial-content'
+          && payload.streamResourceRangeSatisfied === true;
+        const bodyVerified = resolved
+          && body.includes(marker)
+          && fileName === 'flow-ipc-framework-v1_51.bin'
+          && contentType.includes('application/octet-stream')
+          && start === 0
+          && endInclusive === 255
+          && rangeBytes === 256
+          && body.length === 256
+          && fullBytes > rangeBytes
+          && payload.streamResourceFullBodyOmitted === true
+          && payload.streamResourceResponseMode === 'range-slice';
+        window.VaadinDesktopIpcDiagnostics.streamResourceRangeVersion =
+          payload.streamResourceVersion || 'flow-ipc-stream-resource-range-v1_51';
+        window.VaadinDesktopIpcDiagnostics.streamResourceRangeResponseObserved = true;
+        window.VaadinDesktopIpcDiagnostics.streamResourceRangeBodyVerified = bodyVerified;
+        window.VaadinDesktopIpcDiagnostics.streamResourceRangeBodySample = body.slice(0, 96);
+        window.VaadinDesktopIpcDiagnostics.streamResourceRangeFileName = fileName;
+        window.VaadinDesktopIpcDiagnostics.streamResourceRangeContentType = contentType;
+        window.VaadinDesktopIpcDiagnostics.streamResourceRangeStart = start;
+        window.VaadinDesktopIpcDiagnostics.streamResourceRangeEndInclusive = endInclusive;
+        window.VaadinDesktopIpcDiagnostics.streamResourceRangeBytes = rangeBytes;
+        window.VaadinDesktopIpcDiagnostics.streamResourceRangeSha256 =
+          payload.streamResourceRangeSha256 || '';
+        window.VaadinDesktopIpcDiagnostics.streamResourceRangeFullBytes = fullBytes;
+        window.VaadinDesktopIpcDiagnostics.streamResourceRangeFullSha256 =
+          payload.streamResourceFullSha256 || '';
+        window.VaadinDesktopIpcDiagnostics.streamResourceRangeFullBodyOmitted =
+          payload.streamResourceFullBodyOmitted === true;
+        window.VaadinDesktopIpcDiagnostics.streamResourceRangeResponseMode =
+          payload.streamResourceResponseMode || '';
+        window.VaadinDesktopIpcDiagnostics.streamResourceRangeNoLocalhost =
+          payload.streamResourceNoLocalhost === true;
+        window.VaadinDesktopIpcDiagnostics.streamResourceRangeFixtureSubstituted =
+          payload.streamResourceFixtureSubstituted === true;
+        window.VaadinDesktopIpcDiagnostics.streamResourceRangeFailureLayer =
+          bodyVerified ? '' : (payload.streamResourceFailureLayer || 'stream-resource-range-response-unverified');
+        window.VaadinDesktopIpcDiagnostics.frameworkStreamResourceRangeResponseObserved = true;
+        window.VaadinDesktopIpcDiagnostics.frameworkStreamResourceRangeBodyVerified = bodyVerified;
+        window.VaadinDesktopIpcDiagnostics.frameworkStreamResourceRangeComplete =
+          window.VaadinDesktopIpcDiagnostics.frameworkStreamResourceRangeRendered
+          && window.VaadinDesktopIpcDiagnostics.frameworkStreamResourceRangeAnchorHrefObserved
+          && window.VaadinDesktopIpcDiagnostics.frameworkStreamResourceRangeRequestObserved
+          && window.VaadinDesktopIpcDiagnostics.frameworkStreamResourceRangeResponseObserved
+          && window.VaadinDesktopIpcDiagnostics.frameworkStreamResourceRangeBodyVerified;
+        trace.textContent = bodyVerified ? 'stream resource range verified' : 'stream resource range unverified';
+      }
+
       async function handleResourceResponse(payload) {
+        if (payload && payload.dynamicStreamResource === true
+            && payload.streamResourceVersion === 'flow-ipc-stream-resource-range-v1_51') {
+          handleStreamResourceRangeResponse(payload);
+          return;
+        }
         if (payload && payload.dynamicStreamResource === true
             && payload.streamResourceVersion === 'flow-ipc-stream-resource-v1_50') {
           handleStreamResourceResponse(payload);

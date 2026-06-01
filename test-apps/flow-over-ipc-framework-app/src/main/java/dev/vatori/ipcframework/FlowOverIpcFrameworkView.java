@@ -147,6 +147,19 @@ public class FlowOverIpcFrameworkView extends VerticalLayout {
         Span streamResourceStatus = new Span("StreamResource: pending");
         streamResourceStatus.setId("framework-stream-resource-status");
 
+        byte[] binaryStreamResourceBytes = binaryStreamResourceBytes();
+        StreamResource binaryStreamResource = new StreamResource("flow-ipc-framework-v1_51.bin",
+                (stream, session) -> stream.write(binaryStreamResourceBytes));
+        binaryStreamResource.setContentType("application/octet-stream");
+        binaryStreamResource.setHeader("X-Vatori-Flow-IPC", "stream-resource-range-v1_51");
+
+        Anchor streamResourceRangeDownload = new Anchor(binaryStreamResource, "Download Binary StreamResource");
+        streamResourceRangeDownload.setId("framework-stream-resource-range-download");
+        streamResourceRangeDownload.getElement().setAttribute("download", true);
+
+        Span streamResourceRangeStatus = new Span("StreamResource range: pending");
+        streamResourceRangeStatus.setId("framework-stream-resource-range-status");
+
         VirtualList<String> virtualList = new VirtualList<>();
         virtualList.setId("framework-virtual-list");
         virtualList.setItems(List.of("Queue alpha", "Queue beta", "Queue release"));
@@ -268,13 +281,26 @@ public class FlowOverIpcFrameworkView extends VerticalLayout {
 
         add(title, budget, expedited, priority, reviewer, dueDate, openDialog, detailsDialog,
                 grid, lazyGrid, lazyGridStatus, lazyGridReport, streamResourceDownload,
-                streamResourceStatus, virtualList, formLayout,
+                streamResourceStatus, streamResourceRangeDownload, streamResourceRangeStatus,
+                virtualList, formLayout,
                 apply, status, componentStatus, matrixStatus,
                 updateList);
     }
 
     private void appendUpdate(String text) {
         updateList.add(new Span(text));
+    }
+
+    private static byte[] binaryStreamResourceBytes() {
+        byte[] bytes = new byte[8192];
+        for (int index = 0; index < bytes.length; index++) {
+            bytes[index] = (byte) ((index * 31 + 17) & 0xff);
+        }
+        byte[] marker = "Flow IPC Binary StreamResource v1.51\n".getBytes(StandardCharsets.UTF_8);
+        System.arraycopy(marker, 0, bytes, 0, marker.length);
+        byte[] tail = "\nrange-tail=v1_51".getBytes(StandardCharsets.UTF_8);
+        System.arraycopy(tail, 0, bytes, bytes.length - tail.length, tail.length);
+        return bytes;
     }
 
     private record WorkItem(String id, String owner, String state) {

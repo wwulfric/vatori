@@ -132,12 +132,18 @@ final class FlowIpcRuntime {
         }
         Map<String, Object> response;
         if (isDynamicStreamResourcePath(path)) {
-            response = new LinkedHashMap<>(flowSession.streamResourceResponse(path)
+            int rangeStart = JsonFields.integer(json, "streamResourceRangeStart", -1);
+            int rangeEndInclusive = JsonFields.integer(json, "streamResourceRangeEndInclusive", -1);
+            response = new LinkedHashMap<>(flowSession.streamResourceResponse(path, rangeStart, rangeEndInclusive)
                     .orElseGet(() -> Map.of(
                             "path", normalizeDynamicResourcePath(path),
-                            "artifactFamily", "flow-stream-resource",
+                            "artifactFamily", rangeStart >= 0
+                                    ? "flow-stream-resource-range"
+                                    : "flow-stream-resource",
                             "dynamicStreamResource", true,
-                            "streamResourceVersion", "flow-ipc-stream-resource-v1_50",
+                            "streamResourceVersion", rangeStart >= 0
+                                    ? "flow-ipc-stream-resource-range-v1_51"
+                                    : "flow-ipc-stream-resource-v1_50",
                             "streamResourceStatus", "not-found",
                             "streamResourceFailureLayer", "stream-resource-registry-unavailable",
                             "streamResourceNoLocalhost", true,

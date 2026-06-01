@@ -30,6 +30,7 @@ import java.net.URI;
 import java.net.URISyntaxException;
 import java.net.URL;
 import java.nio.charset.StandardCharsets;
+import java.util.Arrays;
 import java.util.Base64;
 import java.util.Collection;
 import java.util.Collections;
@@ -224,7 +225,7 @@ public final class DesktopFlowRuntimeSession {
         }
     }
 
-    public Optional<Map<String, Object>> streamResourceResponse(String path) {
+    public Optional<Map<String, Object>> streamResourceResponse(String path, int rangeStart, int rangeEndInclusive) {
         Objects.requireNonNull(path, "path");
         String normalizedPath = path.startsWith("/") ? path.substring(1) : path;
         AbstractStreamResource abstractResource;
@@ -251,16 +252,28 @@ public final class DesktopFlowRuntimeSession {
             throw new IllegalStateException("Unable to read Flow IPC StreamResource: " + error.getMessage(), error);
         }
 
+        boolean rangeRequested = rangeStart >= 0 && rangeEndInclusive >= rangeStart;
+        int effectiveRangeStart = rangeRequested ? Math.min(rangeStart, bytes.length) : 0;
+        boolean rangeSatisfied = !rangeRequested || effectiveRangeStart < bytes.length;
+        int effectiveRangeEndInclusive = rangeRequested && rangeSatisfied
+                ? Math.min(rangeEndInclusive, bytes.length - 1)
+                : Math.max(bytes.length - 1, 0);
+        byte[] responseBytes = rangeRequested && rangeSatisfied
+                ? Arrays.copyOfRange(bytes, effectiveRangeStart, effectiveRangeEndInclusive + 1)
+                : (rangeRequested ? new byte[0] : bytes);
+
         Map<String, Object> payload = new LinkedHashMap<>();
         payload.put("path", normalizedPath);
-        payload.put("artifactFamily", "flow-stream-resource");
+        payload.put("artifactFamily", rangeRequested ? "flow-stream-resource-range" : "flow-stream-resource");
         payload.put("dynamicStreamResource", true);
-        payload.put("streamResourceVersion", "flow-ipc-stream-resource-v1_50");
+        payload.put("streamResourceVersion", rangeRequested
+                ? "flow-ipc-stream-resource-range-v1_51"
+                : "flow-ipc-stream-resource-v1_50");
         payload.put("streamResourceRegistrySource", "VaadinSession.StreamResourceRegistry");
         payload.put("streamResourceTransport", "ipc-resource-request");
         payload.put("streamResourceNoLocalhost", true);
         payload.put("streamResourceFixtureSubstituted", false);
-        payload.put("streamResourceStatus", "resolved");
+        payload.put("streamResourceStatus", rangeRequested ? "partial-content" : "resolved");
         payload.put("streamResourcePath", normalizedPath);
         payload.put("streamResourceFileName", resource.getName());
         payload.put("streamResourceContentType", contentType(resource));
@@ -268,9 +281,27 @@ public final class DesktopFlowRuntimeSession {
         payload.put("streamResourceHeaders", resource.getHeaders());
         payload.put("streamResourceBytes", bytes.length);
         payload.put("streamResourceSha256", MessageDigestUtil.sha256Hex(bytes));
-        payload.put("streamResourceBodyBase64", Base64.getEncoder().encodeToString(bytes));
-        if (bytes.length <= 4096) {
+        payload.put("streamResourceBodyBase64", Base64.getEncoder().encodeToString(responseBytes));
+        if (!rangeRequested && bytes.length <= 4096) {
             payload.put("streamResourceText", new String(bytes, StandardCharsets.UTF_8));
+        }
+        if (rangeRequested) {
+            payload.put("streamResourceRangeRequested", true);
+            payload.put("streamResourceRangeHeader",
+                    "bytes=%d-%d".formatted(rangeStart, rangeEndInclusive));
+            payload.put("streamResourceRangeStart", effectiveRangeStart);
+            payload.put("streamResourceRangeEndInclusive", effectiveRangeEndInclusive);
+            payload.put("streamResourceRangeBytes", responseBytes.length);
+            payload.put("streamResourceRangeSha256", MessageDigestUtil.sha256Hex(responseBytes));
+            payload.put("streamResourceRangeBodyBase64",
+                    Base64.getEncoder().encodeToString(responseBytes));
+            payload.put("streamResourceFullBytes", bytes.length);
+            payload.put("streamResourceFullSha256", MessageDigestUtil.sha256Hex(bytes));
+            payload.put("streamResourceFullBodyOmitted", true);
+            payload.put("streamResourceResponseMode", "range-slice");
+            payload.put("streamResourceRangeSatisfied", rangeSatisfied);
+            payload.put("streamResourceBackpressureEvidence",
+                    "full-body-integrity-recorded-but-response-body-limited-to-requested-range");
         }
         payload.put("streamResourceFailureLayer", "");
         payload.put("streamResourceNextResolutionStep",

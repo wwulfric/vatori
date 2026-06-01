@@ -819,6 +819,30 @@ final class FlowClientResources {
             "full-upload-download-streaming,range-requests,large-file-backpressure,theme-variants,dev-mode-vite-parity,installer-packaging,durable-reconnect";
     private static final String STREAM_RESOURCE_NEXT_STEP =
             "turn this bounded StreamResource download into Upload/Download streaming and broader dynamic resource parity";
+    private static final String STREAM_RESOURCE_RANGE_VERSION =
+            "flow-ipc-stream-resource-range-v1_51";
+    private static final String STREAM_RESOURCE_RANGE_SOURCE =
+            "stream-resource-v1_50";
+    private static final String STREAM_RESOURCE_RANGE_SCOPE =
+            "framework-validation-app-binary-stream-resource-range-download";
+    private static final String STREAM_RESOURCE_RANGE_JAVA_CLASSES =
+            "com.vaadin.flow.component.html.Anchor,com.vaadin.flow.server.StreamResource,com.vaadin.flow.server.StreamResourceRegistry";
+    private static final String STREAM_RESOURCE_RANGE_COMPONENT_IDS =
+            "framework-stream-resource-range-download,framework-stream-resource-range-status";
+    private static final String STREAM_RESOURCE_RANGE_EXPECTED_FILE =
+            "flow-ipc-framework-v1_51.bin";
+    private static final String STREAM_RESOURCE_RANGE_EXPECTED_CONTENT_TYPE =
+            "application/octet-stream";
+    private static final String STREAM_RESOURCE_RANGE_EXPECTED_BODY_MARKER =
+            "Flow IPC Binary StreamResource v1.51";
+    private static final String STREAM_RESOURCE_RANGE_HEADER =
+            "bytes=0-255";
+    private static final String STREAM_RESOURCE_RANGE_ACCEPTABLE_FAILURES =
+            "stream-resource-registry-unavailable,dynamic-resource-href-missing,range-response-missing,range-body-marker-missing,range-slice-metadata-mismatch";
+    private static final String STREAM_RESOURCE_RANGE_REMAINING_BLOCKERS =
+            "full-upload-download-streaming,large-file-backpressure,progress-cancellation,downloadhandler-parity,upload-receiver-parity,theme-variants,dev-mode-vite-parity,installer-packaging,durable-reconnect";
+    private static final String STREAM_RESOURCE_RANGE_NEXT_STEP =
+            "turn binary range-slice download evidence into DownloadHandler/Upload streaming with progress, cancellation and OS file grants";
     private static final List<String> PRODUCTION_RUNTIME_OWNER_DEPENDENCY_ARTIFACTS = List.of(
             DEV_BUNDLE_COMMONJS_JS,
             DEV_BUNDLE_INDEX_HTML_JS,
@@ -3073,6 +3097,73 @@ final class FlowClientResources {
                 : "framework-validation-app-not-selected");
         attributes.put("streamResourceRemainingBlockers", STREAM_RESOURCE_REMAINING_BLOCKERS);
         attributes.put("streamResourceNextResolutionStep", STREAM_RESOURCE_NEXT_STEP);
+        attributes.putAll(streamResourceRangeAttributes(evidence, buildStep, selectedArtifacts,
+                handoffReady));
+        return attributes;
+    }
+
+    private static Map<String, Object> streamResourceRangeAttributes(
+            CurrentAppBuildFrontendOutputEvidence evidence,
+            FrontendBuildStepEvidence buildStep,
+            String selectedArtifacts,
+            boolean handoffReady) {
+        Path module = appModuleDirectory();
+        String appShape = packagingRuntimeHandoffAppShape(module);
+        boolean frameworkApp = "framework-validation-app".equals(appShape);
+        Map<String, Object> attributes = new LinkedHashMap<>();
+        attributes.put("streamResourceRangeVersion", STREAM_RESOURCE_RANGE_VERSION);
+        attributes.put("streamResourceRangeSource", STREAM_RESOURCE_RANGE_SOURCE);
+        attributes.put("streamResourceRangeScope", STREAM_RESOURCE_RANGE_SCOPE);
+        attributes.put("streamResourceRangeAppShape", appShape);
+        attributes.put("streamResourceRangeJavaClasses", STREAM_RESOURCE_RANGE_JAVA_CLASSES);
+        attributes.put("streamResourceRangeComponentIds", STREAM_RESOURCE_RANGE_COMPONENT_IDS);
+        attributes.put("streamResourceRangeDynamicPathPrefix", STREAM_RESOURCE_DYNAMIC_PATH_PREFIX);
+        attributes.put("streamResourceRangeExpectedFile", STREAM_RESOURCE_RANGE_EXPECTED_FILE);
+        attributes.put("streamResourceRangeExpectedContentType",
+                STREAM_RESOURCE_RANGE_EXPECTED_CONTENT_TYPE);
+        attributes.put("streamResourceRangeExpectedBodyMarker",
+                STREAM_RESOURCE_RANGE_EXPECTED_BODY_MARKER);
+        attributes.put("streamResourceRangeHeader", STREAM_RESOURCE_RANGE_HEADER);
+        attributes.put("streamResourceRangeSelectedArtifacts", selectedArtifacts);
+        attributes.put("streamResourceRangeSelectedArtifactCount", csvValues(selectedArtifacts).size());
+        attributes.put("streamResourceRangeGeneratedImportsOwnerSource",
+                CURRENT_APP_GENERATED_IMPORTS_OWNER_RUNTIME_CONTRACT_SOURCE);
+        attributes.put("streamResourceRangeGeneratedImportsOwnerArtifact",
+                CURRENT_APP_BUILD_FRONTEND_GENERATED_IMPORTS_JS);
+        attributes.put("streamResourceRangeProductionSupportArtifact",
+                evidence.sourceGeneratedImportsRootProductionSupportArtifact());
+        attributes.put("streamResourceRangeProductionSupportSha256",
+                evidence.productionGeneratedImportsSha256());
+        attributes.put("streamResourceRangeProductionSupportBytes",
+                evidence.productionGeneratedImportsBytes());
+        attributes.put("streamResourceRangeProductionEntryArtifact",
+                evidence.productionEntryScriptVirtualPath());
+        attributes.put("streamResourceRangeBuildGoal", buildStep.goal());
+        attributes.put("streamResourceRangeBuildStatus", buildStep.status());
+        attributes.put("streamResourceRangeOutputUsability", buildStep.outputUsability());
+        attributes.put("streamResourceRangeFrameworkAppRequired", true);
+        attributes.put("streamResourceRangeFrameworkAppObserved", frameworkApp);
+        attributes.put("streamResourceRangeCliContractEnabled",
+                "1".equals(System.getenv("VAADIN_DESKTOP_FLOW_IPC_FRONTEND_BUILD_V1_51")));
+        attributes.put("streamResourceRangeManifestReady", handoffReady && frameworkApp);
+        attributes.put("streamResourceRangeRuntimeHandoffRequired", true);
+        attributes.put("streamResourceRangeRuntimeHandoffReady", handoffReady);
+        attributes.put("streamResourceRangeAnchorHrefObserved", false);
+        attributes.put("streamResourceRangeRequestObserved", false);
+        attributes.put("streamResourceRangeResponseObserved", false);
+        attributes.put("streamResourceRangeBodyVerified", false);
+        attributes.put("streamResourceRangeFullBodyOmitted", true);
+        attributes.put("streamResourceRangeResponseMode", "range-slice");
+        attributes.put("streamResourceRangeNoLocalhost", true);
+        attributes.put("streamResourceRangeFixtureSubstituted", false);
+        attributes.put("streamResourceRangeAcceptableFailures",
+                STREAM_RESOURCE_RANGE_ACCEPTABLE_FAILURES);
+        attributes.put("streamResourceRangeFailureLayer", frameworkApp
+                ? "framework-stream-resource-range-runtime-validation-pending"
+                : "framework-validation-app-not-selected");
+        attributes.put("streamResourceRangeRemainingBlockers",
+                STREAM_RESOURCE_RANGE_REMAINING_BLOCKERS);
+        attributes.put("streamResourceRangeNextResolutionStep", STREAM_RESOURCE_RANGE_NEXT_STEP);
         return attributes;
     }
 

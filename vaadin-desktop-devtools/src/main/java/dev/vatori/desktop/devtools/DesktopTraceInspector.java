@@ -169,6 +169,9 @@ public final class DesktopTraceInspector {
         FLOW_IPC_V1_50_STREAM_RESOURCE(
                 "--require-flow-ipc-v1_50-stream-resource"),
         FLOW_IPC_V1_50("--require-flow-ipc-v1_50"),
+        FLOW_IPC_V1_51_STREAM_RESOURCE_RANGE(
+                "--require-flow-ipc-v1_51-stream-resource-range"),
+        FLOW_IPC_V1_51("--require-flow-ipc-v1_51"),
         FLOW_IPC_V1_3_FRAMEWORK("--require-flow-ipc-v1_3-framework");
 
         private final String option;
@@ -638,6 +641,11 @@ public final class DesktopTraceInspector {
                 case FLOW_IPC_V1_50 -> EnumSet.of(
                         FLOW_IPC_V1_50_STREAM_RESOURCE,
                         FLOW_IPC_V1_50);
+                case FLOW_IPC_V1_51_STREAM_RESOURCE_RANGE ->
+                    EnumSet.of(FLOW_IPC_V1_51_STREAM_RESOURCE_RANGE);
+                case FLOW_IPC_V1_51 -> EnumSet.of(
+                        FLOW_IPC_V1_51_STREAM_RESOURCE_RANGE,
+                        FLOW_IPC_V1_51);
                 case FLOW_IPC_V1_3_FRAMEWORK -> EnumSet.of(FLOW_IPC_V1_3_FRAMEWORK);
             };
         }
@@ -779,6 +787,9 @@ public final class DesktopTraceInspector {
                 case FLOW_IPC_V1_50_STREAM_RESOURCE ->
                     summary.hasRequiredFlowIpcV1_50StreamResourceTypes();
                 case FLOW_IPC_V1_50 -> summary.hasRequiredFlowIpcV1_50Types();
+                case FLOW_IPC_V1_51_STREAM_RESOURCE_RANGE ->
+                    summary.hasRequiredFlowIpcV1_51StreamResourceRangeTypes();
+                case FLOW_IPC_V1_51 -> summary.hasRequiredFlowIpcV1_51Types();
                 case FLOW_IPC_V1_3_FRAMEWORK -> summary.hasRequiredFlowIpcV1_3FrameworkTypes();
             };
         }
@@ -1041,6 +1052,13 @@ public final class DesktopTraceInspector {
                     && line.contains("com.vaadin.flow.server.StreamResource")) {
                 summary.frameworkStreamResourceBootstrapObserved = true;
             }
+            if (line.contains("dev.vatori.ipcframework.FlowOverIpcFrameworkView")
+                    && line.contains("framework-stream-resource-range-download")
+                    && line.contains("framework-stream-resource-range-status")
+                    && line.contains("com.vaadin.flow.component.html.Anchor")
+                    && line.contains("com.vaadin.flow.server.StreamResource")) {
+                summary.frameworkStreamResourceRangeBootstrapObserved = true;
+            }
             if (line.contains("\"type\":\"event\"")
                     && line.contains("\"dispatch\":\"flow-client-xhr\"")
                     && line.contains("\"attachExistingElementById\"")
@@ -1154,6 +1172,19 @@ public final class DesktopTraceInspector {
             if (line.contains("\"type\":\"resourceResponse\"")
                     && containsStreamResourceV150Response(line)) {
                 summary.streamResourceV150ResponseObserved = true;
+            }
+            if (line.contains("\"type\":\"resourceRequest\"")
+                    && containsStringField(line, "streamResourceVersion",
+                            "flow-ipc-stream-resource-range-v1_51")
+                    && containsStringField(line, "purpose", "framework-stream-resource-range-v1_51")
+                    && containsStringField(line, "streamResourceRangeHeader", "bytes=0-255")
+                    && line.contains("VAADIN/dynamic/resource/")
+                    && line.contains("flow-ipc-framework-v1_51.bin")) {
+                summary.streamResourceRangeV151RequestObserved = true;
+            }
+            if (line.contains("\"type\":\"resourceResponse\"")
+                    && containsStreamResourceRangeV151Response(line)) {
+                summary.streamResourceRangeV151ResponseObserved = true;
             }
             if (line.contains("\"type\":\"patch\"")
                     && line.contains("\"source\":\"UidlRequestHandler\"")
@@ -1685,6 +1716,11 @@ public final class DesktopTraceInspector {
                     && line.contains("\"componentFrontendResources\"")
                     && containsStreamResourceV150Fields(line)) {
                 summary.streamResourceV150ManifestObserved = true;
+            }
+            if (line.contains("\"type\":\"bootstrapResponse\"")
+                    && line.contains("\"componentFrontendResources\"")
+                    && containsStreamResourceRangeV151Fields(line)) {
+                summary.streamResourceRangeV151ManifestObserved = true;
             }
             if (line.contains("\"type\":\"bootstrapResponse\"")
                     && line.contains("\"componentFrontendResources\"")
@@ -4688,6 +4724,10 @@ public final class DesktopTraceInspector {
                 summary.streamResourceV150DomObserved = true;
             }
             if (line.contains("\"type\":\"webview.dom\"")
+                    && containsStreamResourceRangeV151Dom(line)) {
+                summary.streamResourceRangeV151DomObserved = true;
+            }
+            if (line.contains("\"type\":\"webview.dom\"")
                     && containsLiteralField(line, "generatedLazySourceCurrentBuildNoOpConfirmed", "true")
                     && containsStringField(line, "generatedLazySourceCurrentBuildTableShape",
                             "no-op-promise-resolve-0")
@@ -5214,6 +5254,21 @@ public final class DesktopTraceInspector {
                     && containsLiteralField(line,
                             "frameworkStreamResourceComplete", "true")) {
                 summary.frameworkStreamResourceDomObserved = true;
+            }
+            if (line.contains("\"type\":\"webview.dom\"")
+                    && line.contains("Flow IPC Framework Desk")
+                    && containsLiteralField(line, "frameworkStreamResourceRangeRendered", "true")
+                    && containsLiteralField(line,
+                            "frameworkStreamResourceRangeAnchorHrefObserved", "true")
+                    && containsLiteralField(line,
+                            "frameworkStreamResourceRangeRequestObserved", "true")
+                    && containsLiteralField(line,
+                            "frameworkStreamResourceRangeResponseObserved", "true")
+                    && containsLiteralField(line,
+                            "frameworkStreamResourceRangeBodyVerified", "true")
+                    && containsLiteralField(line,
+                            "frameworkStreamResourceRangeComplete", "true")) {
+                summary.frameworkStreamResourceRangeDomObserved = true;
             }
             if (line.contains("\"type\":\"event\"")
                     && line.contains("\"sessionId\":\"flow-ipc-session\"")
@@ -6941,6 +6996,107 @@ public final class DesktopTraceInspector {
                 && containsLiteralField(line, "frameworkStreamResourceComplete", "true");
     }
 
+    private static boolean containsStreamResourceRangeV151Fields(String line) {
+        return containsStringField(line, "streamResourceRangeVersion",
+                        "flow-ipc-stream-resource-range-v1_51")
+                && containsStringField(line, "streamResourceRangeSource",
+                        "stream-resource-v1_50")
+                && containsStringField(line, "streamResourceRangeScope",
+                        "framework-validation-app-binary-stream-resource-range-download")
+                && containsStringField(line, "streamResourceRangeAppShape",
+                        "framework-validation-app")
+                && containsStringField(line, "streamResourceRangeJavaClasses",
+                        "com.vaadin.flow.component.html.Anchor,com.vaadin.flow.server.StreamResource,com.vaadin.flow.server.StreamResourceRegistry")
+                && containsStringField(line, "streamResourceRangeComponentIds",
+                        "framework-stream-resource-range-download,framework-stream-resource-range-status")
+                && containsStringField(line, "streamResourceRangeDynamicPathPrefix",
+                        "VAADIN/dynamic/resource/")
+                && containsStringField(line, "streamResourceRangeExpectedFile",
+                        "flow-ipc-framework-v1_51.bin")
+                && containsStringField(line, "streamResourceRangeExpectedContentType",
+                        "application/octet-stream")
+                && containsStringField(line, "streamResourceRangeExpectedBodyMarker",
+                        "Flow IPC Binary StreamResource v1.51")
+                && containsStringField(line, "streamResourceRangeHeader", "bytes=0-255")
+                && containsStringFieldPrefix(line, "streamResourceRangeSelectedArtifacts",
+                        "current-app-frontend/generated/flow/generated-flow-imports.js")
+                && containsPositiveIntegerField(line, "streamResourceRangeSelectedArtifactCount")
+                && containsStringField(line, "streamResourceRangeGeneratedImportsOwnerSource",
+                        "current-app-generated-imports-select-owner-coverage-v1_41")
+                && containsStringField(line, "streamResourceRangeGeneratedImportsOwnerArtifact",
+                        "current-app-frontend/generated/flow/generated-flow-imports.js")
+                && containsStringFieldPrefix(line, "streamResourceRangeProductionSupportArtifact",
+                        "current-app-production/VAADIN/build/generated-flow-imports-")
+                && line.contains("streamResourceRangeProductionSupportSha256")
+                && containsPositiveIntegerField(line, "streamResourceRangeProductionSupportBytes")
+                && line.contains("streamResourceRangeProductionEntryArtifact")
+                && containsStringField(line, "streamResourceRangeBuildGoal", "build-frontend")
+                && containsStringField(line, "streamResourceRangeBuildStatus", "success")
+                && line.contains("streamResourceRangeOutputUsability")
+                && containsLiteralField(line, "streamResourceRangeFrameworkAppRequired", "true")
+                && containsLiteralField(line, "streamResourceRangeFrameworkAppObserved", "true")
+                && containsLiteralField(line, "streamResourceRangeCliContractEnabled", "true")
+                && containsLiteralField(line, "streamResourceRangeManifestReady", "true")
+                && containsLiteralField(line, "streamResourceRangeRuntimeHandoffRequired", "true")
+                && containsLiteralField(line, "streamResourceRangeRuntimeHandoffReady", "true")
+                && containsLiteralField(line, "streamResourceRangeFullBodyOmitted", "true")
+                && containsStringField(line, "streamResourceRangeResponseMode", "range-slice")
+                && containsLiteralField(line, "streamResourceRangeNoLocalhost", "true")
+                && containsLiteralField(line, "streamResourceRangeFixtureSubstituted", "false")
+                && line.contains("streamResourceRangeAcceptableFailures")
+                && line.contains("streamResourceRangeRemainingBlockers")
+                && line.contains("streamResourceRangeNextResolutionStep");
+    }
+
+    private static boolean containsStreamResourceRangeV151Response(String line) {
+        return containsStringField(line, "streamResourceVersion",
+                        "flow-ipc-stream-resource-range-v1_51")
+                && containsStringField(line, "artifactFamily", "flow-stream-resource-range")
+                && containsStringField(line, "streamResourceStatus", "partial-content")
+                && containsStringField(line, "streamResourceFileName",
+                        "flow-ipc-framework-v1_51.bin")
+                && containsStringField(line, "streamResourceContentType",
+                        "application/octet-stream")
+                && containsStringField(line, "streamResourceRangeHeader", "bytes=0-255")
+                && containsPositiveIntegerField(line, "streamResourceRangeBytes")
+                && containsPositiveIntegerField(line, "streamResourceFullBytes")
+                && line.contains("streamResourceRangeSha256")
+                && line.contains("streamResourceFullSha256")
+                && line.contains("streamResourceRangeBodyBase64")
+                && containsLiteralField(line, "dynamicStreamResource", "true")
+                && containsLiteralField(line, "streamResourceRangeRequested", "true")
+                && containsLiteralField(line, "streamResourceRangeSatisfied", "true")
+                && containsLiteralField(line, "streamResourceFullBodyOmitted", "true")
+                && containsStringField(line, "streamResourceResponseMode", "range-slice")
+                && containsLiteralField(line, "streamResourceNoLocalhost", "true")
+                && containsLiteralField(line, "streamResourceFixtureSubstituted", "false");
+    }
+
+    private static boolean containsStreamResourceRangeV151Dom(String line) {
+        return containsStringField(line, "streamResourceRangeVersion",
+                        "flow-ipc-stream-resource-range-v1_51")
+                && containsStringField(line, "streamResourceRangeFileName",
+                        "flow-ipc-framework-v1_51.bin")
+                && containsStringField(line, "streamResourceRangeContentType",
+                        "application/octet-stream")
+                && line.contains("streamResourceRangeBodySample")
+                && line.contains("Flow IPC Binary StreamResource v1.51")
+                && line.contains("VAADIN/dynamic/resource/")
+                && containsPositiveIntegerField(line, "streamResourceRangeBytes")
+                && containsPositiveIntegerField(line, "streamResourceRangeFullBytes")
+                && line.contains("streamResourceRangeSha256")
+                && line.contains("streamResourceRangeFullSha256")
+                && containsLiteralField(line, "streamResourceRangeAnchorHrefObserved", "true")
+                && containsLiteralField(line, "streamResourceRangeRequestObserved", "true")
+                && containsLiteralField(line, "streamResourceRangeResponseObserved", "true")
+                && containsLiteralField(line, "streamResourceRangeBodyVerified", "true")
+                && containsLiteralField(line, "streamResourceRangeFullBodyOmitted", "true")
+                && containsStringField(line, "streamResourceRangeResponseMode", "range-slice")
+                && containsLiteralField(line, "streamResourceRangeNoLocalhost", "true")
+                && containsLiteralField(line, "streamResourceRangeFixtureSubstituted", "false")
+                && containsLiteralField(line, "frameworkStreamResourceRangeComplete", "true");
+    }
+
     private static boolean containsProductionOwnerFailureLayer(String line, String field) {
         return containsStringField(line, field, "production-owner-duplicate-custom-element")
                 || containsStringField(line, field, "production-owner-relative-import-unresolved")
@@ -7269,6 +7425,8 @@ public final class DesktopTraceInspector {
         private boolean frameworkGridScrollVirtualizationDomObserved;
         private boolean frameworkStreamResourceBootstrapObserved;
         private boolean frameworkStreamResourceDomObserved;
+        private boolean frameworkStreamResourceRangeBootstrapObserved;
+        private boolean frameworkStreamResourceRangeDomObserved;
         private boolean firstMeaningfulPaintObserved;
         private boolean frontendAssetPipelineV14Observed;
         private boolean frontendArtifactFamilyModelObserved;
@@ -7557,6 +7715,10 @@ public final class DesktopTraceInspector {
         private boolean streamResourceV150RequestObserved;
         private boolean streamResourceV150ResponseObserved;
         private boolean streamResourceV150DomObserved;
+        private boolean streamResourceRangeV151ManifestObserved;
+        private boolean streamResourceRangeV151RequestObserved;
+        private boolean streamResourceRangeV151ResponseObserved;
+        private boolean streamResourceRangeV151DomObserved;
 
         public boolean hasRequiredFlowIpcTypes() {
             return types.keySet().containsAll(FLOW_IPC_REQUIRED_TYPES)
@@ -8353,6 +8515,20 @@ public final class DesktopTraceInspector {
             return hasRequiredFlowIpcV1_50StreamResourceTypes();
         }
 
+        public boolean hasRequiredFlowIpcV1_51StreamResourceRangeTypes() {
+            return streamResourceRangeV151ManifestObserved
+                    && streamResourceRangeV151RequestObserved
+                    && streamResourceRangeV151ResponseObserved
+                    && streamResourceRangeV151DomObserved
+                    && frameworkStreamResourceRangeBootstrapObserved
+                    && frameworkStreamResourceRangeDomObserved
+                    && hasRequiredFlowIpcV1_50StreamResourceTypes();
+        }
+
+        public boolean hasRequiredFlowIpcV1_51Types() {
+            return hasRequiredFlowIpcV1_51StreamResourceRangeTypes();
+        }
+
         private boolean hasCurrentAppBuildFrontendOutputSuccessorEvidence() {
             return currentAppBuildFrontendOutputV132ManifestObserved
                     && currentAppBuildFrontendOutputV132RequestObserved
@@ -9044,6 +9220,14 @@ public final class DesktopTraceInspector {
             System.out.println("framework StreamResource bootstrap/DOM observed: "
                     + frameworkStreamResourceBootstrapObserved + "/"
                     + frameworkStreamResourceDomObserved);
+            System.out.println("Flow IPC v1.51 StreamResource range manifest/request/response/DOM observed: "
+                    + streamResourceRangeV151ManifestObserved + "/"
+                    + streamResourceRangeV151RequestObserved + "/"
+                    + streamResourceRangeV151ResponseObserved + "/"
+                    + streamResourceRangeV151DomObserved);
+            System.out.println("framework StreamResource range bootstrap/DOM observed: "
+                    + frameworkStreamResourceRangeBootstrapObserved + "/"
+                    + frameworkStreamResourceRangeDomObserved);
             System.out.println("Flow IPC v1.6 TextField graph manifest observed: "
                     + frontendTextFieldV16ManifestObserved);
             System.out.println("Flow IPC v1.6 TextField graph request observed: "

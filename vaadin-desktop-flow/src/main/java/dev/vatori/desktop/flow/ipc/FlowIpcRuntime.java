@@ -134,6 +134,10 @@ final class FlowIpcRuntime {
         if (isDynamicStreamResourcePath(path)) {
             int rangeStart = JsonFields.integer(json, "streamResourceRangeStart", -1);
             int rangeEndInclusive = JsonFields.integer(json, "streamResourceRangeEndInclusive", -1);
+            boolean chunkedDownload = JsonFields.bool(json, "streamResourceChunkedDownload", false);
+            int chunkIndex = JsonFields.integer(json, "streamResourceChunkIndex", -1);
+            int chunkCount = JsonFields.integer(json, "streamResourceChunkCount", -1);
+            int chunkSize = JsonFields.integer(json, "streamResourceChunkSize", -1);
             response = new LinkedHashMap<>(flowSession.streamResourceResponse(path, rangeStart, rangeEndInclusive)
                     .orElseGet(() -> Map.of(
                             "path", normalizeDynamicResourcePath(path),
@@ -148,6 +152,21 @@ final class FlowIpcRuntime {
                             "streamResourceFailureLayer", "stream-resource-registry-unavailable",
                             "streamResourceNoLocalhost", true,
                             "streamResourceFixtureSubstituted", false)));
+            if (chunkedDownload) {
+                response.put("artifactFamily", "flow-stream-resource-chunks");
+                response.put("streamResourceVersion", "flow-ipc-stream-resource-chunks-v1_52");
+                response.put("streamResourceChunkedDownload", true);
+                response.put("streamResourceChunkIndex", chunkIndex);
+                response.put("streamResourceChunkCount", chunkCount);
+                response.put("streamResourceChunkSize", chunkSize);
+                response.put("streamResourceChunkRangeHeader",
+                        "bytes=%d-%d".formatted(rangeStart, rangeEndInclusive));
+                response.put("streamResourceChunkSequence",
+                        "%d/%d".formatted(chunkIndex + 1, Math.max(chunkCount, 0)));
+                response.put("streamResourceResponseMode", "range-chunk-sequential");
+                response.put("streamResourceBackpressureEvidence",
+                        "sequential-single-chunk-window-full-body-omitted");
+            }
         } else if (flowClientResources.contains(path)) {
             response = new LinkedHashMap<>(flowClientResources.response(path));
         } else {
@@ -501,6 +520,15 @@ final class FlowIpcRuntime {
                 return fallback;
             }
             return Integer.parseInt(matcher.group(1));
+        }
+
+        static boolean bool(String json, String field, boolean fallback) {
+            Matcher matcher = Pattern.compile(
+                    "\"" + Pattern.quote(field) + "\"\\s*:\\s*(true|false)").matcher(json);
+            if (!matcher.find()) {
+                return fallback;
+            }
+            return Boolean.parseBoolean(matcher.group(1));
         }
 
         static String object(String json, String field) {

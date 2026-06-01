@@ -19,6 +19,7 @@ struct HostConfig {
     var flowIpcAutoGridScroll: Bool = false
     var flowIpcAutoStreamResource: Bool = false
     var flowIpcAutoStreamResourceRange: Bool = false
+    var flowIpcAutoStreamResourceChunks: Bool = false
     var flowIpcAutoShutdown: Bool = false
     var hostNoActivate: Bool = false
     var title: String = "Vaadin Desktop"
@@ -73,6 +74,7 @@ struct HostConfig {
         config.flowIpcAutoGridScroll = ProcessInfo.processInfo.environment["VAADIN_DESKTOP_FLOW_IPC_AUTO_GRID_SCROLL"] == "1"
         config.flowIpcAutoStreamResource = ProcessInfo.processInfo.environment["VAADIN_DESKTOP_FLOW_IPC_AUTO_STREAM_RESOURCE"] == "1"
         config.flowIpcAutoStreamResourceRange = ProcessInfo.processInfo.environment["VAADIN_DESKTOP_FLOW_IPC_AUTO_STREAM_RESOURCE_RANGE"] == "1"
+        config.flowIpcAutoStreamResourceChunks = ProcessInfo.processInfo.environment["VAADIN_DESKTOP_FLOW_IPC_AUTO_STREAM_RESOURCE_CHUNKS"] == "1"
         config.flowIpcAutoShutdown = ProcessInfo.processInfo.environment["VAADIN_DESKTOP_FLOW_IPC_AUTO_SHUTDOWN"] == "1"
         config.hostNoActivate = ProcessInfo.processInfo.environment["VAADIN_DESKTOP_HOST_NO_ACTIVATE"] == "1"
         return config
@@ -772,6 +774,10 @@ final class WebViewHost: NSObject, NSApplicationDelegate, NSWindowDelegate, WKNa
         }
         if config.flowIpcAutoStreamResourceRange {
             let source = "window.__VAADIN_DESKTOP_FLOW_IPC_AUTO_STREAM_RESOURCE_RANGE__ = true;"
+            userContentController.addUserScript(WKUserScript(source: source, injectionTime: .atDocumentStart, forMainFrameOnly: true))
+        }
+        if config.flowIpcAutoStreamResourceChunks {
+            let source = "window.__VAADIN_DESKTOP_FLOW_IPC_AUTO_STREAM_RESOURCE_CHUNKS__ = true;"
             userContentController.addUserScript(WKUserScript(source: source, injectionTime: .atDocumentStart, forMainFrameOnly: true))
         }
         userContentController.add(self, name: "flowIpc")
@@ -2155,13 +2161,16 @@ final class WebViewHost: NSObject, NSApplicationDelegate, NSWindowDelegate, WKNa
             || !!d.frameworkStreamResourceComplete;
           const streamResourceRangeComplete = !window.__VAADIN_DESKTOP_FLOW_IPC_AUTO_STREAM_RESOURCE_RANGE__
             || !!d.frameworkStreamResourceRangeComplete;
+          const streamResourceChunksComplete = !window.__VAADIN_DESKTOP_FLOW_IPC_AUTO_STREAM_RESOURCE_CHUNKS__
+            || !!d.frameworkStreamResourceChunksComplete;
           const frameworkComplete = !!d.frameworkAppInteractionComplete
             && componentMatrixComplete
             && dataComponentMatrixComplete
             && lazyDataProviderComplete
             && gridScrollVirtualizationComplete
             && streamResourceComplete
-            && streamResourceRangeComplete;
+            && streamResourceRangeComplete
+            && streamResourceChunksComplete;
           const complete = window.__VAADIN_DESKTOP_FLOW_IPC_AUTO_FRAMEWORK_UPDATE__
             ? frameworkComplete
             : smokeComplete;
@@ -2175,6 +2184,7 @@ final class WebViewHost: NSObject, NSApplicationDelegate, NSWindowDelegate, WKNa
             gridScrollVirtualizationComplete,
             streamResourceComplete,
             streamResourceRangeComplete,
+            streamResourceChunksComplete,
             click: !!d.flowClientEngineEventPatchConsumed,
             text: !!d.flowClientEngineTextInputEventObserved,
             checkbox: !!d.flowClientEngineCheckboxEventObserved,
@@ -3578,6 +3588,26 @@ final class WebViewHost: NSObject, NSApplicationDelegate, NSWindowDelegate, WKNa
           streamResourceRangeNoLocalhost: !!(window.VaadinDesktopIpcDiagnostics && window.VaadinDesktopIpcDiagnostics.streamResourceRangeNoLocalhost),
           streamResourceRangeFixtureSubstituted: !!(window.VaadinDesktopIpcDiagnostics && window.VaadinDesktopIpcDiagnostics.streamResourceRangeFixtureSubstituted),
           streamResourceRangeFailureLayer: window.VaadinDesktopIpcDiagnostics ? window.VaadinDesktopIpcDiagnostics.streamResourceRangeFailureLayer : "",
+          streamResourceChunksVersion: window.VaadinDesktopIpcDiagnostics ? window.VaadinDesktopIpcDiagnostics.streamResourceChunksVersion : "",
+          streamResourceChunksAnchorHref: window.VaadinDesktopIpcDiagnostics ? window.VaadinDesktopIpcDiagnostics.streamResourceChunksAnchorHref : "",
+          streamResourceChunksAnchorHrefObserved: !!(window.VaadinDesktopIpcDiagnostics && window.VaadinDesktopIpcDiagnostics.streamResourceChunksAnchorHrefObserved),
+          streamResourceChunksRequestObserved: !!(window.VaadinDesktopIpcDiagnostics && window.VaadinDesktopIpcDiagnostics.streamResourceChunksRequestObserved),
+          streamResourceChunksResponseObserved: !!(window.VaadinDesktopIpcDiagnostics && window.VaadinDesktopIpcDiagnostics.streamResourceChunksResponseObserved),
+          streamResourceChunksBodyVerified: !!(window.VaadinDesktopIpcDiagnostics && window.VaadinDesktopIpcDiagnostics.streamResourceChunksBodyVerified),
+          streamResourceChunksRequestOrder: window.VaadinDesktopIpcDiagnostics ? window.VaadinDesktopIpcDiagnostics.streamResourceChunksRequestOrder : "",
+          streamResourceChunksResponseOrder: window.VaadinDesktopIpcDiagnostics ? window.VaadinDesktopIpcDiagnostics.streamResourceChunksResponseOrder : "",
+          streamResourceChunksVerifiedCount: window.VaadinDesktopIpcDiagnostics ? window.VaadinDesktopIpcDiagnostics.streamResourceChunksVerifiedCount : 0,
+          streamResourceChunksExpectedCount: window.VaadinDesktopIpcDiagnostics ? window.VaadinDesktopIpcDiagnostics.streamResourceChunksExpectedCount : 0,
+          streamResourceChunksChunkSize: window.VaadinDesktopIpcDiagnostics ? window.VaadinDesktopIpcDiagnostics.streamResourceChunksChunkSize : 0,
+          streamResourceChunksAggregateBytes: window.VaadinDesktopIpcDiagnostics ? window.VaadinDesktopIpcDiagnostics.streamResourceChunksAggregateBytes : 0,
+          streamResourceChunksFullBytes: window.VaadinDesktopIpcDiagnostics ? window.VaadinDesktopIpcDiagnostics.streamResourceChunksFullBytes : 0,
+          streamResourceChunksFullSha256: window.VaadinDesktopIpcDiagnostics ? window.VaadinDesktopIpcDiagnostics.streamResourceChunksFullSha256 : "",
+          streamResourceChunksFirstBodySample: window.VaadinDesktopIpcDiagnostics ? window.VaadinDesktopIpcDiagnostics.streamResourceChunksFirstBodySample : "",
+          streamResourceChunksFullBodyOmitted: !!(window.VaadinDesktopIpcDiagnostics && window.VaadinDesktopIpcDiagnostics.streamResourceChunksFullBodyOmitted),
+          streamResourceChunksResponseMode: window.VaadinDesktopIpcDiagnostics ? window.VaadinDesktopIpcDiagnostics.streamResourceChunksResponseMode : "",
+          streamResourceChunksNoLocalhost: !!(window.VaadinDesktopIpcDiagnostics && window.VaadinDesktopIpcDiagnostics.streamResourceChunksNoLocalhost),
+          streamResourceChunksFixtureSubstituted: !!(window.VaadinDesktopIpcDiagnostics && window.VaadinDesktopIpcDiagnostics.streamResourceChunksFixtureSubstituted),
+          streamResourceChunksFailureLayer: window.VaadinDesktopIpcDiagnostics ? window.VaadinDesktopIpcDiagnostics.streamResourceChunksFailureLayer : "",
           frameworkStreamResourceVersion: window.VaadinDesktopIpcDiagnostics ? window.VaadinDesktopIpcDiagnostics.frameworkStreamResourceVersion : "",
           frameworkStreamResourceRendered: !!(window.VaadinDesktopIpcDiagnostics && window.VaadinDesktopIpcDiagnostics.frameworkStreamResourceRendered),
           frameworkStreamResourceAnchorHrefObserved: !!(window.VaadinDesktopIpcDiagnostics && window.VaadinDesktopIpcDiagnostics.frameworkStreamResourceAnchorHrefObserved),
@@ -3592,6 +3622,13 @@ final class WebViewHost: NSObject, NSApplicationDelegate, NSWindowDelegate, WKNa
           frameworkStreamResourceRangeResponseObserved: !!(window.VaadinDesktopIpcDiagnostics && window.VaadinDesktopIpcDiagnostics.frameworkStreamResourceRangeResponseObserved),
           frameworkStreamResourceRangeBodyVerified: !!(window.VaadinDesktopIpcDiagnostics && window.VaadinDesktopIpcDiagnostics.frameworkStreamResourceRangeBodyVerified),
           frameworkStreamResourceRangeComplete: !!(window.VaadinDesktopIpcDiagnostics && window.VaadinDesktopIpcDiagnostics.frameworkStreamResourceRangeComplete),
+          frameworkStreamResourceChunksVersion: window.VaadinDesktopIpcDiagnostics ? window.VaadinDesktopIpcDiagnostics.frameworkStreamResourceChunksVersion : "",
+          frameworkStreamResourceChunksRendered: !!(window.VaadinDesktopIpcDiagnostics && window.VaadinDesktopIpcDiagnostics.frameworkStreamResourceChunksRendered),
+          frameworkStreamResourceChunksAnchorHrefObserved: !!(window.VaadinDesktopIpcDiagnostics && window.VaadinDesktopIpcDiagnostics.frameworkStreamResourceChunksAnchorHrefObserved),
+          frameworkStreamResourceChunksRequestObserved: !!(window.VaadinDesktopIpcDiagnostics && window.VaadinDesktopIpcDiagnostics.frameworkStreamResourceChunksRequestObserved),
+          frameworkStreamResourceChunksResponseObserved: !!(window.VaadinDesktopIpcDiagnostics && window.VaadinDesktopIpcDiagnostics.frameworkStreamResourceChunksResponseObserved),
+          frameworkStreamResourceChunksBodyVerified: !!(window.VaadinDesktopIpcDiagnostics && window.VaadinDesktopIpcDiagnostics.frameworkStreamResourceChunksBodyVerified),
+          frameworkStreamResourceChunksComplete: !!(window.VaadinDesktopIpcDiagnostics && window.VaadinDesktopIpcDiagnostics.frameworkStreamResourceChunksComplete),
           frameworkAppFailureReason: window.VaadinDesktopIpcDiagnostics ? window.VaadinDesktopIpcDiagnostics.frameworkAppFailureReason : ""
         })
         """
@@ -3971,6 +4008,17 @@ let flowIpcShell = #"""
       let autoFrameworkUpdateInterval = null;
       let frameworkStreamResourceRequestSent = false;
       let frameworkStreamResourceRangeRequestSent = false;
+      let frameworkStreamResourceChunksRequestSent = false;
+      let frameworkStreamResourceChunksPlan = [
+        { index: 0, start: 0, end: 255 },
+        { index: 1, start: 256, end: 511 },
+        { index: 2, start: 512, end: 767 }
+      ];
+      let frameworkStreamResourceChunksVerified = {};
+      let frameworkStreamResourceChunksBodies = {};
+      let frameworkStreamResourceChunksRequested = {};
+      let frameworkStreamResourceChunksPath = '';
+      let frameworkStreamResourceChunksSecurityKey = '';
       let autoResyncDone = false;
       let autoErrorProbeDone = false;
       const flowBootstrapAppId = 'ROOT-2521314';
@@ -4942,6 +4990,26 @@ let flowIpcShell = #"""
         streamResourceRangeNoLocalhost: false,
         streamResourceRangeFixtureSubstituted: false,
         streamResourceRangeFailureLayer: '',
+        streamResourceChunksVersion: '',
+        streamResourceChunksAnchorHref: '',
+        streamResourceChunksAnchorHrefObserved: false,
+        streamResourceChunksRequestObserved: false,
+        streamResourceChunksResponseObserved: false,
+        streamResourceChunksBodyVerified: false,
+        streamResourceChunksRequestOrder: '',
+        streamResourceChunksResponseOrder: '',
+        streamResourceChunksVerifiedCount: 0,
+        streamResourceChunksExpectedCount: 0,
+        streamResourceChunksChunkSize: 0,
+        streamResourceChunksAggregateBytes: 0,
+        streamResourceChunksFullBytes: 0,
+        streamResourceChunksFullSha256: '',
+        streamResourceChunksFirstBodySample: '',
+        streamResourceChunksFullBodyOmitted: false,
+        streamResourceChunksResponseMode: '',
+        streamResourceChunksNoLocalhost: false,
+        streamResourceChunksFixtureSubstituted: false,
+        streamResourceChunksFailureLayer: '',
         frameworkStreamResourceVersion: '',
         frameworkStreamResourceRendered: false,
         frameworkStreamResourceAnchorHrefObserved: false,
@@ -4956,6 +5024,13 @@ let flowIpcShell = #"""
         frameworkStreamResourceRangeResponseObserved: false,
         frameworkStreamResourceRangeBodyVerified: false,
         frameworkStreamResourceRangeComplete: false,
+        frameworkStreamResourceChunksVersion: '',
+        frameworkStreamResourceChunksRendered: false,
+        frameworkStreamResourceChunksAnchorHrefObserved: false,
+        frameworkStreamResourceChunksRequestObserved: false,
+        frameworkStreamResourceChunksResponseObserved: false,
+        frameworkStreamResourceChunksBodyVerified: false,
+        frameworkStreamResourceChunksComplete: false,
         frontendBuildPreflightAvailabilityObserved: false,
         frontendBuildPreflightAvailabilityVersion: '',
         frontendBuildPreflightAvailabilitySource: '',
@@ -5642,6 +5717,26 @@ let flowIpcShell = #"""
         streamResourceRangeNoLocalhost: false,
         streamResourceRangeFixtureSubstituted: false,
         streamResourceRangeFailureLayer: '',
+        streamResourceChunksVersion: '',
+        streamResourceChunksAnchorHref: '',
+        streamResourceChunksAnchorHrefObserved: false,
+        streamResourceChunksRequestObserved: false,
+        streamResourceChunksResponseObserved: false,
+        streamResourceChunksBodyVerified: false,
+        streamResourceChunksRequestOrder: '',
+        streamResourceChunksResponseOrder: '',
+        streamResourceChunksVerifiedCount: 0,
+        streamResourceChunksExpectedCount: 0,
+        streamResourceChunksChunkSize: 0,
+        streamResourceChunksAggregateBytes: 0,
+        streamResourceChunksFullBytes: 0,
+        streamResourceChunksFullSha256: '',
+        streamResourceChunksFirstBodySample: '',
+        streamResourceChunksFullBodyOmitted: false,
+        streamResourceChunksResponseMode: '',
+        streamResourceChunksNoLocalhost: false,
+        streamResourceChunksFixtureSubstituted: false,
+        streamResourceChunksFailureLayer: '',
         frameworkStreamResourceVersion: '',
         frameworkStreamResourceRendered: false,
         frameworkStreamResourceAnchorHrefObserved: false,
@@ -5656,6 +5751,13 @@ let flowIpcShell = #"""
         frameworkStreamResourceRangeResponseObserved: false,
         frameworkStreamResourceRangeBodyVerified: false,
         frameworkStreamResourceRangeComplete: false,
+        frameworkStreamResourceChunksVersion: '',
+        frameworkStreamResourceChunksRendered: false,
+        frameworkStreamResourceChunksAnchorHrefObserved: false,
+        frameworkStreamResourceChunksRequestObserved: false,
+        frameworkStreamResourceChunksResponseObserved: false,
+        frameworkStreamResourceChunksBodyVerified: false,
+        frameworkStreamResourceChunksComplete: false,
         frameworkAppFailureReason: ''
       };
 
@@ -6184,6 +6286,68 @@ let flowIpcShell = #"""
         });
       }
 
+      function sendFrameworkStreamResourceChunk(chunk) {
+        frameworkStreamResourceChunksRequested[chunk.index] = true;
+        const order = window.VaadinDesktopIpcDiagnostics.streamResourceChunksRequestOrder || '';
+        const entry = chunk.index + ':' + chunk.start + '-' + chunk.end;
+        window.VaadinDesktopIpcDiagnostics.streamResourceChunksRequestOrder =
+          order ? order + ',' + entry : entry;
+        send('resourceRequest', {
+          purpose: 'framework-stream-resource-chunks-v1_52',
+          lookupKind: 'Flow-StreamResource-sequential-chunk-download-v1_52',
+          path: frameworkStreamResourceChunksPath,
+          expectedFileName: 'flow-ipc-framework-v1_51.bin',
+          expectedBodyMarker: 'Flow IPC Binary StreamResource v1.51',
+          streamResourceVersion: 'flow-ipc-stream-resource-chunks-v1_52',
+          dynamicStreamResource: true,
+          streamResourceChunkedDownload: true,
+          streamResourceChunkIndex: chunk.index,
+          streamResourceChunkCount: frameworkStreamResourceChunksPlan.length,
+          streamResourceChunkSize: 256,
+          streamResourceRangeStart: chunk.start,
+          streamResourceRangeEndInclusive: chunk.end,
+          streamResourceRangeHeader: 'bytes=' + chunk.start + '-' + chunk.end,
+          securityKey: frameworkStreamResourceChunksSecurityKey
+        });
+      }
+
+      function requestFrameworkStreamResourceChunksIfReady() {
+        if (frameworkStreamResourceChunksRequestSent
+            || window.VaadinDesktopIpcDiagnostics.frameworkStreamResourceChunksComplete) {
+          return;
+        }
+        const anchorRef = flowClientEngineElementById('framework-stream-resource-range-download');
+        const anchor = anchorRef && anchorRef.element
+          ? anchorRef.element
+          : document.getElementById('framework-stream-resource-range-download');
+        const path = anchor ? normalizeFrameworkStreamResourceHref(anchor.getAttribute('href') || '') : '';
+        if (!path || !path.includes('VAADIN/dynamic/resource/')) {
+          window.VaadinDesktopIpcDiagnostics.streamResourceChunksFailureLayer =
+            'dynamic-resource-href-missing';
+          return;
+        }
+        const securityKey = flowClientState.securityKey || flowClientState.csrfToken;
+        if (!securityKey) {
+          return;
+        }
+        frameworkStreamResourceChunksRequestSent = true;
+        frameworkStreamResourceChunksPath = path;
+        frameworkStreamResourceChunksSecurityKey = securityKey;
+        window.VaadinDesktopIpcDiagnostics.streamResourceChunksVersion =
+          'flow-ipc-stream-resource-chunks-v1_52';
+        window.VaadinDesktopIpcDiagnostics.streamResourceChunksAnchorHref = path;
+        window.VaadinDesktopIpcDiagnostics.streamResourceChunksAnchorHrefObserved = true;
+        window.VaadinDesktopIpcDiagnostics.frameworkStreamResourceChunksAnchorHrefObserved = true;
+        window.VaadinDesktopIpcDiagnostics.streamResourceChunksRequestObserved = true;
+        window.VaadinDesktopIpcDiagnostics.frameworkStreamResourceChunksRequestObserved = true;
+        window.VaadinDesktopIpcDiagnostics.streamResourceChunksExpectedCount =
+          frameworkStreamResourceChunksPlan.length;
+        window.VaadinDesktopIpcDiagnostics.streamResourceChunksChunkSize = 256;
+        window.VaadinDesktopIpcDiagnostics.streamResourceChunksResponseMode =
+          'range-chunk-sequential';
+        sendFrameworkStreamResourceChunk(frameworkStreamResourceChunksPlan[0]);
+      }
+
       function refreshFrameworkAppDiagnostics() {
         const root = flowClientEngineElementById('framework-root');
         const budget = flowClientEngineElementById('framework-budget');
@@ -6210,6 +6374,8 @@ let flowIpcShell = #"""
           || { element: document.getElementById('framework-stream-resource-range-download') };
         const streamResourceRangeStatus = flowClientEngineElementById('framework-stream-resource-range-status')
           || { element: document.getElementById('framework-stream-resource-range-status') };
+        const streamResourceChunksStatus = flowClientEngineElementById('framework-stream-resource-chunks-status')
+          || { element: document.getElementById('framework-stream-resource-chunks-status') };
         const apply = flowClientEngineElementById('framework-apply');
         const status = flowClientEngineElementById('framework-status');
         const componentStatus = flowClientEngineElementById('framework-component-status');
@@ -6324,13 +6490,28 @@ let flowIpcShell = #"""
         window.VaadinDesktopIpcDiagnostics.frameworkStreamResourceRangeRendered =
           !!streamResourceRangeDownload && !!streamResourceRangeDownload.element
           && !!streamResourceRangeStatus && !!streamResourceRangeStatus.element;
+        window.VaadinDesktopIpcDiagnostics.frameworkStreamResourceChunksVersion =
+          'flow-ipc-stream-resource-chunks-v1_52';
+        window.VaadinDesktopIpcDiagnostics.frameworkStreamResourceChunksRendered =
+          !!streamResourceRangeDownload && !!streamResourceRangeDownload.element
+          && !!streamResourceChunksStatus && !!streamResourceChunksStatus.element;
         window.VaadinDesktopIpcDiagnostics.streamResourceRangeAnchorHref = streamResourceRangeHref;
         window.VaadinDesktopIpcDiagnostics.streamResourceRangeAnchorHrefObserved =
           !!streamResourceRangeHref && streamResourceRangeHref.includes('VAADIN/dynamic/resource/');
         window.VaadinDesktopIpcDiagnostics.frameworkStreamResourceRangeAnchorHrefObserved =
           window.VaadinDesktopIpcDiagnostics.streamResourceRangeAnchorHrefObserved;
+        if (!window.VaadinDesktopIpcDiagnostics.streamResourceChunksAnchorHref) {
+          window.VaadinDesktopIpcDiagnostics.streamResourceChunksAnchorHref = streamResourceRangeHref;
+        }
+        window.VaadinDesktopIpcDiagnostics.streamResourceChunksAnchorHrefObserved =
+          !!streamResourceRangeHref && streamResourceRangeHref.includes('VAADIN/dynamic/resource/');
+        window.VaadinDesktopIpcDiagnostics.frameworkStreamResourceChunksAnchorHrefObserved =
+          window.VaadinDesktopIpcDiagnostics.streamResourceChunksAnchorHrefObserved;
         if (window.__VAADIN_DESKTOP_FLOW_IPC_AUTO_STREAM_RESOURCE_RANGE__) {
           requestFrameworkStreamResourceRangeIfReady();
+        }
+        if (window.__VAADIN_DESKTOP_FLOW_IPC_AUTO_STREAM_RESOURCE_CHUNKS__) {
+          requestFrameworkStreamResourceChunksIfReady();
         }
         const lazyGridObservedRange = lazyGridRangeFromText(lazyGridStatusText);
         if (window.VaadinDesktopIpcDiagnostics.frameworkGridScrollVirtualizationClientApiInvoked
@@ -6448,6 +6629,12 @@ let flowIpcShell = #"""
           && window.VaadinDesktopIpcDiagnostics.frameworkStreamResourceRangeRequestObserved
           && window.VaadinDesktopIpcDiagnostics.frameworkStreamResourceRangeResponseObserved
           && window.VaadinDesktopIpcDiagnostics.frameworkStreamResourceRangeBodyVerified;
+        window.VaadinDesktopIpcDiagnostics.frameworkStreamResourceChunksComplete =
+          window.VaadinDesktopIpcDiagnostics.frameworkStreamResourceChunksRendered
+          && window.VaadinDesktopIpcDiagnostics.frameworkStreamResourceChunksAnchorHrefObserved
+          && window.VaadinDesktopIpcDiagnostics.frameworkStreamResourceChunksRequestObserved
+          && window.VaadinDesktopIpcDiagnostics.frameworkStreamResourceChunksResponseObserved
+          && window.VaadinDesktopIpcDiagnostics.frameworkStreamResourceChunksBodyVerified;
         window.VaadinDesktopIpcDiagnostics.gridScrollVirtualizationClientApiAvailable =
           window.VaadinDesktopIpcDiagnostics.frameworkGridScrollVirtualizationClientApiAvailable;
         window.VaadinDesktopIpcDiagnostics.gridScrollVirtualizationClientApiInvoked =
@@ -6468,7 +6655,9 @@ let flowIpcShell = #"""
             && (!window.__VAADIN_DESKTOP_FLOW_IPC_AUTO_STREAM_RESOURCE__
               || window.VaadinDesktopIpcDiagnostics.frameworkStreamResourceComplete)
             && (!window.__VAADIN_DESKTOP_FLOW_IPC_AUTO_STREAM_RESOURCE_RANGE__
-              || window.VaadinDesktopIpcDiagnostics.frameworkStreamResourceRangeComplete)) {
+              || window.VaadinDesktopIpcDiagnostics.frameworkStreamResourceRangeComplete)
+            && (!window.__VAADIN_DESKTOP_FLOW_IPC_AUTO_STREAM_RESOURCE_CHUNKS__
+              || window.VaadinDesktopIpcDiagnostics.frameworkStreamResourceChunksComplete)) {
           autoFrameworkUpdateDone = true;
           autoFrameworkUpdateInFlight = false;
         }
@@ -6633,7 +6822,9 @@ let flowIpcShell = #"""
               && (!window.__VAADIN_DESKTOP_FLOW_IPC_AUTO_STREAM_RESOURCE__
                 || window.VaadinDesktopIpcDiagnostics.frameworkStreamResourceComplete)
               && (!window.__VAADIN_DESKTOP_FLOW_IPC_AUTO_STREAM_RESOURCE_RANGE__
-                || window.VaadinDesktopIpcDiagnostics.frameworkStreamResourceRangeComplete)) {
+                || window.VaadinDesktopIpcDiagnostics.frameworkStreamResourceRangeComplete)
+              && (!window.__VAADIN_DESKTOP_FLOW_IPC_AUTO_STREAM_RESOURCE_CHUNKS__
+                || window.VaadinDesktopIpcDiagnostics.frameworkStreamResourceChunksComplete)) {
             autoFrameworkUpdateDone = true;
           }
         }
@@ -15177,7 +15368,102 @@ let flowIpcShell = #"""
         trace.textContent = bodyVerified ? 'stream resource range verified' : 'stream resource range unverified';
       }
 
+      function handleStreamResourceChunksResponse(payload) {
+        let body = '';
+        try {
+          body = typeof payload.streamResourceRangeBodyBase64 === 'string'
+            ? atob(payload.streamResourceRangeBodyBase64)
+            : (typeof payload.streamResourceBodyBase64 === 'string'
+              ? atob(payload.streamResourceBodyBase64)
+              : '');
+        } catch (_) {
+          body = '';
+        }
+        const marker = payload.expectedBodyMarker || 'Flow IPC Binary StreamResource v1.51';
+        const fileName = payload.streamResourceFileName || '';
+        const contentType = payload.streamResourceContentType || '';
+        const rangeBytes = Number(payload.streamResourceRangeBytes || 0);
+        const fullBytes = Number(payload.streamResourceFullBytes || 0);
+        const chunkIndex = Number(payload.streamResourceChunkIndex || 0);
+        const chunkCount = Number(payload.streamResourceChunkCount || frameworkStreamResourceChunksPlan.length);
+        const chunkSize = Number(payload.streamResourceChunkSize || 256);
+        const start = Number(payload.streamResourceRangeStart || 0);
+        const endInclusive = Number(payload.streamResourceRangeEndInclusive || 0);
+        const expectedChunk = frameworkStreamResourceChunksPlan[chunkIndex] || null;
+        const resolved = payload.streamResourceStatus === 'partial-content'
+          && payload.streamResourceRangeSatisfied === true
+          && payload.streamResourceChunkedDownload === true;
+        const bodyMarkerOk = chunkIndex === 0 ? body.includes(marker) : body.length === chunkSize;
+        const chunkVerified = !!expectedChunk
+          && resolved
+          && bodyMarkerOk
+          && fileName === 'flow-ipc-framework-v1_51.bin'
+          && contentType.includes('application/octet-stream')
+          && start === expectedChunk.start
+          && endInclusive === expectedChunk.end
+          && rangeBytes === chunkSize
+          && body.length === chunkSize
+          && fullBytes > chunkSize
+          && payload.streamResourceFullBodyOmitted === true
+          && payload.streamResourceResponseMode === 'range-chunk-sequential';
+        if (chunkVerified) {
+          frameworkStreamResourceChunksVerified[chunkIndex] = true;
+          frameworkStreamResourceChunksBodies[chunkIndex] = body;
+        }
+        const responseOrder = window.VaadinDesktopIpcDiagnostics.streamResourceChunksResponseOrder || '';
+        const responseEntry = chunkIndex + ':' + start + '-' + endInclusive;
+        window.VaadinDesktopIpcDiagnostics.streamResourceChunksResponseOrder =
+          responseOrder ? responseOrder + ',' + responseEntry : responseEntry;
+        const verifiedCount = Object.keys(frameworkStreamResourceChunksVerified).length;
+        let aggregateBytes = 0;
+        for (const value of Object.values(frameworkStreamResourceChunksBodies)) {
+          aggregateBytes += value.length;
+        }
+        const allVerified = verifiedCount === frameworkStreamResourceChunksPlan.length;
+        window.VaadinDesktopIpcDiagnostics.streamResourceChunksVersion =
+          payload.streamResourceVersion || 'flow-ipc-stream-resource-chunks-v1_52';
+        window.VaadinDesktopIpcDiagnostics.streamResourceChunksResponseObserved = true;
+        window.VaadinDesktopIpcDiagnostics.streamResourceChunksBodyVerified = allVerified;
+        window.VaadinDesktopIpcDiagnostics.streamResourceChunksVerifiedCount = verifiedCount;
+        window.VaadinDesktopIpcDiagnostics.streamResourceChunksExpectedCount =
+          frameworkStreamResourceChunksPlan.length;
+        window.VaadinDesktopIpcDiagnostics.streamResourceChunksChunkSize = chunkSize;
+        window.VaadinDesktopIpcDiagnostics.streamResourceChunksAggregateBytes = aggregateBytes;
+        window.VaadinDesktopIpcDiagnostics.streamResourceChunksFullBytes = fullBytes;
+        window.VaadinDesktopIpcDiagnostics.streamResourceChunksFullSha256 =
+          payload.streamResourceFullSha256 || '';
+        window.VaadinDesktopIpcDiagnostics.streamResourceChunksFirstBodySample =
+          frameworkStreamResourceChunksBodies[0] ? frameworkStreamResourceChunksBodies[0].slice(0, 96) : '';
+        window.VaadinDesktopIpcDiagnostics.streamResourceChunksFullBodyOmitted =
+          payload.streamResourceFullBodyOmitted === true;
+        window.VaadinDesktopIpcDiagnostics.streamResourceChunksResponseMode =
+          payload.streamResourceResponseMode || '';
+        window.VaadinDesktopIpcDiagnostics.streamResourceChunksNoLocalhost =
+          payload.streamResourceNoLocalhost === true;
+        window.VaadinDesktopIpcDiagnostics.streamResourceChunksFixtureSubstituted =
+          payload.streamResourceFixtureSubstituted === true;
+        window.VaadinDesktopIpcDiagnostics.streamResourceChunksFailureLayer =
+          allVerified ? '' : (chunkVerified ? '' : (payload.streamResourceFailureLayer || 'stream-resource-chunk-response-unverified'));
+        window.VaadinDesktopIpcDiagnostics.frameworkStreamResourceChunksResponseObserved = true;
+        window.VaadinDesktopIpcDiagnostics.frameworkStreamResourceChunksBodyVerified = allVerified;
+        window.VaadinDesktopIpcDiagnostics.frameworkStreamResourceChunksComplete =
+          window.VaadinDesktopIpcDiagnostics.frameworkStreamResourceChunksRendered
+          && window.VaadinDesktopIpcDiagnostics.frameworkStreamResourceChunksAnchorHrefObserved
+          && window.VaadinDesktopIpcDiagnostics.frameworkStreamResourceChunksRequestObserved
+          && window.VaadinDesktopIpcDiagnostics.frameworkStreamResourceChunksResponseObserved
+          && window.VaadinDesktopIpcDiagnostics.frameworkStreamResourceChunksBodyVerified;
+        if (chunkVerified && chunkIndex + 1 < frameworkStreamResourceChunksPlan.length) {
+          sendFrameworkStreamResourceChunk(frameworkStreamResourceChunksPlan[chunkIndex + 1]);
+        }
+        trace.textContent = allVerified ? 'stream resource chunks verified' : 'stream resource chunks pending';
+      }
+
       async function handleResourceResponse(payload) {
+        if (payload && payload.dynamicStreamResource === true
+            && payload.streamResourceVersion === 'flow-ipc-stream-resource-chunks-v1_52') {
+          handleStreamResourceChunksResponse(payload);
+          return;
+        }
         if (payload && payload.dynamicStreamResource === true
             && payload.streamResourceVersion === 'flow-ipc-stream-resource-range-v1_51') {
           handleStreamResourceRangeResponse(payload);

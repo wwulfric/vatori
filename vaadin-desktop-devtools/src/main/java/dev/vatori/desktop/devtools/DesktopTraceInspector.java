@@ -172,6 +172,9 @@ public final class DesktopTraceInspector {
         FLOW_IPC_V1_51_STREAM_RESOURCE_RANGE(
                 "--require-flow-ipc-v1_51-stream-resource-range"),
         FLOW_IPC_V1_51("--require-flow-ipc-v1_51"),
+        FLOW_IPC_V1_52_STREAM_RESOURCE_CHUNKS(
+                "--require-flow-ipc-v1_52-stream-resource-chunks"),
+        FLOW_IPC_V1_52("--require-flow-ipc-v1_52"),
         FLOW_IPC_V1_3_FRAMEWORK("--require-flow-ipc-v1_3-framework");
 
         private final String option;
@@ -646,6 +649,11 @@ public final class DesktopTraceInspector {
                 case FLOW_IPC_V1_51 -> EnumSet.of(
                         FLOW_IPC_V1_51_STREAM_RESOURCE_RANGE,
                         FLOW_IPC_V1_51);
+                case FLOW_IPC_V1_52_STREAM_RESOURCE_CHUNKS ->
+                    EnumSet.of(FLOW_IPC_V1_52_STREAM_RESOURCE_CHUNKS);
+                case FLOW_IPC_V1_52 -> EnumSet.of(
+                        FLOW_IPC_V1_52_STREAM_RESOURCE_CHUNKS,
+                        FLOW_IPC_V1_52);
                 case FLOW_IPC_V1_3_FRAMEWORK -> EnumSet.of(FLOW_IPC_V1_3_FRAMEWORK);
             };
         }
@@ -790,6 +798,9 @@ public final class DesktopTraceInspector {
                 case FLOW_IPC_V1_51_STREAM_RESOURCE_RANGE ->
                     summary.hasRequiredFlowIpcV1_51StreamResourceRangeTypes();
                 case FLOW_IPC_V1_51 -> summary.hasRequiredFlowIpcV1_51Types();
+                case FLOW_IPC_V1_52_STREAM_RESOURCE_CHUNKS ->
+                    summary.hasRequiredFlowIpcV1_52StreamResourceChunksTypes();
+                case FLOW_IPC_V1_52 -> summary.hasRequiredFlowIpcV1_52Types();
                 case FLOW_IPC_V1_3_FRAMEWORK -> summary.hasRequiredFlowIpcV1_3FrameworkTypes();
             };
         }
@@ -1059,6 +1070,13 @@ public final class DesktopTraceInspector {
                     && line.contains("com.vaadin.flow.server.StreamResource")) {
                 summary.frameworkStreamResourceRangeBootstrapObserved = true;
             }
+            if (line.contains("dev.vatori.ipcframework.FlowOverIpcFrameworkView")
+                    && line.contains("framework-stream-resource-range-download")
+                    && line.contains("framework-stream-resource-chunks-status")
+                    && line.contains("com.vaadin.flow.component.html.Anchor")
+                    && line.contains("com.vaadin.flow.server.StreamResource")) {
+                summary.frameworkStreamResourceChunksBootstrapObserved = true;
+            }
             if (line.contains("\"type\":\"event\"")
                     && line.contains("\"dispatch\":\"flow-client-xhr\"")
                     && line.contains("\"attachExistingElementById\"")
@@ -1185,6 +1203,20 @@ public final class DesktopTraceInspector {
             if (line.contains("\"type\":\"resourceResponse\"")
                     && containsStreamResourceRangeV151Response(line)) {
                 summary.streamResourceRangeV151ResponseObserved = true;
+            }
+            if (line.contains("\"type\":\"resourceRequest\"")
+                    && containsStringField(line, "streamResourceVersion",
+                            "flow-ipc-stream-resource-chunks-v1_52")
+                    && containsStringField(line, "purpose", "framework-stream-resource-chunks-v1_52")
+                    && containsStringField(line, "streamResourceRangeHeader", "bytes=0-255")
+                    && containsLiteralField(line, "streamResourceChunkedDownload", "true")
+                    && line.contains("VAADIN/dynamic/resource/")
+                    && line.contains("flow-ipc-framework-v1_51.bin")) {
+                summary.streamResourceChunksV152RequestObserved = true;
+            }
+            if (line.contains("\"type\":\"resourceResponse\"")
+                    && containsStreamResourceChunksV152Response(line)) {
+                summary.streamResourceChunksV152ResponseObserved = true;
             }
             if (line.contains("\"type\":\"patch\"")
                     && line.contains("\"source\":\"UidlRequestHandler\"")
@@ -1721,6 +1753,11 @@ public final class DesktopTraceInspector {
                     && line.contains("\"componentFrontendResources\"")
                     && containsStreamResourceRangeV151Fields(line)) {
                 summary.streamResourceRangeV151ManifestObserved = true;
+            }
+            if (line.contains("\"type\":\"bootstrapResponse\"")
+                    && line.contains("\"componentFrontendResources\"")
+                    && containsStreamResourceChunksV152Fields(line)) {
+                summary.streamResourceChunksV152ManifestObserved = true;
             }
             if (line.contains("\"type\":\"bootstrapResponse\"")
                     && line.contains("\"componentFrontendResources\"")
@@ -4728,6 +4765,11 @@ public final class DesktopTraceInspector {
                 summary.streamResourceRangeV151DomObserved = true;
             }
             if (line.contains("\"type\":\"webview.dom\"")
+                    && containsStreamResourceChunksV152Dom(line)) {
+                summary.streamResourceChunksV152DomObserved = true;
+                summary.frameworkStreamResourceChunksDomObserved = true;
+            }
+            if (line.contains("\"type\":\"webview.dom\"")
                     && containsLiteralField(line, "generatedLazySourceCurrentBuildNoOpConfirmed", "true")
                     && containsStringField(line, "generatedLazySourceCurrentBuildTableShape",
                             "no-op-promise-resolve-0")
@@ -7097,6 +7139,135 @@ public final class DesktopTraceInspector {
                 && containsLiteralField(line, "frameworkStreamResourceRangeComplete", "true");
     }
 
+    private static boolean containsStreamResourceChunksV152Fields(String line) {
+        return containsStringField(line, "streamResourceChunksVersion",
+                        "flow-ipc-stream-resource-chunks-v1_52")
+                && containsStringField(line, "streamResourceChunksSource",
+                        "stream-resource-range-v1_51")
+                && containsStringField(line, "streamResourceChunksScope",
+                        "framework-validation-app-binary-stream-resource-sequential-chunk-download")
+                && containsStringField(line, "streamResourceChunksAppShape",
+                        "framework-validation-app")
+                && containsStringField(line, "streamResourceChunksJavaClasses",
+                        "com.vaadin.flow.component.html.Anchor,com.vaadin.flow.server.StreamResource,com.vaadin.flow.server.StreamResourceRegistry")
+                && containsStringField(line, "streamResourceChunksComponentIds",
+                        "framework-stream-resource-range-download,framework-stream-resource-range-status,framework-stream-resource-chunks-status")
+                && containsStringField(line, "streamResourceChunksDynamicPathPrefix",
+                        "VAADIN/dynamic/resource/")
+                && containsStringField(line, "streamResourceChunksExpectedFile",
+                        "flow-ipc-framework-v1_51.bin")
+                && containsStringField(line, "streamResourceChunksExpectedContentType",
+                        "application/octet-stream")
+                && containsStringField(line, "streamResourceChunksExpectedBodyMarker",
+                        "Flow IPC Binary StreamResource v1.51")
+                && containsStringField(line, "streamResourceChunksRangePlan",
+                        "bytes=0-255,bytes=256-511,bytes=512-767")
+                && containsLiteralField(line, "streamResourceChunksChunkCount", "3")
+                && containsLiteralField(line, "streamResourceChunksChunkSize", "256")
+                && containsLiteralField(line, "streamResourceChunksExpectedAggregateBytes", "768")
+                && containsLiteralField(line, "streamResourceChunksBackpressureWindow", "1")
+                && containsStringFieldPrefix(line, "streamResourceChunksSelectedArtifacts",
+                        "current-app-frontend/generated/flow/generated-flow-imports.js")
+                && containsPositiveIntegerField(line, "streamResourceChunksSelectedArtifactCount")
+                && containsStringField(line, "streamResourceChunksGeneratedImportsOwnerSource",
+                        "current-app-generated-imports-select-owner-coverage-v1_41")
+                && containsStringField(line, "streamResourceChunksGeneratedImportsOwnerArtifact",
+                        "current-app-frontend/generated/flow/generated-flow-imports.js")
+                && containsStringFieldPrefix(line, "streamResourceChunksProductionSupportArtifact",
+                        "current-app-production/VAADIN/build/generated-flow-imports-")
+                && line.contains("streamResourceChunksProductionSupportSha256")
+                && containsPositiveIntegerField(line, "streamResourceChunksProductionSupportBytes")
+                && line.contains("streamResourceChunksProductionEntryArtifact")
+                && containsStringField(line, "streamResourceChunksBuildGoal", "build-frontend")
+                && containsStringField(line, "streamResourceChunksBuildStatus", "success")
+                && line.contains("streamResourceChunksOutputUsability")
+                && containsLiteralField(line, "streamResourceChunksFrameworkAppRequired", "true")
+                && containsLiteralField(line, "streamResourceChunksFrameworkAppObserved", "true")
+                && containsLiteralField(line, "streamResourceChunksCliContractEnabled", "true")
+                && containsLiteralField(line, "streamResourceChunksManifestReady", "true")
+                && containsLiteralField(line, "streamResourceChunksRuntimeHandoffRequired", "true")
+                && containsLiteralField(line, "streamResourceChunksRuntimeHandoffReady", "true")
+                && containsLiteralField(line, "streamResourceChunksFullBodyOmitted", "true")
+                && containsStringField(line, "streamResourceChunksResponseMode",
+                        "range-chunk-sequential")
+                && containsLiteralField(line, "streamResourceChunksNoLocalhost", "true")
+                && containsLiteralField(line, "streamResourceChunksFixtureSubstituted", "false")
+                && line.contains("streamResourceChunksAcceptableFailures")
+                && line.contains("streamResourceChunksRemainingBlockers")
+                && line.contains("streamResourceChunksNextResolutionStep");
+    }
+
+    private static boolean containsStreamResourceChunksV152Response(String line) {
+        return containsStringField(line, "streamResourceVersion",
+                        "flow-ipc-stream-resource-chunks-v1_52")
+                && containsStringField(line, "artifactFamily", "flow-stream-resource-chunks")
+                && containsStringField(line, "streamResourceStatus", "partial-content")
+                && containsStringField(line, "streamResourceFileName",
+                        "flow-ipc-framework-v1_51.bin")
+                && containsStringField(line, "streamResourceContentType",
+                        "application/octet-stream")
+                && containsStringField(line, "streamResourceRangeHeader", "bytes=0-255")
+                && containsStringField(line, "streamResourceChunkRangeHeader", "bytes=0-255")
+                && containsLiteralField(line, "streamResourceChunkedDownload", "true")
+                && containsLiteralField(line, "streamResourceChunkIndex", "0")
+                && containsLiteralField(line, "streamResourceChunkCount", "3")
+                && containsLiteralField(line, "streamResourceChunkSize", "256")
+                && containsPositiveIntegerField(line, "streamResourceRangeBytes")
+                && containsPositiveIntegerField(line, "streamResourceFullBytes")
+                && line.contains("streamResourceRangeSha256")
+                && line.contains("streamResourceFullSha256")
+                && line.contains("streamResourceRangeBodyBase64")
+                && containsLiteralField(line, "dynamicStreamResource", "true")
+                && containsLiteralField(line, "streamResourceRangeRequested", "true")
+                && containsLiteralField(line, "streamResourceRangeSatisfied", "true")
+                && containsLiteralField(line, "streamResourceFullBodyOmitted", "true")
+                && containsStringField(line, "streamResourceResponseMode",
+                        "range-chunk-sequential")
+                && containsStringField(line, "streamResourceBackpressureEvidence",
+                        "sequential-single-chunk-window-full-body-omitted")
+                && containsLiteralField(line, "streamResourceNoLocalhost", "true")
+                && containsLiteralField(line, "streamResourceFixtureSubstituted", "false");
+    }
+
+    private static boolean containsStreamResourceChunksV152Dom(String line) {
+        return containsStringField(line, "streamResourceChunksVersion",
+                        "flow-ipc-stream-resource-chunks-v1_52")
+                && line.contains("VAADIN/dynamic/resource/")
+                && line.contains("flow-ipc-framework-v1_51.bin")
+                && line.contains("Flow IPC Binary StreamResource v1.51")
+                && containsStringField(line, "streamResourceChunksRequestOrder",
+                        "0:0-255,1:256-511,2:512-767")
+                && containsStringField(line, "streamResourceChunksResponseOrder",
+                        "0:0-255,1:256-511,2:512-767")
+                && containsLiteralField(line, "streamResourceChunksVerifiedCount", "3")
+                && containsLiteralField(line, "streamResourceChunksExpectedCount", "3")
+                && containsLiteralField(line, "streamResourceChunksChunkSize", "256")
+                && containsLiteralField(line, "streamResourceChunksAggregateBytes", "768")
+                && containsPositiveIntegerField(line, "streamResourceChunksFullBytes")
+                && line.contains("streamResourceChunksFullSha256")
+                && containsLiteralField(line, "streamResourceChunksAnchorHrefObserved", "true")
+                && containsLiteralField(line, "streamResourceChunksRequestObserved", "true")
+                && containsLiteralField(line, "streamResourceChunksResponseObserved", "true")
+                && containsLiteralField(line, "streamResourceChunksBodyVerified", "true")
+                && containsLiteralField(line, "streamResourceChunksFullBodyOmitted", "true")
+                && containsStringField(line, "streamResourceChunksResponseMode",
+                        "range-chunk-sequential")
+                && containsLiteralField(line, "streamResourceChunksNoLocalhost", "true")
+                && containsLiteralField(line, "streamResourceChunksFixtureSubstituted", "false")
+                && containsStringField(line, "frameworkStreamResourceChunksVersion",
+                        "flow-ipc-stream-resource-chunks-v1_52")
+                && containsLiteralField(line, "frameworkStreamResourceChunksRendered", "true")
+                && containsLiteralField(line, "frameworkStreamResourceChunksAnchorHrefObserved",
+                        "true")
+                && containsLiteralField(line, "frameworkStreamResourceChunksRequestObserved",
+                        "true")
+                && containsLiteralField(line, "frameworkStreamResourceChunksResponseObserved",
+                        "true")
+                && containsLiteralField(line, "frameworkStreamResourceChunksBodyVerified",
+                        "true")
+                && containsLiteralField(line, "frameworkStreamResourceChunksComplete", "true");
+    }
+
     private static boolean containsProductionOwnerFailureLayer(String line, String field) {
         return containsStringField(line, field, "production-owner-duplicate-custom-element")
                 || containsStringField(line, field, "production-owner-relative-import-unresolved")
@@ -7427,6 +7598,8 @@ public final class DesktopTraceInspector {
         private boolean frameworkStreamResourceDomObserved;
         private boolean frameworkStreamResourceRangeBootstrapObserved;
         private boolean frameworkStreamResourceRangeDomObserved;
+        private boolean frameworkStreamResourceChunksBootstrapObserved;
+        private boolean frameworkStreamResourceChunksDomObserved;
         private boolean firstMeaningfulPaintObserved;
         private boolean frontendAssetPipelineV14Observed;
         private boolean frontendArtifactFamilyModelObserved;
@@ -7719,6 +7892,10 @@ public final class DesktopTraceInspector {
         private boolean streamResourceRangeV151RequestObserved;
         private boolean streamResourceRangeV151ResponseObserved;
         private boolean streamResourceRangeV151DomObserved;
+        private boolean streamResourceChunksV152ManifestObserved;
+        private boolean streamResourceChunksV152RequestObserved;
+        private boolean streamResourceChunksV152ResponseObserved;
+        private boolean streamResourceChunksV152DomObserved;
 
         public boolean hasRequiredFlowIpcTypes() {
             return types.keySet().containsAll(FLOW_IPC_REQUIRED_TYPES)
@@ -8529,6 +8706,18 @@ public final class DesktopTraceInspector {
             return hasRequiredFlowIpcV1_51StreamResourceRangeTypes();
         }
 
+        public boolean hasRequiredFlowIpcV1_52StreamResourceChunksTypes() {
+            return streamResourceChunksV152ManifestObserved
+                    && streamResourceChunksV152RequestObserved
+                    && streamResourceChunksV152ResponseObserved
+                    && streamResourceChunksV152DomObserved
+                    && hasRequiredFlowIpcV1_51StreamResourceRangeTypes();
+        }
+
+        public boolean hasRequiredFlowIpcV1_52Types() {
+            return hasRequiredFlowIpcV1_52StreamResourceChunksTypes();
+        }
+
         private boolean hasCurrentAppBuildFrontendOutputSuccessorEvidence() {
             return currentAppBuildFrontendOutputV132ManifestObserved
                     && currentAppBuildFrontendOutputV132RequestObserved
@@ -9228,6 +9417,14 @@ public final class DesktopTraceInspector {
             System.out.println("framework StreamResource range bootstrap/DOM observed: "
                     + frameworkStreamResourceRangeBootstrapObserved + "/"
                     + frameworkStreamResourceRangeDomObserved);
+            System.out.println("Flow IPC v1.52 StreamResource chunks manifest/request/response/DOM observed: "
+                    + streamResourceChunksV152ManifestObserved + "/"
+                    + streamResourceChunksV152RequestObserved + "/"
+                    + streamResourceChunksV152ResponseObserved + "/"
+                    + streamResourceChunksV152DomObserved);
+            System.out.println("framework StreamResource chunks bootstrap/DOM observed: "
+                    + frameworkStreamResourceChunksBootstrapObserved + "/"
+                    + frameworkStreamResourceChunksDomObserved);
             System.out.println("Flow IPC v1.6 TextField graph manifest observed: "
                     + frontendTextFieldV16ManifestObserved);
             System.out.println("Flow IPC v1.6 TextField graph request observed: "

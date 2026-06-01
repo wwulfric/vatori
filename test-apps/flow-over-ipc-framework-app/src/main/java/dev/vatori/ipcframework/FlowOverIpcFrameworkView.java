@@ -160,6 +160,9 @@ public class FlowOverIpcFrameworkView extends VerticalLayout {
         Span streamResourceRangeStatus = new Span("StreamResource range: pending");
         streamResourceRangeStatus.setId("framework-stream-resource-range-status");
 
+        Span streamResourceChunksStatus = new Span("StreamResource chunks: pending");
+        streamResourceChunksStatus.setId("framework-stream-resource-chunks-status");
+
         VirtualList<String> virtualList = new VirtualList<>();
         virtualList.setId("framework-virtual-list");
         virtualList.setItems(List.of("Queue alpha", "Queue beta", "Queue release"));
@@ -282,7 +285,7 @@ public class FlowOverIpcFrameworkView extends VerticalLayout {
         add(title, budget, expedited, priority, reviewer, dueDate, openDialog, detailsDialog,
                 grid, lazyGrid, lazyGridStatus, lazyGridReport, streamResourceDownload,
                 streamResourceStatus, streamResourceRangeDownload, streamResourceRangeStatus,
-                virtualList, formLayout,
+                streamResourceChunksStatus, virtualList, formLayout,
                 apply, status, componentStatus, matrixStatus,
                 updateList);
     }

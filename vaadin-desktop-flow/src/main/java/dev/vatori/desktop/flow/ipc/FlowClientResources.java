@@ -843,6 +843,22 @@ final class FlowClientResources {
             "full-upload-download-streaming,large-file-backpressure,progress-cancellation,downloadhandler-parity,upload-receiver-parity,theme-variants,dev-mode-vite-parity,installer-packaging,durable-reconnect";
     private static final String STREAM_RESOURCE_RANGE_NEXT_STEP =
             "turn binary range-slice download evidence into DownloadHandler/Upload streaming with progress, cancellation and OS file grants";
+    private static final String STREAM_RESOURCE_CHUNKS_VERSION =
+            "flow-ipc-stream-resource-chunks-v1_52";
+    private static final String STREAM_RESOURCE_CHUNKS_SOURCE =
+            "stream-resource-range-v1_51";
+    private static final String STREAM_RESOURCE_CHUNKS_SCOPE =
+            "framework-validation-app-binary-stream-resource-sequential-chunk-download";
+    private static final String STREAM_RESOURCE_CHUNKS_COMPONENT_IDS =
+            "framework-stream-resource-range-download,framework-stream-resource-range-status,framework-stream-resource-chunks-status";
+    private static final String STREAM_RESOURCE_CHUNKS_RANGE_PLAN =
+            "bytes=0-255,bytes=256-511,bytes=512-767";
+    private static final String STREAM_RESOURCE_CHUNKS_ACCEPTABLE_FAILURES =
+            "stream-resource-registry-unavailable,dynamic-resource-href-missing,chunk-response-missing,chunk-order-mismatch,chunk-body-marker-missing,chunk-metadata-mismatch";
+    private static final String STREAM_RESOURCE_CHUNKS_REMAINING_BLOCKERS =
+            "full-upload-download-streaming,parallel-chunk-backpressure,retry-resume,progress-cancellation,downloadhandler-parity,upload-receiver-parity,theme-variants,dev-mode-vite-parity,installer-packaging,durable-reconnect";
+    private static final String STREAM_RESOURCE_CHUNKS_NEXT_STEP =
+            "turn bounded sequential chunk evidence into generalized streaming with retry/resume, progress, cancellation and OS file grants";
     private static final List<String> PRODUCTION_RUNTIME_OWNER_DEPENDENCY_ARTIFACTS = List.of(
             DEV_BUNDLE_COMMONJS_JS,
             DEV_BUNDLE_INDEX_HTML_JS,
@@ -3164,6 +3180,77 @@ final class FlowClientResources {
         attributes.put("streamResourceRangeRemainingBlockers",
                 STREAM_RESOURCE_RANGE_REMAINING_BLOCKERS);
         attributes.put("streamResourceRangeNextResolutionStep", STREAM_RESOURCE_RANGE_NEXT_STEP);
+        attributes.putAll(streamResourceChunksAttributes(evidence, buildStep, selectedArtifacts,
+                handoffReady));
+        return attributes;
+    }
+
+    private static Map<String, Object> streamResourceChunksAttributes(
+            CurrentAppBuildFrontendOutputEvidence evidence,
+            FrontendBuildStepEvidence buildStep,
+            String selectedArtifacts,
+            boolean handoffReady) {
+        Path module = appModuleDirectory();
+        String appShape = packagingRuntimeHandoffAppShape(module);
+        boolean frameworkApp = "framework-validation-app".equals(appShape);
+        Map<String, Object> attributes = new LinkedHashMap<>();
+        attributes.put("streamResourceChunksVersion", STREAM_RESOURCE_CHUNKS_VERSION);
+        attributes.put("streamResourceChunksSource", STREAM_RESOURCE_CHUNKS_SOURCE);
+        attributes.put("streamResourceChunksScope", STREAM_RESOURCE_CHUNKS_SCOPE);
+        attributes.put("streamResourceChunksAppShape", appShape);
+        attributes.put("streamResourceChunksJavaClasses", STREAM_RESOURCE_RANGE_JAVA_CLASSES);
+        attributes.put("streamResourceChunksComponentIds", STREAM_RESOURCE_CHUNKS_COMPONENT_IDS);
+        attributes.put("streamResourceChunksDynamicPathPrefix", STREAM_RESOURCE_DYNAMIC_PATH_PREFIX);
+        attributes.put("streamResourceChunksExpectedFile", STREAM_RESOURCE_RANGE_EXPECTED_FILE);
+        attributes.put("streamResourceChunksExpectedContentType",
+                STREAM_RESOURCE_RANGE_EXPECTED_CONTENT_TYPE);
+        attributes.put("streamResourceChunksExpectedBodyMarker",
+                STREAM_RESOURCE_RANGE_EXPECTED_BODY_MARKER);
+        attributes.put("streamResourceChunksRangePlan", STREAM_RESOURCE_CHUNKS_RANGE_PLAN);
+        attributes.put("streamResourceChunksChunkCount", 3);
+        attributes.put("streamResourceChunksChunkSize", 256);
+        attributes.put("streamResourceChunksExpectedAggregateBytes", 768);
+        attributes.put("streamResourceChunksBackpressureWindow", 1);
+        attributes.put("streamResourceChunksSelectedArtifacts", selectedArtifacts);
+        attributes.put("streamResourceChunksSelectedArtifactCount", csvValues(selectedArtifacts).size());
+        attributes.put("streamResourceChunksGeneratedImportsOwnerSource",
+                CURRENT_APP_GENERATED_IMPORTS_OWNER_RUNTIME_CONTRACT_SOURCE);
+        attributes.put("streamResourceChunksGeneratedImportsOwnerArtifact",
+                CURRENT_APP_BUILD_FRONTEND_GENERATED_IMPORTS_JS);
+        attributes.put("streamResourceChunksProductionSupportArtifact",
+                evidence.sourceGeneratedImportsRootProductionSupportArtifact());
+        attributes.put("streamResourceChunksProductionSupportSha256",
+                evidence.productionGeneratedImportsSha256());
+        attributes.put("streamResourceChunksProductionSupportBytes",
+                evidence.productionGeneratedImportsBytes());
+        attributes.put("streamResourceChunksProductionEntryArtifact",
+                evidence.productionEntryScriptVirtualPath());
+        attributes.put("streamResourceChunksBuildGoal", buildStep.goal());
+        attributes.put("streamResourceChunksBuildStatus", buildStep.status());
+        attributes.put("streamResourceChunksOutputUsability", buildStep.outputUsability());
+        attributes.put("streamResourceChunksFrameworkAppRequired", true);
+        attributes.put("streamResourceChunksFrameworkAppObserved", frameworkApp);
+        attributes.put("streamResourceChunksCliContractEnabled",
+                "1".equals(System.getenv("VAADIN_DESKTOP_FLOW_IPC_FRONTEND_BUILD_V1_52")));
+        attributes.put("streamResourceChunksManifestReady", handoffReady && frameworkApp);
+        attributes.put("streamResourceChunksRuntimeHandoffRequired", true);
+        attributes.put("streamResourceChunksRuntimeHandoffReady", handoffReady);
+        attributes.put("streamResourceChunksAnchorHrefObserved", false);
+        attributes.put("streamResourceChunksRequestObserved", false);
+        attributes.put("streamResourceChunksResponseObserved", false);
+        attributes.put("streamResourceChunksBodyVerified", false);
+        attributes.put("streamResourceChunksFullBodyOmitted", true);
+        attributes.put("streamResourceChunksResponseMode", "range-chunk-sequential");
+        attributes.put("streamResourceChunksNoLocalhost", true);
+        attributes.put("streamResourceChunksFixtureSubstituted", false);
+        attributes.put("streamResourceChunksAcceptableFailures",
+                STREAM_RESOURCE_CHUNKS_ACCEPTABLE_FAILURES);
+        attributes.put("streamResourceChunksFailureLayer", frameworkApp
+                ? "framework-stream-resource-chunks-runtime-validation-pending"
+                : "framework-validation-app-not-selected");
+        attributes.put("streamResourceChunksRemainingBlockers",
+                STREAM_RESOURCE_CHUNKS_REMAINING_BLOCKERS);
+        attributes.put("streamResourceChunksNextResolutionStep", STREAM_RESOURCE_CHUNKS_NEXT_STEP);
         return attributes;
     }
 

@@ -57,8 +57,9 @@ v0/v1 runtime 切片走向可产品化桌面框架的最终完成状态。
 - `docs/goal-1_49.md`：Grid Client Scroll Virtualization Probe Contract，已完成。
 - `docs/goal-1_50.md`：Flow StreamResource Dynamic Download Resource Contract，已完成。
 - `docs/goal-1_51.md`：Flow StreamResource Binary Range Download Contract，已完成。
+- `docs/goal-1_52.md`：Flow StreamResource Sequential Chunk Download Contract，已完成。
 
-当前已完成到 `docs/goal-1_51.md`。v1.31 先把 v1.30 的 offline plugin blocker 推进到
+当前已完成到 `docs/goal-1_52.md`。v1.31 先把 v1.30 的 offline plugin blocker 推进到
 explicit online/local-repo preflight；v1.32 进一步把 blocker 推进到 full
 `build-frontend` 输出层，证明当前 smoke app 已产生真实 source generated imports/chunk、
 production webapp build output 和 `prod.bundle`。v1.33 则把 v1.32 的 generic
@@ -199,8 +200,20 @@ slice/full sha256、full byte count、`streamResourceFullBodyOmitted=true` 和
 metadata 全部 verified。它仍不是完整 Vaadin `Upload` / generalized `DownloadHandler`、
 多 chunk streaming、进度、取消、OS save/open panel、sandbox grants、dev-mode/Vite、
 installer packaging 或 durable reconnect parity。
+v1.52 将该路径从单个 range slice 推进到 sequential chunk download：framework app 复用同一个
+binary Flow `StreamResource`，host 对真实
+`VAADIN/dynamic/resource/.../flow-ipc-framework-v1_51.bin` href 顺序发送 `0-255`、
+`256-511`、`512-767` 三个单窗口 chunk request；Java sidecar 仍通过当前
+`VaadinSession.StreamResourceRegistry` 解析完整 resource，但每次只回传当前 256-byte chunk、
+chunk index/count/range、slice sha256、full byte/hash diagnostics、
+`streamResourceFullBodyOmitted=true` 和 `streamResourceResponseMode=range-chunk-sequential`。
+Trace 记录 `flow-ipc-stream-resource-chunks-v1_52`，真实窗口固定 trace 证明 request/response order、
+verified chunk count、aggregate bytes、full-body-omitted、no-localhost/no-fixture metadata 全部
+verified。它仍不是完整 Vaadin `Upload` / generalized `DownloadHandler`、parallel chunk、
+retry/resume、progress、cancel、OS save/open panel、sandbox grants、dev-mode/Vite、installer
+packaging 或 durable reconnect parity。
 
-后续阶段应继续以 `docs/goal-1_52.md` 等文件拆分，
+后续阶段应继续以 `docs/goal-1_53.md` 等文件拆分，
 每个阶段只拿走本长期目标中的一个可评审切片。不要把本文件改写成短期任务清单；
 它是长期北极星和完成度账本。
 
@@ -222,14 +235,15 @@ installer packaging 或 durable reconnect parity。
 
 ## 当前基线
 
-截至 goal 1.51，仓库已经证明：
+截至 goal 1.52，仓库已经证明：
 
 - `dev-ipc` 可以启动 no-localhost Flow IPC runtime。
 - 真实 macOS Swift/AppKit/WKWebView 窗口可以运行 Flow IPC smoke app 和 framework
   validation app。
 - Button、BigDecimalField、Checkbox、Select、ComboBox、DatePicker、Dialog、Grid、
   lazy Grid DataProvider viewport RPC、VirtualList、FormLayout/Binder validation、
-  Flow `StreamResource` dynamic download 和 binary range download、list/repeated update、desktop capability baseline 都有
+  Flow `StreamResource` dynamic download、binary range download 和 sequential chunk download、
+  list/repeated update、desktop capability baseline 都有
   trace gate 或 host-log gate 证据。
 - Java sidecar 通过 `UidlWriter`、`UidlRequestHandler`、`ServerRpcHandler`、
   desktop `VaadinRequest` / `VaadinResponse` adapter 切片生成真实 UIDL。
@@ -818,7 +832,7 @@ installer packaging 或 durable reconnect parity。
 
 - 基于 v1.22 generated lazy chunk-file positive fixture、v1.23 production owner positive
   runtime fixture、v1.24 closure decision contract、v1.25 packaged frontend baseline 和
-  v1.26-v1.51 当前 app generated/build-frontend output 和 framework component/resource behavior contracts，
+  v1.26-v1.52 当前 app generated/build-frontend output 和 framework component/resource behavior contracts，
   继续让当前 app/build 产生的
   真实 generated lazy chunk file 完成执行：在 current app generated imports root package graph 已由
   production support artifact 承载的基础上，接入受支持 Vaadin lazy chunk SPI，或把真实
@@ -866,12 +880,12 @@ installer packaging 或 durable reconnect parity。
 
 ## 当前建议的下一阶段
 
-v1.51 已完成 Flow StreamResource Binary Range Download Contract。下一阶段建议继续沿着更真实的
+v1.52 已完成 Flow StreamResource Sequential Chunk Download Contract。下一阶段建议继续沿着更真实的
 Upload/Download streaming、resource loading parity、component behavior parity 或 dev-mode/Vite 替代路径推进：
 
-- 创建 `docs/goal-1_52.md`：在 v1.51 的 StreamResource binary range download 基础上选择一个
-  更深切片，例如 multi-range / chunked download streaming、Upload event path、完整 Grid scroll container/virtualizer
-  behavior、theme variants，或把 dev-mode/Vite graph execution 收敛为明确替代路径。
+- 创建 `docs/goal-1_53.md`：在 v1.52 的 sequential StreamResource chunk download 基础上选择一个
+  更深切片，例如 Upload component event/resource path、DownloadHandler/save-open grants、完整 Grid scroll
+  container/virtualizer behavior、theme variants，或把 dev-mode/Vite graph execution 收敛为明确替代路径。
 - 不再把 supported Vaadin lazy chunk SPI 当作当前默认路径；除非上游/本地版本提供稳定 API，否则继续以
   packaging-time `build-frontend` artifacts 作为产品化输入。
 - 真实 production owner-owned runtime reuse success，或把当前 generated imports owner contract 与

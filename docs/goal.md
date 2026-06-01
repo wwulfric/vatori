@@ -60,8 +60,9 @@ v0/v1 runtime 切片走向可产品化桌面框架的最终完成状态。
 - `docs/goal-1_52.md`：Flow StreamResource Sequential Chunk Download Contract，已完成。
 - `docs/goal-1_53.md`：Flow Upload ElementRequestHandler Receiver Contract，已完成。
 - `docs/goal-1_54.md`：Flow Upload Multipart Progress and Cancel Contract，已完成。
+- `docs/goal-1_55.md`：Flow DownloadHandler Save/Open Grant Contract，已完成。
 
-当前已完成到 `docs/goal-1_54.md`。v1.31 先把 v1.30 的 offline plugin blocker 推进到
+当前已完成到 `docs/goal-1_55.md`。v1.31 先把 v1.30 的 offline plugin blocker 推进到
 explicit online/local-repo preflight；v1.32 进一步把 blocker 推进到 full
 `build-frontend` 输出层，证明当前 smoke app 已产生真实 source generated imports/chunk、
 production webapp build output 和 `prod.bundle`。v1.33 则把 v1.32 的 generic
@@ -231,9 +232,19 @@ bounded single-file `multipart/form-data` contract：host 对同一个真实 `va
 byte count、sha256、part count、progress checkpoints、cancel probe classification、no-localhost 和
 no-fixture proof。它仍不是 multi-file/large-file streaming、parallel upload、retry/resume、
 真实 backpressure、OS open/save panel、sandbox grants、dev-mode/Vite、installer packaging 或
+durable reconnect parity。v1.55 将下载方向补齐到真实 Flow `DownloadHandler`
+save/open grant contract：framework app 暴露普通 Flow `Anchor` + `DownloadHandler`，
+WebView/host 观察真实 `VAADIN/dynamic/resource/.../flow-ipc-download-handler-v1_55.txt`
+href，经 Flow IPC `resourceRequest` 调用真实 handler，Java runtime 通过 desktop
+`VaadinRequest` / `VaadinResponse` adapter 捕获 body、headers、filename、MIME、status 和
+sha256；Swift host 再通过 manifest-gated `fileTransfer.download` 写入 controlled save path，
+trace 记录 permission、grant type、redacted path、byte count、body redaction、
+open-after-save classification、no-localhost/no-fixture proof 和 WebView DOM completion。
+它仍不是完整 OS `NSSavePanel` 用户授权流、security-scoped bookmarks、large-file streaming、
+parallel chunk、retry/resume、真实 backpressure、dev-mode/Vite、installer packaging 或
 durable reconnect parity。
 
-后续阶段应继续以 `docs/goal-1_55.md` 等文件拆分，
+后续阶段应继续以 `docs/goal-1_56.md` 等文件拆分，
 每个阶段只拿走本长期目标中的一个可评审切片。不要把本文件改写成短期任务清单；
 它是长期北极星和完成度账本。
 
@@ -255,7 +266,7 @@ durable reconnect parity。
 
 ## 当前基线
 
-截至 goal 1.54，仓库已经证明：
+截至 goal 1.55，仓库已经证明：
 
 - `dev-ipc` 可以启动 no-localhost Flow IPC runtime。
 - 真实 macOS Swift/AppKit/WKWebView 窗口可以运行 Flow IPC smoke app 和 framework
@@ -264,6 +275,7 @@ durable reconnect parity。
   lazy Grid DataProvider viewport RPC、VirtualList、FormLayout/Binder validation、
   Flow `StreamResource` dynamic download、binary range download、sequential chunk download、
   bounded Flow `Upload` receiver、single-file multipart Flow `Upload` receiver、
+  Flow `DownloadHandler` save/open 到 manifest-gated native `fileTransfer.download`、
   list/repeated update、desktop capability baseline 都有
   trace gate 或 host-log gate 证据。
 - Java sidecar 通过 `UidlWriter`、`UidlRequestHandler`、`ServerRpcHandler`、
@@ -853,7 +865,7 @@ durable reconnect parity。
 
 - 基于 v1.22 generated lazy chunk-file positive fixture、v1.23 production owner positive
   runtime fixture、v1.24 closure decision contract、v1.25 packaged frontend baseline 和
-  v1.26-v1.54 当前 app generated/build-frontend output 和 framework component/resource behavior contracts，
+  v1.26-v1.55 当前 app generated/build-frontend output 和 framework component/resource behavior contracts，
   继续让当前 app/build 产生的
   真实 generated lazy chunk file 完成执行：在 current app generated imports root package graph 已由
   production support artifact 承载的基础上，接入受支持 Vaadin lazy chunk SPI，或把真实
@@ -879,7 +891,7 @@ durable reconnect parity。
   不能替代真实 owner parity。
 - Dev-mode/Vite graph execution 或可靠替代模式。
 - Broader Vaadin component parity，尤其是完整 Grid scroll virtualization、multi-file/large-file
-  Upload/Download streaming、
+  Upload/Download streaming、production save/open panel grants、
   theme variants 和 attach/detach/focus 等组件行为。
 - Durable push queue、ack、reconnect、reload 和 resync 语义。
 - Multi-window / multi-UI / multi-session lifecycle。
@@ -887,6 +899,21 @@ durable reconnect parity。
 - macOS host 默认化、Windows/Linux host 切片、打包和更新。
 - Production permission model 和 security-scoped file access。
 - Upstream Vaadin SPI 评估。
+
+## 当前粗略迭代估算
+
+以 v1.55 为当前基线，不再锚定早期的 v1.12 或 v1.36 判断：
+
+- 到 Flow IPC frontend/resource pipeline 可以称为“当前 macOS app 基本闭环”，预计还需要
+  6-9 个当前粒度 goal。主要缺口是 large-file Upload/Download progress/cancel/retry/backpressure、
+  production save/open panel grants、theme/static variants、attach/detach/focus/keyboard 行为、
+  durable reconnect/resync，以及 dev-mode/Vite 的可靠替代或明确降级策略。
+- 到本文件定义的完整 `Vaadin Desktop Framework` 长期愿景，预计还需要 28-40 个当前粒度 goal。
+  这包括 runtime/transport hardening、native capability permission model、multi-window/multi-session
+  lifecycle、Swift host 默认化和 host tests、CLI/project template/doctor、packaging/signing/update、
+  Windows/Linux host 切片、文档和非 smoke app 验证体系。
+- 如果把多个 trace-contract 合并成更大阶段，表面 goal 数可以减少；底层工作量不会减少。
+  后续规划应该以可产品化能力面为单位，而不是以历史版本号为锚点。
 
 ## 后续阶段制定规则
 
@@ -902,14 +929,14 @@ durable reconnect parity。
 
 ## 当前建议的下一阶段
 
-v1.54 已完成 Flow Upload Multipart Progress and Cancel Contract。下一阶段建议继续沿着更真实的
-Upload/Download streaming、resource loading parity、component behavior parity、durable reconnect
-或 dev-mode/Vite 替代路径推进：
+v1.55 已完成 Flow DownloadHandler Save/Open Grant Contract。下一阶段建议继续沿着更真实的
+large-file Upload/Download streaming、resource loading parity、component behavior parity、
+durable reconnect 或 dev-mode/Vite 替代路径推进：
 
-- 创建 `docs/goal-1_55.md`：在 v1.54 的 bounded multipart Upload receiver 基础上选择一个
-  更深切片，例如 DownloadHandler/save-open grants、large-file upload/download progress/cancel、
-  完整 Grid scroll container/virtualizer behavior、theme variants，或把 durable reconnect / dev-mode/Vite
-  graph execution 收敛为明确替代路径。
+- 创建 `docs/goal-1_56.md`：在 v1.55 的 `DownloadHandler` save/open grant 基础上选择一个
+  更深切片，例如 large-file upload/download progress/cancel/retry/resume、真实
+  save/open panel grants、完整 Grid scroll container/virtualizer behavior、theme variants，
+  或把 durable reconnect / dev-mode/Vite graph execution 收敛为明确替代路径。
 - 不再把 supported Vaadin lazy chunk SPI 当作当前默认路径；除非上游/本地版本提供稳定 API，否则继续以
   packaging-time `build-frontend` artifacts 作为产品化输入。
 - 真实 production owner-owned runtime reuse success，或把当前 generated imports owner contract 与

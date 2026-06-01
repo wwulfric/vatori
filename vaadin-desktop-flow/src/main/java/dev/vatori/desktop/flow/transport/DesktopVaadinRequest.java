@@ -113,6 +113,21 @@ final class DesktopVaadinRequest implements VaadinRequest, HttpServletRequest {
                 headers);
     }
 
+    static DesktopVaadinRequest download(VaadinSession session, String sessionId, int uiId, String path) {
+        Map<String, String[]> parameters = new LinkedHashMap<>();
+        parameters.put(ApplicationConstants.UI_ID_PARAMETER, new String[]{String.valueOf(uiId)});
+        return new DesktopVaadinRequest(
+                session.getService(),
+                session.getSession() == null ? new DesktopWrappedSession(sessionId) : session.getSession(),
+                new byte[0],
+                parameters,
+                Locale.getDefault(),
+                path,
+                "GET",
+                "application/octet-stream",
+                Map.of("Accept", "*/*"));
+    }
+
     @Override
     public String getParameter(String parameter) {
         String[] values = parameters.get(parameter);

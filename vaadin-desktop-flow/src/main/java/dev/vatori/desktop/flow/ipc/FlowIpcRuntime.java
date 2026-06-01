@@ -140,20 +140,34 @@ final class FlowIpcRuntime {
             int chunkIndex = JsonFields.integer(json, "streamResourceChunkIndex", -1);
             int chunkCount = JsonFields.integer(json, "streamResourceChunkCount", -1);
             int chunkSize = JsonFields.integer(json, "streamResourceChunkSize", -1);
+            boolean downloadHandlerSaveOpen = JsonFields.booleanValue(json, "downloadHandlerSaveOpen", false);
             response = new LinkedHashMap<>(flowSession.streamResourceResponse(path, rangeStart, rangeEndInclusive)
-                    .orElseGet(() -> Map.of(
-                            "path", normalizeDynamicResourcePath(path),
-                            "artifactFamily", rangeStart >= 0
-                                    ? "flow-stream-resource-range"
-                                    : "flow-stream-resource",
-                            "dynamicStreamResource", true,
-                            "streamResourceVersion", rangeStart >= 0
-                                    ? "flow-ipc-stream-resource-range-v1_51"
-                                    : "flow-ipc-stream-resource-v1_50",
-                            "streamResourceStatus", "not-found",
-                            "streamResourceFailureLayer", "stream-resource-registry-unavailable",
-                            "streamResourceNoLocalhost", true,
-                            "streamResourceFixtureSubstituted", false)));
+                    .orElseGet(() -> {
+                        Map<String, Object> missing = new LinkedHashMap<>();
+                        missing.put("path", normalizeDynamicResourcePath(path));
+                        missing.put("artifactFamily", downloadHandlerSaveOpen
+                                ? "flow-download-handler-save-open"
+                                : (rangeStart >= 0 ? "flow-stream-resource-range" : "flow-stream-resource"));
+                        missing.put("dynamicStreamResource", !downloadHandlerSaveOpen);
+                        missing.put("dynamicDownloadHandlerResource", downloadHandlerSaveOpen);
+                        missing.put("streamResourceVersion", rangeStart >= 0
+                                ? "flow-ipc-stream-resource-range-v1_51"
+                                : "flow-ipc-stream-resource-v1_50");
+                        missing.put("downloadHandlerVersion", downloadHandlerSaveOpen
+                                ? "flow-ipc-download-handler-save-open-v1_55"
+                                : "");
+                        missing.put("streamResourceStatus", "not-found");
+                        missing.put("downloadHandlerStatus", downloadHandlerSaveOpen ? "not-found" : "");
+                        missing.put("streamResourceFailureLayer", "stream-resource-registry-unavailable");
+                        missing.put("downloadHandlerFailureLayer", downloadHandlerSaveOpen
+                                ? "download-handler-registry-unavailable"
+                                : "");
+                        missing.put("streamResourceNoLocalhost", true);
+                        missing.put("streamResourceFixtureSubstituted", false);
+                        missing.put("downloadHandlerNoLocalhost", downloadHandlerSaveOpen);
+                        missing.put("downloadHandlerFixtureSubstituted", false);
+                        return missing;
+                    }));
             if (chunkedDownload) {
                 response.put("artifactFamily", "flow-stream-resource-chunks");
                 response.put("streamResourceVersion", "flow-ipc-stream-resource-chunks-v1_52");
@@ -168,6 +182,17 @@ final class FlowIpcRuntime {
                 response.put("streamResourceResponseMode", "range-chunk-sequential");
                 response.put("streamResourceBackpressureEvidence",
                         "sequential-single-chunk-window-full-body-omitted");
+            }
+            if (downloadHandlerSaveOpen) {
+                response.put("downloadHandlerSaveOpenRequested", true);
+                response.put("downloadHandlerSaveTargetPath",
+                        Objects.toString(JsonFields.string(json, "downloadSaveTargetPath"), ""));
+                response.put("downloadHandlerOpenAfterSaveRequested",
+                        JsonFields.booleanValue(json, "downloadOpenAfterSave", false));
+                response.put("downloadHandlerUserGesture",
+                        Objects.toString(JsonFields.string(json, "downloadUserGesture"), ""));
+                response.put("downloadHandlerWindowLabel",
+                        Objects.toString(JsonFields.string(json, "downloadWindowLabel"), "main"));
             }
         } else if (flowClientResources.contains(path)) {
             response = new LinkedHashMap<>(flowClientResources.response(path));

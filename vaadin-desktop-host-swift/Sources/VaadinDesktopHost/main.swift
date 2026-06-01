@@ -22,6 +22,7 @@ struct HostConfig {
     var flowIpcAutoStreamResourceChunks: Bool = false
     var flowIpcAutoUploadReceiver: Bool = false
     var flowIpcAutoUploadMultipart: Bool = false
+    var flowIpcAutoDownloadSaveOpen: Bool = false
     var flowIpcAutoShutdown: Bool = false
     var hostNoActivate: Bool = false
     var title: String = "Vaadin Desktop"
@@ -79,6 +80,7 @@ struct HostConfig {
         config.flowIpcAutoStreamResourceChunks = ProcessInfo.processInfo.environment["VAADIN_DESKTOP_FLOW_IPC_AUTO_STREAM_RESOURCE_CHUNKS"] == "1"
         config.flowIpcAutoUploadReceiver = ProcessInfo.processInfo.environment["VAADIN_DESKTOP_FLOW_IPC_AUTO_UPLOAD_RECEIVER"] == "1"
         config.flowIpcAutoUploadMultipart = ProcessInfo.processInfo.environment["VAADIN_DESKTOP_FLOW_IPC_AUTO_UPLOAD_MULTIPART"] == "1"
+        config.flowIpcAutoDownloadSaveOpen = ProcessInfo.processInfo.environment["VAADIN_DESKTOP_FLOW_IPC_AUTO_DOWNLOAD_SAVE_OPEN"] == "1"
         config.flowIpcAutoShutdown = ProcessInfo.processInfo.environment["VAADIN_DESKTOP_FLOW_IPC_AUTO_SHUTDOWN"] == "1"
         config.hostNoActivate = ProcessInfo.processInfo.environment["VAADIN_DESKTOP_HOST_NO_ACTIVATE"] == "1"
         return config
@@ -792,6 +794,10 @@ final class WebViewHost: NSObject, NSApplicationDelegate, NSWindowDelegate, WKNa
             let source = "window.__VAADIN_DESKTOP_FLOW_IPC_AUTO_UPLOAD_MULTIPART__ = true;"
             userContentController.addUserScript(WKUserScript(source: source, injectionTime: .atDocumentStart, forMainFrameOnly: true))
         }
+        if config.flowIpcAutoDownloadSaveOpen {
+            let source = "window.__VAADIN_DESKTOP_FLOW_IPC_AUTO_DOWNLOAD_SAVE_OPEN__ = true;"
+            userContentController.addUserScript(WKUserScript(source: source, injectionTime: .atDocumentStart, forMainFrameOnly: true))
+        }
         userContentController.add(self, name: "flowIpc")
 
         prepareFlowIpcResourceStagingDirectory()
@@ -868,7 +874,78 @@ final class WebViewHost: NSObject, NSApplicationDelegate, NSWindowDelegate, WKNa
             handleFlowIpcCommand(object)
             return
         }
+        if type == "resourceResponse" {
+            deliverFlowIpcEnvelope(raw, type: type)
+            handleFlowIpcDownloadSaveOpenResourceResponse(object)
+            return
+        }
         deliverFlowIpcEnvelope(raw, type: type)
+    }
+
+    private func handleFlowIpcDownloadSaveOpenResourceResponse(_ object: [String: Any]) {
+        guard config.flowIpcAutoDownloadSaveOpen,
+              let payload = object["payload"] as? [String: Any],
+              payload["downloadHandlerVersion"] as? String == "flow-ipc-download-handler-save-open-v1_55",
+              payload["downloadHandlerSaveOpenRequested"] as? Bool == true else {
+            return
+        }
+        let base64 = payload["downloadHandlerBodyBase64"] as? String ?? ""
+        let bodyData = Data(base64Encoded: base64) ?? Data()
+        let body = String(data: bodyData, encoding: .utf8) ?? ""
+        let suggestedName = payload["downloadHandlerFileName"] as? String ?? "flow-ipc-download-handler-v1_55.txt"
+        let contentType = payload["downloadHandlerContentType"] as? String ?? "text/plain; charset=UTF-8"
+        let targetPath = (payload["downloadHandlerSaveTargetPath"] as? String).flatMap { $0.isBlank ? nil : $0 }
+            ?? ".build/vaadin-desktop-host-swift/downloads/flow-ipc-download-handler-v1_55.txt"
+        let command = "fileTransfer.download"
+        executeDesktopCommand(command, args: [
+            "title": "Save Flow IPC DownloadHandler",
+            "suggestedName": suggestedName,
+            "mimeType": contentType,
+            "bodyEncoding": "utf-8",
+            "body": body,
+            "byteCount": bodyData.count,
+            "targetPath": targetPath
+        ]) { result in
+            var augmented = result
+            let path = augmented["path"] as? String ?? ""
+            augmented["downloadHandlerSaveOpenVersion"] = "flow-ipc-download-handler-save-open-v1_55"
+            augmented["downloadHandlerSaveOpenSource"] = "flow-ipc-download-handler-resource-response"
+            augmented["downloadHandlerResourcePath"] = payload["path"] as? String ?? ""
+            augmented["downloadHandlerResourceSha256"] = payload["downloadHandlerSha256"] as? String ?? ""
+            augmented["downloadHandlerResourceBytes"] = payload["downloadHandlerBytes"] as? Int ?? bodyData.count
+            augmented["downloadHandlerResourceContentType"] = contentType
+            augmented["downloadHandlerSavePathRedacted"] = self.redactedTransferPath(path)
+            augmented["downloadHandlerGrantType"] = "controlled-test-path"
+            augmented["downloadHandlerSecurityScoped"] = false
+            augmented["downloadHandlerNoLocalhost"] = true
+            augmented["downloadHandlerFixtureSubstituted"] = false
+            augmented["downloadHandlerBodyVerifiedByHost"] = body.contains("Flow IPC DownloadHandler v1.55")
+            augmented["downloadHandlerOpenAfterSaveRequested"] = payload["downloadHandlerOpenAfterSaveRequested"] as? Bool ?? false
+            augmented["downloadHandlerOpenAfterSaveResult"] = "classified-not-opened-in-auto-smoke"
+            augmented["downloadHandlerFailureLayer"] = (augmented["success"] as? Bool) == true
+                ? ""
+                : "download-save-write-failed"
+            let correlationId = (object["correlationId"] as? String) ?? (object["id"] as? String) ?? ""
+            let resultEnvelope: [String: Any] = [
+                "version": "flow-ipc-v1",
+                "type": "capabilityResult",
+                "id": "download-save-open-\(correlationId)",
+                "correlationId": correlationId,
+                "sessionId": object["sessionId"] as? String ?? "flow-ipc-session",
+                "uiId": object["uiId"] as? String ?? "main",
+                "route": object["route"] as? String ?? "",
+                "payload": augmented,
+                "error": NSNull(),
+                "timestamp": nowMillis()
+            ]
+            trace("send", "capabilityResult", [
+                "target": "webview",
+                "transport": "flow-ipc",
+                "command": command,
+                "envelope": resultEnvelope
+            ])
+            self.deliverFlowIpcEnvelope(resultEnvelope, type: "capabilityResult")
+        }
     }
 
     private func handleFlowIpcCommand(_ object: [String: Any]) {
@@ -1328,6 +1405,17 @@ final class WebViewHost: NSObject, NSApplicationDelegate, NSWindowDelegate, WKNa
             return URL(fileURLWithPath: expanded)
         }
         return URL(fileURLWithPath: config.repoRoot).appendingPathComponent(expanded)
+    }
+
+    private func redactedTransferPath(_ path: String) -> String {
+        if path.isBlank {
+            return ""
+        }
+        if path.hasPrefix(config.repoRoot) {
+            let suffix = String(path.dropFirst(config.repoRoot.count)).trimmingCharacters(in: CharacterSet(charactersIn: "/"))
+            return "$REPO/" + suffix
+        }
+        return URL(fileURLWithPath: path).lastPathComponent
     }
 
     private func fileByteCount(_ url: URL) -> Int64 {
@@ -2179,6 +2267,8 @@ final class WebViewHost: NSObject, NSApplicationDelegate, NSWindowDelegate, WKNa
             || !!d.frameworkUploadReceiverComplete;
           const uploadMultipartComplete = !window.__VAADIN_DESKTOP_FLOW_IPC_AUTO_UPLOAD_MULTIPART__
             || !!d.frameworkUploadMultipartComplete;
+          const downloadHandlerSaveOpenComplete = !window.__VAADIN_DESKTOP_FLOW_IPC_AUTO_DOWNLOAD_SAVE_OPEN__
+            || !!d.frameworkDownloadHandlerSaveOpenComplete;
           const frameworkComplete = !!d.frameworkAppInteractionComplete
             && componentMatrixComplete
             && dataComponentMatrixComplete
@@ -2188,7 +2278,8 @@ final class WebViewHost: NSObject, NSApplicationDelegate, NSWindowDelegate, WKNa
             && streamResourceRangeComplete
             && streamResourceChunksComplete
             && uploadReceiverComplete
-            && uploadMultipartComplete;
+            && uploadMultipartComplete
+            && downloadHandlerSaveOpenComplete;
           const complete = window.__VAADIN_DESKTOP_FLOW_IPC_AUTO_FRAMEWORK_UPDATE__
             ? frameworkComplete
             : smokeComplete;
@@ -2205,6 +2296,7 @@ final class WebViewHost: NSObject, NSApplicationDelegate, NSWindowDelegate, WKNa
             streamResourceChunksComplete,
             uploadReceiverComplete,
             uploadMultipartComplete,
+            downloadHandlerSaveOpenComplete,
             click: !!d.flowClientEngineEventPatchConsumed,
             text: !!d.flowClientEngineTextInputEventObserved,
             checkbox: !!d.flowClientEngineCheckboxEventObserved,
@@ -3679,6 +3771,33 @@ final class WebViewHost: NSObject, NSApplicationDelegate, NSWindowDelegate, WKNa
           uploadMultipartFixtureSubstituted: !!(window.VaadinDesktopIpcDiagnostics && window.VaadinDesktopIpcDiagnostics.uploadMultipartFixtureSubstituted),
           uploadMultipartParity: !!(window.VaadinDesktopIpcDiagnostics && window.VaadinDesktopIpcDiagnostics.uploadMultipartParity),
           uploadMultipartFailureLayer: window.VaadinDesktopIpcDiagnostics ? window.VaadinDesktopIpcDiagnostics.uploadMultipartFailureLayer : "",
+          downloadHandlerSaveOpenVersion: window.VaadinDesktopIpcDiagnostics ? window.VaadinDesktopIpcDiagnostics.downloadHandlerSaveOpenVersion : "",
+          downloadHandlerSaveOpenAnchorHref: window.VaadinDesktopIpcDiagnostics ? window.VaadinDesktopIpcDiagnostics.downloadHandlerSaveOpenAnchorHref : "",
+          downloadHandlerSaveOpenAnchorHrefObserved: !!(window.VaadinDesktopIpcDiagnostics && window.VaadinDesktopIpcDiagnostics.downloadHandlerSaveOpenAnchorHrefObserved),
+          downloadHandlerSaveOpenRequestObserved: !!(window.VaadinDesktopIpcDiagnostics && window.VaadinDesktopIpcDiagnostics.downloadHandlerSaveOpenRequestObserved),
+          downloadHandlerSaveOpenResponseObserved: !!(window.VaadinDesktopIpcDiagnostics && window.VaadinDesktopIpcDiagnostics.downloadHandlerSaveOpenResponseObserved),
+          downloadHandlerSaveOpenCapabilityResultObserved: !!(window.VaadinDesktopIpcDiagnostics && window.VaadinDesktopIpcDiagnostics.downloadHandlerSaveOpenCapabilityResultObserved),
+          downloadHandlerSaveOpenBodyVerified: !!(window.VaadinDesktopIpcDiagnostics && window.VaadinDesktopIpcDiagnostics.downloadHandlerSaveOpenBodyVerified),
+          downloadHandlerSaveOpenBodySample: window.VaadinDesktopIpcDiagnostics ? window.VaadinDesktopIpcDiagnostics.downloadHandlerSaveOpenBodySample : "",
+          downloadHandlerSaveOpenFileName: window.VaadinDesktopIpcDiagnostics ? window.VaadinDesktopIpcDiagnostics.downloadHandlerSaveOpenFileName : "",
+          downloadHandlerSaveOpenContentType: window.VaadinDesktopIpcDiagnostics ? window.VaadinDesktopIpcDiagnostics.downloadHandlerSaveOpenContentType : "",
+          downloadHandlerSaveOpenBytes: window.VaadinDesktopIpcDiagnostics ? window.VaadinDesktopIpcDiagnostics.downloadHandlerSaveOpenBytes : 0,
+          downloadHandlerSaveOpenSha256: window.VaadinDesktopIpcDiagnostics ? window.VaadinDesktopIpcDiagnostics.downloadHandlerSaveOpenSha256 : "",
+          downloadHandlerSaveOpenResourceType: window.VaadinDesktopIpcDiagnostics ? window.VaadinDesktopIpcDiagnostics.downloadHandlerSaveOpenResourceType : "",
+          downloadHandlerSaveOpenHandlerType: window.VaadinDesktopIpcDiagnostics ? window.VaadinDesktopIpcDiagnostics.downloadHandlerSaveOpenHandlerType : "",
+          downloadHandlerSaveOpenResponseStatusCode: window.VaadinDesktopIpcDiagnostics ? window.VaadinDesktopIpcDiagnostics.downloadHandlerSaveOpenResponseStatusCode : 0,
+          downloadHandlerSaveOpenPermissionMode: window.VaadinDesktopIpcDiagnostics ? window.VaadinDesktopIpcDiagnostics.downloadHandlerSaveOpenPermissionMode : "",
+          downloadHandlerSaveOpenPermissionDecision: window.VaadinDesktopIpcDiagnostics ? window.VaadinDesktopIpcDiagnostics.downloadHandlerSaveOpenPermissionDecision : "",
+          downloadHandlerSaveOpenGrantType: window.VaadinDesktopIpcDiagnostics ? window.VaadinDesktopIpcDiagnostics.downloadHandlerSaveOpenGrantType : "",
+          downloadHandlerSaveOpenPathRedacted: window.VaadinDesktopIpcDiagnostics ? window.VaadinDesktopIpcDiagnostics.downloadHandlerSaveOpenPathRedacted : "",
+          downloadHandlerSaveOpenFileWritten: !!(window.VaadinDesktopIpcDiagnostics && window.VaadinDesktopIpcDiagnostics.downloadHandlerSaveOpenFileWritten),
+          downloadHandlerSaveOpenByteCount: window.VaadinDesktopIpcDiagnostics ? window.VaadinDesktopIpcDiagnostics.downloadHandlerSaveOpenByteCount : 0,
+          downloadHandlerSaveOpenBodyRedacted: !!(window.VaadinDesktopIpcDiagnostics && window.VaadinDesktopIpcDiagnostics.downloadHandlerSaveOpenBodyRedacted),
+          downloadHandlerSaveOpenSecurityScoped: !!(window.VaadinDesktopIpcDiagnostics && window.VaadinDesktopIpcDiagnostics.downloadHandlerSaveOpenSecurityScoped),
+          downloadHandlerSaveOpenAfterSaveResult: window.VaadinDesktopIpcDiagnostics ? window.VaadinDesktopIpcDiagnostics.downloadHandlerSaveOpenAfterSaveResult : "",
+          downloadHandlerSaveOpenNoLocalhost: !!(window.VaadinDesktopIpcDiagnostics && window.VaadinDesktopIpcDiagnostics.downloadHandlerSaveOpenNoLocalhost),
+          downloadHandlerSaveOpenFixtureSubstituted: !!(window.VaadinDesktopIpcDiagnostics && window.VaadinDesktopIpcDiagnostics.downloadHandlerSaveOpenFixtureSubstituted),
+          downloadHandlerSaveOpenFailureLayer: window.VaadinDesktopIpcDiagnostics ? window.VaadinDesktopIpcDiagnostics.downloadHandlerSaveOpenFailureLayer : "",
           frameworkStreamResourceVersion: window.VaadinDesktopIpcDiagnostics ? window.VaadinDesktopIpcDiagnostics.frameworkStreamResourceVersion : "",
           frameworkStreamResourceRendered: !!(window.VaadinDesktopIpcDiagnostics && window.VaadinDesktopIpcDiagnostics.frameworkStreamResourceRendered),
           frameworkStreamResourceAnchorHrefObserved: !!(window.VaadinDesktopIpcDiagnostics && window.VaadinDesktopIpcDiagnostics.frameworkStreamResourceAnchorHrefObserved),
@@ -3716,6 +3835,15 @@ final class WebViewHost: NSObject, NSApplicationDelegate, NSWindowDelegate, WKNa
           frameworkUploadMultipartPatchObserved: !!(window.VaadinDesktopIpcDiagnostics && window.VaadinDesktopIpcDiagnostics.frameworkUploadMultipartPatchObserved),
           frameworkUploadMultipartBodyVerified: !!(window.VaadinDesktopIpcDiagnostics && window.VaadinDesktopIpcDiagnostics.frameworkUploadMultipartBodyVerified),
           frameworkUploadMultipartComplete: !!(window.VaadinDesktopIpcDiagnostics && window.VaadinDesktopIpcDiagnostics.frameworkUploadMultipartComplete),
+          frameworkDownloadHandlerSaveOpenVersion: window.VaadinDesktopIpcDiagnostics ? window.VaadinDesktopIpcDiagnostics.frameworkDownloadHandlerSaveOpenVersion : "",
+          frameworkDownloadHandlerSaveOpenRendered: !!(window.VaadinDesktopIpcDiagnostics && window.VaadinDesktopIpcDiagnostics.frameworkDownloadHandlerSaveOpenRendered),
+          frameworkDownloadHandlerSaveOpenAnchorHrefObserved: !!(window.VaadinDesktopIpcDiagnostics && window.VaadinDesktopIpcDiagnostics.frameworkDownloadHandlerSaveOpenAnchorHrefObserved),
+          frameworkDownloadHandlerSaveOpenRequestObserved: !!(window.VaadinDesktopIpcDiagnostics && window.VaadinDesktopIpcDiagnostics.frameworkDownloadHandlerSaveOpenRequestObserved),
+          frameworkDownloadHandlerSaveOpenResponseObserved: !!(window.VaadinDesktopIpcDiagnostics && window.VaadinDesktopIpcDiagnostics.frameworkDownloadHandlerSaveOpenResponseObserved),
+          frameworkDownloadHandlerSaveOpenCapabilityResultObserved: !!(window.VaadinDesktopIpcDiagnostics && window.VaadinDesktopIpcDiagnostics.frameworkDownloadHandlerSaveOpenCapabilityResultObserved),
+          frameworkDownloadHandlerSaveOpenBodyVerified: !!(window.VaadinDesktopIpcDiagnostics && window.VaadinDesktopIpcDiagnostics.frameworkDownloadHandlerSaveOpenBodyVerified),
+          frameworkDownloadHandlerSaveOpenFileWritten: !!(window.VaadinDesktopIpcDiagnostics && window.VaadinDesktopIpcDiagnostics.frameworkDownloadHandlerSaveOpenFileWritten),
+          frameworkDownloadHandlerSaveOpenComplete: !!(window.VaadinDesktopIpcDiagnostics && window.VaadinDesktopIpcDiagnostics.frameworkDownloadHandlerSaveOpenComplete),
           frameworkAppFailureReason: window.VaadinDesktopIpcDiagnostics ? window.VaadinDesktopIpcDiagnostics.frameworkAppFailureReason : ""
         })
         """
@@ -4098,6 +4226,7 @@ let flowIpcShell = #"""
       let frameworkStreamResourceChunksRequestSent = false;
       let frameworkUploadReceiverRequestSent = false;
       let frameworkUploadMultipartRequestSent = false;
+      let frameworkDownloadHandlerSaveOpenRequestSent = false;
       let frameworkStreamResourceChunksPlan = [
         { index: 0, start: 0, end: 255 },
         { index: 1, start: 256, end: 511 },
@@ -4115,6 +4244,10 @@ let flowIpcShell = #"""
       const frameworkUploadMultipartFileContentType = 'text/plain; charset=UTF-8';
       const frameworkUploadMultipartBoundary = '----VatoriFlowIpcUploadMultipartV154';
       const frameworkUploadMultipartFileSha256 = '535fb2ea55f6d5082b64ce78c9fdc38e5300c5964e400b4fa4759c5416094a6f';
+      const frameworkDownloadHandlerSaveOpenFileName = 'flow-ipc-download-handler-v1_55.txt';
+      const frameworkDownloadHandlerSaveOpenMarker = 'Flow IPC DownloadHandler v1.55';
+      const frameworkDownloadHandlerSaveOpenTargetPath =
+        '.build/vaadin-desktop-host-swift/downloads/flow-ipc-download-handler-v1_55.txt';
       let autoResyncDone = false;
       let autoErrorProbeDone = false;
       const flowBootstrapAppId = 'ROOT-2521314';
@@ -5157,6 +5290,33 @@ let flowIpcShell = #"""
         uploadMultipartFixtureSubstituted: false,
         uploadMultipartParity: false,
         uploadMultipartFailureLayer: '',
+        downloadHandlerSaveOpenVersion: '',
+        downloadHandlerSaveOpenAnchorHref: '',
+        downloadHandlerSaveOpenAnchorHrefObserved: false,
+        downloadHandlerSaveOpenRequestObserved: false,
+        downloadHandlerSaveOpenResponseObserved: false,
+        downloadHandlerSaveOpenCapabilityResultObserved: false,
+        downloadHandlerSaveOpenBodyVerified: false,
+        downloadHandlerSaveOpenBodySample: '',
+        downloadHandlerSaveOpenFileName: '',
+        downloadHandlerSaveOpenContentType: '',
+        downloadHandlerSaveOpenBytes: 0,
+        downloadHandlerSaveOpenSha256: '',
+        downloadHandlerSaveOpenResourceType: '',
+        downloadHandlerSaveOpenHandlerType: '',
+        downloadHandlerSaveOpenResponseStatusCode: 0,
+        downloadHandlerSaveOpenPermissionMode: '',
+        downloadHandlerSaveOpenPermissionDecision: '',
+        downloadHandlerSaveOpenGrantType: '',
+        downloadHandlerSaveOpenPathRedacted: '',
+        downloadHandlerSaveOpenFileWritten: false,
+        downloadHandlerSaveOpenByteCount: 0,
+        downloadHandlerSaveOpenBodyRedacted: false,
+        downloadHandlerSaveOpenSecurityScoped: false,
+        downloadHandlerSaveOpenAfterSaveResult: '',
+        downloadHandlerSaveOpenNoLocalhost: false,
+        downloadHandlerSaveOpenFixtureSubstituted: false,
+        downloadHandlerSaveOpenFailureLayer: '',
         frameworkStreamResourceVersion: '',
         frameworkStreamResourceRendered: false,
         frameworkStreamResourceAnchorHrefObserved: false,
@@ -5194,6 +5354,15 @@ let flowIpcShell = #"""
         frameworkUploadMultipartPatchObserved: false,
         frameworkUploadMultipartBodyVerified: false,
         frameworkUploadMultipartComplete: false,
+        frameworkDownloadHandlerSaveOpenVersion: '',
+        frameworkDownloadHandlerSaveOpenRendered: false,
+        frameworkDownloadHandlerSaveOpenAnchorHrefObserved: false,
+        frameworkDownloadHandlerSaveOpenRequestObserved: false,
+        frameworkDownloadHandlerSaveOpenResponseObserved: false,
+        frameworkDownloadHandlerSaveOpenCapabilityResultObserved: false,
+        frameworkDownloadHandlerSaveOpenBodyVerified: false,
+        frameworkDownloadHandlerSaveOpenFileWritten: false,
+        frameworkDownloadHandlerSaveOpenComplete: false,
         frontendBuildPreflightAvailabilityObserved: false,
         frontendBuildPreflightAvailabilityVersion: '',
         frontendBuildPreflightAvailabilitySource: '',
@@ -6670,6 +6839,53 @@ let flowIpcShell = #"""
         });
       }
 
+      function requestFrameworkDownloadHandlerSaveOpenIfReady() {
+        if (frameworkDownloadHandlerSaveOpenRequestSent
+            || window.VaadinDesktopIpcDiagnostics.frameworkDownloadHandlerSaveOpenComplete) {
+          return;
+        }
+        if (!frameworkDownloadHandlerSaveOpenPrerequisitesReady()) {
+          return;
+        }
+        const anchorRef = flowClientEngineElementById('framework-download-handler-save-open');
+        const anchor = anchorRef && anchorRef.element
+          ? anchorRef.element
+          : document.getElementById('framework-download-handler-save-open');
+        const path = anchor ? normalizeFrameworkStreamResourceHref(anchor.getAttribute('href') || '') : '';
+        if (!path || !path.includes('VAADIN/dynamic/resource/')) {
+          window.VaadinDesktopIpcDiagnostics.downloadHandlerSaveOpenFailureLayer =
+            'download-handler-target-missing';
+          return;
+        }
+        const securityKey = flowClientState.securityKey || flowClientState.csrfToken;
+        if (!securityKey) {
+          return;
+        }
+        frameworkDownloadHandlerSaveOpenRequestSent = true;
+        window.VaadinDesktopIpcDiagnostics.downloadHandlerSaveOpenVersion =
+          'flow-ipc-download-handler-save-open-v1_55';
+        window.VaadinDesktopIpcDiagnostics.downloadHandlerSaveOpenAnchorHref = path;
+        window.VaadinDesktopIpcDiagnostics.downloadHandlerSaveOpenAnchorHrefObserved = true;
+        window.VaadinDesktopIpcDiagnostics.frameworkDownloadHandlerSaveOpenAnchorHrefObserved = true;
+        window.VaadinDesktopIpcDiagnostics.downloadHandlerSaveOpenRequestObserved = true;
+        window.VaadinDesktopIpcDiagnostics.frameworkDownloadHandlerSaveOpenRequestObserved = true;
+        send('resourceRequest', {
+          purpose: 'framework-download-handler-save-open-v1_55',
+          lookupKind: 'Flow-DownloadHandler-save-open-v1_55',
+          path,
+          downloadHandlerVersion: 'flow-ipc-download-handler-save-open-v1_55',
+          dynamicDownloadHandlerResource: true,
+          downloadHandlerSaveOpen: true,
+          downloadSaveTargetPath: frameworkDownloadHandlerSaveOpenTargetPath,
+          downloadOpenAfterSave: true,
+          downloadUserGesture: 'auto-smoke-user-gesture-classified',
+          downloadWindowLabel: 'main',
+          expectedFileName: frameworkDownloadHandlerSaveOpenFileName,
+          expectedBodyMarker: frameworkDownloadHandlerSaveOpenMarker,
+          securityKey
+        });
+      }
+
       function frameworkUploadMultipartPrerequisitesReady() {
         if (!frameworkUploadReceiverPrerequisitesReady()) {
           return false;
@@ -6677,6 +6893,19 @@ let flowIpcShell = #"""
         const d = window.VaadinDesktopIpcDiagnostics || {};
         return !window.__VAADIN_DESKTOP_FLOW_IPC_AUTO_UPLOAD_RECEIVER__
           || !!d.frameworkUploadReceiverComplete;
+      }
+
+      function frameworkDownloadHandlerSaveOpenPrerequisitesReady() {
+        const d = window.VaadinDesktopIpcDiagnostics || {};
+        if (window.__VAADIN_DESKTOP_FLOW_IPC_AUTO_UPLOAD_MULTIPART__
+            && !d.frameworkUploadMultipartComplete) {
+          return false;
+        }
+        if (window.__VAADIN_DESKTOP_FLOW_IPC_AUTO_UPLOAD_RECEIVER__
+            && !d.frameworkUploadReceiverComplete) {
+          return false;
+        }
+        return true;
       }
 
       function frameworkUploadReceiverPrerequisitesReady() {
@@ -6745,6 +6974,10 @@ let flowIpcShell = #"""
           || { element: document.getElementById('framework-stream-resource-range-status') };
         const streamResourceChunksStatus = flowClientEngineElementById('framework-stream-resource-chunks-status')
           || { element: document.getElementById('framework-stream-resource-chunks-status') };
+        const downloadHandlerSaveOpen = flowClientEngineElementById('framework-download-handler-save-open')
+          || { element: document.getElementById('framework-download-handler-save-open') };
+        const downloadHandlerSaveOpenStatus = flowClientEngineElementById('framework-download-handler-save-open-status')
+          || { element: document.getElementById('framework-download-handler-save-open-status') };
         const uploadReceiver = flowClientEngineElementById('framework-upload')
           || { element: document.getElementById('framework-upload') };
         const uploadReceiverStatus = flowClientEngineElementById('framework-upload-status')
@@ -6764,6 +6997,9 @@ let flowIpcShell = #"""
           : '';
         const streamResourceRangeHref = streamResourceRangeDownload && streamResourceRangeDownload.element
           ? normalizeFrameworkStreamResourceHref(streamResourceRangeDownload.element.getAttribute('href') || '')
+          : '';
+        const downloadHandlerSaveOpenHref = downloadHandlerSaveOpen && downloadHandlerSaveOpen.element
+          ? normalizeFrameworkStreamResourceHref(downloadHandlerSaveOpen.element.getAttribute('href') || '')
           : '';
         const uploadReceiverTargetHref = uploadReceiver && uploadReceiver.element
           ? normalizeFrameworkStreamResourceHref(uploadReceiver.element.getAttribute('target') || uploadReceiver.element.target || '')
@@ -6920,6 +7156,20 @@ let flowIpcShell = #"""
         if (window.__VAADIN_DESKTOP_FLOW_IPC_AUTO_STREAM_RESOURCE_CHUNKS__) {
           requestFrameworkStreamResourceChunksIfReady();
         }
+        window.VaadinDesktopIpcDiagnostics.frameworkDownloadHandlerSaveOpenVersion =
+          'flow-ipc-download-handler-save-open-v1_55';
+        window.VaadinDesktopIpcDiagnostics.frameworkDownloadHandlerSaveOpenRendered =
+          !!downloadHandlerSaveOpen && !!downloadHandlerSaveOpen.element
+          && !!downloadHandlerSaveOpenStatus && !!downloadHandlerSaveOpenStatus.element;
+        window.VaadinDesktopIpcDiagnostics.downloadHandlerSaveOpenAnchorHref =
+          downloadHandlerSaveOpenHref;
+        window.VaadinDesktopIpcDiagnostics.downloadHandlerSaveOpenAnchorHrefObserved =
+          !!downloadHandlerSaveOpenHref && downloadHandlerSaveOpenHref.includes('VAADIN/dynamic/resource/');
+        window.VaadinDesktopIpcDiagnostics.frameworkDownloadHandlerSaveOpenAnchorHrefObserved =
+          window.VaadinDesktopIpcDiagnostics.downloadHandlerSaveOpenAnchorHrefObserved;
+        if (window.__VAADIN_DESKTOP_FLOW_IPC_AUTO_DOWNLOAD_SAVE_OPEN__) {
+          requestFrameworkDownloadHandlerSaveOpenIfReady();
+        }
         window.VaadinDesktopIpcDiagnostics.frameworkUploadReceiverVersion =
           'flow-ipc-upload-receiver-v1_53';
         window.VaadinDesktopIpcDiagnostics.frameworkUploadReceiverRendered =
@@ -6976,6 +7226,14 @@ let flowIpcShell = #"""
           && window.VaadinDesktopIpcDiagnostics.frameworkUploadMultipartBodyVerified
           && window.VaadinDesktopIpcDiagnostics.uploadMultipartProgressTerminalStatus === 'completed'
           && window.VaadinDesktopIpcDiagnostics.uploadMultipartCancelProbeAttempted;
+        window.VaadinDesktopIpcDiagnostics.frameworkDownloadHandlerSaveOpenComplete =
+          window.VaadinDesktopIpcDiagnostics.frameworkDownloadHandlerSaveOpenRendered
+          && window.VaadinDesktopIpcDiagnostics.frameworkDownloadHandlerSaveOpenAnchorHrefObserved
+          && window.VaadinDesktopIpcDiagnostics.frameworkDownloadHandlerSaveOpenRequestObserved
+          && window.VaadinDesktopIpcDiagnostics.frameworkDownloadHandlerSaveOpenResponseObserved
+          && window.VaadinDesktopIpcDiagnostics.frameworkDownloadHandlerSaveOpenCapabilityResultObserved
+          && window.VaadinDesktopIpcDiagnostics.frameworkDownloadHandlerSaveOpenBodyVerified
+          && window.VaadinDesktopIpcDiagnostics.frameworkDownloadHandlerSaveOpenFileWritten;
         const lazyGridObservedRange = lazyGridRangeFromText(lazyGridStatusText);
         if (window.VaadinDesktopIpcDiagnostics.frameworkGridScrollVirtualizationClientApiInvoked
             && lazyGridObservedRange
@@ -7120,6 +7378,9 @@ let flowIpcShell = #"""
         if (window.__VAADIN_DESKTOP_FLOW_IPC_AUTO_UPLOAD_MULTIPART__) {
           requestFrameworkUploadMultipartIfReady();
         }
+        if (window.__VAADIN_DESKTOP_FLOW_IPC_AUTO_DOWNLOAD_SAVE_OPEN__) {
+          requestFrameworkDownloadHandlerSaveOpenIfReady();
+        }
         window.VaadinDesktopIpcDiagnostics.gridScrollVirtualizationClientApiAvailable =
           window.VaadinDesktopIpcDiagnostics.frameworkGridScrollVirtualizationClientApiAvailable;
         window.VaadinDesktopIpcDiagnostics.gridScrollVirtualizationClientApiInvoked =
@@ -7146,7 +7407,9 @@ let flowIpcShell = #"""
             && (!window.__VAADIN_DESKTOP_FLOW_IPC_AUTO_UPLOAD_RECEIVER__
               || window.VaadinDesktopIpcDiagnostics.frameworkUploadReceiverComplete)
             && (!window.__VAADIN_DESKTOP_FLOW_IPC_AUTO_UPLOAD_MULTIPART__
-              || window.VaadinDesktopIpcDiagnostics.frameworkUploadMultipartComplete)) {
+              || window.VaadinDesktopIpcDiagnostics.frameworkUploadMultipartComplete)
+            && (!window.__VAADIN_DESKTOP_FLOW_IPC_AUTO_DOWNLOAD_SAVE_OPEN__
+              || window.VaadinDesktopIpcDiagnostics.frameworkDownloadHandlerSaveOpenComplete)) {
           autoFrameworkUpdateDone = true;
           autoFrameworkUpdateInFlight = false;
         }
@@ -15947,6 +16210,52 @@ let flowIpcShell = #"""
         trace.textContent = allVerified ? 'stream resource chunks verified' : 'stream resource chunks pending';
       }
 
+      function handleDownloadHandlerSaveOpenResponse(payload) {
+        let body = '';
+        try {
+          body = typeof payload.downloadHandlerBodyBase64 === 'string'
+            ? atob(payload.downloadHandlerBodyBase64)
+            : (typeof payload.downloadHandlerText === 'string' ? payload.downloadHandlerText : '');
+        } catch (_) {
+          body = '';
+        }
+        const fileName = payload.downloadHandlerFileName || '';
+        const contentType = payload.downloadHandlerContentType || '';
+        const bytes = Number(payload.downloadHandlerBytes || 0);
+        const verified = payload.downloadHandlerStatus === 'resolved'
+          && fileName === frameworkDownloadHandlerSaveOpenFileName
+          && contentType.includes('text/plain')
+          && body.includes(frameworkDownloadHandlerSaveOpenMarker)
+          && bytes > 0
+          && payload.downloadHandlerNoLocalhost === true
+          && payload.downloadHandlerFixtureSubstituted === false;
+        window.VaadinDesktopIpcDiagnostics.downloadHandlerSaveOpenVersion =
+          payload.downloadHandlerVersion || 'flow-ipc-download-handler-save-open-v1_55';
+        window.VaadinDesktopIpcDiagnostics.downloadHandlerSaveOpenResponseObserved = true;
+        window.VaadinDesktopIpcDiagnostics.frameworkDownloadHandlerSaveOpenResponseObserved = true;
+        window.VaadinDesktopIpcDiagnostics.downloadHandlerSaveOpenBodyVerified = verified;
+        window.VaadinDesktopIpcDiagnostics.frameworkDownloadHandlerSaveOpenBodyVerified = verified;
+        window.VaadinDesktopIpcDiagnostics.downloadHandlerSaveOpenBodySample = body.slice(0, 160);
+        window.VaadinDesktopIpcDiagnostics.downloadHandlerSaveOpenFileName = fileName;
+        window.VaadinDesktopIpcDiagnostics.downloadHandlerSaveOpenContentType = contentType;
+        window.VaadinDesktopIpcDiagnostics.downloadHandlerSaveOpenBytes = bytes;
+        window.VaadinDesktopIpcDiagnostics.downloadHandlerSaveOpenSha256 =
+          payload.downloadHandlerSha256 || '';
+        window.VaadinDesktopIpcDiagnostics.downloadHandlerSaveOpenResourceType =
+          payload.downloadHandlerResourceType || '';
+        window.VaadinDesktopIpcDiagnostics.downloadHandlerSaveOpenHandlerType =
+          payload.downloadHandlerHandlerType || '';
+        window.VaadinDesktopIpcDiagnostics.downloadHandlerSaveOpenResponseStatusCode =
+          Number(payload.downloadHandlerResponseStatusCode || 0);
+        window.VaadinDesktopIpcDiagnostics.downloadHandlerSaveOpenNoLocalhost =
+          payload.downloadHandlerNoLocalhost === true;
+        window.VaadinDesktopIpcDiagnostics.downloadHandlerSaveOpenFixtureSubstituted =
+          payload.downloadHandlerFixtureSubstituted === true;
+        window.VaadinDesktopIpcDiagnostics.downloadHandlerSaveOpenFailureLayer =
+          verified ? '' : (payload.downloadHandlerFailureLayer || 'download-handler-response-unverified');
+        trace.textContent = verified ? 'download handler response verified' : 'download handler response pending';
+      }
+
       function handleUploadMultipartResponse(payload) {
         const verified = payload.uploadMultipartStatus === 'resolved'
           && payload.uploadMultipartFileName === frameworkUploadMultipartFileName
@@ -16057,6 +16366,11 @@ let flowIpcShell = #"""
       }
 
       async function handleResourceResponse(payload) {
+        if (payload && payload.dynamicDownloadHandlerResource === true
+            && payload.downloadHandlerVersion === 'flow-ipc-download-handler-save-open-v1_55') {
+          handleDownloadHandlerSaveOpenResponse(payload);
+          return;
+        }
         if (payload && payload.dynamicStreamResource === true
             && payload.streamResourceVersion === 'flow-ipc-stream-resource-chunks-v1_52') {
           handleStreamResourceChunksResponse(payload);
@@ -24164,6 +24478,52 @@ let flowIpcShell = #"""
             && payload.bodyRedacted === true
             && !!payload.path;
           appendFileTransferResultOrder('download');
+          if (payload.downloadHandlerSaveOpenVersion === 'flow-ipc-download-handler-save-open-v1_55') {
+            const saveVerified = payload.success === true
+              && payload.operation === 'download'
+              && payload.canceled !== true
+              && payload.bodyRedacted === true
+              && payload.downloadHandlerBodyVerifiedByHost === true
+              && payload.downloadHandlerNoLocalhost === true
+              && payload.downloadHandlerFixtureSubstituted === false
+              && Number(payload.byteCount || 0) === Number(payload.downloadHandlerResourceBytes || 0);
+            window.VaadinDesktopIpcDiagnostics.downloadHandlerSaveOpenCapabilityResultObserved = true;
+            window.VaadinDesktopIpcDiagnostics.frameworkDownloadHandlerSaveOpenCapabilityResultObserved = true;
+            window.VaadinDesktopIpcDiagnostics.downloadHandlerSaveOpenPermissionMode =
+              payload.permissionMode || '';
+            window.VaadinDesktopIpcDiagnostics.downloadHandlerSaveOpenPermissionDecision =
+              payload.permissionDecision || '';
+            window.VaadinDesktopIpcDiagnostics.downloadHandlerSaveOpenGrantType =
+              payload.downloadHandlerGrantType || '';
+            window.VaadinDesktopIpcDiagnostics.downloadHandlerSaveOpenPathRedacted =
+              payload.downloadHandlerSavePathRedacted || '';
+            window.VaadinDesktopIpcDiagnostics.downloadHandlerSaveOpenFileWritten = saveVerified;
+            window.VaadinDesktopIpcDiagnostics.frameworkDownloadHandlerSaveOpenFileWritten = saveVerified;
+            window.VaadinDesktopIpcDiagnostics.downloadHandlerSaveOpenByteCount =
+              Number(payload.byteCount || 0);
+            window.VaadinDesktopIpcDiagnostics.downloadHandlerSaveOpenBodyRedacted =
+              payload.bodyRedacted === true;
+            window.VaadinDesktopIpcDiagnostics.downloadHandlerSaveOpenSecurityScoped =
+              payload.downloadHandlerSecurityScoped === true;
+            window.VaadinDesktopIpcDiagnostics.downloadHandlerSaveOpenAfterSaveResult =
+              payload.downloadHandlerOpenAfterSaveResult || '';
+            window.VaadinDesktopIpcDiagnostics.downloadHandlerSaveOpenFailureLayer =
+              saveVerified ? '' : (payload.downloadHandlerFailureLayer || 'download-save-capability-result-unverified');
+            const status = document.getElementById('framework-download-handler-save-open-status');
+            if (status) {
+              status.textContent = saveVerified
+                ? 'DownloadHandler save/open complete: ' + (payload.filename || frameworkDownloadHandlerSaveOpenFileName)
+                : 'DownloadHandler save/open pending';
+            }
+            window.VaadinDesktopIpcDiagnostics.frameworkDownloadHandlerSaveOpenComplete =
+              window.VaadinDesktopIpcDiagnostics.frameworkDownloadHandlerSaveOpenRendered
+              && window.VaadinDesktopIpcDiagnostics.frameworkDownloadHandlerSaveOpenAnchorHrefObserved
+              && window.VaadinDesktopIpcDiagnostics.frameworkDownloadHandlerSaveOpenRequestObserved
+              && window.VaadinDesktopIpcDiagnostics.frameworkDownloadHandlerSaveOpenResponseObserved
+              && window.VaadinDesktopIpcDiagnostics.frameworkDownloadHandlerSaveOpenCapabilityResultObserved
+              && window.VaadinDesktopIpcDiagnostics.frameworkDownloadHandlerSaveOpenBodyVerified
+              && window.VaadinDesktopIpcDiagnostics.frameworkDownloadHandlerSaveOpenFileWritten;
+          }
         } else if (command === 'fileTransfer.selectUploadFile') {
           window.VaadinDesktopIpcDiagnostics.fileTransferUploadMode = payload.mode || '';
           window.VaadinDesktopIpcDiagnostics.fileTransferUploadPath = payload.path || '';

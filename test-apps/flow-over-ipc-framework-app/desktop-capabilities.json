@@ -7,7 +7,8 @@
       "commands": [
         "window.setTitle",
         "clipboard.writeText",
-        "notification.show"
+        "notification.show",
+        "fileTransfer.download"
       ]
     }
   ]

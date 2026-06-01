@@ -19,10 +19,15 @@ import com.vaadin.flow.component.virtuallist.VirtualList;
 import com.vaadin.flow.data.binder.Binder;
 import com.vaadin.flow.router.Route;
 import com.vaadin.flow.server.StreamResource;
+import com.vaadin.flow.server.streams.DownloadEvent;
+import com.vaadin.flow.server.streams.DownloadHandler;
+import com.vaadin.flow.server.streams.DownloadResponse;
 import com.vaadin.flow.server.streams.UploadHandler;
 import dev.vatori.desktop.Desktop;
 import tools.jackson.databind.JsonNode;
 
+import java.io.ByteArrayInputStream;
+import java.io.IOException;
 import java.nio.charset.StandardCharsets;
 import java.math.BigDecimal;
 import java.time.LocalDate;
@@ -165,6 +170,35 @@ public class FlowOverIpcFrameworkView extends VerticalLayout {
         Span streamResourceChunksStatus = new Span("StreamResource chunks: pending");
         streamResourceChunksStatus.setId("framework-stream-resource-chunks-status");
 
+        byte[] downloadHandlerBytes = """
+                Flow IPC DownloadHandler v1.55
+                owner=framework-validation-app
+                transport=flow-ipc-resource-request-to-native-save
+                """.getBytes(StandardCharsets.UTF_8);
+        DownloadHandler inputStreamDownloadHandler = DownloadHandler.fromInputStream(
+                event -> new DownloadResponse(
+                        new ByteArrayInputStream(downloadHandlerBytes),
+                        "flow-ipc-download-handler-v1_55.txt",
+                        "text/plain; charset=UTF-8",
+                        downloadHandlerBytes.length));
+        DownloadHandler namedDownloadHandler = new DownloadHandler() {
+            @Override
+            public void handleDownloadRequest(DownloadEvent event) throws IOException {
+                inputStreamDownloadHandler.handleDownloadRequest(event);
+            }
+
+            @Override
+            public String getUrlPostfix() {
+                return "flow-ipc-download-handler-v1_55.txt";
+            }
+        };
+        Anchor downloadHandlerSaveOpen = new Anchor(namedDownloadHandler,
+                "DownloadHandler Save/Open");
+        downloadHandlerSaveOpen.setId("framework-download-handler-save-open");
+
+        Span downloadHandlerSaveOpenStatus = new Span("DownloadHandler save/open: pending");
+        downloadHandlerSaveOpenStatus.setId("framework-download-handler-save-open-status");
+
         Span uploadStatus = new Span("Upload receiver: pending");
         uploadStatus.setId("framework-upload-status");
         Upload upload = new Upload(UploadHandler.inMemory((metadata, bytes) -> {
@@ -306,8 +340,8 @@ public class FlowOverIpcFrameworkView extends VerticalLayout {
         add(title, budget, expedited, priority, reviewer, dueDate, openDialog, detailsDialog,
                 grid, lazyGrid, lazyGridStatus, lazyGridReport, streamResourceDownload,
                 streamResourceStatus, streamResourceRangeDownload, streamResourceRangeStatus,
-                streamResourceChunksStatus, upload, uploadStatus, virtualList, formLayout,
-                apply, status, componentStatus, matrixStatus,
+                streamResourceChunksStatus, downloadHandlerSaveOpen, downloadHandlerSaveOpenStatus,
+                upload, uploadStatus, virtualList, formLayout, apply, status, componentStatus, matrixStatus,
                 updateList);
     }
 

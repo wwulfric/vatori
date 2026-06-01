@@ -181,6 +181,9 @@ public final class DesktopTraceInspector {
         FLOW_IPC_V1_54_UPLOAD_MULTIPART(
                 "--require-flow-ipc-v1_54-upload-multipart"),
         FLOW_IPC_V1_54("--require-flow-ipc-v1_54"),
+        FLOW_IPC_V1_55_DOWNLOAD_SAVE_OPEN(
+                "--require-flow-ipc-v1_55-download-save-open"),
+        FLOW_IPC_V1_55("--require-flow-ipc-v1_55"),
         FLOW_IPC_V1_3_FRAMEWORK("--require-flow-ipc-v1_3-framework");
 
         private final String option;
@@ -670,6 +673,11 @@ public final class DesktopTraceInspector {
                 case FLOW_IPC_V1_54 -> EnumSet.of(
                         FLOW_IPC_V1_54_UPLOAD_MULTIPART,
                         FLOW_IPC_V1_54);
+                case FLOW_IPC_V1_55_DOWNLOAD_SAVE_OPEN ->
+                    EnumSet.of(FLOW_IPC_V1_55_DOWNLOAD_SAVE_OPEN);
+                case FLOW_IPC_V1_55 -> EnumSet.of(
+                        FLOW_IPC_V1_55_DOWNLOAD_SAVE_OPEN,
+                        FLOW_IPC_V1_55);
                 case FLOW_IPC_V1_3_FRAMEWORK -> EnumSet.of(FLOW_IPC_V1_3_FRAMEWORK);
             };
         }
@@ -823,6 +831,9 @@ public final class DesktopTraceInspector {
                 case FLOW_IPC_V1_54_UPLOAD_MULTIPART ->
                     summary.hasRequiredFlowIpcV1_54UploadMultipartTypes();
                 case FLOW_IPC_V1_54 -> summary.hasRequiredFlowIpcV1_54Types();
+                case FLOW_IPC_V1_55_DOWNLOAD_SAVE_OPEN ->
+                    summary.hasRequiredFlowIpcV1_55DownloadSaveOpenTypes();
+                case FLOW_IPC_V1_55 -> summary.hasRequiredFlowIpcV1_55Types();
                 case FLOW_IPC_V1_3_FRAMEWORK -> summary.hasRequiredFlowIpcV1_3FrameworkTypes();
             };
         }
@@ -1106,6 +1117,13 @@ public final class DesktopTraceInspector {
                     && line.contains("com.vaadin.flow.server.streams.UploadHandler")) {
                 summary.frameworkUploadReceiverBootstrapObserved = true;
             }
+            if (line.contains("dev.vatori.ipcframework.FlowOverIpcFrameworkView")
+                    && line.contains("framework-download-handler-save-open")
+                    && line.contains("framework-download-handler-save-open-status")
+                    && line.contains("com.vaadin.flow.server.streams.DownloadHandler")
+                    && line.contains("com.vaadin.flow.server.streams.DownloadResponse")) {
+                summary.frameworkDownloadHandlerSaveOpenBootstrapObserved = true;
+            }
             if (line.contains("\"type\":\"event\"")
                     && line.contains("\"dispatch\":\"flow-client-xhr\"")
                     && line.contains("\"attachExistingElementById\"")
@@ -1287,6 +1305,27 @@ public final class DesktopTraceInspector {
             if (line.contains("\"type\":\"uploadResponse\"")
                     && containsUploadMultipartV154Response(line)) {
                 summary.uploadMultipartV154ResponseObserved = true;
+            }
+            if (line.contains("\"type\":\"resourceRequest\"")
+                    && containsStringField(line, "downloadHandlerVersion",
+                            "flow-ipc-download-handler-save-open-v1_55")
+                    && containsStringField(line, "purpose",
+                            "framework-download-handler-save-open-v1_55")
+                    && containsStringField(line, "downloadSaveTargetPath",
+                            ".build/vaadin-desktop-host-swift/downloads/flow-ipc-download-handler-v1_55.txt")
+                    && containsLiteralField(line, "dynamicDownloadHandlerResource", "true")
+                    && containsLiteralField(line, "downloadHandlerSaveOpen", "true")
+                    && line.contains("VAADIN/dynamic/resource/")
+                    && line.contains("flow-ipc-download-handler-v1_55.txt")) {
+                summary.downloadHandlerSaveOpenV155RequestObserved = true;
+            }
+            if (line.contains("\"type\":\"resourceResponse\"")
+                    && containsDownloadHandlerSaveOpenV155Response(line)) {
+                summary.downloadHandlerSaveOpenV155ResponseObserved = true;
+            }
+            if (line.contains("\"type\":\"capabilityResult\"")
+                    && containsDownloadHandlerSaveOpenV155CapabilityResult(line)) {
+                summary.downloadHandlerSaveOpenV155CapabilityResultObserved = true;
             }
             if (line.contains("\"type\":\"patch\"")
                     && line.contains("\"source\":\"UidlRequestHandler\"")
@@ -1854,6 +1893,11 @@ public final class DesktopTraceInspector {
                     && line.contains("\"componentFrontendResources\"")
                     && containsUploadMultipartV154Fields(line)) {
                 summary.uploadMultipartV154ManifestObserved = true;
+            }
+            if (line.contains("\"type\":\"bootstrapResponse\"")
+                    && line.contains("\"componentFrontendResources\"")
+                    && containsDownloadHandlerSaveOpenV155Fields(line)) {
+                summary.downloadHandlerSaveOpenV155ManifestObserved = true;
             }
             if (line.contains("\"type\":\"bootstrapResponse\"")
                     && line.contains("\"componentFrontendResources\"")
@@ -4876,6 +4920,11 @@ public final class DesktopTraceInspector {
                 summary.frameworkUploadMultipartDomObserved = true;
             }
             if (line.contains("\"type\":\"webview.dom\"")
+                    && containsDownloadHandlerSaveOpenV155Dom(line)) {
+                summary.downloadHandlerSaveOpenV155DomObserved = true;
+                summary.frameworkDownloadHandlerSaveOpenDomObserved = true;
+            }
+            if (line.contains("\"type\":\"webview.dom\"")
                     && containsLiteralField(line, "generatedLazySourceCurrentBuildNoOpConfirmed", "true")
                     && containsStringField(line, "generatedLazySourceCurrentBuildTableShape",
                             "no-op-promise-resolve-0")
@@ -7630,6 +7679,157 @@ public final class DesktopTraceInspector {
                 && containsLiteralField(line, "frameworkUploadMultipartComplete", "true");
     }
 
+    private static boolean containsDownloadHandlerSaveOpenV155Fields(String line) {
+        return containsStringField(line, "downloadHandlerSaveOpenVersion",
+                        "flow-ipc-download-handler-save-open-v1_55")
+                && containsStringField(line, "downloadHandlerSaveOpenSource",
+                        "flow-ipc-upload-multipart-v1_54")
+                && containsStringField(line, "downloadHandlerSaveOpenScope",
+                        "framework-validation-app-downloadhandler-native-save-open-grant")
+                && containsStringField(line, "downloadHandlerSaveOpenAppShape",
+                        "framework-validation-app")
+                && line.contains("com.vaadin.flow.server.streams.DownloadHandler")
+                && line.contains("com.vaadin.flow.server.streams.DownloadResponse")
+                && line.contains("StreamResourceRegistry.ElementStreamResource")
+                && containsStringField(line, "downloadHandlerSaveOpenComponentIds",
+                        "framework-download-handler-save-open,framework-download-handler-save-open-status")
+                && containsStringField(line, "downloadHandlerSaveOpenDynamicPathPrefix",
+                        "VAADIN/dynamic/resource/")
+                && containsStringField(line, "downloadHandlerSaveOpenExpectedFile",
+                        "flow-ipc-download-handler-v1_55.txt")
+                && containsStringField(line, "downloadHandlerSaveOpenExpectedContentType",
+                        "text/plain; charset=UTF-8")
+                && containsStringField(line, "downloadHandlerSaveOpenExpectedBodyMarker",
+                        "Flow IPC DownloadHandler v1.55")
+                && containsStringField(line, "downloadHandlerSaveOpenTransport",
+                        "ipc-resource-request-downloadhandler-to-fileTransfer.download")
+                && containsStringFieldPrefix(line, "downloadHandlerSaveOpenSelectedArtifacts",
+                        "current-app-frontend/generated/flow/generated-flow-imports.js")
+                && containsPositiveIntegerField(line, "downloadHandlerSaveOpenSelectedArtifactCount")
+                && containsStringField(line, "downloadHandlerSaveOpenGeneratedImportsOwnerSource",
+                        "current-app-generated-imports-select-owner-coverage-v1_41")
+                && containsStringField(line, "downloadHandlerSaveOpenBuildGoal", "build-frontend")
+                && containsStringField(line, "downloadHandlerSaveOpenBuildStatus", "success")
+                && containsLiteralField(line, "downloadHandlerSaveOpenFrameworkAppRequired", "true")
+                && containsLiteralField(line, "downloadHandlerSaveOpenFrameworkAppObserved", "true")
+                && containsLiteralField(line, "downloadHandlerSaveOpenCliContractEnabled", "true")
+                && containsLiteralField(line, "downloadHandlerSaveOpenManifestReady", "true")
+                && containsLiteralField(line, "downloadHandlerSaveOpenRuntimeHandoffRequired", "true")
+                && containsLiteralField(line, "downloadHandlerSaveOpenRuntimeHandoffReady", "true")
+                && containsLiteralField(line, "downloadHandlerSaveOpenPathRedacted", "true")
+                && containsLiteralField(line, "downloadHandlerSaveOpenSecurityScoped", "false")
+                && containsLiteralField(line, "downloadHandlerSaveOpenNoLocalhost", "true")
+                && containsLiteralField(line, "downloadHandlerSaveOpenFixtureSubstituted", "false")
+                && line.contains("downloadHandlerSaveOpenAcceptableFailures")
+                && line.contains("downloadHandlerSaveOpenRemainingBlockers")
+                && line.contains("downloadHandlerSaveOpenNextResolutionStep");
+    }
+
+    private static boolean containsDownloadHandlerSaveOpenV155Response(String line) {
+        return containsStringField(line, "downloadHandlerVersion",
+                        "flow-ipc-download-handler-save-open-v1_55")
+                && containsStringField(line, "artifactFamily",
+                        "flow-download-handler-save-open")
+                && containsStringField(line, "requestPurpose",
+                        "framework-download-handler-save-open-v1_55")
+                && containsStringField(line, "lookupKind",
+                        "Flow-DownloadHandler-save-open-v1_55")
+                && containsStringField(line, "downloadHandlerRegistrySource",
+                        "VaadinSession.StreamResourceRegistry")
+                && line.contains("ElementStreamResource")
+                && line.contains("DownloadHandler")
+                && containsStringField(line, "downloadHandlerTransport",
+                        "ipc-resource-request-downloadhandler")
+                && containsStringField(line, "downloadHandlerStatus", "resolved")
+                && containsPositiveIntegerField(line, "downloadHandlerResponseStatusCode")
+                && containsStringField(line, "downloadHandlerFileName",
+                        "flow-ipc-download-handler-v1_55.txt")
+                && containsStringField(line, "downloadHandlerContentType",
+                        "text/plain; charset=UTF-8")
+                && containsPositiveIntegerField(line, "downloadHandlerBytes")
+                && line.contains("downloadHandlerSha256")
+                && line.contains("downloadHandlerBodyBase64")
+                && line.contains("Flow IPC DownloadHandler v1.55")
+                && containsLiteralField(line, "dynamicDownloadHandlerResource", "true")
+                && containsLiteralField(line, "downloadHandlerSaveOpenRequested", "true")
+                && containsStringField(line, "downloadHandlerSaveTargetPath",
+                        ".build/vaadin-desktop-host-swift/downloads/flow-ipc-download-handler-v1_55.txt")
+                && containsLiteralField(line, "downloadHandlerOpenAfterSaveRequested", "true")
+                && containsLiteralField(line, "downloadHandlerNoLocalhost", "true")
+                && containsLiteralField(line, "downloadHandlerFixtureSubstituted", "false")
+                && line.contains("VAADIN/dynamic/resource/");
+    }
+
+    private static boolean containsDownloadHandlerSaveOpenV155CapabilityResult(String line) {
+        return containsStringField(line, "downloadHandlerSaveOpenVersion",
+                        "flow-ipc-download-handler-save-open-v1_55")
+                && containsStringField(line, "command", "fileTransfer.download")
+                && containsStringField(line, "operation", "download")
+                && containsStringField(line, "downloadHandlerGrantType", "controlled-test-path")
+                && containsStringField(line, "downloadHandlerOpenAfterSaveResult",
+                        "classified-not-opened-in-auto-smoke")
+                && containsStringField(line, "downloadHandlerSavePathRedacted",
+                        "$REPO/.build/vaadin-desktop-host-swift/downloads/flow-ipc-download-handler-v1_55.txt")
+                && containsLiteralField(line, "success", "true")
+                && containsLiteralField(line, "bodyRedacted", "true")
+                && containsLiteralField(line, "downloadHandlerBodyVerifiedByHost", "true")
+                && containsLiteralField(line, "downloadHandlerSecurityScoped", "false")
+                && containsLiteralField(line, "downloadHandlerNoLocalhost", "true")
+                && containsLiteralField(line, "downloadHandlerFixtureSubstituted", "false")
+                && containsPositiveIntegerField(line, "byteCount")
+                && containsPositiveIntegerField(line, "downloadHandlerResourceBytes")
+                && line.contains("permissionMode")
+                && line.contains("permissionDecision")
+                && line.contains("flow-ipc-download-handler-v1_55.txt");
+    }
+
+    private static boolean containsDownloadHandlerSaveOpenV155Dom(String line) {
+        return containsStringField(line, "downloadHandlerSaveOpenVersion",
+                        "flow-ipc-download-handler-save-open-v1_55")
+                && line.contains("VAADIN/dynamic/resource/")
+                && containsStringField(line, "downloadHandlerSaveOpenFileName",
+                        "flow-ipc-download-handler-v1_55.txt")
+                && containsStringField(line, "downloadHandlerSaveOpenContentType",
+                        "text/plain; charset=UTF-8")
+                && containsPositiveIntegerField(line, "downloadHandlerSaveOpenBytes")
+                && line.contains("downloadHandlerSaveOpenSha256")
+                && line.contains("ElementStreamResource")
+                && line.contains("DownloadHandler")
+                && containsPositiveIntegerField(line, "downloadHandlerSaveOpenResponseStatusCode")
+                && containsLiteralField(line, "downloadHandlerSaveOpenAnchorHrefObserved", "true")
+                && containsLiteralField(line, "downloadHandlerSaveOpenRequestObserved", "true")
+                && containsLiteralField(line, "downloadHandlerSaveOpenResponseObserved", "true")
+                && containsLiteralField(line, "downloadHandlerSaveOpenCapabilityResultObserved", "true")
+                && containsLiteralField(line, "downloadHandlerSaveOpenBodyVerified", "true")
+                && containsLiteralField(line, "downloadHandlerSaveOpenFileWritten", "true")
+                && containsPositiveIntegerField(line, "downloadHandlerSaveOpenByteCount")
+                && containsLiteralField(line, "downloadHandlerSaveOpenBodyRedacted", "true")
+                && containsStringField(line, "downloadHandlerSaveOpenGrantType", "controlled-test-path")
+                && containsStringField(line, "downloadHandlerSaveOpenPathRedacted",
+                        "$REPO/.build/vaadin-desktop-host-swift/downloads/flow-ipc-download-handler-v1_55.txt")
+                && containsStringField(line, "downloadHandlerSaveOpenAfterSaveResult",
+                        "classified-not-opened-in-auto-smoke")
+                && containsLiteralField(line, "downloadHandlerSaveOpenNoLocalhost", "true")
+                && containsLiteralField(line, "downloadHandlerSaveOpenFixtureSubstituted", "false")
+                && line.contains("Flow IPC DownloadHandler v1.55")
+                && containsStringField(line, "frameworkDownloadHandlerSaveOpenVersion",
+                        "flow-ipc-download-handler-save-open-v1_55")
+                && containsLiteralField(line, "frameworkDownloadHandlerSaveOpenRendered", "true")
+                && containsLiteralField(line,
+                        "frameworkDownloadHandlerSaveOpenAnchorHrefObserved", "true")
+                && containsLiteralField(line,
+                        "frameworkDownloadHandlerSaveOpenRequestObserved", "true")
+                && containsLiteralField(line,
+                        "frameworkDownloadHandlerSaveOpenResponseObserved", "true")
+                && containsLiteralField(line,
+                        "frameworkDownloadHandlerSaveOpenCapabilityResultObserved", "true")
+                && containsLiteralField(line,
+                        "frameworkDownloadHandlerSaveOpenBodyVerified", "true")
+                && containsLiteralField(line,
+                        "frameworkDownloadHandlerSaveOpenFileWritten", "true")
+                && containsLiteralField(line, "frameworkDownloadHandlerSaveOpenComplete", "true");
+    }
+
     private static boolean containsProductionOwnerFailureLayer(String line, String field) {
         return containsStringField(line, field, "production-owner-duplicate-custom-element")
                 || containsStringField(line, field, "production-owner-relative-import-unresolved")
@@ -7965,6 +8165,8 @@ public final class DesktopTraceInspector {
         private boolean frameworkUploadReceiverBootstrapObserved;
         private boolean frameworkUploadReceiverDomObserved;
         private boolean frameworkUploadMultipartDomObserved;
+        private boolean frameworkDownloadHandlerSaveOpenBootstrapObserved;
+        private boolean frameworkDownloadHandlerSaveOpenDomObserved;
         private boolean firstMeaningfulPaintObserved;
         private boolean frontendAssetPipelineV14Observed;
         private boolean frontendArtifactFamilyModelObserved;
@@ -8271,6 +8473,11 @@ public final class DesktopTraceInspector {
         private boolean uploadMultipartV154ResponseObserved;
         private boolean uploadMultipartV154PatchObserved;
         private boolean uploadMultipartV154DomObserved;
+        private boolean downloadHandlerSaveOpenV155ManifestObserved;
+        private boolean downloadHandlerSaveOpenV155RequestObserved;
+        private boolean downloadHandlerSaveOpenV155ResponseObserved;
+        private boolean downloadHandlerSaveOpenV155CapabilityResultObserved;
+        private boolean downloadHandlerSaveOpenV155DomObserved;
 
         public boolean hasRequiredFlowIpcTypes() {
             return types.keySet().containsAll(FLOW_IPC_REQUIRED_TYPES)
@@ -9123,6 +9330,21 @@ public final class DesktopTraceInspector {
             return hasRequiredFlowIpcV1_54UploadMultipartTypes();
         }
 
+        public boolean hasRequiredFlowIpcV1_55DownloadSaveOpenTypes() {
+            return downloadHandlerSaveOpenV155ManifestObserved
+                    && downloadHandlerSaveOpenV155RequestObserved
+                    && downloadHandlerSaveOpenV155ResponseObserved
+                    && downloadHandlerSaveOpenV155CapabilityResultObserved
+                    && downloadHandlerSaveOpenV155DomObserved
+                    && frameworkDownloadHandlerSaveOpenBootstrapObserved
+                    && frameworkDownloadHandlerSaveOpenDomObserved
+                    && hasRequiredFlowIpcV1_54UploadMultipartTypes();
+        }
+
+        public boolean hasRequiredFlowIpcV1_55Types() {
+            return hasRequiredFlowIpcV1_55DownloadSaveOpenTypes();
+        }
+
         private boolean hasCurrentAppBuildFrontendOutputSuccessorEvidence() {
             return currentAppBuildFrontendOutputV132ManifestObserved
                     && currentAppBuildFrontendOutputV132RequestObserved
@@ -9847,6 +10069,15 @@ public final class DesktopTraceInspector {
                     + uploadMultipartV154DomObserved);
             System.out.println("framework Upload multipart DOM observed: "
                     + frameworkUploadMultipartDomObserved);
+            System.out.println("Flow IPC v1.55 DownloadHandler save/open manifest/request/response/capability/DOM observed: "
+                    + downloadHandlerSaveOpenV155ManifestObserved + "/"
+                    + downloadHandlerSaveOpenV155RequestObserved + "/"
+                    + downloadHandlerSaveOpenV155ResponseObserved + "/"
+                    + downloadHandlerSaveOpenV155CapabilityResultObserved + "/"
+                    + downloadHandlerSaveOpenV155DomObserved);
+            System.out.println("framework DownloadHandler save/open bootstrap/DOM observed: "
+                    + frameworkDownloadHandlerSaveOpenBootstrapObserved + "/"
+                    + frameworkDownloadHandlerSaveOpenDomObserved);
             System.out.println("Flow IPC v1.6 TextField graph manifest observed: "
                     + frontendTextFieldV16ManifestObserved);
             System.out.println("Flow IPC v1.6 TextField graph request observed: "

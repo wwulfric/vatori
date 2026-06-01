@@ -94,6 +94,10 @@ final class DesktopVaadinResponse implements VaadinResponse {
         return body.toString(StandardCharsets.UTF_8);
     }
 
+    byte[] bodyBytes() {
+        return body.toByteArray();
+    }
+
     String contentType() {
         return contentType;
     }

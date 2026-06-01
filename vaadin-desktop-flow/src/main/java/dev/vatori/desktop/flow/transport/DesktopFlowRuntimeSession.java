@@ -18,6 +18,7 @@ import com.vaadin.flow.server.VaadinResponse;
 import com.vaadin.flow.server.VaadinService;
 import com.vaadin.flow.server.VaadinSession;
 import com.vaadin.flow.server.WrappedSession;
+import com.vaadin.flow.server.streams.DownloadHandler;
 import com.vaadin.flow.shared.ApplicationConstants;
 import com.vaadin.flow.shared.communication.PushMode;
 import dev.vatori.desktop.ipc.IpcJson;
@@ -453,6 +454,9 @@ public final class DesktopFlowRuntimeSession {
         if (abstractResource == null) {
             return Optional.empty();
         }
+        if (abstractResource instanceof ElementStreamResource elementResource) {
+            return Optional.of(downloadHandlerResourceResponse(normalizedPath, elementResource));
+        }
         if (!(abstractResource instanceof StreamResource resource)) {
             throw new IllegalArgumentException("Unsupported Flow IPC dynamic resource type: "
                     + abstractResource.getClass().getName());
@@ -521,6 +525,122 @@ public final class DesktopFlowRuntimeSession {
         payload.put("streamResourceNextResolutionStep",
                 "extend dynamic resource handling toward DownloadHandler, Upload and streaming backpressure");
         return Optional.of(payload);
+    }
+
+    private Map<String, Object> downloadHandlerResourceResponse(String normalizedPath,
+                                                                ElementStreamResource elementResource) {
+        if (!(elementResource.getElementRequestHandler() instanceof DownloadHandler)) {
+            return downloadHandlerFailurePayload(normalizedPath, elementResource,
+                    "download-handler-not-element-download-handler", 0, Collections.emptyMap(), "");
+        }
+        session.lock();
+        try {
+            DesktopVaadinRequest request = DesktopVaadinRequest.download(session, sessionId, uiId, normalizedPath);
+            DesktopVaadinResponse response = new DesktopVaadinResponse(session.getService());
+            Map<Class<?>, CurrentInstance> oldInstances = CurrentInstance.getInstances();
+            CurrentInstance.setCurrent(ui);
+            CurrentInstance.set(VaadinRequest.class, request);
+            CurrentInstance.set(VaadinResponse.class, response);
+            try {
+                elementResource.getElementRequestHandler().handleRequest(request, response, session,
+                        elementResource.getOwner());
+            } catch (IOException error) {
+                throw new IllegalStateException("Unable to dispatch Flow IPC DownloadHandler resource: "
+                        + error.getMessage(), error);
+            } finally {
+                CurrentInstance.clearAll();
+                CurrentInstance.restoreInstances(oldInstances);
+            }
+
+            byte[] bytes = response.bodyBytes();
+            String contentType = Objects.toString(response.contentType(), "");
+            String fileName = filenameFromContentDisposition(response.headers().get("Content-Disposition"))
+                    .orElseGet(() -> elementResource.getName() == null || elementResource.getName().isBlank()
+                            ? "download"
+                            : elementResource.getName());
+            Map<String, Object> payload = new LinkedHashMap<>();
+            payload.put("path", normalizedPath);
+            payload.put("artifactFamily", "flow-download-handler-save-open");
+            payload.put("dynamicDownloadHandlerResource", true);
+            payload.put("downloadHandlerVersion", "flow-ipc-download-handler-save-open-v1_55");
+            payload.put("downloadHandlerRegistrySource", "VaadinSession.StreamResourceRegistry");
+            payload.put("downloadHandlerResourceType", ElementStreamResource.class.getName());
+            payload.put("downloadHandlerHandlerType", elementResource.getElementRequestHandler().getClass().getName());
+            payload.put("downloadHandlerOwnerNodeId", elementResource.getOwner().getNode().getId());
+            payload.put("downloadHandlerTransport", "ipc-resource-request-downloadhandler");
+            payload.put("downloadHandlerStatus", response.statusCode() >= 200 && response.statusCode() < 300
+                    ? "resolved"
+                    : "response-status-" + response.statusCode());
+            payload.put("downloadHandlerResponseStatusCode", response.statusCode());
+            payload.put("downloadHandlerResponseHeaders", response.headers());
+            payload.put("downloadHandlerResponseContentDisposition",
+                    Objects.toString(response.headers().get("Content-Disposition"), ""));
+            payload.put("downloadHandlerFileName", fileName);
+            payload.put("downloadHandlerContentType", contentType);
+            payload.put("downloadHandlerBytes", bytes.length);
+            payload.put("downloadHandlerSha256", MessageDigestUtil.sha256Hex(bytes));
+            payload.put("downloadHandlerBodyBase64", Base64.getEncoder().encodeToString(bytes));
+            if (bytes.length <= 4096) {
+                payload.put("downloadHandlerText", new String(bytes, StandardCharsets.UTF_8));
+            }
+            payload.put("downloadHandlerNoLocalhost", true);
+            payload.put("downloadHandlerFixtureSubstituted", false);
+            payload.put("downloadHandlerSaveOpenRequired", true);
+            payload.put("downloadHandlerSaveOpenStatus", "resource-response-ready");
+            payload.put("downloadHandlerFailureLayer", "");
+            payload.put("downloadHandlerRemainingBlockers",
+                    "large-file-streaming,parallel-chunk,retry-resume,real-backpressure,native-save-panel-user-flow,security-scoped-production-grants,open-after-save-user-flow,dev-mode-vite-parity,installer-packaging,durable-reconnect");
+            payload.put("downloadHandlerNextResolutionStep",
+                    "turn bounded DownloadHandler save/open evidence into large-file streaming and production file grants");
+            return payload;
+        } finally {
+            session.unlock();
+        }
+    }
+
+    private static Map<String, Object> downloadHandlerFailurePayload(String normalizedPath,
+                                                                     ElementStreamResource elementResource,
+                                                                     String failureLayer,
+                                                                     int statusCode,
+                                                                     Map<String, String> headers,
+                                                                     String body) {
+        Map<String, Object> payload = new LinkedHashMap<>();
+        payload.put("path", normalizedPath);
+        payload.put("artifactFamily", "flow-download-handler-save-open");
+        payload.put("dynamicDownloadHandlerResource", true);
+        payload.put("downloadHandlerVersion", "flow-ipc-download-handler-save-open-v1_55");
+        payload.put("downloadHandlerRegistrySource", "VaadinSession.StreamResourceRegistry");
+        payload.put("downloadHandlerResourceType", ElementStreamResource.class.getName());
+        payload.put("downloadHandlerHandlerType", elementResource.getElementRequestHandler().getClass().getName());
+        payload.put("downloadHandlerOwnerNodeId", elementResource.getOwner().getNode().getId());
+        payload.put("downloadHandlerTransport", "ipc-resource-request-downloadhandler");
+        payload.put("downloadHandlerStatus", "failed");
+        payload.put("downloadHandlerResponseStatusCode", statusCode);
+        payload.put("downloadHandlerResponseHeaders", headers);
+        payload.put("downloadHandlerResponseBody", body);
+        payload.put("downloadHandlerNoLocalhost", true);
+        payload.put("downloadHandlerFixtureSubstituted", false);
+        payload.put("downloadHandlerSaveOpenRequired", true);
+        payload.put("downloadHandlerSaveOpenStatus", "not-attempted");
+        payload.put("downloadHandlerFailureLayer", failureLayer);
+        payload.put("downloadHandlerNextResolutionStep",
+                "invoke a real Vaadin DownloadHandler through the desktop request/response adapter");
+        return payload;
+    }
+
+    private static Optional<String> filenameFromContentDisposition(String header) {
+        if (header == null || header.isBlank()) {
+            return Optional.empty();
+        }
+        Matcher quoted = Pattern.compile("filename=\\\"([^\\\"]+)\\\"").matcher(header);
+        if (quoted.find()) {
+            return Optional.of(quoted.group(1));
+        }
+        Matcher plain = Pattern.compile("filename=([^;]+)").matcher(header);
+        if (plain.find()) {
+            return Optional.of(plain.group(1).trim());
+        }
+        return Optional.empty();
     }
 
     public FlowPatchResponse handleDomEvent(int nodeId, String eventType, int clientToServerMessageId)

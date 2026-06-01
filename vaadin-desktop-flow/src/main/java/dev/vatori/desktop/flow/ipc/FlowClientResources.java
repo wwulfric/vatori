@@ -903,6 +903,28 @@ final class FlowClientResources {
             "multi-file-upload,large-file-streaming,parallel-upload,retry-resume,real-backpressure,upload-client-progress-ui-consumption,cancel-abort-wiring,downloadhandler-parity,os-file-grants,dev-mode-vite-parity,installer-packaging,durable-reconnect";
     private static final String UPLOAD_MULTIPART_NEXT_STEP =
             "turn bounded single-file multipart evidence into streaming upload with real progress/cancel/backpressure";
+    private static final String DOWNLOAD_HANDLER_SAVE_OPEN_VERSION =
+            "flow-ipc-download-handler-save-open-v1_55";
+    private static final String DOWNLOAD_HANDLER_SAVE_OPEN_SCOPE =
+            "framework-validation-app-downloadhandler-native-save-open-grant";
+    private static final String DOWNLOAD_HANDLER_SAVE_OPEN_JAVA_CLASSES =
+            "com.vaadin.flow.component.html.Anchor,com.vaadin.flow.server.streams.DownloadHandler,com.vaadin.flow.server.streams.DownloadResponse,com.vaadin.flow.server.StreamResourceRegistry.ElementStreamResource";
+    private static final String DOWNLOAD_HANDLER_SAVE_OPEN_COMPONENT_IDS =
+            "framework-download-handler-save-open,framework-download-handler-save-open-status";
+    private static final String DOWNLOAD_HANDLER_SAVE_OPEN_EXPECTED_FILE =
+            "flow-ipc-download-handler-v1_55.txt";
+    private static final String DOWNLOAD_HANDLER_SAVE_OPEN_EXPECTED_CONTENT_TYPE =
+            "text/plain; charset=UTF-8";
+    private static final String DOWNLOAD_HANDLER_SAVE_OPEN_EXPECTED_BODY_MARKER =
+            "Flow IPC DownloadHandler v1.55";
+    private static final String DOWNLOAD_HANDLER_SAVE_OPEN_TRANSPORT =
+            "ipc-resource-request-downloadhandler-to-fileTransfer.download";
+    private static final String DOWNLOAD_HANDLER_SAVE_OPEN_ACCEPTABLE_FAILURES =
+            "download-handler-target-missing,download-handler-registry-unavailable,download-handler-not-element-download-handler,download-handler-response-missing,download-handler-body-unverified,download-save-capability-denied,download-save-write-failed,download-open-after-save-classified";
+    private static final String DOWNLOAD_HANDLER_SAVE_OPEN_REMAINING_BLOCKERS =
+            "large-file-streaming,parallel-chunk,retry-resume,real-backpressure,native-save-panel-user-flow,security-scoped-production-grants,open-after-save-user-flow,dev-mode-vite-parity,installer-packaging,durable-reconnect";
+    private static final String DOWNLOAD_HANDLER_SAVE_OPEN_NEXT_STEP =
+            "turn bounded DownloadHandler save/open evidence into large-file streaming and production file grants";
     private static final List<String> PRODUCTION_RUNTIME_OWNER_DEPENDENCY_ARTIFACTS = List.of(
             DEV_BUNDLE_COMMONJS_JS,
             DEV_BUNDLE_INDEX_HTML_JS,
@@ -3299,6 +3321,8 @@ final class FlowClientResources {
                 handoffReady));
         attributes.putAll(uploadMultipartAttributes(evidence, buildStep, selectedArtifacts,
                 handoffReady));
+        attributes.putAll(downloadHandlerSaveOpenAttributes(evidence, buildStep, selectedArtifacts,
+                handoffReady));
         return attributes;
     }
 
@@ -3424,6 +3448,73 @@ final class FlowClientResources {
                 : "framework-validation-app-not-selected");
         attributes.put("uploadMultipartRemainingBlockers", UPLOAD_MULTIPART_REMAINING_BLOCKERS);
         attributes.put("uploadMultipartNextResolutionStep", UPLOAD_MULTIPART_NEXT_STEP);
+        return attributes;
+    }
+
+    private static Map<String, Object> downloadHandlerSaveOpenAttributes(
+            CurrentAppBuildFrontendOutputEvidence evidence,
+            FrontendBuildStepEvidence buildStep,
+            String selectedArtifacts,
+            boolean handoffReady) {
+        Path module = appModuleDirectory();
+        String appShape = packagingRuntimeHandoffAppShape(module);
+        boolean frameworkApp = "framework-validation-app".equals(appShape);
+        Map<String, Object> attributes = new LinkedHashMap<>();
+        attributes.put("downloadHandlerSaveOpenVersion", DOWNLOAD_HANDLER_SAVE_OPEN_VERSION);
+        attributes.put("downloadHandlerSaveOpenSource", UPLOAD_MULTIPART_VERSION);
+        attributes.put("downloadHandlerSaveOpenScope", DOWNLOAD_HANDLER_SAVE_OPEN_SCOPE);
+        attributes.put("downloadHandlerSaveOpenAppShape", appShape);
+        attributes.put("downloadHandlerSaveOpenJavaClasses", DOWNLOAD_HANDLER_SAVE_OPEN_JAVA_CLASSES);
+        attributes.put("downloadHandlerSaveOpenComponentIds", DOWNLOAD_HANDLER_SAVE_OPEN_COMPONENT_IDS);
+        attributes.put("downloadHandlerSaveOpenDynamicPathPrefix", STREAM_RESOURCE_DYNAMIC_PATH_PREFIX);
+        attributes.put("downloadHandlerSaveOpenExpectedFile", DOWNLOAD_HANDLER_SAVE_OPEN_EXPECTED_FILE);
+        attributes.put("downloadHandlerSaveOpenExpectedContentType",
+                DOWNLOAD_HANDLER_SAVE_OPEN_EXPECTED_CONTENT_TYPE);
+        attributes.put("downloadHandlerSaveOpenExpectedBodyMarker",
+                DOWNLOAD_HANDLER_SAVE_OPEN_EXPECTED_BODY_MARKER);
+        attributes.put("downloadHandlerSaveOpenTransport", DOWNLOAD_HANDLER_SAVE_OPEN_TRANSPORT);
+        attributes.put("downloadHandlerSaveOpenSelectedArtifacts", selectedArtifacts);
+        attributes.put("downloadHandlerSaveOpenSelectedArtifactCount", csvValues(selectedArtifacts).size());
+        attributes.put("downloadHandlerSaveOpenGeneratedImportsOwnerSource",
+                CURRENT_APP_GENERATED_IMPORTS_OWNER_RUNTIME_CONTRACT_SOURCE);
+        attributes.put("downloadHandlerSaveOpenGeneratedImportsOwnerArtifact",
+                CURRENT_APP_BUILD_FRONTEND_GENERATED_IMPORTS_JS);
+        attributes.put("downloadHandlerSaveOpenProductionSupportArtifact",
+                evidence.sourceGeneratedImportsRootProductionSupportArtifact());
+        attributes.put("downloadHandlerSaveOpenProductionSupportSha256",
+                evidence.productionGeneratedImportsSha256());
+        attributes.put("downloadHandlerSaveOpenProductionSupportBytes",
+                evidence.productionGeneratedImportsBytes());
+        attributes.put("downloadHandlerSaveOpenProductionEntryArtifact",
+                evidence.productionEntryScriptVirtualPath());
+        attributes.put("downloadHandlerSaveOpenBuildGoal", buildStep.goal());
+        attributes.put("downloadHandlerSaveOpenBuildStatus", buildStep.status());
+        attributes.put("downloadHandlerSaveOpenOutputUsability", buildStep.outputUsability());
+        attributes.put("downloadHandlerSaveOpenFrameworkAppRequired", true);
+        attributes.put("downloadHandlerSaveOpenFrameworkAppObserved", frameworkApp);
+        attributes.put("downloadHandlerSaveOpenCliContractEnabled",
+                "1".equals(System.getenv("VAADIN_DESKTOP_FLOW_IPC_FRONTEND_BUILD_V1_55")));
+        attributes.put("downloadHandlerSaveOpenManifestReady", handoffReady && frameworkApp);
+        attributes.put("downloadHandlerSaveOpenRuntimeHandoffRequired", true);
+        attributes.put("downloadHandlerSaveOpenRuntimeHandoffReady", handoffReady);
+        attributes.put("downloadHandlerSaveOpenAnchorHrefObserved", false);
+        attributes.put("downloadHandlerSaveOpenRequestObserved", false);
+        attributes.put("downloadHandlerSaveOpenResponseObserved", false);
+        attributes.put("downloadHandlerSaveOpenCapabilityResultObserved", false);
+        attributes.put("downloadHandlerSaveOpenBodyVerified", false);
+        attributes.put("downloadHandlerSaveOpenFileWritten", false);
+        attributes.put("downloadHandlerSaveOpenPathRedacted", true);
+        attributes.put("downloadHandlerSaveOpenSecurityScoped", false);
+        attributes.put("downloadHandlerSaveOpenNoLocalhost", true);
+        attributes.put("downloadHandlerSaveOpenFixtureSubstituted", false);
+        attributes.put("downloadHandlerSaveOpenAcceptableFailures",
+                DOWNLOAD_HANDLER_SAVE_OPEN_ACCEPTABLE_FAILURES);
+        attributes.put("downloadHandlerSaveOpenFailureLayer", frameworkApp
+                ? "framework-download-handler-save-open-runtime-validation-pending"
+                : "framework-validation-app-not-selected");
+        attributes.put("downloadHandlerSaveOpenRemainingBlockers",
+                DOWNLOAD_HANDLER_SAVE_OPEN_REMAINING_BLOCKERS);
+        attributes.put("downloadHandlerSaveOpenNextResolutionStep", DOWNLOAD_HANDLER_SAVE_OPEN_NEXT_STEP);
         return attributes;
     }
 

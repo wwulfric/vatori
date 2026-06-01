@@ -59,8 +59,9 @@ v0/v1 runtime 切片走向可产品化桌面框架的最终完成状态。
 - `docs/goal-1_51.md`：Flow StreamResource Binary Range Download Contract，已完成。
 - `docs/goal-1_52.md`：Flow StreamResource Sequential Chunk Download Contract，已完成。
 - `docs/goal-1_53.md`：Flow Upload ElementRequestHandler Receiver Contract，已完成。
+- `docs/goal-1_54.md`：Flow Upload Multipart Progress and Cancel Contract，已完成。
 
-当前已完成到 `docs/goal-1_53.md`。v1.31 先把 v1.30 的 offline plugin blocker 推进到
+当前已完成到 `docs/goal-1_54.md`。v1.31 先把 v1.30 的 offline plugin blocker 推进到
 explicit online/local-repo preflight；v1.32 进一步把 blocker 推进到 full
 `build-frontend` 输出层，证明当前 smoke app 已产生真实 source generated imports/chunk、
 production webapp build output 和 `prod.bundle`。v1.33 则把 v1.32 的 generic
@@ -221,9 +222,18 @@ packaging 或 durable reconnect parity。v1.53 将 resource pipeline 推到上�
 verified、文件名、content type、byte count、sha256、handler/resource type、no-localhost 和
 no-fixture proof。它仍不是 multipart upload parity、多文件/大文件 streaming、progress、cancel、
 retry/resume、backpressure、OS open/save panel、sandbox grants、dev-mode/Vite、installer packaging
-或 durable reconnect parity。
+或 durable reconnect parity。v1.54 将 Upload receiver 从 raw-body positive path 推进到
+bounded single-file `multipart/form-data` contract：host 对同一个真实 `vaadin-upload` target
+发送 multipart request，Java desktop `VaadinRequest` adapter 补齐最小
+`HttpServletRequest` / multipart `Part` 形状，真实 `ElementRequestHandler` / `UploadHandler`
+读取 multipart file body，并通过 UIDL patch 更新可见 DOM。Trace 记录
+`flow-ipc-upload-multipart-v1_54`、boundary、part headers、filename、content type、file/multipart
+byte count、sha256、part count、progress checkpoints、cancel probe classification、no-localhost 和
+no-fixture proof。它仍不是 multi-file/large-file streaming、parallel upload、retry/resume、
+真实 backpressure、OS open/save panel、sandbox grants、dev-mode/Vite、installer packaging 或
+durable reconnect parity。
 
-后续阶段应继续以 `docs/goal-1_54.md` 等文件拆分，
+后续阶段应继续以 `docs/goal-1_55.md` 等文件拆分，
 每个阶段只拿走本长期目标中的一个可评审切片。不要把本文件改写成短期任务清单；
 它是长期北极星和完成度账本。
 
@@ -245,7 +255,7 @@ retry/resume、backpressure、OS open/save panel、sandbox grants、dev-mode/Vit
 
 ## 当前基线
 
-截至 goal 1.53，仓库已经证明：
+截至 goal 1.54，仓库已经证明：
 
 - `dev-ipc` 可以启动 no-localhost Flow IPC runtime。
 - 真实 macOS Swift/AppKit/WKWebView 窗口可以运行 Flow IPC smoke app 和 framework
@@ -253,7 +263,7 @@ retry/resume、backpressure、OS open/save panel、sandbox grants、dev-mode/Vit
 - Button、BigDecimalField、Checkbox、Select、ComboBox、DatePicker、Dialog、Grid、
   lazy Grid DataProvider viewport RPC、VirtualList、FormLayout/Binder validation、
   Flow `StreamResource` dynamic download、binary range download、sequential chunk download、
-  bounded Flow `Upload` receiver、
+  bounded Flow `Upload` receiver、single-file multipart Flow `Upload` receiver、
   list/repeated update、desktop capability baseline 都有
   trace gate 或 host-log gate 证据。
 - Java sidecar 通过 `UidlWriter`、`UidlRequestHandler`、`ServerRpcHandler`、
@@ -843,7 +853,7 @@ retry/resume、backpressure、OS open/save panel、sandbox grants、dev-mode/Vit
 
 - 基于 v1.22 generated lazy chunk-file positive fixture、v1.23 production owner positive
   runtime fixture、v1.24 closure decision contract、v1.25 packaged frontend baseline 和
-  v1.26-v1.53 当前 app generated/build-frontend output 和 framework component/resource behavior contracts，
+  v1.26-v1.54 当前 app generated/build-frontend output 和 framework component/resource behavior contracts，
   继续让当前 app/build 产生的
   真实 generated lazy chunk file 完成执行：在 current app generated imports root package graph 已由
   production support artifact 承载的基础上，接入受支持 Vaadin lazy chunk SPI，或把真实
@@ -868,7 +878,8 @@ retry/resume、backpressure、OS open/save panel、sandbox grants、dev-mode/Vit
   app 上复用，但仍不是完整 production/runtime SPI parity；v1.23 positive fixture 也只能证明基础设施可行，
   不能替代真实 owner parity。
 - Dev-mode/Vite graph execution 或可靠替代模式。
-- Broader Vaadin component parity，尤其是完整 Grid scroll virtualization、Upload/Download streaming、
+- Broader Vaadin component parity，尤其是完整 Grid scroll virtualization、multi-file/large-file
+  Upload/Download streaming、
   theme variants 和 attach/detach/focus 等组件行为。
 - Durable push queue、ack、reconnect、reload 和 resync 语义。
 - Multi-window / multi-UI / multi-session lifecycle。
@@ -891,17 +902,19 @@ retry/resume、backpressure、OS open/save panel、sandbox grants、dev-mode/Vit
 
 ## 当前建议的下一阶段
 
-v1.53 已完成 Flow Upload ElementRequestHandler Receiver Contract。下一阶段建议继续沿着更真实的
-Upload/Download streaming、resource loading parity、component behavior parity 或 dev-mode/Vite 替代路径推进：
+v1.54 已完成 Flow Upload Multipart Progress and Cancel Contract。下一阶段建议继续沿着更真实的
+Upload/Download streaming、resource loading parity、component behavior parity、durable reconnect
+或 dev-mode/Vite 替代路径推进：
 
-- 创建 `docs/goal-1_54.md`：在 v1.53 的 bounded Upload receiver 基础上选择一个
-  更深切片，例如 Upload multipart/progress/cancel path、DownloadHandler/save-open grants、完整 Grid scroll
-  container/virtualizer behavior、theme variants，或把 dev-mode/Vite graph execution 收敛为明确替代路径。
+- 创建 `docs/goal-1_55.md`：在 v1.54 的 bounded multipart Upload receiver 基础上选择一个
+  更深切片，例如 DownloadHandler/save-open grants、large-file upload/download progress/cancel、
+  完整 Grid scroll container/virtualizer behavior、theme variants，或把 durable reconnect / dev-mode/Vite
+  graph execution 收敛为明确替代路径。
 - 不再把 supported Vaadin lazy chunk SPI 当作当前默认路径；除非上游/本地版本提供稳定 API，否则继续以
   packaging-time `build-frontend` artifacts 作为产品化输入。
 - 真实 production owner-owned runtime reuse success，或把当前 generated imports owner contract 与
   packaging-time inventory/runtime handoff 对齐。
 - Dev-mode/Vite graph execution 或可靠替代模式。
-- Broader Vaadin component parity，尤其是完整 Grid/VirtualList behavior、Upload/Download、
+- Broader Vaadin component parity，尤其是完整 Grid/VirtualList behavior、multi-file/large-file Upload/Download、
   theme variants 和 attach/detach/focus。
 - Durable push / reconnect / resync、Swift host tests / default-host readiness、打包和更新。

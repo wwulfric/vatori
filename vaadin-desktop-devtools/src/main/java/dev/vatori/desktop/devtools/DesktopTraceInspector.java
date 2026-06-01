@@ -178,6 +178,9 @@ public final class DesktopTraceInspector {
         FLOW_IPC_V1_53_UPLOAD_RECEIVER(
                 "--require-flow-ipc-v1_53-upload-receiver"),
         FLOW_IPC_V1_53("--require-flow-ipc-v1_53"),
+        FLOW_IPC_V1_54_UPLOAD_MULTIPART(
+                "--require-flow-ipc-v1_54-upload-multipart"),
+        FLOW_IPC_V1_54("--require-flow-ipc-v1_54"),
         FLOW_IPC_V1_3_FRAMEWORK("--require-flow-ipc-v1_3-framework");
 
         private final String option;
@@ -662,6 +665,11 @@ public final class DesktopTraceInspector {
                 case FLOW_IPC_V1_53 -> EnumSet.of(
                         FLOW_IPC_V1_53_UPLOAD_RECEIVER,
                         FLOW_IPC_V1_53);
+                case FLOW_IPC_V1_54_UPLOAD_MULTIPART ->
+                    EnumSet.of(FLOW_IPC_V1_54_UPLOAD_MULTIPART);
+                case FLOW_IPC_V1_54 -> EnumSet.of(
+                        FLOW_IPC_V1_54_UPLOAD_MULTIPART,
+                        FLOW_IPC_V1_54);
                 case FLOW_IPC_V1_3_FRAMEWORK -> EnumSet.of(FLOW_IPC_V1_3_FRAMEWORK);
             };
         }
@@ -812,6 +820,9 @@ public final class DesktopTraceInspector {
                 case FLOW_IPC_V1_53_UPLOAD_RECEIVER ->
                     summary.hasRequiredFlowIpcV1_53UploadReceiverTypes();
                 case FLOW_IPC_V1_53 -> summary.hasRequiredFlowIpcV1_53Types();
+                case FLOW_IPC_V1_54_UPLOAD_MULTIPART ->
+                    summary.hasRequiredFlowIpcV1_54UploadMultipartTypes();
+                case FLOW_IPC_V1_54 -> summary.hasRequiredFlowIpcV1_54Types();
                 case FLOW_IPC_V1_3_FRAMEWORK -> summary.hasRequiredFlowIpcV1_3FrameworkTypes();
             };
         }
@@ -1253,6 +1264,30 @@ public final class DesktopTraceInspector {
                     && containsUploadReceiverV153Response(line)) {
                 summary.uploadReceiverV153ResponseObserved = true;
             }
+            if (line.contains("\"type\":\"uploadRequest\"")
+                    && containsStringField(line, "uploadMultipartVersion",
+                            "flow-ipc-upload-multipart-v1_54")
+                    && containsStringField(line, "purpose", "framework-upload-multipart-v1_54")
+                    && containsStringField(line, "uploadBodyMode", "multipart-form-data")
+                    && containsStringField(line, "uploadFileName",
+                            "flow-ipc-upload-multipart-v1_54.txt")
+                    && containsStringField(line, "uploadFileContentType",
+                            "text/plain; charset=UTF-8")
+                    && containsStringField(line, "uploadMultipartBoundary",
+                            "----VatoriFlowIpcUploadMultipartV154")
+                    && containsPositiveIntegerField(line, "uploadFileBytes")
+                    && containsPositiveIntegerField(line, "uploadMultipartBytes")
+                    && containsPositiveIntegerField(line, "uploadProgressTotalBytes")
+                    && containsPositiveIntegerField(line, "uploadProgressDeliveredBytes")
+                    && containsLiteralField(line, "uploadCancelProbeAttempted", "true")
+                    && line.contains("uploadFileSha256")
+                    && line.contains("VAADIN/dynamic/resource/")) {
+                summary.uploadMultipartV154RequestObserved = true;
+            }
+            if (line.contains("\"type\":\"uploadResponse\"")
+                    && containsUploadMultipartV154Response(line)) {
+                summary.uploadMultipartV154ResponseObserved = true;
+            }
             if (line.contains("\"type\":\"patch\"")
                     && line.contains("\"source\":\"UidlRequestHandler\"")
                     && line.contains("\"reason\":\"event\"")
@@ -1340,6 +1375,14 @@ public final class DesktopTraceInspector {
                     && line.contains("Upload received: flow-ipc-upload-v1_53.txt")
                     && line.contains("marker=true")) {
                 summary.uploadReceiverV153PatchObserved = true;
+            }
+            if (line.contains("\"type\":\"patch\"")
+                    && line.contains("\"source\":\"UidlRequestHandler\"")
+                    && line.contains("\"reason\":\"upload\"")
+                    && line.contains("\"eventDispatch\":\"flow-ipc-upload-resource\"")
+                    && line.contains("Multipart upload received: flow-ipc-upload-multipart-v1_54.txt")
+                    && line.contains("marker=true")) {
+                summary.uploadMultipartV154PatchObserved = true;
             }
             if (line.contains("\"type\":\"command\"")
                     && line.contains("\"command\":\"window.setTitle\"")
@@ -1806,6 +1849,11 @@ public final class DesktopTraceInspector {
                     && line.contains("\"componentFrontendResources\"")
                     && containsUploadReceiverV153Fields(line)) {
                 summary.uploadReceiverV153ManifestObserved = true;
+            }
+            if (line.contains("\"type\":\"bootstrapResponse\"")
+                    && line.contains("\"componentFrontendResources\"")
+                    && containsUploadMultipartV154Fields(line)) {
+                summary.uploadMultipartV154ManifestObserved = true;
             }
             if (line.contains("\"type\":\"bootstrapResponse\"")
                     && line.contains("\"componentFrontendResources\"")
@@ -4823,6 +4871,11 @@ public final class DesktopTraceInspector {
                 summary.frameworkUploadReceiverDomObserved = true;
             }
             if (line.contains("\"type\":\"webview.dom\"")
+                    && containsUploadMultipartV154Dom(line)) {
+                summary.uploadMultipartV154DomObserved = true;
+                summary.frameworkUploadMultipartDomObserved = true;
+            }
+            if (line.contains("\"type\":\"webview.dom\"")
                     && containsLiteralField(line, "generatedLazySourceCurrentBuildNoOpConfirmed", "true")
                     && containsStringField(line, "generatedLazySourceCurrentBuildTableShape",
                             "no-op-promise-resolve-0")
@@ -7441,6 +7494,142 @@ public final class DesktopTraceInspector {
                 && containsLiteralField(line, "frameworkUploadReceiverComplete", "true");
     }
 
+    private static boolean containsUploadMultipartV154Fields(String line) {
+        return containsStringField(line, "uploadMultipartVersion",
+                        "flow-ipc-upload-multipart-v1_54")
+                && containsStringField(line, "uploadMultipartSource",
+                        "flow-ipc-upload-receiver-v1_53")
+                && containsStringField(line, "uploadMultipartScope",
+                        "framework-validation-app-upload-element-request-handler-bounded-multipart-progress-cancel")
+                && containsStringField(line, "uploadMultipartAppShape",
+                        "framework-validation-app")
+                && line.contains("jakarta.servlet.http.Part")
+                && containsStringField(line, "uploadMultipartComponentIds",
+                        "framework-upload,framework-upload-status")
+                && containsStringField(line, "uploadMultipartDynamicPathPrefix",
+                        "VAADIN/dynamic/resource/")
+                && containsStringField(line, "uploadMultipartExpectedFile",
+                        "flow-ipc-upload-multipart-v1_54.txt")
+                && containsStringField(line, "uploadMultipartExpectedContentType",
+                        "text/plain; charset=UTF-8")
+                && containsStringField(line, "uploadMultipartExpectedBodyMarker",
+                        "Flow IPC Upload Multipart v1.54")
+                && containsStringField(line, "uploadMultipartTransport",
+                        "ipc-upload-request-multipart-form-data")
+                && containsStringFieldPrefix(line, "uploadMultipartSelectedArtifacts",
+                        "current-app-frontend/generated/flow/generated-flow-imports.js")
+                && containsPositiveIntegerField(line, "uploadMultipartSelectedArtifactCount")
+                && containsStringField(line, "uploadMultipartGeneratedImportsOwnerSource",
+                        "current-app-generated-imports-select-owner-coverage-v1_41")
+                && containsStringField(line, "uploadMultipartBuildGoal", "build-frontend")
+                && containsStringField(line, "uploadMultipartBuildStatus", "success")
+                && containsLiteralField(line, "uploadMultipartFrameworkAppRequired", "true")
+                && containsLiteralField(line, "uploadMultipartFrameworkAppObserved", "true")
+                && containsLiteralField(line, "uploadMultipartCliContractEnabled", "true")
+                && containsLiteralField(line, "uploadMultipartManifestReady", "true")
+                && containsLiteralField(line, "uploadMultipartRuntimeHandoffRequired", "true")
+                && containsLiteralField(line, "uploadMultipartRuntimeHandoffReady", "true")
+                && containsLiteralField(line, "uploadMultipartNoLocalhost", "true")
+                && containsLiteralField(line, "uploadMultipartFixtureSubstituted", "false")
+                && containsLiteralField(line, "uploadMultipartParity", "true")
+                && line.contains("uploadMultipartAcceptableFailures")
+                && line.contains("uploadMultipartRemainingBlockers")
+                && line.contains("uploadMultipartNextResolutionStep");
+    }
+
+    private static boolean containsUploadMultipartV154Response(String line) {
+        return containsStringField(line, "uploadMultipartVersion",
+                        "flow-ipc-upload-multipart-v1_54")
+                && containsStringField(line, "artifactFamily", "flow-upload-receiver")
+                && containsStringField(line, "requestPurpose",
+                        "framework-upload-multipart-v1_54")
+                && containsStringField(line, "lookupKind",
+                        "Flow-Upload-ElementRequestHandler-multipart-v1_54")
+                && containsStringField(line, "uploadMultipartRequestBodyMode",
+                        "multipart-form-data")
+                && containsStringField(line, "uploadMultipartBoundary",
+                        "----VatoriFlowIpcUploadMultipartV154")
+                && containsStringField(line, "uploadMultipartFileName",
+                        "flow-ipc-upload-multipart-v1_54.txt")
+                && containsStringField(line, "uploadMultipartFileContentType",
+                        "text/plain; charset=UTF-8")
+                && containsPositiveIntegerField(line, "uploadMultipartFileBytes")
+                && line.contains("uploadMultipartFileSha256")
+                && containsPositiveIntegerField(line, "uploadMultipartBytes")
+                && line.contains("uploadMultipartSha256")
+                && containsPositiveIntegerField(line, "uploadMultipartPartCount")
+                && line.contains("ElementStreamResource")
+                && line.contains("UploadHandler")
+                && containsStringField(line, "uploadMultipartStatus", "resolved")
+                && containsPositiveIntegerField(line, "uploadMultipartResponseStatusCode")
+                && containsLiteralField(line, "uploadMultipartPatchContainsChanges", "true")
+                && containsLiteralField(line, "uploadMultipartPatchContainsStatus", "true")
+                && containsStringField(line, "uploadMultipartProgressTerminalStatus", "completed")
+                && containsPositiveIntegerField(line, "uploadMultipartProgressTotalBytes")
+                && containsPositiveIntegerField(line, "uploadMultipartProgressDeliveredBytes")
+                && containsLiteralField(line, "uploadMultipartProgressConsumedByVaadinClient", "false")
+                && containsLiteralField(line, "uploadMultipartCancelProbeAttempted", "true")
+                && containsStringField(line, "uploadMultipartCancelProbeResult",
+                        "classified-not-issued-after-success")
+                && containsStringField(line, "uploadMultipartCancelFailureLayer",
+                        "upload-client-cancel-event-not-wired-to-no-http-bridge-yet")
+                && containsLiteralField(line, "uploadMultipartNoLocalhost", "true")
+                && containsLiteralField(line, "uploadMultipartFixtureSubstituted", "false")
+                && containsLiteralField(line, "uploadMultipartParity", "true")
+                && containsLiteralField(line, "uploadReceiverRequestBodyBase64Observed", "true")
+                && line.contains("VAADIN/dynamic/resource/");
+    }
+
+    private static boolean containsUploadMultipartV154Dom(String line) {
+        return containsStringField(line, "uploadMultipartVersion",
+                        "flow-ipc-upload-multipart-v1_54")
+                && line.contains("VAADIN/dynamic/resource/")
+                && containsStringField(line, "uploadMultipartFileName",
+                        "flow-ipc-upload-multipart-v1_54.txt")
+                && containsStringField(line, "uploadMultipartFileContentType",
+                        "text/plain; charset=UTF-8")
+                && containsPositiveIntegerField(line, "uploadMultipartFileBytes")
+                && line.contains("uploadMultipartFileSha256")
+                && containsPositiveIntegerField(line, "uploadMultipartBytes")
+                && line.contains("uploadMultipartSha256")
+                && containsStringField(line, "uploadMultipartBoundary",
+                        "----VatoriFlowIpcUploadMultipartV154")
+                && containsPositiveIntegerField(line, "uploadMultipartPartCount")
+                && line.contains("ElementStreamResource")
+                && line.contains("UploadHandler")
+                && containsPositiveIntegerField(line, "uploadMultipartResponseStatusCode")
+                && containsLiteralField(line, "uploadMultipartTargetHrefObserved", "true")
+                && containsLiteralField(line, "uploadMultipartRequestObserved", "true")
+                && containsLiteralField(line, "uploadMultipartResponseObserved", "true")
+                && containsLiteralField(line, "uploadMultipartPatchObserved", "true")
+                && containsLiteralField(line, "uploadMultipartBodyVerified", "true")
+                && containsStringField(line, "uploadMultipartProgressTerminalStatus", "completed")
+                && containsPositiveIntegerField(line, "uploadMultipartProgressTotalBytes")
+                && containsPositiveIntegerField(line, "uploadMultipartProgressDeliveredBytes")
+                && containsLiteralField(line, "uploadMultipartProgressConsumedByVaadinClient", "false")
+                && containsLiteralField(line, "uploadMultipartCancelProbeAttempted", "true")
+                && containsStringField(line, "uploadMultipartCancelProbeResult",
+                        "classified-not-issued-after-success")
+                && containsStringField(line, "uploadMultipartCancelFailureLayer",
+                        "upload-client-cancel-event-not-wired-to-no-http-bridge-yet")
+                && containsLiteralField(line, "uploadMultipartNoLocalhost", "true")
+                && containsLiteralField(line, "uploadMultipartFixtureSubstituted", "false")
+                && containsLiteralField(line, "uploadMultipartParity", "true")
+                && line.contains("Multipart upload received: flow-ipc-upload-multipart-v1_54.txt")
+                && line.contains("marker=true")
+                && containsStringField(line, "frameworkUploadMultipartVersion",
+                        "flow-ipc-upload-multipart-v1_54")
+                && containsLiteralField(line, "frameworkUploadMultipartRendered", "true")
+                && containsLiteralField(line, "frameworkUploadMultipartTargetHrefObserved",
+                        "true")
+                && containsLiteralField(line, "frameworkUploadMultipartRequestObserved", "true")
+                && containsLiteralField(line, "frameworkUploadMultipartResponseObserved",
+                        "true")
+                && containsLiteralField(line, "frameworkUploadMultipartPatchObserved", "true")
+                && containsLiteralField(line, "frameworkUploadMultipartBodyVerified", "true")
+                && containsLiteralField(line, "frameworkUploadMultipartComplete", "true");
+    }
+
     private static boolean containsProductionOwnerFailureLayer(String line, String field) {
         return containsStringField(line, field, "production-owner-duplicate-custom-element")
                 || containsStringField(line, field, "production-owner-relative-import-unresolved")
@@ -7775,6 +7964,7 @@ public final class DesktopTraceInspector {
         private boolean frameworkStreamResourceChunksDomObserved;
         private boolean frameworkUploadReceiverBootstrapObserved;
         private boolean frameworkUploadReceiverDomObserved;
+        private boolean frameworkUploadMultipartDomObserved;
         private boolean firstMeaningfulPaintObserved;
         private boolean frontendAssetPipelineV14Observed;
         private boolean frontendArtifactFamilyModelObserved;
@@ -8076,6 +8266,11 @@ public final class DesktopTraceInspector {
         private boolean uploadReceiverV153ResponseObserved;
         private boolean uploadReceiverV153PatchObserved;
         private boolean uploadReceiverV153DomObserved;
+        private boolean uploadMultipartV154ManifestObserved;
+        private boolean uploadMultipartV154RequestObserved;
+        private boolean uploadMultipartV154ResponseObserved;
+        private boolean uploadMultipartV154PatchObserved;
+        private boolean uploadMultipartV154DomObserved;
 
         public boolean hasRequiredFlowIpcTypes() {
             return types.keySet().containsAll(FLOW_IPC_REQUIRED_TYPES)
@@ -8913,6 +9108,21 @@ public final class DesktopTraceInspector {
             return hasRequiredFlowIpcV1_53UploadReceiverTypes();
         }
 
+        public boolean hasRequiredFlowIpcV1_54UploadMultipartTypes() {
+            return uploadMultipartV154ManifestObserved
+                    && uploadMultipartV154RequestObserved
+                    && uploadMultipartV154ResponseObserved
+                    && uploadMultipartV154PatchObserved
+                    && uploadMultipartV154DomObserved
+                    && frameworkUploadReceiverBootstrapObserved
+                    && frameworkUploadMultipartDomObserved
+                    && hasRequiredFlowIpcV1_53UploadReceiverTypes();
+        }
+
+        public boolean hasRequiredFlowIpcV1_54Types() {
+            return hasRequiredFlowIpcV1_54UploadMultipartTypes();
+        }
+
         private boolean hasCurrentAppBuildFrontendOutputSuccessorEvidence() {
             return currentAppBuildFrontendOutputV132ManifestObserved
                     && currentAppBuildFrontendOutputV132RequestObserved
@@ -9629,6 +9839,14 @@ public final class DesktopTraceInspector {
             System.out.println("framework Upload receiver bootstrap/DOM observed: "
                     + frameworkUploadReceiverBootstrapObserved + "/"
                     + frameworkUploadReceiverDomObserved);
+            System.out.println("Flow IPC v1.54 Upload multipart manifest/request/response/patch/DOM observed: "
+                    + uploadMultipartV154ManifestObserved + "/"
+                    + uploadMultipartV154RequestObserved + "/"
+                    + uploadMultipartV154ResponseObserved + "/"
+                    + uploadMultipartV154PatchObserved + "/"
+                    + uploadMultipartV154DomObserved);
+            System.out.println("framework Upload multipart DOM observed: "
+                    + frameworkUploadMultipartDomObserved);
             System.out.println("Flow IPC v1.6 TextField graph manifest observed: "
                     + frontendTextFieldV16ManifestObserved);
             System.out.println("Flow IPC v1.6 TextField graph request observed: "

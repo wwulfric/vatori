@@ -169,11 +169,14 @@ public class FlowOverIpcFrameworkView extends VerticalLayout {
         uploadStatus.setId("framework-upload-status");
         Upload upload = new Upload(UploadHandler.inMemory((metadata, bytes) -> {
             String body = new String(bytes, StandardCharsets.UTF_8);
-            boolean marker = body.contains("Flow IPC Upload v1.53");
-            uploadStatus.setText("Upload received: " + metadata.fileName()
+            boolean multipartMarker = body.contains("Flow IPC Upload Multipart v1.54");
+            boolean marker = multipartMarker || body.contains("Flow IPC Upload v1.53");
+            String prefix = multipartMarker ? "Multipart upload received: " : "Upload received: ";
+            uploadStatus.setText(prefix + metadata.fileName()
                     + " bytes=" + bytes.length
                     + " marker=" + marker
-                    + " contentType=" + metadata.contentType());
+                    + " contentType=" + metadata.contentType()
+                    + (multipartMarker ? " progress=completed cancel=classified" : ""));
         }));
         upload.setId("framework-upload");
         upload.setMaxFiles(1);

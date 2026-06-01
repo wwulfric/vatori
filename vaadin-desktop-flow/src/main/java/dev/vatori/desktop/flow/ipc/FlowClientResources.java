@@ -885,6 +885,24 @@ final class FlowClientResources {
             "multipart-upload-parity,multi-file-upload,large-file-backpressure,progress-cancellation,retry-resume,downloadhandler-parity,theme-variants,dev-mode-vite-parity,installer-packaging,durable-reconnect";
     private static final String UPLOAD_RECEIVER_NEXT_STEP =
             "turn bounded raw UploadHandler evidence into multipart/progress/cancel Upload parity and generalized streaming";
+    private static final String UPLOAD_MULTIPART_VERSION =
+            "flow-ipc-upload-multipart-v1_54";
+    private static final String UPLOAD_MULTIPART_SCOPE =
+            "framework-validation-app-upload-element-request-handler-bounded-multipart-progress-cancel";
+    private static final String UPLOAD_MULTIPART_EXPECTED_FILE =
+            "flow-ipc-upload-multipart-v1_54.txt";
+    private static final String UPLOAD_MULTIPART_EXPECTED_CONTENT_TYPE =
+            "text/plain; charset=UTF-8";
+    private static final String UPLOAD_MULTIPART_EXPECTED_BODY_MARKER =
+            "Flow IPC Upload Multipart v1.54";
+    private static final String UPLOAD_MULTIPART_TRANSPORT =
+            "ipc-upload-request-multipart-form-data";
+    private static final String UPLOAD_MULTIPART_ACCEPTABLE_FAILURES =
+            "upload-multipart-target-missing,upload-multipart-servlet-request-adapter-missing,upload-multipart-parser-error,upload-multipart-part-missing,upload-multipart-handler-error,upload-multipart-progress-unconsumed,upload-multipart-cancel-classified";
+    private static final String UPLOAD_MULTIPART_REMAINING_BLOCKERS =
+            "multi-file-upload,large-file-streaming,parallel-upload,retry-resume,real-backpressure,upload-client-progress-ui-consumption,cancel-abort-wiring,downloadhandler-parity,os-file-grants,dev-mode-vite-parity,installer-packaging,durable-reconnect";
+    private static final String UPLOAD_MULTIPART_NEXT_STEP =
+            "turn bounded single-file multipart evidence into streaming upload with real progress/cancel/backpressure";
     private static final List<String> PRODUCTION_RUNTIME_OWNER_DEPENDENCY_ARTIFACTS = List.of(
             DEV_BUNDLE_COMMONJS_JS,
             DEV_BUNDLE_INDEX_HTML_JS,
@@ -3279,6 +3297,8 @@ final class FlowClientResources {
         attributes.put("streamResourceChunksNextResolutionStep", STREAM_RESOURCE_CHUNKS_NEXT_STEP);
         attributes.putAll(uploadReceiverAttributes(evidence, buildStep, selectedArtifacts,
                 handoffReady));
+        attributes.putAll(uploadMultipartAttributes(evidence, buildStep, selectedArtifacts,
+                handoffReady));
         return attributes;
     }
 
@@ -3340,6 +3360,70 @@ final class FlowClientResources {
                 : "framework-validation-app-not-selected");
         attributes.put("uploadReceiverRemainingBlockers", UPLOAD_RECEIVER_REMAINING_BLOCKERS);
         attributes.put("uploadReceiverNextResolutionStep", UPLOAD_RECEIVER_NEXT_STEP);
+        return attributes;
+    }
+
+    private static Map<String, Object> uploadMultipartAttributes(
+            CurrentAppBuildFrontendOutputEvidence evidence,
+            FrontendBuildStepEvidence buildStep,
+            String selectedArtifacts,
+            boolean handoffReady) {
+        Path module = appModuleDirectory();
+        String appShape = packagingRuntimeHandoffAppShape(module);
+        boolean frameworkApp = "framework-validation-app".equals(appShape);
+        Map<String, Object> attributes = new LinkedHashMap<>();
+        attributes.put("uploadMultipartVersion", UPLOAD_MULTIPART_VERSION);
+        attributes.put("uploadMultipartSource", UPLOAD_RECEIVER_VERSION);
+        attributes.put("uploadMultipartScope", UPLOAD_MULTIPART_SCOPE);
+        attributes.put("uploadMultipartAppShape", appShape);
+        attributes.put("uploadMultipartJavaClasses",
+                "com.vaadin.flow.component.upload.Upload,com.vaadin.flow.server.streams.UploadHandler,com.vaadin.flow.server.StreamResourceRegistry.ElementStreamResource,jakarta.servlet.http.Part");
+        attributes.put("uploadMultipartComponentIds", UPLOAD_RECEIVER_COMPONENT_IDS);
+        attributes.put("uploadMultipartDynamicPathPrefix", UPLOAD_RECEIVER_DYNAMIC_PATH_PREFIX);
+        attributes.put("uploadMultipartExpectedFile", UPLOAD_MULTIPART_EXPECTED_FILE);
+        attributes.put("uploadMultipartExpectedContentType", UPLOAD_MULTIPART_EXPECTED_CONTENT_TYPE);
+        attributes.put("uploadMultipartExpectedBodyMarker", UPLOAD_MULTIPART_EXPECTED_BODY_MARKER);
+        attributes.put("uploadMultipartTransport", UPLOAD_MULTIPART_TRANSPORT);
+        attributes.put("uploadMultipartSelectedArtifacts", selectedArtifacts);
+        attributes.put("uploadMultipartSelectedArtifactCount", csvValues(selectedArtifacts).size());
+        attributes.put("uploadMultipartGeneratedImportsOwnerSource",
+                CURRENT_APP_GENERATED_IMPORTS_OWNER_RUNTIME_CONTRACT_SOURCE);
+        attributes.put("uploadMultipartGeneratedImportsOwnerArtifact",
+                CURRENT_APP_BUILD_FRONTEND_GENERATED_IMPORTS_JS);
+        attributes.put("uploadMultipartProductionSupportArtifact",
+                evidence.sourceGeneratedImportsRootProductionSupportArtifact());
+        attributes.put("uploadMultipartProductionSupportSha256",
+                evidence.productionGeneratedImportsSha256());
+        attributes.put("uploadMultipartProductionSupportBytes",
+                evidence.productionGeneratedImportsBytes());
+        attributes.put("uploadMultipartProductionEntryArtifact",
+                evidence.productionEntryScriptVirtualPath());
+        attributes.put("uploadMultipartBuildGoal", buildStep.goal());
+        attributes.put("uploadMultipartBuildStatus", buildStep.status());
+        attributes.put("uploadMultipartOutputUsability", buildStep.outputUsability());
+        attributes.put("uploadMultipartFrameworkAppRequired", true);
+        attributes.put("uploadMultipartFrameworkAppObserved", frameworkApp);
+        attributes.put("uploadMultipartCliContractEnabled",
+                "1".equals(System.getenv("VAADIN_DESKTOP_FLOW_IPC_FRONTEND_BUILD_V1_54")));
+        attributes.put("uploadMultipartManifestReady", handoffReady && frameworkApp);
+        attributes.put("uploadMultipartRuntimeHandoffRequired", true);
+        attributes.put("uploadMultipartRuntimeHandoffReady", handoffReady);
+        attributes.put("uploadMultipartTargetHrefObserved", false);
+        attributes.put("uploadMultipartRequestObserved", false);
+        attributes.put("uploadMultipartResponseObserved", false);
+        attributes.put("uploadMultipartPatchObserved", false);
+        attributes.put("uploadMultipartBodyVerified", false);
+        attributes.put("uploadMultipartProgressObserved", false);
+        attributes.put("uploadMultipartCancelProbeObserved", false);
+        attributes.put("uploadMultipartNoLocalhost", true);
+        attributes.put("uploadMultipartFixtureSubstituted", false);
+        attributes.put("uploadMultipartParity", true);
+        attributes.put("uploadMultipartAcceptableFailures", UPLOAD_MULTIPART_ACCEPTABLE_FAILURES);
+        attributes.put("uploadMultipartFailureLayer", frameworkApp
+                ? "framework-upload-multipart-runtime-validation-pending"
+                : "framework-validation-app-not-selected");
+        attributes.put("uploadMultipartRemainingBlockers", UPLOAD_MULTIPART_REMAINING_BLOCKERS);
+        attributes.put("uploadMultipartNextResolutionStep", UPLOAD_MULTIPART_NEXT_STEP);
         return attributes;
     }
 

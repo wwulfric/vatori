@@ -1,6 +1,6 @@
 # Goal 1.54: Flow Upload Multipart Progress and Cancel Contract
 
-状态：待执行
+状态：已完成
 
 `docs/goal.md` 是长期愿景和完成度账本。v1.53 已经证明普通 Flow `Upload`
 的 Vaadin dynamic target 可以通过 no-localhost IPC 被调用：host 观察真实
@@ -88,4 +88,34 @@ bash bin/flow-ipc-trace-inspect --require-flow-ipc-v1_54 docs/traces/flow-ipc-v1
 
 ```text
 feat: add Flow Upload multipart receiver contract
+```
+
+## 完成记录
+
+v1.54 已实现并验证 `flow-ipc-upload-multipart-v1_54`：
+
+- framework validation app 复用普通 Flow `Upload` 组件，新增 multipart upload 可见 status。
+- Swift host/WebView 观察真实 `vaadin-upload` target dynamic resource href，并通过 no-localhost
+  Flow IPC 发送 bounded single-file `multipart/form-data` request。
+- Java sidecar 的 desktop `VaadinRequest` adapter 补齐最小 `HttpServletRequest` / multipart
+  `Part` 形状，真实 `ElementRequestHandler` / `UploadHandler` 能读取 multipart file body。
+- DOM summary 记录 target/request/response/patch/body/status verified、boundary、part headers、
+  文件名、content type、file/multipart byte count、sha256、part count、progress checkpoints、
+  cancel probe classification、no-localhost 和 no-fixture proof。
+- v1.53 raw upload status 被保留为 baseline，v1.54 multipart status 单独验证。
+- 固定 trace 保存为 `docs/traces/flow-ipc-v1_54-framework.ndjson`。
+
+已执行验收：
+
+```bash
+git diff --check
+bash -n bin/vaadin-desktop
+/usr/bin/swiftc -parse vaadin-desktop-host-swift/Sources/VaadinDesktopHost/main.swift
+source /Users/bytedance/.sdkman/bin/sdkman-init.sh
+mvn -q -o -Dmaven.repo.local=/Users/bytedance/IdeaProjects/vatori/.m2/repository -pl vaadin-desktop-devtools,vaadin-desktop-flow,test-apps/flow-over-ipc-framework-app -am -DskipTests compile
+VAADIN_DESKTOP_MAVEN_OFFLINE=0 VAADIN_DESKTOP_HOST_NO_ACTIVATE=1 VAADIN_DESKTOP_FLOW_IPC_PREPARE_FRONTEND=1 VAADIN_DESKTOP_FLOW_IPC_FRONTEND_BUILD_ONLINE=1 VAADIN_DESKTOP_FLOW_IPC_FRONTEND_BUILD_GOAL=build-frontend VAADIN_DESKTOP_FLOW_IPC_AUTO_FRAMEWORK_UPDATE=1 VAADIN_DESKTOP_FLOW_IPC_AUTO_STREAM_RESOURCE=1 VAADIN_DESKTOP_FLOW_IPC_AUTO_STREAM_RESOURCE_RANGE=1 VAADIN_DESKTOP_FLOW_IPC_AUTO_STREAM_RESOURCE_CHUNKS=1 VAADIN_DESKTOP_FLOW_IPC_AUTO_UPLOAD_RECEIVER=1 VAADIN_DESKTOP_FLOW_IPC_AUTO_UPLOAD_MULTIPART=1 VAADIN_DESKTOP_FLOW_IPC_AUTO_SHUTDOWN=1 bash bin/vaadin-desktop dev-ipc test-apps/flow-over-ipc-framework-app
+bash bin/flow-ipc-trace-inspect --require-flow-ipc-v1_54-upload-multipart .build/vaadin-desktop-host-swift/host.out.log
+bash bin/flow-ipc-trace-inspect --require-flow-ipc-v1_54 .build/vaadin-desktop-host-swift/host.out.log
+bash bin/flow-ipc-trace-inspect --require-flow-ipc-v1_54-upload-multipart docs/traces/flow-ipc-v1_54-framework.ndjson
+bash bin/flow-ipc-trace-inspect --require-flow-ipc-v1_54 docs/traces/flow-ipc-v1_54-framework.ndjson
 ```

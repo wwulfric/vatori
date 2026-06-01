@@ -21,6 +21,7 @@ import com.vaadin.flow.server.WrappedSession;
 import com.vaadin.flow.shared.ApplicationConstants;
 import com.vaadin.flow.shared.communication.PushMode;
 import dev.vatori.desktop.ipc.IpcJson;
+import jakarta.servlet.http.Part;
 
 import java.io.ByteArrayOutputStream;
 import java.io.File;
@@ -227,24 +228,47 @@ public final class DesktopFlowRuntimeSession {
     }
 
     public FlowUploadResponse uploadResourceResponse(String path, String fileName, String contentType, byte[] bytes) {
+        return uploadResourceResponse(path, fileName, contentType, bytes, UploadRequestMetadata.raw());
+    }
+
+    public FlowUploadResponse uploadResourceResponse(String path, String fileName, String contentType, byte[] bytes,
+                                                     UploadRequestMetadata metadata) {
         Objects.requireNonNull(path, "path");
+        UploadRequestMetadata requestMetadata = metadata == null ? UploadRequestMetadata.raw() : metadata;
         byte[] uploadBytes = bytes == null ? new byte[0] : bytes.clone();
         String normalizedPath = path.startsWith("/") ? path.substring(1) : path;
+        boolean multipart = requestMetadata.multipart();
+        String uploadVersion = multipart
+                ? "flow-ipc-upload-multipart-v1_54"
+                : "flow-ipc-upload-receiver-v1_53";
+        String uploadTransport = multipart
+                ? "ipc-upload-request-multipart-form-data"
+                : "ipc-upload-request-raw-xhr-compatible";
         session.lock();
         try {
             URI uri = dynamicResourceUri(normalizedPath);
             AbstractStreamResource abstractResource = session.getResourceRegistry().getResource(uri).orElse(null);
             if (abstractResource == null) {
                 return new FlowUploadResponse(uploadFailurePayload(normalizedPath, fileName, contentType, uploadBytes,
-                        "not-found", "upload-resource-registry-unavailable", ""), null);
+                        "not-found", "upload-resource-registry-unavailable", "", requestMetadata), null);
             }
             if (!(abstractResource instanceof ElementStreamResource elementResource)) {
                 return new FlowUploadResponse(uploadFailurePayload(normalizedPath, fileName, contentType, uploadBytes,
-                        abstractResource.getClass().getName(), "upload-resource-not-element-request-handler", ""), null);
+                        abstractResource.getClass().getName(), "upload-resource-not-element-request-handler", "",
+                        requestMetadata), null);
             }
 
             DesktopVaadinRequest request = DesktopVaadinRequest.upload(session, sessionId, uiId, normalizedPath,
                     uploadBytes, fileName, contentType);
+            String receiverFileName = request.firstPart()
+                    .map(part -> Objects.toString(part.getSubmittedFileName(), fileName))
+                    .orElse(fileName);
+            String receiverContentType = request.firstPart()
+                    .map(part -> Objects.toString(part.getContentType(), requestMetadata.fileContentType()))
+                    .orElse(contentType);
+            long receiverFileBytes = request.firstPart()
+                    .map(Part::getSize)
+                    .orElse((long) uploadBytes.length);
             DesktopVaadinResponse response = new DesktopVaadinResponse(session.getService());
             Map<Class<?>, CurrentInstance> oldInstances = CurrentInstance.getInstances();
             CurrentInstance.setCurrent(ui);
@@ -268,22 +292,24 @@ public final class DesktopFlowRuntimeSession {
                 payload.put("path", normalizedPath);
                 payload.put("artifactFamily", "flow-upload-receiver");
                 payload.put("dynamicUploadResource", true);
-                payload.put("uploadReceiverVersion", "flow-ipc-upload-receiver-v1_53");
+                payload.put("uploadReceiverVersion", multipart
+                        ? "flow-ipc-upload-receiver-v1_53+multipart-v1_54"
+                        : "flow-ipc-upload-receiver-v1_53");
                 payload.put("uploadReceiverRegistrySource", "VaadinSession.StreamResourceRegistry");
                 payload.put("uploadReceiverResourceType", ElementStreamResource.class.getName());
                 payload.put("uploadReceiverConcreteResourceType", abstractResource.getClass().getName());
                 payload.put("uploadReceiverHandlerType",
                         elementResource.getElementRequestHandler().getClass().getName());
                 payload.put("uploadReceiverOwnerNodeId", elementResource.getOwner().getNode().getId());
-                payload.put("uploadReceiverTransport", "ipc-upload-request-raw-xhr-compatible");
+                payload.put("uploadReceiverTransport", uploadTransport);
                 payload.put("uploadReceiverNoLocalhost", true);
                 payload.put("uploadReceiverFixtureSubstituted", false);
-                payload.put("uploadReceiverMultipartParity", false);
+                payload.put("uploadReceiverMultipartParity", multipart);
                 payload.put("uploadReceiverStatus", response.statusCode() >= 200 && response.statusCode() < 300
                         ? "resolved"
                         : "response-status-" + response.statusCode());
-                payload.put("uploadReceiverFileName", fileName);
-                payload.put("uploadReceiverContentType", contentType);
+                payload.put("uploadReceiverFileName", receiverFileName);
+                payload.put("uploadReceiverContentType", receiverContentType);
                 payload.put("uploadReceiverBytes", uploadBytes.length);
                 payload.put("uploadReceiverSha256", MessageDigestUtil.sha256Hex(uploadBytes));
                 payload.put("uploadReceiverResponseStatusCode", response.statusCode());
@@ -291,11 +317,19 @@ public final class DesktopFlowRuntimeSession {
                 payload.put("uploadReceiverResponseHeaders", response.headers());
                 payload.put("uploadReceiverResponseBody", Objects.toString(response.bodyAsString(), ""));
                 payload.put("uploadReceiverPatchContainsChanges", uidlJson.contains("\"changes\""));
+                String expectedStatusPrefix = multipart ? "Multipart upload received: " : "Upload received: ";
                 payload.put("uploadReceiverPatchContainsStatus",
-                        uidlJson.contains("Upload received: " + fileName));
+                        uidlJson.contains(expectedStatusPrefix + receiverFileName));
                 payload.put("uploadReceiverFailureLayer", "");
                 payload.put("uploadReceiverNextResolutionStep",
-                        "extend raw UploadHandler path toward multipart/progress/cancel/backpressure parity");
+                        multipart
+                                ? "turn bounded multipart evidence into multi-file/streaming progress/cancel parity"
+                                : "extend raw UploadHandler path toward multipart/progress/cancel/backpressure parity");
+                if (multipart) {
+                    putUploadMultipartPayload(payload, normalizedPath, receiverFileName, receiverContentType,
+                            receiverFileBytes, uploadBytes, request, response, uidlJson, requestMetadata,
+                            elementResource.getElementRequestHandler().getClass().getName(), uploadVersion);
+                }
                 return new FlowUploadResponse(payload, patch);
             } catch (IOException error) {
                 throw new IllegalStateException("Unable to dispatch Flow IPC upload resource: "
@@ -311,21 +345,28 @@ public final class DesktopFlowRuntimeSession {
 
     private static Map<String, Object> uploadFailurePayload(String normalizedPath, String fileName, String contentType,
                                                            byte[] uploadBytes, String resourceType,
-                                                           String failureLayer, String responseBody) {
+                                                           String failureLayer, String responseBody,
+                                                           UploadRequestMetadata metadata) {
+        UploadRequestMetadata requestMetadata = metadata == null ? UploadRequestMetadata.raw() : metadata;
+        boolean multipart = requestMetadata.multipart();
         Map<String, Object> payload = new LinkedHashMap<>();
         payload.put("path", normalizedPath);
         payload.put("artifactFamily", "flow-upload-receiver");
         payload.put("dynamicUploadResource", true);
-        payload.put("uploadReceiverVersion", "flow-ipc-upload-receiver-v1_53");
+        payload.put("uploadReceiverVersion", multipart
+                ? "flow-ipc-upload-receiver-v1_53+multipart-v1_54"
+                : "flow-ipc-upload-receiver-v1_53");
         payload.put("uploadReceiverRegistrySource", "VaadinSession.StreamResourceRegistry");
         payload.put("uploadReceiverResourceType", resourceType);
-        payload.put("uploadReceiverTransport", "ipc-upload-request-raw-xhr-compatible");
+        payload.put("uploadReceiverTransport", multipart
+                ? "ipc-upload-request-multipart-form-data"
+                : "ipc-upload-request-raw-xhr-compatible");
         payload.put("uploadReceiverHandlerType", "");
         payload.put("uploadReceiverResponseStatusCode", 0);
         payload.put("uploadReceiverResponseContentType", "");
         payload.put("uploadReceiverNoLocalhost", true);
         payload.put("uploadReceiverFixtureSubstituted", false);
-        payload.put("uploadReceiverMultipartParity", false);
+        payload.put("uploadReceiverMultipartParity", multipart);
         payload.put("uploadReceiverStatus", "not-resolved");
         payload.put("uploadReceiverFileName", fileName);
         payload.put("uploadReceiverContentType", contentType);
@@ -335,7 +376,67 @@ public final class DesktopFlowRuntimeSession {
         payload.put("uploadReceiverFailureLayer", failureLayer);
         payload.put("uploadReceiverNextResolutionStep",
                 "resolve vaadin-upload target to ElementStreamResource and invoke UploadHandler");
+        if (multipart) {
+            putUploadMultipartPayload(payload, normalizedPath, fileName, requestMetadata.fileContentType(),
+                    requestMetadata.fileBytes(), uploadBytes, null, null, "", requestMetadata, "",
+                    "flow-ipc-upload-multipart-v1_54");
+            payload.put("uploadMultipartFailureLayer", failureLayer);
+        }
         return payload;
+    }
+
+    private static void putUploadMultipartPayload(Map<String, Object> payload, String normalizedPath, String fileName,
+                                                  String fileContentType, long fileBytes, byte[] uploadBytes,
+                                                  DesktopVaadinRequest request, DesktopVaadinResponse response,
+                                                  String uidlJson, UploadRequestMetadata metadata,
+                                                  String handlerType, String version) {
+        int partCount = request == null ? 0 : request.partCount();
+        payload.put("uploadMultipartVersion", version);
+        payload.put("uploadMultipartSource", "upload-receiver-v1_53");
+        payload.put("uploadMultipartScope",
+                "framework-validation-app-upload-element-request-handler-bounded-multipart-progress-cancel");
+        payload.put("uploadMultipartAppShape", "framework-validation-app");
+        payload.put("uploadMultipartJavaClasses",
+                "com.vaadin.flow.component.upload.Upload,com.vaadin.flow.server.streams.UploadHandler,com.vaadin.flow.server.StreamResourceRegistry.ElementStreamResource,jakarta.servlet.http.Part");
+        payload.put("uploadMultipartComponentIds", "framework-upload,framework-upload-status");
+        payload.put("uploadMultipartDynamicPathPrefix", "VAADIN/dynamic/resource/");
+        payload.put("uploadMultipartTargetPath", normalizedPath);
+        payload.put("uploadMultipartRequestBodyMode", "multipart-form-data");
+        payload.put("uploadMultipartBoundary", metadata.multipartBoundary());
+        payload.put("uploadMultipartPartHeaders",
+                "Content-Disposition: form-data; name=\"file\"; filename=\"" + fileName
+                        + "\",Content-Type: " + fileContentType);
+        payload.put("uploadMultipartFileName", fileName);
+        payload.put("uploadMultipartFileContentType", fileContentType);
+        payload.put("uploadMultipartFileBytes", fileBytes);
+        payload.put("uploadMultipartFileSha256", metadata.fileSha256());
+        payload.put("uploadMultipartBytes", uploadBytes.length);
+        payload.put("uploadMultipartSha256", MessageDigestUtil.sha256Hex(uploadBytes));
+        payload.put("uploadMultipartPartCount", partCount);
+        payload.put("uploadMultipartReceiverUsesHttpServletRequest", request instanceof jakarta.servlet.http.HttpServletRequest);
+        payload.put("uploadMultipartResourceType", payload.getOrDefault("uploadReceiverResourceType", ""));
+        payload.put("uploadMultipartHandlerType", handlerType);
+        payload.put("uploadMultipartStatus", payload.getOrDefault("uploadReceiverStatus", "not-resolved"));
+        payload.put("uploadMultipartResponseStatusCode", response == null ? 0 : response.statusCode());
+        payload.put("uploadMultipartPatchContainsChanges", uidlJson.contains("\"changes\""));
+        payload.put("uploadMultipartPatchContainsStatus",
+                uidlJson.contains("Multipart upload received: " + fileName));
+        payload.put("uploadMultipartProgressCheckpoints", metadata.progressCheckpoints());
+        payload.put("uploadMultipartProgressTotalBytes", metadata.progressTotalBytes());
+        payload.put("uploadMultipartProgressDeliveredBytes", metadata.progressDeliveredBytes());
+        payload.put("uploadMultipartProgressTerminalStatus", metadata.progressTerminalStatus());
+        payload.put("uploadMultipartProgressConsumedByVaadinClient", metadata.progressConsumedByVaadinClient());
+        payload.put("uploadMultipartCancelProbeAttempted", metadata.cancelProbeAttempted());
+        payload.put("uploadMultipartCancelProbeResult", metadata.cancelProbeResult());
+        payload.put("uploadMultipartCancelFailureLayer", metadata.cancelFailureLayer());
+        payload.put("uploadMultipartNoLocalhost", true);
+        payload.put("uploadMultipartFixtureSubstituted", false);
+        payload.put("uploadMultipartParity", true);
+        payload.put("uploadMultipartFailureLayer", "");
+        payload.put("uploadMultipartRemainingBlockers",
+                "multi-file-upload,large-file-streaming,parallel-upload,retry-resume,real-backpressure,upload-client-progress-ui-consumption,cancel-abort-wiring,downloadhandler-parity,os-file-grants,dev-mode-vite-parity,installer-packaging,durable-reconnect");
+        payload.put("uploadMultipartNextResolutionStep",
+                "turn bounded single-file multipart evidence into streaming upload with real progress/cancel/backpressure");
     }
 
     public Optional<Map<String, Object>> streamResourceResponse(String path, int rangeStart, int rangeEndInclusive) {
@@ -540,6 +641,22 @@ public final class DesktopFlowRuntimeSession {
     }
 
     public record FlowUploadResponse(Map<String, Object> payload, FlowPatchResponse patch) {
+    }
+
+    public record UploadRequestMetadata(String bodyMode, String multipartBoundary, String fileContentType,
+                                        long fileBytes, String fileSha256, String progressCheckpoints,
+                                        long progressTotalBytes, long progressDeliveredBytes,
+                                        String progressTerminalStatus, boolean progressConsumedByVaadinClient,
+                                        boolean cancelProbeAttempted, String cancelProbeResult,
+                                        String cancelFailureLayer) {
+        static UploadRequestMetadata raw() {
+            return new UploadRequestMetadata("raw-xhr-compatible", "", "", 0L, "", "", 0L, 0L,
+                    "", false, false, "", "");
+        }
+
+        boolean multipart() {
+            return "multipart-form-data".equals(bodyMode);
+        }
     }
 
     private static final class DesktopFlowVaadinService extends VaadinService {

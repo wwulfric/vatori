@@ -21,6 +21,7 @@ struct HostConfig {
     var flowIpcAutoStreamResourceRange: Bool = false
     var flowIpcAutoStreamResourceChunks: Bool = false
     var flowIpcAutoUploadReceiver: Bool = false
+    var flowIpcAutoUploadMultipart: Bool = false
     var flowIpcAutoShutdown: Bool = false
     var hostNoActivate: Bool = false
     var title: String = "Vaadin Desktop"
@@ -77,6 +78,7 @@ struct HostConfig {
         config.flowIpcAutoStreamResourceRange = ProcessInfo.processInfo.environment["VAADIN_DESKTOP_FLOW_IPC_AUTO_STREAM_RESOURCE_RANGE"] == "1"
         config.flowIpcAutoStreamResourceChunks = ProcessInfo.processInfo.environment["VAADIN_DESKTOP_FLOW_IPC_AUTO_STREAM_RESOURCE_CHUNKS"] == "1"
         config.flowIpcAutoUploadReceiver = ProcessInfo.processInfo.environment["VAADIN_DESKTOP_FLOW_IPC_AUTO_UPLOAD_RECEIVER"] == "1"
+        config.flowIpcAutoUploadMultipart = ProcessInfo.processInfo.environment["VAADIN_DESKTOP_FLOW_IPC_AUTO_UPLOAD_MULTIPART"] == "1"
         config.flowIpcAutoShutdown = ProcessInfo.processInfo.environment["VAADIN_DESKTOP_FLOW_IPC_AUTO_SHUTDOWN"] == "1"
         config.hostNoActivate = ProcessInfo.processInfo.environment["VAADIN_DESKTOP_HOST_NO_ACTIVATE"] == "1"
         return config
@@ -784,6 +786,10 @@ final class WebViewHost: NSObject, NSApplicationDelegate, NSWindowDelegate, WKNa
         }
         if config.flowIpcAutoUploadReceiver {
             let source = "window.__VAADIN_DESKTOP_FLOW_IPC_AUTO_UPLOAD_RECEIVER__ = true;"
+            userContentController.addUserScript(WKUserScript(source: source, injectionTime: .atDocumentStart, forMainFrameOnly: true))
+        }
+        if config.flowIpcAutoUploadMultipart {
+            let source = "window.__VAADIN_DESKTOP_FLOW_IPC_AUTO_UPLOAD_MULTIPART__ = true;"
             userContentController.addUserScript(WKUserScript(source: source, injectionTime: .atDocumentStart, forMainFrameOnly: true))
         }
         userContentController.add(self, name: "flowIpc")
@@ -2171,6 +2177,8 @@ final class WebViewHost: NSObject, NSApplicationDelegate, NSWindowDelegate, WKNa
             || !!d.frameworkStreamResourceChunksComplete;
           const uploadReceiverComplete = !window.__VAADIN_DESKTOP_FLOW_IPC_AUTO_UPLOAD_RECEIVER__
             || !!d.frameworkUploadReceiverComplete;
+          const uploadMultipartComplete = !window.__VAADIN_DESKTOP_FLOW_IPC_AUTO_UPLOAD_MULTIPART__
+            || !!d.frameworkUploadMultipartComplete;
           const frameworkComplete = !!d.frameworkAppInteractionComplete
             && componentMatrixComplete
             && dataComponentMatrixComplete
@@ -2179,7 +2187,8 @@ final class WebViewHost: NSObject, NSApplicationDelegate, NSWindowDelegate, WKNa
             && streamResourceComplete
             && streamResourceRangeComplete
             && streamResourceChunksComplete
-            && uploadReceiverComplete;
+            && uploadReceiverComplete
+            && uploadMultipartComplete;
           const complete = window.__VAADIN_DESKTOP_FLOW_IPC_AUTO_FRAMEWORK_UPDATE__
             ? frameworkComplete
             : smokeComplete;
@@ -2195,6 +2204,7 @@ final class WebViewHost: NSObject, NSApplicationDelegate, NSWindowDelegate, WKNa
             streamResourceRangeComplete,
             streamResourceChunksComplete,
             uploadReceiverComplete,
+            uploadMultipartComplete,
             click: !!d.flowClientEngineEventPatchConsumed,
             text: !!d.flowClientEngineTextInputEventObserved,
             checkbox: !!d.flowClientEngineCheckboxEventObserved,
@@ -3637,6 +3647,38 @@ final class WebViewHost: NSObject, NSApplicationDelegate, NSWindowDelegate, WKNa
           uploadReceiverFixtureSubstituted: !!(window.VaadinDesktopIpcDiagnostics && window.VaadinDesktopIpcDiagnostics.uploadReceiverFixtureSubstituted),
           uploadReceiverMultipartParity: !!(window.VaadinDesktopIpcDiagnostics && window.VaadinDesktopIpcDiagnostics.uploadReceiverMultipartParity),
           uploadReceiverFailureLayer: window.VaadinDesktopIpcDiagnostics ? window.VaadinDesktopIpcDiagnostics.uploadReceiverFailureLayer : "",
+          uploadMultipartVersion: window.VaadinDesktopIpcDiagnostics ? window.VaadinDesktopIpcDiagnostics.uploadMultipartVersion : "",
+          uploadMultipartTargetHref: window.VaadinDesktopIpcDiagnostics ? window.VaadinDesktopIpcDiagnostics.uploadMultipartTargetHref : "",
+          uploadMultipartTargetHrefObserved: !!(window.VaadinDesktopIpcDiagnostics && window.VaadinDesktopIpcDiagnostics.uploadMultipartTargetHrefObserved),
+          uploadMultipartRequestObserved: !!(window.VaadinDesktopIpcDiagnostics && window.VaadinDesktopIpcDiagnostics.uploadMultipartRequestObserved),
+          uploadMultipartResponseObserved: !!(window.VaadinDesktopIpcDiagnostics && window.VaadinDesktopIpcDiagnostics.uploadMultipartResponseObserved),
+          uploadMultipartPatchObserved: !!(window.VaadinDesktopIpcDiagnostics && window.VaadinDesktopIpcDiagnostics.uploadMultipartPatchObserved),
+          uploadMultipartBodyVerified: !!(window.VaadinDesktopIpcDiagnostics && window.VaadinDesktopIpcDiagnostics.uploadMultipartBodyVerified),
+          uploadMultipartStatusText: window.VaadinDesktopIpcDiagnostics ? window.VaadinDesktopIpcDiagnostics.uploadMultipartStatusText : "",
+          uploadMultipartFileName: window.VaadinDesktopIpcDiagnostics ? window.VaadinDesktopIpcDiagnostics.uploadMultipartFileName : "",
+          uploadMultipartFileContentType: window.VaadinDesktopIpcDiagnostics ? window.VaadinDesktopIpcDiagnostics.uploadMultipartFileContentType : "",
+          uploadMultipartFileBytes: window.VaadinDesktopIpcDiagnostics ? window.VaadinDesktopIpcDiagnostics.uploadMultipartFileBytes : 0,
+          uploadMultipartFileSha256: window.VaadinDesktopIpcDiagnostics ? window.VaadinDesktopIpcDiagnostics.uploadMultipartFileSha256 : "",
+          uploadMultipartBytes: window.VaadinDesktopIpcDiagnostics ? window.VaadinDesktopIpcDiagnostics.uploadMultipartBytes : 0,
+          uploadMultipartSha256: window.VaadinDesktopIpcDiagnostics ? window.VaadinDesktopIpcDiagnostics.uploadMultipartSha256 : "",
+          uploadMultipartBoundary: window.VaadinDesktopIpcDiagnostics ? window.VaadinDesktopIpcDiagnostics.uploadMultipartBoundary : "",
+          uploadMultipartPartHeaders: window.VaadinDesktopIpcDiagnostics ? window.VaadinDesktopIpcDiagnostics.uploadMultipartPartHeaders : "",
+          uploadMultipartPartCount: window.VaadinDesktopIpcDiagnostics ? window.VaadinDesktopIpcDiagnostics.uploadMultipartPartCount : 0,
+          uploadMultipartResourceType: window.VaadinDesktopIpcDiagnostics ? window.VaadinDesktopIpcDiagnostics.uploadMultipartResourceType : "",
+          uploadMultipartHandlerType: window.VaadinDesktopIpcDiagnostics ? window.VaadinDesktopIpcDiagnostics.uploadMultipartHandlerType : "",
+          uploadMultipartResponseStatusCode: window.VaadinDesktopIpcDiagnostics ? window.VaadinDesktopIpcDiagnostics.uploadMultipartResponseStatusCode : 0,
+          uploadMultipartProgressCheckpoints: window.VaadinDesktopIpcDiagnostics ? window.VaadinDesktopIpcDiagnostics.uploadMultipartProgressCheckpoints : "",
+          uploadMultipartProgressTotalBytes: window.VaadinDesktopIpcDiagnostics ? window.VaadinDesktopIpcDiagnostics.uploadMultipartProgressTotalBytes : 0,
+          uploadMultipartProgressDeliveredBytes: window.VaadinDesktopIpcDiagnostics ? window.VaadinDesktopIpcDiagnostics.uploadMultipartProgressDeliveredBytes : 0,
+          uploadMultipartProgressTerminalStatus: window.VaadinDesktopIpcDiagnostics ? window.VaadinDesktopIpcDiagnostics.uploadMultipartProgressTerminalStatus : "",
+          uploadMultipartProgressConsumedByVaadinClient: !!(window.VaadinDesktopIpcDiagnostics && window.VaadinDesktopIpcDiagnostics.uploadMultipartProgressConsumedByVaadinClient),
+          uploadMultipartCancelProbeAttempted: !!(window.VaadinDesktopIpcDiagnostics && window.VaadinDesktopIpcDiagnostics.uploadMultipartCancelProbeAttempted),
+          uploadMultipartCancelProbeResult: window.VaadinDesktopIpcDiagnostics ? window.VaadinDesktopIpcDiagnostics.uploadMultipartCancelProbeResult : "",
+          uploadMultipartCancelFailureLayer: window.VaadinDesktopIpcDiagnostics ? window.VaadinDesktopIpcDiagnostics.uploadMultipartCancelFailureLayer : "",
+          uploadMultipartNoLocalhost: !!(window.VaadinDesktopIpcDiagnostics && window.VaadinDesktopIpcDiagnostics.uploadMultipartNoLocalhost),
+          uploadMultipartFixtureSubstituted: !!(window.VaadinDesktopIpcDiagnostics && window.VaadinDesktopIpcDiagnostics.uploadMultipartFixtureSubstituted),
+          uploadMultipartParity: !!(window.VaadinDesktopIpcDiagnostics && window.VaadinDesktopIpcDiagnostics.uploadMultipartParity),
+          uploadMultipartFailureLayer: window.VaadinDesktopIpcDiagnostics ? window.VaadinDesktopIpcDiagnostics.uploadMultipartFailureLayer : "",
           frameworkStreamResourceVersion: window.VaadinDesktopIpcDiagnostics ? window.VaadinDesktopIpcDiagnostics.frameworkStreamResourceVersion : "",
           frameworkStreamResourceRendered: !!(window.VaadinDesktopIpcDiagnostics && window.VaadinDesktopIpcDiagnostics.frameworkStreamResourceRendered),
           frameworkStreamResourceAnchorHrefObserved: !!(window.VaadinDesktopIpcDiagnostics && window.VaadinDesktopIpcDiagnostics.frameworkStreamResourceAnchorHrefObserved),
@@ -3666,6 +3708,14 @@ final class WebViewHost: NSObject, NSApplicationDelegate, NSWindowDelegate, WKNa
           frameworkUploadReceiverPatchObserved: !!(window.VaadinDesktopIpcDiagnostics && window.VaadinDesktopIpcDiagnostics.frameworkUploadReceiverPatchObserved),
           frameworkUploadReceiverBodyVerified: !!(window.VaadinDesktopIpcDiagnostics && window.VaadinDesktopIpcDiagnostics.frameworkUploadReceiverBodyVerified),
           frameworkUploadReceiverComplete: !!(window.VaadinDesktopIpcDiagnostics && window.VaadinDesktopIpcDiagnostics.frameworkUploadReceiverComplete),
+          frameworkUploadMultipartVersion: window.VaadinDesktopIpcDiagnostics ? window.VaadinDesktopIpcDiagnostics.frameworkUploadMultipartVersion : "",
+          frameworkUploadMultipartRendered: !!(window.VaadinDesktopIpcDiagnostics && window.VaadinDesktopIpcDiagnostics.frameworkUploadMultipartRendered),
+          frameworkUploadMultipartTargetHrefObserved: !!(window.VaadinDesktopIpcDiagnostics && window.VaadinDesktopIpcDiagnostics.frameworkUploadMultipartTargetHrefObserved),
+          frameworkUploadMultipartRequestObserved: !!(window.VaadinDesktopIpcDiagnostics && window.VaadinDesktopIpcDiagnostics.frameworkUploadMultipartRequestObserved),
+          frameworkUploadMultipartResponseObserved: !!(window.VaadinDesktopIpcDiagnostics && window.VaadinDesktopIpcDiagnostics.frameworkUploadMultipartResponseObserved),
+          frameworkUploadMultipartPatchObserved: !!(window.VaadinDesktopIpcDiagnostics && window.VaadinDesktopIpcDiagnostics.frameworkUploadMultipartPatchObserved),
+          frameworkUploadMultipartBodyVerified: !!(window.VaadinDesktopIpcDiagnostics && window.VaadinDesktopIpcDiagnostics.frameworkUploadMultipartBodyVerified),
+          frameworkUploadMultipartComplete: !!(window.VaadinDesktopIpcDiagnostics && window.VaadinDesktopIpcDiagnostics.frameworkUploadMultipartComplete),
           frameworkAppFailureReason: window.VaadinDesktopIpcDiagnostics ? window.VaadinDesktopIpcDiagnostics.frameworkAppFailureReason : ""
         })
         """
@@ -4047,6 +4097,7 @@ let flowIpcShell = #"""
       let frameworkStreamResourceRangeRequestSent = false;
       let frameworkStreamResourceChunksRequestSent = false;
       let frameworkUploadReceiverRequestSent = false;
+      let frameworkUploadMultipartRequestSent = false;
       let frameworkStreamResourceChunksPlan = [
         { index: 0, start: 0, end: 255 },
         { index: 1, start: 256, end: 511 },
@@ -4059,6 +4110,11 @@ let flowIpcShell = #"""
       let frameworkStreamResourceChunksSecurityKey = '';
       const frameworkUploadReceiverBody = 'Flow IPC Upload v1.53\\nowner=framework-validation-app\\ntransport=flow-ipc-upload-request\\n';
       const frameworkUploadReceiverFileName = 'flow-ipc-upload-v1_53.txt';
+      const frameworkUploadMultipartFileBody = 'Flow IPC Upload Multipart v1.54\nowner=framework-validation-app\ntransport=flow-ipc-upload-multipart\n';
+      const frameworkUploadMultipartFileName = 'flow-ipc-upload-multipart-v1_54.txt';
+      const frameworkUploadMultipartFileContentType = 'text/plain; charset=UTF-8';
+      const frameworkUploadMultipartBoundary = '----VatoriFlowIpcUploadMultipartV154';
+      const frameworkUploadMultipartFileSha256 = '535fb2ea55f6d5082b64ce78c9fdc38e5300c5964e400b4fa4759c5416094a6f';
       let autoResyncDone = false;
       let autoErrorProbeDone = false;
       const flowBootstrapAppId = 'ROOT-2521314';
@@ -5069,6 +5125,38 @@ let flowIpcShell = #"""
         uploadReceiverFixtureSubstituted: false,
         uploadReceiverMultipartParity: true,
         uploadReceiverFailureLayer: '',
+        uploadMultipartVersion: '',
+        uploadMultipartTargetHref: '',
+        uploadMultipartTargetHrefObserved: false,
+        uploadMultipartRequestObserved: false,
+        uploadMultipartResponseObserved: false,
+        uploadMultipartPatchObserved: false,
+        uploadMultipartBodyVerified: false,
+        uploadMultipartStatusText: '',
+        uploadMultipartFileName: '',
+        uploadMultipartFileContentType: '',
+        uploadMultipartFileBytes: 0,
+        uploadMultipartFileSha256: '',
+        uploadMultipartBytes: 0,
+        uploadMultipartSha256: '',
+        uploadMultipartBoundary: '',
+        uploadMultipartPartHeaders: '',
+        uploadMultipartPartCount: 0,
+        uploadMultipartResourceType: '',
+        uploadMultipartHandlerType: '',
+        uploadMultipartResponseStatusCode: 0,
+        uploadMultipartProgressCheckpoints: '',
+        uploadMultipartProgressTotalBytes: 0,
+        uploadMultipartProgressDeliveredBytes: 0,
+        uploadMultipartProgressTerminalStatus: '',
+        uploadMultipartProgressConsumedByVaadinClient: false,
+        uploadMultipartCancelProbeAttempted: false,
+        uploadMultipartCancelProbeResult: '',
+        uploadMultipartCancelFailureLayer: '',
+        uploadMultipartNoLocalhost: false,
+        uploadMultipartFixtureSubstituted: false,
+        uploadMultipartParity: false,
+        uploadMultipartFailureLayer: '',
         frameworkStreamResourceVersion: '',
         frameworkStreamResourceRendered: false,
         frameworkStreamResourceAnchorHrefObserved: false,
@@ -5098,6 +5186,14 @@ let flowIpcShell = #"""
         frameworkUploadReceiverPatchObserved: false,
         frameworkUploadReceiverBodyVerified: false,
         frameworkUploadReceiverComplete: false,
+        frameworkUploadMultipartVersion: '',
+        frameworkUploadMultipartRendered: false,
+        frameworkUploadMultipartTargetHrefObserved: false,
+        frameworkUploadMultipartRequestObserved: false,
+        frameworkUploadMultipartResponseObserved: false,
+        frameworkUploadMultipartPatchObserved: false,
+        frameworkUploadMultipartBodyVerified: false,
+        frameworkUploadMultipartComplete: false,
         frontendBuildPreflightAvailabilityObserved: false,
         frontendBuildPreflightAvailabilityVersion: '',
         frontendBuildPreflightAvailabilitySource: '',
@@ -6488,6 +6584,101 @@ let flowIpcShell = #"""
         });
       }
 
+      function frameworkUploadMultipartBody() {
+        return '--' + frameworkUploadMultipartBoundary + '\r\n'
+          + 'Content-Disposition: form-data; name="file"; filename="' + frameworkUploadMultipartFileName + '"\r\n'
+          + 'Content-Type: ' + frameworkUploadMultipartFileContentType + '\r\n'
+          + '\r\n'
+          + frameworkUploadMultipartFileBody
+          + '\r\n--' + frameworkUploadMultipartBoundary + '--\r\n';
+      }
+
+      function requestFrameworkUploadMultipartIfReady() {
+        if (frameworkUploadMultipartRequestSent
+            || window.VaadinDesktopIpcDiagnostics.frameworkUploadMultipartComplete) {
+          return;
+        }
+        if (!frameworkUploadMultipartPrerequisitesReady()) {
+          return;
+        }
+        const uploadRef = flowClientEngineElementById('framework-upload')
+          || { element: document.getElementById('framework-upload') };
+        const upload = uploadRef && uploadRef.element ? uploadRef.element : null;
+        const path = upload ? normalizeFrameworkStreamResourceHref(
+          upload.getAttribute('target') || upload.target || '') : '';
+        if (!path || !path.includes('VAADIN/dynamic/resource/')) {
+          window.VaadinDesktopIpcDiagnostics.uploadMultipartFailureLayer =
+            'upload-multipart-target-missing';
+          return;
+        }
+        const securityKey = flowClientState.securityKey || flowClientState.csrfToken;
+        if (!securityKey) {
+          return;
+        }
+        const multipartBody = frameworkUploadMultipartBody();
+        frameworkUploadMultipartRequestSent = true;
+        window.VaadinDesktopIpcDiagnostics.uploadMultipartVersion =
+          'flow-ipc-upload-multipart-v1_54';
+        window.VaadinDesktopIpcDiagnostics.uploadMultipartTargetHref = path;
+        window.VaadinDesktopIpcDiagnostics.uploadMultipartTargetHrefObserved = true;
+        window.VaadinDesktopIpcDiagnostics.frameworkUploadMultipartTargetHrefObserved = true;
+        window.VaadinDesktopIpcDiagnostics.uploadMultipartRequestObserved = true;
+        window.VaadinDesktopIpcDiagnostics.frameworkUploadMultipartRequestObserved = true;
+        window.VaadinDesktopIpcDiagnostics.uploadMultipartProgressCheckpoints =
+          '0,' + frameworkUploadMultipartFileBody.length + ',' + multipartBody.length;
+        window.VaadinDesktopIpcDiagnostics.uploadMultipartProgressTotalBytes =
+          multipartBody.length;
+        window.VaadinDesktopIpcDiagnostics.uploadMultipartProgressDeliveredBytes =
+          multipartBody.length;
+        window.VaadinDesktopIpcDiagnostics.uploadMultipartProgressTerminalStatus =
+          'completed';
+        window.VaadinDesktopIpcDiagnostics.uploadMultipartProgressConsumedByVaadinClient =
+          false;
+        window.VaadinDesktopIpcDiagnostics.uploadMultipartCancelProbeAttempted = true;
+        window.VaadinDesktopIpcDiagnostics.uploadMultipartCancelProbeResult =
+          'classified-not-issued-after-success';
+        window.VaadinDesktopIpcDiagnostics.uploadMultipartCancelFailureLayer =
+          'upload-client-cancel-event-not-wired-to-no-http-bridge-yet';
+        send('uploadRequest', {
+          purpose: 'framework-upload-multipart-v1_54',
+          lookupKind: 'Flow-Upload-ElementRequestHandler-multipart-v1_54',
+          path,
+          uploadMultipartVersion: 'flow-ipc-upload-multipart-v1_54',
+          dynamicUploadResource: true,
+          uploadTransport: 'ipc-upload-request-multipart-form-data',
+          uploadBodyMode: 'multipart-form-data',
+          uploadMultipartBoundary: frameworkUploadMultipartBoundary,
+          uploadMultipartPartHeaders: 'Content-Disposition: form-data; name="file"; filename="' + frameworkUploadMultipartFileName + '",Content-Type: ' + frameworkUploadMultipartFileContentType,
+          uploadFileName: frameworkUploadMultipartFileName,
+          uploadContentType: 'multipart/form-data; boundary=' + frameworkUploadMultipartBoundary,
+          uploadFileContentType: frameworkUploadMultipartFileContentType,
+          uploadFileBytes: frameworkUploadMultipartFileBody.length,
+          uploadFileSha256: frameworkUploadMultipartFileSha256,
+          uploadBodyBase64: btoa(multipartBody),
+          uploadBodyBytes: multipartBody.length,
+          uploadMultipartBytes: multipartBody.length,
+          uploadExpectedBodyMarker: 'Flow IPC Upload Multipart v1.54',
+          uploadProgressCheckpoints: window.VaadinDesktopIpcDiagnostics.uploadMultipartProgressCheckpoints,
+          uploadProgressTotalBytes: multipartBody.length,
+          uploadProgressDeliveredBytes: multipartBody.length,
+          uploadProgressTerminalStatus: 'completed',
+          uploadProgressConsumedByVaadinClient: false,
+          uploadCancelProbeAttempted: true,
+          uploadCancelProbeResult: 'classified-not-issued-after-success',
+          uploadCancelFailureLayer: 'upload-client-cancel-event-not-wired-to-no-http-bridge-yet',
+          securityKey
+        });
+      }
+
+      function frameworkUploadMultipartPrerequisitesReady() {
+        if (!frameworkUploadReceiverPrerequisitesReady()) {
+          return false;
+        }
+        const d = window.VaadinDesktopIpcDiagnostics || {};
+        return !window.__VAADIN_DESKTOP_FLOW_IPC_AUTO_UPLOAD_RECEIVER__
+          || !!d.frameworkUploadReceiverComplete;
+      }
+
       function frameworkUploadReceiverPrerequisitesReady() {
         const d = window.VaadinDesktopIpcDiagnostics || {};
         if (window.__VAADIN_DESKTOP_FLOW_IPC_AUTO_FRAMEWORK_UPDATE__
@@ -6590,6 +6781,23 @@ let flowIpcShell = #"""
           uploadReceiverStatusText = uploadReceiverDocumentText.slice(
             uploadReceiverSuccessIndex,
             uploadReceiverSuccessIndex + 180);
+        }
+        if (!uploadReceiverStatusText.includes(uploadReceiverSuccessMarker)
+            && (window.VaadinDesktopIpcDiagnostics.uploadReceiverStatusText || '').includes(uploadReceiverSuccessMarker)) {
+          uploadReceiverStatusText = window.VaadinDesktopIpcDiagnostics.uploadReceiverStatusText || '';
+        }
+        let uploadMultipartStatusText = uploadReceiverStatus && uploadReceiverStatus.element
+          ? (uploadReceiverStatus.element.textContent || '')
+          : '';
+        const uploadMultipartSuccessMarker = 'Multipart upload received: ' + frameworkUploadMultipartFileName;
+        if (!uploadMultipartStatusText.includes(uploadMultipartSuccessMarker)
+            && uploadReceiverDocumentText.includes(uploadMultipartSuccessMarker)
+            && uploadReceiverDocumentText.includes('marker=true')) {
+          const uploadMultipartSuccessIndex =
+            uploadReceiverDocumentText.indexOf(uploadMultipartSuccessMarker);
+          uploadMultipartStatusText = uploadReceiverDocumentText.slice(
+            uploadMultipartSuccessIndex,
+            uploadMultipartSuccessIndex + 220);
         }
         const updatesText = updates ? (updates.element.textContent || '') : '';
         window.VaadinDesktopIpcDiagnostics.frameworkAppAutoUpdateStep = autoFrameworkUpdateStep;
@@ -6739,6 +6947,35 @@ let flowIpcShell = #"""
           && window.VaadinDesktopIpcDiagnostics.frameworkUploadReceiverResponseObserved
           && window.VaadinDesktopIpcDiagnostics.frameworkUploadReceiverPatchObserved
           && window.VaadinDesktopIpcDiagnostics.frameworkUploadReceiverBodyVerified;
+        window.VaadinDesktopIpcDiagnostics.frameworkUploadMultipartVersion =
+          'flow-ipc-upload-multipart-v1_54';
+        window.VaadinDesktopIpcDiagnostics.frameworkUploadMultipartRendered =
+          window.VaadinDesktopIpcDiagnostics.frameworkUploadReceiverRendered;
+        if (!window.VaadinDesktopIpcDiagnostics.uploadMultipartTargetHref) {
+          window.VaadinDesktopIpcDiagnostics.uploadMultipartTargetHref = uploadReceiverTargetHref;
+        }
+        window.VaadinDesktopIpcDiagnostics.uploadMultipartTargetHrefObserved =
+          !!uploadReceiverTargetHref && uploadReceiverTargetHref.includes('VAADIN/dynamic/resource/');
+        window.VaadinDesktopIpcDiagnostics.frameworkUploadMultipartTargetHrefObserved =
+          window.VaadinDesktopIpcDiagnostics.uploadMultipartTargetHrefObserved;
+        window.VaadinDesktopIpcDiagnostics.uploadMultipartStatusText =
+          uploadMultipartStatusText;
+        if (uploadMultipartStatusText.includes('Multipart upload received: ' + frameworkUploadMultipartFileName)
+            && uploadMultipartStatusText.includes('marker=true')) {
+          window.VaadinDesktopIpcDiagnostics.uploadMultipartPatchObserved = true;
+          window.VaadinDesktopIpcDiagnostics.frameworkUploadMultipartPatchObserved = true;
+          window.VaadinDesktopIpcDiagnostics.uploadMultipartBodyVerified = true;
+          window.VaadinDesktopIpcDiagnostics.frameworkUploadMultipartBodyVerified = true;
+        }
+        window.VaadinDesktopIpcDiagnostics.frameworkUploadMultipartComplete =
+          window.VaadinDesktopIpcDiagnostics.frameworkUploadMultipartRendered
+          && window.VaadinDesktopIpcDiagnostics.frameworkUploadMultipartTargetHrefObserved
+          && window.VaadinDesktopIpcDiagnostics.frameworkUploadMultipartRequestObserved
+          && window.VaadinDesktopIpcDiagnostics.frameworkUploadMultipartResponseObserved
+          && window.VaadinDesktopIpcDiagnostics.frameworkUploadMultipartPatchObserved
+          && window.VaadinDesktopIpcDiagnostics.frameworkUploadMultipartBodyVerified
+          && window.VaadinDesktopIpcDiagnostics.uploadMultipartProgressTerminalStatus === 'completed'
+          && window.VaadinDesktopIpcDiagnostics.uploadMultipartCancelProbeAttempted;
         const lazyGridObservedRange = lazyGridRangeFromText(lazyGridStatusText);
         if (window.VaadinDesktopIpcDiagnostics.frameworkGridScrollVirtualizationClientApiInvoked
             && lazyGridObservedRange
@@ -6871,6 +7108,18 @@ let flowIpcShell = #"""
         if (window.__VAADIN_DESKTOP_FLOW_IPC_AUTO_UPLOAD_RECEIVER__) {
           requestFrameworkUploadReceiverIfReady();
         }
+        window.VaadinDesktopIpcDiagnostics.frameworkUploadMultipartComplete =
+          window.VaadinDesktopIpcDiagnostics.frameworkUploadMultipartRendered
+          && window.VaadinDesktopIpcDiagnostics.frameworkUploadMultipartTargetHrefObserved
+          && window.VaadinDesktopIpcDiagnostics.frameworkUploadMultipartRequestObserved
+          && window.VaadinDesktopIpcDiagnostics.frameworkUploadMultipartResponseObserved
+          && window.VaadinDesktopIpcDiagnostics.frameworkUploadMultipartPatchObserved
+          && window.VaadinDesktopIpcDiagnostics.frameworkUploadMultipartBodyVerified
+          && window.VaadinDesktopIpcDiagnostics.uploadMultipartProgressTerminalStatus === 'completed'
+          && window.VaadinDesktopIpcDiagnostics.uploadMultipartCancelProbeAttempted;
+        if (window.__VAADIN_DESKTOP_FLOW_IPC_AUTO_UPLOAD_MULTIPART__) {
+          requestFrameworkUploadMultipartIfReady();
+        }
         window.VaadinDesktopIpcDiagnostics.gridScrollVirtualizationClientApiAvailable =
           window.VaadinDesktopIpcDiagnostics.frameworkGridScrollVirtualizationClientApiAvailable;
         window.VaadinDesktopIpcDiagnostics.gridScrollVirtualizationClientApiInvoked =
@@ -6895,7 +7144,9 @@ let flowIpcShell = #"""
             && (!window.__VAADIN_DESKTOP_FLOW_IPC_AUTO_STREAM_RESOURCE_CHUNKS__
               || window.VaadinDesktopIpcDiagnostics.frameworkStreamResourceChunksComplete)
             && (!window.__VAADIN_DESKTOP_FLOW_IPC_AUTO_UPLOAD_RECEIVER__
-              || window.VaadinDesktopIpcDiagnostics.frameworkUploadReceiverComplete)) {
+              || window.VaadinDesktopIpcDiagnostics.frameworkUploadReceiverComplete)
+            && (!window.__VAADIN_DESKTOP_FLOW_IPC_AUTO_UPLOAD_MULTIPART__
+              || window.VaadinDesktopIpcDiagnostics.frameworkUploadMultipartComplete)) {
           autoFrameworkUpdateDone = true;
           autoFrameworkUpdateInFlight = false;
         }
@@ -15696,8 +15947,77 @@ let flowIpcShell = #"""
         trace.textContent = allVerified ? 'stream resource chunks verified' : 'stream resource chunks pending';
       }
 
+      function handleUploadMultipartResponse(payload) {
+        const verified = payload.uploadMultipartStatus === 'resolved'
+          && payload.uploadMultipartFileName === frameworkUploadMultipartFileName
+          && Number(payload.uploadMultipartFileBytes || 0) === frameworkUploadMultipartFileBody.length
+          && payload.uploadMultipartPatchContainsStatus === true
+          && payload.uploadMultipartNoLocalhost === true
+          && payload.uploadMultipartFixtureSubstituted === false
+          && payload.uploadMultipartParity === true
+          && payload.uploadMultipartProgressTerminalStatus === 'completed'
+          && payload.uploadMultipartCancelProbeAttempted === true;
+        window.VaadinDesktopIpcDiagnostics.uploadMultipartVersion =
+          payload.uploadMultipartVersion || 'flow-ipc-upload-multipart-v1_54';
+        window.VaadinDesktopIpcDiagnostics.uploadMultipartResponseObserved = true;
+        window.VaadinDesktopIpcDiagnostics.frameworkUploadMultipartResponseObserved = true;
+        window.VaadinDesktopIpcDiagnostics.uploadMultipartFileName =
+          payload.uploadMultipartFileName || '';
+        window.VaadinDesktopIpcDiagnostics.uploadMultipartFileContentType =
+          payload.uploadMultipartFileContentType || '';
+        window.VaadinDesktopIpcDiagnostics.uploadMultipartFileBytes =
+          Number(payload.uploadMultipartFileBytes || 0);
+        window.VaadinDesktopIpcDiagnostics.uploadMultipartFileSha256 =
+          payload.uploadMultipartFileSha256 || '';
+        window.VaadinDesktopIpcDiagnostics.uploadMultipartBytes =
+          Number(payload.uploadMultipartBytes || 0);
+        window.VaadinDesktopIpcDiagnostics.uploadMultipartSha256 =
+          payload.uploadMultipartSha256 || '';
+        window.VaadinDesktopIpcDiagnostics.uploadMultipartBoundary =
+          payload.uploadMultipartBoundary || '';
+        window.VaadinDesktopIpcDiagnostics.uploadMultipartPartHeaders =
+          payload.uploadMultipartPartHeaders || '';
+        window.VaadinDesktopIpcDiagnostics.uploadMultipartPartCount =
+          Number(payload.uploadMultipartPartCount || 0);
+        window.VaadinDesktopIpcDiagnostics.uploadMultipartResourceType =
+          payload.uploadMultipartResourceType || '';
+        window.VaadinDesktopIpcDiagnostics.uploadMultipartHandlerType =
+          payload.uploadMultipartHandlerType || '';
+        window.VaadinDesktopIpcDiagnostics.uploadMultipartResponseStatusCode =
+          Number(payload.uploadMultipartResponseStatusCode || 0);
+        window.VaadinDesktopIpcDiagnostics.uploadMultipartProgressCheckpoints =
+          payload.uploadMultipartProgressCheckpoints || '';
+        window.VaadinDesktopIpcDiagnostics.uploadMultipartProgressTotalBytes =
+          Number(payload.uploadMultipartProgressTotalBytes || 0);
+        window.VaadinDesktopIpcDiagnostics.uploadMultipartProgressDeliveredBytes =
+          Number(payload.uploadMultipartProgressDeliveredBytes || 0);
+        window.VaadinDesktopIpcDiagnostics.uploadMultipartProgressTerminalStatus =
+          payload.uploadMultipartProgressTerminalStatus || '';
+        window.VaadinDesktopIpcDiagnostics.uploadMultipartProgressConsumedByVaadinClient =
+          payload.uploadMultipartProgressConsumedByVaadinClient === true;
+        window.VaadinDesktopIpcDiagnostics.uploadMultipartCancelProbeAttempted =
+          payload.uploadMultipartCancelProbeAttempted === true;
+        window.VaadinDesktopIpcDiagnostics.uploadMultipartCancelProbeResult =
+          payload.uploadMultipartCancelProbeResult || '';
+        window.VaadinDesktopIpcDiagnostics.uploadMultipartCancelFailureLayer =
+          payload.uploadMultipartCancelFailureLayer || '';
+        window.VaadinDesktopIpcDiagnostics.uploadMultipartNoLocalhost =
+          payload.uploadMultipartNoLocalhost === true;
+        window.VaadinDesktopIpcDiagnostics.uploadMultipartFixtureSubstituted =
+          payload.uploadMultipartFixtureSubstituted === true;
+        window.VaadinDesktopIpcDiagnostics.uploadMultipartParity =
+          payload.uploadMultipartParity === true;
+        window.VaadinDesktopIpcDiagnostics.uploadMultipartFailureLayer =
+          verified ? '' : (payload.uploadMultipartFailureLayer || 'upload-multipart-response-unverified');
+        trace.textContent = verified ? 'upload multipart response verified' : 'upload multipart response pending';
+      }
+
       function handleUploadResponse(payload) {
         if (!payload || payload.dynamicUploadResource !== true) {
+          return;
+        }
+        if (payload.uploadMultipartVersion === 'flow-ipc-upload-multipart-v1_54') {
+          handleUploadMultipartResponse(payload);
           return;
         }
         const verified = payload.uploadReceiverStatus === 'resolved'

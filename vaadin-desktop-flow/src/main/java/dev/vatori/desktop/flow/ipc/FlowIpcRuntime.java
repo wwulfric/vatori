@@ -212,12 +212,47 @@ final class FlowIpcRuntime {
         if (contentType == null || contentType.isBlank()) {
             contentType = "application/octet-stream";
         }
+        String bodyMode = JsonFields.string(json, "uploadBodyMode");
+        if (bodyMode == null || bodyMode.isBlank()) {
+            bodyMode = "raw-xhr-compatible";
+        }
+        String multipartBoundary = JsonFields.string(json, "uploadMultipartBoundary");
+        String fileContentType = JsonFields.string(json, "uploadFileContentType");
+        if (fileContentType == null || fileContentType.isBlank()) {
+            fileContentType = contentType;
+        }
+        String fileSha256 = JsonFields.string(json, "uploadFileSha256");
+        String progressCheckpoints = JsonFields.string(json, "uploadProgressCheckpoints");
+        String progressTerminalStatus = JsonFields.string(json, "uploadProgressTerminalStatus");
+        String cancelProbeResult = JsonFields.string(json, "uploadCancelProbeResult");
+        String cancelFailureLayer = JsonFields.string(json, "uploadCancelFailureLayer");
         String bodyBase64 = JsonFields.string(json, "uploadBodyBase64");
         byte[] bytes = bodyBase64 == null || bodyBase64.isBlank()
                 ? new byte[0]
                 : Base64.getDecoder().decode(bodyBase64);
+        long fileBytes = JsonFields.longValue(json, "uploadFileBytes", bytes.length);
+        long progressTotalBytes = JsonFields.longValue(json, "uploadProgressTotalBytes", bytes.length);
+        long progressDeliveredBytes = JsonFields.longValue(json, "uploadProgressDeliveredBytes", bytes.length);
+        boolean progressConsumedByVaadinClient =
+                JsonFields.booleanValue(json, "uploadProgressConsumedByVaadinClient", false);
+        boolean cancelProbeAttempted = JsonFields.booleanValue(json, "uploadCancelProbeAttempted", false);
+        DesktopFlowRuntimeSession.UploadRequestMetadata metadata =
+                new DesktopFlowRuntimeSession.UploadRequestMetadata(
+                        bodyMode,
+                        multipartBoundary == null ? "" : multipartBoundary,
+                        fileContentType,
+                        fileBytes,
+                        fileSha256 == null ? "" : fileSha256,
+                        progressCheckpoints == null ? "" : progressCheckpoints,
+                        progressTotalBytes,
+                        progressDeliveredBytes,
+                        progressTerminalStatus == null ? "" : progressTerminalStatus,
+                        progressConsumedByVaadinClient,
+                        cancelProbeAttempted,
+                        cancelProbeResult == null ? "" : cancelProbeResult,
+                        cancelFailureLayer == null ? "" : cancelFailureLayer);
         DesktopFlowRuntimeSession.FlowUploadResponse response =
-                flowSession.uploadResourceResponse(path, fileName, contentType, bytes);
+                flowSession.uploadResourceResponse(path, fileName, contentType, bytes, metadata);
         Map<String, Object> payload = new LinkedHashMap<>(response.payload());
         String purpose = JsonFields.string(json, "purpose");
         if (purpose != null && !purpose.isBlank()) {
@@ -570,6 +605,15 @@ final class FlowIpcRuntime {
             return Integer.parseInt(matcher.group(1));
         }
 
+        static long longValue(String json, String field, long fallback) {
+            Matcher matcher = Pattern.compile(
+                    "\"" + Pattern.quote(field) + "\"\\s*:\\s*(-?\\d+)").matcher(json);
+            if (!matcher.find()) {
+                return fallback;
+            }
+            return Long.parseLong(matcher.group(1));
+        }
+
         static boolean bool(String json, String field, boolean fallback) {
             Matcher matcher = Pattern.compile(
                     "\"" + Pattern.quote(field) + "\"\\s*:\\s*(true|false)").matcher(json);
@@ -577,6 +621,10 @@ final class FlowIpcRuntime {
                 return fallback;
             }
             return Boolean.parseBoolean(matcher.group(1));
+        }
+
+        static boolean booleanValue(String json, String field, boolean fallback) {
+            return bool(json, field, fallback);
         }
 
         static String object(String json, String field) {

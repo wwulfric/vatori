@@ -8,6 +8,7 @@ target/
 *.log
 .DS_Store
 vaadin-desktop-host-tauri/
+docs/traces/*.ndjson
 **/src/main/frontend/generated/
 **/src/main/frontend/index.html
 **/src/main/bundles/

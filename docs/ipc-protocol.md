@@ -62,4 +62,6 @@ HOST_PROTOCOL {"direction":"send","type":"ready","payload":{...}}
 VDP1 {"type":"command","id":"desktop-command-1","payload":{...}}
 ```
 
-See `docs/traces/host-protocol-v0.ndjson` for an example review trace.
+Generate a current review trace by running the Swift host path and inspecting
+`.build/vaadin-desktop-host-swift/host.out.log`. Full trace logs are generated
+artifacts and are not committed per version.

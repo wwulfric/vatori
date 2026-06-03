@@ -1,0 +1,10 @@
+#!/usr/bin/env bash
+set -euo pipefail
+
+ROOT="$(cd "$(dirname "${BASH_SOURCE[0]}")/.." && pwd)"
+
+bash "$ROOT/bin/repository-hygiene-check"
+bash "$ROOT/bin/uidl-adapter-smoke"
+bash "$ROOT/bin/uidl-rpc-smoke"
+bash "$ROOT/bin/flow-ipc-scope-smoke"
+bash "$ROOT/bin/flow-client-resource-smoke"

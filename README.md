@@ -75,124 +75,32 @@ bash bin/flow-ipc-trace-inspect --require-flow-ipc-v1_3-framework .build/vaadin-
 
 That gate verifies generic viewport promotion, first meaningful paint, two Web Component events, the Button apply event, UIDL patches, a list item text update and `window.setTitle` / `clipboard.writeText` / `notification.show` command-result traces in a less smoke-specific app.
 
-Inspect the Flow IPC trace sample:
+Inspect a freshly generated Flow IPC trace:
 
 ```bash
-bash bin/flow-ipc-trace-inspect --require-flow-ipc-v1 docs/traces/flow-ipc-v1.ndjson
-bash bin/flow-ipc-trace-inspect --require-flow-ipc-v1_1 docs/traces/flow-ipc-v1_1.ndjson
-bash bin/flow-ipc-trace-inspect --require-flow-ipc-v1_2 docs/traces/flow-ipc-v1_2.ndjson
-bash bin/flow-ipc-trace-inspect --require-flow-ipc-v1_3 docs/traces/flow-ipc-v1_3.ndjson
-bash bin/flow-ipc-trace-inspect --require-flow-ipc-v1_4 docs/traces/flow-ipc-v1_4.ndjson
-bash bin/flow-ipc-trace-inspect --require-flow-ipc-v1_5 docs/traces/flow-ipc-v1_5.ndjson
-bash bin/flow-ipc-trace-inspect --require-flow-ipc-v1_6 docs/traces/flow-ipc-v1_6.ndjson
-bash bin/flow-ipc-trace-inspect --require-flow-ipc-v1_7 docs/traces/flow-ipc-v1_7.ndjson
-bash bin/flow-ipc-trace-inspect --require-flow-ipc-v1_8 docs/traces/flow-ipc-v1_8.ndjson
-bash bin/flow-ipc-trace-inspect --require-flow-ipc-v1_9-loadondemand docs/traces/flow-ipc-v1_9.ndjson
-bash bin/flow-ipc-trace-inspect --require-flow-ipc-v1_9 docs/traces/flow-ipc-v1_9.ndjson
-bash bin/flow-ipc-trace-inspect --require-flow-ipc-v1_10-lazy-dependency docs/traces/flow-ipc-v1_10.ndjson
-bash bin/flow-ipc-trace-inspect --require-flow-ipc-v1_10-production-runtime docs/traces/flow-ipc-v1_10.ndjson
-bash bin/flow-ipc-trace-inspect --require-flow-ipc-v1_10 docs/traces/flow-ipc-v1_10.ndjson
-bash bin/flow-ipc-trace-inspect --require-flow-ipc-v1_11-loadondemand-chunk docs/traces/flow-ipc-v1_11.ndjson
-bash bin/flow-ipc-trace-inspect --require-flow-ipc-v1_11 docs/traces/flow-ipc-v1_11.ndjson
-bash bin/flow-ipc-trace-inspect --require-flow-ipc-v1_12-loadondemand-chunk-file docs/traces/flow-ipc-v1_12.ndjson
-bash bin/flow-ipc-trace-inspect --require-flow-ipc-v1_12 docs/traces/flow-ipc-v1_12.ndjson
-bash bin/flow-ipc-trace-inspect --require-flow-ipc-v1_13-production-owner docs/traces/flow-ipc-v1_13.ndjson
-bash bin/flow-ipc-trace-inspect --require-flow-ipc-v1_13 docs/traces/flow-ipc-v1_13.ndjson
-bash bin/flow-ipc-trace-inspect --require-flow-ipc-v1_14-production-owner-import docs/traces/flow-ipc-v1_14.ndjson
-bash bin/flow-ipc-trace-inspect --require-flow-ipc-v1_14 docs/traces/flow-ipc-v1_14.ndjson
-bash bin/flow-ipc-trace-inspect --require-flow-ipc-v1_15-production-owner-dependencies docs/traces/flow-ipc-v1_15.ndjson
-bash bin/flow-ipc-trace-inspect --require-flow-ipc-v1_15 docs/traces/flow-ipc-v1_15.ndjson
-bash bin/flow-ipc-trace-inspect --require-flow-ipc-v1_16-production-owner-ordering docs/traces/flow-ipc-v1_16.ndjson
-bash bin/flow-ipc-trace-inspect --require-flow-ipc-v1_16 docs/traces/flow-ipc-v1_16.ndjson
-bash bin/flow-ipc-trace-inspect --require-flow-ipc-v1_17-resource-scheme docs/traces/flow-ipc-v1_17.ndjson
-bash bin/flow-ipc-trace-inspect --require-flow-ipc-v1_17 docs/traces/flow-ipc-v1_17.ndjson
-bash bin/flow-ipc-trace-inspect --require-flow-ipc-v1_18-production-owner-resource-scheme docs/traces/flow-ipc-v1_18.ndjson
-bash bin/flow-ipc-trace-inspect --require-flow-ipc-v1_18 docs/traces/flow-ipc-v1_18.ndjson
-bash bin/flow-ipc-trace-inspect --require-flow-ipc-v1_19-production-owner-side-effect docs/traces/flow-ipc-v1_19.ndjson
-bash bin/flow-ipc-trace-inspect --require-flow-ipc-v1_19 docs/traces/flow-ipc-v1_19.ndjson
-bash bin/flow-ipc-trace-inspect --require-flow-ipc-v1_20-production-owner-owned-runtime docs/traces/flow-ipc-v1_20.ndjson
-bash bin/flow-ipc-trace-inspect --require-flow-ipc-v1_20 docs/traces/flow-ipc-v1_20.ndjson
-bash bin/flow-ipc-trace-inspect --require-flow-ipc-v1_21-frontend-resolver-contract docs/traces/flow-ipc-v1_21.ndjson
-bash bin/flow-ipc-trace-inspect --require-flow-ipc-v1_21 docs/traces/flow-ipc-v1_21.ndjson
-bash bin/flow-ipc-trace-inspect --require-flow-ipc-v1_22-generated-chunk-fixture docs/traces/flow-ipc-v1_22.ndjson
-bash bin/flow-ipc-trace-inspect --require-flow-ipc-v1_22 docs/traces/flow-ipc-v1_22.ndjson
-bash bin/flow-ipc-trace-inspect --require-flow-ipc-v1_23-production-owner-positive-fixture docs/traces/flow-ipc-v1_23.ndjson
-bash bin/flow-ipc-trace-inspect --require-flow-ipc-v1_23 docs/traces/flow-ipc-v1_23.ndjson
-bash bin/flow-ipc-trace-inspect --require-flow-ipc-v1_24-frontend-pipeline-closure docs/traces/flow-ipc-v1_24.ndjson
-bash bin/flow-ipc-trace-inspect --require-flow-ipc-v1_24 docs/traces/flow-ipc-v1_24.ndjson
-bash bin/flow-ipc-trace-inspect --require-flow-ipc-v1_25-packaged-frontend-baseline docs/traces/flow-ipc-v1_25.ndjson
-bash bin/flow-ipc-trace-inspect --require-flow-ipc-v1_25 docs/traces/flow-ipc-v1_25.ndjson
-bash bin/flow-ipc-trace-inspect --require-flow-ipc-v1_26-generated-lazy-source-boundary docs/traces/flow-ipc-v1_26.ndjson
-bash bin/flow-ipc-trace-inspect --require-flow-ipc-v1_26 docs/traces/flow-ipc-v1_26.ndjson
-bash bin/flow-ipc-trace-inspect --require-flow-ipc-v1_27-generated-lazy-real-build-probe docs/traces/flow-ipc-v1_27.ndjson
-bash bin/flow-ipc-trace-inspect --require-flow-ipc-v1_27 docs/traces/flow-ipc-v1_27.ndjson
-bash bin/flow-ipc-trace-inspect --require-flow-ipc-v1_28-generated-lazy-build-lifecycle docs/traces/flow-ipc-v1_28.ndjson
-bash bin/flow-ipc-trace-inspect --require-flow-ipc-v1_28 docs/traces/flow-ipc-v1_28.ndjson
-bash bin/flow-ipc-trace-inspect --require-flow-ipc-v1_29-generated-lazy-app-build-output docs/traces/flow-ipc-v1_29.ndjson
-bash bin/flow-ipc-trace-inspect --require-flow-ipc-v1_29 docs/traces/flow-ipc-v1_29.ndjson
-bash bin/flow-ipc-trace-inspect --require-flow-ipc-v1_30-current-app-frontend-build-output docs/traces/flow-ipc-v1_30.ndjson
-bash bin/flow-ipc-trace-inspect --require-flow-ipc-v1_30 docs/traces/flow-ipc-v1_30.ndjson
-bash bin/flow-ipc-trace-inspect --require-flow-ipc-v1_31-frontend-build-preflight-availability docs/traces/flow-ipc-v1_31.ndjson
-bash bin/flow-ipc-trace-inspect --require-flow-ipc-v1_31 docs/traces/flow-ipc-v1_31.ndjson
-bash bin/flow-ipc-trace-inspect --require-flow-ipc-v1_32-build-frontend-output docs/traces/flow-ipc-v1_32.ndjson
-bash bin/flow-ipc-trace-inspect --require-flow-ipc-v1_32 docs/traces/flow-ipc-v1_32.ndjson
-bash bin/flow-ipc-trace-inspect --require-flow-ipc-v1_33-current-app-generated-chunk-package-edge docs/traces/flow-ipc-v1_33.ndjson
-bash bin/flow-ipc-trace-inspect --require-flow-ipc-v1_33 docs/traces/flow-ipc-v1_33.ndjson
-bash bin/flow-ipc-trace-inspect --require-flow-ipc-v1_34-current-app-generated-imports-root-package-graph docs/traces/flow-ipc-v1_34.ndjson
-bash bin/flow-ipc-trace-inspect --require-flow-ipc-v1_34 docs/traces/flow-ipc-v1_34.ndjson
-bash bin/flow-ipc-trace-inspect --require-flow-ipc-v1_35-current-app-production-runtime-ownership docs/traces/flow-ipc-v1_35.ndjson
-bash bin/flow-ipc-trace-inspect --require-flow-ipc-v1_35 docs/traces/flow-ipc-v1_35.ndjson
-bash bin/flow-ipc-trace-inspect --require-flow-ipc-v1_36-current-app-production-owner-import docs/traces/flow-ipc-v1_36.ndjson
-bash bin/flow-ipc-trace-inspect --require-flow-ipc-v1_36 docs/traces/flow-ipc-v1_36.ndjson
-bash bin/flow-ipc-trace-inspect --require-flow-ipc-v1_37-current-app-production-owner-component-reuse docs/traces/flow-ipc-v1_37.ndjson
-bash bin/flow-ipc-trace-inspect --require-flow-ipc-v1_37 docs/traces/flow-ipc-v1_37.ndjson
-bash bin/flow-ipc-trace-inspect --require-flow-ipc-v1_38-current-app-owner-component-reuse-matrix docs/traces/flow-ipc-v1_38.ndjson
-bash bin/flow-ipc-trace-inspect --require-flow-ipc-v1_38 docs/traces/flow-ipc-v1_38.ndjson
-bash bin/flow-ipc-trace-inspect --require-flow-ipc-v1_39-current-app-owner-early-import docs/traces/flow-ipc-v1_39.ndjson
-bash bin/flow-ipc-trace-inspect --require-flow-ipc-v1_39 docs/traces/flow-ipc-v1_39.ndjson
-bash bin/flow-ipc-trace-inspect --require-flow-ipc-v1_40-current-app-generated-imports-owner-side-effect docs/traces/flow-ipc-v1_40.ndjson
-bash bin/flow-ipc-trace-inspect --require-flow-ipc-v1_40 docs/traces/flow-ipc-v1_40.ndjson
-bash bin/flow-ipc-trace-inspect --require-flow-ipc-v1_41-current-app-generated-imports-select-owner-coverage docs/traces/flow-ipc-v1_41.ndjson
-bash bin/flow-ipc-trace-inspect --require-flow-ipc-v1_41 docs/traces/flow-ipc-v1_41.ndjson
-bash bin/flow-ipc-trace-inspect --require-flow-ipc-v1_42-generated-imports-owner-runtime-contract docs/traces/flow-ipc-v1_42.ndjson
-bash bin/flow-ipc-trace-inspect --require-flow-ipc-v1_42 docs/traces/flow-ipc-v1_42.ndjson
-bash bin/flow-ipc-trace-inspect --require-flow-ipc-v1_43-generated-lazy-spi-decision docs/traces/flow-ipc-v1_43.ndjson
-bash bin/flow-ipc-trace-inspect --require-flow-ipc-v1_43 docs/traces/flow-ipc-v1_43.ndjson
-bash bin/flow-ipc-trace-inspect --require-flow-ipc-v1_44-packaging-frontend-inventory docs/traces/flow-ipc-v1_44.ndjson
-bash bin/flow-ipc-trace-inspect --require-flow-ipc-v1_44 docs/traces/flow-ipc-v1_44.ndjson
-bash bin/flow-ipc-trace-inspect --require-flow-ipc-v1_45-packaging-runtime-handoff-reuse docs/traces/flow-ipc-v1_45.ndjson
-bash bin/flow-ipc-trace-inspect --require-flow-ipc-v1_45 docs/traces/flow-ipc-v1_45.ndjson
-bash bin/flow-ipc-trace-inspect --require-flow-ipc-v1_45-framework-packaging-runtime-handoff-reuse docs/traces/flow-ipc-v1_45-framework.ndjson
-bash bin/flow-ipc-trace-inspect --require-flow-ipc-v1_46-broader-component-resource-matrix docs/traces/flow-ipc-v1_46-framework.ndjson
-bash bin/flow-ipc-trace-inspect --require-flow-ipc-v1_47-data-component-resource-matrix docs/traces/flow-ipc-v1_47-framework.ndjson
-bash bin/flow-ipc-trace-inspect --require-flow-ipc-v1_48-grid-lazy-data-provider docs/traces/flow-ipc-v1_48-framework.ndjson
-bash bin/flow-ipc-trace-inspect --require-flow-ipc-v1_48 docs/traces/flow-ipc-v1_48-framework.ndjson
-bash bin/flow-ipc-trace-inspect --require-flow-ipc-v1_49-grid-scroll-virtualization docs/traces/flow-ipc-v1_49-framework.ndjson
-bash bin/flow-ipc-trace-inspect --require-flow-ipc-v1_49 docs/traces/flow-ipc-v1_49-framework.ndjson
-bash bin/flow-ipc-trace-inspect --require-flow-ipc-v1_50-stream-resource docs/traces/flow-ipc-v1_50-framework.ndjson
-bash bin/flow-ipc-trace-inspect --require-flow-ipc-v1_50 docs/traces/flow-ipc-v1_50-framework.ndjson
-bash bin/flow-ipc-trace-inspect --require-flow-ipc-v1_51-stream-resource-range docs/traces/flow-ipc-v1_51-framework.ndjson
-bash bin/flow-ipc-trace-inspect --require-flow-ipc-v1_51 docs/traces/flow-ipc-v1_51-framework.ndjson
-bash bin/flow-ipc-trace-inspect --require-flow-ipc-v1_52-stream-resource-chunks docs/traces/flow-ipc-v1_52-framework.ndjson
-bash bin/flow-ipc-trace-inspect --require-flow-ipc-v1_52 docs/traces/flow-ipc-v1_52-framework.ndjson
-bash bin/flow-ipc-trace-inspect --require-flow-ipc-v1_53-upload-receiver docs/traces/flow-ipc-v1_53-framework.ndjson
-bash bin/flow-ipc-trace-inspect --require-flow-ipc-v1_53 docs/traces/flow-ipc-v1_53-framework.ndjson
-bash bin/flow-ipc-trace-inspect --require-flow-ipc-v1_54-upload-multipart docs/traces/flow-ipc-v1_54-framework.ndjson
-bash bin/flow-ipc-trace-inspect --require-flow-ipc-v1_54 docs/traces/flow-ipc-v1_54-framework.ndjson
-bash bin/flow-ipc-trace-inspect --require-flow-ipc-v1_55-download-save-open docs/traces/flow-ipc-v1_55-framework.ndjson
-bash bin/flow-ipc-trace-inspect --require-flow-ipc-v1_55 docs/traces/flow-ipc-v1_55-framework.ndjson
+VAADIN_DESKTOP_HOST_NO_ACTIVATE=1 VAADIN_DESKTOP_FLOW_IPC_AUTO_FRAMEWORK_UPDATE=1 VAADIN_DESKTOP_FLOW_IPC_AUTO_SHUTDOWN=1 bash bin/vaadin-desktop dev-ipc test-apps/flow-over-ipc-framework-app
+bash bin/flow-ipc-trace-inspect --require-flow-ipc-v1_3-framework .build/vaadin-desktop-host-swift/host.out.log
 ```
+
+Full `.ndjson` traces are generated artifacts and are not committed per version. The acceptance contract lives in `DesktopTraceInspector`; milestone traces should be stored as CI artifacts, release assets or external archives when needed.
 
 Verify the first real Flow UIDL writer adapter slice:
 
 ```bash
+bash bin/verify-smoke
+```
+
+`bin/verify-smoke` runs:
+
+```bash
+bash bin/repository-hygiene-check
 bash bin/uidl-adapter-smoke
 bash bin/uidl-rpc-smoke
 bash bin/flow-ipc-scope-smoke
 bash bin/flow-client-resource-smoke
 ```
 
-These commands construct a minimal desktop-shaped `VaadinSession`/`UI` in process. The first verifies that Vaadin's real `UidlWriter` emits UIDL `changes`, `syncId` and bootstrap `Vaadin-Security-Key`; the second sends a real Flow event RPC body through `UidlRequestHandler`/`ServerRpcHandler`, verifies a click listener UIDL patch, and confirms invalid Flow IPC `csrfToken`/security key, stale `syncId` and out-of-order `clientId` values are rejected before dispatch. The third verifies that invalid Flow IPC envelope `sessionId` / `uiId` values are rejected before event handling. The fourth verifies that the runtime can read and respond with every advertised Vaadin `flow-client` classpath resource, including `FlowBootstrap.js`, `FlowClient.js`, `Flow.js`, `index.js`, `compile.properties` and the generated GWT client bundle.
+The repository hygiene check fails if generated traces, build output, packaged artifacts or large files are tracked. The smoke commands construct a minimal desktop-shaped `VaadinSession`/`UI` in process. The first verifies that Vaadin's real `UidlWriter` emits UIDL `changes`, `syncId` and bootstrap `Vaadin-Security-Key`; the second sends a real Flow event RPC body through `UidlRequestHandler`/`ServerRpcHandler`, verifies a click listener UIDL patch, and confirms invalid Flow IPC `csrfToken`/security key, stale `syncId` and out-of-order `clientId` values are rejected before dispatch. The third verifies that invalid Flow IPC envelope `sessionId` / `uiId` values are rejected before event handling. The fourth verifies that the runtime can read and respond with every advertised Vaadin `flow-client` classpath resource, including `FlowBootstrap.js`, `FlowClient.js`, `Flow.js`, `index.js`, `compile.properties` and the generated GWT client bundle.
 
 Expected diagnostic output: `SLF4J(W): No SLF4J providers` is harmless in these smoke commands. The UIDL RPC and scope smoke commands intentionally send invalid tokens, stale IDs and invalid scope values; output such as `invalid csrfToken rejected`, `invalid securityKey rejected`, `stale syncId rejected`, `out-of-order clientId rejected` and `invalid Flow IPC sessionId/uiId rejected` means the negative-path assertions passed. In unattended `dev-ipc` verification, `VAADIN_DESKTOP_FLOW_IPC_AUTO_ERROR=1` intentionally emits a `FLOW_IPC_CLIENT_ERROR ... webviewVerificationProbe` trace; success is determined by process exit code plus the matching `flow-ipc-trace-inspect` gate. The plain `dev`, `dev-swift` and `dev-ipc` commands are interactive desktop runs and stay alive until the window or app is closed; use the auto-shutdown forms above for repeatable smoke verification.
 
@@ -213,11 +121,13 @@ VAADIN_DESKTOP_HOST=browser bash bin/vaadin-desktop dev examples/counter-app
 - `vaadin-desktop-host`: macOS system WebView fallback, compatibility host and Java native bridge implementations.
 - `vaadin-desktop-host-swift`: Swift/AppKit/WKWebView host for the macOS native runtime path.
 - `vaadin-desktop-flow`: real Vaadin Flow/Spring Boot integration layer plus the first compiled UIDL transport adapter slice.
-- `vaadin-desktop-devtools`: trace inspector for Flow IPC review traces.
+- `vaadin-desktop-devtools`: trace inspector for generated Flow IPC run logs.
 - `vaadin-desktop-cli`: CLI scaffold; shell entry is `bin/vaadin-desktop`.
+- `examples/`: developer-facing sample apps, not acceptance fixtures.
 - `examples/counter-app`: real Vaadin Flow counter app.
 - `examples/grid-app`: real Vaadin Flow Grid app.
 - `examples/desktop-capabilities-app`: desktop runtime API example.
+- `test-apps/`: validation targets with deterministic hooks and broader assertion surfaces.
 - `test-apps/vaadin-desktop-smoke-app`: independent test project using the framework.
 - `test-apps/flow-over-ipc-smoke-app`: independent test project for the `dev-ipc` runtime slice.
 - `test-apps/flow-over-ipc-framework-app`: developer-shaped Flow IPC validation app for checking generic shell/runtime behavior beyond the strict smoke fixture.
@@ -234,6 +144,7 @@ VAADIN_DESKTOP_HOST=browser bash bin/vaadin-desktop dev examples/counter-app
 - [Flow over IPC Runtime](docs/flow-over-ipc-runtime.md)
 - [Flow Transport Adapter](docs/flow-transport-adapter.md)
 - [Acceptance and Smoke Tools](docs/acceptance-tools.md)
+- [Repository Hygiene and Test Layout](docs/repository-hygiene.md)
 - [Native Host](docs/native-host.md)
 - [Roadmap](docs/roadmap.md)
 - [Original Design Package](docs/flow-over-ipc-design.md)

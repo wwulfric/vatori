@@ -1,0 +1,68 @@
+#!/usr/bin/env bash
+set -euo pipefail
+
+ROOT="$(cd "$(dirname "${BASH_SOURCE[0]}")/.." && pwd)"
+cd "$ROOT"
+
+MAX_TRACKED_FILE_BYTES="${MAX_TRACKED_FILE_BYTES:-10485760}"
+failed=0
+
+fail() {
+  printf 'repository hygiene violation: %s\n' "$*" >&2
+  failed=1
+}
+
+check_forbidden_path() {
+  local path="$1"
+  case "$path" in
+    .build/*|\
+    .m2/*|\
+    */target/*|\
+    target/*|\
+    vaadin-desktop-host-tauri/*|\
+    docs/traces/*.ndjson|\
+    */src/main/frontend/generated/*|\
+    */src/main/frontend/index.html|\
+    */src/main/bundles/*|\
+    *.class|\
+    *.jar|\
+    *.war|\
+    *.ear|\
+    *.zip|\
+    *.tar|\
+    *.tar.gz|\
+    *.tgz|\
+    *.dmg|\
+    *.pkg|\
+    *.app/*|\
+    *.log)
+      fail "tracked generated or packaged artifact: $path"
+      ;;
+  esac
+}
+
+check_size() {
+  local path="$1"
+  if [[ ! -f "$path" ]]; then
+    return 0
+  fi
+  local bytes
+  bytes="$(wc -c < "$path" | tr -d '[:space:]')"
+  if [[ "$bytes" =~ ^[0-9]+$ ]] && (( bytes > MAX_TRACKED_FILE_BYTES )); then
+    fail "tracked file exceeds $MAX_TRACKED_FILE_BYTES bytes: $path ($bytes bytes)"
+  fi
+}
+
+while IFS= read -r -d '' path; do
+  if [[ ! -e "$path" ]]; then
+    continue
+  fi
+  check_forbidden_path "$path"
+  check_size "$path"
+done < <(git ls-files -z)
+
+if (( failed )); then
+  exit 1
+fi
+
+echo "Repository hygiene check passed."

@@ -15,7 +15,7 @@
     <artifactId>vaadin-desktop-parent</artifactId>
     <version>0.1.0-SNAPSHOT</version>
     <packaging>pom</packaging>
-    <name>Vaadin Desktop Framework</name>
+    <name>vatori</name>
 
     <modules>
         <module>vaadin-desktop-core</module>
@@ -27,6 +27,7 @@
         <module>examples/counter-app</module>
         <module>examples/grid-app</module>
         <module>examples/desktop-capabilities-app</module>
+        <module>examples/component-gallery-app</module>
         <module>test-apps/vaadin-desktop-smoke-app</module>
         <module>test-apps/flow-over-ipc-smoke-app</module>
         <module>test-apps/flow-over-ipc-framework-app</module>

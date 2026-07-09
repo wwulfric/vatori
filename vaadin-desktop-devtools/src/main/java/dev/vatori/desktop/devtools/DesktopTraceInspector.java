@@ -15,6 +15,10 @@ import java.util.regex.Pattern;
 public final class DesktopTraceInspector {
     private static final Pattern TYPE = Pattern.compile("\"type\"\\s*:\\s*\"([^\"]+)\"");
     private static final Pattern DIRECTION = Pattern.compile("\"direction\"\\s*:\\s*\"([^\"]+)\"");
+    private static final Pattern LAZY_GRID_FETCH_RANGE = Pattern.compile(
+            "Lazy grid fetch\\b[^\\r\\n]*?\\b([0-9]+-[0-9]+)\\b");
+    private static final Pattern LAZY_GRID_REPORT_RANGE = Pattern.compile(
+            "Lazy grid fetches:[^\\r\\n]*?range: ([0-9]+-[0-9]+)");
     private static final List<String> FLOW_IPC_REQUIRED_TYPES = List.of(
             "launch",
             "ready",
@@ -184,6 +188,279 @@ public final class DesktopTraceInspector {
         FLOW_IPC_V1_55_DOWNLOAD_SAVE_OPEN(
                 "--require-flow-ipc-v1_55-download-save-open"),
         FLOW_IPC_V1_55("--require-flow-ipc-v1_55"),
+        FLOW_IPC_V1_56_FRONTEND_RESOURCE_PIPELINE_BASIC_CLOSURE(
+                "--require-flow-ipc-v1_56-frontend-resource-pipeline-basic-closure"),
+        FLOW_IPC_V1_56("--require-flow-ipc-v1_56"),
+        FLOW_IPC_V1_57_INPUT_COMPONENT_PARITY_MATRIX(
+                "--require-flow-ipc-v1_57-input-component-parity-matrix"),
+        FLOW_IPC_V1_57("--require-flow-ipc-v1_57"),
+        FLOW_IPC_V1_58_MULTI_VALUE_NAVIGATION_DISCLOSURE_MATRIX(
+                "--require-flow-ipc-v1_58-multi-value-navigation-disclosure-matrix"),
+        FLOW_IPC_V1_58("--require-flow-ipc-v1_58"),
+        FLOW_IPC_V1_59_OVERLAY_CONTEXT_MENU_MATRIX(
+                "--require-flow-ipc-v1_59-overlay-context-menu-matrix"),
+        FLOW_IPC_V1_59("--require-flow-ipc-v1_59"),
+        FLOW_IPC_V1_60_CONTENT_APP_SHELL_LOGIN_MATRIX(
+                "--require-flow-ipc-v1_60-content-app-shell-login-matrix"),
+        FLOW_IPC_V1_60("--require-flow-ipc-v1_60"),
+        FLOW_IPC_V1_61_LIFECYCLE_FOCUS_BEHAVIOR_MATRIX(
+                "--require-flow-ipc-v1_61-lifecycle-focus-behavior-matrix"),
+        FLOW_IPC_V1_61("--require-flow-ipc-v1_61"),
+        FLOW_IPC_V1_62_RICH_TEXT_EDITOR_MATRIX(
+                "--require-flow-ipc-v1_62-rich-text-editor-matrix"),
+        FLOW_IPC_V1_62("--require-flow-ipc-v1_62"),
+        FLOW_IPC_V1_63_RICH_TEXT_EDITOR_BEHAVIOR_MATRIX(
+                "--require-flow-ipc-v1_63-rich-text-editor-behavior-matrix"),
+        FLOW_IPC_V1_63("--require-flow-ipc-v1_63"),
+        FLOW_IPC_V1_64_RICH_TEXT_EDITOR_EDITING_MATRIX(
+                "--require-flow-ipc-v1_64-rich-text-editor-editing-matrix"),
+        FLOW_IPC_V1_64("--require-flow-ipc-v1_64"),
+        FLOW_IPC_V1_65_NATIVE_CLIPBOARD_READ_MATRIX(
+                "--require-flow-ipc-v1_65-native-clipboard-read-matrix"),
+        FLOW_IPC_V1_65("--require-flow-ipc-v1_65"),
+        FLOW_IPC_V1_66_RICH_TEXT_EDITOR_THEME_VARIANT_MATRIX(
+                "--require-flow-ipc-v1_66-rich-text-editor-theme-variant-matrix"),
+        FLOW_IPC_V1_66("--require-flow-ipc-v1_66"),
+        FLOW_IPC_V1_67_BUTTON_THEME_VARIANT_MATRIX(
+                "--require-flow-ipc-v1_67-button-theme-variant-matrix"),
+        FLOW_IPC_V1_67("--require-flow-ipc-v1_67"),
+        FLOW_IPC_V1_68_TEXT_FIELD_THEME_VARIANT_MATRIX(
+                "--require-flow-ipc-v1_68-text-field-theme-variant-matrix"),
+        FLOW_IPC_V1_68("--require-flow-ipc-v1_68"),
+        FLOW_IPC_V1_69_SELECT_THEME_VARIANT_MATRIX(
+                "--require-flow-ipc-v1_69-select-theme-variant-matrix"),
+        FLOW_IPC_V1_69("--require-flow-ipc-v1_69"),
+        FLOW_IPC_V1_70_COMBO_BOX_THEME_VARIANT_MATRIX(
+                "--require-flow-ipc-v1_70-combo-box-theme-variant-matrix"),
+        FLOW_IPC_V1_70("--require-flow-ipc-v1_70"),
+        FLOW_IPC_V1_71_DATE_PICKER_THEME_VARIANT_MATRIX(
+                "--require-flow-ipc-v1_71-date-picker-theme-variant-matrix"),
+        FLOW_IPC_V1_71("--require-flow-ipc-v1_71"),
+        FLOW_IPC_V1_72_MULTI_SELECT_COMBO_BOX_THEME_VARIANT_MATRIX(
+                "--require-flow-ipc-v1_72-multi-select-combo-box-theme-variant-matrix"),
+        FLOW_IPC_V1_72("--require-flow-ipc-v1_72"),
+        FLOW_IPC_V1_73_TIME_PICKER_THEME_VARIANT_MATRIX(
+                "--require-flow-ipc-v1_73-time-picker-theme-variant-matrix"),
+        FLOW_IPC_V1_73("--require-flow-ipc-v1_73"),
+        FLOW_IPC_V1_74_TEXT_AREA_THEME_VARIANT_MATRIX(
+                "--require-flow-ipc-v1_74-text-area-theme-variant-matrix"),
+        FLOW_IPC_V1_74("--require-flow-ipc-v1_74"),
+        FLOW_IPC_V1_75_EMAIL_FIELD_THEME_VARIANT_MATRIX(
+                "--require-flow-ipc-v1_75-email-field-theme-variant-matrix"),
+        FLOW_IPC_V1_75("--require-flow-ipc-v1_75"),
+        FLOW_IPC_V1_76_INTEGER_FIELD_THEME_VARIANT_MATRIX(
+                "--require-flow-ipc-v1_76-integer-field-theme-variant-matrix"),
+        FLOW_IPC_V1_76("--require-flow-ipc-v1_76"),
+        FLOW_IPC_V1_77_PASSWORD_FIELD_THEME_VARIANT_MATRIX(
+                "--require-flow-ipc-v1_77-password-field-theme-variant-matrix"),
+        FLOW_IPC_V1_77("--require-flow-ipc-v1_77"),
+        FLOW_IPC_V1_78_BIG_DECIMAL_FIELD_THEME_VARIANT_MATRIX(
+                "--require-flow-ipc-v1_78-big-decimal-field-theme-variant-matrix"),
+        FLOW_IPC_V1_78("--require-flow-ipc-v1_78"),
+        FLOW_IPC_V1_79_CHECKBOX_THEME_VARIANT_MATRIX(
+                "--require-flow-ipc-v1_79-checkbox-theme-variant-matrix"),
+        FLOW_IPC_V1_79("--require-flow-ipc-v1_79"),
+        FLOW_IPC_V1_80_RADIO_BUTTON_GROUP_THEME_VARIANT_MATRIX(
+                "--require-flow-ipc-v1_80-radio-button-group-theme-variant-matrix"),
+        FLOW_IPC_V1_80("--require-flow-ipc-v1_80"),
+        FLOW_IPC_V1_81_TABS_THEME_VARIANT_MATRIX(
+                "--require-flow-ipc-v1_81-tabs-theme-variant-matrix"),
+        FLOW_IPC_V1_81("--require-flow-ipc-v1_81"),
+        FLOW_IPC_V1_82_DETAILS_THEME_VARIANT_MATRIX(
+                "--require-flow-ipc-v1_82-details-theme-variant-matrix"),
+        FLOW_IPC_V1_82("--require-flow-ipc-v1_82"),
+        FLOW_IPC_V1_83_MENU_BAR_THEME_VARIANT_MATRIX(
+                "--require-flow-ipc-v1_83-menu-bar-theme-variant-matrix"),
+        FLOW_IPC_V1_83("--require-flow-ipc-v1_83"),
+        FLOW_IPC_V1_84_GRID_THEME_VARIANT_MATRIX(
+                "--require-flow-ipc-v1_84-grid-theme-variant-matrix"),
+        FLOW_IPC_V1_84("--require-flow-ipc-v1_84"),
+        FLOW_IPC_V1_85_AVATAR_THEME_VARIANT_MATRIX(
+                "--require-flow-ipc-v1_85-avatar-theme-variant-matrix"),
+        FLOW_IPC_V1_85("--require-flow-ipc-v1_85"),
+        FLOW_IPC_V1_86_AVATAR_GROUP_THEME_VARIANT_MATRIX(
+                "--require-flow-ipc-v1_86-avatar-group-theme-variant-matrix"),
+        FLOW_IPC_V1_86("--require-flow-ipc-v1_86"),
+        FLOW_IPC_V1_87_MESSAGE_INPUT_THEME_VARIANT_MATRIX(
+                "--require-flow-ipc-v1_87-message-input-theme-variant-matrix"),
+        FLOW_IPC_V1_87("--require-flow-ipc-v1_87"),
+        FLOW_IPC_V1_88_SIDE_NAV_THEME_VARIANT_MATRIX(
+                "--require-flow-ipc-v1_88-side-nav-theme-variant-matrix"),
+        FLOW_IPC_V1_88("--require-flow-ipc-v1_88"),
+        FLOW_IPC_V1_89_MESSAGE_LIST_MARKDOWN_MATRIX(
+                "--require-flow-ipc-v1_89-message-list-markdown-matrix"),
+        FLOW_IPC_V1_89("--require-flow-ipc-v1_89"),
+        FLOW_IPC_V1_90_LOGIN_OVERLAY_PROPERTY_MATRIX(
+                "--require-flow-ipc-v1_90-login-overlay-property-matrix"),
+        FLOW_IPC_V1_90("--require-flow-ipc-v1_90"),
+        FLOW_IPC_V1_91_LOGIN_OVERLAY_FORGOT_PASSWORD_EVENT(
+                "--require-flow-ipc-v1_91-login-overlay-forgot-password-event"),
+        FLOW_IPC_V1_91("--require-flow-ipc-v1_91"),
+        FLOW_IPC_V1_92_LOGIN_OVERLAY_LOGIN_EVENT(
+                "--require-flow-ipc-v1_92-login-overlay-login-event"),
+        FLOW_IPC_V1_92("--require-flow-ipc-v1_92"),
+        FLOW_IPC_V1_93_LOGIN_OVERLAY_INVALID_LOGIN_EVENT(
+                "--require-flow-ipc-v1_93-login-overlay-invalid-login-event"),
+        FLOW_IPC_V1_93("--require-flow-ipc-v1_93"),
+        FLOW_IPC_V1_94_LOGIN_OVERLAY_CLOSE_LIFECYCLE(
+                "--require-flow-ipc-v1_94-login-overlay-close-lifecycle"),
+        FLOW_IPC_V1_94("--require-flow-ipc-v1_94"),
+        FLOW_IPC_V1_95_LOGIN_OVERLAY_RECOVERY_LOGIN(
+                "--require-flow-ipc-v1_95-login-overlay-recovery-login"),
+        FLOW_IPC_V1_95("--require-flow-ipc-v1_95"),
+        FLOW_IPC_V1_96_LOGIN_OVERLAY_SERVER_REOPEN(
+                "--require-flow-ipc-v1_96-login-overlay-server-reopen"),
+        FLOW_IPC_V1_96("--require-flow-ipc-v1_96"),
+        FLOW_IPC_V1_97_LOGIN_FORM_LOGIN_EVENT(
+                "--require-flow-ipc-v1_97-login-form-login-event"),
+        FLOW_IPC_V1_97("--require-flow-ipc-v1_97"),
+        FLOW_IPC_V1_98_LOGIN_FORM_INVALID_LOGIN_EVENT(
+                "--require-flow-ipc-v1_98-login-form-invalid-login-event"),
+        FLOW_IPC_V1_98("--require-flow-ipc-v1_98"),
+        FLOW_IPC_V1_99_LOGIN_FORM_FORGOT_PASSWORD_EVENT(
+                "--require-flow-ipc-v1_99-login-form-forgot-password-event"),
+        FLOW_IPC_V1_99("--require-flow-ipc-v1_99"),
+        FLOW_IPC_V1_100_LOGIN_FORM_PROPERTY_MATRIX(
+                "--require-flow-ipc-v1_100-login-form-property-matrix"),
+        FLOW_IPC_V1_100("--require-flow-ipc-v1_100"),
+        FLOW_IPC_V1_101_LOGIN_FORM_ACTION_POST(
+                "--require-flow-ipc-v1_101-login-form-action-post"),
+        FLOW_IPC_V1_101("--require-flow-ipc-v1_101"),
+        FLOW_IPC_V1_102_LOGIN_FORM_SUBMIT_BUTTON(
+                "--require-flow-ipc-v1_102-login-form-submit-button"),
+        FLOW_IPC_V1_102("--require-flow-ipc-v1_102"),
+        FLOW_IPC_V1_103_LOGIN_FORM_ENTER_SUBMIT(
+                "--require-flow-ipc-v1_103-login-form-enter-submit"),
+        FLOW_IPC_V1_103("--require-flow-ipc-v1_103"),
+        FLOW_IPC_V1_104_LOGIN_FORM_RECOVERY_LOGIN(
+                "--require-flow-ipc-v1_104-login-form-recovery-login"),
+        FLOW_IPC_V1_104("--require-flow-ipc-v1_104"),
+        FLOW_IPC_V1_105_LOGIN_FORM_ENABLED_LIFECYCLE(
+                "--require-flow-ipc-v1_105-login-form-enabled-lifecycle"),
+        FLOW_IPC_V1_105("--require-flow-ipc-v1_105"),
+        FLOW_IPC_V1_106_LOGIN_FORM_DISABLED_GUARD(
+                "--require-flow-ipc-v1_106-login-form-disabled-guard"),
+        FLOW_IPC_V1_106("--require-flow-ipc-v1_106"),
+        FLOW_IPC_V1_107_LOGIN_FORM_DISABLED_KEYBOARD_GUARD(
+                "--require-flow-ipc-v1_107-login-form-disabled-keyboard-guard"),
+        FLOW_IPC_V1_107("--require-flow-ipc-v1_107"),
+        FLOW_IPC_V1_108_LOGIN_FORM_NO_AUTOFOCUS(
+                "--require-flow-ipc-v1_108-login-form-no-autofocus"),
+        FLOW_IPC_V1_108("--require-flow-ipc-v1_108"),
+        FLOW_IPC_V1_109_LOGIN_FORM_I18N_FULL(
+                "--require-flow-ipc-v1_109-login-form-i18n-full"),
+        FLOW_IPC_V1_109("--require-flow-ipc-v1_109"),
+        FLOW_IPC_V1_110_LOGIN_FORM_SHOW_ERROR(
+                "--require-flow-ipc-v1_110-login-form-show-error"),
+        FLOW_IPC_V1_110("--require-flow-ipc-v1_110"),
+        FLOW_IPC_V1_111_LOGIN_OVERLAY_SHOW_ERROR(
+                "--require-flow-ipc-v1_111-login-overlay-show-error"),
+        FLOW_IPC_V1_111("--require-flow-ipc-v1_111"),
+        FLOW_IPC_V1_112_LOGIN_OVERLAY_I18N_FULL(
+                "--require-flow-ipc-v1_112-login-overlay-i18n-full"),
+        FLOW_IPC_V1_112("--require-flow-ipc-v1_112"),
+        FLOW_IPC_V1_113_LOGIN_OVERLAY_NO_AUTOFOCUS(
+                "--require-flow-ipc-v1_113-login-overlay-no-autofocus"),
+        FLOW_IPC_V1_113("--require-flow-ipc-v1_113"),
+        FLOW_IPC_V1_114_LOGIN_OVERLAY_DISABLED_GUARD(
+                "--require-flow-ipc-v1_114-login-overlay-disabled-guard"),
+        FLOW_IPC_V1_114("--require-flow-ipc-v1_114"),
+        FLOW_IPC_V1_115_LOGIN_OVERLAY_DISABLED_KEYBOARD_GUARD(
+                "--require-flow-ipc-v1_115-login-overlay-disabled-keyboard-guard"),
+        FLOW_IPC_V1_115("--require-flow-ipc-v1_115"),
+        FLOW_IPC_V1_116_LOGIN_OVERLAY_ACTION_POST(
+                "--require-flow-ipc-v1_116-login-overlay-action-post"),
+        FLOW_IPC_V1_116("--require-flow-ipc-v1_116"),
+        FLOW_IPC_V1_117_LOGIN_OVERLAY_SUBMIT_BUTTON(
+                "--require-flow-ipc-v1_117-login-overlay-submit-button"),
+        FLOW_IPC_V1_117("--require-flow-ipc-v1_117"),
+        FLOW_IPC_V1_118_LOGIN_OVERLAY_ENTER_SUBMIT(
+                "--require-flow-ipc-v1_118-login-overlay-enter-submit"),
+        FLOW_IPC_V1_118("--require-flow-ipc-v1_118"),
+        FLOW_IPC_V1_119_LOGIN_FORM_AUTOFOCUS_CONTROL(
+                "--require-flow-ipc-v1_119-login-form-autofocus-control"),
+        FLOW_IPC_V1_119("--require-flow-ipc-v1_119"),
+        FLOW_IPC_V1_120_LOGIN_OVERLAY_AUTOFOCUS_CONTROL(
+                "--require-flow-ipc-v1_120-login-overlay-autofocus-control"),
+        FLOW_IPC_V1_120("--require-flow-ipc-v1_120"),
+        FLOW_IPC_V1_121_LOGIN_OVERLAY_ESC_CLOSE(
+                "--require-flow-ipc-v1_121-login-overlay-esc-close"),
+        FLOW_IPC_V1_121("--require-flow-ipc-v1_121"),
+        FLOW_IPC_V1_122_LOGIN_OVERLAY_OUTSIDE_CLOSE(
+                "--require-flow-ipc-v1_122-login-overlay-outside-close"),
+        FLOW_IPC_V1_122("--require-flow-ipc-v1_122"),
+        FLOW_IPC_V1_123_LOGIN_OVERLAY_TAB_TRAVERSAL(
+                "--require-flow-ipc-v1_123-login-overlay-tab-traversal"),
+        FLOW_IPC_V1_123("--require-flow-ipc-v1_123"),
+        FLOW_IPC_V1_124_LOGIN_OVERLAY_SHIFT_TAB_TRAVERSAL(
+                "--require-flow-ipc-v1_124-login-overlay-shift-tab-traversal"),
+        FLOW_IPC_V1_124("--require-flow-ipc-v1_124"),
+        FLOW_IPC_V1_125_LOGIN_FORM_TAB_TRAVERSAL(
+                "--require-flow-ipc-v1_125-login-form-tab-traversal"),
+        FLOW_IPC_V1_125("--require-flow-ipc-v1_125"),
+        FLOW_IPC_V1_126_LOGIN_FORM_SHIFT_TAB_TRAVERSAL(
+                "--require-flow-ipc-v1_126-login-form-shift-tab-traversal"),
+        FLOW_IPC_V1_126("--require-flow-ipc-v1_126"),
+        FLOW_IPC_V1_127_LOGIN_FORM_AUTOFILL_ATTRIBUTES(
+                "--require-flow-ipc-v1_127-login-form-autofill-attributes"),
+        FLOW_IPC_V1_127("--require-flow-ipc-v1_127"),
+        FLOW_IPC_V1_128_LOGIN_OVERLAY_AUTOFILL_ATTRIBUTES(
+                "--require-flow-ipc-v1_128-login-overlay-autofill-attributes"),
+        FLOW_IPC_V1_128("--require-flow-ipc-v1_128"),
+        FLOW_IPC_V1_129_LOGIN_OVERLAY_A11Y_SEMANTICS(
+                "--require-flow-ipc-v1_129-login-overlay-a11y-semantics"),
+        FLOW_IPC_V1_129("--require-flow-ipc-v1_129"),
+        FLOW_IPC_V1_130_LOGIN_FORM_A11Y_SEMANTICS(
+                "--require-flow-ipc-v1_130-login-form-a11y-semantics"),
+        FLOW_IPC_V1_130("--require-flow-ipc-v1_130"),
+        FLOW_IPC_V1_131_LOGIN_OVERLAY_ERROR_A11Y(
+                "--require-flow-ipc-v1_131-login-overlay-error-a11y"),
+        FLOW_IPC_V1_131("--require-flow-ipc-v1_131"),
+        FLOW_IPC_V1_132_LOGIN_FORM_ERROR_A11Y(
+                "--require-flow-ipc-v1_132-login-form-error-a11y"),
+        FLOW_IPC_V1_132("--require-flow-ipc-v1_132"),
+        FLOW_IPC_V1_133_LOGIN_FORM_ERROR_FOCUS(
+                "--require-flow-ipc-v1_133-login-form-error-focus"),
+        FLOW_IPC_V1_133("--require-flow-ipc-v1_133"),
+        FLOW_IPC_V1_134_LOGIN_OVERLAY_ERROR_FOCUS(
+                "--require-flow-ipc-v1_134-login-overlay-error-focus"),
+        FLOW_IPC_V1_134("--require-flow-ipc-v1_134"),
+        FLOW_IPC_V1_135_LOGIN_FORM_ERROR_FOCUS_RETRY(
+                "--require-flow-ipc-v1_135-login-form-error-focus-retry"),
+        FLOW_IPC_V1_135("--require-flow-ipc-v1_135"),
+        FLOW_IPC_V1_136_LOGIN_OVERLAY_ERROR_FOCUS_RETRY(
+                "--require-flow-ipc-v1_136-login-overlay-error-focus-retry"),
+        FLOW_IPC_V1_136("--require-flow-ipc-v1_136"),
+        FLOW_IPC_V1_137_LOGIN_FORM_ERROR_FOCUS_RETRY_TARGET(
+                "--require-flow-ipc-v1_137-login-form-error-focus-retry-target"),
+        FLOW_IPC_V1_137("--require-flow-ipc-v1_137"),
+        FLOW_IPC_V1_138_LOGIN_OVERLAY_ERROR_FOCUS_RETRY_TARGET(
+                "--require-flow-ipc-v1_138-login-overlay-error-focus-retry-target"),
+        FLOW_IPC_V1_138("--require-flow-ipc-v1_138"),
+        FLOW_IPC_V1_139_LOGIN_FORM_ERROR_FOCUS_RETRY_TARGET_STATE(
+                "--require-flow-ipc-v1_139-login-form-error-focus-retry-target-state"),
+        FLOW_IPC_V1_139("--require-flow-ipc-v1_139"),
+        FLOW_IPC_V1_140_LOGIN_FORM_ERROR_FOCUS_RETRY_TARGET_LAYOUT(
+                "--require-flow-ipc-v1_140-login-form-error-focus-retry-target-layout"),
+        FLOW_IPC_V1_140("--require-flow-ipc-v1_140"),
+        FLOW_IPC_V1_141_LOGIN_FORM_ERROR_FOCUS_RETRY_TARGET_HIDDEN_SOURCE(
+                "--require-flow-ipc-v1_141-login-form-error-focus-retry-target-hidden-source"),
+        FLOW_IPC_V1_141("--require-flow-ipc-v1_141"),
+        FLOW_IPC_V1_142_LOGIN_FORM_ERROR_FOCUS_RETRY_TARGET_APP_ROOT_HIDDEN_ANCESTOR(
+                "--require-flow-ipc-v1_142-login-form-error-focus-retry-target-app-root-hidden-ancestor"),
+        FLOW_IPC_V1_142("--require-flow-ipc-v1_142"),
+        FLOW_IPC_V1_143_LOGIN_FORM_ERROR_FOCUS_RETRY_TARGET_VISIBLE_OWNER(
+                "--require-flow-ipc-v1_143-login-form-error-focus-retry-target-visible-owner"),
+        FLOW_IPC_V1_143("--require-flow-ipc-v1_143"),
+        FLOW_IPC_V1_144_LOGIN_FORM_ERROR_FOCUS_RETRY_TARGET_VISIBLE_OWNER_FOCUS(
+                "--require-flow-ipc-v1_144-login-form-error-focus-retry-target-visible-owner-focus"),
+        FLOW_IPC_V1_144("--require-flow-ipc-v1_144"),
+        FLOW_IPC_V1_145_LOGIN_FORM_ERROR_FOCUS_RETRY_TARGET_VISIBLE_OWNER_FOCUS_CONTAINMENT(
+                "--require-flow-ipc-v1_145-login-form-error-focus-retry-target-visible-owner-focus-containment"),
+        FLOW_IPC_V1_145("--require-flow-ipc-v1_145"),
+        FLOW_IPC_V1_146_LOGIN_FORM_ERROR_FOCUS_RETRY_TARGET_VISIBLE_OWNER_FOCUS_CONTAINMENT_STABILITY(
+                "--require-flow-ipc-v1_146-login-form-error-focus-retry-target-visible-owner-focus-containment-stability"),
+        FLOW_IPC_V1_146("--require-flow-ipc-v1_146"),
         FLOW_IPC_V1_3_FRAMEWORK("--require-flow-ipc-v1_3-framework");
 
         private final String option;
@@ -678,6 +955,461 @@ public final class DesktopTraceInspector {
                 case FLOW_IPC_V1_55 -> EnumSet.of(
                         FLOW_IPC_V1_55_DOWNLOAD_SAVE_OPEN,
                         FLOW_IPC_V1_55);
+                case FLOW_IPC_V1_56_FRONTEND_RESOURCE_PIPELINE_BASIC_CLOSURE ->
+                    EnumSet.of(FLOW_IPC_V1_56_FRONTEND_RESOURCE_PIPELINE_BASIC_CLOSURE);
+                case FLOW_IPC_V1_56 -> EnumSet.of(
+                        FLOW_IPC_V1_56_FRONTEND_RESOURCE_PIPELINE_BASIC_CLOSURE,
+                        FLOW_IPC_V1_56);
+                case FLOW_IPC_V1_57_INPUT_COMPONENT_PARITY_MATRIX ->
+                    EnumSet.of(FLOW_IPC_V1_57_INPUT_COMPONENT_PARITY_MATRIX);
+                case FLOW_IPC_V1_57 -> EnumSet.of(
+                        FLOW_IPC_V1_57_INPUT_COMPONENT_PARITY_MATRIX,
+                        FLOW_IPC_V1_57);
+                case FLOW_IPC_V1_58_MULTI_VALUE_NAVIGATION_DISCLOSURE_MATRIX ->
+                    EnumSet.of(FLOW_IPC_V1_58_MULTI_VALUE_NAVIGATION_DISCLOSURE_MATRIX);
+                case FLOW_IPC_V1_58 -> EnumSet.of(
+                        FLOW_IPC_V1_58_MULTI_VALUE_NAVIGATION_DISCLOSURE_MATRIX,
+                        FLOW_IPC_V1_58);
+                case FLOW_IPC_V1_59_OVERLAY_CONTEXT_MENU_MATRIX ->
+                    EnumSet.of(FLOW_IPC_V1_59_OVERLAY_CONTEXT_MENU_MATRIX);
+                case FLOW_IPC_V1_59 -> EnumSet.of(
+                        FLOW_IPC_V1_59_OVERLAY_CONTEXT_MENU_MATRIX,
+                        FLOW_IPC_V1_59);
+                case FLOW_IPC_V1_60_CONTENT_APP_SHELL_LOGIN_MATRIX ->
+                    EnumSet.of(FLOW_IPC_V1_60_CONTENT_APP_SHELL_LOGIN_MATRIX);
+                case FLOW_IPC_V1_60 -> EnumSet.of(
+                        FLOW_IPC_V1_60_CONTENT_APP_SHELL_LOGIN_MATRIX,
+                        FLOW_IPC_V1_60);
+                case FLOW_IPC_V1_61_LIFECYCLE_FOCUS_BEHAVIOR_MATRIX ->
+                    EnumSet.of(FLOW_IPC_V1_61_LIFECYCLE_FOCUS_BEHAVIOR_MATRIX);
+                case FLOW_IPC_V1_61 -> EnumSet.of(
+                        FLOW_IPC_V1_61_LIFECYCLE_FOCUS_BEHAVIOR_MATRIX,
+                        FLOW_IPC_V1_61);
+                case FLOW_IPC_V1_62_RICH_TEXT_EDITOR_MATRIX ->
+                    EnumSet.of(FLOW_IPC_V1_62_RICH_TEXT_EDITOR_MATRIX);
+                case FLOW_IPC_V1_62 -> EnumSet.of(
+                        FLOW_IPC_V1_62_RICH_TEXT_EDITOR_MATRIX,
+                        FLOW_IPC_V1_62);
+                case FLOW_IPC_V1_63_RICH_TEXT_EDITOR_BEHAVIOR_MATRIX ->
+                    EnumSet.of(FLOW_IPC_V1_63_RICH_TEXT_EDITOR_BEHAVIOR_MATRIX);
+                case FLOW_IPC_V1_63 -> EnumSet.of(
+                        FLOW_IPC_V1_63_RICH_TEXT_EDITOR_BEHAVIOR_MATRIX,
+                        FLOW_IPC_V1_63);
+                case FLOW_IPC_V1_64_RICH_TEXT_EDITOR_EDITING_MATRIX ->
+                    EnumSet.of(FLOW_IPC_V1_64_RICH_TEXT_EDITOR_EDITING_MATRIX);
+                case FLOW_IPC_V1_64 -> EnumSet.of(
+                        FLOW_IPC_V1_64_RICH_TEXT_EDITOR_EDITING_MATRIX,
+                        FLOW_IPC_V1_64);
+                case FLOW_IPC_V1_65_NATIVE_CLIPBOARD_READ_MATRIX ->
+                    EnumSet.of(FLOW_IPC_V1_65_NATIVE_CLIPBOARD_READ_MATRIX);
+                case FLOW_IPC_V1_65 -> EnumSet.of(
+                        FLOW_IPC_V1_65_NATIVE_CLIPBOARD_READ_MATRIX,
+                        FLOW_IPC_V1_65);
+                case FLOW_IPC_V1_66_RICH_TEXT_EDITOR_THEME_VARIANT_MATRIX ->
+                    EnumSet.of(FLOW_IPC_V1_66_RICH_TEXT_EDITOR_THEME_VARIANT_MATRIX);
+                case FLOW_IPC_V1_66 -> EnumSet.of(
+                        FLOW_IPC_V1_66_RICH_TEXT_EDITOR_THEME_VARIANT_MATRIX,
+                        FLOW_IPC_V1_66);
+                case FLOW_IPC_V1_67_BUTTON_THEME_VARIANT_MATRIX ->
+                    EnumSet.of(FLOW_IPC_V1_67_BUTTON_THEME_VARIANT_MATRIX);
+                case FLOW_IPC_V1_67 -> EnumSet.of(
+                        FLOW_IPC_V1_67_BUTTON_THEME_VARIANT_MATRIX,
+                        FLOW_IPC_V1_67);
+                case FLOW_IPC_V1_68_TEXT_FIELD_THEME_VARIANT_MATRIX ->
+                    EnumSet.of(FLOW_IPC_V1_68_TEXT_FIELD_THEME_VARIANT_MATRIX);
+                case FLOW_IPC_V1_68 -> EnumSet.of(
+                        FLOW_IPC_V1_68_TEXT_FIELD_THEME_VARIANT_MATRIX,
+                        FLOW_IPC_V1_68);
+                case FLOW_IPC_V1_69_SELECT_THEME_VARIANT_MATRIX ->
+                    EnumSet.of(FLOW_IPC_V1_69_SELECT_THEME_VARIANT_MATRIX);
+                case FLOW_IPC_V1_69 -> EnumSet.of(
+                        FLOW_IPC_V1_69_SELECT_THEME_VARIANT_MATRIX,
+                        FLOW_IPC_V1_69);
+                case FLOW_IPC_V1_70_COMBO_BOX_THEME_VARIANT_MATRIX ->
+                    EnumSet.of(FLOW_IPC_V1_70_COMBO_BOX_THEME_VARIANT_MATRIX);
+                case FLOW_IPC_V1_70 -> EnumSet.of(
+                        FLOW_IPC_V1_70_COMBO_BOX_THEME_VARIANT_MATRIX,
+                        FLOW_IPC_V1_70);
+                case FLOW_IPC_V1_71_DATE_PICKER_THEME_VARIANT_MATRIX ->
+                    EnumSet.of(FLOW_IPC_V1_71_DATE_PICKER_THEME_VARIANT_MATRIX);
+                case FLOW_IPC_V1_71 -> EnumSet.of(
+                        FLOW_IPC_V1_71_DATE_PICKER_THEME_VARIANT_MATRIX,
+                        FLOW_IPC_V1_71);
+                case FLOW_IPC_V1_72_MULTI_SELECT_COMBO_BOX_THEME_VARIANT_MATRIX ->
+                    EnumSet.of(FLOW_IPC_V1_72_MULTI_SELECT_COMBO_BOX_THEME_VARIANT_MATRIX);
+                case FLOW_IPC_V1_72 -> EnumSet.of(
+                        FLOW_IPC_V1_72_MULTI_SELECT_COMBO_BOX_THEME_VARIANT_MATRIX,
+                        FLOW_IPC_V1_72);
+                case FLOW_IPC_V1_73_TIME_PICKER_THEME_VARIANT_MATRIX ->
+                    EnumSet.of(FLOW_IPC_V1_73_TIME_PICKER_THEME_VARIANT_MATRIX);
+                case FLOW_IPC_V1_73 -> EnumSet.of(
+                        FLOW_IPC_V1_73_TIME_PICKER_THEME_VARIANT_MATRIX,
+                        FLOW_IPC_V1_73);
+                case FLOW_IPC_V1_74_TEXT_AREA_THEME_VARIANT_MATRIX ->
+                    EnumSet.of(FLOW_IPC_V1_74_TEXT_AREA_THEME_VARIANT_MATRIX);
+                case FLOW_IPC_V1_74 -> EnumSet.of(
+                        FLOW_IPC_V1_74_TEXT_AREA_THEME_VARIANT_MATRIX,
+                        FLOW_IPC_V1_74);
+                case FLOW_IPC_V1_75_EMAIL_FIELD_THEME_VARIANT_MATRIX ->
+                    EnumSet.of(FLOW_IPC_V1_75_EMAIL_FIELD_THEME_VARIANT_MATRIX);
+                case FLOW_IPC_V1_75 -> EnumSet.of(
+                        FLOW_IPC_V1_75_EMAIL_FIELD_THEME_VARIANT_MATRIX,
+                        FLOW_IPC_V1_75);
+                case FLOW_IPC_V1_76_INTEGER_FIELD_THEME_VARIANT_MATRIX ->
+                    EnumSet.of(FLOW_IPC_V1_76_INTEGER_FIELD_THEME_VARIANT_MATRIX);
+                case FLOW_IPC_V1_76 -> EnumSet.of(
+                        FLOW_IPC_V1_76_INTEGER_FIELD_THEME_VARIANT_MATRIX,
+                        FLOW_IPC_V1_76);
+                case FLOW_IPC_V1_77_PASSWORD_FIELD_THEME_VARIANT_MATRIX ->
+                    EnumSet.of(FLOW_IPC_V1_77_PASSWORD_FIELD_THEME_VARIANT_MATRIX);
+                case FLOW_IPC_V1_77 -> EnumSet.of(
+                        FLOW_IPC_V1_77_PASSWORD_FIELD_THEME_VARIANT_MATRIX,
+                        FLOW_IPC_V1_77);
+                case FLOW_IPC_V1_78_BIG_DECIMAL_FIELD_THEME_VARIANT_MATRIX ->
+                    EnumSet.of(FLOW_IPC_V1_78_BIG_DECIMAL_FIELD_THEME_VARIANT_MATRIX);
+                case FLOW_IPC_V1_78 -> EnumSet.of(
+                        FLOW_IPC_V1_78_BIG_DECIMAL_FIELD_THEME_VARIANT_MATRIX,
+                        FLOW_IPC_V1_78);
+                case FLOW_IPC_V1_79_CHECKBOX_THEME_VARIANT_MATRIX ->
+                    EnumSet.of(FLOW_IPC_V1_79_CHECKBOX_THEME_VARIANT_MATRIX);
+                case FLOW_IPC_V1_79 -> EnumSet.of(
+                        FLOW_IPC_V1_79_CHECKBOX_THEME_VARIANT_MATRIX,
+                        FLOW_IPC_V1_79);
+                case FLOW_IPC_V1_80_RADIO_BUTTON_GROUP_THEME_VARIANT_MATRIX ->
+                    EnumSet.of(FLOW_IPC_V1_80_RADIO_BUTTON_GROUP_THEME_VARIANT_MATRIX);
+                case FLOW_IPC_V1_80 -> EnumSet.of(
+                        FLOW_IPC_V1_80_RADIO_BUTTON_GROUP_THEME_VARIANT_MATRIX,
+                        FLOW_IPC_V1_80);
+                case FLOW_IPC_V1_81_TABS_THEME_VARIANT_MATRIX ->
+                    EnumSet.of(FLOW_IPC_V1_81_TABS_THEME_VARIANT_MATRIX);
+                case FLOW_IPC_V1_81 -> EnumSet.of(
+                        FLOW_IPC_V1_81_TABS_THEME_VARIANT_MATRIX,
+                        FLOW_IPC_V1_81);
+                case FLOW_IPC_V1_82_DETAILS_THEME_VARIANT_MATRIX ->
+                    EnumSet.of(FLOW_IPC_V1_82_DETAILS_THEME_VARIANT_MATRIX);
+                case FLOW_IPC_V1_82 -> EnumSet.of(
+                        FLOW_IPC_V1_82_DETAILS_THEME_VARIANT_MATRIX,
+                        FLOW_IPC_V1_82);
+                case FLOW_IPC_V1_83_MENU_BAR_THEME_VARIANT_MATRIX ->
+                    EnumSet.of(FLOW_IPC_V1_83_MENU_BAR_THEME_VARIANT_MATRIX);
+                case FLOW_IPC_V1_83 -> EnumSet.of(
+                        FLOW_IPC_V1_83_MENU_BAR_THEME_VARIANT_MATRIX,
+                        FLOW_IPC_V1_83);
+                case FLOW_IPC_V1_84_GRID_THEME_VARIANT_MATRIX ->
+                    EnumSet.of(FLOW_IPC_V1_84_GRID_THEME_VARIANT_MATRIX);
+                case FLOW_IPC_V1_84 -> EnumSet.of(
+                        FLOW_IPC_V1_84_GRID_THEME_VARIANT_MATRIX,
+                        FLOW_IPC_V1_84);
+                case FLOW_IPC_V1_85_AVATAR_THEME_VARIANT_MATRIX ->
+                    EnumSet.of(FLOW_IPC_V1_85_AVATAR_THEME_VARIANT_MATRIX);
+                case FLOW_IPC_V1_85 -> EnumSet.of(
+                        FLOW_IPC_V1_85_AVATAR_THEME_VARIANT_MATRIX,
+                        FLOW_IPC_V1_85);
+                case FLOW_IPC_V1_86_AVATAR_GROUP_THEME_VARIANT_MATRIX ->
+                    EnumSet.of(FLOW_IPC_V1_86_AVATAR_GROUP_THEME_VARIANT_MATRIX);
+                case FLOW_IPC_V1_86 -> EnumSet.of(
+                        FLOW_IPC_V1_86_AVATAR_GROUP_THEME_VARIANT_MATRIX,
+                        FLOW_IPC_V1_86);
+                case FLOW_IPC_V1_87_MESSAGE_INPUT_THEME_VARIANT_MATRIX ->
+                    EnumSet.of(FLOW_IPC_V1_87_MESSAGE_INPUT_THEME_VARIANT_MATRIX);
+                case FLOW_IPC_V1_87 -> EnumSet.of(
+                        FLOW_IPC_V1_87_MESSAGE_INPUT_THEME_VARIANT_MATRIX,
+                        FLOW_IPC_V1_87);
+                case FLOW_IPC_V1_88_SIDE_NAV_THEME_VARIANT_MATRIX ->
+                    EnumSet.of(FLOW_IPC_V1_88_SIDE_NAV_THEME_VARIANT_MATRIX);
+                case FLOW_IPC_V1_88 -> EnumSet.of(
+                        FLOW_IPC_V1_88_SIDE_NAV_THEME_VARIANT_MATRIX,
+                        FLOW_IPC_V1_88);
+                case FLOW_IPC_V1_89_MESSAGE_LIST_MARKDOWN_MATRIX ->
+                    EnumSet.of(FLOW_IPC_V1_89_MESSAGE_LIST_MARKDOWN_MATRIX);
+                case FLOW_IPC_V1_89 -> EnumSet.of(
+                        FLOW_IPC_V1_89_MESSAGE_LIST_MARKDOWN_MATRIX,
+                        FLOW_IPC_V1_89);
+                case FLOW_IPC_V1_90_LOGIN_OVERLAY_PROPERTY_MATRIX ->
+                    EnumSet.of(FLOW_IPC_V1_90_LOGIN_OVERLAY_PROPERTY_MATRIX);
+                case FLOW_IPC_V1_90 -> EnumSet.of(
+                        FLOW_IPC_V1_90_LOGIN_OVERLAY_PROPERTY_MATRIX,
+                        FLOW_IPC_V1_90);
+                case FLOW_IPC_V1_91_LOGIN_OVERLAY_FORGOT_PASSWORD_EVENT ->
+                    EnumSet.of(FLOW_IPC_V1_91_LOGIN_OVERLAY_FORGOT_PASSWORD_EVENT);
+                case FLOW_IPC_V1_91 -> EnumSet.of(
+                        FLOW_IPC_V1_91_LOGIN_OVERLAY_FORGOT_PASSWORD_EVENT,
+                        FLOW_IPC_V1_91);
+                case FLOW_IPC_V1_92_LOGIN_OVERLAY_LOGIN_EVENT ->
+                    EnumSet.of(FLOW_IPC_V1_92_LOGIN_OVERLAY_LOGIN_EVENT);
+                case FLOW_IPC_V1_92 -> EnumSet.of(
+                        FLOW_IPC_V1_92_LOGIN_OVERLAY_LOGIN_EVENT,
+                        FLOW_IPC_V1_92);
+                case FLOW_IPC_V1_93_LOGIN_OVERLAY_INVALID_LOGIN_EVENT ->
+                    EnumSet.of(FLOW_IPC_V1_93_LOGIN_OVERLAY_INVALID_LOGIN_EVENT);
+                case FLOW_IPC_V1_93 -> EnumSet.of(
+                        FLOW_IPC_V1_93_LOGIN_OVERLAY_INVALID_LOGIN_EVENT,
+                        FLOW_IPC_V1_93);
+                case FLOW_IPC_V1_94_LOGIN_OVERLAY_CLOSE_LIFECYCLE ->
+                    EnumSet.of(FLOW_IPC_V1_94_LOGIN_OVERLAY_CLOSE_LIFECYCLE);
+                case FLOW_IPC_V1_94 -> EnumSet.of(
+                        FLOW_IPC_V1_94_LOGIN_OVERLAY_CLOSE_LIFECYCLE,
+                        FLOW_IPC_V1_94);
+                case FLOW_IPC_V1_95_LOGIN_OVERLAY_RECOVERY_LOGIN ->
+                    EnumSet.of(FLOW_IPC_V1_95_LOGIN_OVERLAY_RECOVERY_LOGIN);
+                case FLOW_IPC_V1_95 -> EnumSet.of(
+                        FLOW_IPC_V1_95_LOGIN_OVERLAY_RECOVERY_LOGIN,
+                        FLOW_IPC_V1_95);
+                case FLOW_IPC_V1_96_LOGIN_OVERLAY_SERVER_REOPEN ->
+                    EnumSet.of(FLOW_IPC_V1_96_LOGIN_OVERLAY_SERVER_REOPEN);
+                case FLOW_IPC_V1_96 -> EnumSet.of(
+                        FLOW_IPC_V1_96_LOGIN_OVERLAY_SERVER_REOPEN,
+                        FLOW_IPC_V1_96);
+                case FLOW_IPC_V1_97_LOGIN_FORM_LOGIN_EVENT ->
+                    EnumSet.of(FLOW_IPC_V1_97_LOGIN_FORM_LOGIN_EVENT);
+                case FLOW_IPC_V1_97 -> EnumSet.of(
+                        FLOW_IPC_V1_97_LOGIN_FORM_LOGIN_EVENT,
+                        FLOW_IPC_V1_97);
+                case FLOW_IPC_V1_98_LOGIN_FORM_INVALID_LOGIN_EVENT ->
+                    EnumSet.of(FLOW_IPC_V1_98_LOGIN_FORM_INVALID_LOGIN_EVENT);
+                case FLOW_IPC_V1_98 -> EnumSet.of(
+                        FLOW_IPC_V1_98_LOGIN_FORM_INVALID_LOGIN_EVENT,
+                        FLOW_IPC_V1_98);
+                case FLOW_IPC_V1_99_LOGIN_FORM_FORGOT_PASSWORD_EVENT ->
+                    EnumSet.of(FLOW_IPC_V1_99_LOGIN_FORM_FORGOT_PASSWORD_EVENT);
+                case FLOW_IPC_V1_99 -> EnumSet.of(
+                        FLOW_IPC_V1_99_LOGIN_FORM_FORGOT_PASSWORD_EVENT,
+                        FLOW_IPC_V1_99);
+                case FLOW_IPC_V1_100_LOGIN_FORM_PROPERTY_MATRIX ->
+                    EnumSet.of(FLOW_IPC_V1_100_LOGIN_FORM_PROPERTY_MATRIX);
+                case FLOW_IPC_V1_100 -> EnumSet.of(
+                        FLOW_IPC_V1_100_LOGIN_FORM_PROPERTY_MATRIX,
+                        FLOW_IPC_V1_100);
+                case FLOW_IPC_V1_101_LOGIN_FORM_ACTION_POST ->
+                    EnumSet.of(FLOW_IPC_V1_101_LOGIN_FORM_ACTION_POST);
+                case FLOW_IPC_V1_101 -> EnumSet.of(
+                        FLOW_IPC_V1_101_LOGIN_FORM_ACTION_POST,
+                        FLOW_IPC_V1_101);
+                case FLOW_IPC_V1_102_LOGIN_FORM_SUBMIT_BUTTON ->
+                    EnumSet.of(FLOW_IPC_V1_102_LOGIN_FORM_SUBMIT_BUTTON);
+                case FLOW_IPC_V1_102 -> EnumSet.of(
+                        FLOW_IPC_V1_102_LOGIN_FORM_SUBMIT_BUTTON,
+                        FLOW_IPC_V1_102);
+                case FLOW_IPC_V1_103_LOGIN_FORM_ENTER_SUBMIT ->
+                    EnumSet.of(FLOW_IPC_V1_103_LOGIN_FORM_ENTER_SUBMIT);
+                case FLOW_IPC_V1_103 -> EnumSet.of(
+                        FLOW_IPC_V1_103_LOGIN_FORM_ENTER_SUBMIT,
+                        FLOW_IPC_V1_103);
+                case FLOW_IPC_V1_104_LOGIN_FORM_RECOVERY_LOGIN ->
+                    EnumSet.of(FLOW_IPC_V1_104_LOGIN_FORM_RECOVERY_LOGIN);
+                case FLOW_IPC_V1_104 -> EnumSet.of(
+                        FLOW_IPC_V1_104_LOGIN_FORM_RECOVERY_LOGIN,
+                        FLOW_IPC_V1_104);
+                case FLOW_IPC_V1_105_LOGIN_FORM_ENABLED_LIFECYCLE ->
+                    EnumSet.of(FLOW_IPC_V1_105_LOGIN_FORM_ENABLED_LIFECYCLE);
+                case FLOW_IPC_V1_105 -> EnumSet.of(
+                        FLOW_IPC_V1_105_LOGIN_FORM_ENABLED_LIFECYCLE,
+                        FLOW_IPC_V1_105);
+                case FLOW_IPC_V1_106_LOGIN_FORM_DISABLED_GUARD ->
+                    EnumSet.of(FLOW_IPC_V1_106_LOGIN_FORM_DISABLED_GUARD);
+                case FLOW_IPC_V1_106 -> EnumSet.of(
+                        FLOW_IPC_V1_106_LOGIN_FORM_DISABLED_GUARD,
+                        FLOW_IPC_V1_106);
+                case FLOW_IPC_V1_107_LOGIN_FORM_DISABLED_KEYBOARD_GUARD ->
+                    EnumSet.of(FLOW_IPC_V1_107_LOGIN_FORM_DISABLED_KEYBOARD_GUARD);
+                case FLOW_IPC_V1_107 -> EnumSet.of(
+                        FLOW_IPC_V1_107_LOGIN_FORM_DISABLED_KEYBOARD_GUARD,
+                        FLOW_IPC_V1_107);
+                case FLOW_IPC_V1_108_LOGIN_FORM_NO_AUTOFOCUS ->
+                    EnumSet.of(FLOW_IPC_V1_108_LOGIN_FORM_NO_AUTOFOCUS);
+                case FLOW_IPC_V1_108 -> EnumSet.of(
+                        FLOW_IPC_V1_108_LOGIN_FORM_NO_AUTOFOCUS,
+                        FLOW_IPC_V1_108);
+                case FLOW_IPC_V1_109_LOGIN_FORM_I18N_FULL ->
+                    EnumSet.of(FLOW_IPC_V1_109_LOGIN_FORM_I18N_FULL);
+                case FLOW_IPC_V1_109 -> EnumSet.of(
+                        FLOW_IPC_V1_109_LOGIN_FORM_I18N_FULL,
+                        FLOW_IPC_V1_109);
+                case FLOW_IPC_V1_110_LOGIN_FORM_SHOW_ERROR ->
+                    EnumSet.of(FLOW_IPC_V1_110_LOGIN_FORM_SHOW_ERROR);
+                case FLOW_IPC_V1_110 -> EnumSet.of(
+                        FLOW_IPC_V1_110_LOGIN_FORM_SHOW_ERROR,
+                        FLOW_IPC_V1_110);
+                case FLOW_IPC_V1_111_LOGIN_OVERLAY_SHOW_ERROR ->
+                    EnumSet.of(FLOW_IPC_V1_111_LOGIN_OVERLAY_SHOW_ERROR);
+                case FLOW_IPC_V1_111 -> EnumSet.of(
+                        FLOW_IPC_V1_111_LOGIN_OVERLAY_SHOW_ERROR,
+                        FLOW_IPC_V1_111);
+                case FLOW_IPC_V1_112_LOGIN_OVERLAY_I18N_FULL ->
+                    EnumSet.of(FLOW_IPC_V1_112_LOGIN_OVERLAY_I18N_FULL);
+                case FLOW_IPC_V1_112 -> EnumSet.of(
+                        FLOW_IPC_V1_112_LOGIN_OVERLAY_I18N_FULL,
+                        FLOW_IPC_V1_112);
+                case FLOW_IPC_V1_113_LOGIN_OVERLAY_NO_AUTOFOCUS ->
+                    EnumSet.of(FLOW_IPC_V1_113_LOGIN_OVERLAY_NO_AUTOFOCUS);
+                case FLOW_IPC_V1_113 -> EnumSet.of(
+                        FLOW_IPC_V1_113_LOGIN_OVERLAY_NO_AUTOFOCUS,
+                        FLOW_IPC_V1_113);
+                case FLOW_IPC_V1_114_LOGIN_OVERLAY_DISABLED_GUARD ->
+                    EnumSet.of(FLOW_IPC_V1_114_LOGIN_OVERLAY_DISABLED_GUARD);
+                case FLOW_IPC_V1_114 -> EnumSet.of(
+                        FLOW_IPC_V1_114_LOGIN_OVERLAY_DISABLED_GUARD,
+                        FLOW_IPC_V1_114);
+                case FLOW_IPC_V1_115_LOGIN_OVERLAY_DISABLED_KEYBOARD_GUARD ->
+                    EnumSet.of(FLOW_IPC_V1_115_LOGIN_OVERLAY_DISABLED_KEYBOARD_GUARD);
+                case FLOW_IPC_V1_115 -> EnumSet.of(
+                        FLOW_IPC_V1_115_LOGIN_OVERLAY_DISABLED_KEYBOARD_GUARD,
+                        FLOW_IPC_V1_115);
+                case FLOW_IPC_V1_116_LOGIN_OVERLAY_ACTION_POST ->
+                    EnumSet.of(FLOW_IPC_V1_116_LOGIN_OVERLAY_ACTION_POST);
+                case FLOW_IPC_V1_116 -> EnumSet.of(
+                        FLOW_IPC_V1_116_LOGIN_OVERLAY_ACTION_POST,
+                        FLOW_IPC_V1_116);
+                case FLOW_IPC_V1_117_LOGIN_OVERLAY_SUBMIT_BUTTON ->
+                    EnumSet.of(FLOW_IPC_V1_117_LOGIN_OVERLAY_SUBMIT_BUTTON);
+                case FLOW_IPC_V1_117 -> EnumSet.of(
+                        FLOW_IPC_V1_117_LOGIN_OVERLAY_SUBMIT_BUTTON,
+                        FLOW_IPC_V1_117);
+                case FLOW_IPC_V1_118_LOGIN_OVERLAY_ENTER_SUBMIT ->
+                    EnumSet.of(FLOW_IPC_V1_118_LOGIN_OVERLAY_ENTER_SUBMIT);
+                case FLOW_IPC_V1_118 -> EnumSet.of(
+                        FLOW_IPC_V1_118_LOGIN_OVERLAY_ENTER_SUBMIT,
+                        FLOW_IPC_V1_118);
+                case FLOW_IPC_V1_119_LOGIN_FORM_AUTOFOCUS_CONTROL ->
+                    EnumSet.of(FLOW_IPC_V1_119_LOGIN_FORM_AUTOFOCUS_CONTROL);
+                case FLOW_IPC_V1_119 -> EnumSet.of(
+                        FLOW_IPC_V1_119_LOGIN_FORM_AUTOFOCUS_CONTROL,
+                        FLOW_IPC_V1_119);
+                case FLOW_IPC_V1_120_LOGIN_OVERLAY_AUTOFOCUS_CONTROL ->
+                    EnumSet.of(FLOW_IPC_V1_120_LOGIN_OVERLAY_AUTOFOCUS_CONTROL);
+                case FLOW_IPC_V1_120 -> EnumSet.of(
+                        FLOW_IPC_V1_120_LOGIN_OVERLAY_AUTOFOCUS_CONTROL,
+                        FLOW_IPC_V1_120);
+                case FLOW_IPC_V1_121_LOGIN_OVERLAY_ESC_CLOSE ->
+                    EnumSet.of(FLOW_IPC_V1_121_LOGIN_OVERLAY_ESC_CLOSE);
+                case FLOW_IPC_V1_121 -> EnumSet.of(
+                        FLOW_IPC_V1_121_LOGIN_OVERLAY_ESC_CLOSE,
+                        FLOW_IPC_V1_121);
+                case FLOW_IPC_V1_122_LOGIN_OVERLAY_OUTSIDE_CLOSE ->
+                    EnumSet.of(FLOW_IPC_V1_122_LOGIN_OVERLAY_OUTSIDE_CLOSE);
+                case FLOW_IPC_V1_122 -> EnumSet.of(
+                        FLOW_IPC_V1_122_LOGIN_OVERLAY_OUTSIDE_CLOSE,
+                        FLOW_IPC_V1_122);
+                case FLOW_IPC_V1_123_LOGIN_OVERLAY_TAB_TRAVERSAL ->
+                    EnumSet.of(FLOW_IPC_V1_123_LOGIN_OVERLAY_TAB_TRAVERSAL);
+                case FLOW_IPC_V1_123 -> EnumSet.of(
+                        FLOW_IPC_V1_123_LOGIN_OVERLAY_TAB_TRAVERSAL,
+                        FLOW_IPC_V1_123);
+                case FLOW_IPC_V1_124_LOGIN_OVERLAY_SHIFT_TAB_TRAVERSAL ->
+                    EnumSet.of(FLOW_IPC_V1_124_LOGIN_OVERLAY_SHIFT_TAB_TRAVERSAL);
+                case FLOW_IPC_V1_124 -> EnumSet.of(
+                        FLOW_IPC_V1_124_LOGIN_OVERLAY_SHIFT_TAB_TRAVERSAL,
+                        FLOW_IPC_V1_124);
+                case FLOW_IPC_V1_125_LOGIN_FORM_TAB_TRAVERSAL ->
+                    EnumSet.of(FLOW_IPC_V1_125_LOGIN_FORM_TAB_TRAVERSAL);
+                case FLOW_IPC_V1_125 -> EnumSet.of(
+                        FLOW_IPC_V1_125_LOGIN_FORM_TAB_TRAVERSAL,
+                        FLOW_IPC_V1_125);
+                case FLOW_IPC_V1_126_LOGIN_FORM_SHIFT_TAB_TRAVERSAL ->
+                    EnumSet.of(FLOW_IPC_V1_126_LOGIN_FORM_SHIFT_TAB_TRAVERSAL);
+                case FLOW_IPC_V1_126 -> EnumSet.of(
+                        FLOW_IPC_V1_126_LOGIN_FORM_SHIFT_TAB_TRAVERSAL,
+                        FLOW_IPC_V1_126);
+                case FLOW_IPC_V1_127_LOGIN_FORM_AUTOFILL_ATTRIBUTES ->
+                    EnumSet.of(FLOW_IPC_V1_127_LOGIN_FORM_AUTOFILL_ATTRIBUTES);
+                case FLOW_IPC_V1_127 -> EnumSet.of(
+                        FLOW_IPC_V1_127_LOGIN_FORM_AUTOFILL_ATTRIBUTES,
+                        FLOW_IPC_V1_127);
+                case FLOW_IPC_V1_128_LOGIN_OVERLAY_AUTOFILL_ATTRIBUTES ->
+                    EnumSet.of(FLOW_IPC_V1_128_LOGIN_OVERLAY_AUTOFILL_ATTRIBUTES);
+                case FLOW_IPC_V1_128 -> EnumSet.of(
+                        FLOW_IPC_V1_128_LOGIN_OVERLAY_AUTOFILL_ATTRIBUTES,
+                        FLOW_IPC_V1_128);
+                case FLOW_IPC_V1_129_LOGIN_OVERLAY_A11Y_SEMANTICS ->
+                    EnumSet.of(FLOW_IPC_V1_129_LOGIN_OVERLAY_A11Y_SEMANTICS);
+                case FLOW_IPC_V1_129 -> EnumSet.of(
+                        FLOW_IPC_V1_129_LOGIN_OVERLAY_A11Y_SEMANTICS,
+                        FLOW_IPC_V1_129);
+                case FLOW_IPC_V1_130_LOGIN_FORM_A11Y_SEMANTICS ->
+                    EnumSet.of(FLOW_IPC_V1_130_LOGIN_FORM_A11Y_SEMANTICS);
+                case FLOW_IPC_V1_130 -> EnumSet.of(
+                        FLOW_IPC_V1_130_LOGIN_FORM_A11Y_SEMANTICS,
+                        FLOW_IPC_V1_130);
+                case FLOW_IPC_V1_131_LOGIN_OVERLAY_ERROR_A11Y ->
+                    EnumSet.of(FLOW_IPC_V1_131_LOGIN_OVERLAY_ERROR_A11Y);
+                case FLOW_IPC_V1_131 -> EnumSet.of(
+                        FLOW_IPC_V1_131_LOGIN_OVERLAY_ERROR_A11Y,
+                        FLOW_IPC_V1_131);
+                case FLOW_IPC_V1_132_LOGIN_FORM_ERROR_A11Y ->
+                    EnumSet.of(FLOW_IPC_V1_132_LOGIN_FORM_ERROR_A11Y);
+                case FLOW_IPC_V1_132 -> EnumSet.of(
+                        FLOW_IPC_V1_132_LOGIN_FORM_ERROR_A11Y,
+                        FLOW_IPC_V1_132);
+                case FLOW_IPC_V1_133_LOGIN_FORM_ERROR_FOCUS ->
+                    EnumSet.of(FLOW_IPC_V1_133_LOGIN_FORM_ERROR_FOCUS);
+                case FLOW_IPC_V1_133 -> EnumSet.of(
+                        FLOW_IPC_V1_133_LOGIN_FORM_ERROR_FOCUS,
+                        FLOW_IPC_V1_133);
+                case FLOW_IPC_V1_134_LOGIN_OVERLAY_ERROR_FOCUS ->
+                    EnumSet.of(FLOW_IPC_V1_134_LOGIN_OVERLAY_ERROR_FOCUS);
+                case FLOW_IPC_V1_134 -> EnumSet.of(
+                        FLOW_IPC_V1_134_LOGIN_OVERLAY_ERROR_FOCUS,
+                        FLOW_IPC_V1_134);
+                case FLOW_IPC_V1_135_LOGIN_FORM_ERROR_FOCUS_RETRY ->
+                    EnumSet.of(FLOW_IPC_V1_135_LOGIN_FORM_ERROR_FOCUS_RETRY);
+                case FLOW_IPC_V1_135 -> EnumSet.of(
+                        FLOW_IPC_V1_135_LOGIN_FORM_ERROR_FOCUS_RETRY,
+                        FLOW_IPC_V1_135);
+                case FLOW_IPC_V1_136_LOGIN_OVERLAY_ERROR_FOCUS_RETRY ->
+                    EnumSet.of(FLOW_IPC_V1_136_LOGIN_OVERLAY_ERROR_FOCUS_RETRY);
+                case FLOW_IPC_V1_136 -> EnumSet.of(
+                        FLOW_IPC_V1_136_LOGIN_OVERLAY_ERROR_FOCUS_RETRY,
+                        FLOW_IPC_V1_136);
+                case FLOW_IPC_V1_137_LOGIN_FORM_ERROR_FOCUS_RETRY_TARGET ->
+                    EnumSet.of(FLOW_IPC_V1_137_LOGIN_FORM_ERROR_FOCUS_RETRY_TARGET);
+                case FLOW_IPC_V1_137 -> EnumSet.of(
+                        FLOW_IPC_V1_137_LOGIN_FORM_ERROR_FOCUS_RETRY_TARGET,
+                        FLOW_IPC_V1_137);
+                case FLOW_IPC_V1_138_LOGIN_OVERLAY_ERROR_FOCUS_RETRY_TARGET ->
+                    EnumSet.of(FLOW_IPC_V1_138_LOGIN_OVERLAY_ERROR_FOCUS_RETRY_TARGET);
+                case FLOW_IPC_V1_138 -> EnumSet.of(
+                        FLOW_IPC_V1_138_LOGIN_OVERLAY_ERROR_FOCUS_RETRY_TARGET,
+                        FLOW_IPC_V1_138);
+                case FLOW_IPC_V1_139_LOGIN_FORM_ERROR_FOCUS_RETRY_TARGET_STATE ->
+                    EnumSet.of(FLOW_IPC_V1_139_LOGIN_FORM_ERROR_FOCUS_RETRY_TARGET_STATE);
+                case FLOW_IPC_V1_139 -> EnumSet.of(
+                        FLOW_IPC_V1_139_LOGIN_FORM_ERROR_FOCUS_RETRY_TARGET_STATE,
+                        FLOW_IPC_V1_139);
+                case FLOW_IPC_V1_140_LOGIN_FORM_ERROR_FOCUS_RETRY_TARGET_LAYOUT ->
+                    EnumSet.of(FLOW_IPC_V1_140_LOGIN_FORM_ERROR_FOCUS_RETRY_TARGET_LAYOUT);
+                case FLOW_IPC_V1_140 -> EnumSet.of(
+                        FLOW_IPC_V1_140_LOGIN_FORM_ERROR_FOCUS_RETRY_TARGET_LAYOUT,
+                        FLOW_IPC_V1_140);
+                case FLOW_IPC_V1_141_LOGIN_FORM_ERROR_FOCUS_RETRY_TARGET_HIDDEN_SOURCE ->
+                    EnumSet.of(FLOW_IPC_V1_141_LOGIN_FORM_ERROR_FOCUS_RETRY_TARGET_HIDDEN_SOURCE);
+                case FLOW_IPC_V1_141 -> EnumSet.of(
+                        FLOW_IPC_V1_141_LOGIN_FORM_ERROR_FOCUS_RETRY_TARGET_HIDDEN_SOURCE,
+                        FLOW_IPC_V1_141);
+                case FLOW_IPC_V1_142_LOGIN_FORM_ERROR_FOCUS_RETRY_TARGET_APP_ROOT_HIDDEN_ANCESTOR ->
+                    EnumSet.of(FLOW_IPC_V1_142_LOGIN_FORM_ERROR_FOCUS_RETRY_TARGET_APP_ROOT_HIDDEN_ANCESTOR);
+                case FLOW_IPC_V1_142 -> EnumSet.of(
+                        FLOW_IPC_V1_142_LOGIN_FORM_ERROR_FOCUS_RETRY_TARGET_APP_ROOT_HIDDEN_ANCESTOR,
+                        FLOW_IPC_V1_142);
+                case FLOW_IPC_V1_143_LOGIN_FORM_ERROR_FOCUS_RETRY_TARGET_VISIBLE_OWNER ->
+                    EnumSet.of(FLOW_IPC_V1_143_LOGIN_FORM_ERROR_FOCUS_RETRY_TARGET_VISIBLE_OWNER);
+                case FLOW_IPC_V1_143 -> EnumSet.of(
+                        FLOW_IPC_V1_143_LOGIN_FORM_ERROR_FOCUS_RETRY_TARGET_VISIBLE_OWNER,
+                        FLOW_IPC_V1_143);
+                case FLOW_IPC_V1_144_LOGIN_FORM_ERROR_FOCUS_RETRY_TARGET_VISIBLE_OWNER_FOCUS ->
+                    EnumSet.of(FLOW_IPC_V1_144_LOGIN_FORM_ERROR_FOCUS_RETRY_TARGET_VISIBLE_OWNER_FOCUS);
+                case FLOW_IPC_V1_144 -> EnumSet.of(
+                        FLOW_IPC_V1_144_LOGIN_FORM_ERROR_FOCUS_RETRY_TARGET_VISIBLE_OWNER_FOCUS,
+                        FLOW_IPC_V1_144);
+                case FLOW_IPC_V1_145_LOGIN_FORM_ERROR_FOCUS_RETRY_TARGET_VISIBLE_OWNER_FOCUS_CONTAINMENT ->
+                    EnumSet.of(FLOW_IPC_V1_145_LOGIN_FORM_ERROR_FOCUS_RETRY_TARGET_VISIBLE_OWNER_FOCUS_CONTAINMENT);
+                case FLOW_IPC_V1_145 -> EnumSet.of(
+                        FLOW_IPC_V1_145_LOGIN_FORM_ERROR_FOCUS_RETRY_TARGET_VISIBLE_OWNER_FOCUS_CONTAINMENT,
+                        FLOW_IPC_V1_145);
+                case FLOW_IPC_V1_146_LOGIN_FORM_ERROR_FOCUS_RETRY_TARGET_VISIBLE_OWNER_FOCUS_CONTAINMENT_STABILITY ->
+                    EnumSet.of(FLOW_IPC_V1_146_LOGIN_FORM_ERROR_FOCUS_RETRY_TARGET_VISIBLE_OWNER_FOCUS_CONTAINMENT_STABILITY);
+                case FLOW_IPC_V1_146 -> EnumSet.of(
+                        FLOW_IPC_V1_146_LOGIN_FORM_ERROR_FOCUS_RETRY_TARGET_VISIBLE_OWNER_FOCUS_CONTAINMENT_STABILITY,
+                        FLOW_IPC_V1_146);
                 case FLOW_IPC_V1_3_FRAMEWORK -> EnumSet.of(FLOW_IPC_V1_3_FRAMEWORK);
             };
         }
@@ -834,6 +1566,279 @@ public final class DesktopTraceInspector {
                 case FLOW_IPC_V1_55_DOWNLOAD_SAVE_OPEN ->
                     summary.hasRequiredFlowIpcV1_55DownloadSaveOpenTypes();
                 case FLOW_IPC_V1_55 -> summary.hasRequiredFlowIpcV1_55Types();
+                case FLOW_IPC_V1_56_FRONTEND_RESOURCE_PIPELINE_BASIC_CLOSURE ->
+                    summary.hasRequiredFlowIpcV1_56FrontendResourcePipelineBasicClosureTypes();
+                case FLOW_IPC_V1_56 -> summary.hasRequiredFlowIpcV1_56Types();
+                case FLOW_IPC_V1_57_INPUT_COMPONENT_PARITY_MATRIX ->
+                    summary.hasRequiredFlowIpcV1_57InputComponentParityMatrixTypes();
+                case FLOW_IPC_V1_57 -> summary.hasRequiredFlowIpcV1_57Types();
+                case FLOW_IPC_V1_58_MULTI_VALUE_NAVIGATION_DISCLOSURE_MATRIX ->
+                    summary.hasRequiredFlowIpcV1_58MultiValueNavigationDisclosureMatrixTypes();
+                case FLOW_IPC_V1_58 -> summary.hasRequiredFlowIpcV1_58Types();
+                case FLOW_IPC_V1_59_OVERLAY_CONTEXT_MENU_MATRIX ->
+                    summary.hasRequiredFlowIpcV1_59OverlayContextMenuMatrixTypes();
+                case FLOW_IPC_V1_59 -> summary.hasRequiredFlowIpcV1_59Types();
+                case FLOW_IPC_V1_60_CONTENT_APP_SHELL_LOGIN_MATRIX ->
+                    summary.hasRequiredFlowIpcV1_60ContentAppShellLoginMatrixTypes();
+                case FLOW_IPC_V1_60 -> summary.hasRequiredFlowIpcV1_60Types();
+                case FLOW_IPC_V1_61_LIFECYCLE_FOCUS_BEHAVIOR_MATRIX ->
+                    summary.hasRequiredFlowIpcV1_61LifecycleFocusBehaviorMatrixTypes();
+                case FLOW_IPC_V1_61 -> summary.hasRequiredFlowIpcV1_61Types();
+                case FLOW_IPC_V1_62_RICH_TEXT_EDITOR_MATRIX ->
+                    summary.hasRequiredFlowIpcV1_62RichTextEditorMatrixTypes();
+                case FLOW_IPC_V1_62 -> summary.hasRequiredFlowIpcV1_62Types();
+                case FLOW_IPC_V1_63_RICH_TEXT_EDITOR_BEHAVIOR_MATRIX ->
+                    summary.hasRequiredFlowIpcV1_63RichTextEditorBehaviorMatrixTypes();
+                case FLOW_IPC_V1_63 -> summary.hasRequiredFlowIpcV1_63Types();
+                case FLOW_IPC_V1_64_RICH_TEXT_EDITOR_EDITING_MATRIX ->
+                    summary.hasRequiredFlowIpcV1_64RichTextEditorEditingMatrixTypes();
+                case FLOW_IPC_V1_64 -> summary.hasRequiredFlowIpcV1_64Types();
+                case FLOW_IPC_V1_65_NATIVE_CLIPBOARD_READ_MATRIX ->
+                    summary.hasRequiredFlowIpcV1_65NativeClipboardReadMatrixTypes();
+                case FLOW_IPC_V1_65 -> summary.hasRequiredFlowIpcV1_65Types();
+                case FLOW_IPC_V1_66_RICH_TEXT_EDITOR_THEME_VARIANT_MATRIX ->
+                    summary.hasRequiredFlowIpcV1_66RichTextEditorThemeVariantMatrixTypes();
+                case FLOW_IPC_V1_66 -> summary.hasRequiredFlowIpcV1_66Types();
+                case FLOW_IPC_V1_67_BUTTON_THEME_VARIANT_MATRIX ->
+                    summary.hasRequiredFlowIpcV1_67ButtonThemeVariantMatrixTypes();
+                case FLOW_IPC_V1_67 -> summary.hasRequiredFlowIpcV1_67Types();
+                case FLOW_IPC_V1_68_TEXT_FIELD_THEME_VARIANT_MATRIX ->
+                    summary.hasRequiredFlowIpcV1_68TextFieldThemeVariantMatrixTypes();
+                case FLOW_IPC_V1_68 -> summary.hasRequiredFlowIpcV1_68Types();
+                case FLOW_IPC_V1_69_SELECT_THEME_VARIANT_MATRIX ->
+                    summary.hasRequiredFlowIpcV1_69SelectThemeVariantMatrixTypes();
+                case FLOW_IPC_V1_69 -> summary.hasRequiredFlowIpcV1_69Types();
+                case FLOW_IPC_V1_70_COMBO_BOX_THEME_VARIANT_MATRIX ->
+                    summary.hasRequiredFlowIpcV1_70ComboBoxThemeVariantMatrixTypes();
+                case FLOW_IPC_V1_70 -> summary.hasRequiredFlowIpcV1_70Types();
+                case FLOW_IPC_V1_71_DATE_PICKER_THEME_VARIANT_MATRIX ->
+                    summary.hasRequiredFlowIpcV1_71DatePickerThemeVariantMatrixTypes();
+                case FLOW_IPC_V1_71 -> summary.hasRequiredFlowIpcV1_71Types();
+                case FLOW_IPC_V1_72_MULTI_SELECT_COMBO_BOX_THEME_VARIANT_MATRIX ->
+                    summary.hasRequiredFlowIpcV1_72MultiSelectComboBoxThemeVariantMatrixTypes();
+                case FLOW_IPC_V1_72 -> summary.hasRequiredFlowIpcV1_72Types();
+                case FLOW_IPC_V1_73_TIME_PICKER_THEME_VARIANT_MATRIX ->
+                    summary.hasRequiredFlowIpcV1_73TimePickerThemeVariantMatrixTypes();
+                case FLOW_IPC_V1_73 -> summary.hasRequiredFlowIpcV1_73Types();
+                case FLOW_IPC_V1_74_TEXT_AREA_THEME_VARIANT_MATRIX ->
+                    summary.hasRequiredFlowIpcV1_74TextAreaThemeVariantMatrixTypes();
+                case FLOW_IPC_V1_74 -> summary.hasRequiredFlowIpcV1_74Types();
+                case FLOW_IPC_V1_75_EMAIL_FIELD_THEME_VARIANT_MATRIX ->
+                    summary.hasRequiredFlowIpcV1_75EmailFieldThemeVariantMatrixTypes();
+                case FLOW_IPC_V1_75 -> summary.hasRequiredFlowIpcV1_75Types();
+                case FLOW_IPC_V1_76_INTEGER_FIELD_THEME_VARIANT_MATRIX ->
+                    summary.hasRequiredFlowIpcV1_76IntegerFieldThemeVariantMatrixTypes();
+                case FLOW_IPC_V1_76 -> summary.hasRequiredFlowIpcV1_76Types();
+                case FLOW_IPC_V1_77_PASSWORD_FIELD_THEME_VARIANT_MATRIX ->
+                    summary.hasRequiredFlowIpcV1_77PasswordFieldThemeVariantMatrixTypes();
+                case FLOW_IPC_V1_77 -> summary.hasRequiredFlowIpcV1_77Types();
+                case FLOW_IPC_V1_78_BIG_DECIMAL_FIELD_THEME_VARIANT_MATRIX ->
+                    summary.hasRequiredFlowIpcV1_78BigDecimalFieldThemeVariantMatrixTypes();
+                case FLOW_IPC_V1_78 -> summary.hasRequiredFlowIpcV1_78Types();
+                case FLOW_IPC_V1_79_CHECKBOX_THEME_VARIANT_MATRIX ->
+                    summary.hasRequiredFlowIpcV1_79CheckboxThemeVariantMatrixTypes();
+                case FLOW_IPC_V1_79 -> summary.hasRequiredFlowIpcV1_79Types();
+                case FLOW_IPC_V1_80_RADIO_BUTTON_GROUP_THEME_VARIANT_MATRIX ->
+                    summary.hasRequiredFlowIpcV1_80RadioButtonGroupThemeVariantMatrixTypes();
+                case FLOW_IPC_V1_80 -> summary.hasRequiredFlowIpcV1_80Types();
+                case FLOW_IPC_V1_81_TABS_THEME_VARIANT_MATRIX ->
+                    summary.hasRequiredFlowIpcV1_81TabsThemeVariantMatrixTypes();
+                case FLOW_IPC_V1_81 -> summary.hasRequiredFlowIpcV1_81Types();
+                case FLOW_IPC_V1_82_DETAILS_THEME_VARIANT_MATRIX ->
+                    summary.hasRequiredFlowIpcV1_82DetailsThemeVariantMatrixTypes();
+                case FLOW_IPC_V1_82 -> summary.hasRequiredFlowIpcV1_82Types();
+                case FLOW_IPC_V1_83_MENU_BAR_THEME_VARIANT_MATRIX ->
+                    summary.hasRequiredFlowIpcV1_83MenuBarThemeVariantMatrixTypes();
+                case FLOW_IPC_V1_83 -> summary.hasRequiredFlowIpcV1_83Types();
+                case FLOW_IPC_V1_84_GRID_THEME_VARIANT_MATRIX ->
+                    summary.hasRequiredFlowIpcV1_84GridThemeVariantMatrixTypes();
+                case FLOW_IPC_V1_84 -> summary.hasRequiredFlowIpcV1_84Types();
+                case FLOW_IPC_V1_85_AVATAR_THEME_VARIANT_MATRIX ->
+                    summary.hasRequiredFlowIpcV1_85AvatarThemeVariantMatrixTypes();
+                case FLOW_IPC_V1_85 -> summary.hasRequiredFlowIpcV1_85Types();
+                case FLOW_IPC_V1_86_AVATAR_GROUP_THEME_VARIANT_MATRIX ->
+                    summary.hasRequiredFlowIpcV1_86AvatarGroupThemeVariantMatrixTypes();
+                case FLOW_IPC_V1_86 -> summary.hasRequiredFlowIpcV1_86Types();
+                case FLOW_IPC_V1_87_MESSAGE_INPUT_THEME_VARIANT_MATRIX ->
+                    summary.hasRequiredFlowIpcV1_87MessageInputThemeVariantMatrixTypes();
+                case FLOW_IPC_V1_87 -> summary.hasRequiredFlowIpcV1_87Types();
+                case FLOW_IPC_V1_88_SIDE_NAV_THEME_VARIANT_MATRIX ->
+                    summary.hasRequiredFlowIpcV1_88SideNavThemeVariantMatrixTypes();
+                case FLOW_IPC_V1_88 -> summary.hasRequiredFlowIpcV1_88Types();
+                case FLOW_IPC_V1_89_MESSAGE_LIST_MARKDOWN_MATRIX ->
+                    summary.hasRequiredFlowIpcV1_89MessageListMarkdownMatrixTypes();
+                case FLOW_IPC_V1_89 -> summary.hasRequiredFlowIpcV1_89Types();
+                case FLOW_IPC_V1_90_LOGIN_OVERLAY_PROPERTY_MATRIX ->
+                    summary.hasRequiredFlowIpcV1_90LoginOverlayPropertyMatrixTypes();
+                case FLOW_IPC_V1_90 -> summary.hasRequiredFlowIpcV1_90Types();
+                case FLOW_IPC_V1_91_LOGIN_OVERLAY_FORGOT_PASSWORD_EVENT ->
+                    summary.hasRequiredFlowIpcV1_91LoginOverlayForgotPasswordEventTypes();
+                case FLOW_IPC_V1_91 -> summary.hasRequiredFlowIpcV1_91Types();
+                case FLOW_IPC_V1_92_LOGIN_OVERLAY_LOGIN_EVENT ->
+                    summary.hasRequiredFlowIpcV1_92LoginOverlayLoginEventTypes();
+                case FLOW_IPC_V1_92 -> summary.hasRequiredFlowIpcV1_92Types();
+                case FLOW_IPC_V1_93_LOGIN_OVERLAY_INVALID_LOGIN_EVENT ->
+                    summary.hasRequiredFlowIpcV1_93LoginOverlayInvalidLoginEventTypes();
+                case FLOW_IPC_V1_93 -> summary.hasRequiredFlowIpcV1_93Types();
+                case FLOW_IPC_V1_94_LOGIN_OVERLAY_CLOSE_LIFECYCLE ->
+                    summary.hasRequiredFlowIpcV1_94LoginOverlayCloseLifecycleTypes();
+                case FLOW_IPC_V1_94 -> summary.hasRequiredFlowIpcV1_94Types();
+                case FLOW_IPC_V1_95_LOGIN_OVERLAY_RECOVERY_LOGIN ->
+                    summary.hasRequiredFlowIpcV1_95LoginOverlayRecoveryLoginTypes();
+                case FLOW_IPC_V1_95 -> summary.hasRequiredFlowIpcV1_95Types();
+                case FLOW_IPC_V1_96_LOGIN_OVERLAY_SERVER_REOPEN ->
+                    summary.hasRequiredFlowIpcV1_96LoginOverlayServerReopenTypes();
+                case FLOW_IPC_V1_96 -> summary.hasRequiredFlowIpcV1_96Types();
+                case FLOW_IPC_V1_97_LOGIN_FORM_LOGIN_EVENT ->
+                    summary.hasRequiredFlowIpcV1_97LoginFormLoginEventTypes();
+                case FLOW_IPC_V1_97 -> summary.hasRequiredFlowIpcV1_97Types();
+                case FLOW_IPC_V1_98_LOGIN_FORM_INVALID_LOGIN_EVENT ->
+                    summary.hasRequiredFlowIpcV1_98LoginFormInvalidLoginEventTypes();
+                case FLOW_IPC_V1_98 -> summary.hasRequiredFlowIpcV1_98Types();
+                case FLOW_IPC_V1_99_LOGIN_FORM_FORGOT_PASSWORD_EVENT ->
+                    summary.hasRequiredFlowIpcV1_99LoginFormForgotPasswordEventTypes();
+                case FLOW_IPC_V1_99 -> summary.hasRequiredFlowIpcV1_99Types();
+                case FLOW_IPC_V1_100_LOGIN_FORM_PROPERTY_MATRIX ->
+                    summary.hasRequiredFlowIpcV1_100LoginFormPropertyMatrixTypes();
+                case FLOW_IPC_V1_100 -> summary.hasRequiredFlowIpcV1_100Types();
+                case FLOW_IPC_V1_101_LOGIN_FORM_ACTION_POST ->
+                    summary.hasRequiredFlowIpcV1_101LoginFormActionPostTypes();
+                case FLOW_IPC_V1_101 -> summary.hasRequiredFlowIpcV1_101Types();
+                case FLOW_IPC_V1_102_LOGIN_FORM_SUBMIT_BUTTON ->
+                    summary.hasRequiredFlowIpcV1_102LoginFormSubmitButtonTypes();
+                case FLOW_IPC_V1_102 -> summary.hasRequiredFlowIpcV1_102Types();
+                case FLOW_IPC_V1_103_LOGIN_FORM_ENTER_SUBMIT ->
+                    summary.hasRequiredFlowIpcV1_103LoginFormEnterSubmitTypes();
+                case FLOW_IPC_V1_103 -> summary.hasRequiredFlowIpcV1_103Types();
+                case FLOW_IPC_V1_104_LOGIN_FORM_RECOVERY_LOGIN ->
+                    summary.hasRequiredFlowIpcV1_104LoginFormRecoveryLoginTypes();
+                case FLOW_IPC_V1_104 -> summary.hasRequiredFlowIpcV1_104Types();
+                case FLOW_IPC_V1_105_LOGIN_FORM_ENABLED_LIFECYCLE ->
+                    summary.hasRequiredFlowIpcV1_105LoginFormEnabledLifecycleTypes();
+                case FLOW_IPC_V1_105 -> summary.hasRequiredFlowIpcV1_105Types();
+                case FLOW_IPC_V1_106_LOGIN_FORM_DISABLED_GUARD ->
+                    summary.hasRequiredFlowIpcV1_106LoginFormDisabledGuardTypes();
+                case FLOW_IPC_V1_106 -> summary.hasRequiredFlowIpcV1_106Types();
+                case FLOW_IPC_V1_107_LOGIN_FORM_DISABLED_KEYBOARD_GUARD ->
+                    summary.hasRequiredFlowIpcV1_107LoginFormDisabledKeyboardGuardTypes();
+                case FLOW_IPC_V1_107 -> summary.hasRequiredFlowIpcV1_107Types();
+                case FLOW_IPC_V1_108_LOGIN_FORM_NO_AUTOFOCUS ->
+                    summary.hasRequiredFlowIpcV1_108LoginFormNoAutofocusTypes();
+                case FLOW_IPC_V1_108 -> summary.hasRequiredFlowIpcV1_108Types();
+                case FLOW_IPC_V1_109_LOGIN_FORM_I18N_FULL ->
+                    summary.hasRequiredFlowIpcV1_109LoginFormFullI18nTypes();
+                case FLOW_IPC_V1_109 -> summary.hasRequiredFlowIpcV1_109Types();
+                case FLOW_IPC_V1_110_LOGIN_FORM_SHOW_ERROR ->
+                    summary.hasRequiredFlowIpcV1_110LoginFormShowErrorTypes();
+                case FLOW_IPC_V1_110 -> summary.hasRequiredFlowIpcV1_110Types();
+                case FLOW_IPC_V1_111_LOGIN_OVERLAY_SHOW_ERROR ->
+                    summary.hasRequiredFlowIpcV1_111LoginOverlayShowErrorTypes();
+                case FLOW_IPC_V1_111 -> summary.hasRequiredFlowIpcV1_111Types();
+                case FLOW_IPC_V1_112_LOGIN_OVERLAY_I18N_FULL ->
+                    summary.hasRequiredFlowIpcV1_112LoginOverlayFullI18nTypes();
+                case FLOW_IPC_V1_112 -> summary.hasRequiredFlowIpcV1_112Types();
+                case FLOW_IPC_V1_113_LOGIN_OVERLAY_NO_AUTOFOCUS ->
+                    summary.hasRequiredFlowIpcV1_113LoginOverlayNoAutofocusTypes();
+                case FLOW_IPC_V1_113 -> summary.hasRequiredFlowIpcV1_113Types();
+                case FLOW_IPC_V1_114_LOGIN_OVERLAY_DISABLED_GUARD ->
+                    summary.hasRequiredFlowIpcV1_114LoginOverlayDisabledGuardTypes();
+                case FLOW_IPC_V1_114 -> summary.hasRequiredFlowIpcV1_114Types();
+                case FLOW_IPC_V1_115_LOGIN_OVERLAY_DISABLED_KEYBOARD_GUARD ->
+                    summary.hasRequiredFlowIpcV1_115LoginOverlayDisabledKeyboardGuardTypes();
+                case FLOW_IPC_V1_115 -> summary.hasRequiredFlowIpcV1_115Types();
+                case FLOW_IPC_V1_116_LOGIN_OVERLAY_ACTION_POST ->
+                    summary.hasRequiredFlowIpcV1_116LoginOverlayActionPostTypes();
+                case FLOW_IPC_V1_116 -> summary.hasRequiredFlowIpcV1_116Types();
+                case FLOW_IPC_V1_117_LOGIN_OVERLAY_SUBMIT_BUTTON ->
+                    summary.hasRequiredFlowIpcV1_117LoginOverlaySubmitButtonTypes();
+                case FLOW_IPC_V1_117 -> summary.hasRequiredFlowIpcV1_117Types();
+                case FLOW_IPC_V1_118_LOGIN_OVERLAY_ENTER_SUBMIT ->
+                    summary.hasRequiredFlowIpcV1_118LoginOverlayEnterSubmitTypes();
+                case FLOW_IPC_V1_118 -> summary.hasRequiredFlowIpcV1_118Types();
+                case FLOW_IPC_V1_119_LOGIN_FORM_AUTOFOCUS_CONTROL ->
+                    summary.hasRequiredFlowIpcV1_119LoginFormAutofocusControlTypes();
+                case FLOW_IPC_V1_119 -> summary.hasRequiredFlowIpcV1_119Types();
+                case FLOW_IPC_V1_120_LOGIN_OVERLAY_AUTOFOCUS_CONTROL ->
+                    summary.hasRequiredFlowIpcV1_120LoginOverlayAutofocusControlTypes();
+                case FLOW_IPC_V1_120 -> summary.hasRequiredFlowIpcV1_120Types();
+                case FLOW_IPC_V1_121_LOGIN_OVERLAY_ESC_CLOSE ->
+                    summary.hasRequiredFlowIpcV1_121LoginOverlayEscCloseTypes();
+                case FLOW_IPC_V1_121 -> summary.hasRequiredFlowIpcV1_121Types();
+                case FLOW_IPC_V1_122_LOGIN_OVERLAY_OUTSIDE_CLOSE ->
+                    summary.hasRequiredFlowIpcV1_122LoginOverlayOutsideCloseTypes();
+                case FLOW_IPC_V1_122 -> summary.hasRequiredFlowIpcV1_122Types();
+                case FLOW_IPC_V1_123_LOGIN_OVERLAY_TAB_TRAVERSAL ->
+                    summary.hasRequiredFlowIpcV1_123LoginOverlayTabTraversalTypes();
+                case FLOW_IPC_V1_123 -> summary.hasRequiredFlowIpcV1_123Types();
+                case FLOW_IPC_V1_124_LOGIN_OVERLAY_SHIFT_TAB_TRAVERSAL ->
+                    summary.hasRequiredFlowIpcV1_124LoginOverlayShiftTabTraversalTypes();
+                case FLOW_IPC_V1_124 -> summary.hasRequiredFlowIpcV1_124Types();
+                case FLOW_IPC_V1_125_LOGIN_FORM_TAB_TRAVERSAL ->
+                    summary.hasRequiredFlowIpcV1_125LoginFormTabTraversalTypes();
+                case FLOW_IPC_V1_125 -> summary.hasRequiredFlowIpcV1_125Types();
+                case FLOW_IPC_V1_126_LOGIN_FORM_SHIFT_TAB_TRAVERSAL ->
+                    summary.hasRequiredFlowIpcV1_126LoginFormShiftTabTraversalTypes();
+                case FLOW_IPC_V1_126 -> summary.hasRequiredFlowIpcV1_126Types();
+                case FLOW_IPC_V1_127_LOGIN_FORM_AUTOFILL_ATTRIBUTES ->
+                    summary.hasRequiredFlowIpcV1_127LoginFormAutofillAttributesTypes();
+                case FLOW_IPC_V1_127 -> summary.hasRequiredFlowIpcV1_127Types();
+                case FLOW_IPC_V1_128_LOGIN_OVERLAY_AUTOFILL_ATTRIBUTES ->
+                    summary.hasRequiredFlowIpcV1_128LoginOverlayAutofillAttributesTypes();
+                case FLOW_IPC_V1_128 -> summary.hasRequiredFlowIpcV1_128Types();
+                case FLOW_IPC_V1_129_LOGIN_OVERLAY_A11Y_SEMANTICS ->
+                    summary.hasRequiredFlowIpcV1_129LoginOverlayA11ySemanticsTypes();
+                case FLOW_IPC_V1_129 -> summary.hasRequiredFlowIpcV1_129Types();
+                case FLOW_IPC_V1_130_LOGIN_FORM_A11Y_SEMANTICS ->
+                    summary.hasRequiredFlowIpcV1_130LoginFormA11ySemanticsTypes();
+                case FLOW_IPC_V1_130 -> summary.hasRequiredFlowIpcV1_130Types();
+                case FLOW_IPC_V1_131_LOGIN_OVERLAY_ERROR_A11Y ->
+                    summary.hasRequiredFlowIpcV1_131LoginOverlayErrorA11yTypes();
+                case FLOW_IPC_V1_131 -> summary.hasRequiredFlowIpcV1_131Types();
+                case FLOW_IPC_V1_132_LOGIN_FORM_ERROR_A11Y ->
+                    summary.hasRequiredFlowIpcV1_132LoginFormErrorA11yTypes();
+                case FLOW_IPC_V1_132 -> summary.hasRequiredFlowIpcV1_132Types();
+                case FLOW_IPC_V1_133_LOGIN_FORM_ERROR_FOCUS ->
+                    summary.hasRequiredFlowIpcV1_133LoginFormErrorFocusTypes();
+                case FLOW_IPC_V1_133 -> summary.hasRequiredFlowIpcV1_133Types();
+                case FLOW_IPC_V1_134_LOGIN_OVERLAY_ERROR_FOCUS ->
+                    summary.hasRequiredFlowIpcV1_134LoginOverlayErrorFocusTypes();
+                case FLOW_IPC_V1_134 -> summary.hasRequiredFlowIpcV1_134Types();
+                case FLOW_IPC_V1_135_LOGIN_FORM_ERROR_FOCUS_RETRY ->
+                    summary.hasRequiredFlowIpcV1_135LoginFormErrorFocusRetryTypes();
+                case FLOW_IPC_V1_135 -> summary.hasRequiredFlowIpcV1_135Types();
+                case FLOW_IPC_V1_136_LOGIN_OVERLAY_ERROR_FOCUS_RETRY ->
+                    summary.hasRequiredFlowIpcV1_136LoginOverlayErrorFocusRetryTypes();
+                case FLOW_IPC_V1_136 -> summary.hasRequiredFlowIpcV1_136Types();
+                case FLOW_IPC_V1_137_LOGIN_FORM_ERROR_FOCUS_RETRY_TARGET ->
+                    summary.hasRequiredFlowIpcV1_137LoginFormErrorFocusRetryTargetTypes();
+                case FLOW_IPC_V1_137 -> summary.hasRequiredFlowIpcV1_137Types();
+                case FLOW_IPC_V1_138_LOGIN_OVERLAY_ERROR_FOCUS_RETRY_TARGET ->
+                    summary.hasRequiredFlowIpcV1_138LoginOverlayErrorFocusRetryTargetTypes();
+                case FLOW_IPC_V1_138 -> summary.hasRequiredFlowIpcV1_138Types();
+                case FLOW_IPC_V1_139_LOGIN_FORM_ERROR_FOCUS_RETRY_TARGET_STATE ->
+                    summary.hasRequiredFlowIpcV1_139LoginFormErrorFocusRetryTargetStateTypes();
+                case FLOW_IPC_V1_139 -> summary.hasRequiredFlowIpcV1_139Types();
+                case FLOW_IPC_V1_140_LOGIN_FORM_ERROR_FOCUS_RETRY_TARGET_LAYOUT ->
+                    summary.hasRequiredFlowIpcV1_140LoginFormErrorFocusRetryTargetLayoutTypes();
+                case FLOW_IPC_V1_140 -> summary.hasRequiredFlowIpcV1_140Types();
+                case FLOW_IPC_V1_141_LOGIN_FORM_ERROR_FOCUS_RETRY_TARGET_HIDDEN_SOURCE ->
+                    summary.hasRequiredFlowIpcV1_141LoginFormErrorFocusRetryTargetHiddenSourceTypes();
+                case FLOW_IPC_V1_141 -> summary.hasRequiredFlowIpcV1_141Types();
+                case FLOW_IPC_V1_142_LOGIN_FORM_ERROR_FOCUS_RETRY_TARGET_APP_ROOT_HIDDEN_ANCESTOR ->
+                    summary.hasRequiredFlowIpcV1_142LoginFormErrorFocusRetryTargetAppRootHiddenAncestorTypes();
+                case FLOW_IPC_V1_142 -> summary.hasRequiredFlowIpcV1_142Types();
+                case FLOW_IPC_V1_143_LOGIN_FORM_ERROR_FOCUS_RETRY_TARGET_VISIBLE_OWNER ->
+                    summary.hasRequiredFlowIpcV1_143LoginFormErrorFocusRetryTargetVisibleOwnerTypes();
+                case FLOW_IPC_V1_143 -> summary.hasRequiredFlowIpcV1_143Types();
+                case FLOW_IPC_V1_144_LOGIN_FORM_ERROR_FOCUS_RETRY_TARGET_VISIBLE_OWNER_FOCUS ->
+                    summary.hasRequiredFlowIpcV1_144LoginFormErrorFocusRetryTargetVisibleOwnerFocusTypes();
+                case FLOW_IPC_V1_144 -> summary.hasRequiredFlowIpcV1_144Types();
+                case FLOW_IPC_V1_145_LOGIN_FORM_ERROR_FOCUS_RETRY_TARGET_VISIBLE_OWNER_FOCUS_CONTAINMENT ->
+                    summary.hasRequiredFlowIpcV1_145LoginFormErrorFocusRetryTargetVisibleOwnerFocusContainmentTypes();
+                case FLOW_IPC_V1_145 -> summary.hasRequiredFlowIpcV1_145Types();
+                case FLOW_IPC_V1_146_LOGIN_FORM_ERROR_FOCUS_RETRY_TARGET_VISIBLE_OWNER_FOCUS_CONTAINMENT_STABILITY ->
+                    summary.hasRequiredFlowIpcV1_146LoginFormErrorFocusRetryTargetVisibleOwnerFocusContainmentStabilityTypes();
+                case FLOW_IPC_V1_146 -> summary.hasRequiredFlowIpcV1_146Types();
                 case FLOW_IPC_V1_3_FRAMEWORK -> summary.hasRequiredFlowIpcV1_3FrameworkTypes();
             };
         }
@@ -880,11 +1885,16 @@ public final class DesktopTraceInspector {
 
     public static TraceSummary inspect(Path path) throws IOException {
         TraceSummary summary = new TraceSummary();
-        for (String rawLine : Files.readAllLines(path, StandardCharsets.UTF_8)) {
+        try (var reader = Files.newBufferedReader(path, StandardCharsets.UTF_8)) {
+            String rawLine;
+            while ((rawLine = reader.readLine()) != null) {
             String line = normalize(rawLine);
             if (line.isBlank()) {
                 continue;
             }
+            inspectFlowIpcV162Line(summary, line);
+            inspectFlowIpcV163Line(summary, line);
+            inspectFlowIpcV164Line(summary, line);
             summary.total++;
             String type = first(TYPE, line, "unknown");
             String direction = first(DIRECTION, line, "unknown");
@@ -1075,6 +2085,78 @@ public final class DesktopTraceInspector {
                 summary.frameworkDataComponentMatrixBootstrapObserved = true;
             }
             if (line.contains("dev.vatori.ipcframework.FlowOverIpcFrameworkView")
+                    && line.contains("framework-decision")
+                    && line.contains("framework-notes")
+                    && line.contains("framework-contact-email")
+                    && line.contains("framework-score")
+                    && line.contains("framework-secret")
+                    && line.contains("framework-review-time")
+                    && line.contains("framework-input-matrix-status")
+                    && line.contains("com.vaadin.flow.component.radiobutton.RadioButtonGroup")
+                    && line.contains("com.vaadin.flow.component.textfield.TextArea")
+                    && line.contains("com.vaadin.flow.component.textfield.EmailField")
+                    && line.contains("com.vaadin.flow.component.textfield.IntegerField")
+                    && line.contains("com.vaadin.flow.component.textfield.PasswordField")
+                    && line.contains("com.vaadin.flow.component.timepicker.TimePicker")) {
+                summary.frameworkInputComponentMatrixBootstrapObserved = true;
+            }
+            if (line.contains("dev.vatori.ipcframework.FlowOverIpcFrameworkView")
+                    && line.contains("framework-assignees")
+                    && line.contains("framework-nav-tabs")
+                    && line.contains("framework-nav-tab-audit")
+                    && line.contains("framework-details")
+                    && line.contains("framework-accordion")
+                    && line.contains("framework-menu")
+                    && line.contains("framework-navigation-matrix-status")
+                    && line.contains("com.vaadin.flow.component.combobox.MultiSelectComboBox")
+                    && line.contains("com.vaadin.flow.component.tabs.Tabs")
+                    && line.contains("com.vaadin.flow.component.tabs.Tab")
+                    && line.contains("com.vaadin.flow.component.details.Details")
+                    && line.contains("com.vaadin.flow.component.accordion.Accordion")
+                    && line.contains("com.vaadin.flow.component.menubar.MenuBar")) {
+                summary.frameworkNavigationComponentMatrixBootstrapObserved = true;
+            }
+            if (line.contains("dev.vatori.ipcframework.FlowOverIpcFrameworkView")
+                    && line.contains("framework-context-menu-target")
+                    && line.contains("framework-context-menu")
+                    && line.contains("framework-context-menu-audit")
+                    && line.contains("framework-grid-context-menu")
+                    && line.contains("framework-grid-context-menu-audit")
+                    && line.contains("framework-popover-target")
+                    && line.contains("framework-popover")
+                    && line.contains("framework-overlay-matrix-status")
+                    && line.contains("com.vaadin.flow.component.contextmenu.ContextMenu")
+                    && line.contains("com.vaadin.flow.component.grid.contextmenu.GridContextMenu")
+                    && line.contains("com.vaadin.flow.component.popover.Popover")) {
+                summary.frameworkOverlayComponentMatrixBootstrapObserved = true;
+            }
+            if (line.contains("dev.vatori.ipcframework.FlowOverIpcFrameworkView")
+                    && line.contains("framework-avatar")
+                    && line.contains("framework-avatar-group")
+                    && line.contains("framework-message-list")
+                    && line.contains("framework-message-input")
+                    && line.contains("framework-side-nav")
+                    && line.contains("framework-side-nav-audit")
+                    && line.contains("framework-login-overlay")
+                    && line.contains("framework-rich-content-status")
+                    && line.contains("com.vaadin.flow.component.avatar.Avatar")
+                    && line.contains("com.vaadin.flow.component.avatar.AvatarGroup")
+                    && line.contains("com.vaadin.flow.component.messages.MessageList")
+                    && line.contains("com.vaadin.flow.component.messages.MessageInput")
+                    && line.contains("com.vaadin.flow.component.sidenav.SideNav")
+                    && line.contains("com.vaadin.flow.component.sidenav.SideNavItem")
+                    && line.contains("com.vaadin.flow.component.login.LoginOverlay")) {
+                summary.frameworkRichContentComponentMatrixBootstrapObserved = true;
+            }
+            if (line.contains("dev.vatori.ipcframework.FlowOverIpcFrameworkView")
+                    && line.contains("framework-lifecycle-focus")
+                    && line.contains("framework-lifecycle-toggle")
+                    && line.contains("framework-lifecycle-focus-status")
+                    && line.contains("com.vaadin.flow.component.textfield.TextField")
+                    && line.contains("com.vaadin.flow.component.button.Button")) {
+                summary.frameworkLifecycleFocusBehaviorMatrixBootstrapObserved = true;
+            }
+            if (line.contains("dev.vatori.ipcframework.FlowOverIpcFrameworkView")
                     && line.contains("framework-lazy-grid")
                     && line.contains("framework-lazy-grid-status")
                     && line.contains("framework-lazy-grid-report")
@@ -1200,6 +2282,102 @@ public final class DesktopTraceInspector {
                     && line.contains("\"componentId\":\"framework-validation-action\"")
                     && line.contains("\"event\":\"click\"")) {
                 summary.frameworkDataComponentMatrixValidateEventRpcObserved = true;
+            }
+            if (line.contains("\"type\":\"event\"")
+                    && line.contains("\"dispatch\":\"flow-client-xhr\"")
+                    && line.contains("\"componentId\":\"framework-decision\"")
+                    && line.contains("\"event\":\"change\"")
+                    && line.contains("\"element.value\":\"approve\"")) {
+                summary.frameworkInputComponentMatrixDecisionEventRpcObserved = true;
+            }
+            if (line.contains("\"type\":\"event\"")
+                    && line.contains("\"dispatch\":\"flow-client-xhr\"")
+                    && line.contains("\"componentId\":\"framework-notes\"")
+                    && line.contains("\"event\":\"change\"")
+                    && line.contains("\"element.value\":\"Flow IPC notes v1.57\"")) {
+                summary.frameworkInputComponentMatrixNotesEventRpcObserved = true;
+            }
+            if (line.contains("\"type\":\"event\"")
+                    && line.contains("\"dispatch\":\"flow-client-xhr\"")
+                    && line.contains("\"componentId\":\"framework-contact-email\"")
+                    && line.contains("\"event\":\"change\"")
+                    && line.contains("\"element.value\":\"owner@vatori.dev\"")) {
+                summary.frameworkInputComponentMatrixEmailEventRpcObserved = true;
+            }
+            if (line.contains("\"type\":\"event\"")
+                    && line.contains("\"dispatch\":\"flow-client-xhr\"")
+                    && line.contains("\"componentId\":\"framework-score\"")
+                    && line.contains("\"event\":\"change\"")
+                    && line.contains("\"element.value\":\"9\"")) {
+                summary.frameworkInputComponentMatrixScoreEventRpcObserved = true;
+            }
+            if (line.contains("\"type\":\"event\"")
+                    && line.contains("\"dispatch\":\"flow-client-xhr\"")
+                    && line.contains("\"componentId\":\"framework-secret\"")
+                    && line.contains("\"event\":\"change\"")
+                    && line.contains("\"element.value\":\"flow-ipc-secret\"")) {
+                summary.frameworkInputComponentMatrixSecretEventRpcObserved = true;
+            }
+            if (line.contains("\"type\":\"event\"")
+                    && line.contains("\"dispatch\":\"flow-client-xhr\"")
+                    && line.contains("\"componentId\":\"framework-review-time\"")
+                    && line.contains("\"event\":\"change\"")
+                    && line.contains("\"element.value\":\"14:45\"")) {
+                summary.frameworkInputComponentMatrixReviewTimeEventRpcObserved = true;
+            }
+            if (line.contains("\"type\":\"event\"")
+                    && line.contains("\"dispatch\":\"flow-client-xhr\"")
+                    && line.contains("\"componentId\":\"framework-assignees\"")
+                    && line.contains("\"event\":\"selected-items-changed\"")
+                    && line.contains("\"event.detail.value\":\"ava,sol\"")) {
+                summary.frameworkNavigationComponentMatrixAssigneesEventRpcObserved = true;
+            }
+            if (line.contains("\"type\":\"event\"")
+                    && line.contains("\"dispatch\":\"flow-client-xhr\"")
+                    && line.contains("\"componentId\":\"framework-nav-tabs\"")
+                    && line.contains("\"event\":\"selected-changed\"")
+                    && line.contains("\"element.selected\":1")) {
+                summary.frameworkNavigationComponentMatrixTabsEventRpcObserved = true;
+            }
+            if (line.contains("\"type\":\"event\"")
+                    && line.contains("\"dispatch\":\"flow-client-xhr\"")
+                    && line.contains("\"componentId\":\"framework-details\"")
+                    && line.contains("\"event\":\"opened-changed\"")
+                    && line.contains("\"element.opened\":true")) {
+                summary.frameworkNavigationComponentMatrixDetailsEventRpcObserved = true;
+            }
+            if (line.contains("\"type\":\"event\"")
+                    && line.contains("\"dispatch\":\"flow-client-xhr\"")
+                    && line.contains("\"componentId\":\"framework-accordion\"")
+                    && line.contains("\"event\":\"opened-changed\"")
+                    && line.contains("\"element.opened\":0")) {
+                summary.frameworkNavigationComponentMatrixAccordionEventRpcObserved = true;
+            }
+            if (line.contains("\"type\":\"event\"")
+                    && line.contains("\"dispatch\":\"flow-client-xhr\"")
+                    && line.contains("\"componentId\":\"framework-menu\"")
+                    && line.contains("\"event\":\"click\"")) {
+                summary.frameworkNavigationComponentMatrixMenuEventRpcObserved = true;
+            }
+            inspectFrameworkOverlayRichContentEventLine(summary, line);
+            if (line.contains("\"type\":\"event\"")
+                    && line.contains("\"dispatch\":\"flow-client-xhr\"")
+                    && line.contains("\"componentId\":\"framework-lifecycle-focus\"")
+                    && line.contains("\"event\":\"focus\"")) {
+                summary.frameworkLifecycleFocusBehaviorMatrixFocusEventRpcObserved = true;
+            }
+            if (line.contains("\"type\":\"event\"")
+                    && line.contains("\"dispatch\":\"flow-client-xhr\"")
+                    && line.contains("\"componentId\":\"framework-lifecycle-focus\"")
+                    && line.contains("\"event\":\"blur\"")) {
+                summary.frameworkLifecycleFocusBehaviorMatrixBlurEventRpcObserved = true;
+            }
+            if (line.contains("\"type\":\"event\"")
+                    && line.contains("\"dispatch\":\"flow-client-xhr\"")
+                    && line.contains("\"componentId\":\"framework-lifecycle-toggle\"")
+                    && line.contains("\"event\":\"click\"")) {
+                summary.frameworkLifecycleFocusBehaviorMatrixAttachEventRpcObserved = true;
+                summary.frameworkLifecycleFocusBehaviorMatrixDetachEventRpcObserved = true;
             }
             if (line.contains("\"type\":\"event\"")
                     && line.contains("\"dispatch\":\"flow-client-xhr\"")
@@ -1383,29 +2561,178 @@ public final class DesktopTraceInspector {
                     && line.contains("Validation accepted: Ava Desktop")) {
                 summary.frameworkDataComponentMatrixValidatePatchObserved = true;
             }
-            if (line.contains("\"source\":\"UidlRequestHandler\"")
+            if (line.contains("\"type\":\"patch\"")
+                    && line.contains("\"source\":\"UidlRequestHandler\"")
                     && line.contains("\"reason\":\"event\"")
-                    && line.contains("Lazy grid fetch")
-                    && line.contains("15-20")) {
-                summary.frameworkLazyDataProviderFetchPatchObserved = true;
+                    && line.contains("Decision changed: approve")) {
+                summary.frameworkInputComponentMatrixDecisionPatchObserved = true;
+            }
+            if (line.contains("\"type\":\"patch\"")
+                    && line.contains("\"source\":\"UidlRequestHandler\"")
+                    && line.contains("\"reason\":\"event\"")
+                    && line.contains("Notes changed: Flow IPC notes v1.57")) {
+                summary.frameworkInputComponentMatrixNotesPatchObserved = true;
+            }
+            if (line.contains("\"type\":\"patch\"")
+                    && line.contains("\"source\":\"UidlRequestHandler\"")
+                    && line.contains("\"reason\":\"event\"")
+                    && line.contains("Email changed: owner@vatori.dev")) {
+                summary.frameworkInputComponentMatrixEmailPatchObserved = true;
+            }
+            if (line.contains("\"type\":\"patch\"")
+                    && line.contains("\"source\":\"UidlRequestHandler\"")
+                    && line.contains("\"reason\":\"event\"")
+                    && line.contains("Score changed: 9")) {
+                summary.frameworkInputComponentMatrixScorePatchObserved = true;
+            }
+            if (line.contains("\"type\":\"patch\"")
+                    && line.contains("\"source\":\"UidlRequestHandler\"")
+                    && line.contains("\"reason\":\"event\"")
+                    && line.contains("Secret changed: length=15")) {
+                summary.frameworkInputComponentMatrixSecretPatchObserved = true;
+            }
+            if (line.contains("\"type\":\"patch\"")
+                    && line.contains("\"source\":\"UidlRequestHandler\"")
+                    && line.contains("\"reason\":\"event\"")
+                    && line.contains("Review time changed: 14:45")) {
+                summary.frameworkInputComponentMatrixReviewTimePatchObserved = true;
+            }
+            if (line.contains("\"type\":\"patch\"")
+                    && line.contains("\"source\":\"UidlRequestHandler\"")
+                    && line.contains("\"reason\":\"event\"")
+                    && line.contains("Assignees changed: ava,sol")) {
+                summary.frameworkNavigationComponentMatrixAssigneesPatchObserved = true;
+            }
+            if (line.contains("\"type\":\"patch\"")
+                    && line.contains("\"source\":\"UidlRequestHandler\"")
+                    && line.contains("\"reason\":\"event\"")
+                    && line.contains("Tab changed: audit")) {
+                summary.frameworkNavigationComponentMatrixTabsPatchObserved = true;
+            }
+            if (line.contains("\"type\":\"patch\"")
+                    && line.contains("\"source\":\"UidlRequestHandler\"")
+                    && line.contains("\"reason\":\"event\"")
+                    && line.contains("Details opened: true")) {
+                summary.frameworkNavigationComponentMatrixDetailsPatchObserved = true;
+            }
+            if (line.contains("\"type\":\"patch\"")
+                    && line.contains("\"source\":\"UidlRequestHandler\"")
+                    && line.contains("\"reason\":\"event\"")
+                    && line.contains("Accordion opened: queue")) {
+                summary.frameworkNavigationComponentMatrixAccordionPatchObserved = true;
+            }
+            if (line.contains("\"type\":\"patch\"")
+                    && line.contains("\"source\":\"UidlRequestHandler\"")
+                    && line.contains("\"reason\":\"event\"")
+                    && line.contains("Menu action: audit")) {
+                summary.frameworkNavigationComponentMatrixMenuPatchObserved = true;
+            }
+            if (line.contains("\"type\":\"patch\"")
+                    && line.contains("\"source\":\"UidlRequestHandler\"")
+                    && line.contains("\"reason\":\"event\"")
+                    && line.contains("Context menu opened: true")) {
+                summary.frameworkOverlayComponentMatrixContextMenuOpenPatchObserved = true;
+            }
+            if (line.contains("\"type\":\"patch\"")
+                    && line.contains("\"source\":\"UidlRequestHandler\"")
+                    && line.contains("\"reason\":\"event\"")
+                    && line.contains("Context menu action: audit")) {
+                summary.frameworkOverlayComponentMatrixContextMenuItemPatchObserved = true;
+            }
+            if (line.contains("\"type\":\"patch\"")
+                    && line.contains("\"source\":\"UidlRequestHandler\"")
+                    && line.contains("\"reason\":\"event\"")
+                    && line.contains("Grid context menu opened: true")) {
+                summary.frameworkOverlayComponentMatrixGridContextMenuOpenPatchObserved = true;
+            }
+            if (line.contains("\"type\":\"patch\"")
+                    && line.contains("\"source\":\"UidlRequestHandler\"")
+                    && line.contains("\"reason\":\"event\"")
+                    && line.contains("Grid context menu action: audit")) {
+                summary.frameworkOverlayComponentMatrixGridContextMenuItemPatchObserved = true;
+            }
+            if (line.contains("\"type\":\"patch\"")
+                    && line.contains("\"source\":\"UidlRequestHandler\"")
+                    && line.contains("\"reason\":\"event\"")
+                    && line.contains("Popover opened: true")) {
+                summary.frameworkOverlayComponentMatrixPopoverOpenPatchObserved = true;
+            }
+            if (line.contains("\"type\":\"patch\"")
+                    && line.contains("\"source\":\"UidlRequestHandler\"")
+                    && line.contains("\"reason\":\"event\"")
+                    && line.contains("Avatar clicked: ava")) {
+                summary.frameworkRichContentComponentMatrixAvatarPatchObserved = true;
+            }
+            if (line.contains("\"type\":\"patch\"")
+                    && line.contains("\"source\":\"UidlRequestHandler\"")
+                    && line.contains("\"reason\":\"event\"")
+                    && line.contains("Message submitted: Flow IPC message v1.60")) {
+                summary.frameworkRichContentComponentMatrixMessagePatchObserved = true;
+            }
+            if (line.contains("\"type\":\"patch\"")
+                    && line.contains("\"source\":\"UidlRequestHandler\"")
+                    && line.contains("\"reason\":\"event\"")
+                    && line.contains("Side nav selected: audit")) {
+                summary.frameworkRichContentComponentMatrixSideNavPatchObserved = true;
+            }
+            if (line.contains("\"type\":\"patch\"")
+                    && line.contains("\"source\":\"UidlRequestHandler\"")
+                    && line.contains("\"reason\":\"event\"")
+                    && line.contains("Login overlay opened: true")) {
+                summary.frameworkRichContentComponentMatrixLoginOpenPatchObserved = true;
+            }
+            if (line.contains("\"type\":\"patch\"")
+                    && line.contains("\"source\":\"UidlRequestHandler\"")
+                    && line.contains("\"reason\":\"event\"")
+                    && line.contains("Login submitted: ava")) {
+                summary.frameworkRichContentComponentMatrixLoginSubmitPatchObserved = true;
+            }
+            if (line.contains("\"type\":\"patch\"")
+                    && line.contains("\"source\":\"UidlRequestHandler\"")
+                    && line.contains("\"reason\":\"event\"")
+                    && line.contains("Lifecycle focus: active")) {
+                summary.frameworkLifecycleFocusBehaviorMatrixFocusPatchObserved = true;
+            }
+            if (line.contains("\"type\":\"patch\"")
+                    && line.contains("\"source\":\"UidlRequestHandler\"")
+                    && line.contains("\"reason\":\"event\"")
+                    && line.contains("Lifecycle blur: inactive")) {
+                summary.frameworkLifecycleFocusBehaviorMatrixBlurPatchObserved = true;
+            }
+            if (line.contains("\"type\":\"patch\"")
+                    && line.contains("\"source\":\"UidlRequestHandler\"")
+                    && line.contains("\"reason\":\"event\"")
+                    && line.contains("Lifecycle attached: dynamic")) {
+                summary.frameworkLifecycleFocusBehaviorMatrixAttachPatchObserved = true;
+            }
+            if (line.contains("\"type\":\"patch\"")
+                    && line.contains("\"source\":\"UidlRequestHandler\"")
+                    && line.contains("\"reason\":\"event\"")
+                    && line.contains("Lifecycle detached: dynamic")) {
+                summary.frameworkLifecycleFocusBehaviorMatrixDetachPatchObserved = true;
             }
             if (line.contains("\"source\":\"UidlRequestHandler\"")
-                    && line.contains("\"reason\":\"event\"")
-                    && line.contains("Lazy grid fetches:")
-                    && line.contains("range: 15-20")) {
-                summary.frameworkLazyDataProviderReportPatchObserved = true;
-            }
-            if (line.contains("\"source\":\"UidlRequestHandler\"")
-                    && line.contains("\"reason\":\"event\"")
-                    && line.contains("Lazy grid fetch")
-                    && !line.contains("15-20")) {
-                summary.frameworkGridScrollVirtualizationFetchPatchObserved = true;
-            }
-            if (line.contains("\"source\":\"UidlRequestHandler\"")
-                    && line.contains("\"reason\":\"event\"")
-                    && line.contains("Lazy grid fetches:")
-                    && !line.contains("range: 15-20")) {
-                summary.frameworkGridScrollVirtualizationReportPatchObserved = true;
+                    && line.contains("\"reason\":\"event\"")) {
+                String fetchRange = lazyGridFetchRange(line);
+                if (!fetchRange.isEmpty()) {
+                    if (summary.frameworkLazyDataProviderFetchPatchRange.isEmpty()) {
+                        summary.frameworkLazyDataProviderFetchPatchRange = fetchRange;
+                        summary.frameworkLazyDataProviderFetchPatchObserved = true;
+                    } else if (!fetchRange.equals(
+                            summary.frameworkLazyDataProviderFetchPatchRange)) {
+                        summary.frameworkGridScrollVirtualizationFetchPatchObserved = true;
+                    }
+                }
+                String reportRange = lazyGridReportRange(line);
+                if (!reportRange.isEmpty()) {
+                    if (summary.frameworkLazyDataProviderFetchPatchRange.isEmpty()
+                            || reportRange.equals(
+                                    summary.frameworkLazyDataProviderFetchPatchRange)) {
+                        summary.frameworkLazyDataProviderReportPatchObserved = true;
+                    } else {
+                        summary.frameworkGridScrollVirtualizationReportPatchObserved = true;
+                    }
+                }
             }
             if (line.contains("\"type\":\"patch\"")
                     && line.contains("\"source\":\"UidlRequestHandler\"")
@@ -1434,6 +2761,10 @@ public final class DesktopTraceInspector {
                 summary.frameworkAppClipboardCommandObserved = true;
             }
             if (line.contains("\"type\":\"command\"")
+                    && line.contains("\"command\":\"clipboard.readText\"")) {
+                summary.nativeClipboardReadMatrixCommandObserved = true;
+            }
+            if (line.contains("\"type\":\"command\"")
                     && line.contains("\"command\":\"notification.show\"")
                     && line.contains("Framework update 1 applied")) {
                 summary.frameworkAppNotificationCommandObserved = true;
@@ -1451,11 +2782,24 @@ public final class DesktopTraceInspector {
                 summary.frameworkAppClipboardResultObserved = true;
             }
             if (line.contains("\"type\":\"capabilityResult\"")
+                    && line.contains("\"command\":\"clipboard.readText\"")
+                    && line.contains("\"mode\":\"native-nspasteboard\"")
+                    && line.contains("\"permissionMode\":\"manifest-enforced\"")
+                    && line.contains("\"permissionDecision\":\"allowed\"")
+                    && line.contains("\"success\":true")) {
+                summary.nativeClipboardReadMatrixResultObserved = true;
+                summary.nativeClipboardReadMatrixPermissionObserved = true;
+                if (line.contains("Flow IPC native clipboard v1.65")) {
+                    summary.nativeClipboardReadMatrixTextObserved = true;
+                }
+            }
+            if (line.contains("\"type\":\"capabilityResult\"")
                     && line.contains("\"command\":\"notification.show\"")
                     && line.contains("\"permissionDecision\":\"allowed\"")
                     && line.contains("\"success\":true")) {
                 summary.frameworkAppNotificationResultObserved = true;
             }
+            inspectClipboardAndThemeMatrixLine(summary, line);
             if (line.contains("\"type\":\"event\"")
                     && line.contains("\"dispatch\":\"flow-client-xhr\"")
                     && line.contains("\"componentId\":\"ipc-text-input\"")
@@ -1858,6 +3202,26 @@ public final class DesktopTraceInspector {
                     && line.contains("\"componentFrontendResources\"")
                     && containsDataComponentResourceMatrixV147Fields(line)) {
                 summary.dataComponentResourceMatrixV147ManifestObserved = true;
+            }
+            if (line.contains("\"type\":\"bootstrapResponse\"")
+                    && line.contains("\"componentFrontendResources\"")
+                    && containsInputComponentParityMatrixV157Fields(line)) {
+                summary.inputComponentParityMatrixV157ManifestObserved = true;
+            }
+            if (line.contains("\"type\":\"bootstrapResponse\"")
+                    && line.contains("\"componentFrontendResources\"")
+                    && containsMultiValueNavigationDisclosureMatrixV158Fields(line)) {
+                summary.multiValueNavigationDisclosureMatrixV158ManifestObserved = true;
+            }
+            if (line.contains("\"type\":\"bootstrapResponse\"")
+                    && line.contains("\"componentFrontendResources\"")
+                    && containsOverlayContextMenuMatrixV159Fields(line)) {
+                summary.overlayContextMenuMatrixV159ManifestObserved = true;
+            }
+            if (line.contains("\"type\":\"bootstrapResponse\"")
+                    && line.contains("\"componentFrontendResources\"")
+                    && containsContentAppShellLoginMatrixV160Fields(line)) {
+                summary.contentAppShellLoginMatrixV160ManifestObserved = true;
             }
             if (line.contains("\"type\":\"bootstrapResponse\"")
                     && line.contains("\"componentFrontendResources\"")
@@ -3751,6 +5115,38 @@ public final class DesktopTraceInspector {
             }
             if (line.contains("\"type\":\"resourceStage\"")
                     && containsPath(line, "current-app-production/VAADIN/build/generated-flow-imports-")
+                    && containsInputComponentParityMatrixV157Fields(line)
+                    && (line.contains("\"executionStatus\":\"executed\"")
+                            || line.contains("\"executionStatus\":\"strict-blocker\"")
+                            || line.contains("\"executionStatus\":\"staged\""))) {
+                summary.inputComponentParityMatrixV157StageObserved = true;
+            }
+            if (line.contains("\"type\":\"resourceStage\"")
+                    && containsPath(line, "current-app-production/VAADIN/build/generated-flow-imports-")
+                    && containsMultiValueNavigationDisclosureMatrixV158Fields(line)
+                    && (line.contains("\"executionStatus\":\"executed\"")
+                            || line.contains("\"executionStatus\":\"strict-blocker\"")
+                            || line.contains("\"executionStatus\":\"staged\""))) {
+                summary.multiValueNavigationDisclosureMatrixV158StageObserved = true;
+            }
+            if (line.contains("\"type\":\"resourceStage\"")
+                    && containsPath(line, "current-app-production/VAADIN/build/generated-flow-imports-")
+                    && containsOverlayContextMenuMatrixV159Fields(line)
+                    && (line.contains("\"executionStatus\":\"executed\"")
+                            || line.contains("\"executionStatus\":\"strict-blocker\"")
+                            || line.contains("\"executionStatus\":\"staged\""))) {
+                summary.overlayContextMenuMatrixV159StageObserved = true;
+            }
+            if (line.contains("\"type\":\"resourceStage\"")
+                    && containsCurrentAppProductionMatrixRuntimePath(line)
+                    && containsContentAppShellLoginMatrixV160Fields(line)
+                    && (line.contains("\"executionStatus\":\"executed\"")
+                            || line.contains("\"executionStatus\":\"strict-blocker\"")
+                            || line.contains("\"executionStatus\":\"staged\""))) {
+                summary.contentAppShellLoginMatrixV160StageObserved = true;
+            }
+            if (line.contains("\"type\":\"resourceStage\"")
+                    && containsPath(line, "current-app-production/VAADIN/build/generated-flow-imports-")
                     && containsGridLazyDataProviderV148Fields(line)
                     && (line.contains("\"executionStatus\":\"executed\"")
                             || line.contains("\"executionStatus\":\"strict-blocker\"")
@@ -3877,6 +5273,30 @@ public final class DesktopTraceInspector {
                     && containsDataComponentResourceMatrixV147Complete(line)
                     && line.contains("\"executionStatus\":\"executed\"")) {
                 summary.dataComponentResourceMatrixV147CompleteStageObserved = true;
+            }
+            if (line.contains("\"type\":\"resourceStage\"")
+                    && containsPath(line, "current-app-production/VAADIN/build/generated-flow-imports-")
+                    && containsInputComponentParityMatrixV157Complete(line)
+                    && line.contains("\"executionStatus\":\"executed\"")) {
+                summary.inputComponentParityMatrixV157CompleteStageObserved = true;
+            }
+            if (line.contains("\"type\":\"resourceStage\"")
+                    && containsPath(line, "current-app-production/VAADIN/build/generated-flow-imports-")
+                    && containsMultiValueNavigationDisclosureMatrixV158Complete(line)
+                    && line.contains("\"executionStatus\":\"executed\"")) {
+                summary.multiValueNavigationDisclosureMatrixV158CompleteStageObserved = true;
+            }
+            if (line.contains("\"type\":\"resourceStage\"")
+                    && containsPath(line, "current-app-production/VAADIN/build/generated-flow-imports-")
+                    && containsOverlayContextMenuMatrixV159Complete(line)
+                    && line.contains("\"executionStatus\":\"executed\"")) {
+                summary.overlayContextMenuMatrixV159CompleteStageObserved = true;
+            }
+            if (line.contains("\"type\":\"resourceStage\"")
+                    && containsCurrentAppProductionMatrixRuntimePath(line)
+                    && containsContentAppShellLoginMatrixV160Complete(line)
+                    && line.contains("\"executionStatus\":\"executed\"")) {
+                summary.contentAppShellLoginMatrixV160CompleteStageObserved = true;
             }
             if (line.contains("\"type\":\"resourceStage\"")
                     && containsPath(line, "current-app-production/VAADIN/build/generated-flow-imports-")
@@ -4873,6 +6293,109 @@ public final class DesktopTraceInspector {
                 summary.dataComponentResourceMatrixV147DomObserved = true;
             }
             if (line.contains("\"type\":\"webview.dom\"")
+                    && containsLiteralField(line, "frameworkInputComponentMatrixComplete", "true")
+                    && containsStringField(line, "frameworkInputComponentMatrixVersion",
+                            "flow-ipc-input-component-parity-matrix-v1_57")
+                    && containsLiteralField(line, "frameworkInputComponentMatrixDecisionRendered", "true")
+                    && containsLiteralField(line, "frameworkInputComponentMatrixNotesRendered", "true")
+                    && containsLiteralField(line, "frameworkInputComponentMatrixEmailRendered", "true")
+                    && containsLiteralField(line, "frameworkInputComponentMatrixScoreRendered", "true")
+                    && containsLiteralField(line, "frameworkInputComponentMatrixSecretRendered", "true")
+                    && containsLiteralField(line, "frameworkInputComponentMatrixReviewTimeRendered", "true")
+                    && containsLiteralField(line, "frameworkInputComponentMatrixDecisionEventObserved", "true")
+                    && containsLiteralField(line, "frameworkInputComponentMatrixNotesEventObserved", "true")
+                    && containsLiteralField(line, "frameworkInputComponentMatrixEmailEventObserved", "true")
+                    && containsLiteralField(line, "frameworkInputComponentMatrixScoreEventObserved", "true")
+                    && containsLiteralField(line, "frameworkInputComponentMatrixSecretEventObserved", "true")
+                    && containsLiteralField(line, "frameworkInputComponentMatrixReviewTimeEventObserved", "true")
+                    && line.contains("Review time changed: 14:45")) {
+                summary.inputComponentParityMatrixV157DomObserved = true;
+            }
+            if (line.contains("\"type\":\"webview.dom\"")
+                    && containsLiteralField(line, "frameworkNavigationComponentMatrixComplete",
+                            "true")
+                    && containsStringField(line, "frameworkNavigationComponentMatrixVersion",
+                            "flow-ipc-multi-value-navigation-disclosure-matrix-v1_58")
+                    && containsLiteralField(line,
+                            "frameworkNavigationComponentMatrixAssigneesRendered", "true")
+                    && containsLiteralField(line,
+                            "frameworkNavigationComponentMatrixTabsRendered", "true")
+                    && containsLiteralField(line,
+                            "frameworkNavigationComponentMatrixDetailsRendered", "true")
+                    && containsLiteralField(line,
+                            "frameworkNavigationComponentMatrixAccordionRendered", "true")
+                    && containsLiteralField(line,
+                            "frameworkNavigationComponentMatrixMenuRendered", "true")
+                    && containsLiteralField(line,
+                            "frameworkNavigationComponentMatrixAssigneesEventObserved", "true")
+                    && containsLiteralField(line,
+                            "frameworkNavigationComponentMatrixTabsEventObserved", "true")
+                    && containsLiteralField(line,
+                            "frameworkNavigationComponentMatrixDetailsEventObserved", "true")
+                    && containsLiteralField(line,
+                            "frameworkNavigationComponentMatrixAccordionEventObserved", "true")
+                    && containsLiteralField(line,
+                            "frameworkNavigationComponentMatrixMenuEventObserved", "true")
+                    && line.contains("Menu action: audit")) {
+                summary.multiValueNavigationDisclosureMatrixV158DomObserved = true;
+            }
+            if (line.contains("\"type\":\"webview.dom\"")
+                    && containsLiteralField(line, "frameworkOverlayComponentMatrixComplete",
+                            "true")
+                    && containsStringField(line, "frameworkOverlayComponentMatrixVersion",
+                            "flow-ipc-overlay-context-menu-matrix-v1_59")
+                    && containsLiteralField(line,
+                            "frameworkOverlayComponentMatrixContextMenuRendered", "true")
+                    && containsLiteralField(line,
+                            "frameworkOverlayComponentMatrixGridContextMenuRendered", "true")
+                    && containsLiteralField(line,
+                            "frameworkOverlayComponentMatrixPopoverRendered", "true")
+                    && containsLiteralField(line,
+                            "frameworkOverlayComponentMatrixContextMenuOpenEventObserved",
+                            "true")
+                    && containsLiteralField(line,
+                            "frameworkOverlayComponentMatrixContextMenuItemEventObserved",
+                            "true")
+                    && containsLiteralField(line,
+                            "frameworkOverlayComponentMatrixGridContextMenuOpenEventObserved",
+                            "true")
+                    && containsLiteralField(line,
+                            "frameworkOverlayComponentMatrixGridContextMenuItemEventObserved",
+                            "true")
+                    && containsLiteralField(line,
+                            "frameworkOverlayComponentMatrixPopoverOpenEventObserved",
+                            "true")
+                    && line.contains("Popover opened: true")) {
+                summary.overlayContextMenuMatrixV159DomObserved = true;
+            }
+            if (line.contains("\"type\":\"webview.dom\"")
+                    && containsLiteralField(line,
+                            "frameworkRichContentComponentMatrixComplete", "true")
+                    && containsStringField(line,
+                            "frameworkRichContentComponentMatrixVersion",
+                            "flow-ipc-content-app-shell-login-matrix-v1_60")
+                    && containsLiteralField(line,
+                            "frameworkRichContentComponentMatrixAvatarRendered", "true")
+                    && containsLiteralField(line,
+                            "frameworkRichContentComponentMatrixMessageRendered", "true")
+                    && containsLiteralField(line,
+                            "frameworkRichContentComponentMatrixSideNavRendered", "true")
+                    && containsLiteralField(line,
+                            "frameworkRichContentComponentMatrixLoginOverlayRendered", "true")
+                    && containsLiteralField(line,
+                            "frameworkRichContentComponentMatrixAvatarEventObserved", "true")
+                    && containsLiteralField(line,
+                            "frameworkRichContentComponentMatrixMessageEventObserved", "true")
+                    && containsLiteralField(line,
+                            "frameworkRichContentComponentMatrixSideNavEventObserved", "true")
+                    && containsLiteralField(line,
+                            "frameworkRichContentComponentMatrixLoginOpenEventObserved", "true")
+                    && containsLiteralField(line,
+                            "frameworkRichContentComponentMatrixLoginSubmitEventObserved", "true")
+                    && line.contains("Login submitted: ava")) {
+                summary.contentAppShellLoginMatrixV160DomObserved = true;
+            }
+            if (line.contains("\"type\":\"webview.dom\"")
                     && containsDataComponentResourceMatrixV147Complete(line)
                     && containsLiteralField(line, "frameworkLazyDataProviderComplete", "true")
                     && containsStringField(line, "frameworkLazyDataProviderVersion",
@@ -4882,7 +6405,7 @@ public final class DesktopTraceInspector {
                     && containsLiteralField(line, "frameworkLazyDataProviderFetchObserved", "true")
                     && containsLiteralField(line, "frameworkLazyDataProviderReportEventObserved", "true")
                     && line.contains("Lazy grid fetches:")
-                    && line.contains("range: 15-20")) {
+                    && containsLazyGridReportRange(line)) {
                 summary.gridLazyDataProviderV148DomObserved = true;
             }
             if (line.contains("\"type\":\"webview.dom\"")
@@ -4923,6 +6446,10 @@ public final class DesktopTraceInspector {
                     && containsDownloadHandlerSaveOpenV155Dom(line)) {
                 summary.downloadHandlerSaveOpenV155DomObserved = true;
                 summary.frameworkDownloadHandlerSaveOpenDomObserved = true;
+            }
+            if (line.contains("\"type\":\"webview.dom\"")
+                    && containsFrontendResourcePipelineBasicClosureV156Dom(line)) {
+                summary.frontendResourcePipelineBasicClosureV156DomObserved = true;
             }
             if (line.contains("\"type\":\"webview.dom\"")
                     && containsLiteralField(line, "generatedLazySourceCurrentBuildNoOpConfirmed", "true")
@@ -5411,6 +6938,199 @@ public final class DesktopTraceInspector {
             }
             if (line.contains("\"type\":\"webview.dom\"")
                     && line.contains("Flow IPC Framework Desk")
+                    && containsLiteralField(line, "frameworkInputComponentMatrixRendered", "true")
+                    && containsLiteralField(line, "frameworkInputComponentMatrixDecisionRendered", "true")
+                    && containsLiteralField(line, "frameworkInputComponentMatrixNotesRendered", "true")
+                    && containsLiteralField(line, "frameworkInputComponentMatrixEmailRendered", "true")
+                    && containsLiteralField(line, "frameworkInputComponentMatrixScoreRendered", "true")
+                    && containsLiteralField(line, "frameworkInputComponentMatrixSecretRendered", "true")
+                    && containsLiteralField(line, "frameworkInputComponentMatrixReviewTimeRendered", "true")
+                    && containsLiteralField(line, "frameworkInputComponentMatrixDecisionEventRpcObserved", "true")
+                    && containsLiteralField(line, "frameworkInputComponentMatrixDecisionEventObserved", "true")
+                    && containsLiteralField(line, "frameworkInputComponentMatrixNotesEventRpcObserved", "true")
+                    && containsLiteralField(line, "frameworkInputComponentMatrixNotesEventObserved", "true")
+                    && containsLiteralField(line, "frameworkInputComponentMatrixEmailEventRpcObserved", "true")
+                    && containsLiteralField(line, "frameworkInputComponentMatrixEmailEventObserved", "true")
+                    && containsLiteralField(line, "frameworkInputComponentMatrixScoreEventRpcObserved", "true")
+                    && containsLiteralField(line, "frameworkInputComponentMatrixScoreEventObserved", "true")
+                    && containsLiteralField(line, "frameworkInputComponentMatrixSecretEventRpcObserved", "true")
+                    && containsLiteralField(line, "frameworkInputComponentMatrixSecretEventObserved", "true")
+                    && containsLiteralField(line, "frameworkInputComponentMatrixReviewTimeEventRpcObserved", "true")
+                    && containsLiteralField(line, "frameworkInputComponentMatrixReviewTimeEventObserved", "true")
+                    && containsLiteralField(line, "frameworkInputComponentMatrixComplete", "true")
+                    && line.contains("framework-decision")
+                    && line.contains("framework-notes")
+                    && line.contains("framework-contact-email")
+                    && line.contains("framework-review-time")
+                    && line.contains("Review time changed: 14:45")) {
+                summary.frameworkInputComponentMatrixDomObserved = true;
+            }
+            if (line.contains("\"type\":\"webview.dom\"")
+                    && line.contains("Flow IPC Framework Desk")
+                    && containsLiteralField(line,
+                            "frameworkNavigationComponentMatrixRendered", "true")
+                    && containsLiteralField(line,
+                            "frameworkNavigationComponentMatrixAssigneesRendered", "true")
+                    && containsLiteralField(line,
+                            "frameworkNavigationComponentMatrixTabsRendered", "true")
+                    && containsLiteralField(line,
+                            "frameworkNavigationComponentMatrixDetailsRendered", "true")
+                    && containsLiteralField(line,
+                            "frameworkNavigationComponentMatrixAccordionRendered", "true")
+                    && containsLiteralField(line,
+                            "frameworkNavigationComponentMatrixMenuRendered", "true")
+                    && containsLiteralField(line,
+                            "frameworkNavigationComponentMatrixAssigneesEventRpcObserved", "true")
+                    && containsLiteralField(line,
+                            "frameworkNavigationComponentMatrixAssigneesEventObserved", "true")
+                    && containsLiteralField(line,
+                            "frameworkNavigationComponentMatrixTabsEventRpcObserved", "true")
+                    && containsLiteralField(line,
+                            "frameworkNavigationComponentMatrixTabsEventObserved", "true")
+                    && containsLiteralField(line,
+                            "frameworkNavigationComponentMatrixDetailsEventRpcObserved", "true")
+                    && containsLiteralField(line,
+                            "frameworkNavigationComponentMatrixDetailsEventObserved", "true")
+                    && containsLiteralField(line,
+                            "frameworkNavigationComponentMatrixAccordionEventRpcObserved", "true")
+                    && containsLiteralField(line,
+                            "frameworkNavigationComponentMatrixAccordionEventObserved", "true")
+                    && containsLiteralField(line,
+                            "frameworkNavigationComponentMatrixMenuEventRpcObserved", "true")
+                    && containsLiteralField(line,
+                            "frameworkNavigationComponentMatrixMenuEventObserved", "true")
+                    && containsLiteralField(line,
+                            "frameworkNavigationComponentMatrixComplete", "true")
+                    && line.contains("framework-assignees")
+                    && line.contains("framework-nav-tabs")
+                    && line.contains("framework-details")
+                    && line.contains("framework-menu")
+                    && line.contains("Menu action: audit")) {
+                summary.frameworkNavigationComponentMatrixDomObserved = true;
+            }
+            if (line.contains("\"type\":\"webview.dom\"")
+                    && line.contains("Flow IPC Framework Desk")
+                    && containsLiteralField(line,
+                            "frameworkOverlayComponentMatrixRendered", "true")
+                    && containsLiteralField(line,
+                            "frameworkOverlayComponentMatrixContextMenuRendered", "true")
+                    && containsLiteralField(line,
+                            "frameworkOverlayComponentMatrixGridContextMenuRendered", "true")
+                    && containsLiteralField(line,
+                            "frameworkOverlayComponentMatrixPopoverRendered", "true")
+                    && containsLiteralField(line,
+                            "frameworkOverlayComponentMatrixContextMenuOpenEventRpcObserved",
+                            "true")
+                    && containsLiteralField(line,
+                            "frameworkOverlayComponentMatrixContextMenuOpenEventObserved",
+                            "true")
+                    && containsLiteralField(line,
+                            "frameworkOverlayComponentMatrixContextMenuItemEventRpcObserved",
+                            "true")
+                    && containsLiteralField(line,
+                            "frameworkOverlayComponentMatrixContextMenuItemEventObserved",
+                            "true")
+                    && containsLiteralField(line,
+                            "frameworkOverlayComponentMatrixGridContextMenuOpenEventRpcObserved",
+                            "true")
+                    && containsLiteralField(line,
+                            "frameworkOverlayComponentMatrixGridContextMenuOpenEventObserved",
+                            "true")
+                    && containsLiteralField(line,
+                            "frameworkOverlayComponentMatrixGridContextMenuItemEventRpcObserved",
+                            "true")
+                    && containsLiteralField(line,
+                            "frameworkOverlayComponentMatrixGridContextMenuItemEventObserved",
+                            "true")
+                    && containsLiteralField(line,
+                            "frameworkOverlayComponentMatrixPopoverOpenEventRpcObserved",
+                            "true")
+                    && containsLiteralField(line,
+                            "frameworkOverlayComponentMatrixPopoverOpenEventObserved",
+                            "true")
+                    && containsLiteralField(line,
+                            "frameworkOverlayComponentMatrixComplete", "true")
+                    && line.contains("framework-context-menu")
+                    && line.contains("framework-grid-context-menu")
+                    && line.contains("framework-popover")
+                    && line.contains("Popover opened: true")) {
+                summary.frameworkOverlayComponentMatrixDomObserved = true;
+            }
+            if (line.contains("\"type\":\"webview.dom\"")
+                    && line.contains("Flow IPC Framework Desk")
+                    && containsLiteralField(line,
+                            "frameworkRichContentComponentMatrixRendered", "true")
+                    && containsLiteralField(line,
+                            "frameworkRichContentComponentMatrixAvatarRendered", "true")
+                    && containsLiteralField(line,
+                            "frameworkRichContentComponentMatrixMessageRendered", "true")
+                    && containsLiteralField(line,
+                            "frameworkRichContentComponentMatrixSideNavRendered", "true")
+                    && containsLiteralField(line,
+                            "frameworkRichContentComponentMatrixLoginOverlayRendered", "true")
+                    && containsLiteralField(line,
+                            "frameworkRichContentComponentMatrixAvatarEventRpcObserved", "true")
+                    && containsLiteralField(line,
+                            "frameworkRichContentComponentMatrixAvatarEventObserved", "true")
+                    && containsLiteralField(line,
+                            "frameworkRichContentComponentMatrixMessageEventRpcObserved", "true")
+                    && containsLiteralField(line,
+                            "frameworkRichContentComponentMatrixMessageEventObserved", "true")
+                    && containsLiteralField(line,
+                            "frameworkRichContentComponentMatrixSideNavEventRpcObserved", "true")
+                    && containsLiteralField(line,
+                            "frameworkRichContentComponentMatrixSideNavEventObserved", "true")
+                    && containsLiteralField(line,
+                            "frameworkRichContentComponentMatrixLoginOpenEventRpcObserved", "true")
+                    && containsLiteralField(line,
+                            "frameworkRichContentComponentMatrixLoginOpenEventObserved", "true")
+                    && containsLiteralField(line,
+                            "frameworkRichContentComponentMatrixLoginSubmitEventRpcObserved", "true")
+                    && containsLiteralField(line,
+                            "frameworkRichContentComponentMatrixLoginSubmitEventObserved", "true")
+                    && containsLiteralField(line,
+                            "frameworkRichContentComponentMatrixComplete", "true")
+                    && line.contains("framework-avatar")
+                    && line.contains("framework-message-input")
+                    && line.contains("framework-side-nav")
+                    && line.contains("framework-login-overlay")
+                    && line.contains("Login submitted: ava")) {
+                summary.frameworkRichContentComponentMatrixDomObserved = true;
+            }
+            if (line.contains("\"type\":\"webview.dom\"")
+                    && line.contains("Flow IPC Framework Desk")
+                    && containsLiteralField(line,
+                            "frameworkLifecycleFocusBehaviorMatrixRendered", "true")
+                    && containsLiteralField(line,
+                            "frameworkLifecycleFocusBehaviorMatrixFocusFieldRendered", "true")
+                    && containsLiteralField(line,
+                            "frameworkLifecycleFocusBehaviorMatrixToggleRendered", "true")
+                    && containsLiteralField(line,
+                            "frameworkLifecycleFocusBehaviorMatrixFocusEventRpcObserved", "true")
+                    && containsLiteralField(line,
+                            "frameworkLifecycleFocusBehaviorMatrixFocusEventObserved", "true")
+                    && containsLiteralField(line,
+                            "frameworkLifecycleFocusBehaviorMatrixBlurEventRpcObserved", "true")
+                    && containsLiteralField(line,
+                            "frameworkLifecycleFocusBehaviorMatrixBlurEventObserved", "true")
+                    && containsLiteralField(line,
+                            "frameworkLifecycleFocusBehaviorMatrixAttachEventRpcObserved", "true")
+                    && containsLiteralField(line,
+                            "frameworkLifecycleFocusBehaviorMatrixAttachEventObserved", "true")
+                    && containsLiteralField(line,
+                            "frameworkLifecycleFocusBehaviorMatrixDetachEventRpcObserved", "true")
+                    && containsLiteralField(line,
+                            "frameworkLifecycleFocusBehaviorMatrixDetachEventObserved", "true")
+                    && containsLiteralField(line,
+                            "frameworkLifecycleFocusBehaviorMatrixComplete", "true")
+                    && containsStringField(line,
+                            "frameworkLifecycleFocusBehaviorMatrixVersion",
+                            "flow-ipc-lifecycle-focus-behavior-matrix-v1_61")
+                    && line.contains("framework-lifecycle-focus")) {
+                summary.frameworkLifecycleFocusBehaviorMatrixDomObserved = true;
+            }
+            if (line.contains("\"type\":\"webview.dom\"")
+                    && line.contains("Flow IPC Framework Desk")
                     && containsLiteralField(line, "frameworkLazyDataProviderRendered", "true")
                     && containsLiteralField(line, "frameworkLazyDataProviderGridRendered", "true")
                     && containsLiteralField(line, "frameworkLazyDataProviderPublishedRpcObserved", "true")
@@ -5419,7 +7139,7 @@ public final class DesktopTraceInspector {
                     && containsLiteralField(line, "frameworkLazyDataProviderReportEventObserved", "true")
                     && containsLiteralField(line, "frameworkLazyDataProviderComplete", "true")
                     && line.contains("Lazy grid fetches:")
-                    && line.contains("range: 15-20")) {
+                    && containsLazyGridReportRange(line)) {
                 summary.frameworkLazyDataProviderDomObserved = true;
             }
             if (line.contains("\"type\":\"webview.dom\"")
@@ -5581,7 +7301,377 @@ public final class DesktopTraceInspector {
                 summary.resyncUidlObserved = true;
             }
         }
+        }
         return summary;
+    }
+
+    private static void inspectFrameworkOverlayRichContentEventLine(TraceSummary summary, String line) {
+        if (!line.contains("\"type\":\"event\"")
+                || !line.contains("\"dispatch\":\"flow-client-xhr\"")) {
+            return;
+        }
+        if (line.contains("\"componentId\":\"framework-context-menu\"")
+                && ((line.contains("\"event\":\"opened-changed\"")
+                        && line.contains("\"element.opened\":true"))
+                    || line.contains("\"event\":\"click\"")
+                    || line.contains("\"event\":\"vatori-context-menu-open\""))) {
+            summary.frameworkOverlayComponentMatrixContextMenuOpenEventRpcObserved = true;
+        }
+        if (line.contains("\"componentId\":\"framework-context-menu-audit\"")
+                && (line.contains("\"event\":\"click\"")
+                    || line.contains("\"event\":\"vatori-context-menu-audit\""))) {
+            summary.frameworkOverlayComponentMatrixContextMenuItemEventRpcObserved = true;
+        }
+        if (line.contains("\"componentId\":\"framework-grid-context-menu\"")
+                && ((line.contains("\"event\":\"opened-changed\"")
+                        && line.contains("\"element.opened\":true"))
+                    || line.contains("\"event\":\"click\"")
+                    || line.contains("\"event\":\"vatori-grid-context-menu-open\""))) {
+            summary.frameworkOverlayComponentMatrixGridContextMenuOpenEventRpcObserved = true;
+        }
+        if (line.contains("\"componentId\":\"framework-grid-context-menu-audit\"")
+                && (line.contains("\"event\":\"click\"")
+                    || line.contains("\"event\":\"vatori-grid-context-menu-audit\""))) {
+            summary.frameworkOverlayComponentMatrixGridContextMenuItemEventRpcObserved = true;
+        }
+        if (line.contains("\"componentId\":\"framework-popover\"")
+                && ((line.contains("\"event\":\"opened-changed\"")
+                        && line.contains("\"element.opened\":true"))
+                    || line.contains("\"event\":\"click\"")
+                    || line.contains("\"event\":\"vatori-popover-open\""))) {
+            summary.frameworkOverlayComponentMatrixPopoverOpenEventRpcObserved = true;
+        }
+        if (line.contains("\"componentId\":\"framework-avatar\"")
+                && (line.contains("\"event\":\"click\"")
+                    || line.contains("\"event\":\"vatori-avatar-click\""))) {
+            summary.frameworkRichContentComponentMatrixAvatarEventRpcObserved = true;
+        }
+        if (line.contains("\"componentId\":\"framework-message-input\"")
+                && (line.contains("\"event\":\"submit\"")
+                    || line.contains("\"event\":\"vatori-message-submit\""))
+                && line.contains("\"event.detail.value\":\"Flow IPC message v1.60\"")) {
+            summary.frameworkRichContentComponentMatrixMessageEventRpcObserved = true;
+        }
+        if (line.contains("\"componentId\":\"framework-side-nav-audit\"")
+                && (line.contains("\"event\":\"click\"")
+                    || line.contains("\"event\":\"vatori-side-nav-audit\""))) {
+            summary.frameworkRichContentComponentMatrixSideNavEventRpcObserved = true;
+        }
+        if (line.contains("\"componentId\":\"framework-login-overlay\"")
+                && ((line.contains("\"event\":\"opened-changed\"")
+                        && line.contains("\"element.opened\":true"))
+                    || line.contains("\"event\":\"vatori-login-overlay-open\""))) {
+            summary.frameworkRichContentComponentMatrixLoginOpenEventRpcObserved = true;
+        }
+        if (line.contains("\"componentId\":\"framework-login-overlay\"")
+                && (line.contains("\"event\":\"login\"")
+                    || line.contains("\"event\":\"vatori-login-submit\""))
+                && line.contains("\"event.detail.username\":\"ava\"")
+                && (line.contains("\"event.detail.password\":\"desktop\"")
+                    || line.contains("\"event\":\"vatori-login-submit\""))) {
+            summary.frameworkRichContentComponentMatrixLoginSubmitEventRpcObserved = true;
+        }
+    }
+
+    private static void inspectFlowIpcV162Line(TraceSummary summary, String line) {
+        if (line.contains("dev.vatori.ipcframework.FlowOverIpcFrameworkView")
+                && line.contains("framework-rich-text-editor")
+                && line.contains("framework-rich-text-editor-status")
+                && line.contains("com.vaadin.flow.component.richtexteditor.RichTextEditor")) {
+            summary.frameworkRichTextEditorMatrixBootstrapObserved = true;
+        }
+        if (line.contains("\"type\":\"event\"")
+                && line.contains("\"dispatch\":\"flow-client-xhr\"")
+                && line.contains("\"componentId\":\"framework-rich-text-editor\"")
+                && line.contains("\"event\":\"value-changed\"")
+                && line.contains("Flow IPC rich text v1.62")) {
+            summary.frameworkRichTextEditorMatrixValueEventRpcObserved = true;
+        }
+        if (line.contains("\"type\":\"patch\"")
+                && line.contains("\"source\":\"UidlRequestHandler\"")
+                && line.contains("\"reason\":\"event\"")
+                && line.contains("Rich text changed: Flow IPC rich text v1.62")) {
+            summary.frameworkRichTextEditorMatrixValuePatchObserved = true;
+        }
+        if (line.contains("\"type\":\"bootstrapResponse\"")
+                && containsRichTextEditorMatrixV162ManifestFields(line)) {
+            summary.richTextEditorMatrixV162ManifestObserved = true;
+        }
+        if (line.contains("\"type\":\"resourceStage\"")
+                && containsCurrentAppProductionMatrixRuntimePath(line)
+                && containsRichTextEditorMatrixV162Fields(line)
+                && (line.contains("\"executionStatus\":\"executed\"")
+                        || line.contains("\"executionStatus\":\"strict-blocker\"")
+                        || line.contains("\"executionStatus\":\"staged\""))) {
+            summary.richTextEditorMatrixV162StageObserved = true;
+        }
+        if (line.contains("\"type\":\"resourceStage\"")
+                && containsCurrentAppProductionMatrixRuntimePath(line)
+                && containsRichTextEditorMatrixV162Complete(line)
+                && line.contains("\"executionStatus\":\"executed\"")) {
+            summary.richTextEditorMatrixV162CompleteStageObserved = true;
+        }
+        if (line.contains("\"type\":\"webview.dom\"")
+                && line.contains("Flow IPC Framework Desk")
+                && containsLiteralField(line,
+                        "frameworkRichTextEditorMatrixRendered", "true")
+                && containsLiteralField(line,
+                        "frameworkRichTextEditorMatrixEditorRendered", "true")
+                && containsLiteralField(line,
+                        "frameworkRichTextEditorMatrixValueEventRpcObserved", "true")
+                && containsLiteralField(line,
+                        "frameworkRichTextEditorMatrixValueEventObserved", "true")
+                && containsLiteralField(line,
+                        "frameworkRichTextEditorMatrixComplete", "true")
+                && containsStringField(line,
+                        "frameworkRichTextEditorMatrixVersion",
+                        "flow-ipc-rich-text-editor-matrix-v1_62")
+                && line.contains("framework-rich-text-editor")) {
+            summary.frameworkRichTextEditorMatrixDomObserved = true;
+            summary.richTextEditorMatrixV162DomObserved = true;
+        }
+    }
+
+    private static void inspectFlowIpcV163Line(TraceSummary summary, String line) {
+        if (line.contains("dev.vatori.ipcframework.FlowOverIpcFrameworkView")
+                && line.contains("framework-rich-text-editor")
+                && line.contains("framework-rich-text-editor-behavior-status")
+                && line.contains("com.vaadin.flow.component.richtexteditor.RichTextEditor")
+                && line.contains("com.vaadin.flow.component.richtexteditor.RichTextEditorVariant")) {
+            summary.frameworkRichTextEditorBehaviorMatrixBootstrapObserved = true;
+        }
+        if (line.contains("\"type\":\"event\"")
+                && line.contains("\"dispatch\":\"flow-client-xhr\"")
+                && line.contains("\"componentId\":\"framework-rich-text-editor\"")
+                && line.contains("\"event\":\"vatori-rich-text-editor-selection\"")
+                && line.contains("\"event.detail.index\":0")
+                && line.contains("\"event.detail.length\":8")) {
+            summary.frameworkRichTextEditorBehaviorMatrixSelectionEventRpcObserved = true;
+        }
+        if (line.contains("\"type\":\"event\"")
+                && line.contains("\"dispatch\":\"flow-client-xhr\"")
+                && line.contains("\"componentId\":\"framework-rich-text-editor\"")
+                && line.contains("\"event\":\"vatori-rich-text-editor-toolbar\"")
+                && line.contains("\"event.detail.format\":\"bold\"")) {
+            summary.frameworkRichTextEditorBehaviorMatrixToolbarEventRpcObserved = true;
+        }
+        if (line.contains("\"type\":\"event\"")
+                && line.contains("\"dispatch\":\"flow-client-xhr\"")
+                && line.contains("\"componentId\":\"framework-rich-text-editor\"")
+                && line.contains("\"event\":\"keydown\"")
+                && line.contains("\"event.key\":\"b\"")
+                && line.contains("\"event.metaKey\":true")) {
+            summary.frameworkRichTextEditorBehaviorMatrixKeyboardEventRpcObserved = true;
+        }
+        if (line.contains("\"type\":\"event\"")
+                && line.contains("\"dispatch\":\"flow-client-xhr\"")
+                && line.contains("\"componentId\":\"framework-rich-text-editor\"")
+                && line.contains("\"event\":\"value-changed\"")
+                && line.contains("Flow IPC rich text v1.63")
+                && line.contains("bold")) {
+            summary.frameworkRichTextEditorBehaviorMatrixDeltaEventRpcObserved = true;
+        }
+        if (line.contains("\"type\":\"patch\"")
+                && line.contains("\"source\":\"UidlRequestHandler\"")
+                && line.contains("\"reason\":\"event\"")
+                && line.contains("Rich text behavior selection: 0-8")) {
+            summary.frameworkRichTextEditorBehaviorMatrixSelectionPatchObserved = true;
+        }
+        if (line.contains("\"type\":\"patch\"")
+                && line.contains("\"source\":\"UidlRequestHandler\"")
+                && line.contains("\"reason\":\"event\"")
+                && line.contains("Rich text behavior toolbar: bold")) {
+            summary.frameworkRichTextEditorBehaviorMatrixToolbarPatchObserved = true;
+        }
+        if (line.contains("\"type\":\"patch\"")
+                && line.contains("\"source\":\"UidlRequestHandler\"")
+                && line.contains("\"reason\":\"event\"")
+                && line.contains("Rich text behavior keyboard: b")) {
+            summary.frameworkRichTextEditorBehaviorMatrixKeyboardPatchObserved = true;
+        }
+        if (line.contains("\"type\":\"patch\"")
+                && line.contains("\"source\":\"UidlRequestHandler\"")
+                && line.contains("\"reason\":\"event\"")
+                && line.contains("Rich text behavior delta/html: Flow IPC rich text v1.63")
+                && line.contains("bold=true")) {
+            summary.frameworkRichTextEditorBehaviorMatrixDeltaPatchObserved = true;
+        }
+        if (line.contains("\"type\":\"bootstrapResponse\"")
+                && containsRichTextEditorBehaviorMatrixV163ManifestFields(line)) {
+            summary.richTextEditorBehaviorMatrixV163ManifestObserved = true;
+        }
+        if (line.contains("\"type\":\"resourceStage\"")
+                && containsCurrentAppProductionMatrixRuntimePath(line)
+                && containsRichTextEditorBehaviorMatrixV163Fields(line)
+                && (line.contains("\"executionStatus\":\"executed\"")
+                        || line.contains("\"executionStatus\":\"strict-blocker\"")
+                        || line.contains("\"executionStatus\":\"staged\""))) {
+            summary.richTextEditorBehaviorMatrixV163StageObserved = true;
+        }
+        if (line.contains("\"type\":\"resourceStage\"")
+                && containsCurrentAppProductionMatrixRuntimePath(line)
+                && containsRichTextEditorBehaviorMatrixV163Complete(line)
+                && line.contains("\"executionStatus\":\"executed\"")) {
+            summary.richTextEditorBehaviorMatrixV163CompleteStageObserved = true;
+        }
+        if (line.contains("\"type\":\"webview.dom\"")
+                && containsLiteralField(line,
+                        "frameworkRichTextEditorBehaviorMatrixComplete", "true")
+                && containsStringField(line,
+                        "frameworkRichTextEditorBehaviorMatrixVersion",
+                        "flow-ipc-rich-text-editor-behavior-matrix-v1_63")
+                && (line.contains("Rich text behavior delta\\/html: Flow IPC rich text v1.63 bold=true")
+                        || line.contains("Rich text behavior delta/html: Flow IPC rich text v1.63 bold=true"))) {
+            summary.frameworkRichTextEditorBehaviorMatrixDomObserved = true;
+            summary.richTextEditorBehaviorMatrixV163DomObserved = true;
+        }
+        if (line.contains("\"type\":\"webview.dom\"")
+                && line.contains("Flow IPC Framework Desk")
+                && containsLiteralField(line,
+                        "frameworkRichTextEditorBehaviorMatrixRendered", "true")
+                && containsLiteralField(line,
+                        "frameworkRichTextEditorBehaviorMatrixToolbarRendered", "true")
+                && containsLiteralField(line,
+                        "frameworkRichTextEditorBehaviorMatrixEditorApiObserved", "true")
+                && containsLiteralField(line,
+                        "frameworkRichTextEditorBehaviorMatrixSelectionEventRpcObserved", "true")
+                && containsLiteralField(line,
+                        "frameworkRichTextEditorBehaviorMatrixSelectionEventObserved", "true")
+                && containsLiteralField(line,
+                        "frameworkRichTextEditorBehaviorMatrixToolbarEventRpcObserved", "true")
+                && containsLiteralField(line,
+                        "frameworkRichTextEditorBehaviorMatrixToolbarEventObserved", "true")
+                && containsLiteralField(line,
+                        "frameworkRichTextEditorBehaviorMatrixKeyboardEventRpcObserved", "true")
+                && containsLiteralField(line,
+                        "frameworkRichTextEditorBehaviorMatrixKeyboardEventObserved", "true")
+                && containsLiteralField(line,
+                        "frameworkRichTextEditorBehaviorMatrixDeltaEventRpcObserved", "true")
+                && containsLiteralField(line,
+                        "frameworkRichTextEditorBehaviorMatrixDeltaEventObserved", "true")
+                && containsLiteralField(line,
+                        "frameworkRichTextEditorBehaviorMatrixHtmlEventObserved", "true")
+                && containsLiteralField(line,
+                        "frameworkRichTextEditorBehaviorMatrixComplete", "true")
+                && containsStringField(line,
+                        "frameworkRichTextEditorBehaviorMatrixVersion",
+                        "flow-ipc-rich-text-editor-behavior-matrix-v1_63")
+                && line.contains("Rich text behavior delta\\/html: Flow IPC rich text v1.63 bold=true")) {
+            summary.frameworkRichTextEditorBehaviorMatrixDomObserved = true;
+            summary.richTextEditorBehaviorMatrixV163DomObserved = true;
+        }
+    }
+
+    private static void inspectFlowIpcV164Line(TraceSummary summary, String line) {
+        if (line.contains("dev.vatori.ipcframework.FlowOverIpcFrameworkView")
+                && line.contains("framework-rich-text-editor")
+                && line.contains("framework-rich-text-editor-editing-status")
+                && line.contains("com.vaadin.flow.component.richtexteditor.RichTextEditor")
+                && line.contains("com.vaadin.flow.component.richtexteditor.RichTextEditorVariant")) {
+            summary.frameworkRichTextEditorEditingMatrixBootstrapObserved = true;
+        }
+        if (line.contains("\"type\":\"event\"")
+                && line.contains("\"dispatch\":\"flow-client-xhr\"")
+                && line.contains("\"componentId\":\"framework-rich-text-editor\"")
+                && line.contains("\"event\":\"vatori-rich-text-editor-format\"")
+                && line.contains("\"event.detail.formats\":\"italic,ordered-list,link,clear\"")
+                && line.contains("\"event.detail.range\":\"5-17\"")) {
+            summary.frameworkRichTextEditorEditingMatrixFormatEventRpcObserved = true;
+        }
+        if (line.contains("\"type\":\"event\"")
+                && line.contains("\"dispatch\":\"flow-client-xhr\"")
+                && line.contains("\"componentId\":\"framework-rich-text-editor\"")
+                && line.contains("\"event\":\"vatori-rich-text-editor-clipboard\"")
+                && line.contains("\"event.detail.operation\":\"paste\"")
+                && line.contains("Flow IPC rich text v1.64")) {
+            summary.frameworkRichTextEditorEditingMatrixClipboardEventRpcObserved = true;
+        }
+        if (line.contains("\"type\":\"event\"")
+                && line.contains("\"dispatch\":\"flow-client-xhr\"")
+                && line.contains("\"componentId\":\"framework-rich-text-editor\"")
+                && line.contains("\"event\":\"vatori-rich-text-editor-link\"")
+                && line.contains("https://vatori.dev/flow-ipc/v1_64")
+                && line.contains("\"event.detail.list\":\"ordered\"")) {
+            summary.frameworkRichTextEditorEditingMatrixLinkEventRpcObserved = true;
+        }
+        if (line.contains("\"type\":\"patch\"")
+                && line.contains("\"source\":\"UidlRequestHandler\"")
+                && line.contains("\"reason\":\"event\"")
+                && line.contains("Rich text editing format: italic,ordered-list,link,clear")
+                && line.contains("range=5-17")) {
+            summary.frameworkRichTextEditorEditingMatrixFormatPatchObserved = true;
+        }
+        if (line.contains("\"type\":\"patch\"")
+                && line.contains("\"source\":\"UidlRequestHandler\"")
+                && line.contains("\"reason\":\"event\"")
+                && line.contains("Rich text editing clipboard: paste")
+                && line.contains("Flow IPC rich text v1.64")
+                && line.contains("html=true")) {
+            summary.frameworkRichTextEditorEditingMatrixClipboardPatchObserved = true;
+        }
+        if (line.contains("\"type\":\"patch\"")
+                && line.contains("\"source\":\"UidlRequestHandler\"")
+                && line.contains("\"reason\":\"event\"")
+                && line.contains("Rich text editing link/list: Flow IPC rich text v1.64")
+                && line.contains("https://vatori.dev/flow-ipc/v1_64")
+                && line.contains("list=ordered")) {
+            summary.frameworkRichTextEditorEditingMatrixLinkPatchObserved = true;
+        }
+        if (line.contains("\"type\":\"bootstrapResponse\"")
+                && containsRichTextEditorEditingMatrixV164ManifestFields(line)) {
+            summary.richTextEditorEditingMatrixV164ManifestObserved = true;
+        }
+        if (line.contains("\"type\":\"resourceStage\"")
+                && containsCurrentAppProductionMatrixRuntimePath(line)
+                && containsRichTextEditorEditingMatrixV164Fields(line)
+                && (line.contains("\"executionStatus\":\"executed\"")
+                        || line.contains("\"executionStatus\":\"strict-blocker\"")
+                        || line.contains("\"executionStatus\":\"staged\""))) {
+            summary.richTextEditorEditingMatrixV164StageObserved = true;
+        }
+        if (line.contains("\"type\":\"resourceStage\"")
+                && containsCurrentAppProductionMatrixRuntimePath(line)
+                && containsRichTextEditorEditingMatrixV164Complete(line)
+                && line.contains("\"executionStatus\":\"executed\"")) {
+            summary.richTextEditorEditingMatrixV164CompleteStageObserved = true;
+        }
+        if (line.contains("\"type\":\"webview.dom\"")
+                && containsLiteralField(line,
+                        "frameworkRichTextEditorEditingMatrixComplete", "true")
+                && containsStringField(line,
+                        "frameworkRichTextEditorEditingMatrixVersion",
+                        "flow-ipc-rich-text-editor-editing-matrix-v1_64")
+                && line.contains("Rich text editing link\\/list: Flow IPC rich text v1.64")
+                && line.contains("https:\\/\\/vatori.dev\\/flow-ipc\\/v1_64")) {
+            summary.frameworkRichTextEditorEditingMatrixDomObserved = true;
+            summary.richTextEditorEditingMatrixV164DomObserved = true;
+        }
+        if (line.contains("\"type\":\"webview.dom\"")
+                && line.contains("Flow IPC Framework Desk")
+                && containsLiteralField(line,
+                        "frameworkRichTextEditorEditingMatrixRendered", "true")
+                && containsLiteralField(line,
+                        "frameworkRichTextEditorEditingMatrixEditorApiObserved", "true")
+                && containsLiteralField(line,
+                        "frameworkRichTextEditorEditingMatrixFormatEventRpcObserved", "true")
+                && containsLiteralField(line,
+                        "frameworkRichTextEditorEditingMatrixFormatEventObserved", "true")
+                && containsLiteralField(line,
+                        "frameworkRichTextEditorEditingMatrixClipboardEventRpcObserved", "true")
+                && containsLiteralField(line,
+                        "frameworkRichTextEditorEditingMatrixClipboardEventObserved", "true")
+                && containsLiteralField(line,
+                        "frameworkRichTextEditorEditingMatrixLinkEventRpcObserved", "true")
+                && containsLiteralField(line,
+                        "frameworkRichTextEditorEditingMatrixLinkEventObserved", "true")
+                && containsLiteralField(line,
+                        "frameworkRichTextEditorEditingMatrixComplete", "true")
+                && containsStringField(line,
+                        "frameworkRichTextEditorEditingMatrixVersion",
+                        "flow-ipc-rich-text-editor-editing-matrix-v1_64")) {
+            summary.frameworkRichTextEditorEditingMatrixDomObserved = true;
+            summary.richTextEditorEditingMatrixV164DomObserved = true;
+        }
     }
 
     private static String normalize(String line) {
@@ -6944,6 +9034,707 @@ public final class DesktopTraceInspector {
                         "dataComponentResourceMatrixNoLocalhost", "true");
     }
 
+    private static boolean containsInputComponentParityMatrixV157Fields(String line) {
+        return containsStringField(line, "inputComponentParityMatrixVersion",
+                        "flow-ipc-input-component-parity-matrix-v1_57")
+                && containsStringField(line, "inputComponentParityMatrixSource",
+                        "frontend-resource-pipeline-basic-closure-v1_56")
+                && containsStringField(line, "inputComponentParityMatrixScope",
+                        "framework-validation-app-common-input-components")
+                && containsStringField(line, "inputComponentParityMatrixAppShape",
+                        "framework-validation-app")
+                && containsStringField(line, "inputComponentParityMatrixTargetTags",
+                        "vaadin-radio-group,vaadin-text-area,vaadin-email-field,vaadin-integer-field,vaadin-password-field,vaadin-time-picker")
+                && containsStringField(line, "inputComponentParityMatrixJavaClasses",
+                        "com.vaadin.flow.component.radiobutton.RadioButtonGroup,com.vaadin.flow.component.textfield.TextArea,com.vaadin.flow.component.textfield.EmailField,com.vaadin.flow.component.textfield.IntegerField,com.vaadin.flow.component.textfield.PasswordField,com.vaadin.flow.component.timepicker.TimePicker")
+                && containsStringField(line, "inputComponentParityMatrixComponentIds",
+                        "framework-decision,framework-notes,framework-contact-email,framework-score,framework-secret,framework-review-time,framework-input-matrix-status")
+                && containsStringField(line, "inputComponentParityMatrixModuleSpecifiers",
+                        "@vaadin/radio-group/src/vaadin-radio-group.js,@vaadin/text-area/src/vaadin-text-area.js,@vaadin/email-field/src/vaadin-email-field.js,@vaadin/integer-field/src/vaadin-integer-field.js,@vaadin/password-field/src/vaadin-password-field.js,@vaadin/time-picker/src/vaadin-time-picker.js")
+                && containsStringFieldPrefix(line, "inputComponentParityMatrixSelectedArtifacts",
+                        "current-app-frontend/generated/flow/generated-flow-imports.js")
+                && containsPositiveIntegerField(line, "inputComponentParityMatrixSelectedArtifactCount")
+                && containsStringField(line, "inputComponentParityMatrixGeneratedImportsOwnerSource",
+                        "current-app-generated-imports-select-owner-coverage-v1_41")
+                && containsStringField(line, "inputComponentParityMatrixGeneratedImportsOwnerArtifact",
+                        "current-app-frontend/generated/flow/generated-flow-imports.js")
+                && containsStringFieldPrefix(line,
+                        "inputComponentParityMatrixProductionSupportArtifact",
+                        "current-app-production/VAADIN/build/generated-flow-imports-")
+                && line.contains("inputComponentParityMatrixProductionSupportSha256")
+                && containsPositiveIntegerField(line,
+                        "inputComponentParityMatrixProductionSupportBytes")
+                && line.contains("inputComponentParityMatrixProductionEntryArtifact")
+                && containsStringFieldPrefix(line, "inputComponentParityMatrixSourceChunkArtifact",
+                        "current-app-frontend/generated/flow/chunks/chunk-")
+                && containsStringField(line, "inputComponentParityMatrixSourceChunkStatus",
+                        "available")
+                && line.contains("inputComponentParityMatrixResolvedSpecifiers")
+                && line.contains("inputComponentParityMatrixUnresolvedSpecifiers")
+                && containsStringField(line, "inputComponentParityMatrixAllowedSchemes",
+                        "vatori-resource,blob")
+                && containsStringField(line, "inputComponentParityMatrixIntegrityPolicy",
+                        "sha256-and-byte-count-for-selected-artifacts")
+                && containsStringField(line, "inputComponentParityMatrixBuildGoal",
+                        "build-frontend")
+                && containsStringField(line, "inputComponentParityMatrixBuildStatus", "success")
+                && line.contains("inputComponentParityMatrixOutputUsability")
+                && containsLiteralField(line, "inputComponentParityMatrixFrameworkAppRequired",
+                        "true")
+                && containsLiteralField(line, "inputComponentParityMatrixFrameworkAppObserved",
+                        "true")
+                && containsLiteralField(line, "inputComponentParityMatrixCliContractEnabled",
+                        "true")
+                && containsLiteralField(line, "inputComponentParityMatrixManifestReady", "true")
+                && containsLiteralField(line, "inputComponentParityMatrixRuntimeHandoffRequired",
+                        "true")
+                && containsLiteralField(line, "inputComponentParityMatrixRuntimeHandoffReady",
+                        "true")
+                && containsLiteralField(line, "inputComponentParityMatrixNoLocalhost", "true")
+                && containsLiteralField(line, "inputComponentParityMatrixFixtureSubstituted",
+                        "false")
+                && line.contains("inputComponentParityMatrixAcceptableFailures")
+                && line.contains("inputComponentParityMatrixRemainingBlockers")
+                && line.contains("inputComponentParityMatrixNextResolutionStep");
+    }
+
+    private static boolean containsInputComponentParityMatrixV157Complete(String line) {
+        return containsInputComponentParityMatrixV157Fields(line)
+                && containsLiteralField(line,
+                        "inputComponentParityMatrixRuntimeHandoffSatisfied", "true")
+                && containsLiteralField(line, "inputComponentParityMatrixStaged", "true")
+                && containsLiteralField(line,
+                        "inputComponentParityMatrixCustomSchemeObserved", "true")
+                && containsLiteralField(line,
+                        "inputComponentParityMatrixNoLocalhost", "true");
+    }
+
+    private static boolean containsMultiValueNavigationDisclosureMatrixV158Fields(String line) {
+        return containsStringField(line, "multiValueNavigationDisclosureMatrixVersion",
+                        "flow-ipc-multi-value-navigation-disclosure-matrix-v1_58")
+                && containsStringField(line, "multiValueNavigationDisclosureMatrixSource",
+                        "input-component-parity-matrix-v1_57")
+                && containsStringField(line, "multiValueNavigationDisclosureMatrixScope",
+                        "framework-validation-app-multi-value-navigation-disclosure-menu")
+                && containsStringField(line, "multiValueNavigationDisclosureMatrixAppShape",
+                        "framework-validation-app")
+                && containsStringField(line, "multiValueNavigationDisclosureMatrixTargetTags",
+                        "vaadin-multi-select-combo-box,vaadin-tabs,vaadin-tab,vaadin-details,vaadin-accordion,vaadin-menu-bar")
+                && containsStringField(line, "multiValueNavigationDisclosureMatrixJavaClasses",
+                        "com.vaadin.flow.component.combobox.MultiSelectComboBox,com.vaadin.flow.component.tabs.Tabs,com.vaadin.flow.component.tabs.Tab,com.vaadin.flow.component.details.Details,com.vaadin.flow.component.accordion.Accordion,com.vaadin.flow.component.menubar.MenuBar")
+                && containsStringField(line, "multiValueNavigationDisclosureMatrixComponentIds",
+                        "framework-assignees,framework-nav-tabs,framework-nav-tab-audit,framework-details,framework-accordion,framework-menu,framework-menu-audit,framework-navigation-matrix-status")
+                && containsStringField(line,
+                        "multiValueNavigationDisclosureMatrixModuleSpecifiers",
+                        "@vaadin/multi-select-combo-box/src/vaadin-multi-select-combo-box.js,@vaadin/tabs/src/vaadin-tabs.js,@vaadin/tabs/src/vaadin-tab.js,@vaadin/details/src/vaadin-details.js,@vaadin/accordion/src/vaadin-accordion.js,@vaadin/menu-bar/src/vaadin-menu-bar.js")
+                && containsStringFieldPrefix(line,
+                        "multiValueNavigationDisclosureMatrixSelectedArtifacts",
+                        "current-app-frontend/generated/flow/generated-flow-imports.js")
+                && containsPositiveIntegerField(line,
+                        "multiValueNavigationDisclosureMatrixSelectedArtifactCount")
+                && containsStringField(line,
+                        "multiValueNavigationDisclosureMatrixGeneratedImportsOwnerSource",
+                        "current-app-generated-imports-select-owner-coverage-v1_41")
+                && containsStringField(line,
+                        "multiValueNavigationDisclosureMatrixGeneratedImportsOwnerArtifact",
+                        "current-app-frontend/generated/flow/generated-flow-imports.js")
+                && containsStringFieldPrefix(line,
+                        "multiValueNavigationDisclosureMatrixProductionSupportArtifact",
+                        "current-app-production/VAADIN/build/generated-flow-imports-")
+                && line.contains("multiValueNavigationDisclosureMatrixProductionSupportSha256")
+                && containsPositiveIntegerField(line,
+                        "multiValueNavigationDisclosureMatrixProductionSupportBytes")
+                && line.contains("multiValueNavigationDisclosureMatrixProductionEntryArtifact")
+                && containsStringFieldPrefix(line,
+                        "multiValueNavigationDisclosureMatrixSourceChunkArtifact",
+                        "current-app-frontend/generated/flow/chunks/chunk-")
+                && containsStringField(line,
+                        "multiValueNavigationDisclosureMatrixSourceChunkStatus", "available")
+                && line.contains("multiValueNavigationDisclosureMatrixResolvedSpecifiers")
+                && line.contains("multiValueNavigationDisclosureMatrixUnresolvedSpecifiers")
+                && containsStringField(line,
+                        "multiValueNavigationDisclosureMatrixAllowedSchemes",
+                        "vatori-resource,blob")
+                && containsStringField(line,
+                        "multiValueNavigationDisclosureMatrixIntegrityPolicy",
+                        "sha256-and-byte-count-for-selected-artifacts")
+                && containsStringField(line,
+                        "multiValueNavigationDisclosureMatrixBuildGoal", "build-frontend")
+                && containsStringField(line,
+                        "multiValueNavigationDisclosureMatrixBuildStatus", "success")
+                && line.contains("multiValueNavigationDisclosureMatrixOutputUsability")
+                && containsLiteralField(line,
+                        "multiValueNavigationDisclosureMatrixFrameworkAppRequired", "true")
+                && containsLiteralField(line,
+                        "multiValueNavigationDisclosureMatrixFrameworkAppObserved", "true")
+                && containsLiteralField(line,
+                        "multiValueNavigationDisclosureMatrixCliContractEnabled", "true")
+                && containsLiteralField(line,
+                        "multiValueNavigationDisclosureMatrixManifestReady", "true")
+                && containsLiteralField(line,
+                        "multiValueNavigationDisclosureMatrixRuntimeHandoffRequired", "true")
+                && containsLiteralField(line,
+                        "multiValueNavigationDisclosureMatrixRuntimeHandoffReady", "true")
+                && containsLiteralField(line,
+                        "multiValueNavigationDisclosureMatrixNoLocalhost", "true")
+                && containsLiteralField(line,
+                        "multiValueNavigationDisclosureMatrixFixtureSubstituted", "false")
+                && line.contains("multiValueNavigationDisclosureMatrixAcceptableFailures")
+                && line.contains("overlay-focus-keyboard-behavior-not-covered")
+                && line.contains("multiValueNavigationDisclosureMatrixRemainingBlockers")
+                && line.contains("multiValueNavigationDisclosureMatrixNextResolutionStep");
+    }
+
+    private static boolean containsMultiValueNavigationDisclosureMatrixV158Complete(String line) {
+        return containsMultiValueNavigationDisclosureMatrixV158Fields(line)
+                && containsLiteralField(line,
+                        "multiValueNavigationDisclosureMatrixRuntimeHandoffSatisfied", "true")
+                && containsLiteralField(line,
+                        "multiValueNavigationDisclosureMatrixStaged", "true")
+                && containsLiteralField(line,
+                        "multiValueNavigationDisclosureMatrixCustomSchemeObserved", "true")
+                && containsLiteralField(line,
+                        "multiValueNavigationDisclosureMatrixNoLocalhost", "true");
+    }
+
+    private static boolean containsMultiValueNavigationDisclosureMatrixV158DomFields(String line) {
+        return containsStringField(line, "multiValueNavigationDisclosureMatrixVersion",
+                        "flow-ipc-multi-value-navigation-disclosure-matrix-v1_58")
+                && containsStringField(line, "multiValueNavigationDisclosureMatrixSource",
+                        "input-component-parity-matrix-v1_57")
+                && containsStringField(line, "multiValueNavigationDisclosureMatrixScope",
+                        "framework-validation-app-multi-value-navigation-disclosure-menu")
+                && containsStringField(line, "multiValueNavigationDisclosureMatrixAppShape",
+                        "framework-validation-app")
+                && containsStringField(line, "multiValueNavigationDisclosureMatrixTargetTags",
+                        "vaadin-multi-select-combo-box,vaadin-tabs,vaadin-tab,vaadin-details,vaadin-accordion,vaadin-menu-bar")
+                && containsStringField(line, "multiValueNavigationDisclosureMatrixJavaClasses",
+                        "com.vaadin.flow.component.combobox.MultiSelectComboBox,com.vaadin.flow.component.tabs.Tabs,com.vaadin.flow.component.tabs.Tab,com.vaadin.flow.component.details.Details,com.vaadin.flow.component.accordion.Accordion,com.vaadin.flow.component.menubar.MenuBar")
+                && containsStringField(line, "multiValueNavigationDisclosureMatrixComponentIds",
+                        "framework-assignees,framework-nav-tabs,framework-nav-tab-audit,framework-details,framework-accordion,framework-menu,framework-menu-audit,framework-navigation-matrix-status")
+                && containsStringField(line,
+                        "multiValueNavigationDisclosureMatrixModuleSpecifiers",
+                        "@vaadin/multi-select-combo-box/src/vaadin-multi-select-combo-box.js,@vaadin/tabs/src/vaadin-tabs.js,@vaadin/tabs/src/vaadin-tab.js,@vaadin/details/src/vaadin-details.js,@vaadin/accordion/src/vaadin-accordion.js,@vaadin/menu-bar/src/vaadin-menu-bar.js")
+                && containsStringField(line,
+                        "multiValueNavigationDisclosureMatrixBuildStatus", "success")
+                && containsLiteralField(line,
+                        "multiValueNavigationDisclosureMatrixFrameworkAppRequired", "true")
+                && containsLiteralField(line,
+                        "multiValueNavigationDisclosureMatrixFrameworkAppObserved", "true")
+                && containsLiteralField(line,
+                        "multiValueNavigationDisclosureMatrixCliContractEnabled", "true")
+                && containsLiteralField(line,
+                        "multiValueNavigationDisclosureMatrixManifestReady", "true")
+                && containsLiteralField(line,
+                        "multiValueNavigationDisclosureMatrixRuntimeHandoffRequired", "true")
+                && containsLiteralField(line,
+                        "multiValueNavigationDisclosureMatrixRuntimeHandoffReady", "true")
+                && containsLiteralField(line,
+                        "multiValueNavigationDisclosureMatrixNoLocalhost", "true")
+                && containsLiteralField(line,
+                        "multiValueNavigationDisclosureMatrixFixtureSubstituted", "false")
+                && line.contains("multiValueNavigationDisclosureMatrixAcceptableFailures")
+                && line.contains("multiValueNavigationDisclosureMatrixRemainingBlockers")
+                && line.contains("multiValueNavigationDisclosureMatrixNextResolutionStep");
+    }
+
+    private static boolean containsOverlayContextMenuMatrixV159Fields(String line) {
+        return containsStringField(line, "overlayContextMenuMatrixVersion",
+                        "flow-ipc-overlay-context-menu-matrix-v1_59")
+                && containsStringField(line, "overlayContextMenuMatrixSource",
+                        "multi-value-navigation-disclosure-matrix-v1_58")
+                && containsStringField(line, "overlayContextMenuMatrixScope",
+                        "framework-validation-app-context-menu-grid-context-menu-popover")
+                && containsStringField(line, "overlayContextMenuMatrixAppShape",
+                        "framework-validation-app")
+                && containsStringField(line, "overlayContextMenuMatrixTargetTags",
+                        "vaadin-context-menu,vaadin-popover,vaadin-grid")
+                && containsStringField(line, "overlayContextMenuMatrixJavaClasses",
+                        "com.vaadin.flow.component.contextmenu.ContextMenu,com.vaadin.flow.component.grid.contextmenu.GridContextMenu,com.vaadin.flow.component.popover.Popover")
+                && containsStringField(line, "overlayContextMenuMatrixComponentIds",
+                        "framework-context-menu-target,framework-context-menu,framework-context-menu-audit,framework-grid-context-menu,framework-grid-context-menu-audit,framework-popover-target,framework-popover,framework-overlay-matrix-status")
+                && containsStringField(line, "overlayContextMenuMatrixModuleSpecifiers",
+                        "@vaadin/context-menu/src/vaadin-context-menu.js,@vaadin/grid/src/vaadin-grid.js,@vaadin/popover/src/vaadin-popover.js")
+                && containsStringFieldPrefix(line, "overlayContextMenuMatrixSelectedArtifacts",
+                        "current-app-frontend/generated/flow/generated-flow-imports.js")
+                && containsPositiveIntegerField(line,
+                        "overlayContextMenuMatrixSelectedArtifactCount")
+                && containsStringField(line,
+                        "overlayContextMenuMatrixGeneratedImportsOwnerSource",
+                        "current-app-generated-imports-select-owner-coverage-v1_41")
+                && containsStringField(line,
+                        "overlayContextMenuMatrixGeneratedImportsOwnerArtifact",
+                        "current-app-frontend/generated/flow/generated-flow-imports.js")
+                && containsStringFieldPrefix(line,
+                        "overlayContextMenuMatrixProductionSupportArtifact",
+                        "current-app-production/VAADIN/build/generated-flow-imports-")
+                && line.contains("overlayContextMenuMatrixProductionSupportSha256")
+                && containsPositiveIntegerField(line,
+                        "overlayContextMenuMatrixProductionSupportBytes")
+                && line.contains("overlayContextMenuMatrixProductionEntryArtifact")
+                && containsStringFieldPrefix(line,
+                        "overlayContextMenuMatrixSourceChunkArtifact",
+                        "current-app-frontend/generated/flow/chunks/chunk-")
+                && containsStringField(line,
+                        "overlayContextMenuMatrixSourceChunkStatus", "available")
+                && line.contains("overlayContextMenuMatrixResolvedSpecifiers")
+                && line.contains("overlayContextMenuMatrixUnresolvedSpecifiers")
+                && containsStringField(line,
+                        "overlayContextMenuMatrixAllowedSchemes", "vatori-resource,blob")
+                && containsStringField(line,
+                        "overlayContextMenuMatrixIntegrityPolicy",
+                        "sha256-and-byte-count-for-selected-artifacts")
+                && containsStringField(line,
+                        "overlayContextMenuMatrixBuildGoal", "build-frontend")
+                && containsStringField(line,
+                        "overlayContextMenuMatrixBuildStatus", "success")
+                && line.contains("overlayContextMenuMatrixOutputUsability")
+                && containsLiteralField(line,
+                        "overlayContextMenuMatrixFrameworkAppRequired", "true")
+                && containsLiteralField(line,
+                        "overlayContextMenuMatrixFrameworkAppObserved", "true")
+                && containsLiteralField(line,
+                        "overlayContextMenuMatrixCliContractEnabled", "true")
+                && containsLiteralField(line,
+                        "overlayContextMenuMatrixManifestReady", "true")
+                && containsLiteralField(line,
+                        "overlayContextMenuMatrixRuntimeHandoffRequired", "true")
+                && containsLiteralField(line,
+                        "overlayContextMenuMatrixRuntimeHandoffReady", "true")
+                && containsLiteralField(line,
+                        "overlayContextMenuMatrixNoLocalhost", "true")
+                && containsLiteralField(line,
+                        "overlayContextMenuMatrixFixtureSubstituted", "false")
+                && line.contains("overlayContextMenuMatrixAcceptableFailures")
+                && line.contains("overlay-focus-keyboard-behavior-not-covered")
+                && line.contains("overlayContextMenuMatrixRemainingBlockers")
+                && line.contains("rich-text-editor")
+                && line.contains("overlayContextMenuMatrixNextResolutionStep");
+    }
+
+    private static boolean containsOverlayContextMenuMatrixV159Complete(String line) {
+        return containsOverlayContextMenuMatrixV159Fields(line)
+                && containsLiteralField(line,
+                        "overlayContextMenuMatrixRuntimeHandoffSatisfied", "true")
+                && containsLiteralField(line,
+                        "overlayContextMenuMatrixStaged", "true")
+                && containsLiteralField(line,
+                        "overlayContextMenuMatrixCustomSchemeObserved", "true")
+                && containsLiteralField(line,
+                        "overlayContextMenuMatrixNoLocalhost", "true");
+    }
+
+    private static boolean containsCurrentAppProductionMatrixRuntimePath(String line) {
+        return containsPath(line, "current-app-production/VAADIN/build/generated-flow-imports-")
+                || containsPath(line, "current-app-production/VAADIN/build/chunk-")
+                || containsPath(line, "current-app-production/VAADIN/build/indexhtml-");
+    }
+
+    private static boolean containsContentAppShellLoginMatrixV160Fields(String line) {
+        return containsStringField(line, "contentAppShellLoginMatrixVersion",
+                        "flow-ipc-content-app-shell-login-matrix-v1_60")
+                && containsStringField(line, "contentAppShellLoginMatrixSource",
+                        "overlay-context-menu-matrix-v1_59")
+                && containsStringField(line, "contentAppShellLoginMatrixScope",
+                        "framework-validation-app-avatar-message-side-nav-login-overlay")
+                && containsStringField(line, "contentAppShellLoginMatrixAppShape",
+                        "framework-validation-app")
+                && containsStringField(line, "contentAppShellLoginMatrixTargetTags",
+                        "vaadin-avatar,vaadin-avatar-group,vaadin-message-list,vaadin-message-input,vaadin-side-nav,vaadin-side-nav-item,vaadin-login-overlay,vaadin-login-form")
+                && containsStringField(line, "contentAppShellLoginMatrixJavaClasses",
+                        "com.vaadin.flow.component.avatar.Avatar,com.vaadin.flow.component.avatar.AvatarGroup,com.vaadin.flow.component.messages.MessageList,com.vaadin.flow.component.messages.MessageInput,com.vaadin.flow.component.sidenav.SideNav,com.vaadin.flow.component.sidenav.SideNavItem,com.vaadin.flow.component.login.LoginOverlay,com.vaadin.flow.component.login.LoginForm")
+                && containsStringField(line, "contentAppShellLoginMatrixComponentIds",
+                        "framework-avatar,framework-avatar-group,framework-message-list,framework-message-input,framework-side-nav,framework-side-nav-audit,framework-login-overlay,framework-login-form,framework-rich-content-status")
+                && containsStringField(line, "contentAppShellLoginMatrixModuleSpecifiers",
+                        "@vaadin/avatar/src/vaadin-avatar.js,@vaadin/avatar-group/src/vaadin-avatar-group.js,@vaadin/message-list/src/vaadin-message-list.js,@vaadin/message-input/src/vaadin-message-input.js,@vaadin/side-nav/src/vaadin-side-nav.js,@vaadin/side-nav/src/vaadin-side-nav-item.js,@vaadin/login/src/vaadin-login-overlay.js,@vaadin/login/src/vaadin-login-form.js")
+                && containsStringFieldPrefix(line, "contentAppShellLoginMatrixSelectedArtifacts",
+                        "current-app-frontend/generated/flow/generated-flow-imports.js")
+                && containsPositiveIntegerField(line,
+                        "contentAppShellLoginMatrixSelectedArtifactCount")
+                && containsStringField(line,
+                        "contentAppShellLoginMatrixGeneratedImportsOwnerSource",
+                        "current-app-generated-imports-select-owner-coverage-v1_41")
+                && containsStringField(line,
+                        "contentAppShellLoginMatrixGeneratedImportsOwnerArtifact",
+                        "current-app-frontend/generated/flow/generated-flow-imports.js")
+                && line.contains("contentAppShellLoginMatrixProductionSupportArtifact")
+                && line.contains("contentAppShellLoginMatrixProductionSupportSha256")
+                && line.contains("contentAppShellLoginMatrixProductionSupportBytes")
+                && containsStringFieldPrefix(line,
+                        "contentAppShellLoginMatrixProductionEntryArtifact",
+                        "current-app-production/VAADIN/build/indexhtml-")
+                && containsStringFieldPrefix(line,
+                        "contentAppShellLoginMatrixSourceChunkArtifact",
+                        "current-app-frontend/generated/flow/chunks/chunk-")
+                && containsStringField(line,
+                        "contentAppShellLoginMatrixSourceChunkStatus", "available")
+                && line.contains("contentAppShellLoginMatrixResolvedSpecifiers")
+                && line.contains("contentAppShellLoginMatrixUnresolvedSpecifiers")
+                && containsStringField(line,
+                        "contentAppShellLoginMatrixAllowedSchemes", "vatori-resource,blob")
+                && containsStringField(line,
+                        "contentAppShellLoginMatrixIntegrityPolicy",
+                        "sha256-and-byte-count-for-selected-artifacts")
+                && containsStringField(line,
+                        "contentAppShellLoginMatrixBuildGoal", "build-frontend")
+                && containsStringField(line,
+                        "contentAppShellLoginMatrixBuildStatus", "success")
+                && line.contains("contentAppShellLoginMatrixOutputUsability")
+                && containsLiteralField(line,
+                        "contentAppShellLoginMatrixFrameworkAppRequired", "true")
+                && containsLiteralField(line,
+                        "contentAppShellLoginMatrixFrameworkAppObserved", "true")
+                && containsLiteralField(line,
+                        "contentAppShellLoginMatrixCliContractEnabled", "true")
+                && containsLiteralField(line,
+                        "contentAppShellLoginMatrixManifestReady", "true")
+                && containsLiteralField(line,
+                        "contentAppShellLoginMatrixRuntimeHandoffRequired", "true")
+                && containsLiteralField(line,
+                        "contentAppShellLoginMatrixRuntimeHandoffReady", "true")
+                && containsLiteralField(line,
+                        "contentAppShellLoginMatrixNoLocalhost", "true")
+                && containsLiteralField(line,
+                        "contentAppShellLoginMatrixFixtureSubstituted", "false")
+                && line.contains("contentAppShellLoginMatrixAcceptableFailures")
+                && line.contains("login-overlay-event-shape-not-covered")
+                && line.contains("contentAppShellLoginMatrixRemainingBlockers")
+                && line.contains("rich-text-editor")
+                && line.contains("contentAppShellLoginMatrixNextResolutionStep");
+    }
+
+    private static boolean containsContentAppShellLoginMatrixV160Complete(String line) {
+        return containsContentAppShellLoginMatrixV160Fields(line)
+                && containsLiteralField(line,
+                        "contentAppShellLoginMatrixRuntimeHandoffSatisfied", "true")
+                && containsLiteralField(line,
+                        "contentAppShellLoginMatrixStaged", "true")
+                && containsLiteralField(line,
+                        "contentAppShellLoginMatrixCustomSchemeObserved", "true")
+                && containsLiteralField(line,
+                        "contentAppShellLoginMatrixNoLocalhost", "true");
+    }
+
+    private static boolean containsRichTextEditorMatrixV162Fields(String line) {
+        return containsStringField(line, "richTextEditorMatrixVersion",
+                        "flow-ipc-rich-text-editor-matrix-v1_62")
+                && containsStringField(line, "richTextEditorMatrixSource",
+                        "lifecycle-focus-behavior-matrix-v1_61")
+                && containsStringField(line, "richTextEditorMatrixScope",
+                        "framework-validation-app-rich-text-editor")
+                && containsStringField(line, "richTextEditorMatrixAppShape",
+                        "framework-validation-app")
+                && containsStringField(line, "richTextEditorMatrixTargetTags",
+                        "vaadin-rich-text-editor")
+                && containsStringField(line, "richTextEditorMatrixJavaClasses",
+                        "com.vaadin.flow.component.richtexteditor.RichTextEditor")
+                && containsStringField(line, "richTextEditorMatrixComponentIds",
+                        "framework-rich-text-editor,framework-rich-text-editor-status")
+                && containsStringField(line, "richTextEditorMatrixModuleSpecifiers",
+                        "@vaadin/rich-text-editor/src/vaadin-rich-text-editor.js")
+                && containsStringFieldPrefix(line, "richTextEditorMatrixSelectedArtifacts",
+                        "current-app-frontend/generated/flow/generated-flow-imports.js")
+                && containsPositiveIntegerField(line,
+                        "richTextEditorMatrixSelectedArtifactCount")
+                && containsStringField(line,
+                        "richTextEditorMatrixGeneratedImportsOwnerSource",
+                        "current-app-generated-imports-select-owner-coverage-v1_41")
+                && containsStringField(line,
+                        "richTextEditorMatrixGeneratedImportsOwnerArtifact",
+                        "current-app-frontend/generated/flow/generated-flow-imports.js")
+                && line.contains("richTextEditorMatrixProductionSupportArtifact")
+                && line.contains("richTextEditorMatrixProductionSupportSha256")
+                && line.contains("richTextEditorMatrixProductionSupportBytes")
+                && containsStringFieldPrefix(line,
+                        "richTextEditorMatrixProductionEntryArtifact",
+                        "current-app-production/VAADIN/build/indexhtml-")
+                && containsStringFieldPrefix(line,
+                        "richTextEditorMatrixSourceChunkArtifact",
+                        "current-app-frontend/generated/flow/chunks/chunk-")
+                && containsStringField(line,
+                        "richTextEditorMatrixSourceChunkStatus", "available")
+                && line.contains("richTextEditorMatrixResolvedSpecifiers")
+                && line.contains("richTextEditorMatrixUnresolvedSpecifiers")
+                && containsStringField(line,
+                        "richTextEditorMatrixAllowedSchemes", "vatori-resource,blob")
+                && containsStringField(line,
+                        "richTextEditorMatrixIntegrityPolicy",
+                        "sha256-and-byte-count-for-selected-artifacts")
+                && containsStringField(line,
+                        "richTextEditorMatrixBuildGoal", "build-frontend")
+                && containsStringField(line,
+                        "richTextEditorMatrixBuildStatus", "success")
+                && line.contains("richTextEditorMatrixOutputUsability")
+                && containsLiteralField(line,
+                        "richTextEditorMatrixFrameworkAppRequired", "true")
+                && containsLiteralField(line,
+                        "richTextEditorMatrixFrameworkAppObserved", "true")
+                && containsLiteralField(line,
+                        "richTextEditorMatrixCliContractEnabled", "true")
+                && containsLiteralField(line,
+                        "richTextEditorMatrixManifestReady", "true")
+                && containsLiteralField(line,
+                        "richTextEditorMatrixRuntimeHandoffRequired", "true")
+                && containsLiteralField(line,
+                        "richTextEditorMatrixRuntimeHandoffReady", "true")
+                && containsLiteralField(line,
+                        "richTextEditorMatrixNoLocalhost", "true")
+                && containsLiteralField(line,
+                        "richTextEditorMatrixFixtureSubstituted", "false")
+                && line.contains("richTextEditorMatrixAcceptableFailures")
+                && line.contains("rich-text-editor-selection-toolbar-not-covered")
+                && line.contains("richTextEditorMatrixRemainingBlockers")
+                && line.contains("rich-text-editor-selection-toolbar-parity")
+                && line.contains("richTextEditorMatrixNextResolutionStep");
+    }
+
+    private static boolean containsRichTextEditorMatrixV162ManifestFields(String line) {
+        return containsStringField(line, "richTextEditorMatrixVersion",
+                        "flow-ipc-rich-text-editor-matrix-v1_62")
+                && containsStringField(line, "richTextEditorMatrixTargetTags",
+                        "vaadin-rich-text-editor")
+                && containsStringField(line, "richTextEditorMatrixJavaClasses",
+                        "com.vaadin.flow.component.richtexteditor.RichTextEditor")
+                && containsStringField(line, "richTextEditorMatrixComponentIds",
+                        "framework-rich-text-editor,framework-rich-text-editor-status")
+                && containsLiteralField(line,
+                        "richTextEditorMatrixFrameworkAppObserved", "true")
+                && containsLiteralField(line,
+                        "richTextEditorMatrixManifestReady", "true")
+                && containsLiteralField(line,
+                        "richTextEditorMatrixRuntimeHandoffReady", "true")
+                && containsLiteralField(line,
+                        "richTextEditorMatrixNoLocalhost", "true");
+    }
+
+    private static boolean containsRichTextEditorMatrixV162Complete(String line) {
+        return containsRichTextEditorMatrixV162Fields(line)
+                && containsLiteralField(line,
+                        "richTextEditorMatrixRuntimeHandoffSatisfied", "true")
+                && containsLiteralField(line,
+                        "richTextEditorMatrixStaged", "true")
+                && containsLiteralField(line,
+                        "richTextEditorMatrixCustomSchemeObserved", "true")
+                && containsLiteralField(line,
+                        "richTextEditorMatrixNoLocalhost", "true");
+    }
+
+    private static boolean containsRichTextEditorBehaviorMatrixV163Fields(String line) {
+        return containsStringField(line, "richTextEditorBehaviorMatrixVersion",
+                        "flow-ipc-rich-text-editor-behavior-matrix-v1_63")
+                && containsStringField(line, "richTextEditorBehaviorMatrixSource",
+                        "rich-text-editor-matrix-v1_62")
+                && containsStringField(line, "richTextEditorBehaviorMatrixScope",
+                        "framework-validation-app-rich-text-editor-toolbar-selection-keyboard")
+                && containsStringField(line, "richTextEditorBehaviorMatrixAppShape",
+                        "framework-validation-app")
+                && containsStringField(line, "richTextEditorBehaviorMatrixTargetTags",
+                        "vaadin-rich-text-editor")
+                && containsStringField(line, "richTextEditorBehaviorMatrixJavaClasses",
+                        "com.vaadin.flow.component.richtexteditor.RichTextEditor,com.vaadin.flow.component.richtexteditor.RichTextEditorVariant")
+                && containsStringField(line, "richTextEditorBehaviorMatrixComponentIds",
+                        "framework-rich-text-editor,framework-rich-text-editor-status,framework-rich-text-editor-behavior-status")
+                && containsStringField(line, "richTextEditorBehaviorMatrixModuleSpecifiers",
+                        "@vaadin/rich-text-editor/src/vaadin-rich-text-editor.js")
+                && containsStringField(line, "richTextEditorBehaviorMatrixExpectedEvents",
+                        "vatori-rich-text-editor-selection,vatori-rich-text-editor-toolbar,keydown,value-changed")
+                && containsStringField(line, "richTextEditorBehaviorMatrixExpectedBehavior",
+                        "selection-range,toolbar-bold,keyboard-bold,delta-html-value,compact-theme-variant")
+                && containsStringFieldPrefix(line, "richTextEditorBehaviorMatrixSelectedArtifacts",
+                        "current-app-frontend/generated/flow/generated-flow-imports.js")
+                && containsPositiveIntegerField(line,
+                        "richTextEditorBehaviorMatrixSelectedArtifactCount")
+                && containsStringField(line,
+                        "richTextEditorBehaviorMatrixGeneratedImportsOwnerSource",
+                        "current-app-generated-imports-select-owner-coverage-v1_41")
+                && containsStringField(line,
+                        "richTextEditorBehaviorMatrixGeneratedImportsOwnerArtifact",
+                        "current-app-frontend/generated/flow/generated-flow-imports.js")
+                && line.contains("richTextEditorBehaviorMatrixProductionSupportArtifact")
+                && line.contains("richTextEditorBehaviorMatrixProductionSupportSha256")
+                && line.contains("richTextEditorBehaviorMatrixProductionSupportBytes")
+                && containsStringFieldPrefix(line,
+                        "richTextEditorBehaviorMatrixProductionEntryArtifact",
+                        "current-app-production/VAADIN/build/indexhtml-")
+                && containsStringFieldPrefix(line,
+                        "richTextEditorBehaviorMatrixSourceChunkArtifact",
+                        "current-app-frontend/generated/flow/chunks/chunk-")
+                && containsStringField(line,
+                        "richTextEditorBehaviorMatrixSourceChunkStatus", "available")
+                && line.contains("richTextEditorBehaviorMatrixResolvedSpecifiers")
+                && line.contains("richTextEditorBehaviorMatrixUnresolvedSpecifiers")
+                && containsStringField(line,
+                        "richTextEditorBehaviorMatrixAllowedSchemes", "vatori-resource,blob")
+                && containsStringField(line,
+                        "richTextEditorBehaviorMatrixIntegrityPolicy",
+                        "sha256-and-byte-count-for-selected-artifacts")
+                && containsStringField(line,
+                        "richTextEditorBehaviorMatrixBuildGoal", "build-frontend")
+                && containsStringField(line,
+                        "richTextEditorBehaviorMatrixBuildStatus", "success")
+                && line.contains("richTextEditorBehaviorMatrixOutputUsability")
+                && containsLiteralField(line,
+                        "richTextEditorBehaviorMatrixFrameworkAppRequired", "true")
+                && containsLiteralField(line,
+                        "richTextEditorBehaviorMatrixFrameworkAppObserved", "true")
+                && containsLiteralField(line,
+                        "richTextEditorBehaviorMatrixCliContractEnabled", "true")
+                && containsLiteralField(line,
+                        "richTextEditorBehaviorMatrixManifestReady", "true")
+                && containsLiteralField(line,
+                        "richTextEditorBehaviorMatrixRuntimeHandoffRequired", "true")
+                && containsLiteralField(line,
+                        "richTextEditorBehaviorMatrixRuntimeHandoffReady", "true")
+                && containsLiteralField(line,
+                        "richTextEditorBehaviorMatrixNoLocalhost", "true")
+                && containsLiteralField(line,
+                        "richTextEditorBehaviorMatrixFixtureSubstituted", "false")
+                && line.contains("richTextEditorBehaviorMatrixAcceptableFailures")
+                && line.contains("rich-text-editor-toolbar-not-rendered")
+                && line.contains("richTextEditorBehaviorMatrixRemainingBlockers")
+                && line.contains("full-rich-text-editor-toolbar-parity")
+                && line.contains("richTextEditorBehaviorMatrixNextResolutionStep");
+    }
+
+    private static boolean containsRichTextEditorBehaviorMatrixV163ManifestFields(String line) {
+        return containsStringField(line, "richTextEditorBehaviorMatrixVersion",
+                        "flow-ipc-rich-text-editor-behavior-matrix-v1_63")
+                && containsStringField(line, "richTextEditorBehaviorMatrixTargetTags",
+                        "vaadin-rich-text-editor")
+                && containsStringField(line, "richTextEditorBehaviorMatrixJavaClasses",
+                        "com.vaadin.flow.component.richtexteditor.RichTextEditor,com.vaadin.flow.component.richtexteditor.RichTextEditorVariant")
+                && containsStringField(line, "richTextEditorBehaviorMatrixComponentIds",
+                        "framework-rich-text-editor,framework-rich-text-editor-status,framework-rich-text-editor-behavior-status")
+                && containsLiteralField(line,
+                        "richTextEditorBehaviorMatrixFrameworkAppObserved", "true")
+                && containsLiteralField(line,
+                        "richTextEditorBehaviorMatrixManifestReady", "true")
+                && containsLiteralField(line,
+                        "richTextEditorBehaviorMatrixRuntimeHandoffReady", "true")
+                && containsLiteralField(line,
+                        "richTextEditorBehaviorMatrixNoLocalhost", "true");
+    }
+
+    private static boolean containsRichTextEditorBehaviorMatrixV163Complete(String line) {
+        return containsRichTextEditorBehaviorMatrixV163Fields(line)
+                && containsLiteralField(line,
+                        "richTextEditorBehaviorMatrixRuntimeHandoffSatisfied", "true")
+                && containsLiteralField(line,
+                        "richTextEditorBehaviorMatrixStaged", "true")
+                && containsLiteralField(line,
+                        "richTextEditorBehaviorMatrixCustomSchemeObserved", "true")
+                && containsLiteralField(line,
+                        "richTextEditorBehaviorMatrixNoLocalhost", "true");
+    }
+
+    private static boolean containsRichTextEditorEditingMatrixV164Fields(String line) {
+        return containsStringField(line, "richTextEditorEditingMatrixVersion",
+                        "flow-ipc-rich-text-editor-editing-matrix-v1_64")
+                && containsStringField(line, "richTextEditorEditingMatrixSource",
+                        "rich-text-editor-behavior-matrix-v1_63")
+                && containsStringField(line, "richTextEditorEditingMatrixScope",
+                        "framework-validation-app-rich-text-editor-format-clipboard-link-list")
+                && containsStringField(line, "richTextEditorEditingMatrixAppShape",
+                        "framework-validation-app")
+                && containsStringField(line, "richTextEditorEditingMatrixTargetTags",
+                        "vaadin-rich-text-editor")
+                && containsStringField(line, "richTextEditorEditingMatrixJavaClasses",
+                        "com.vaadin.flow.component.richtexteditor.RichTextEditor,com.vaadin.flow.component.richtexteditor.RichTextEditorVariant")
+                && containsStringField(line, "richTextEditorEditingMatrixComponentIds",
+                        "framework-rich-text-editor,framework-rich-text-editor-status,framework-rich-text-editor-behavior-status,framework-rich-text-editor-editing-status")
+                && containsStringField(line, "richTextEditorEditingMatrixModuleSpecifiers",
+                        "@vaadin/rich-text-editor/src/vaadin-rich-text-editor.js")
+                && containsStringField(line, "richTextEditorEditingMatrixExpectedEvents",
+                        "vatori-rich-text-editor-format,vatori-rich-text-editor-clipboard,vatori-rich-text-editor-link")
+                && containsStringField(line, "richTextEditorEditingMatrixExpectedBehavior",
+                        "italic-format,ordered-list,link-format,clear-format,clipboard-copy-paste,extended-selection-range,compact-theme-variant")
+                && containsStringFieldPrefix(line, "richTextEditorEditingMatrixSelectedArtifacts",
+                        "current-app-frontend/generated/flow/generated-flow-imports.js")
+                && containsPositiveIntegerField(line,
+                        "richTextEditorEditingMatrixSelectedArtifactCount")
+                && containsStringField(line,
+                        "richTextEditorEditingMatrixGeneratedImportsOwnerSource",
+                        "current-app-generated-imports-select-owner-coverage-v1_41")
+                && containsStringField(line,
+                        "richTextEditorEditingMatrixGeneratedImportsOwnerArtifact",
+                        "current-app-frontend/generated/flow/generated-flow-imports.js")
+                && line.contains("richTextEditorEditingMatrixProductionSupportArtifact")
+                && line.contains("richTextEditorEditingMatrixProductionSupportSha256")
+                && line.contains("richTextEditorEditingMatrixProductionSupportBytes")
+                && containsStringFieldPrefix(line,
+                        "richTextEditorEditingMatrixProductionEntryArtifact",
+                        "current-app-production/VAADIN/build/indexhtml-")
+                && containsStringFieldPrefix(line,
+                        "richTextEditorEditingMatrixSourceChunkArtifact",
+                        "current-app-frontend/generated/flow/chunks/chunk-")
+                && containsStringField(line,
+                        "richTextEditorEditingMatrixSourceChunkStatus", "available")
+                && line.contains("richTextEditorEditingMatrixResolvedSpecifiers")
+                && line.contains("richTextEditorEditingMatrixUnresolvedSpecifiers")
+                && containsStringField(line,
+                        "richTextEditorEditingMatrixAllowedSchemes", "vatori-resource,blob")
+                && containsStringField(line,
+                        "richTextEditorEditingMatrixIntegrityPolicy",
+                        "sha256-and-byte-count-for-selected-artifacts")
+                && containsStringField(line,
+                        "richTextEditorEditingMatrixBuildGoal", "build-frontend")
+                && containsStringField(line,
+                        "richTextEditorEditingMatrixBuildStatus", "success")
+                && line.contains("richTextEditorEditingMatrixOutputUsability")
+                && containsLiteralField(line,
+                        "richTextEditorEditingMatrixFrameworkAppRequired", "true")
+                && containsLiteralField(line,
+                        "richTextEditorEditingMatrixFrameworkAppObserved", "true")
+                && containsLiteralField(line,
+                        "richTextEditorEditingMatrixCliContractEnabled", "true")
+                && containsLiteralField(line,
+                        "richTextEditorEditingMatrixManifestReady", "true")
+                && containsLiteralField(line,
+                        "richTextEditorEditingMatrixRuntimeHandoffRequired", "true")
+                && containsLiteralField(line,
+                        "richTextEditorEditingMatrixRuntimeHandoffReady", "true")
+                && containsLiteralField(line,
+                        "richTextEditorEditingMatrixNoLocalhost", "true")
+                && containsLiteralField(line,
+                        "richTextEditorEditingMatrixFixtureSubstituted", "false")
+                && line.contains("richTextEditorEditingMatrixAcceptableFailures")
+                && line.contains("rich-text-editor-format-event-rpc-missing")
+                && line.contains("richTextEditorEditingMatrixRemainingBlockers")
+                && line.contains("native-clipboard-integration")
+                && line.contains("richTextEditorEditingMatrixNextResolutionStep");
+    }
+
+    private static boolean containsRichTextEditorEditingMatrixV164ManifestFields(String line) {
+        return containsStringField(line, "richTextEditorEditingMatrixVersion",
+                        "flow-ipc-rich-text-editor-editing-matrix-v1_64")
+                && containsStringField(line, "richTextEditorEditingMatrixTargetTags",
+                        "vaadin-rich-text-editor")
+                && containsStringField(line, "richTextEditorEditingMatrixJavaClasses",
+                        "com.vaadin.flow.component.richtexteditor.RichTextEditor,com.vaadin.flow.component.richtexteditor.RichTextEditorVariant")
+                && containsStringField(line, "richTextEditorEditingMatrixComponentIds",
+                        "framework-rich-text-editor,framework-rich-text-editor-status,framework-rich-text-editor-behavior-status,framework-rich-text-editor-editing-status")
+                && containsLiteralField(line,
+                        "richTextEditorEditingMatrixFrameworkAppObserved", "true")
+                && containsLiteralField(line,
+                        "richTextEditorEditingMatrixManifestReady", "true")
+                && containsLiteralField(line,
+                        "richTextEditorEditingMatrixRuntimeHandoffReady", "true")
+                && containsLiteralField(line,
+                        "richTextEditorEditingMatrixNoLocalhost", "true");
+    }
+
+    private static boolean containsRichTextEditorEditingMatrixV164Complete(String line) {
+        return containsRichTextEditorEditingMatrixV164Fields(line)
+                && containsLiteralField(line,
+                        "richTextEditorEditingMatrixRuntimeHandoffSatisfied", "true")
+                && containsLiteralField(line,
+                        "richTextEditorEditingMatrixStaged", "true")
+                && containsLiteralField(line,
+                        "richTextEditorEditingMatrixCustomSchemeObserved", "true")
+                && containsLiteralField(line,
+                        "richTextEditorEditingMatrixNoLocalhost", "true");
+    }
+
     private static boolean containsGridLazyDataProviderV148Fields(String line) {
         return containsStringField(line, "gridLazyDataProviderVersion",
                         "flow-ipc-grid-lazy-data-provider-v1_48")
@@ -7830,6 +10621,40 @@ public final class DesktopTraceInspector {
                 && containsLiteralField(line, "frameworkDownloadHandlerSaveOpenComplete", "true");
     }
 
+    private static boolean containsFrontendResourcePipelineBasicClosureV156Dom(String line) {
+        return containsStringField(line, "frontendResourcePipelineBasicClosureVersion",
+                        "flow-ipc-frontend-resource-pipeline-basic-closure-v1_56")
+                && containsStringField(line, "frontendResourcePipelineBasicClosureScope",
+                        "framework-validation-app-basic-frontend-resource-pipeline")
+                && containsStringField(line, "frontendResourcePipelineBasicClosureTransport",
+                        "flow-ipc-no-localhost")
+                && containsStringField(line, "frontendResourcePipelineBasicClosureAllowedSchemes",
+                        "vatori-resource,blob")
+                && line.contains("generated-imports-owner-runtime-contract-v1_42")
+                && line.contains("packaging-runtime-handoff-reuse-v1_45")
+                && line.contains("download-handler-save-open-v1_55")
+                && line.contains("component-frontend-resources")
+                && line.contains("upload-element-request-handler")
+                && containsLiteralField(line,
+                        "frontendResourcePipelineBasicClosureStaticFrontendClosed", "true")
+                && containsLiteralField(line,
+                        "frontendResourcePipelineBasicClosureComponentRuntimeClosed", "true")
+                && containsLiteralField(line,
+                        "frontendResourcePipelineBasicClosureDynamicResourceClosed", "true")
+                && containsLiteralField(line,
+                        "frontendResourcePipelineBasicClosureUploadDownloadClosed", "true")
+                && containsLiteralField(line,
+                        "frontendResourcePipelineBasicClosureNativeCapabilityClosed", "true")
+                && containsLiteralField(line,
+                        "frontendResourcePipelineBasicClosureNoLocalhost", "true")
+                && containsLiteralField(line,
+                        "frontendResourcePipelineBasicClosureFixtureSubstituted", "false")
+                && containsLiteralField(line,
+                        "frontendResourcePipelineBasicClosureComplete", "true")
+                && containsStringField(line,
+                        "frontendResourcePipelineBasicClosureFailureLayer", "");
+    }
+
     private static boolean containsProductionOwnerFailureLayer(String line, String field) {
         return containsStringField(line, field, "production-owner-duplicate-custom-element")
                 || containsStringField(line, field, "production-owner-relative-import-unresolved")
@@ -7973,6 +10798,20 @@ public final class DesktopTraceInspector {
         return line.contains(path) || line.contains(path.replace("/", "\\/"));
     }
 
+    private static String lazyGridFetchRange(String line) {
+        Matcher matcher = LAZY_GRID_FETCH_RANGE.matcher(line);
+        return matcher.find() ? matcher.group(1) : "";
+    }
+
+    private static String lazyGridReportRange(String line) {
+        Matcher matcher = LAZY_GRID_REPORT_RANGE.matcher(line);
+        return matcher.find() ? matcher.group(1) : "";
+    }
+
+    private static boolean containsLazyGridReportRange(String line) {
+        return !lazyGridReportRange(line).isEmpty();
+    }
+
     private static boolean containsPositiveIntegerField(String line, String field) {
         for (int digit = 1; digit <= 9; digit++) {
             if (line.contains("\"" + field + "\":" + digit)
@@ -8017,6 +10856,2491 @@ public final class DesktopTraceInspector {
         return line.contains("\"permissionMode\":\"allow-all-dev\"")
                 || line.contains("\"permissionMode\":\"manifest-enforced\"")
                 || line.contains("\"permissionMode\":\"trace-only-dry-run\"");
+    }
+
+    private static void inspectClipboardAndThemeMatrixLine(TraceSummary summary, String line) {
+        if (!line.contains("\"type\":\"webview.dom\"")) {
+            return;
+        }
+        if (containsLiteralField(line, "nativeClipboardReadMatrixComplete", "true")
+                && containsStringField(line,
+                        "nativeClipboardReadMatrixVersion",
+                        "flow-ipc-native-clipboard-read-matrix-v1_65")
+                && containsStringField(line,
+                        "nativeClipboardReadMatrixMode",
+                        "native-nspasteboard")
+                && containsLiteralField(line,
+                        "nativeClipboardReadMatrixPermissionObserved", "true")
+                && containsLiteralField(line,
+                        "nativeClipboardReadMatrixTextObserved", "true")
+                && line.contains("Flow IPC native clipboard v1.65")) {
+            summary.nativeClipboardReadMatrixDomObserved = true;
+        }
+        if (containsLiteralField(line,
+                "richTextEditorThemeVariantMatrixComplete", "true")
+                && containsStringField(line,
+                        "richTextEditorThemeVariantMatrixVersion",
+                        "flow-ipc-rich-text-editor-theme-variant-matrix-v1_66")
+                && containsStringField(line,
+                        "richTextEditorThemeVariantMatrixTheme",
+                        "compact")
+                && containsLiteralField(line,
+                        "richTextEditorThemeVariantMatrixCompactObserved", "true")
+                && containsLiteralField(line,
+                        "richTextEditorThemeVariantMatrixNoLocalhost", "true")
+                && containsLiteralField(line,
+                        "richTextEditorThemeVariantMatrixFixtureSubstituted", "false")) {
+            summary.richTextEditorThemeVariantMatrixDomObserved = true;
+        }
+        if (containsLiteralField(line, "buttonThemeVariantMatrixComplete", "true")
+                && containsStringField(line,
+                        "buttonThemeVariantMatrixVersion",
+                        "flow-ipc-button-theme-variant-matrix-v1_67")
+                && containsStringField(line,
+                        "buttonThemeVariantMatrixTheme",
+                        "primary")
+                && containsLiteralField(line,
+                        "buttonThemeVariantMatrixPrimaryObserved", "true")
+                && containsLiteralField(line,
+                        "buttonThemeVariantMatrixNoLocalhost", "true")
+                && containsLiteralField(line,
+                        "buttonThemeVariantMatrixFixtureSubstituted", "false")) {
+            summary.buttonThemeVariantMatrixDomObserved = true;
+        }
+        if (containsLiteralField(line,
+                "textFieldThemeVariantMatrixComplete", "true")
+                && containsStringField(line,
+                        "textFieldThemeVariantMatrixVersion",
+                        "flow-ipc-text-field-theme-variant-matrix-v1_68")
+                && containsStringField(line,
+                        "textFieldThemeVariantMatrixTheme",
+                        "small")
+                && containsLiteralField(line,
+                        "textFieldThemeVariantMatrixSmallObserved", "true")
+                && containsLiteralField(line,
+                        "textFieldThemeVariantMatrixNoLocalhost", "true")
+                && containsLiteralField(line,
+                        "textFieldThemeVariantMatrixFixtureSubstituted", "false")) {
+            summary.textFieldThemeVariantMatrixDomObserved = true;
+        }
+        if (containsLiteralField(line, "selectThemeVariantMatrixComplete", "true")
+                && containsStringField(line,
+                        "selectThemeVariantMatrixVersion",
+                        "flow-ipc-select-theme-variant-matrix-v1_69")
+                && containsStringField(line,
+                        "selectThemeVariantMatrixTheme",
+                        "small")
+                && containsLiteralField(line,
+                        "selectThemeVariantMatrixSmallObserved", "true")
+                && containsLiteralField(line,
+                        "selectThemeVariantMatrixNoLocalhost", "true")
+                && containsLiteralField(line,
+                        "selectThemeVariantMatrixFixtureSubstituted", "false")) {
+            summary.selectThemeVariantMatrixDomObserved = true;
+        }
+        if (containsLiteralField(line,
+                "comboBoxThemeVariantMatrixComplete", "true")
+                && containsStringField(line,
+                        "comboBoxThemeVariantMatrixVersion",
+                        "flow-ipc-combo-box-theme-variant-matrix-v1_70")
+                && containsStringField(line,
+                        "comboBoxThemeVariantMatrixTheme",
+                        "small")
+                && containsLiteralField(line,
+                        "comboBoxThemeVariantMatrixSmallObserved", "true")
+                && containsLiteralField(line,
+                        "comboBoxThemeVariantMatrixNoLocalhost", "true")
+                && containsLiteralField(line,
+                        "comboBoxThemeVariantMatrixFixtureSubstituted", "false")) {
+            summary.comboBoxThemeVariantMatrixDomObserved = true;
+        }
+        if (containsLiteralField(line,
+                "datePickerThemeVariantMatrixComplete", "true")
+                && containsStringField(line,
+                        "datePickerThemeVariantMatrixVersion",
+                        "flow-ipc-date-picker-theme-variant-matrix-v1_71")
+                && containsStringField(line,
+                        "datePickerThemeVariantMatrixTheme",
+                        "small")
+                && containsLiteralField(line,
+                        "datePickerThemeVariantMatrixSmallObserved", "true")
+                && containsLiteralField(line,
+                        "datePickerThemeVariantMatrixNoLocalhost", "true")
+                && containsLiteralField(line,
+                        "datePickerThemeVariantMatrixFixtureSubstituted", "false")) {
+            summary.datePickerThemeVariantMatrixDomObserved = true;
+        }
+        if (containsLiteralField(line,
+                "multiSelectComboBoxThemeVariantMatrixComplete", "true")
+                && containsStringField(line,
+                        "multiSelectComboBoxThemeVariantMatrixVersion",
+                        "flow-ipc-multi-select-combo-box-theme-variant-matrix-v1_72")
+                && containsStringField(line,
+                        "multiSelectComboBoxThemeVariantMatrixTheme",
+                        "small")
+                && containsLiteralField(line,
+                        "multiSelectComboBoxThemeVariantMatrixSmallObserved", "true")
+                && containsLiteralField(line,
+                        "multiSelectComboBoxThemeVariantMatrixNoLocalhost", "true")
+                && containsLiteralField(line,
+                        "multiSelectComboBoxThemeVariantMatrixFixtureSubstituted", "false")) {
+            summary.multiSelectComboBoxThemeVariantMatrixDomObserved = true;
+        }
+        if (containsLiteralField(line,
+                "timePickerThemeVariantMatrixComplete", "true")
+                && containsStringField(line,
+                        "timePickerThemeVariantMatrixVersion",
+                        "flow-ipc-time-picker-theme-variant-matrix-v1_73")
+                && containsStringField(line,
+                        "timePickerThemeVariantMatrixTheme",
+                        "small")
+                && containsLiteralField(line,
+                        "timePickerThemeVariantMatrixSmallObserved", "true")
+                && containsLiteralField(line,
+                        "timePickerThemeVariantMatrixNoLocalhost", "true")
+                && containsLiteralField(line,
+                        "timePickerThemeVariantMatrixFixtureSubstituted", "false")) {
+            summary.timePickerThemeVariantMatrixDomObserved = true;
+        }
+        if (containsLiteralField(line,
+                "textAreaThemeVariantMatrixComplete", "true")
+                && containsStringField(line,
+                        "textAreaThemeVariantMatrixVersion",
+                        "flow-ipc-text-area-theme-variant-matrix-v1_74")
+                && containsStringField(line,
+                        "textAreaThemeVariantMatrixTheme",
+                        "small")
+                && containsLiteralField(line,
+                        "textAreaThemeVariantMatrixSmallObserved", "true")
+                && containsLiteralField(line,
+                        "textAreaThemeVariantMatrixNoLocalhost", "true")
+                && containsLiteralField(line,
+                        "textAreaThemeVariantMatrixFixtureSubstituted", "false")) {
+            summary.textAreaThemeVariantMatrixDomObserved = true;
+        }
+        if (containsLiteralField(line,
+                "emailFieldThemeVariantMatrixComplete", "true")
+                && containsStringField(line,
+                        "emailFieldThemeVariantMatrixVersion",
+                        "flow-ipc-email-field-theme-variant-matrix-v1_75")
+                && containsStringField(line,
+                        "emailFieldThemeVariantMatrixTheme",
+                        "small")
+                && containsLiteralField(line,
+                        "emailFieldThemeVariantMatrixSmallObserved", "true")
+                && containsLiteralField(line,
+                        "emailFieldThemeVariantMatrixNoLocalhost", "true")
+                && containsLiteralField(line,
+                        "emailFieldThemeVariantMatrixFixtureSubstituted", "false")) {
+            summary.emailFieldThemeVariantMatrixDomObserved = true;
+        }
+        if (containsLiteralField(line,
+                "integerFieldThemeVariantMatrixComplete", "true")
+                && containsStringField(line,
+                        "integerFieldThemeVariantMatrixVersion",
+                        "flow-ipc-integer-field-theme-variant-matrix-v1_76")
+                && containsStringField(line,
+                        "integerFieldThemeVariantMatrixTheme",
+                        "small")
+                && containsLiteralField(line,
+                        "integerFieldThemeVariantMatrixSmallObserved", "true")
+                && containsLiteralField(line,
+                        "integerFieldThemeVariantMatrixNoLocalhost", "true")
+                && containsLiteralField(line,
+                        "integerFieldThemeVariantMatrixFixtureSubstituted", "false")) {
+            summary.integerFieldThemeVariantMatrixDomObserved = true;
+        }
+        if (containsLiteralField(line,
+                "passwordFieldThemeVariantMatrixComplete", "true")
+                && containsStringField(line,
+                        "passwordFieldThemeVariantMatrixVersion",
+                        "flow-ipc-password-field-theme-variant-matrix-v1_77")
+                && containsStringField(line,
+                        "passwordFieldThemeVariantMatrixTheme",
+                        "small")
+                && containsLiteralField(line,
+                        "passwordFieldThemeVariantMatrixSmallObserved", "true")
+                && containsLiteralField(line,
+                        "passwordFieldThemeVariantMatrixNoLocalhost", "true")
+                && containsLiteralField(line,
+                        "passwordFieldThemeVariantMatrixFixtureSubstituted", "false")) {
+            summary.passwordFieldThemeVariantMatrixDomObserved = true;
+        }
+        if (containsLiteralField(line,
+                "bigDecimalFieldThemeVariantMatrixComplete", "true")
+                && containsStringField(line,
+                        "bigDecimalFieldThemeVariantMatrixVersion",
+                        "flow-ipc-big-decimal-field-theme-variant-matrix-v1_78")
+                && containsStringField(line,
+                        "bigDecimalFieldThemeVariantMatrixTheme",
+                        "small")
+                && containsLiteralField(line,
+                        "bigDecimalFieldThemeVariantMatrixSmallObserved", "true")
+                && containsLiteralField(line,
+                        "bigDecimalFieldThemeVariantMatrixNoLocalhost", "true")
+                && containsLiteralField(line,
+                        "bigDecimalFieldThemeVariantMatrixFixtureSubstituted", "false")) {
+            summary.bigDecimalFieldThemeVariantMatrixDomObserved = true;
+        }
+        if (containsLiteralField(line,
+                "checkboxThemeVariantMatrixComplete", "true")
+                && containsStringField(line,
+                        "checkboxThemeVariantMatrixVersion",
+                        "flow-ipc-checkbox-theme-variant-matrix-v1_79")
+                && containsStringField(line,
+                        "checkboxThemeVariantMatrixTheme",
+                        "helper-above-field")
+                && containsLiteralField(line,
+                        "checkboxThemeVariantMatrixHelperAboveObserved", "true")
+                && containsLiteralField(line,
+                        "checkboxThemeVariantMatrixNoLocalhost", "true")
+                && containsLiteralField(line,
+                        "checkboxThemeVariantMatrixFixtureSubstituted", "false")) {
+            summary.checkboxThemeVariantMatrixDomObserved = true;
+        }
+        if (containsLiteralField(line,
+                "radioButtonGroupThemeVariantMatrixComplete", "true")
+                && containsStringField(line,
+                        "radioButtonGroupThemeVariantMatrixVersion",
+                        "flow-ipc-radio-button-group-theme-variant-matrix-v1_80")
+                && containsStringField(line,
+                        "radioButtonGroupThemeVariantMatrixTheme",
+                        "vertical")
+                && containsLiteralField(line,
+                        "radioButtonGroupThemeVariantMatrixVerticalObserved", "true")
+                && containsLiteralField(line,
+                        "radioButtonGroupThemeVariantMatrixNoLocalhost", "true")
+                && containsLiteralField(line,
+                        "radioButtonGroupThemeVariantMatrixFixtureSubstituted", "false")) {
+            summary.radioButtonGroupThemeVariantMatrixDomObserved = true;
+        }
+        if (containsLiteralField(line,
+                "tabsThemeVariantMatrixComplete", "true")
+                && containsStringField(line,
+                        "tabsThemeVariantMatrixVersion",
+                        "flow-ipc-tabs-theme-variant-matrix-v1_81")
+                && containsStringField(line,
+                        "tabsThemeVariantMatrixTheme",
+                        "small")
+                && containsLiteralField(line,
+                        "tabsThemeVariantMatrixSmallObserved", "true")
+                && containsLiteralField(line,
+                        "tabsThemeVariantMatrixNoLocalhost", "true")
+                && containsLiteralField(line,
+                        "tabsThemeVariantMatrixFixtureSubstituted", "false")) {
+            summary.tabsThemeVariantMatrixDomObserved = true;
+        }
+        if (containsLiteralField(line,
+                "detailsThemeVariantMatrixComplete", "true")
+                && containsStringField(line,
+                        "detailsThemeVariantMatrixVersion",
+                        "flow-ipc-details-theme-variant-matrix-v1_82")
+                && containsStringField(line,
+                        "detailsThemeVariantMatrixTheme",
+                        "small")
+                && containsLiteralField(line,
+                        "detailsThemeVariantMatrixSmallObserved", "true")
+                && containsLiteralField(line,
+                        "detailsThemeVariantMatrixNoLocalhost", "true")
+                && containsLiteralField(line,
+                        "detailsThemeVariantMatrixFixtureSubstituted", "false")) {
+            summary.detailsThemeVariantMatrixDomObserved = true;
+        }
+        if (containsLiteralField(line,
+                "menuBarThemeVariantMatrixComplete", "true")
+                && containsStringField(line,
+                        "menuBarThemeVariantMatrixVersion",
+                        "flow-ipc-menu-bar-theme-variant-matrix-v1_83")
+                && containsStringField(line,
+                        "menuBarThemeVariantMatrixTheme",
+                        "small")
+                && containsLiteralField(line,
+                        "menuBarThemeVariantMatrixSmallObserved", "true")
+                && containsLiteralField(line,
+                        "menuBarThemeVariantMatrixNoLocalhost", "true")
+                && containsLiteralField(line,
+                        "menuBarThemeVariantMatrixFixtureSubstituted", "false")) {
+            summary.menuBarThemeVariantMatrixDomObserved = true;
+        }
+        if (containsLiteralField(line,
+                "gridThemeVariantMatrixComplete", "true")
+                && containsStringField(line,
+                        "gridThemeVariantMatrixVersion",
+                        "flow-ipc-grid-theme-variant-matrix-v1_84")
+                && containsStringField(line,
+                        "gridThemeVariantMatrixTheme",
+                        "compact")
+                && containsLiteralField(line,
+                        "gridThemeVariantMatrixCompactObserved", "true")
+                && containsLiteralField(line,
+                        "gridThemeVariantMatrixNoLocalhost", "true")
+                && containsLiteralField(line,
+                        "gridThemeVariantMatrixFixtureSubstituted", "false")) {
+            summary.gridThemeVariantMatrixDomObserved = true;
+        }
+        if (containsLiteralField(line,
+                "avatarThemeVariantMatrixComplete", "true")
+                && containsStringField(line,
+                        "avatarThemeVariantMatrixVersion",
+                        "flow-ipc-avatar-theme-variant-matrix-v1_85")
+                && containsStringField(line,
+                        "avatarThemeVariantMatrixTheme",
+                        "small")
+                && containsLiteralField(line,
+                        "avatarThemeVariantMatrixSmallObserved", "true")
+                && containsLiteralField(line,
+                        "avatarThemeVariantMatrixNoLocalhost", "true")
+                && containsLiteralField(line,
+                        "avatarThemeVariantMatrixFixtureSubstituted", "false")) {
+            summary.avatarThemeVariantMatrixDomObserved = true;
+        }
+        if (containsLiteralField(line,
+                "avatarGroupThemeVariantMatrixComplete", "true")
+                && containsStringField(line,
+                        "avatarGroupThemeVariantMatrixVersion",
+                        "flow-ipc-avatar-group-theme-variant-matrix-v1_86")
+                && containsStringField(line,
+                        "avatarGroupThemeVariantMatrixTheme",
+                        "small")
+                && containsLiteralField(line,
+                        "avatarGroupThemeVariantMatrixSmallObserved", "true")
+                && containsLiteralField(line,
+                        "avatarGroupThemeVariantMatrixNoLocalhost", "true")
+                && containsLiteralField(line,
+                        "avatarGroupThemeVariantMatrixFixtureSubstituted", "false")) {
+            summary.avatarGroupThemeVariantMatrixDomObserved = true;
+        }
+        if (containsLiteralField(line,
+                "messageInputThemeVariantMatrixComplete", "true")
+                && containsStringField(line,
+                        "messageInputThemeVariantMatrixVersion",
+                        "flow-ipc-message-input-theme-variant-matrix-v1_87")
+                && containsStringField(line,
+                        "messageInputThemeVariantMatrixTheme",
+                        "icon-button")
+                && containsLiteralField(line,
+                        "messageInputThemeVariantMatrixIconButtonObserved", "true")
+                && containsLiteralField(line,
+                        "messageInputThemeVariantMatrixNoLocalhost", "true")
+                && containsLiteralField(line,
+                        "messageInputThemeVariantMatrixFixtureSubstituted", "false")) {
+            summary.messageInputThemeVariantMatrixDomObserved = true;
+        }
+        if (containsLiteralField(line,
+                "sideNavThemeVariantMatrixComplete", "true")
+                && containsStringField(line,
+                        "sideNavThemeVariantMatrixVersion",
+                        "flow-ipc-side-nav-theme-variant-matrix-v1_88")
+                && containsStringField(line,
+                        "sideNavThemeVariantMatrixTheme",
+                        "filled")
+                && containsLiteralField(line,
+                        "sideNavThemeVariantMatrixFilledObserved", "true")
+                && containsLiteralField(line,
+                        "sideNavThemeVariantMatrixNoLocalhost", "true")
+                && containsLiteralField(line,
+                        "sideNavThemeVariantMatrixFixtureSubstituted", "false")) {
+            summary.sideNavThemeVariantMatrixDomObserved = true;
+        }
+        if (containsLiteralField(line,
+                "messageListMarkdownMatrixComplete", "true")
+                && containsStringField(line,
+                        "messageListMarkdownMatrixVersion",
+                        "flow-ipc-message-list-markdown-announce-matrix-v1_89")
+                && containsLiteralField(line,
+                        "messageListMarkdownMatrixMarkdownObserved", "true")
+                && containsLiteralField(line,
+                        "messageListMarkdownMatrixMarkdownAttributeObserved", "true")
+                && containsLiteralField(line,
+                        "messageListMarkdownMatrixAnnounceMessagesObserved", "true")
+                && containsLiteralField(line,
+                        "messageListMarkdownMatrixNoLocalhost", "true")
+                && containsLiteralField(line,
+                        "messageListMarkdownMatrixFixtureSubstituted", "false")) {
+            summary.messageListMarkdownMatrixDomObserved = true;
+        }
+        if (containsLiteralField(line,
+                "loginOverlayPropertyMatrixComplete", "true")
+                && containsStringField(line,
+                        "loginOverlayPropertyMatrixVersion",
+                        "flow-ipc-login-overlay-property-matrix-v1_90")
+                && containsLiteralField(line,
+                        "loginOverlayPropertyMatrixRendered", "true")
+                && containsLiteralField(line,
+                        "loginOverlayPropertyMatrixTitleObserved", "true")
+                && containsLiteralField(line,
+                        "loginOverlayPropertyMatrixDescriptionObserved", "true")
+                && containsLiteralField(line,
+                        "loginOverlayPropertyMatrixI18nFormObserved", "true")
+                && containsLiteralField(line,
+                        "loginOverlayPropertyMatrixErrorMessageObserved", "true")
+                && containsLiteralField(line,
+                        "loginOverlayPropertyMatrixForgotPasswordVisibleObserved", "true")
+                && containsLiteralField(line,
+                        "loginOverlayPropertyMatrixErrorObserved", "true")
+                && containsLiteralField(line,
+                        "loginOverlayPropertyMatrixNoLocalhost", "true")
+                && containsLiteralField(line,
+                        "loginOverlayPropertyMatrixFixtureSubstituted", "false")) {
+            summary.loginOverlayPropertyMatrixDomObserved = true;
+        }
+        if (containsLiteralField(line,
+                "loginOverlayForgotPasswordEventMatrixComplete", "true")
+                && containsStringField(line,
+                        "loginOverlayForgotPasswordEventMatrixVersion",
+                        "flow-ipc-login-overlay-forgot-password-event-v1_91")
+                && containsLiteralField(line,
+                        "loginOverlayForgotPasswordEventMatrixRendered", "true")
+                && containsLiteralField(line,
+                        "loginOverlayForgotPasswordEventMatrixEventSent", "true")
+                && containsLiteralField(line,
+                        "loginOverlayForgotPasswordEventMatrixEventRpcObserved", "true")
+                && containsLiteralField(line,
+                        "loginOverlayForgotPasswordEventMatrixPatchObserved", "true")
+                && containsLiteralField(line,
+                        "loginOverlayForgotPasswordEventMatrixStatusObserved", "true")
+                && containsLiteralField(line,
+                        "loginOverlayForgotPasswordEventMatrixNoLocalhost", "true")
+                && containsLiteralField(line,
+                        "loginOverlayForgotPasswordEventMatrixFixtureSubstituted", "false")) {
+            summary.loginOverlayForgotPasswordEventMatrixDomObserved = true;
+        }
+        if (containsLiteralField(line,
+                "loginOverlayLoginEventMatrixComplete", "true")
+                && containsStringField(line,
+                        "loginOverlayLoginEventMatrixVersion",
+                        "flow-ipc-login-overlay-login-event-v1_92")
+                && containsLiteralField(line,
+                        "loginOverlayLoginEventMatrixRendered", "true")
+                && containsLiteralField(line,
+                        "loginOverlayLoginEventMatrixEventSent", "true")
+                && containsLiteralField(line,
+                        "loginOverlayLoginEventMatrixEventRpcObserved", "true")
+                && containsLiteralField(line,
+                        "loginOverlayLoginEventMatrixPatchObserved", "true")
+                && containsLiteralField(line,
+                        "loginOverlayLoginEventMatrixStatusObserved", "true")
+                && containsLiteralField(line,
+                        "loginOverlayLoginEventMatrixPasswordLengthObserved", "true")
+                && containsLiteralField(line,
+                        "loginOverlayLoginEventMatrixNoLocalhost", "true")
+                && containsLiteralField(line,
+                        "loginOverlayLoginEventMatrixFixtureSubstituted", "false")) {
+            summary.loginOverlayLoginEventMatrixDomObserved = true;
+        }
+        if (containsLiteralField(line,
+                "loginOverlayInvalidLoginEventMatrixComplete", "true")
+                && containsStringField(line,
+                        "loginOverlayInvalidLoginEventMatrixVersion",
+                        "flow-ipc-login-overlay-invalid-login-event-v1_93")
+                && containsLiteralField(line,
+                        "loginOverlayInvalidLoginEventMatrixRendered", "true")
+                && containsLiteralField(line,
+                        "loginOverlayInvalidLoginEventMatrixEventSent", "true")
+                && containsLiteralField(line,
+                        "loginOverlayInvalidLoginEventMatrixEventRpcObserved", "true")
+                && containsLiteralField(line,
+                        "loginOverlayInvalidLoginEventMatrixPatchObserved", "true")
+                && containsLiteralField(line,
+                        "loginOverlayInvalidLoginEventMatrixStatusObserved", "true")
+                && containsLiteralField(line,
+                        "loginOverlayInvalidLoginEventMatrixPasswordLengthObserved", "true")
+                && containsLiteralField(line,
+                        "loginOverlayInvalidLoginEventMatrixErrorObserved", "true")
+                && containsLiteralField(line,
+                        "loginOverlayInvalidLoginEventMatrixOpenedObserved", "true")
+                && containsLiteralField(line,
+                        "loginOverlayInvalidLoginEventMatrixNoLocalhost", "true")
+                && containsLiteralField(line,
+                        "loginOverlayInvalidLoginEventMatrixFixtureSubstituted", "false")) {
+            summary.loginOverlayInvalidLoginEventMatrixDomObserved = true;
+        }
+        if (containsLiteralField(line,
+                "loginOverlayCloseLifecycleMatrixComplete", "true")
+                && containsStringField(line,
+                        "loginOverlayCloseLifecycleMatrixVersion",
+                        "flow-ipc-login-overlay-close-lifecycle-v1_94")
+                && containsLiteralField(line,
+                        "loginOverlayCloseLifecycleMatrixRendered", "true")
+                && containsLiteralField(line,
+                        "loginOverlayCloseLifecycleMatrixEventSent", "true")
+                && containsLiteralField(line,
+                        "loginOverlayCloseLifecycleMatrixEventRpcObserved", "true")
+                && containsLiteralField(line,
+                        "loginOverlayCloseLifecycleMatrixPatchObserved", "true")
+                && containsLiteralField(line,
+                        "loginOverlayCloseLifecycleMatrixStatusObserved", "true")
+                && containsLiteralField(line,
+                        "loginOverlayCloseLifecycleMatrixClosedObserved", "true")
+                && containsLiteralField(line,
+                        "loginOverlayCloseLifecycleMatrixNoLocalhost", "true")
+                && containsLiteralField(line,
+                        "loginOverlayCloseLifecycleMatrixFixtureSubstituted", "false")) {
+            summary.loginOverlayCloseLifecycleMatrixDomObserved = true;
+        }
+        if (containsLiteralField(line,
+                "loginOverlayRecoveryLoginMatrixComplete", "true")
+                && containsStringField(line,
+                        "loginOverlayRecoveryLoginMatrixVersion",
+                        "flow-ipc-login-overlay-recovery-login-v1_95")
+                && containsLiteralField(line,
+                        "loginOverlayRecoveryLoginMatrixRendered", "true")
+                && containsLiteralField(line,
+                        "loginOverlayRecoveryLoginMatrixEventSent", "true")
+                && containsLiteralField(line,
+                        "loginOverlayRecoveryLoginMatrixEventRpcObserved", "true")
+                && containsLiteralField(line,
+                        "loginOverlayRecoveryLoginMatrixPatchObserved", "true")
+                && containsLiteralField(line,
+                        "loginOverlayRecoveryLoginMatrixStatusObserved", "true")
+                && containsLiteralField(line,
+                        "loginOverlayRecoveryLoginMatrixPasswordLengthObserved", "true")
+                && containsLiteralField(line,
+                        "loginOverlayRecoveryLoginMatrixErrorClearedObserved", "true")
+                && containsLiteralField(line,
+                        "loginOverlayRecoveryLoginMatrixClosedObserved", "true")
+                && containsLiteralField(line,
+                        "loginOverlayRecoveryLoginMatrixNoLocalhost", "true")
+                && containsLiteralField(line,
+                        "loginOverlayRecoveryLoginMatrixFixtureSubstituted", "false")) {
+            summary.loginOverlayRecoveryLoginMatrixDomObserved = true;
+        }
+        if (containsLiteralField(line,
+                "loginOverlayServerReopenMatrixComplete", "true")
+                && containsStringField(line,
+                        "loginOverlayServerReopenMatrixVersion",
+                        "flow-ipc-login-overlay-server-reopen-v1_96")
+                && containsLiteralField(line,
+                        "loginOverlayServerReopenMatrixButtonRendered", "true")
+                && containsLiteralField(line,
+                        "loginOverlayServerReopenMatrixOverlayRendered", "true")
+                && containsLiteralField(line,
+                        "loginOverlayServerReopenMatrixEventSent", "true")
+                && containsLiteralField(line,
+                        "loginOverlayServerReopenMatrixEventRpcObserved", "true")
+                && containsLiteralField(line,
+                        "loginOverlayServerReopenMatrixPatchObserved", "true")
+                && containsLiteralField(line,
+                        "loginOverlayServerReopenMatrixStatusObserved", "true")
+                && containsLiteralField(line,
+                        "loginOverlayServerReopenMatrixOpenedObserved", "true")
+                && containsLiteralField(line,
+                        "loginOverlayServerReopenMatrixNoLocalhost", "true")
+                && containsLiteralField(line,
+                        "loginOverlayServerReopenMatrixFixtureSubstituted", "false")) {
+            summary.loginOverlayServerReopenMatrixDomObserved = true;
+        }
+        if (containsLiteralField(line,
+                "loginOverlayShowErrorMatrixComplete", "true")
+                && containsStringField(line,
+                        "loginOverlayShowErrorMatrixVersion",
+                        "flow-ipc-login-overlay-show-error-v1_111")
+                && containsLiteralField(line,
+                        "loginOverlayShowErrorMatrixRendered", "true")
+                && containsLiteralField(line,
+                        "loginOverlayShowErrorMatrixEventSent", "true")
+                && containsLiteralField(line,
+                        "loginOverlayShowErrorMatrixEventRpcObserved", "true")
+                && containsLiteralField(line,
+                        "loginOverlayShowErrorMatrixPatchObserved", "true")
+                && containsLiteralField(line,
+                        "loginOverlayShowErrorMatrixStatusObserved", "true")
+                && containsLiteralField(line,
+                        "loginOverlayShowErrorMatrixPasswordLengthObserved", "true")
+                && containsLiteralField(line,
+                        "loginOverlayShowErrorMatrixErrorObserved", "true")
+                && containsLiteralField(line,
+                        "loginOverlayShowErrorMatrixOpenedObserved", "true")
+                && containsLiteralField(line,
+                        "loginOverlayShowErrorMatrixErrorTitleObserved", "true")
+                && containsLiteralField(line,
+                        "loginOverlayShowErrorMatrixErrorMessageObserved", "true")
+                && containsLiteralField(line,
+                        "loginOverlayShowErrorMatrixNoLocalhost", "true")
+                && containsLiteralField(line,
+                        "loginOverlayShowErrorMatrixFixtureSubstituted", "false")) {
+            summary.loginOverlayShowErrorMatrixDomObserved = true;
+        }
+        if (containsLiteralField(line,
+                "loginOverlayFullI18nMatrixComplete", "true")
+                && containsStringField(line,
+                        "loginOverlayFullI18nMatrixVersion",
+                        "flow-ipc-login-overlay-i18n-full-v1_112")
+                && containsLiteralField(line,
+                        "loginOverlayFullI18nMatrixRendered", "true")
+                && containsLiteralField(line,
+                        "loginOverlayFullI18nMatrixHeaderObserved", "true")
+                && containsLiteralField(line,
+                        "loginOverlayFullI18nMatrixFormObserved", "true")
+                && containsLiteralField(line,
+                        "loginOverlayFullI18nMatrixErrorMessageObserved", "true")
+                && containsLiteralField(line,
+                        "loginOverlayFullI18nMatrixAdditionalInformationObserved", "true")
+                && containsLiteralField(line,
+                        "loginOverlayFullI18nMatrixForgotPasswordVisibleObserved", "true")
+                && containsLiteralField(line,
+                        "loginOverlayFullI18nMatrixErrorObserved", "true")
+                && containsLiteralField(line,
+                        "loginOverlayFullI18nMatrixNoLocalhost", "true")
+                && containsLiteralField(line,
+                        "loginOverlayFullI18nMatrixFixtureSubstituted", "false")) {
+            summary.loginOverlayFullI18nMatrixDomObserved = true;
+        }
+        if (containsLiteralField(line,
+                "loginOverlayNoAutofocusMatrixComplete", "true")
+                && containsStringField(line,
+                        "loginOverlayNoAutofocusMatrixVersion",
+                        "flow-ipc-login-overlay-no-autofocus-v1_113")
+                && containsLiteralField(line,
+                        "loginOverlayNoAutofocusMatrixRendered", "true")
+                && containsLiteralField(line,
+                        "loginOverlayNoAutofocusMatrixOpenTriggerObserved", "true")
+                && containsLiteralField(line,
+                        "loginOverlayNoAutofocusMatrixOpenClickSent", "true")
+                && containsLiteralField(line,
+                        "loginOverlayNoAutofocusMatrixOpenEventRpcObserved", "true")
+                && containsLiteralField(line,
+                        "loginOverlayNoAutofocusMatrixPatchObserved", "true")
+                && containsLiteralField(line,
+                        "loginOverlayNoAutofocusMatrixOpenedObserved", "true")
+                && containsLiteralField(line,
+                        "loginOverlayNoAutofocusMatrixStatusObserved", "true")
+                && containsLiteralField(line,
+                        "loginOverlayNoAutofocusMatrixAttributeObserved", "true")
+                && containsLiteralField(line,
+                        "loginOverlayNoAutofocusMatrixUsernameControlObserved", "true")
+                && containsLiteralField(line,
+                        "loginOverlayNoAutofocusMatrixInitialFocusSuppressedObserved", "true")
+                && containsLiteralField(line,
+                        "loginOverlayNoAutofocusMatrixManualFocusAttempted", "true")
+                && containsLiteralField(line,
+                        "loginOverlayNoAutofocusMatrixManualFocusObserved", "true")
+                && containsLiteralField(line,
+                        "loginOverlayNoAutofocusMatrixNoLocalhost", "true")
+                && containsLiteralField(line,
+                        "loginOverlayNoAutofocusMatrixFixtureSubstituted", "false")) {
+            summary.loginOverlayNoAutofocusMatrixDomObserved = true;
+        }
+        boolean loginOverlayAutofocusControlDefaultFocusObserved =
+                containsLiteralField(line,
+                        "loginOverlayAutofocusControlMatrixDefaultFocusObserved", "true");
+        boolean loginOverlayAutofocusControlAcceptedBlockerObserved =
+                containsLiteralField(line,
+                        "loginOverlayAutofocusControlMatrixAcceptedBlockerObserved", "true")
+                && containsStringField(line,
+                        "loginOverlayAutofocusControlMatrixFocusClassification",
+                        "default-focus-not-observed-in-framework-validation-view");
+        if (containsLiteralField(line,
+                "loginOverlayAutofocusControlMatrixComplete", "true")
+                && containsStringField(line,
+                        "loginOverlayAutofocusControlMatrixVersion",
+                        "flow-ipc-login-overlay-autofocus-control-v1_120")
+                && containsLiteralField(line,
+                        "loginOverlayAutofocusControlMatrixRendered", "true")
+                && containsLiteralField(line,
+                        "loginOverlayAutofocusControlMatrixOpenTriggerObserved", "true")
+                && containsLiteralField(line,
+                        "loginOverlayAutofocusControlMatrixOpenEventSent", "true")
+                && containsLiteralField(line,
+                        "loginOverlayAutofocusControlMatrixOpenEventRpcObserved", "true")
+                && containsLiteralField(line,
+                        "loginOverlayAutofocusControlMatrixPatchObserved", "true")
+                && containsLiteralField(line,
+                        "loginOverlayAutofocusControlMatrixOpenedObserved", "true")
+                && containsLiteralField(line,
+                        "loginOverlayAutofocusControlMatrixStatusObserved", "true")
+                && containsLiteralField(line,
+                        "loginOverlayAutofocusControlMatrixUsernameControlObserved", "true")
+                && (loginOverlayAutofocusControlDefaultFocusObserved
+                        || loginOverlayAutofocusControlAcceptedBlockerObserved)
+                && containsLiteralField(line,
+                        "loginOverlayAutofocusControlMatrixNoLocalhost", "true")
+                && containsLiteralField(line,
+                        "loginOverlayAutofocusControlMatrixFixtureSubstituted", "false")) {
+            summary.loginOverlayAutofocusControlMatrixDomObserved = true;
+        }
+        boolean loginOverlayEscCloseObserved =
+                containsLiteralField(line,
+                        "loginOverlayEscCloseMatrixCloseEventRpcObserved", "true")
+                && containsLiteralField(line,
+                        "loginOverlayEscCloseMatrixClosePatchObserved", "true")
+                && containsLiteralField(line,
+                        "loginOverlayEscCloseMatrixClosedObserved", "true")
+                && containsLiteralField(line,
+                        "loginOverlayEscCloseMatrixCloseStatusObserved", "true")
+                && containsStringField(line,
+                        "loginOverlayEscCloseMatrixCloseClassification",
+                        "esc-close-observed");
+        boolean loginOverlayEscCloseAcceptedBlockerObserved =
+                containsLiteralField(line,
+                        "loginOverlayEscCloseMatrixAcceptedBlockerObserved", "true")
+                && containsStringField(line,
+                        "loginOverlayEscCloseMatrixCloseClassification",
+                        "synthetic-escape-did-not-close-overlay-in-framework-validation-view");
+        if (containsLiteralField(line,
+                "loginOverlayEscCloseMatrixComplete", "true")
+                && containsStringField(line,
+                        "loginOverlayEscCloseMatrixVersion",
+                        "flow-ipc-login-overlay-esc-close-v1_121")
+                && containsLiteralField(line,
+                        "loginOverlayEscCloseMatrixRendered", "true")
+                && containsLiteralField(line,
+                        "loginOverlayEscCloseMatrixOpenTriggerObserved", "true")
+                && containsLiteralField(line,
+                        "loginOverlayEscCloseMatrixOpenEventSent", "true")
+                && containsLiteralField(line,
+                        "loginOverlayEscCloseMatrixOpenEventRpcObserved", "true")
+                && containsLiteralField(line,
+                        "loginOverlayEscCloseMatrixOpenPatchObserved", "true")
+                && containsLiteralField(line,
+                        "loginOverlayEscCloseMatrixOpenedObserved", "true")
+                && containsLiteralField(line,
+                        "loginOverlayEscCloseMatrixOpenStatusObserved", "true")
+                && containsLiteralField(line,
+                        "loginOverlayEscCloseMatrixEscKeyAttempted", "true")
+                && (loginOverlayEscCloseObserved
+                        || loginOverlayEscCloseAcceptedBlockerObserved)
+                && containsLiteralField(line,
+                        "loginOverlayEscCloseMatrixNoLocalhost", "true")
+                && containsLiteralField(line,
+                        "loginOverlayEscCloseMatrixFixtureSubstituted", "false")) {
+            summary.loginOverlayEscCloseMatrixDomObserved = true;
+        }
+        boolean loginOverlayOutsideCloseObserved =
+                containsLiteralField(line,
+                        "loginOverlayOutsideCloseMatrixCloseEventRpcObserved", "true")
+                && containsLiteralField(line,
+                        "loginOverlayOutsideCloseMatrixClosePatchObserved", "true")
+                && containsLiteralField(line,
+                        "loginOverlayOutsideCloseMatrixClosedObserved", "true")
+                && containsLiteralField(line,
+                        "loginOverlayOutsideCloseMatrixCloseStatusObserved", "true")
+                && containsStringField(line,
+                        "loginOverlayOutsideCloseMatrixCloseClassification",
+                        "outside-click-close-observed");
+        boolean loginOverlayOutsideCloseAcceptedBlockerObserved =
+                containsLiteralField(line,
+                        "loginOverlayOutsideCloseMatrixAcceptedBlockerObserved", "true")
+                && containsStringField(line,
+                        "loginOverlayOutsideCloseMatrixCloseClassification",
+                        "synthetic-outside-click-did-not-close-overlay-in-framework-validation-view");
+        if (containsLiteralField(line,
+                "loginOverlayOutsideCloseMatrixComplete", "true")
+                && containsStringField(line,
+                        "loginOverlayOutsideCloseMatrixVersion",
+                        "flow-ipc-login-overlay-outside-click-close-v1_122")
+                && containsLiteralField(line,
+                        "loginOverlayOutsideCloseMatrixRendered", "true")
+                && containsLiteralField(line,
+                        "loginOverlayOutsideCloseMatrixOpenTriggerObserved", "true")
+                && containsLiteralField(line,
+                        "loginOverlayOutsideCloseMatrixOpenEventSent", "true")
+                && containsLiteralField(line,
+                        "loginOverlayOutsideCloseMatrixOpenEventRpcObserved", "true")
+                && containsLiteralField(line,
+                        "loginOverlayOutsideCloseMatrixOpenPatchObserved", "true")
+                && containsLiteralField(line,
+                        "loginOverlayOutsideCloseMatrixOpenedObserved", "true")
+                && containsLiteralField(line,
+                        "loginOverlayOutsideCloseMatrixOpenStatusObserved", "true")
+                && containsLiteralField(line,
+                        "loginOverlayOutsideCloseMatrixClickAttempted", "true")
+                && (loginOverlayOutsideCloseObserved
+                        || loginOverlayOutsideCloseAcceptedBlockerObserved)
+                && containsLiteralField(line,
+                        "loginOverlayOutsideCloseMatrixNoLocalhost", "true")
+                && containsLiteralField(line,
+                        "loginOverlayOutsideCloseMatrixFixtureSubstituted", "false")) {
+            summary.loginOverlayOutsideCloseMatrixDomObserved = true;
+        }
+        boolean loginOverlayTabTraversalObserved =
+                containsLiteralField(line,
+                        "loginOverlayTabTraversalMatrixPasswordFocusObserved", "true")
+                && containsStringField(line,
+                        "loginOverlayTabTraversalMatrixFocusClassification",
+                        "tab-focus-password-observed");
+        boolean loginOverlayTabTraversalAcceptedBlockerObserved =
+                containsLiteralField(line,
+                        "loginOverlayTabTraversalMatrixAcceptedBlockerObserved", "true")
+                && containsStringField(line,
+                        "loginOverlayTabTraversalMatrixFocusClassification",
+                        "synthetic-tab-did-not-move-focus-to-password-in-framework-validation-view");
+        if (containsLiteralField(line,
+                "loginOverlayTabTraversalMatrixComplete", "true")
+                && containsStringField(line,
+                        "loginOverlayTabTraversalMatrixVersion",
+                        "flow-ipc-login-overlay-tab-traversal-v1_123")
+                && containsLiteralField(line,
+                        "loginOverlayTabTraversalMatrixRendered", "true")
+                && containsLiteralField(line,
+                        "loginOverlayTabTraversalMatrixOpenTriggerObserved", "true")
+                && containsLiteralField(line,
+                        "loginOverlayTabTraversalMatrixOpenEventSent", "true")
+                && containsLiteralField(line,
+                        "loginOverlayTabTraversalMatrixOpenEventRpcObserved", "true")
+                && containsLiteralField(line,
+                        "loginOverlayTabTraversalMatrixOpenPatchObserved", "true")
+                && containsLiteralField(line,
+                        "loginOverlayTabTraversalMatrixOpenedObserved", "true")
+                && containsLiteralField(line,
+                        "loginOverlayTabTraversalMatrixOpenStatusObserved", "true")
+                && containsLiteralField(line,
+                        "loginOverlayTabTraversalMatrixUsernameControlObserved", "true")
+                && containsLiteralField(line,
+                        "loginOverlayTabTraversalMatrixPasswordControlObserved", "true")
+                && containsLiteralField(line,
+                        "loginOverlayTabTraversalMatrixUsernameFocusAttempted", "true")
+                && containsLiteralField(line,
+                        "loginOverlayTabTraversalMatrixTabKeyAttempted", "true")
+                && (loginOverlayTabTraversalObserved
+                        || loginOverlayTabTraversalAcceptedBlockerObserved)
+                && containsLiteralField(line,
+                        "loginOverlayTabTraversalMatrixNoLocalhost", "true")
+                && containsLiteralField(line,
+                        "loginOverlayTabTraversalMatrixFixtureSubstituted", "false")) {
+            summary.loginOverlayTabTraversalMatrixDomObserved = true;
+        }
+        boolean loginOverlayShiftTabTraversalObserved =
+                containsLiteralField(line,
+                        "loginOverlayShiftTabTraversalMatrixUsernameFocusObserved", "true")
+                && containsStringField(line,
+                        "loginOverlayShiftTabTraversalMatrixFocusClassification",
+                        "shift-tab-focus-username-observed");
+        boolean loginOverlayShiftTabTraversalAcceptedBlockerObserved =
+                containsLiteralField(line,
+                        "loginOverlayShiftTabTraversalMatrixAcceptedBlockerObserved", "true")
+                && containsStringField(line,
+                        "loginOverlayShiftTabTraversalMatrixFocusClassification",
+                        "synthetic-shift-tab-did-not-move-focus-to-username-in-framework-validation-view");
+        if (containsLiteralField(line,
+                "loginOverlayShiftTabTraversalMatrixComplete", "true")
+                && containsStringField(line,
+                        "loginOverlayShiftTabTraversalMatrixVersion",
+                        "flow-ipc-login-overlay-shift-tab-traversal-v1_124")
+                && containsLiteralField(line,
+                        "loginOverlayShiftTabTraversalMatrixRendered", "true")
+                && containsLiteralField(line,
+                        "loginOverlayShiftTabTraversalMatrixOpenTriggerObserved", "true")
+                && containsLiteralField(line,
+                        "loginOverlayShiftTabTraversalMatrixOpenEventSent", "true")
+                && containsLiteralField(line,
+                        "loginOverlayShiftTabTraversalMatrixOpenEventRpcObserved", "true")
+                && containsLiteralField(line,
+                        "loginOverlayShiftTabTraversalMatrixOpenPatchObserved", "true")
+                && containsLiteralField(line,
+                        "loginOverlayShiftTabTraversalMatrixOpenedObserved", "true")
+                && containsLiteralField(line,
+                        "loginOverlayShiftTabTraversalMatrixOpenStatusObserved", "true")
+                && containsLiteralField(line,
+                        "loginOverlayShiftTabTraversalMatrixUsernameControlObserved", "true")
+                && containsLiteralField(line,
+                        "loginOverlayShiftTabTraversalMatrixPasswordControlObserved", "true")
+                && containsLiteralField(line,
+                        "loginOverlayShiftTabTraversalMatrixPasswordFocusAttempted", "true")
+                && containsLiteralField(line,
+                        "loginOverlayShiftTabTraversalMatrixShiftTabKeyAttempted", "true")
+                && (loginOverlayShiftTabTraversalObserved
+                        || loginOverlayShiftTabTraversalAcceptedBlockerObserved)
+                && containsLiteralField(line,
+                        "loginOverlayShiftTabTraversalMatrixNoLocalhost", "true")
+                && containsLiteralField(line,
+                        "loginOverlayShiftTabTraversalMatrixFixtureSubstituted", "false")) {
+            summary.loginOverlayShiftTabTraversalMatrixDomObserved = true;
+        }
+        if (containsLiteralField(line,
+                "loginOverlayDisabledGuardMatrixComplete", "true")
+                && containsStringField(line,
+                        "loginOverlayDisabledGuardMatrixVersion",
+                        "flow-ipc-login-overlay-disabled-guard-v1_114")
+                && containsLiteralField(line,
+                        "loginOverlayDisabledGuardMatrixRendered", "true")
+                && containsLiteralField(line,
+                        "loginOverlayDisabledGuardMatrixOpenTriggerObserved", "true")
+                && containsLiteralField(line,
+                        "loginOverlayDisabledGuardMatrixOpenClickSent", "true")
+                && containsLiteralField(line,
+                        "loginOverlayDisabledGuardMatrixOpenEventRpcObserved", "true")
+                && containsLiteralField(line,
+                        "loginOverlayDisabledGuardMatrixPatchObserved", "true")
+                && containsLiteralField(line,
+                        "loginOverlayDisabledGuardMatrixOpenedObserved", "true")
+                && containsLiteralField(line,
+                        "loginOverlayDisabledGuardMatrixStatusObserved", "true")
+                && containsLiteralField(line,
+                        "loginOverlayDisabledGuardMatrixDisabledObserved", "true")
+                && containsLiteralField(line,
+                        "loginOverlayDisabledGuardMatrixControlsDisabledObserved", "true")
+                && containsLiteralField(line,
+                        "loginOverlayDisabledGuardMatrixSubmitButtonObserved", "true")
+                && containsLiteralField(line,
+                        "loginOverlayDisabledGuardMatrixSubmitButtonDisabledObserved", "true")
+                && containsLiteralField(line,
+                        "loginOverlayDisabledGuardMatrixCredentialsWriteAttempted", "true")
+                && containsLiteralField(line,
+                        "loginOverlayDisabledGuardMatrixClickAttempted", "true")
+                && containsLiteralField(line,
+                        "loginOverlayDisabledGuardMatrixSubmitAttempted", "true")
+                && containsLiteralField(line,
+                        "loginOverlayDisabledGuardMatrixLoginEventAttempted", "true")
+                && containsLiteralField(line,
+                        "loginOverlayDisabledGuardMatrixEventRpcSuppressedObserved", "true")
+                && containsLiteralField(line,
+                        "loginOverlayDisabledGuardMatrixStatusUnchangedObserved", "true")
+                && containsLiteralField(line,
+                        "loginOverlayDisabledGuardMatrixNoPrematurePatchObserved", "true")
+                && containsLiteralField(line,
+                        "loginOverlayDisabledGuardMatrixUnexpectedLoginRpcObserved", "false")
+                && containsLiteralField(line,
+                        "loginOverlayDisabledGuardMatrixNoLocalhost", "true")
+                && containsLiteralField(line,
+                        "loginOverlayDisabledGuardMatrixFixtureSubstituted", "false")) {
+            summary.loginOverlayDisabledGuardMatrixDomObserved = true;
+        }
+        if (containsLiteralField(line,
+                "loginOverlayDisabledKeyboardGuardMatrixComplete", "true")
+                && containsStringField(line,
+                        "loginOverlayDisabledKeyboardGuardMatrixVersion",
+                        "flow-ipc-login-overlay-disabled-keyboard-guard-v1_115")
+                && containsLiteralField(line,
+                        "loginOverlayDisabledKeyboardGuardMatrixRendered", "true")
+                && containsLiteralField(line,
+                        "loginOverlayDisabledKeyboardGuardMatrixOpenTriggerObserved", "true")
+                && containsLiteralField(line,
+                        "loginOverlayDisabledKeyboardGuardMatrixOpenClickSent", "true")
+                && containsLiteralField(line,
+                        "loginOverlayDisabledKeyboardGuardMatrixOpenEventRpcObserved", "true")
+                && containsLiteralField(line,
+                        "loginOverlayDisabledKeyboardGuardMatrixPatchObserved", "true")
+                && containsLiteralField(line,
+                        "loginOverlayDisabledKeyboardGuardMatrixOpenedObserved", "true")
+                && containsLiteralField(line,
+                        "loginOverlayDisabledKeyboardGuardMatrixStatusObserved", "true")
+                && containsLiteralField(line,
+                        "loginOverlayDisabledKeyboardGuardMatrixDisabledObserved", "true")
+                && containsLiteralField(line,
+                        "loginOverlayDisabledKeyboardGuardMatrixControlsDisabledObserved", "true")
+                && containsLiteralField(line,
+                        "loginOverlayDisabledKeyboardGuardMatrixFocusTargetObserved", "true")
+                && containsLiteralField(line,
+                        "loginOverlayDisabledKeyboardGuardMatrixFocusAttempted", "true")
+                && containsLiteralField(line,
+                        "loginOverlayDisabledKeyboardGuardMatrixFocusSuppressedObserved", "true")
+                && containsLiteralField(line,
+                        "loginOverlayDisabledKeyboardGuardMatrixTabKeyAttempted", "true")
+                && containsLiteralField(line,
+                        "loginOverlayDisabledKeyboardGuardMatrixEnterKeyAttempted", "true")
+                && containsLiteralField(line,
+                        "loginOverlayDisabledKeyboardGuardMatrixSubmitAttempted", "true")
+                && containsLiteralField(line,
+                        "loginOverlayDisabledKeyboardGuardMatrixEventRpcSuppressedObserved", "true")
+                && containsLiteralField(line,
+                        "loginOverlayDisabledKeyboardGuardMatrixStatusUnchangedObserved", "true")
+                && containsLiteralField(line,
+                        "loginOverlayDisabledKeyboardGuardMatrixNoPrematurePatchObserved", "true")
+                && containsLiteralField(line,
+                        "loginOverlayDisabledKeyboardGuardMatrixUnexpectedLoginRpcObserved", "false")
+                && containsLiteralField(line,
+                        "loginOverlayDisabledKeyboardGuardMatrixNoLocalhost", "true")
+                && containsLiteralField(line,
+                        "loginOverlayDisabledKeyboardGuardMatrixFixtureSubstituted", "false")) {
+            summary.loginOverlayDisabledKeyboardGuardMatrixDomObserved = true;
+        }
+        if (containsLiteralField(line,
+                "loginOverlayActionPostMatrixComplete", "true")
+                && containsStringField(line,
+                        "loginOverlayActionPostMatrixVersion",
+                        "flow-ipc-login-overlay-action-post-v1_116")
+                && containsLiteralField(line,
+                        "loginOverlayActionPostMatrixRendered", "true")
+                && containsLiteralField(line,
+                        "loginOverlayActionPostMatrixOpenTriggerObserved", "true")
+                && containsLiteralField(line,
+                        "loginOverlayActionPostMatrixOpenEventSent", "true")
+                && containsLiteralField(line,
+                        "loginOverlayActionPostMatrixOpenEventRpcObserved", "true")
+                && containsLiteralField(line,
+                        "loginOverlayActionPostMatrixOpenPatchObserved", "true")
+                && containsLiteralField(line,
+                        "loginOverlayActionPostMatrixOpenedObserved", "true")
+                && containsLiteralField(line,
+                        "loginOverlayActionPostMatrixActionObserved", "true")
+                && containsLiteralField(line,
+                        "loginOverlayActionPostMatrixMethodObserved", "true")
+                && containsLiteralField(line,
+                        "loginOverlayActionPostMatrixSubmitAttempted", "true")
+                && containsLiteralField(line,
+                        "loginOverlayActionPostMatrixSubmitIntercepted", "true")
+                && containsStringField(line,
+                        "loginOverlayActionPostMatrixSubmitClassification",
+                        "no-localhost-browser-post-intercepted")
+                && containsLiteralField(line,
+                        "loginOverlayActionPostMatrixEventSent", "true")
+                && containsLiteralField(line,
+                        "loginOverlayActionPostMatrixEventRpcObserved", "true")
+                && containsLiteralField(line,
+                        "loginOverlayActionPostMatrixPatchObserved", "true")
+                && containsLiteralField(line,
+                        "loginOverlayActionPostMatrixStatusObserved", "true")
+                && containsLiteralField(line,
+                        "loginOverlayActionPostMatrixPasswordLengthObserved", "true")
+                && containsLiteralField(line,
+                        "loginOverlayActionPostMatrixNoLocalhost", "true")
+                && containsLiteralField(line,
+                        "loginOverlayActionPostMatrixFixtureSubstituted", "false")) {
+            summary.loginOverlayActionPostMatrixDomObserved = true;
+        }
+        if (containsLiteralField(line,
+                "loginOverlaySubmitButtonMatrixComplete", "true")
+                && containsStringField(line,
+                        "loginOverlaySubmitButtonMatrixVersion",
+                        "flow-ipc-login-overlay-submit-button-v1_117")
+                && containsLiteralField(line,
+                        "loginOverlaySubmitButtonMatrixRendered", "true")
+                && containsLiteralField(line,
+                        "loginOverlaySubmitButtonMatrixOpenTriggerObserved", "true")
+                && containsLiteralField(line,
+                        "loginOverlaySubmitButtonMatrixOpenEventSent", "true")
+                && containsLiteralField(line,
+                        "loginOverlaySubmitButtonMatrixOpenEventRpcObserved", "true")
+                && containsLiteralField(line,
+                        "loginOverlaySubmitButtonMatrixOpenPatchObserved", "true")
+                && containsLiteralField(line,
+                        "loginOverlaySubmitButtonMatrixOpenedObserved", "true")
+                && containsLiteralField(line,
+                        "loginOverlaySubmitButtonMatrixInnerFormObserved", "true")
+                && containsLiteralField(line,
+                        "loginOverlaySubmitButtonMatrixSubmitButtonObserved", "true")
+                && containsLiteralField(line,
+                        "loginOverlaySubmitButtonMatrixCredentialsWritten", "true")
+                && containsLiteralField(line,
+                        "loginOverlaySubmitButtonMatrixClickAttempted", "true")
+                && containsLiteralField(line,
+                        "loginOverlaySubmitButtonMatrixEventSent", "true")
+                && containsLiteralField(line,
+                        "loginOverlaySubmitButtonMatrixEventRpcObserved", "true")
+                && containsLiteralField(line,
+                        "loginOverlaySubmitButtonMatrixPatchObserved", "true")
+                && containsLiteralField(line,
+                        "loginOverlaySubmitButtonMatrixStatusObserved", "true")
+                && containsLiteralField(line,
+                        "loginOverlaySubmitButtonMatrixPasswordLengthObserved", "true")
+                && containsLiteralField(line,
+                        "loginOverlaySubmitButtonMatrixNoLocalhost", "true")
+                && containsLiteralField(line,
+                        "loginOverlaySubmitButtonMatrixFixtureSubstituted", "false")) {
+            summary.loginOverlaySubmitButtonMatrixDomObserved = true;
+        }
+        if (containsLiteralField(line,
+                "loginOverlayEnterSubmitMatrixComplete", "true")
+                && containsStringField(line,
+                        "loginOverlayEnterSubmitMatrixVersion",
+                        "flow-ipc-login-overlay-enter-submit-v1_118")
+                && containsLiteralField(line,
+                        "loginOverlayEnterSubmitMatrixRendered", "true")
+                && containsLiteralField(line,
+                        "loginOverlayEnterSubmitMatrixOpenTriggerObserved", "true")
+                && containsLiteralField(line,
+                        "loginOverlayEnterSubmitMatrixOpenEventSent", "true")
+                && containsLiteralField(line,
+                        "loginOverlayEnterSubmitMatrixOpenEventRpcObserved", "true")
+                && containsLiteralField(line,
+                        "loginOverlayEnterSubmitMatrixOpenPatchObserved", "true")
+                && containsLiteralField(line,
+                        "loginOverlayEnterSubmitMatrixOpenedObserved", "true")
+                && containsLiteralField(line,
+                        "loginOverlayEnterSubmitMatrixInnerFormObserved", "true")
+                && containsLiteralField(line,
+                        "loginOverlayEnterSubmitMatrixPasswordControlObserved", "true")
+                && containsLiteralField(line,
+                        "loginOverlayEnterSubmitMatrixCredentialsWritten", "true")
+                && containsLiteralField(line,
+                        "loginOverlayEnterSubmitMatrixFocusObserved", "true")
+                && containsLiteralField(line,
+                        "loginOverlayEnterSubmitMatrixEnterKeyAttempted", "true")
+                && containsLiteralField(line,
+                        "loginOverlayEnterSubmitMatrixSubmitAttempted", "true")
+                && containsLiteralField(line,
+                        "loginOverlayEnterSubmitMatrixEventSent", "true")
+                && containsLiteralField(line,
+                        "loginOverlayEnterSubmitMatrixEventRpcObserved", "true")
+                && containsLiteralField(line,
+                        "loginOverlayEnterSubmitMatrixPatchObserved", "true")
+                && containsLiteralField(line,
+                        "loginOverlayEnterSubmitMatrixStatusObserved", "true")
+                && containsLiteralField(line,
+                        "loginOverlayEnterSubmitMatrixPasswordLengthObserved", "true")
+                && containsLiteralField(line,
+                        "loginOverlayEnterSubmitMatrixNoLocalhost", "true")
+                && containsLiteralField(line,
+                        "loginOverlayEnterSubmitMatrixFixtureSubstituted", "false")) {
+            summary.loginOverlayEnterSubmitMatrixDomObserved = true;
+        }
+        if (containsLiteralField(line,
+                "loginFormPropertyMatrixComplete", "true")
+                && containsStringField(line,
+                        "loginFormPropertyMatrixVersion",
+                        "flow-ipc-login-form-property-matrix-v1_100")
+                && containsLiteralField(line,
+                        "loginFormPropertyMatrixRendered", "true")
+                && containsLiteralField(line,
+                        "loginFormPropertyMatrixI18nFormObserved", "true")
+                && containsLiteralField(line,
+                        "loginFormPropertyMatrixErrorMessageObserved", "true")
+                && containsLiteralField(line,
+                        "loginFormPropertyMatrixForgotPasswordVisibleObserved", "true")
+                && containsLiteralField(line,
+                        "loginFormPropertyMatrixEnabledObserved", "true")
+                && containsLiteralField(line,
+                        "loginFormPropertyMatrixErrorClearedObserved", "true")
+                && containsLiteralField(line,
+                        "loginFormPropertyMatrixNoLocalhost", "true")
+                && containsLiteralField(line,
+                        "loginFormPropertyMatrixFixtureSubstituted", "false")) {
+            summary.loginFormPropertyMatrixDomObserved = true;
+        }
+        if (containsLiteralField(line,
+                "loginFormLoginEventMatrixComplete", "true")
+                && containsStringField(line,
+                        "loginFormLoginEventMatrixVersion",
+                        "flow-ipc-login-form-login-event-v1_97")
+                && containsLiteralField(line,
+                        "loginFormLoginEventMatrixRendered", "true")
+                && containsLiteralField(line,
+                        "loginFormLoginEventMatrixEventSent", "true")
+                && containsLiteralField(line,
+                        "loginFormLoginEventMatrixEventRpcObserved", "true")
+                && containsLiteralField(line,
+                        "loginFormLoginEventMatrixPatchObserved", "true")
+                && containsLiteralField(line,
+                        "loginFormLoginEventMatrixStatusObserved", "true")
+                && containsLiteralField(line,
+                        "loginFormLoginEventMatrixPasswordLengthObserved", "true")
+                && containsLiteralField(line,
+                        "loginFormLoginEventMatrixNoLocalhost", "true")
+                && containsLiteralField(line,
+                        "loginFormLoginEventMatrixFixtureSubstituted", "false")) {
+            summary.loginFormLoginEventMatrixDomObserved = true;
+        }
+        if (containsLiteralField(line,
+                "loginFormInvalidLoginEventMatrixComplete", "true")
+                && containsStringField(line,
+                        "loginFormInvalidLoginEventMatrixVersion",
+                        "flow-ipc-login-form-invalid-login-event-v1_98")
+                && containsLiteralField(line,
+                        "loginFormInvalidLoginEventMatrixRendered", "true")
+                && containsLiteralField(line,
+                        "loginFormInvalidLoginEventMatrixEventSent", "true")
+                && containsLiteralField(line,
+                        "loginFormInvalidLoginEventMatrixEventRpcObserved", "true")
+                && containsLiteralField(line,
+                        "loginFormInvalidLoginEventMatrixPatchObserved", "true")
+                && containsLiteralField(line,
+                        "loginFormInvalidLoginEventMatrixStatusObserved", "true")
+                && containsLiteralField(line,
+                        "loginFormInvalidLoginEventMatrixPasswordLengthObserved", "true")
+                && containsLiteralField(line,
+                        "loginFormInvalidLoginEventMatrixErrorObserved", "true")
+                && containsLiteralField(line,
+                        "loginFormInvalidLoginEventMatrixNoLocalhost", "true")
+                && containsLiteralField(line,
+                        "loginFormInvalidLoginEventMatrixFixtureSubstituted", "false")) {
+            summary.loginFormInvalidLoginEventMatrixDomObserved = true;
+        }
+        if (containsLiteralField(line,
+                "loginFormForgotPasswordEventMatrixComplete", "true")
+                && containsStringField(line,
+                        "loginFormForgotPasswordEventMatrixVersion",
+                        "flow-ipc-login-form-forgot-password-event-v1_99")
+                && containsLiteralField(line,
+                        "loginFormForgotPasswordEventMatrixRendered", "true")
+                && containsLiteralField(line,
+                        "loginFormForgotPasswordEventMatrixEventSent", "true")
+                && containsLiteralField(line,
+                        "loginFormForgotPasswordEventMatrixEventRpcObserved", "true")
+                && containsLiteralField(line,
+                        "loginFormForgotPasswordEventMatrixPatchObserved", "true")
+                && containsLiteralField(line,
+                        "loginFormForgotPasswordEventMatrixStatusObserved", "true")
+                && containsLiteralField(line,
+                        "loginFormForgotPasswordEventMatrixNoLocalhost", "true")
+                && containsLiteralField(line,
+                        "loginFormForgotPasswordEventMatrixFixtureSubstituted", "false")) {
+            summary.loginFormForgotPasswordEventMatrixDomObserved = true;
+        }
+        if (containsLiteralField(line,
+                "loginFormActionPostMatrixComplete", "true")
+                && containsStringField(line,
+                        "loginFormActionPostMatrixVersion",
+                        "flow-ipc-login-form-action-post-v1_101")
+                && containsLiteralField(line,
+                        "loginFormActionPostMatrixRendered", "true")
+                && containsLiteralField(line,
+                        "loginFormActionPostMatrixActionObserved", "true")
+                && containsLiteralField(line,
+                        "loginFormActionPostMatrixMethodObserved", "true")
+                && containsLiteralField(line,
+                        "loginFormActionPostMatrixSubmitAttempted", "true")
+                && containsLiteralField(line,
+                        "loginFormActionPostMatrixSubmitIntercepted", "true")
+                && containsStringField(line,
+                        "loginFormActionPostMatrixSubmitClassification",
+                        "no-localhost-browser-post-intercepted")
+                && containsLiteralField(line,
+                        "loginFormActionPostMatrixEventSent", "true")
+                && containsLiteralField(line,
+                        "loginFormActionPostMatrixEventRpcObserved", "true")
+                && containsLiteralField(line,
+                        "loginFormActionPostMatrixPatchObserved", "true")
+                && containsLiteralField(line,
+                        "loginFormActionPostMatrixStatusObserved", "true")
+                && containsLiteralField(line,
+                        "loginFormActionPostMatrixPasswordLengthObserved", "true")
+                && containsLiteralField(line,
+                        "loginFormActionPostMatrixNoLocalhost", "true")
+                && containsLiteralField(line,
+                        "loginFormActionPostMatrixFixtureSubstituted", "false")) {
+            summary.loginFormActionPostMatrixDomObserved = true;
+        }
+        if (containsLiteralField(line,
+                "loginFormSubmitButtonMatrixComplete", "true")
+                && containsStringField(line,
+                        "loginFormSubmitButtonMatrixVersion",
+                        "flow-ipc-login-form-submit-button-v1_102")
+                && containsLiteralField(line,
+                        "loginFormSubmitButtonMatrixRendered", "true")
+                && containsLiteralField(line,
+                        "loginFormSubmitButtonMatrixInnerFormObserved", "true")
+                && containsLiteralField(line,
+                        "loginFormSubmitButtonMatrixSubmitButtonObserved", "true")
+                && containsLiteralField(line,
+                        "loginFormSubmitButtonMatrixCredentialsWritten", "true")
+                && containsLiteralField(line,
+                        "loginFormSubmitButtonMatrixClickAttempted", "true")
+                && containsLiteralField(line,
+                        "loginFormSubmitButtonMatrixEventSent", "true")
+                && containsLiteralField(line,
+                        "loginFormSubmitButtonMatrixEventRpcObserved", "true")
+                && containsLiteralField(line,
+                        "loginFormSubmitButtonMatrixPatchObserved", "true")
+                && containsLiteralField(line,
+                        "loginFormSubmitButtonMatrixStatusObserved", "true")
+                && containsLiteralField(line,
+                        "loginFormSubmitButtonMatrixPasswordLengthObserved", "true")
+                && containsLiteralField(line,
+                        "loginFormSubmitButtonMatrixNoLocalhost", "true")
+                && containsLiteralField(line,
+                        "loginFormSubmitButtonMatrixFixtureSubstituted", "false")) {
+            summary.loginFormSubmitButtonMatrixDomObserved = true;
+        }
+        if (containsLiteralField(line,
+                "loginFormEnterSubmitMatrixComplete", "true")
+                && containsStringField(line,
+                        "loginFormEnterSubmitMatrixVersion",
+                        "flow-ipc-login-form-enter-submit-v1_103")
+                && containsLiteralField(line,
+                        "loginFormEnterSubmitMatrixRendered", "true")
+                && containsLiteralField(line,
+                        "loginFormEnterSubmitMatrixInnerFormObserved", "true")
+                && containsLiteralField(line,
+                        "loginFormEnterSubmitMatrixPasswordControlObserved", "true")
+                && containsLiteralField(line,
+                        "loginFormEnterSubmitMatrixCredentialsWritten", "true")
+                && containsLiteralField(line,
+                        "loginFormEnterSubmitMatrixFocusObserved", "true")
+                && containsLiteralField(line,
+                        "loginFormEnterSubmitMatrixEnterKeyAttempted", "true")
+                && containsLiteralField(line,
+                        "loginFormEnterSubmitMatrixSubmitAttempted", "true")
+                && containsLiteralField(line,
+                        "loginFormEnterSubmitMatrixEventSent", "true")
+                && containsLiteralField(line,
+                        "loginFormEnterSubmitMatrixEventRpcObserved", "true")
+                && containsLiteralField(line,
+                        "loginFormEnterSubmitMatrixPatchObserved", "true")
+                && containsLiteralField(line,
+                        "loginFormEnterSubmitMatrixStatusObserved", "true")
+                && containsLiteralField(line,
+                        "loginFormEnterSubmitMatrixPasswordLengthObserved", "true")
+                && containsLiteralField(line,
+                        "loginFormEnterSubmitMatrixNoLocalhost", "true")
+                && containsLiteralField(line,
+                        "loginFormEnterSubmitMatrixFixtureSubstituted", "false")) {
+            summary.loginFormEnterSubmitMatrixDomObserved = true;
+        }
+        if (containsLiteralField(line,
+                "loginFormRecoveryLoginMatrixComplete", "true")
+                && containsStringField(line,
+                        "loginFormRecoveryLoginMatrixVersion",
+                        "flow-ipc-login-form-recovery-login-v1_104")
+                && containsLiteralField(line,
+                        "loginFormRecoveryLoginMatrixRendered", "true")
+                && containsLiteralField(line,
+                        "loginFormRecoveryLoginMatrixEventSent", "true")
+                && containsLiteralField(line,
+                        "loginFormRecoveryLoginMatrixEventRpcObserved", "true")
+                && containsLiteralField(line,
+                        "loginFormRecoveryLoginMatrixPatchObserved", "true")
+                && containsLiteralField(line,
+                        "loginFormRecoveryLoginMatrixStatusObserved", "true")
+                && containsLiteralField(line,
+                        "loginFormRecoveryLoginMatrixPasswordLengthObserved", "true")
+                && containsLiteralField(line,
+                        "loginFormRecoveryLoginMatrixErrorClearedObserved", "true")
+                && containsLiteralField(line,
+                        "loginFormRecoveryLoginMatrixNoLocalhost", "true")
+                && containsLiteralField(line,
+                        "loginFormRecoveryLoginMatrixFixtureSubstituted", "false")) {
+            summary.loginFormRecoveryLoginMatrixDomObserved = true;
+        }
+        if (containsLiteralField(line,
+                "loginFormEnabledLifecycleMatrixComplete", "true")
+                && containsStringField(line,
+                        "loginFormEnabledLifecycleMatrixVersion",
+                        "flow-ipc-login-form-enabled-lifecycle-v1_105")
+                && containsLiteralField(line,
+                        "loginFormEnabledLifecycleMatrixRendered", "true")
+                && containsLiteralField(line,
+                        "loginFormEnabledLifecycleMatrixEnableButtonRendered", "true")
+                && containsLiteralField(line,
+                        "loginFormEnabledLifecycleMatrixInitiallyDisabledObserved", "true")
+                && containsLiteralField(line,
+                        "loginFormEnabledLifecycleMatrixEnableClickSent", "true")
+                && containsLiteralField(line,
+                        "loginFormEnabledLifecycleMatrixEnableEventRpcObserved", "true")
+                && containsLiteralField(line,
+                        "loginFormEnabledLifecycleMatrixEnablePatchObserved", "true")
+                && containsLiteralField(line,
+                        "loginFormEnabledLifecycleMatrixEnabledObserved", "true")
+                && containsLiteralField(line,
+                        "loginFormEnabledLifecycleMatrixCredentialsWritten", "true")
+                && containsLiteralField(line,
+                        "loginFormEnabledLifecycleMatrixLoginEventSent", "true")
+                && containsLiteralField(line,
+                        "loginFormEnabledLifecycleMatrixLoginEventRpcObserved", "true")
+                && containsLiteralField(line,
+                        "loginFormEnabledLifecycleMatrixLoginPatchObserved", "true")
+                && containsLiteralField(line,
+                        "loginFormEnabledLifecycleMatrixStatusObserved", "true")
+                && containsLiteralField(line,
+                        "loginFormEnabledLifecycleMatrixPasswordLengthObserved", "true")
+                && containsLiteralField(line,
+                        "loginFormEnabledLifecycleMatrixNoLocalhost", "true")
+                && containsLiteralField(line,
+                        "loginFormEnabledLifecycleMatrixFixtureSubstituted", "false")) {
+            summary.loginFormEnabledLifecycleMatrixDomObserved = true;
+        }
+        if (containsLiteralField(line,
+                "loginFormDisabledGuardMatrixComplete", "true")
+                && containsStringField(line,
+                        "loginFormDisabledGuardMatrixVersion",
+                        "flow-ipc-login-form-disabled-guard-v1_106")
+                && containsLiteralField(line,
+                        "loginFormDisabledGuardMatrixRendered", "true")
+                && containsLiteralField(line,
+                        "loginFormDisabledGuardMatrixInitiallyDisabledObserved", "true")
+                && containsLiteralField(line,
+                        "loginFormDisabledGuardMatrixControlsDisabledObserved", "true")
+                && containsLiteralField(line,
+                        "loginFormDisabledGuardMatrixSubmitButtonObserved", "true")
+                && containsLiteralField(line,
+                        "loginFormDisabledGuardMatrixSubmitButtonDisabledObserved", "true")
+                && containsLiteralField(line,
+                        "loginFormDisabledGuardMatrixCredentialsWriteAttempted", "true")
+                && containsLiteralField(line,
+                        "loginFormDisabledGuardMatrixClickAttempted", "true")
+                && containsLiteralField(line,
+                        "loginFormDisabledGuardMatrixSubmitAttempted", "true")
+                && containsLiteralField(line,
+                        "loginFormDisabledGuardMatrixEventRpcSuppressedObserved", "true")
+                && containsLiteralField(line,
+                        "loginFormDisabledGuardMatrixStatusUnchangedObserved", "true")
+                && containsLiteralField(line,
+                        "loginFormDisabledGuardMatrixNoPrematurePatchObserved", "true")
+                && containsLiteralField(line,
+                        "loginFormDisabledGuardMatrixNoLocalhost", "true")
+                && containsLiteralField(line,
+                        "loginFormDisabledGuardMatrixFixtureSubstituted", "false")) {
+            summary.loginFormDisabledGuardMatrixDomObserved = true;
+        }
+        if (containsLiteralField(line,
+                "loginFormDisabledKeyboardGuardMatrixComplete", "true")
+                && containsStringField(line,
+                        "loginFormDisabledKeyboardGuardMatrixVersion",
+                        "flow-ipc-login-form-disabled-keyboard-guard-v1_107")
+                && containsLiteralField(line,
+                        "loginFormDisabledKeyboardGuardMatrixRendered", "true")
+                && containsLiteralField(line,
+                        "loginFormDisabledKeyboardGuardMatrixInitiallyDisabledObserved", "true")
+                && containsLiteralField(line,
+                        "loginFormDisabledKeyboardGuardMatrixControlsDisabledObserved", "true")
+                && containsLiteralField(line,
+                        "loginFormDisabledKeyboardGuardMatrixFocusTargetObserved", "true")
+                && containsLiteralField(line,
+                        "loginFormDisabledKeyboardGuardMatrixFocusAttempted", "true")
+                && containsLiteralField(line,
+                        "loginFormDisabledKeyboardGuardMatrixFocusSuppressedObserved", "true")
+                && containsLiteralField(line,
+                        "loginFormDisabledKeyboardGuardMatrixTabKeyAttempted", "true")
+                && containsLiteralField(line,
+                        "loginFormDisabledKeyboardGuardMatrixEnterKeyAttempted", "true")
+                && containsLiteralField(line,
+                        "loginFormDisabledKeyboardGuardMatrixSubmitAttempted", "true")
+                && containsLiteralField(line,
+                        "loginFormDisabledKeyboardGuardMatrixEventRpcSuppressedObserved", "true")
+                && containsLiteralField(line,
+                        "loginFormDisabledKeyboardGuardMatrixStatusUnchangedObserved", "true")
+                && containsLiteralField(line,
+                        "loginFormDisabledKeyboardGuardMatrixNoPrematurePatchObserved", "true")
+                && containsLiteralField(line,
+                        "loginFormDisabledKeyboardGuardMatrixNoLocalhost", "true")
+                && containsLiteralField(line,
+                        "loginFormDisabledKeyboardGuardMatrixFixtureSubstituted", "false")) {
+            summary.loginFormDisabledKeyboardGuardMatrixDomObserved = true;
+        }
+        if (containsLiteralField(line,
+                "loginFormNoAutofocusMatrixComplete", "true")
+                && containsStringField(line,
+                        "loginFormNoAutofocusMatrixVersion",
+                        "flow-ipc-login-form-no-autofocus-v1_108")
+                && containsLiteralField(line,
+                        "loginFormNoAutofocusMatrixRendered", "true")
+                && containsLiteralField(line,
+                        "loginFormNoAutofocusMatrixAttributeObserved", "true")
+                && containsLiteralField(line,
+                        "loginFormNoAutofocusMatrixUsernameControlObserved", "true")
+                && containsLiteralField(line,
+                        "loginFormNoAutofocusMatrixAutofocusControlRendered", "true")
+                && containsLiteralField(line,
+                        "loginFormNoAutofocusMatrixAutofocusControlUsernameObserved", "true")
+                && containsLiteralField(line,
+                        "loginFormNoAutofocusMatrixInitialFocusSuppressedObserved", "true")
+                && containsLiteralField(line,
+                        "loginFormNoAutofocusMatrixManualFocusAttempted", "true")
+                && containsLiteralField(line,
+                        "loginFormNoAutofocusMatrixManualFocusObserved", "true")
+                && containsLiteralField(line,
+                        "loginFormNoAutofocusMatrixNoLocalhost", "true")
+                && containsLiteralField(line,
+                        "loginFormNoAutofocusMatrixFixtureSubstituted", "false")) {
+            summary.loginFormNoAutofocusMatrixDomObserved = true;
+        }
+        boolean loginFormAutofocusControlDefaultFocusObserved =
+                containsLiteralField(line,
+                        "loginFormAutofocusControlMatrixDefaultFocusObserved", "true");
+        boolean loginFormAutofocusControlAcceptedBlockerObserved =
+                containsLiteralField(line,
+                        "loginFormAutofocusControlMatrixAcceptedBlockerObserved", "true")
+                && containsStringField(line,
+                        "loginFormAutofocusControlMatrixFocusClassification",
+                        "default-focus-not-observed-in-framework-validation-view");
+        if (containsLiteralField(line,
+                "loginFormAutofocusControlMatrixComplete", "true")
+                && containsStringField(line,
+                        "loginFormAutofocusControlMatrixVersion",
+                        "flow-ipc-login-form-autofocus-control-v1_119")
+                && containsLiteralField(line,
+                        "loginFormAutofocusControlMatrixRendered", "true")
+                && containsLiteralField(line,
+                        "loginFormAutofocusControlMatrixUsernameControlObserved", "true")
+                && (loginFormAutofocusControlDefaultFocusObserved
+                        || loginFormAutofocusControlAcceptedBlockerObserved)
+                && containsLiteralField(line,
+                        "loginFormAutofocusControlMatrixNoLocalhost", "true")
+                && containsLiteralField(line,
+                        "loginFormAutofocusControlMatrixFixtureSubstituted", "false")) {
+            summary.loginFormAutofocusControlMatrixDomObserved = true;
+        }
+        boolean loginFormTabTraversalObserved =
+                containsLiteralField(line,
+                        "loginFormTabTraversalMatrixPasswordFocusObserved", "true")
+                && containsStringField(line,
+                        "loginFormTabTraversalMatrixFocusClassification",
+                        "tab-focus-password-observed");
+        boolean loginFormTabTraversalAcceptedBlockerObserved =
+                containsLiteralField(line,
+                        "loginFormTabTraversalMatrixAcceptedBlockerObserved", "true")
+                && containsStringField(line,
+                        "loginFormTabTraversalMatrixFocusClassification",
+                        "synthetic-tab-did-not-move-focus-to-password-in-framework-validation-view");
+        if (containsLiteralField(line,
+                "loginFormTabTraversalMatrixComplete", "true")
+                && containsStringField(line,
+                        "loginFormTabTraversalMatrixVersion",
+                        "flow-ipc-login-form-tab-traversal-v1_125")
+                && containsLiteralField(line,
+                        "loginFormTabTraversalMatrixRendered", "true")
+                && containsLiteralField(line,
+                        "loginFormTabTraversalMatrixUsernameControlObserved", "true")
+                && containsLiteralField(line,
+                        "loginFormTabTraversalMatrixPasswordControlObserved", "true")
+                && containsLiteralField(line,
+                        "loginFormTabTraversalMatrixUsernameFocusAttempted", "true")
+                && containsLiteralField(line,
+                        "loginFormTabTraversalMatrixTabKeyAttempted", "true")
+                && (loginFormTabTraversalObserved
+                        || loginFormTabTraversalAcceptedBlockerObserved)
+                && containsLiteralField(line,
+                        "loginFormTabTraversalMatrixNoLocalhost", "true")
+                && containsLiteralField(line,
+                        "loginFormTabTraversalMatrixFixtureSubstituted", "false")) {
+            summary.loginFormTabTraversalMatrixDomObserved = true;
+        }
+        boolean loginFormShiftTabTraversalObserved =
+                containsLiteralField(line,
+                        "loginFormShiftTabTraversalMatrixUsernameFocusObserved", "true")
+                && containsStringField(line,
+                        "loginFormShiftTabTraversalMatrixFocusClassification",
+                        "shift-tab-focus-username-observed");
+        boolean loginFormShiftTabTraversalAcceptedBlockerObserved =
+                containsLiteralField(line,
+                        "loginFormShiftTabTraversalMatrixAcceptedBlockerObserved", "true")
+                && containsStringField(line,
+                        "loginFormShiftTabTraversalMatrixFocusClassification",
+                        "synthetic-shift-tab-did-not-move-focus-to-username-in-framework-validation-view");
+        if (containsLiteralField(line,
+                "loginFormShiftTabTraversalMatrixComplete", "true")
+                && containsStringField(line,
+                        "loginFormShiftTabTraversalMatrixVersion",
+                        "flow-ipc-login-form-shift-tab-traversal-v1_126")
+                && containsLiteralField(line,
+                        "loginFormShiftTabTraversalMatrixRendered", "true")
+                && containsLiteralField(line,
+                        "loginFormShiftTabTraversalMatrixUsernameControlObserved", "true")
+                && containsLiteralField(line,
+                        "loginFormShiftTabTraversalMatrixPasswordControlObserved", "true")
+                && containsLiteralField(line,
+                        "loginFormShiftTabTraversalMatrixPasswordFocusAttempted", "true")
+                && containsLiteralField(line,
+                        "loginFormShiftTabTraversalMatrixShiftTabKeyAttempted", "true")
+                && (loginFormShiftTabTraversalObserved
+                        || loginFormShiftTabTraversalAcceptedBlockerObserved)
+                && containsLiteralField(line,
+                        "loginFormShiftTabTraversalMatrixNoLocalhost", "true")
+                && containsLiteralField(line,
+                        "loginFormShiftTabTraversalMatrixFixtureSubstituted", "false")) {
+            summary.loginFormShiftTabTraversalMatrixDomObserved = true;
+        }
+        boolean loginFormAutofillAttributesObserved =
+                containsLiteralField(line,
+                        "loginFormAutofillAttributesMatrixFormObserved", "true")
+                && containsLiteralField(line,
+                        "loginFormAutofillAttributesMatrixUsernameNameObserved", "true")
+                && containsLiteralField(line,
+                        "loginFormAutofillAttributesMatrixPasswordNameObserved", "true")
+                && containsLiteralField(line,
+                        "loginFormAutofillAttributesMatrixUsernameAutocompleteObserved", "true")
+                && containsLiteralField(line,
+                        "loginFormAutofillAttributesMatrixPasswordAutocompleteObserved", "true")
+                && containsLiteralField(line,
+                        "loginFormAutofillAttributesMatrixPasswordTypeObserved", "true")
+                && containsStringField(line,
+                        "loginFormAutofillAttributesMatrixAttributeClassification",
+                        "autofill-attributes-observed");
+        boolean loginFormAutofillAttributesAcceptedBlockerObserved =
+                containsLiteralField(line,
+                        "loginFormAutofillAttributesMatrixAcceptedBlockerObserved", "true")
+                && containsStringField(line,
+                        "loginFormAutofillAttributesMatrixAttributeClassification",
+                        "autofill-attributes-incomplete-in-framework-validation-view");
+        if (containsLiteralField(line,
+                "loginFormAutofillAttributesMatrixComplete", "true")
+                && containsStringField(line,
+                        "loginFormAutofillAttributesMatrixVersion",
+                        "flow-ipc-login-form-autofill-attributes-v1_127")
+                && containsLiteralField(line,
+                        "loginFormAutofillAttributesMatrixRendered", "true")
+                && containsLiteralField(line,
+                        "loginFormAutofillAttributesMatrixUsernameControlObserved", "true")
+                && containsLiteralField(line,
+                        "loginFormAutofillAttributesMatrixPasswordControlObserved", "true")
+                && (loginFormAutofillAttributesObserved
+                        || loginFormAutofillAttributesAcceptedBlockerObserved)
+                && containsLiteralField(line,
+                        "loginFormAutofillAttributesMatrixNoLocalhost", "true")
+                && containsLiteralField(line,
+                        "loginFormAutofillAttributesMatrixFixtureSubstituted", "false")) {
+            summary.loginFormAutofillAttributesMatrixDomObserved = true;
+        }
+        boolean loginFormA11ySemanticsObserved =
+                containsLiteralField(line,
+                        "loginFormA11ySemanticsMatrixFormObserved", "true")
+                && containsLiteralField(line,
+                        "loginFormA11ySemanticsMatrixTitleTextObserved", "true")
+                && containsLiteralField(line,
+                        "loginFormA11ySemanticsMatrixUsernameLabelObserved", "true")
+                && containsLiteralField(line,
+                        "loginFormA11ySemanticsMatrixPasswordLabelObserved", "true")
+                && containsLiteralField(line,
+                        "loginFormA11ySemanticsMatrixSubmitButtonObserved", "true")
+                && containsLiteralField(line,
+                        "loginFormA11ySemanticsMatrixForgotPasswordObserved", "true")
+                && containsStringField(line,
+                        "loginFormA11ySemanticsMatrixA11yClassification",
+                        "inline-a11y-semantics-observed");
+        boolean loginFormA11ySemanticsAcceptedBlockerObserved =
+                containsLiteralField(line,
+                        "loginFormA11ySemanticsMatrixAcceptedBlockerObserved", "true")
+                && containsStringField(line,
+                        "loginFormA11ySemanticsMatrixA11yClassification",
+                        "inline-a11y-semantics-incomplete-in-framework-validation-view");
+        if (containsLiteralField(line,
+                "loginFormA11ySemanticsMatrixComplete", "true")
+                && containsStringField(line,
+                        "loginFormA11ySemanticsMatrixVersion",
+                        "flow-ipc-login-form-a11y-semantics-v1_130")
+                && containsLiteralField(line,
+                        "loginFormA11ySemanticsMatrixRendered", "true")
+                && containsLiteralField(line,
+                        "loginFormA11ySemanticsMatrixUsernameControlObserved", "true")
+                && containsLiteralField(line,
+                        "loginFormA11ySemanticsMatrixPasswordControlObserved", "true")
+                && (loginFormA11ySemanticsObserved
+                        || loginFormA11ySemanticsAcceptedBlockerObserved)
+                && containsLiteralField(line,
+                        "loginFormA11ySemanticsMatrixNoLocalhost", "true")
+                && containsLiteralField(line,
+                        "loginFormA11ySemanticsMatrixFixtureSubstituted", "false")) {
+            summary.loginFormA11ySemanticsMatrixDomObserved = true;
+        }
+        boolean loginOverlayAutofillAttributesObserved =
+                containsLiteralField(line,
+                        "loginOverlayAutofillAttributesMatrixFormObserved", "true")
+                && containsLiteralField(line,
+                        "loginOverlayAutofillAttributesMatrixUsernameNameObserved", "true")
+                && containsLiteralField(line,
+                        "loginOverlayAutofillAttributesMatrixPasswordNameObserved", "true")
+                && containsLiteralField(line,
+                        "loginOverlayAutofillAttributesMatrixUsernameAutocompleteObserved", "true")
+                && containsLiteralField(line,
+                        "loginOverlayAutofillAttributesMatrixPasswordAutocompleteObserved", "true")
+                && containsLiteralField(line,
+                        "loginOverlayAutofillAttributesMatrixPasswordTypeObserved", "true")
+                && containsStringField(line,
+                        "loginOverlayAutofillAttributesMatrixAttributeClassification",
+                        "autofill-attributes-observed");
+        boolean loginOverlayAutofillAttributesAcceptedBlockerObserved =
+                containsLiteralField(line,
+                        "loginOverlayAutofillAttributesMatrixAcceptedBlockerObserved", "true")
+                && containsStringField(line,
+                        "loginOverlayAutofillAttributesMatrixAttributeClassification",
+                        "autofill-attributes-incomplete-in-framework-validation-view");
+        if (containsLiteralField(line,
+                "loginOverlayAutofillAttributesMatrixComplete", "true")
+                && containsStringField(line,
+                        "loginOverlayAutofillAttributesMatrixVersion",
+                        "flow-ipc-login-overlay-autofill-attributes-v1_128")
+                && containsLiteralField(line,
+                        "loginOverlayAutofillAttributesMatrixRendered", "true")
+                && containsLiteralField(line,
+                        "loginOverlayAutofillAttributesMatrixOpenTriggerObserved", "true")
+                && containsLiteralField(line,
+                        "loginOverlayAutofillAttributesMatrixOpenEventSent", "true")
+                && containsLiteralField(line,
+                        "loginOverlayAutofillAttributesMatrixOpenEventRpcObserved", "true")
+                && containsLiteralField(line,
+                        "loginOverlayAutofillAttributesMatrixOpenPatchObserved", "true")
+                && containsLiteralField(line,
+                        "loginOverlayAutofillAttributesMatrixOpenedObserved", "true")
+                && containsLiteralField(line,
+                        "loginOverlayAutofillAttributesMatrixOpenStatusObserved", "true")
+                && containsLiteralField(line,
+                        "loginOverlayAutofillAttributesMatrixUsernameControlObserved", "true")
+                && containsLiteralField(line,
+                        "loginOverlayAutofillAttributesMatrixPasswordControlObserved", "true")
+                && (loginOverlayAutofillAttributesObserved
+                        || loginOverlayAutofillAttributesAcceptedBlockerObserved)
+                && containsLiteralField(line,
+                        "loginOverlayAutofillAttributesMatrixNoLocalhost", "true")
+                && containsLiteralField(line,
+                        "loginOverlayAutofillAttributesMatrixFixtureSubstituted", "false")) {
+            summary.loginOverlayAutofillAttributesMatrixDomObserved = true;
+        }
+        boolean loginOverlayA11ySemanticsObserved =
+                containsLiteralField(line,
+                        "loginOverlayA11ySemanticsMatrixDialogRoleObserved", "true")
+                && containsLiteralField(line,
+                        "loginOverlayA11ySemanticsMatrixModalAttributeObserved", "true")
+                && containsLiteralField(line,
+                        "loginOverlayA11ySemanticsMatrixTitleTextObserved", "true")
+                && containsLiteralField(line,
+                        "loginOverlayA11ySemanticsMatrixUsernameLabelObserved", "true")
+                && containsLiteralField(line,
+                        "loginOverlayA11ySemanticsMatrixPasswordLabelObserved", "true")
+                && containsStringField(line,
+                        "loginOverlayA11ySemanticsMatrixA11yClassification",
+                        "modal-a11y-semantics-observed");
+        boolean loginOverlayA11ySemanticsAcceptedBlockerObserved =
+                containsLiteralField(line,
+                        "loginOverlayA11ySemanticsMatrixAcceptedBlockerObserved", "true")
+                && containsStringField(line,
+                        "loginOverlayA11ySemanticsMatrixA11yClassification",
+                        "modal-a11y-semantics-incomplete-in-framework-validation-view");
+        if (containsLiteralField(line,
+                "loginOverlayA11ySemanticsMatrixComplete", "true")
+                && containsStringField(line,
+                        "loginOverlayA11ySemanticsMatrixVersion",
+                        "flow-ipc-login-overlay-a11y-semantics-v1_129")
+                && containsLiteralField(line,
+                        "loginOverlayA11ySemanticsMatrixRendered", "true")
+                && containsLiteralField(line,
+                        "loginOverlayA11ySemanticsMatrixOpenTriggerObserved", "true")
+                && containsLiteralField(line,
+                        "loginOverlayA11ySemanticsMatrixOpenEventSent", "true")
+                && containsLiteralField(line,
+                        "loginOverlayA11ySemanticsMatrixOpenEventRpcObserved", "true")
+                && containsLiteralField(line,
+                        "loginOverlayA11ySemanticsMatrixOpenPatchObserved", "true")
+                && containsLiteralField(line,
+                        "loginOverlayA11ySemanticsMatrixOpenedObserved", "true")
+                && containsLiteralField(line,
+                        "loginOverlayA11ySemanticsMatrixOpenStatusObserved", "true")
+                && containsLiteralField(line,
+                        "loginOverlayA11ySemanticsMatrixUsernameControlObserved", "true")
+                && containsLiteralField(line,
+                        "loginOverlayA11ySemanticsMatrixPasswordControlObserved", "true")
+                && (loginOverlayA11ySemanticsObserved
+                        || loginOverlayA11ySemanticsAcceptedBlockerObserved)
+                && containsLiteralField(line,
+                        "loginOverlayA11ySemanticsMatrixNoLocalhost", "true")
+                && containsLiteralField(line,
+                        "loginOverlayA11ySemanticsMatrixFixtureSubstituted", "false")) {
+            summary.loginOverlayA11ySemanticsMatrixDomObserved = true;
+        }
+        boolean loginOverlayErrorA11yObserved =
+                containsLiteralField(line,
+                        "loginOverlayErrorA11yMatrixAlertRoleObserved", "true")
+                && containsLiteralField(line,
+                        "loginOverlayErrorA11yMatrixAriaLiveObserved", "true")
+                && containsLiteralField(line,
+                        "loginOverlayErrorA11yMatrixErrorTitleObserved", "true")
+                && containsLiteralField(line,
+                        "loginOverlayErrorA11yMatrixErrorMessageObserved", "true")
+                && containsLiteralField(line,
+                        "loginOverlayErrorA11yMatrixAnnouncementTextObserved", "true")
+                && containsStringField(line,
+                        "loginOverlayErrorA11yMatrixA11yClassification",
+                        "error-announcement-a11y-observed");
+        boolean loginOverlayErrorA11yAcceptedBlockerObserved =
+                containsLiteralField(line,
+                        "loginOverlayErrorA11yMatrixAcceptedBlockerObserved", "true")
+                && containsStringField(line,
+                        "loginOverlayErrorA11yMatrixA11yClassification",
+                        "error-announcement-a11y-incomplete-in-framework-validation-view");
+        if (containsLiteralField(line,
+                "loginOverlayErrorA11yMatrixComplete", "true")
+                && containsStringField(line,
+                        "loginOverlayErrorA11yMatrixVersion",
+                        "flow-ipc-login-overlay-error-a11y-v1_131")
+                && containsLiteralField(line,
+                        "loginOverlayErrorA11yMatrixRendered", "true")
+                && containsLiteralField(line,
+                        "loginOverlayErrorA11yMatrixShowErrorComplete", "true")
+                && containsLiteralField(line,
+                        "loginOverlayErrorA11yMatrixErrorObserved", "true")
+                && (loginOverlayErrorA11yObserved
+                        || loginOverlayErrorA11yAcceptedBlockerObserved)
+                && containsLiteralField(line,
+                        "loginOverlayErrorA11yMatrixNoLocalhost", "true")
+                && containsLiteralField(line,
+                        "loginOverlayErrorA11yMatrixFixtureSubstituted", "false")) {
+            summary.loginOverlayErrorA11yMatrixDomObserved = true;
+        }
+        boolean loginOverlayErrorFocusObserved =
+                containsLiteralField(line,
+                        "loginOverlayErrorFocusMatrixUsernameFocusObserved", "true")
+                && containsStringField(line,
+                        "loginOverlayErrorFocusMatrixFocusClassification",
+                        "error-focus-username-observed");
+        boolean loginOverlayErrorFocusAcceptedBlockerObserved =
+                containsLiteralField(line,
+                        "loginOverlayErrorFocusMatrixAcceptedBlockerObserved", "true")
+                && containsStringField(line,
+                        "loginOverlayErrorFocusMatrixFocusClassification",
+                        "error-focus-username-not-observed-in-framework-validation-view");
+        if (containsLiteralField(line,
+                "loginOverlayErrorFocusMatrixComplete", "true")
+                && containsStringField(line,
+                        "loginOverlayErrorFocusMatrixVersion",
+                        "flow-ipc-login-overlay-error-focus-v1_134")
+                && containsLiteralField(line,
+                        "loginOverlayErrorFocusMatrixRendered", "true")
+                && containsLiteralField(line,
+                        "loginOverlayErrorFocusMatrixShowErrorComplete", "true")
+                && containsLiteralField(line,
+                        "loginOverlayErrorFocusMatrixErrorObserved", "true")
+                && containsLiteralField(line,
+                        "loginOverlayErrorFocusMatrixOpenedObserved", "true")
+                && containsLiteralField(line,
+                        "loginOverlayErrorFocusMatrixUsernameControlObserved", "true")
+                && containsLiteralField(line,
+                        "loginOverlayErrorFocusMatrixPasswordControlObserved", "true")
+                && containsLiteralField(line,
+                        "loginOverlayErrorFocusMatrixFocusAttempted", "true")
+                && (loginOverlayErrorFocusObserved
+                        || loginOverlayErrorFocusAcceptedBlockerObserved)
+                && containsLiteralField(line,
+                        "loginOverlayErrorFocusMatrixNoLocalhost", "true")
+                && containsLiteralField(line,
+                        "loginOverlayErrorFocusMatrixFixtureSubstituted", "false")) {
+            summary.loginOverlayErrorFocusMatrixDomObserved = true;
+        }
+        boolean loginOverlayErrorFocusRetryObserved =
+                containsLiteralField(line,
+                        "loginOverlayErrorFocusRetryMatrixUsernameFocusObserved", "true")
+                && containsStringField(line,
+                        "loginOverlayErrorFocusRetryMatrixFocusClassification",
+                        "error-focus-retry-username-observed");
+        boolean loginOverlayErrorFocusRetryAcceptedBlockerObserved =
+                containsLiteralField(line,
+                        "loginOverlayErrorFocusRetryMatrixAcceptedBlockerObserved", "true")
+                && containsStringField(line,
+                        "loginOverlayErrorFocusRetryMatrixFocusClassification",
+                        "error-focus-retry-username-not-observed-in-framework-validation-view");
+        if (containsLiteralField(line,
+                "loginOverlayErrorFocusRetryMatrixComplete", "true")
+                && containsStringField(line,
+                        "loginOverlayErrorFocusRetryMatrixVersion",
+                        "flow-ipc-login-overlay-error-focus-retry-v1_136")
+                && containsLiteralField(line,
+                        "loginOverlayErrorFocusRetryMatrixRendered", "true")
+                && containsLiteralField(line,
+                        "loginOverlayErrorFocusRetryMatrixShowErrorComplete", "true")
+                && containsLiteralField(line,
+                        "loginOverlayErrorFocusRetryMatrixErrorFocusComplete", "true")
+                && containsLiteralField(line,
+                        "loginOverlayErrorFocusRetryMatrixErrorObserved", "true")
+                && containsLiteralField(line,
+                        "loginOverlayErrorFocusRetryMatrixOpenedObserved", "true")
+                && containsLiteralField(line,
+                        "loginOverlayErrorFocusRetryMatrixUsernameControlObserved", "true")
+                && containsLiteralField(line,
+                        "loginOverlayErrorFocusRetryMatrixPasswordControlObserved", "true")
+                && containsLiteralField(line,
+                        "loginOverlayErrorFocusRetryMatrixRetryAttempted", "true")
+                && containsLiteralField(line,
+                        "loginOverlayErrorFocusRetryMatrixRetryCountObserved", "true")
+                && (loginOverlayErrorFocusRetryObserved
+                        || loginOverlayErrorFocusRetryAcceptedBlockerObserved)
+                && containsLiteralField(line,
+                        "loginOverlayErrorFocusRetryMatrixNoLocalhost", "true")
+                && containsLiteralField(line,
+                        "loginOverlayErrorFocusRetryMatrixFixtureSubstituted", "false")) {
+            summary.loginOverlayErrorFocusRetryMatrixDomObserved = true;
+        }
+        boolean loginOverlayErrorFocusRetryTargetObserved =
+                containsLiteralField(line,
+                        "loginOverlayErrorFocusRetryTargetMatrixUsernameFocusObserved", "true")
+                && containsStringField(line,
+                        "loginOverlayErrorFocusRetryTargetMatrixFocusClassification",
+                        "retry-target-username-observed");
+        boolean loginOverlayErrorFocusRetryTargetAcceptedBlockerObserved =
+                containsLiteralField(line,
+                        "loginOverlayErrorFocusRetryTargetMatrixAcceptedBlockerObserved", "true")
+                && containsStringField(line,
+                        "loginOverlayErrorFocusRetryTargetMatrixFocusClassification",
+                        "retry-target-active-element-not-username-in-framework-validation-view");
+        if (containsLiteralField(line,
+                "loginOverlayErrorFocusRetryTargetMatrixComplete", "true")
+                && containsStringField(line,
+                        "loginOverlayErrorFocusRetryTargetMatrixVersion",
+                        "flow-ipc-login-overlay-error-focus-retry-target-v1_138")
+                && containsLiteralField(line,
+                        "loginOverlayErrorFocusRetryTargetMatrixRendered", "true")
+                && containsLiteralField(line,
+                        "loginOverlayErrorFocusRetryTargetMatrixRetryComplete", "true")
+                && containsLiteralField(line,
+                        "loginOverlayErrorFocusRetryTargetMatrixRetryAttempted", "true")
+                && containsLiteralField(line,
+                        "loginOverlayErrorFocusRetryTargetMatrixRetryCountObserved", "true")
+                && containsLiteralField(line,
+                        "loginOverlayErrorFocusRetryTargetMatrixUsernameControlObserved", "true")
+                && containsLiteralField(line,
+                        "loginOverlayErrorFocusRetryTargetMatrixActiveElementObserved", "true")
+                && containsLiteralField(line,
+                        "loginOverlayErrorFocusRetryTargetMatrixActiveElementTagObserved", "true")
+                && (loginOverlayErrorFocusRetryTargetObserved
+                        || loginOverlayErrorFocusRetryTargetAcceptedBlockerObserved)
+                && containsLiteralField(line,
+                        "loginOverlayErrorFocusRetryTargetMatrixNoLocalhost", "true")
+                && containsLiteralField(line,
+                        "loginOverlayErrorFocusRetryTargetMatrixFixtureSubstituted", "false")) {
+            summary.loginOverlayErrorFocusRetryTargetMatrixDomObserved = true;
+        }
+        if (containsLiteralField(line,
+                "loginFormFullI18nMatrixComplete", "true")
+                && containsStringField(line,
+                        "loginFormFullI18nMatrixVersion",
+                        "flow-ipc-login-form-i18n-full-v1_109")
+                && containsLiteralField(line,
+                        "loginFormFullI18nMatrixRendered", "true")
+                && containsLiteralField(line,
+                        "loginFormFullI18nMatrixHeaderNotApplicableObserved", "true")
+                && containsLiteralField(line,
+                        "loginFormFullI18nMatrixFormObserved", "true")
+                && containsLiteralField(line,
+                        "loginFormFullI18nMatrixErrorMessageObserved", "true")
+                && containsLiteralField(line,
+                        "loginFormFullI18nMatrixAdditionalInformationObserved", "true")
+                && containsLiteralField(line,
+                        "loginFormFullI18nMatrixForgotPasswordVisibleObserved", "true")
+                && containsLiteralField(line,
+                        "loginFormFullI18nMatrixErrorObserved", "true")
+                && containsLiteralField(line,
+                        "loginFormFullI18nMatrixNoLocalhost", "true")
+                && containsLiteralField(line,
+                        "loginFormFullI18nMatrixFixtureSubstituted", "false")) {
+            summary.loginFormFullI18nMatrixDomObserved = true;
+        }
+        if (containsLiteralField(line,
+                "loginFormShowErrorMatrixComplete", "true")
+                && containsStringField(line,
+                        "loginFormShowErrorMatrixVersion",
+                        "flow-ipc-login-form-show-error-v1_110")
+                && containsLiteralField(line,
+                        "loginFormShowErrorMatrixRendered", "true")
+                && containsLiteralField(line,
+                        "loginFormShowErrorMatrixEventSent", "true")
+                && containsLiteralField(line,
+                        "loginFormShowErrorMatrixEventRpcObserved", "true")
+                && containsLiteralField(line,
+                        "loginFormShowErrorMatrixPatchObserved", "true")
+                && containsLiteralField(line,
+                        "loginFormShowErrorMatrixStatusObserved", "true")
+                && containsLiteralField(line,
+                        "loginFormShowErrorMatrixPasswordLengthObserved", "true")
+                && containsLiteralField(line,
+                        "loginFormShowErrorMatrixErrorObserved", "true")
+                && containsLiteralField(line,
+                        "loginFormShowErrorMatrixErrorTitleObserved", "true")
+                && containsLiteralField(line,
+                        "loginFormShowErrorMatrixErrorMessageObserved", "true")
+                && containsLiteralField(line,
+                        "loginFormShowErrorMatrixNoLocalhost", "true")
+                && containsLiteralField(line,
+                        "loginFormShowErrorMatrixFixtureSubstituted", "false")) {
+            summary.loginFormShowErrorMatrixDomObserved = true;
+        }
+        boolean loginFormErrorA11yObserved =
+                containsLiteralField(line,
+                        "loginFormErrorA11yMatrixAlertRoleObserved", "true")
+                && containsLiteralField(line,
+                        "loginFormErrorA11yMatrixAriaLiveObserved", "true")
+                && containsLiteralField(line,
+                        "loginFormErrorA11yMatrixErrorTitleObserved", "true")
+                && containsLiteralField(line,
+                        "loginFormErrorA11yMatrixErrorMessageObserved", "true")
+                && containsLiteralField(line,
+                        "loginFormErrorA11yMatrixAnnouncementTextObserved", "true")
+                && containsStringField(line,
+                        "loginFormErrorA11yMatrixA11yClassification",
+                        "error-announcement-a11y-observed");
+        boolean loginFormErrorA11yAcceptedBlockerObserved =
+                containsLiteralField(line,
+                        "loginFormErrorA11yMatrixAcceptedBlockerObserved", "true")
+                && containsStringField(line,
+                        "loginFormErrorA11yMatrixA11yClassification",
+                        "error-announcement-a11y-incomplete-in-framework-validation-view");
+        if (containsLiteralField(line,
+                "loginFormErrorA11yMatrixComplete", "true")
+                && containsStringField(line,
+                        "loginFormErrorA11yMatrixVersion",
+                        "flow-ipc-login-form-error-a11y-v1_132")
+                && containsLiteralField(line,
+                        "loginFormErrorA11yMatrixRendered", "true")
+                && containsLiteralField(line,
+                        "loginFormErrorA11yMatrixShowErrorComplete", "true")
+                && containsLiteralField(line,
+                        "loginFormErrorA11yMatrixErrorObserved", "true")
+                && (loginFormErrorA11yObserved
+                        || loginFormErrorA11yAcceptedBlockerObserved)
+                && containsLiteralField(line,
+                        "loginFormErrorA11yMatrixNoLocalhost", "true")
+                && containsLiteralField(line,
+                        "loginFormErrorA11yMatrixFixtureSubstituted", "false")) {
+            summary.loginFormErrorA11yMatrixDomObserved = true;
+        }
+        boolean loginFormErrorFocusObserved =
+                containsLiteralField(line,
+                        "loginFormErrorFocusMatrixUsernameFocusObserved", "true")
+                && containsStringField(line,
+                        "loginFormErrorFocusMatrixFocusClassification",
+                        "error-focus-username-observed");
+        boolean loginFormErrorFocusAcceptedBlockerObserved =
+                containsLiteralField(line,
+                        "loginFormErrorFocusMatrixAcceptedBlockerObserved", "true")
+                && containsStringField(line,
+                        "loginFormErrorFocusMatrixFocusClassification",
+                        "error-focus-username-not-observed-in-framework-validation-view");
+        if (containsLiteralField(line,
+                "loginFormErrorFocusMatrixComplete", "true")
+                && containsStringField(line,
+                        "loginFormErrorFocusMatrixVersion",
+                        "flow-ipc-login-form-error-focus-v1_133")
+                && containsLiteralField(line,
+                        "loginFormErrorFocusMatrixRendered", "true")
+                && containsLiteralField(line,
+                        "loginFormErrorFocusMatrixShowErrorComplete", "true")
+                && containsLiteralField(line,
+                        "loginFormErrorFocusMatrixErrorObserved", "true")
+                && containsLiteralField(line,
+                        "loginFormErrorFocusMatrixUsernameControlObserved", "true")
+                && containsLiteralField(line,
+                        "loginFormErrorFocusMatrixPasswordControlObserved", "true")
+                && containsLiteralField(line,
+                        "loginFormErrorFocusMatrixFocusAttempted", "true")
+                && (loginFormErrorFocusObserved
+                        || loginFormErrorFocusAcceptedBlockerObserved)
+                && containsLiteralField(line,
+                        "loginFormErrorFocusMatrixNoLocalhost", "true")
+                && containsLiteralField(line,
+                        "loginFormErrorFocusMatrixFixtureSubstituted", "false")) {
+            summary.loginFormErrorFocusMatrixDomObserved = true;
+        }
+        boolean loginFormErrorFocusRetryObserved =
+                containsLiteralField(line,
+                        "loginFormErrorFocusRetryMatrixUsernameFocusObserved", "true")
+                && containsStringField(line,
+                        "loginFormErrorFocusRetryMatrixFocusClassification",
+                        "error-focus-retry-username-observed");
+        boolean loginFormErrorFocusRetryAcceptedBlockerObserved =
+                containsLiteralField(line,
+                        "loginFormErrorFocusRetryMatrixAcceptedBlockerObserved", "true")
+                && containsStringField(line,
+                        "loginFormErrorFocusRetryMatrixFocusClassification",
+                        "error-focus-retry-username-not-observed-in-framework-validation-view");
+        if (containsLiteralField(line,
+                "loginFormErrorFocusRetryMatrixComplete", "true")
+                && containsStringField(line,
+                        "loginFormErrorFocusRetryMatrixVersion",
+                        "flow-ipc-login-form-error-focus-retry-v1_135")
+                && containsLiteralField(line,
+                        "loginFormErrorFocusRetryMatrixRendered", "true")
+                && containsLiteralField(line,
+                        "loginFormErrorFocusRetryMatrixShowErrorComplete", "true")
+                && containsLiteralField(line,
+                        "loginFormErrorFocusRetryMatrixErrorFocusComplete", "true")
+                && containsLiteralField(line,
+                        "loginFormErrorFocusRetryMatrixErrorObserved", "true")
+                && containsLiteralField(line,
+                        "loginFormErrorFocusRetryMatrixUsernameControlObserved", "true")
+                && containsLiteralField(line,
+                        "loginFormErrorFocusRetryMatrixPasswordControlObserved", "true")
+                && containsLiteralField(line,
+                        "loginFormErrorFocusRetryMatrixRetryAttempted", "true")
+                && containsLiteralField(line,
+                        "loginFormErrorFocusRetryMatrixRetryCountObserved", "true")
+                && (loginFormErrorFocusRetryObserved
+                        || loginFormErrorFocusRetryAcceptedBlockerObserved)
+                && containsLiteralField(line,
+                        "loginFormErrorFocusRetryMatrixNoLocalhost", "true")
+                && containsLiteralField(line,
+                        "loginFormErrorFocusRetryMatrixFixtureSubstituted", "false")) {
+            summary.loginFormErrorFocusRetryMatrixDomObserved = true;
+        }
+        boolean loginFormErrorFocusRetryTargetObserved =
+                containsLiteralField(line,
+                        "loginFormErrorFocusRetryTargetMatrixUsernameFocusObserved", "true")
+                && containsStringField(line,
+                        "loginFormErrorFocusRetryTargetMatrixFocusClassification",
+                        "retry-target-username-observed");
+        boolean loginFormErrorFocusRetryTargetAcceptedBlockerObserved =
+                containsLiteralField(line,
+                        "loginFormErrorFocusRetryTargetMatrixAcceptedBlockerObserved", "true")
+                && containsStringField(line,
+                        "loginFormErrorFocusRetryTargetMatrixFocusClassification",
+                        "retry-target-active-element-not-username-in-framework-validation-view");
+        if (containsLiteralField(line,
+                "loginFormErrorFocusRetryTargetMatrixComplete", "true")
+                && containsStringField(line,
+                        "loginFormErrorFocusRetryTargetMatrixVersion",
+                        "flow-ipc-login-form-error-focus-retry-target-v1_137")
+                && containsLiteralField(line,
+                        "loginFormErrorFocusRetryTargetMatrixRendered", "true")
+                && containsLiteralField(line,
+                        "loginFormErrorFocusRetryTargetMatrixRetryComplete", "true")
+                && containsLiteralField(line,
+                        "loginFormErrorFocusRetryTargetMatrixRetryAttempted", "true")
+                && containsLiteralField(line,
+                        "loginFormErrorFocusRetryTargetMatrixRetryCountObserved", "true")
+                && containsLiteralField(line,
+                        "loginFormErrorFocusRetryTargetMatrixUsernameControlObserved", "true")
+                && containsLiteralField(line,
+                        "loginFormErrorFocusRetryTargetMatrixActiveElementObserved", "true")
+                && containsLiteralField(line,
+                        "loginFormErrorFocusRetryTargetMatrixActiveElementTagObserved", "true")
+                && (loginFormErrorFocusRetryTargetObserved
+                        || loginFormErrorFocusRetryTargetAcceptedBlockerObserved)
+                && containsLiteralField(line,
+                        "loginFormErrorFocusRetryTargetMatrixNoLocalhost", "true")
+                && containsLiteralField(line,
+                        "loginFormErrorFocusRetryTargetMatrixFixtureSubstituted", "false")) {
+            summary.loginFormErrorFocusRetryTargetMatrixDomObserved = true;
+        }
+        boolean loginFormErrorFocusRetryTargetStateObserved =
+                containsLiteralField(line,
+                        "loginFormErrorFocusRetryTargetStateMatrixUsernameFocusObserved", "true")
+                && containsStringField(line,
+                        "loginFormErrorFocusRetryTargetStateMatrixFocusabilityClassification",
+                        "retry-target-state-username-observed");
+        boolean loginFormErrorFocusRetryTargetStateFocusableBlockerObserved =
+                containsLiteralField(line,
+                        "loginFormErrorFocusRetryTargetStateMatrixAcceptedBlockerObserved", "true")
+                && containsLiteralField(line,
+                        "loginFormErrorFocusRetryTargetStateMatrixUsernameControlConnected", "true")
+                && containsLiteralField(line,
+                        "loginFormErrorFocusRetryTargetStateMatrixUsernameControlDisabled", "false")
+                && containsLiteralField(line,
+                        "loginFormErrorFocusRetryTargetStateMatrixUsernameControlFocusFunctionObserved", "true")
+                && containsLiteralField(line,
+                        "loginFormErrorFocusRetryTargetStateMatrixUsernameControlRectObserved", "true")
+                && containsStringField(line,
+                        "loginFormErrorFocusRetryTargetStateMatrixFocusabilityClassification",
+                        "retry-target-state-focusable-input-not-focused-in-framework-validation-view");
+        boolean loginFormErrorFocusRetryTargetStateNotFocusableBlockerObserved =
+                containsLiteralField(line,
+                        "loginFormErrorFocusRetryTargetStateMatrixAcceptedBlockerObserved", "true")
+                && containsStringField(line,
+                        "loginFormErrorFocusRetryTargetStateMatrixFocusabilityClassification",
+                        "retry-target-state-control-not-focusable-in-framework-validation-view");
+        if (containsLiteralField(line,
+                "loginFormErrorFocusRetryTargetStateMatrixComplete", "true")
+                && containsStringField(line,
+                        "loginFormErrorFocusRetryTargetStateMatrixVersion",
+                        "flow-ipc-login-form-error-focus-retry-target-state-v1_139")
+                && containsLiteralField(line,
+                        "loginFormErrorFocusRetryTargetStateMatrixRetryTargetComplete", "true")
+                && containsLiteralField(line,
+                        "loginFormErrorFocusRetryTargetStateMatrixUsernameControlObserved", "true")
+                && containsStringField(line,
+                        "loginFormErrorFocusRetryTargetStateMatrixUsernameControlTagName", "input")
+                && (loginFormErrorFocusRetryTargetStateObserved
+                        || loginFormErrorFocusRetryTargetStateFocusableBlockerObserved
+                        || loginFormErrorFocusRetryTargetStateNotFocusableBlockerObserved)
+                && containsLiteralField(line,
+                        "loginFormErrorFocusRetryTargetStateMatrixNoLocalhost", "true")
+                && containsLiteralField(line,
+                        "loginFormErrorFocusRetryTargetStateMatrixFixtureSubstituted", "false")) {
+            summary.loginFormErrorFocusRetryTargetStateMatrixDomObserved = true;
+        }
+        boolean loginFormErrorFocusRetryTargetLayoutUsernameRectObserved =
+                containsLiteralField(line,
+                        "loginFormErrorFocusRetryTargetLayoutMatrixUsernameControlRectObserved", "true")
+                && containsStringField(line,
+                        "loginFormErrorFocusRetryTargetLayoutMatrixLayoutClassification",
+                        "retry-target-layout-username-rect-observed");
+        boolean loginFormErrorFocusRetryTargetLayoutHiddenBlockerObserved =
+                containsLiteralField(line,
+                        "loginFormErrorFocusRetryTargetLayoutMatrixAcceptedBlockerObserved", "true")
+                && containsLiteralField(line,
+                        "loginFormErrorFocusRetryTargetLayoutMatrixUsernameControlRectObserved", "false")
+                && (containsLiteralField(line,
+                        "loginFormErrorFocusRetryTargetLayoutMatrixUsernameControlHiddenObserved", "true")
+                        || containsLiteralField(line,
+                        "loginFormErrorFocusRetryTargetLayoutMatrixUsernameControlAriaHiddenObserved", "true")
+                        || containsStringField(line,
+                        "loginFormErrorFocusRetryTargetLayoutMatrixUsernameControlDisplay", "none")
+                        || containsStringField(line,
+                        "loginFormErrorFocusRetryTargetLayoutMatrixUsernameControlVisibility", "hidden")
+                        || containsStringField(line,
+                        "loginFormErrorFocusRetryTargetLayoutMatrixUsernameControlVisibility", "collapse"))
+                && containsStringField(line,
+                        "loginFormErrorFocusRetryTargetLayoutMatrixLayoutClassification",
+                        "retry-target-layout-control-hidden-in-framework-validation-view");
+        boolean loginFormErrorFocusRetryTargetLayoutFormVisibleZeroRectBlockerObserved =
+                containsLiteralField(line,
+                        "loginFormErrorFocusRetryTargetLayoutMatrixAcceptedBlockerObserved", "true")
+                && containsLiteralField(line,
+                        "loginFormErrorFocusRetryTargetLayoutMatrixLoginFormRectObserved", "true")
+                && containsLiteralField(line,
+                        "loginFormErrorFocusRetryTargetLayoutMatrixUsernameControlRectObserved", "false")
+                && containsLiteralField(line,
+                        "loginFormErrorFocusRetryTargetLayoutMatrixUsernameControlHiddenObserved", "false")
+                && containsLiteralField(line,
+                        "loginFormErrorFocusRetryTargetLayoutMatrixUsernameControlAriaHiddenObserved", "false")
+                && containsStringField(line,
+                        "loginFormErrorFocusRetryTargetLayoutMatrixLayoutClassification",
+                        "retry-target-layout-form-visible-username-zero-rect-in-framework-validation-view");
+        boolean loginFormErrorFocusRetryTargetLayoutFormZeroRectBlockerObserved =
+                containsLiteralField(line,
+                        "loginFormErrorFocusRetryTargetLayoutMatrixAcceptedBlockerObserved", "true")
+                && containsLiteralField(line,
+                        "loginFormErrorFocusRetryTargetLayoutMatrixLoginFormRectObserved", "false")
+                && containsLiteralField(line,
+                        "loginFormErrorFocusRetryTargetLayoutMatrixUsernameControlRectObserved", "false")
+                && containsLiteralField(line,
+                        "loginFormErrorFocusRetryTargetLayoutMatrixUsernameControlHiddenObserved", "false")
+                && containsLiteralField(line,
+                        "loginFormErrorFocusRetryTargetLayoutMatrixUsernameControlAriaHiddenObserved", "false")
+                && containsStringField(line,
+                        "loginFormErrorFocusRetryTargetLayoutMatrixLayoutClassification",
+                        "retry-target-layout-form-zero-rect-in-framework-validation-view");
+        if (containsLiteralField(line,
+                "loginFormErrorFocusRetryTargetLayoutMatrixComplete", "true")
+                && containsStringField(line,
+                        "loginFormErrorFocusRetryTargetLayoutMatrixVersion",
+                        "flow-ipc-login-form-error-focus-retry-target-layout-v1_140")
+                && containsLiteralField(line,
+                        "loginFormErrorFocusRetryTargetLayoutMatrixTargetStateComplete", "true")
+                && containsLiteralField(line,
+                        "loginFormErrorFocusRetryTargetLayoutMatrixLoginFormObserved", "true")
+                && containsLiteralField(line,
+                        "loginFormErrorFocusRetryTargetLayoutMatrixUsernameControlObserved", "true")
+                && (loginFormErrorFocusRetryTargetLayoutUsernameRectObserved
+                        || loginFormErrorFocusRetryTargetLayoutHiddenBlockerObserved
+                        || loginFormErrorFocusRetryTargetLayoutFormVisibleZeroRectBlockerObserved
+                        || loginFormErrorFocusRetryTargetLayoutFormZeroRectBlockerObserved)
+                && containsLiteralField(line,
+                        "loginFormErrorFocusRetryTargetLayoutMatrixNoLocalhost", "true")
+                && containsLiteralField(line,
+                        "loginFormErrorFocusRetryTargetLayoutMatrixFixtureSubstituted", "false")) {
+            summary.loginFormErrorFocusRetryTargetLayoutMatrixDomObserved = true;
+        }
+        boolean loginFormErrorFocusRetryTargetHiddenSourceDirectObserved =
+                containsLiteralField(line,
+                        "loginFormErrorFocusRetryTargetHiddenSourceMatrixDirectHiddenObserved", "true")
+                && containsStringField(line,
+                        "loginFormErrorFocusRetryTargetHiddenSourceMatrixHiddenSourceClassification",
+                        "retry-target-hidden-source-direct-control-hidden");
+        boolean loginFormErrorFocusRetryTargetHiddenSourceAncestorObserved =
+                containsLiteralField(line,
+                        "loginFormErrorFocusRetryTargetHiddenSourceMatrixHiddenAncestorObserved", "true")
+                && containsStringField(line,
+                        "loginFormErrorFocusRetryTargetHiddenSourceMatrixHiddenSourceClassification",
+                        "retry-target-hidden-source-hidden-ancestor");
+        boolean loginFormErrorFocusRetryTargetHiddenSourceDirectAriaObserved =
+                containsLiteralField(line,
+                        "loginFormErrorFocusRetryTargetHiddenSourceMatrixAriaHiddenSelfObserved", "true")
+                && containsStringField(line,
+                        "loginFormErrorFocusRetryTargetHiddenSourceMatrixHiddenSourceClassification",
+                        "retry-target-hidden-source-direct-aria-hidden");
+        boolean loginFormErrorFocusRetryTargetHiddenSourceAriaAncestorObserved =
+                containsLiteralField(line,
+                        "loginFormErrorFocusRetryTargetHiddenSourceMatrixAriaHiddenAncestorObserved", "true")
+                && containsStringField(line,
+                        "loginFormErrorFocusRetryTargetHiddenSourceMatrixHiddenSourceClassification",
+                        "retry-target-hidden-source-aria-hidden-ancestor");
+        boolean loginFormErrorFocusRetryTargetHiddenSourceCssDisplayObserved =
+                containsLiteralField(line,
+                        "loginFormErrorFocusRetryTargetHiddenSourceMatrixCssDisplayNoneObserved", "true")
+                && containsStringField(line,
+                        "loginFormErrorFocusRetryTargetHiddenSourceMatrixHiddenSourceClassification",
+                        "retry-target-hidden-source-css-display-none");
+        boolean loginFormErrorFocusRetryTargetHiddenSourceCssVisibilityHiddenObserved =
+                containsLiteralField(line,
+                        "loginFormErrorFocusRetryTargetHiddenSourceMatrixCssVisibilityHiddenObserved", "true")
+                && containsStringField(line,
+                        "loginFormErrorFocusRetryTargetHiddenSourceMatrixHiddenSourceClassification",
+                        "retry-target-hidden-source-css-visibility-hidden");
+        boolean loginFormErrorFocusRetryTargetHiddenSourceCssVisibilityCollapseObserved =
+                containsLiteralField(line,
+                        "loginFormErrorFocusRetryTargetHiddenSourceMatrixCssVisibilityCollapseObserved", "true")
+                && containsStringField(line,
+                        "loginFormErrorFocusRetryTargetHiddenSourceMatrixHiddenSourceClassification",
+                        "retry-target-hidden-source-css-visibility-collapse");
+        if (containsLiteralField(line,
+                "loginFormErrorFocusRetryTargetHiddenSourceMatrixComplete", "true")
+                && containsStringField(line,
+                        "loginFormErrorFocusRetryTargetHiddenSourceMatrixVersion",
+                        "flow-ipc-login-form-error-focus-retry-target-hidden-source-v1_141")
+                && containsLiteralField(line,
+                        "loginFormErrorFocusRetryTargetHiddenSourceMatrixLayoutComplete", "true")
+                && containsLiteralField(line,
+                        "loginFormErrorFocusRetryTargetHiddenSourceMatrixUsernameControlObserved", "true")
+                && containsStringField(line,
+                        "loginFormErrorFocusRetryTargetHiddenSourceMatrixUsernameControlTagName", "input")
+                && containsLiteralField(line,
+                        "loginFormErrorFocusRetryTargetHiddenSourceMatrixHiddenMarkerObserved", "true")
+                && containsLiteralField(line,
+                        "loginFormErrorFocusRetryTargetHiddenSourceMatrixAcceptedBlockerObserved", "true")
+                && (loginFormErrorFocusRetryTargetHiddenSourceDirectObserved
+                        || loginFormErrorFocusRetryTargetHiddenSourceAncestorObserved
+                        || loginFormErrorFocusRetryTargetHiddenSourceDirectAriaObserved
+                        || loginFormErrorFocusRetryTargetHiddenSourceAriaAncestorObserved
+                        || loginFormErrorFocusRetryTargetHiddenSourceCssDisplayObserved
+                        || loginFormErrorFocusRetryTargetHiddenSourceCssVisibilityHiddenObserved
+                        || loginFormErrorFocusRetryTargetHiddenSourceCssVisibilityCollapseObserved)
+                && containsLiteralField(line,
+                        "loginFormErrorFocusRetryTargetHiddenSourceMatrixNoLocalhost", "true")
+                && containsLiteralField(line,
+                        "loginFormErrorFocusRetryTargetHiddenSourceMatrixFixtureSubstituted", "false")) {
+            summary.loginFormErrorFocusRetryTargetHiddenSourceMatrixDomObserved = true;
+        }
+        if (containsLiteralField(line, "frameworkAppRendered", "true")
+                && containsLiteralField(line, "frameworkAppAutoUpdateDone", "true")
+                && containsLiteralField(line, "flowClientEngineVisibleOwner", "true")
+                && containsLiteralField(line,
+                        "loginFormErrorFocusRetryTargetHiddenSourceMatrixComplete", "true")
+                && containsStringField(line,
+                        "loginFormErrorFocusRetryTargetHiddenSourceMatrixVersion",
+                        "flow-ipc-login-form-error-focus-retry-target-hidden-source-v1_141")
+                && containsLiteralField(line,
+                        "loginFormErrorFocusRetryTargetHiddenSourceMatrixDirectHiddenObserved", "false")
+                && containsLiteralField(line,
+                        "loginFormErrorFocusRetryTargetHiddenSourceMatrixHiddenAncestorObserved", "true")
+                && containsStringField(line,
+                        "loginFormErrorFocusRetryTargetHiddenSourceMatrixHiddenAncestorTagName", "main")
+                && containsStringField(line,
+                        "loginFormErrorFocusRetryTargetHiddenSourceMatrixHiddenAncestorId", "app")
+                && containsStringField(line,
+                        "loginFormErrorFocusRetryTargetHiddenSourceMatrixHiddenSourceClassification",
+                        "retry-target-hidden-source-hidden-ancestor")
+                && containsLiteralField(line,
+                        "loginFormErrorFocusRetryTargetHiddenSourceMatrixNoLocalhost", "true")
+                && containsLiteralField(line,
+                        "loginFormErrorFocusRetryTargetHiddenSourceMatrixFixtureSubstituted", "false")) {
+            summary.loginFormErrorFocusRetryTargetAppRootHiddenAncestorMatrixDomObserved = true;
+        }
+        boolean loginFormErrorFocusRetryTargetVisibleOwnerFlowClient =
+                containsStringField(line,
+                        "loginFormErrorFocusRetryTargetVisibleOwnerMatrixSelectedOwner",
+                        "flow-client-engine")
+                && containsLiteralField(line,
+                        "loginFormErrorFocusRetryTargetVisibleOwnerMatrixSelectedInsideFlowClientRoot",
+                        "true");
+        boolean loginFormErrorFocusRetryTargetVisibleOwnerDocumentVisible =
+                containsStringField(line,
+                        "loginFormErrorFocusRetryTargetVisibleOwnerMatrixSelectedOwner",
+                        "document-visible")
+                && containsLiteralField(line,
+                        "loginFormErrorFocusRetryTargetVisibleOwnerMatrixSelectedInsideFlowClientRoot",
+                        "false");
+        if (containsLiteralField(line, "frameworkAppRendered", "true")
+                && containsLiteralField(line, "frameworkAppAutoUpdateDone", "true")
+                && containsLiteralField(line, "flowClientEngineVisibleOwner", "true")
+                && containsLiteralField(line,
+                        "loginFormErrorFocusRetryTargetVisibleOwnerMatrixComplete", "true")
+                && containsStringField(line,
+                        "loginFormErrorFocusRetryTargetVisibleOwnerMatrixVersion",
+                        "flow-ipc-login-form-error-focus-retry-target-visible-owner-v1_143")
+                && containsLiteralField(line, "loginFormErrorFocusMatrixComplete", "true")
+                && containsLiteralField(line,
+                        "loginFormErrorFocusRetryTargetVisibleOwnerMatrixLoginFormObserved", "true")
+                && (loginFormErrorFocusRetryTargetVisibleOwnerFlowClient
+                        || loginFormErrorFocusRetryTargetVisibleOwnerDocumentVisible)
+                && containsLiteralField(line,
+                        "loginFormErrorFocusRetryTargetVisibleOwnerMatrixSelectedInsideHiddenAppRoot", "false")
+                && containsLiteralField(line,
+                        "loginFormErrorFocusRetryTargetVisibleOwnerMatrixUsernameControlObserved", "true")
+                && containsLiteralField(line,
+                        "loginFormErrorFocusRetryTargetVisibleOwnerMatrixUsernameControlRectObserved", "true")
+                && containsLiteralField(line,
+                        "loginFormErrorFocusRetryTargetVisibleOwnerMatrixUsernameControlHiddenMarkerObserved", "false")
+                && containsStringField(line,
+                        "loginFormErrorFocusRetryTargetHiddenSourceMatrixHiddenSourceClassification",
+                        "retry-target-hidden-source-visible-owner-no-hidden-marker")
+                && containsLiteralField(line,
+                        "loginFormErrorFocusRetryTargetVisibleOwnerMatrixNoLocalhost", "true")
+                && containsLiteralField(line,
+                        "loginFormErrorFocusRetryTargetVisibleOwnerMatrixFixtureSubstituted", "false")) {
+            summary.loginFormErrorFocusRetryTargetVisibleOwnerMatrixDomObserved = true;
+        }
+        if (containsLiteralField(line, "frameworkAppRendered", "true")
+                && containsLiteralField(line, "frameworkAppAutoUpdateDone", "true")
+                && containsLiteralField(line, "flowClientEngineVisibleOwner", "true")
+                && containsLiteralField(line,
+                        "loginFormErrorFocusRetryTargetVisibleOwnerFocusMatrixComplete", "true")
+                && containsStringField(line,
+                        "loginFormErrorFocusRetryTargetVisibleOwnerFocusMatrixVersion",
+                        "flow-ipc-login-form-error-focus-retry-target-visible-owner-focus-v1_144")
+                && containsLiteralField(line,
+                        "loginFormErrorFocusRetryTargetVisibleOwnerFocusMatrixVisibleOwnerComplete",
+                        "true")
+                && containsLiteralField(line,
+                        "loginFormErrorFocusRetryTargetVisibleOwnerMatrixComplete", "true")
+                && containsLiteralField(line,
+                        "loginFormErrorFocusRetryTargetVisibleOwnerFocusMatrixUsernameControlObserved",
+                        "true")
+                && containsLiteralField(line,
+                        "loginFormErrorFocusRetryTargetVisibleOwnerFocusMatrixUsernameControlRectObserved",
+                        "true")
+                && containsLiteralField(line,
+                        "loginFormErrorFocusRetryTargetVisibleOwnerFocusMatrixActiveElementObserved",
+                        "true")
+                && containsStringField(line,
+                        "loginFormErrorFocusRetryTargetVisibleOwnerFocusMatrixActiveElementTagName",
+                        "input")
+                && containsLiteralField(line,
+                        "loginFormErrorFocusRetryTargetVisibleOwnerFocusMatrixUsernameFocusObserved",
+                        "true")
+                && containsStringField(line,
+                        "loginFormErrorFocusRetryTargetVisibleOwnerFocusMatrixFocusClassification",
+                        "visible-owner-focus-username-observed")
+                && containsLiteralField(line,
+                        "loginFormErrorFocusRetryTargetVisibleOwnerFocusMatrixNoLocalhost", "true")
+                && containsLiteralField(line,
+                        "loginFormErrorFocusRetryTargetVisibleOwnerFocusMatrixFixtureSubstituted", "false")) {
+            summary.loginFormErrorFocusRetryTargetVisibleOwnerFocusMatrixDomObserved = true;
+        }
+        if (containsLiteralField(line, "frameworkAppRendered", "true")
+                && containsLiteralField(line, "frameworkAppAutoUpdateDone", "true")
+                && containsLiteralField(line, "flowClientEngineVisibleOwner", "true")
+                && containsLiteralField(line,
+                        "loginFormErrorFocusRetryTargetVisibleOwnerFocusContainmentMatrixComplete", "true")
+                && containsStringField(line,
+                        "loginFormErrorFocusRetryTargetVisibleOwnerFocusContainmentMatrixVersion",
+                        "flow-ipc-login-form-error-focus-retry-target-visible-owner-focus-containment-v1_145")
+                && containsLiteralField(line,
+                        "loginFormErrorFocusRetryTargetVisibleOwnerFocusContainmentMatrixFocusComplete",
+                        "true")
+                && containsLiteralField(line,
+                        "loginFormErrorFocusRetryTargetVisibleOwnerFocusMatrixComplete", "true")
+                && containsLiteralField(line,
+                        "loginFormErrorFocusRetryTargetVisibleOwnerFocusContainmentMatrixActiveElementObserved",
+                        "true")
+                && containsStringField(line,
+                        "loginFormErrorFocusRetryTargetVisibleOwnerFocusContainmentMatrixActiveElementTagName",
+                        "input")
+                && containsLiteralField(line,
+                        "loginFormErrorFocusRetryTargetVisibleOwnerFocusContainmentMatrixActiveElementWithinLoginFormObserved",
+                        "true")
+                && containsLiteralField(line,
+                        "loginFormErrorFocusRetryTargetVisibleOwnerFocusContainmentMatrixUsernameFocusObserved",
+                        "true")
+                && containsStringField(line,
+                        "loginFormErrorFocusRetryTargetVisibleOwnerFocusContainmentMatrixContainmentClassification",
+                        "visible-owner-focus-containment-observed")
+                && containsLiteralField(line,
+                        "loginFormErrorFocusRetryTargetVisibleOwnerFocusContainmentMatrixNoLocalhost",
+                        "true")
+                && containsLiteralField(line,
+                        "loginFormErrorFocusRetryTargetVisibleOwnerFocusContainmentMatrixFixtureSubstituted",
+                        "false")) {
+            summary.loginFormErrorFocusRetryTargetVisibleOwnerFocusContainmentMatrixDomObserved = true;
+        }
+        if (containsLiteralField(line, "frameworkAppRendered", "true")
+                && containsLiteralField(line, "frameworkAppAutoUpdateDone", "true")
+                && containsLiteralField(line, "flowClientEngineVisibleOwner", "true")
+                && containsLiteralField(line,
+                        "loginFormErrorFocusRetryTargetVisibleOwnerFocusContainmentStabilityMatrixComplete",
+                        "true")
+                && containsStringField(line,
+                        "loginFormErrorFocusRetryTargetVisibleOwnerFocusContainmentStabilityMatrixVersion",
+                        "flow-ipc-login-form-error-focus-retry-target-visible-owner-focus-containment-stability-v1_146")
+                && containsLiteralField(line,
+                        "loginFormErrorFocusRetryTargetVisibleOwnerFocusContainmentStabilityMatrixContainmentComplete",
+                        "true")
+                && containsLiteralField(line,
+                        "loginFormErrorFocusRetryTargetVisibleOwnerFocusContainmentMatrixComplete",
+                        "true")
+                && containsPositiveIntegerField(line,
+                        "loginFormErrorFocusRetryTargetVisibleOwnerFocusContainmentStabilityMatrixStableObservationCount")
+                && containsLiteralField(line,
+                        "loginFormErrorFocusRetryTargetVisibleOwnerFocusContainmentStabilityMatrixStableObservationThreshold",
+                        "2")
+                && containsLiteralField(line,
+                        "loginFormErrorFocusRetryTargetVisibleOwnerFocusContainmentStabilityMatrixStableObservationComplete",
+                        "true")
+                && containsStringField(line,
+                        "loginFormErrorFocusRetryTargetVisibleOwnerFocusContainmentStabilityMatrixStabilityClassification",
+                        "visible-owner-focus-containment-stable")
+                && containsLiteralField(line,
+                        "loginFormErrorFocusRetryTargetVisibleOwnerFocusContainmentStabilityMatrixNoLocalhost",
+                        "true")
+                && containsLiteralField(line,
+                        "loginFormErrorFocusRetryTargetVisibleOwnerFocusContainmentStabilityMatrixFixtureSubstituted",
+                        "false")) {
+            summary.loginFormErrorFocusRetryTargetVisibleOwnerFocusContainmentStabilityMatrixDomObserved = true;
+        }
     }
 
     private static void usage() {
@@ -8128,6 +13452,92 @@ public final class DesktopTraceInspector {
         private boolean frameworkAppWindowTitleResultObserved;
         private boolean frameworkAppClipboardResultObserved;
         private boolean frameworkAppNotificationResultObserved;
+        private boolean nativeClipboardReadMatrixCommandObserved;
+        private boolean nativeClipboardReadMatrixResultObserved;
+        private boolean nativeClipboardReadMatrixPermissionObserved;
+        private boolean nativeClipboardReadMatrixTextObserved;
+        private boolean nativeClipboardReadMatrixDomObserved;
+        private boolean richTextEditorThemeVariantMatrixDomObserved;
+        private boolean buttonThemeVariantMatrixDomObserved;
+        private boolean textFieldThemeVariantMatrixDomObserved;
+        private boolean selectThemeVariantMatrixDomObserved;
+        private boolean comboBoxThemeVariantMatrixDomObserved;
+        private boolean datePickerThemeVariantMatrixDomObserved;
+        private boolean multiSelectComboBoxThemeVariantMatrixDomObserved;
+        private boolean timePickerThemeVariantMatrixDomObserved;
+        private boolean textAreaThemeVariantMatrixDomObserved;
+        private boolean emailFieldThemeVariantMatrixDomObserved;
+        private boolean integerFieldThemeVariantMatrixDomObserved;
+        private boolean passwordFieldThemeVariantMatrixDomObserved;
+        private boolean bigDecimalFieldThemeVariantMatrixDomObserved;
+        private boolean checkboxThemeVariantMatrixDomObserved;
+        private boolean radioButtonGroupThemeVariantMatrixDomObserved;
+        private boolean tabsThemeVariantMatrixDomObserved;
+        private boolean detailsThemeVariantMatrixDomObserved;
+        private boolean menuBarThemeVariantMatrixDomObserved;
+        private boolean gridThemeVariantMatrixDomObserved;
+        private boolean avatarThemeVariantMatrixDomObserved;
+        private boolean avatarGroupThemeVariantMatrixDomObserved;
+        private boolean messageInputThemeVariantMatrixDomObserved;
+        private boolean sideNavThemeVariantMatrixDomObserved;
+        private boolean messageListMarkdownMatrixDomObserved;
+        private boolean loginOverlayPropertyMatrixDomObserved;
+        private boolean loginOverlayForgotPasswordEventMatrixDomObserved;
+        private boolean loginOverlayLoginEventMatrixDomObserved;
+        private boolean loginOverlayInvalidLoginEventMatrixDomObserved;
+        private boolean loginOverlayCloseLifecycleMatrixDomObserved;
+        private boolean loginOverlayRecoveryLoginMatrixDomObserved;
+        private boolean loginOverlayServerReopenMatrixDomObserved;
+        private boolean loginOverlayShowErrorMatrixDomObserved;
+        private boolean loginOverlayFullI18nMatrixDomObserved;
+        private boolean loginOverlayNoAutofocusMatrixDomObserved;
+        private boolean loginOverlayAutofocusControlMatrixDomObserved;
+        private boolean loginOverlayEscCloseMatrixDomObserved;
+        private boolean loginOverlayOutsideCloseMatrixDomObserved;
+        private boolean loginOverlayTabTraversalMatrixDomObserved;
+        private boolean loginOverlayShiftTabTraversalMatrixDomObserved;
+        private boolean loginOverlayAutofillAttributesMatrixDomObserved;
+        private boolean loginOverlayA11ySemanticsMatrixDomObserved;
+        private boolean loginOverlayErrorA11yMatrixDomObserved;
+        private boolean loginOverlayErrorFocusMatrixDomObserved;
+        private boolean loginOverlayErrorFocusRetryMatrixDomObserved;
+        private boolean loginOverlayErrorFocusRetryTargetMatrixDomObserved;
+        private boolean loginOverlayDisabledGuardMatrixDomObserved;
+        private boolean loginOverlayDisabledKeyboardGuardMatrixDomObserved;
+        private boolean loginOverlayActionPostMatrixDomObserved;
+        private boolean loginOverlaySubmitButtonMatrixDomObserved;
+        private boolean loginOverlayEnterSubmitMatrixDomObserved;
+        private boolean loginFormPropertyMatrixDomObserved;
+        private boolean loginFormLoginEventMatrixDomObserved;
+        private boolean loginFormInvalidLoginEventMatrixDomObserved;
+        private boolean loginFormForgotPasswordEventMatrixDomObserved;
+        private boolean loginFormActionPostMatrixDomObserved;
+        private boolean loginFormSubmitButtonMatrixDomObserved;
+        private boolean loginFormEnterSubmitMatrixDomObserved;
+        private boolean loginFormRecoveryLoginMatrixDomObserved;
+        private boolean loginFormEnabledLifecycleMatrixDomObserved;
+        private boolean loginFormDisabledGuardMatrixDomObserved;
+        private boolean loginFormDisabledKeyboardGuardMatrixDomObserved;
+        private boolean loginFormNoAutofocusMatrixDomObserved;
+        private boolean loginFormAutofocusControlMatrixDomObserved;
+        private boolean loginFormTabTraversalMatrixDomObserved;
+        private boolean loginFormShiftTabTraversalMatrixDomObserved;
+        private boolean loginFormAutofillAttributesMatrixDomObserved;
+        private boolean loginFormA11ySemanticsMatrixDomObserved;
+        private boolean loginFormFullI18nMatrixDomObserved;
+        private boolean loginFormShowErrorMatrixDomObserved;
+        private boolean loginFormErrorA11yMatrixDomObserved;
+        private boolean loginFormErrorFocusMatrixDomObserved;
+        private boolean loginFormErrorFocusRetryMatrixDomObserved;
+        private boolean loginFormErrorFocusRetryTargetMatrixDomObserved;
+        private boolean loginFormErrorFocusRetryTargetStateMatrixDomObserved;
+        private boolean loginFormErrorFocusRetryTargetLayoutMatrixDomObserved;
+        private boolean loginFormErrorFocusRetryTargetHiddenSourceMatrixDomObserved;
+        private boolean loginFormErrorFocusRetryTargetAppRootHiddenAncestorMatrixDomObserved;
+        private boolean loginFormErrorFocusRetryTargetVisibleOwnerMatrixDomObserved;
+        private boolean loginFormErrorFocusRetryTargetVisibleOwnerFocusMatrixDomObserved;
+        private boolean loginFormErrorFocusRetryTargetVisibleOwnerFocusContainmentMatrixDomObserved;
+        private boolean loginFormErrorFocusRetryTargetVisibleOwnerFocusContainmentStabilityMatrixDomObserved;
         private boolean frameworkAppDomObserved;
         private boolean frameworkAppInteractionDomObserved;
         private boolean frameworkComponentMatrixBootstrapObserved;
@@ -8144,12 +13554,95 @@ public final class DesktopTraceInspector {
         private boolean frameworkDataComponentMatrixOwnerPatchObserved;
         private boolean frameworkDataComponentMatrixValidatePatchObserved;
         private boolean frameworkDataComponentMatrixDomObserved;
+        private boolean frameworkInputComponentMatrixBootstrapObserved;
+        private boolean frameworkInputComponentMatrixDecisionEventRpcObserved;
+        private boolean frameworkInputComponentMatrixNotesEventRpcObserved;
+        private boolean frameworkInputComponentMatrixEmailEventRpcObserved;
+        private boolean frameworkInputComponentMatrixScoreEventRpcObserved;
+        private boolean frameworkInputComponentMatrixSecretEventRpcObserved;
+        private boolean frameworkInputComponentMatrixReviewTimeEventRpcObserved;
+        private boolean frameworkInputComponentMatrixDecisionPatchObserved;
+        private boolean frameworkInputComponentMatrixNotesPatchObserved;
+        private boolean frameworkInputComponentMatrixEmailPatchObserved;
+        private boolean frameworkInputComponentMatrixScorePatchObserved;
+        private boolean frameworkInputComponentMatrixSecretPatchObserved;
+        private boolean frameworkInputComponentMatrixReviewTimePatchObserved;
+        private boolean frameworkInputComponentMatrixDomObserved;
+        private boolean frameworkNavigationComponentMatrixBootstrapObserved;
+        private boolean frameworkNavigationComponentMatrixAssigneesEventRpcObserved;
+        private boolean frameworkNavigationComponentMatrixTabsEventRpcObserved;
+        private boolean frameworkNavigationComponentMatrixDetailsEventRpcObserved;
+        private boolean frameworkNavigationComponentMatrixAccordionEventRpcObserved;
+        private boolean frameworkNavigationComponentMatrixMenuEventRpcObserved;
+        private boolean frameworkNavigationComponentMatrixAssigneesPatchObserved;
+        private boolean frameworkNavigationComponentMatrixTabsPatchObserved;
+        private boolean frameworkNavigationComponentMatrixDetailsPatchObserved;
+        private boolean frameworkNavigationComponentMatrixAccordionPatchObserved;
+        private boolean frameworkNavigationComponentMatrixMenuPatchObserved;
+        private boolean frameworkNavigationComponentMatrixDomObserved;
+        private boolean frameworkOverlayComponentMatrixBootstrapObserved;
+        private boolean frameworkOverlayComponentMatrixContextMenuOpenEventRpcObserved;
+        private boolean frameworkOverlayComponentMatrixContextMenuItemEventRpcObserved;
+        private boolean frameworkOverlayComponentMatrixGridContextMenuOpenEventRpcObserved;
+        private boolean frameworkOverlayComponentMatrixGridContextMenuItemEventRpcObserved;
+        private boolean frameworkOverlayComponentMatrixPopoverOpenEventRpcObserved;
+        private boolean frameworkOverlayComponentMatrixContextMenuOpenPatchObserved;
+        private boolean frameworkOverlayComponentMatrixContextMenuItemPatchObserved;
+        private boolean frameworkOverlayComponentMatrixGridContextMenuOpenPatchObserved;
+        private boolean frameworkOverlayComponentMatrixGridContextMenuItemPatchObserved;
+        private boolean frameworkOverlayComponentMatrixPopoverOpenPatchObserved;
+        private boolean frameworkOverlayComponentMatrixDomObserved;
+        private boolean frameworkRichContentComponentMatrixBootstrapObserved;
+        private boolean frameworkRichContentComponentMatrixAvatarEventRpcObserved;
+        private boolean frameworkRichContentComponentMatrixMessageEventRpcObserved;
+        private boolean frameworkRichContentComponentMatrixSideNavEventRpcObserved;
+        private boolean frameworkRichContentComponentMatrixLoginOpenEventRpcObserved;
+        private boolean frameworkRichContentComponentMatrixLoginSubmitEventRpcObserved;
+        private boolean frameworkRichContentComponentMatrixAvatarPatchObserved;
+        private boolean frameworkRichContentComponentMatrixMessagePatchObserved;
+        private boolean frameworkRichContentComponentMatrixSideNavPatchObserved;
+        private boolean frameworkRichContentComponentMatrixLoginOpenPatchObserved;
+        private boolean frameworkRichContentComponentMatrixLoginSubmitPatchObserved;
+        private boolean frameworkRichContentComponentMatrixDomObserved;
+        private boolean frameworkLifecycleFocusBehaviorMatrixBootstrapObserved;
+        private boolean frameworkLifecycleFocusBehaviorMatrixFocusEventRpcObserved;
+        private boolean frameworkLifecycleFocusBehaviorMatrixBlurEventRpcObserved;
+        private boolean frameworkLifecycleFocusBehaviorMatrixAttachEventRpcObserved;
+        private boolean frameworkLifecycleFocusBehaviorMatrixDetachEventRpcObserved;
+        private boolean frameworkLifecycleFocusBehaviorMatrixFocusPatchObserved;
+        private boolean frameworkLifecycleFocusBehaviorMatrixBlurPatchObserved;
+        private boolean frameworkLifecycleFocusBehaviorMatrixAttachPatchObserved;
+        private boolean frameworkLifecycleFocusBehaviorMatrixDetachPatchObserved;
+        private boolean frameworkLifecycleFocusBehaviorMatrixDomObserved;
+        private boolean frameworkRichTextEditorMatrixBootstrapObserved;
+        private boolean frameworkRichTextEditorMatrixValueEventRpcObserved;
+        private boolean frameworkRichTextEditorMatrixValuePatchObserved;
+        private boolean frameworkRichTextEditorMatrixDomObserved;
+        private boolean frameworkRichTextEditorBehaviorMatrixBootstrapObserved;
+        private boolean frameworkRichTextEditorBehaviorMatrixSelectionEventRpcObserved;
+        private boolean frameworkRichTextEditorBehaviorMatrixToolbarEventRpcObserved;
+        private boolean frameworkRichTextEditorBehaviorMatrixKeyboardEventRpcObserved;
+        private boolean frameworkRichTextEditorBehaviorMatrixDeltaEventRpcObserved;
+        private boolean frameworkRichTextEditorBehaviorMatrixSelectionPatchObserved;
+        private boolean frameworkRichTextEditorBehaviorMatrixToolbarPatchObserved;
+        private boolean frameworkRichTextEditorBehaviorMatrixKeyboardPatchObserved;
+        private boolean frameworkRichTextEditorBehaviorMatrixDeltaPatchObserved;
+        private boolean frameworkRichTextEditorBehaviorMatrixDomObserved;
+        private boolean frameworkRichTextEditorEditingMatrixBootstrapObserved;
+        private boolean frameworkRichTextEditorEditingMatrixFormatEventRpcObserved;
+        private boolean frameworkRichTextEditorEditingMatrixClipboardEventRpcObserved;
+        private boolean frameworkRichTextEditorEditingMatrixLinkEventRpcObserved;
+        private boolean frameworkRichTextEditorEditingMatrixFormatPatchObserved;
+        private boolean frameworkRichTextEditorEditingMatrixClipboardPatchObserved;
+        private boolean frameworkRichTextEditorEditingMatrixLinkPatchObserved;
+        private boolean frameworkRichTextEditorEditingMatrixDomObserved;
         private boolean frameworkLazyDataProviderBootstrapObserved;
         private boolean frameworkLazyDataProviderPublishedRpcObserved;
         private boolean frameworkLazyDataProviderReportEventRpcObserved;
         private boolean frameworkLazyDataProviderFetchPatchObserved;
         private boolean frameworkLazyDataProviderReportPatchObserved;
         private boolean frameworkLazyDataProviderDomObserved;
+        private String frameworkLazyDataProviderFetchPatchRange = "";
         private boolean frameworkGridScrollVirtualizationBootstrapObserved;
         private boolean frameworkGridScrollVirtualizationPublishedRpcObserved;
         private boolean frameworkGridScrollVirtualizationReportEventRpcObserved;
@@ -8167,6 +13660,7 @@ public final class DesktopTraceInspector {
         private boolean frameworkUploadMultipartDomObserved;
         private boolean frameworkDownloadHandlerSaveOpenBootstrapObserved;
         private boolean frameworkDownloadHandlerSaveOpenDomObserved;
+        private boolean frontendResourcePipelineBasicClosureV156DomObserved;
         private boolean firstMeaningfulPaintObserved;
         private boolean frontendAssetPipelineV14Observed;
         private boolean frontendArtifactFamilyModelObserved;
@@ -8443,6 +13937,34 @@ public final class DesktopTraceInspector {
         private boolean dataComponentResourceMatrixV147StageObserved;
         private boolean dataComponentResourceMatrixV147CompleteStageObserved;
         private boolean dataComponentResourceMatrixV147DomObserved;
+        private boolean inputComponentParityMatrixV157ManifestObserved;
+        private boolean inputComponentParityMatrixV157StageObserved;
+        private boolean inputComponentParityMatrixV157CompleteStageObserved;
+        private boolean inputComponentParityMatrixV157DomObserved;
+        private boolean multiValueNavigationDisclosureMatrixV158ManifestObserved;
+        private boolean multiValueNavigationDisclosureMatrixV158StageObserved;
+        private boolean multiValueNavigationDisclosureMatrixV158CompleteStageObserved;
+        private boolean multiValueNavigationDisclosureMatrixV158DomObserved;
+        private boolean overlayContextMenuMatrixV159ManifestObserved;
+        private boolean overlayContextMenuMatrixV159StageObserved;
+        private boolean overlayContextMenuMatrixV159CompleteStageObserved;
+        private boolean overlayContextMenuMatrixV159DomObserved;
+        private boolean contentAppShellLoginMatrixV160ManifestObserved;
+        private boolean contentAppShellLoginMatrixV160StageObserved;
+        private boolean contentAppShellLoginMatrixV160CompleteStageObserved;
+        private boolean contentAppShellLoginMatrixV160DomObserved;
+        private boolean richTextEditorMatrixV162ManifestObserved;
+        private boolean richTextEditorMatrixV162StageObserved;
+        private boolean richTextEditorMatrixV162CompleteStageObserved;
+        private boolean richTextEditorMatrixV162DomObserved;
+        private boolean richTextEditorBehaviorMatrixV163ManifestObserved;
+        private boolean richTextEditorBehaviorMatrixV163StageObserved;
+        private boolean richTextEditorBehaviorMatrixV163CompleteStageObserved;
+        private boolean richTextEditorBehaviorMatrixV163DomObserved;
+        private boolean richTextEditorEditingMatrixV164ManifestObserved;
+        private boolean richTextEditorEditingMatrixV164StageObserved;
+        private boolean richTextEditorEditingMatrixV164CompleteStageObserved;
+        private boolean richTextEditorEditingMatrixV164DomObserved;
         private boolean gridLazyDataProviderV148ManifestObserved;
         private boolean gridLazyDataProviderV148StageObserved;
         private boolean gridLazyDataProviderV148CompleteStageObserved;
@@ -9345,6 +14867,938 @@ public final class DesktopTraceInspector {
             return hasRequiredFlowIpcV1_55DownloadSaveOpenTypes();
         }
 
+        public boolean hasRequiredFlowIpcV1_56FrontendResourcePipelineBasicClosureTypes() {
+            return frontendResourcePipelineBasicClosureV156DomObserved;
+        }
+
+        public boolean hasRequiredFlowIpcV1_56Types() {
+            return hasRequiredFlowIpcV1_56FrontendResourcePipelineBasicClosureTypes();
+        }
+
+        public boolean hasRequiredFlowIpcV1_57InputComponentParityMatrixTypes() {
+            return inputComponentParityMatrixV157ManifestObserved
+                    && inputComponentParityMatrixV157StageObserved
+                    && (inputComponentParityMatrixV157CompleteStageObserved
+                            || inputComponentParityMatrixV157DomObserved)
+                    && inputComponentParityMatrixV157DomObserved
+                    && frameworkInputComponentMatrixBootstrapObserved
+                    && frameworkInputComponentMatrixDecisionEventRpcObserved
+                    && frameworkInputComponentMatrixNotesEventRpcObserved
+                    && frameworkInputComponentMatrixEmailEventRpcObserved
+                    && frameworkInputComponentMatrixScoreEventRpcObserved
+                    && frameworkInputComponentMatrixSecretEventRpcObserved
+                    && frameworkInputComponentMatrixReviewTimeEventRpcObserved
+                    && frameworkInputComponentMatrixDecisionPatchObserved
+                    && frameworkInputComponentMatrixNotesPatchObserved
+                    && frameworkInputComponentMatrixEmailPatchObserved
+                    && frameworkInputComponentMatrixScorePatchObserved
+                    && frameworkInputComponentMatrixSecretPatchObserved
+                    && frameworkInputComponentMatrixReviewTimePatchObserved
+                    && frameworkInputComponentMatrixDomObserved
+                    && hasRequiredFlowIpcV1_56FrontendResourcePipelineBasicClosureTypes();
+        }
+
+        public boolean hasRequiredFlowIpcV1_57Types() {
+            return hasRequiredFlowIpcV1_57InputComponentParityMatrixTypes();
+        }
+
+        public boolean hasRequiredFlowIpcV1_58MultiValueNavigationDisclosureMatrixTypes() {
+            return multiValueNavigationDisclosureMatrixV158ManifestObserved
+                    && multiValueNavigationDisclosureMatrixV158StageObserved
+                    && (multiValueNavigationDisclosureMatrixV158CompleteStageObserved
+                            || multiValueNavigationDisclosureMatrixV158DomObserved)
+                    && multiValueNavigationDisclosureMatrixV158DomObserved
+                    && frameworkNavigationComponentMatrixBootstrapObserved
+                    && frameworkNavigationComponentMatrixAssigneesEventRpcObserved
+                    && frameworkNavigationComponentMatrixTabsEventRpcObserved
+                    && frameworkNavigationComponentMatrixDetailsEventRpcObserved
+                    && frameworkNavigationComponentMatrixAccordionEventRpcObserved
+                    && frameworkNavigationComponentMatrixMenuEventRpcObserved
+                    && frameworkNavigationComponentMatrixAssigneesPatchObserved
+                    && frameworkNavigationComponentMatrixTabsPatchObserved
+                    && frameworkNavigationComponentMatrixDetailsPatchObserved
+                    && frameworkNavigationComponentMatrixAccordionPatchObserved
+                    && frameworkNavigationComponentMatrixMenuPatchObserved
+                    && frameworkNavigationComponentMatrixDomObserved
+                    && hasRequiredFlowIpcV1_57InputComponentParityMatrixTypes();
+        }
+
+        public boolean hasRequiredFlowIpcV1_58Types() {
+            return hasRequiredFlowIpcV1_58MultiValueNavigationDisclosureMatrixTypes();
+        }
+
+        public boolean hasRequiredFlowIpcV1_59OverlayContextMenuMatrixTypes() {
+            return overlayContextMenuMatrixV159ManifestObserved
+                    && overlayContextMenuMatrixV159StageObserved
+                    && (overlayContextMenuMatrixV159CompleteStageObserved
+                            || overlayContextMenuMatrixV159DomObserved)
+                    && overlayContextMenuMatrixV159DomObserved
+                    && frameworkOverlayComponentMatrixBootstrapObserved
+                    && frameworkOverlayComponentMatrixContextMenuOpenEventRpcObserved
+                    && frameworkOverlayComponentMatrixContextMenuItemEventRpcObserved
+                    && (frameworkOverlayComponentMatrixGridContextMenuOpenEventRpcObserved
+                            || frameworkOverlayComponentMatrixDomObserved)
+                    && frameworkOverlayComponentMatrixGridContextMenuItemEventRpcObserved
+                    && frameworkOverlayComponentMatrixPopoverOpenEventRpcObserved
+                    && frameworkOverlayComponentMatrixContextMenuOpenPatchObserved
+                    && frameworkOverlayComponentMatrixContextMenuItemPatchObserved
+                    && frameworkOverlayComponentMatrixGridContextMenuOpenPatchObserved
+                    && frameworkOverlayComponentMatrixGridContextMenuItemPatchObserved
+                    && frameworkOverlayComponentMatrixPopoverOpenPatchObserved
+                    && frameworkOverlayComponentMatrixDomObserved
+                    && hasRequiredFlowIpcV1_58MultiValueNavigationDisclosureMatrixTypes();
+        }
+
+        public boolean hasRequiredFlowIpcV1_59Types() {
+            return hasRequiredFlowIpcV1_59OverlayContextMenuMatrixTypes();
+        }
+
+        public boolean hasRequiredFlowIpcV1_60ContentAppShellLoginMatrixTypes() {
+            return contentAppShellLoginMatrixV160ManifestObserved
+                    && contentAppShellLoginMatrixV160StageObserved
+                    && (contentAppShellLoginMatrixV160CompleteStageObserved
+                            || contentAppShellLoginMatrixV160DomObserved)
+                    && contentAppShellLoginMatrixV160DomObserved
+                    && frameworkRichContentComponentMatrixBootstrapObserved
+                    && frameworkRichContentComponentMatrixAvatarEventRpcObserved
+                    && frameworkRichContentComponentMatrixMessageEventRpcObserved
+                    && frameworkRichContentComponentMatrixSideNavEventRpcObserved
+                    && frameworkRichContentComponentMatrixLoginOpenEventRpcObserved
+                    && frameworkRichContentComponentMatrixLoginSubmitEventRpcObserved
+                    && frameworkRichContentComponentMatrixAvatarPatchObserved
+                    && frameworkRichContentComponentMatrixMessagePatchObserved
+                    && frameworkRichContentComponentMatrixSideNavPatchObserved
+                    && frameworkRichContentComponentMatrixLoginOpenPatchObserved
+                    && frameworkRichContentComponentMatrixLoginSubmitPatchObserved
+                    && frameworkRichContentComponentMatrixDomObserved
+                    && hasRequiredFlowIpcV1_59OverlayContextMenuMatrixTypes();
+        }
+
+        public boolean hasRequiredFlowIpcV1_60Types() {
+            return hasRequiredFlowIpcV1_60ContentAppShellLoginMatrixTypes();
+        }
+
+        public boolean hasRequiredFlowIpcV1_61LifecycleFocusBehaviorMatrixTypes() {
+            return frameworkLifecycleFocusBehaviorMatrixBootstrapObserved
+                    && frameworkLifecycleFocusBehaviorMatrixFocusEventRpcObserved
+                    && frameworkLifecycleFocusBehaviorMatrixBlurEventRpcObserved
+                    && frameworkLifecycleFocusBehaviorMatrixAttachEventRpcObserved
+                    && frameworkLifecycleFocusBehaviorMatrixDetachEventRpcObserved
+                    && frameworkLifecycleFocusBehaviorMatrixFocusPatchObserved
+                    && frameworkLifecycleFocusBehaviorMatrixBlurPatchObserved
+                    && frameworkLifecycleFocusBehaviorMatrixAttachPatchObserved
+                    && frameworkLifecycleFocusBehaviorMatrixDetachPatchObserved
+                    && frameworkLifecycleFocusBehaviorMatrixDomObserved
+                    && hasRequiredFlowIpcV1_60ContentAppShellLoginMatrixTypes();
+        }
+
+        public boolean hasRequiredFlowIpcV1_61Types() {
+            return hasRequiredFlowIpcV1_61LifecycleFocusBehaviorMatrixTypes();
+        }
+
+        public boolean hasRequiredFlowIpcV1_62RichTextEditorMatrixTypes() {
+            return richTextEditorMatrixV162ManifestObserved
+                    && richTextEditorMatrixV162StageObserved
+                    && (richTextEditorMatrixV162CompleteStageObserved
+                            || richTextEditorMatrixV162DomObserved)
+                    && richTextEditorMatrixV162DomObserved
+                    && frameworkRichTextEditorMatrixBootstrapObserved
+                    && frameworkRichTextEditorMatrixValueEventRpcObserved
+                    && frameworkRichTextEditorMatrixValuePatchObserved
+                    && frameworkRichTextEditorMatrixDomObserved;
+        }
+
+        public boolean hasRequiredFlowIpcV1_62Types() {
+            return hasRequiredFlowIpcV1_62RichTextEditorMatrixTypes()
+                    && hasRequiredFlowIpcV1_61LifecycleFocusBehaviorMatrixTypes();
+        }
+
+        public boolean hasRequiredFlowIpcV1_63RichTextEditorBehaviorMatrixTypes() {
+            return richTextEditorBehaviorMatrixV163ManifestObserved
+                    && richTextEditorBehaviorMatrixV163StageObserved
+                    && (richTextEditorBehaviorMatrixV163CompleteStageObserved
+                            || richTextEditorBehaviorMatrixV163DomObserved)
+                    && richTextEditorBehaviorMatrixV163DomObserved
+                    && frameworkRichTextEditorBehaviorMatrixBootstrapObserved
+                    && frameworkRichTextEditorBehaviorMatrixSelectionEventRpcObserved
+                    && frameworkRichTextEditorBehaviorMatrixToolbarEventRpcObserved
+                    && frameworkRichTextEditorBehaviorMatrixKeyboardEventRpcObserved
+                    && frameworkRichTextEditorBehaviorMatrixDeltaEventRpcObserved
+                    && frameworkRichTextEditorBehaviorMatrixSelectionPatchObserved
+                    && frameworkRichTextEditorBehaviorMatrixToolbarPatchObserved
+                    && frameworkRichTextEditorBehaviorMatrixKeyboardPatchObserved
+                    && frameworkRichTextEditorBehaviorMatrixDeltaPatchObserved
+                    && frameworkRichTextEditorBehaviorMatrixDomObserved;
+        }
+
+        public boolean hasRequiredFlowIpcV1_63Types() {
+            return hasRequiredFlowIpcV1_63RichTextEditorBehaviorMatrixTypes()
+                    && hasRequiredFlowIpcV1_62RichTextEditorMatrixTypes();
+        }
+
+        public boolean hasRequiredFlowIpcV1_64RichTextEditorEditingMatrixTypes() {
+            return richTextEditorEditingMatrixV164ManifestObserved
+                    && richTextEditorEditingMatrixV164StageObserved
+                    && (richTextEditorEditingMatrixV164CompleteStageObserved
+                            || richTextEditorEditingMatrixV164DomObserved)
+                    && richTextEditorEditingMatrixV164DomObserved
+                    && frameworkRichTextEditorEditingMatrixBootstrapObserved
+                    && frameworkRichTextEditorEditingMatrixFormatEventRpcObserved
+                    && frameworkRichTextEditorEditingMatrixClipboardEventRpcObserved
+                    && frameworkRichTextEditorEditingMatrixLinkEventRpcObserved
+                    && frameworkRichTextEditorEditingMatrixFormatPatchObserved
+                    && frameworkRichTextEditorEditingMatrixClipboardPatchObserved
+                    && frameworkRichTextEditorEditingMatrixLinkPatchObserved
+                    && frameworkRichTextEditorEditingMatrixDomObserved;
+        }
+
+        public boolean hasRequiredFlowIpcV1_64Types() {
+            return hasRequiredFlowIpcV1_64RichTextEditorEditingMatrixTypes()
+                    && hasRequiredFlowIpcV1_63RichTextEditorBehaviorMatrixTypes()
+                    && hasRequiredFlowIpcV1_62RichTextEditorMatrixTypes();
+        }
+
+        public boolean hasRequiredFlowIpcV1_65NativeClipboardReadMatrixTypes() {
+            return nativeClipboardReadMatrixCommandObserved
+                    && nativeClipboardReadMatrixResultObserved
+                    && nativeClipboardReadMatrixPermissionObserved
+                    && nativeClipboardReadMatrixTextObserved
+                    && nativeClipboardReadMatrixDomObserved;
+        }
+
+        public boolean hasRequiredFlowIpcV1_65Types() {
+            return hasRequiredFlowIpcV1_65NativeClipboardReadMatrixTypes()
+                    && hasRequiredFlowIpcV1_64Types();
+        }
+
+        public boolean hasRequiredFlowIpcV1_66RichTextEditorThemeVariantMatrixTypes() {
+            return richTextEditorThemeVariantMatrixDomObserved;
+        }
+
+        public boolean hasRequiredFlowIpcV1_66Types() {
+            return hasRequiredFlowIpcV1_66RichTextEditorThemeVariantMatrixTypes()
+                    && hasRequiredFlowIpcV1_65Types();
+        }
+
+        public boolean hasRequiredFlowIpcV1_67ButtonThemeVariantMatrixTypes() {
+            return buttonThemeVariantMatrixDomObserved;
+        }
+
+        public boolean hasRequiredFlowIpcV1_67Types() {
+            return hasRequiredFlowIpcV1_67ButtonThemeVariantMatrixTypes()
+                    && hasRequiredFlowIpcV1_66Types();
+        }
+
+        public boolean hasRequiredFlowIpcV1_68TextFieldThemeVariantMatrixTypes() {
+            return textFieldThemeVariantMatrixDomObserved;
+        }
+
+        public boolean hasRequiredFlowIpcV1_68Types() {
+            return hasRequiredFlowIpcV1_68TextFieldThemeVariantMatrixTypes()
+                    && hasRequiredFlowIpcV1_67Types();
+        }
+
+        public boolean hasRequiredFlowIpcV1_69SelectThemeVariantMatrixTypes() {
+            return selectThemeVariantMatrixDomObserved;
+        }
+
+        public boolean hasRequiredFlowIpcV1_69Types() {
+            return hasRequiredFlowIpcV1_69SelectThemeVariantMatrixTypes()
+                    && hasRequiredFlowIpcV1_68Types();
+        }
+
+        public boolean hasRequiredFlowIpcV1_70ComboBoxThemeVariantMatrixTypes() {
+            return comboBoxThemeVariantMatrixDomObserved;
+        }
+
+        public boolean hasRequiredFlowIpcV1_70Types() {
+            return hasRequiredFlowIpcV1_70ComboBoxThemeVariantMatrixTypes()
+                    && hasRequiredFlowIpcV1_69Types();
+        }
+
+        public boolean hasRequiredFlowIpcV1_71DatePickerThemeVariantMatrixTypes() {
+            return datePickerThemeVariantMatrixDomObserved;
+        }
+
+        public boolean hasRequiredFlowIpcV1_71Types() {
+            return hasRequiredFlowIpcV1_71DatePickerThemeVariantMatrixTypes()
+                    && hasRequiredFlowIpcV1_70Types();
+        }
+
+        public boolean hasRequiredFlowIpcV1_72MultiSelectComboBoxThemeVariantMatrixTypes() {
+            return multiSelectComboBoxThemeVariantMatrixDomObserved;
+        }
+
+        public boolean hasRequiredFlowIpcV1_72Types() {
+            return hasRequiredFlowIpcV1_72MultiSelectComboBoxThemeVariantMatrixTypes()
+                    && hasRequiredFlowIpcV1_71Types();
+        }
+
+        public boolean hasRequiredFlowIpcV1_73TimePickerThemeVariantMatrixTypes() {
+            return timePickerThemeVariantMatrixDomObserved;
+        }
+
+        public boolean hasRequiredFlowIpcV1_73Types() {
+            return hasRequiredFlowIpcV1_73TimePickerThemeVariantMatrixTypes()
+                    && hasRequiredFlowIpcV1_72Types();
+        }
+
+        public boolean hasRequiredFlowIpcV1_74TextAreaThemeVariantMatrixTypes() {
+            return textAreaThemeVariantMatrixDomObserved;
+        }
+
+        public boolean hasRequiredFlowIpcV1_74Types() {
+            return hasRequiredFlowIpcV1_74TextAreaThemeVariantMatrixTypes()
+                    && hasRequiredFlowIpcV1_73Types();
+        }
+
+        public boolean hasRequiredFlowIpcV1_75EmailFieldThemeVariantMatrixTypes() {
+            return emailFieldThemeVariantMatrixDomObserved;
+        }
+
+        public boolean hasRequiredFlowIpcV1_75Types() {
+            return hasRequiredFlowIpcV1_75EmailFieldThemeVariantMatrixTypes()
+                    && hasRequiredFlowIpcV1_74Types();
+        }
+
+        public boolean hasRequiredFlowIpcV1_76IntegerFieldThemeVariantMatrixTypes() {
+            return integerFieldThemeVariantMatrixDomObserved;
+        }
+
+        public boolean hasRequiredFlowIpcV1_76Types() {
+            return hasRequiredFlowIpcV1_76IntegerFieldThemeVariantMatrixTypes()
+                    && hasRequiredFlowIpcV1_75Types();
+        }
+
+        public boolean hasRequiredFlowIpcV1_77PasswordFieldThemeVariantMatrixTypes() {
+            return passwordFieldThemeVariantMatrixDomObserved;
+        }
+
+        public boolean hasRequiredFlowIpcV1_77Types() {
+            return hasRequiredFlowIpcV1_77PasswordFieldThemeVariantMatrixTypes()
+                    && hasRequiredFlowIpcV1_76Types();
+        }
+
+        public boolean hasRequiredFlowIpcV1_78BigDecimalFieldThemeVariantMatrixTypes() {
+            return bigDecimalFieldThemeVariantMatrixDomObserved;
+        }
+
+        public boolean hasRequiredFlowIpcV1_78Types() {
+            return hasRequiredFlowIpcV1_78BigDecimalFieldThemeVariantMatrixTypes()
+                    && hasRequiredFlowIpcV1_77Types();
+        }
+
+        public boolean hasRequiredFlowIpcV1_79CheckboxThemeVariantMatrixTypes() {
+            return checkboxThemeVariantMatrixDomObserved;
+        }
+
+        public boolean hasRequiredFlowIpcV1_79Types() {
+            return hasRequiredFlowIpcV1_79CheckboxThemeVariantMatrixTypes()
+                    && hasRequiredFlowIpcV1_78Types();
+        }
+
+        public boolean hasRequiredFlowIpcV1_80RadioButtonGroupThemeVariantMatrixTypes() {
+            return radioButtonGroupThemeVariantMatrixDomObserved;
+        }
+
+        public boolean hasRequiredFlowIpcV1_80Types() {
+            return hasRequiredFlowIpcV1_80RadioButtonGroupThemeVariantMatrixTypes()
+                    && hasRequiredFlowIpcV1_79Types();
+        }
+
+        public boolean hasRequiredFlowIpcV1_81TabsThemeVariantMatrixTypes() {
+            return tabsThemeVariantMatrixDomObserved;
+        }
+
+        public boolean hasRequiredFlowIpcV1_81Types() {
+            return hasRequiredFlowIpcV1_81TabsThemeVariantMatrixTypes()
+                    && hasRequiredFlowIpcV1_80Types();
+        }
+
+        public boolean hasRequiredFlowIpcV1_82DetailsThemeVariantMatrixTypes() {
+            return detailsThemeVariantMatrixDomObserved;
+        }
+
+        public boolean hasRequiredFlowIpcV1_82Types() {
+            return hasRequiredFlowIpcV1_82DetailsThemeVariantMatrixTypes()
+                    && hasRequiredFlowIpcV1_81Types();
+        }
+
+        public boolean hasRequiredFlowIpcV1_83MenuBarThemeVariantMatrixTypes() {
+            return menuBarThemeVariantMatrixDomObserved;
+        }
+
+        public boolean hasRequiredFlowIpcV1_83Types() {
+            return hasRequiredFlowIpcV1_83MenuBarThemeVariantMatrixTypes()
+                    && hasRequiredFlowIpcV1_82Types();
+        }
+
+        public boolean hasRequiredFlowIpcV1_84GridThemeVariantMatrixTypes() {
+            return gridThemeVariantMatrixDomObserved;
+        }
+
+        public boolean hasRequiredFlowIpcV1_84Types() {
+            return hasRequiredFlowIpcV1_84GridThemeVariantMatrixTypes()
+                    && hasRequiredFlowIpcV1_83Types();
+        }
+
+        public boolean hasRequiredFlowIpcV1_85AvatarThemeVariantMatrixTypes() {
+            return avatarThemeVariantMatrixDomObserved;
+        }
+
+        public boolean hasRequiredFlowIpcV1_85Types() {
+            return hasRequiredFlowIpcV1_85AvatarThemeVariantMatrixTypes()
+                    && hasRequiredFlowIpcV1_84Types();
+        }
+
+        public boolean hasRequiredFlowIpcV1_86AvatarGroupThemeVariantMatrixTypes() {
+            return avatarGroupThemeVariantMatrixDomObserved;
+        }
+
+        public boolean hasRequiredFlowIpcV1_86Types() {
+            return hasRequiredFlowIpcV1_86AvatarGroupThemeVariantMatrixTypes()
+                    && hasRequiredFlowIpcV1_85Types();
+        }
+
+        public boolean hasRequiredFlowIpcV1_87MessageInputThemeVariantMatrixTypes() {
+            return messageInputThemeVariantMatrixDomObserved;
+        }
+
+        public boolean hasRequiredFlowIpcV1_87Types() {
+            return hasRequiredFlowIpcV1_87MessageInputThemeVariantMatrixTypes()
+                    && hasRequiredFlowIpcV1_86Types();
+        }
+
+        public boolean hasRequiredFlowIpcV1_88SideNavThemeVariantMatrixTypes() {
+            return sideNavThemeVariantMatrixDomObserved;
+        }
+
+        public boolean hasRequiredFlowIpcV1_88Types() {
+            return hasRequiredFlowIpcV1_88SideNavThemeVariantMatrixTypes()
+                    && hasRequiredFlowIpcV1_87Types();
+        }
+
+        public boolean hasRequiredFlowIpcV1_89MessageListMarkdownMatrixTypes() {
+            return messageListMarkdownMatrixDomObserved;
+        }
+
+        public boolean hasRequiredFlowIpcV1_89Types() {
+            return hasRequiredFlowIpcV1_89MessageListMarkdownMatrixTypes()
+                    && hasRequiredFlowIpcV1_88Types();
+        }
+
+        public boolean hasRequiredFlowIpcV1_90LoginOverlayPropertyMatrixTypes() {
+            return loginOverlayPropertyMatrixDomObserved;
+        }
+
+        public boolean hasRequiredFlowIpcV1_90Types() {
+            return hasRequiredFlowIpcV1_90LoginOverlayPropertyMatrixTypes();
+        }
+
+        public boolean hasRequiredFlowIpcV1_91LoginOverlayForgotPasswordEventTypes() {
+            return loginOverlayForgotPasswordEventMatrixDomObserved;
+        }
+
+        public boolean hasRequiredFlowIpcV1_91Types() {
+            return hasRequiredFlowIpcV1_91LoginOverlayForgotPasswordEventTypes()
+                    && hasRequiredFlowIpcV1_90Types();
+        }
+
+        public boolean hasRequiredFlowIpcV1_92LoginOverlayLoginEventTypes() {
+            return loginOverlayLoginEventMatrixDomObserved;
+        }
+
+        public boolean hasRequiredFlowIpcV1_92Types() {
+            return hasRequiredFlowIpcV1_92LoginOverlayLoginEventTypes()
+                    && hasRequiredFlowIpcV1_91Types();
+        }
+
+        public boolean hasRequiredFlowIpcV1_93LoginOverlayInvalidLoginEventTypes() {
+            return loginOverlayInvalidLoginEventMatrixDomObserved;
+        }
+
+        public boolean hasRequiredFlowIpcV1_93Types() {
+            return hasRequiredFlowIpcV1_93LoginOverlayInvalidLoginEventTypes()
+                    && hasRequiredFlowIpcV1_92Types();
+        }
+
+        public boolean hasRequiredFlowIpcV1_94LoginOverlayCloseLifecycleTypes() {
+            return loginOverlayCloseLifecycleMatrixDomObserved;
+        }
+
+        public boolean hasRequiredFlowIpcV1_94Types() {
+            return hasRequiredFlowIpcV1_94LoginOverlayCloseLifecycleTypes()
+                    && hasRequiredFlowIpcV1_93Types();
+        }
+
+        public boolean hasRequiredFlowIpcV1_95LoginOverlayRecoveryLoginTypes() {
+            return loginOverlayRecoveryLoginMatrixDomObserved;
+        }
+
+        public boolean hasRequiredFlowIpcV1_95Types() {
+            return hasRequiredFlowIpcV1_95LoginOverlayRecoveryLoginTypes()
+                    && hasRequiredFlowIpcV1_94Types();
+        }
+
+        public boolean hasRequiredFlowIpcV1_96LoginOverlayServerReopenTypes() {
+            return loginOverlayServerReopenMatrixDomObserved;
+        }
+
+        public boolean hasRequiredFlowIpcV1_96Types() {
+            return hasRequiredFlowIpcV1_96LoginOverlayServerReopenTypes()
+                    && hasRequiredFlowIpcV1_95Types();
+        }
+
+        public boolean hasRequiredFlowIpcV1_97LoginFormLoginEventTypes() {
+            return loginFormLoginEventMatrixDomObserved;
+        }
+
+        public boolean hasRequiredFlowIpcV1_97Types() {
+            return hasRequiredFlowIpcV1_97LoginFormLoginEventTypes()
+                    && hasRequiredFlowIpcV1_96Types();
+        }
+
+        public boolean hasRequiredFlowIpcV1_98LoginFormInvalidLoginEventTypes() {
+            return loginFormInvalidLoginEventMatrixDomObserved;
+        }
+
+        public boolean hasRequiredFlowIpcV1_98Types() {
+            return hasRequiredFlowIpcV1_98LoginFormInvalidLoginEventTypes()
+                    && hasRequiredFlowIpcV1_97Types();
+        }
+
+        public boolean hasRequiredFlowIpcV1_99LoginFormForgotPasswordEventTypes() {
+            return loginFormForgotPasswordEventMatrixDomObserved;
+        }
+
+        public boolean hasRequiredFlowIpcV1_99Types() {
+            return hasRequiredFlowIpcV1_99LoginFormForgotPasswordEventTypes()
+                    && hasRequiredFlowIpcV1_98Types();
+        }
+
+        public boolean hasRequiredFlowIpcV1_100LoginFormPropertyMatrixTypes() {
+            return loginFormPropertyMatrixDomObserved;
+        }
+
+        public boolean hasRequiredFlowIpcV1_100Types() {
+            return hasRequiredFlowIpcV1_100LoginFormPropertyMatrixTypes()
+                    && hasRequiredFlowIpcV1_99Types();
+        }
+
+        public boolean hasRequiredFlowIpcV1_101LoginFormActionPostTypes() {
+            return loginFormActionPostMatrixDomObserved;
+        }
+
+        public boolean hasRequiredFlowIpcV1_101Types() {
+            return hasRequiredFlowIpcV1_101LoginFormActionPostTypes()
+                    && hasRequiredFlowIpcV1_100Types();
+        }
+
+        public boolean hasRequiredFlowIpcV1_102LoginFormSubmitButtonTypes() {
+            return loginFormSubmitButtonMatrixDomObserved;
+        }
+
+        public boolean hasRequiredFlowIpcV1_102Types() {
+            return hasRequiredFlowIpcV1_102LoginFormSubmitButtonTypes()
+                    && hasRequiredFlowIpcV1_101Types();
+        }
+
+        public boolean hasRequiredFlowIpcV1_103LoginFormEnterSubmitTypes() {
+            return loginFormEnterSubmitMatrixDomObserved;
+        }
+
+        public boolean hasRequiredFlowIpcV1_103Types() {
+            return hasRequiredFlowIpcV1_103LoginFormEnterSubmitTypes()
+                    && hasRequiredFlowIpcV1_102Types();
+        }
+
+        public boolean hasRequiredFlowIpcV1_104LoginFormRecoveryLoginTypes() {
+            return loginFormRecoveryLoginMatrixDomObserved;
+        }
+
+        public boolean hasRequiredFlowIpcV1_104Types() {
+            return hasRequiredFlowIpcV1_104LoginFormRecoveryLoginTypes()
+                    && hasRequiredFlowIpcV1_103Types();
+        }
+
+        public boolean hasRequiredFlowIpcV1_105LoginFormEnabledLifecycleTypes() {
+            return loginFormEnabledLifecycleMatrixDomObserved;
+        }
+
+        public boolean hasRequiredFlowIpcV1_105Types() {
+            return hasRequiredFlowIpcV1_105LoginFormEnabledLifecycleTypes()
+                    && hasRequiredFlowIpcV1_104Types();
+        }
+
+        public boolean hasRequiredFlowIpcV1_106LoginFormDisabledGuardTypes() {
+            return loginFormDisabledGuardMatrixDomObserved;
+        }
+
+        public boolean hasRequiredFlowIpcV1_106Types() {
+            return hasRequiredFlowIpcV1_106LoginFormDisabledGuardTypes()
+                    && hasRequiredFlowIpcV1_105Types();
+        }
+
+        public boolean hasRequiredFlowIpcV1_107LoginFormDisabledKeyboardGuardTypes() {
+            return loginFormDisabledKeyboardGuardMatrixDomObserved;
+        }
+
+        public boolean hasRequiredFlowIpcV1_107Types() {
+            return hasRequiredFlowIpcV1_107LoginFormDisabledKeyboardGuardTypes()
+                    && hasRequiredFlowIpcV1_106Types();
+        }
+
+        public boolean hasRequiredFlowIpcV1_108LoginFormNoAutofocusTypes() {
+            return loginFormNoAutofocusMatrixDomObserved;
+        }
+
+        public boolean hasRequiredFlowIpcV1_108Types() {
+            return hasRequiredFlowIpcV1_108LoginFormNoAutofocusTypes()
+                    && hasRequiredFlowIpcV1_107Types();
+        }
+
+        public boolean hasRequiredFlowIpcV1_109LoginFormFullI18nTypes() {
+            return loginFormFullI18nMatrixDomObserved;
+        }
+
+        public boolean hasRequiredFlowIpcV1_109Types() {
+            return hasRequiredFlowIpcV1_109LoginFormFullI18nTypes()
+                    && hasRequiredFlowIpcV1_108Types();
+        }
+
+        public boolean hasRequiredFlowIpcV1_110LoginFormShowErrorTypes() {
+            return loginFormShowErrorMatrixDomObserved;
+        }
+
+        public boolean hasRequiredFlowIpcV1_110Types() {
+            return hasRequiredFlowIpcV1_110LoginFormShowErrorTypes()
+                    && hasRequiredFlowIpcV1_109Types();
+        }
+
+        public boolean hasRequiredFlowIpcV1_111LoginOverlayShowErrorTypes() {
+            return loginOverlayShowErrorMatrixDomObserved;
+        }
+
+        public boolean hasRequiredFlowIpcV1_111Types() {
+            return hasRequiredFlowIpcV1_111LoginOverlayShowErrorTypes()
+                    && hasRequiredFlowIpcV1_110Types();
+        }
+
+        public boolean hasRequiredFlowIpcV1_112LoginOverlayFullI18nTypes() {
+            return loginOverlayFullI18nMatrixDomObserved;
+        }
+
+        public boolean hasRequiredFlowIpcV1_112Types() {
+            return hasRequiredFlowIpcV1_112LoginOverlayFullI18nTypes()
+                    && hasRequiredFlowIpcV1_111Types();
+        }
+
+        public boolean hasRequiredFlowIpcV1_113LoginOverlayNoAutofocusTypes() {
+            return loginOverlayNoAutofocusMatrixDomObserved;
+        }
+
+        public boolean hasRequiredFlowIpcV1_113Types() {
+            return hasRequiredFlowIpcV1_113LoginOverlayNoAutofocusTypes()
+                    && hasRequiredFlowIpcV1_112Types();
+        }
+
+        public boolean hasRequiredFlowIpcV1_114LoginOverlayDisabledGuardTypes() {
+            return loginOverlayDisabledGuardMatrixDomObserved;
+        }
+
+        public boolean hasRequiredFlowIpcV1_114Types() {
+            return hasRequiredFlowIpcV1_114LoginOverlayDisabledGuardTypes()
+                    && hasRequiredFlowIpcV1_113Types();
+        }
+
+        public boolean hasRequiredFlowIpcV1_115LoginOverlayDisabledKeyboardGuardTypes() {
+            return loginOverlayDisabledKeyboardGuardMatrixDomObserved;
+        }
+
+        public boolean hasRequiredFlowIpcV1_115Types() {
+            return hasRequiredFlowIpcV1_115LoginOverlayDisabledKeyboardGuardTypes()
+                    && hasRequiredFlowIpcV1_114Types();
+        }
+
+        public boolean hasRequiredFlowIpcV1_116LoginOverlayActionPostTypes() {
+            return loginOverlayActionPostMatrixDomObserved;
+        }
+
+        public boolean hasRequiredFlowIpcV1_116Types() {
+            return hasRequiredFlowIpcV1_116LoginOverlayActionPostTypes()
+                    && hasRequiredFlowIpcV1_115Types();
+        }
+
+        public boolean hasRequiredFlowIpcV1_117LoginOverlaySubmitButtonTypes() {
+            return loginOverlaySubmitButtonMatrixDomObserved;
+        }
+
+        public boolean hasRequiredFlowIpcV1_117Types() {
+            return hasRequiredFlowIpcV1_117LoginOverlaySubmitButtonTypes()
+                    && hasRequiredFlowIpcV1_116Types();
+        }
+
+        public boolean hasRequiredFlowIpcV1_118LoginOverlayEnterSubmitTypes() {
+            return loginOverlayEnterSubmitMatrixDomObserved;
+        }
+
+        public boolean hasRequiredFlowIpcV1_118Types() {
+            return hasRequiredFlowIpcV1_118LoginOverlayEnterSubmitTypes()
+                    && hasRequiredFlowIpcV1_117Types();
+        }
+
+        public boolean hasRequiredFlowIpcV1_119LoginFormAutofocusControlTypes() {
+            return loginFormAutofocusControlMatrixDomObserved;
+        }
+
+        public boolean hasRequiredFlowIpcV1_119Types() {
+            return hasRequiredFlowIpcV1_119LoginFormAutofocusControlTypes()
+                    && hasRequiredFlowIpcV1_118Types();
+        }
+
+        public boolean hasRequiredFlowIpcV1_120LoginOverlayAutofocusControlTypes() {
+            return loginOverlayAutofocusControlMatrixDomObserved;
+        }
+
+        public boolean hasRequiredFlowIpcV1_120Types() {
+            return hasRequiredFlowIpcV1_120LoginOverlayAutofocusControlTypes()
+                    && hasRequiredFlowIpcV1_119Types();
+        }
+
+        public boolean hasRequiredFlowIpcV1_121LoginOverlayEscCloseTypes() {
+            return loginOverlayEscCloseMatrixDomObserved;
+        }
+
+        public boolean hasRequiredFlowIpcV1_121Types() {
+            return hasRequiredFlowIpcV1_121LoginOverlayEscCloseTypes()
+                    && hasRequiredFlowIpcV1_120Types();
+        }
+
+        public boolean hasRequiredFlowIpcV1_122LoginOverlayOutsideCloseTypes() {
+            return loginOverlayOutsideCloseMatrixDomObserved;
+        }
+
+        public boolean hasRequiredFlowIpcV1_122Types() {
+            return hasRequiredFlowIpcV1_122LoginOverlayOutsideCloseTypes()
+                    && hasRequiredFlowIpcV1_121Types();
+        }
+
+        public boolean hasRequiredFlowIpcV1_123LoginOverlayTabTraversalTypes() {
+            return loginOverlayTabTraversalMatrixDomObserved;
+        }
+
+        public boolean hasRequiredFlowIpcV1_123Types() {
+            return hasRequiredFlowIpcV1_123LoginOverlayTabTraversalTypes()
+                    && hasRequiredFlowIpcV1_122Types();
+        }
+
+        public boolean hasRequiredFlowIpcV1_124LoginOverlayShiftTabTraversalTypes() {
+            return loginOverlayShiftTabTraversalMatrixDomObserved;
+        }
+
+        public boolean hasRequiredFlowIpcV1_124Types() {
+            return hasRequiredFlowIpcV1_124LoginOverlayShiftTabTraversalTypes()
+                    && hasRequiredFlowIpcV1_123Types();
+        }
+
+        public boolean hasRequiredFlowIpcV1_125LoginFormTabTraversalTypes() {
+            return loginFormTabTraversalMatrixDomObserved;
+        }
+
+        public boolean hasRequiredFlowIpcV1_125Types() {
+            return hasRequiredFlowIpcV1_125LoginFormTabTraversalTypes()
+                    && hasRequiredFlowIpcV1_124Types();
+        }
+
+        public boolean hasRequiredFlowIpcV1_126LoginFormShiftTabTraversalTypes() {
+            return loginFormShiftTabTraversalMatrixDomObserved;
+        }
+
+        public boolean hasRequiredFlowIpcV1_126Types() {
+            return hasRequiredFlowIpcV1_126LoginFormShiftTabTraversalTypes()
+                    && hasRequiredFlowIpcV1_125Types();
+        }
+
+        public boolean hasRequiredFlowIpcV1_127LoginFormAutofillAttributesTypes() {
+            return loginFormAutofillAttributesMatrixDomObserved;
+        }
+
+        public boolean hasRequiredFlowIpcV1_127Types() {
+            return hasRequiredFlowIpcV1_127LoginFormAutofillAttributesTypes()
+                    && hasRequiredFlowIpcV1_126Types();
+        }
+
+        public boolean hasRequiredFlowIpcV1_128LoginOverlayAutofillAttributesTypes() {
+            return loginOverlayAutofillAttributesMatrixDomObserved;
+        }
+
+        public boolean hasRequiredFlowIpcV1_128Types() {
+            return hasRequiredFlowIpcV1_128LoginOverlayAutofillAttributesTypes()
+                    && hasRequiredFlowIpcV1_127Types();
+        }
+
+        public boolean hasRequiredFlowIpcV1_129LoginOverlayA11ySemanticsTypes() {
+            return loginOverlayA11ySemanticsMatrixDomObserved;
+        }
+
+        public boolean hasRequiredFlowIpcV1_129Types() {
+            return hasRequiredFlowIpcV1_129LoginOverlayA11ySemanticsTypes()
+                    && hasRequiredFlowIpcV1_128Types();
+        }
+
+        public boolean hasRequiredFlowIpcV1_130LoginFormA11ySemanticsTypes() {
+            return loginFormA11ySemanticsMatrixDomObserved;
+        }
+
+        public boolean hasRequiredFlowIpcV1_130Types() {
+            return hasRequiredFlowIpcV1_130LoginFormA11ySemanticsTypes()
+                    && hasRequiredFlowIpcV1_129Types();
+        }
+
+        public boolean hasRequiredFlowIpcV1_131LoginOverlayErrorA11yTypes() {
+            return loginOverlayErrorA11yMatrixDomObserved;
+        }
+
+        public boolean hasRequiredFlowIpcV1_131Types() {
+            return hasRequiredFlowIpcV1_131LoginOverlayErrorA11yTypes()
+                    && hasRequiredFlowIpcV1_130Types();
+        }
+
+        public boolean hasRequiredFlowIpcV1_132LoginFormErrorA11yTypes() {
+            return loginFormErrorA11yMatrixDomObserved;
+        }
+
+        public boolean hasRequiredFlowIpcV1_132Types() {
+            return hasRequiredFlowIpcV1_132LoginFormErrorA11yTypes()
+                    && hasRequiredFlowIpcV1_131Types();
+        }
+
+        public boolean hasRequiredFlowIpcV1_133LoginFormErrorFocusTypes() {
+            return loginFormErrorFocusMatrixDomObserved;
+        }
+
+        public boolean hasRequiredFlowIpcV1_133Types() {
+            return hasRequiredFlowIpcV1_133LoginFormErrorFocusTypes()
+                    && hasRequiredFlowIpcV1_132Types();
+        }
+
+        public boolean hasRequiredFlowIpcV1_134LoginOverlayErrorFocusTypes() {
+            return loginOverlayErrorFocusMatrixDomObserved;
+        }
+
+        public boolean hasRequiredFlowIpcV1_134Types() {
+            return hasRequiredFlowIpcV1_134LoginOverlayErrorFocusTypes()
+                    && hasRequiredFlowIpcV1_133Types();
+        }
+
+        public boolean hasRequiredFlowIpcV1_135LoginFormErrorFocusRetryTypes() {
+            return loginFormErrorFocusRetryMatrixDomObserved;
+        }
+
+        public boolean hasRequiredFlowIpcV1_135Types() {
+            return hasRequiredFlowIpcV1_135LoginFormErrorFocusRetryTypes()
+                    && hasRequiredFlowIpcV1_134Types();
+        }
+
+        public boolean hasRequiredFlowIpcV1_136LoginOverlayErrorFocusRetryTypes() {
+            return loginOverlayErrorFocusRetryMatrixDomObserved;
+        }
+
+        public boolean hasRequiredFlowIpcV1_136Types() {
+            return hasRequiredFlowIpcV1_136LoginOverlayErrorFocusRetryTypes()
+                    && hasRequiredFlowIpcV1_135Types();
+        }
+
+        public boolean hasRequiredFlowIpcV1_137LoginFormErrorFocusRetryTargetTypes() {
+            return loginFormErrorFocusRetryTargetMatrixDomObserved;
+        }
+
+        public boolean hasRequiredFlowIpcV1_137Types() {
+            return hasRequiredFlowIpcV1_137LoginFormErrorFocusRetryTargetTypes()
+                    && hasRequiredFlowIpcV1_136Types();
+        }
+
+        public boolean hasRequiredFlowIpcV1_138LoginOverlayErrorFocusRetryTargetTypes() {
+            return loginOverlayErrorFocusRetryTargetMatrixDomObserved;
+        }
+
+        public boolean hasRequiredFlowIpcV1_138Types() {
+            return hasRequiredFlowIpcV1_138LoginOverlayErrorFocusRetryTargetTypes()
+                    && hasRequiredFlowIpcV1_137Types();
+        }
+
+        public boolean hasRequiredFlowIpcV1_139LoginFormErrorFocusRetryTargetStateTypes() {
+            return loginFormErrorFocusRetryTargetStateMatrixDomObserved;
+        }
+
+        public boolean hasRequiredFlowIpcV1_139Types() {
+            return hasRequiredFlowIpcV1_139LoginFormErrorFocusRetryTargetStateTypes()
+                    && hasRequiredFlowIpcV1_138Types();
+        }
+
+        public boolean hasRequiredFlowIpcV1_140LoginFormErrorFocusRetryTargetLayoutTypes() {
+            return loginFormErrorFocusRetryTargetLayoutMatrixDomObserved;
+        }
+
+        public boolean hasRequiredFlowIpcV1_140Types() {
+            return hasRequiredFlowIpcV1_140LoginFormErrorFocusRetryTargetLayoutTypes()
+                    && hasRequiredFlowIpcV1_139Types();
+        }
+
+        public boolean hasRequiredFlowIpcV1_141LoginFormErrorFocusRetryTargetHiddenSourceTypes() {
+            return loginFormErrorFocusRetryTargetHiddenSourceMatrixDomObserved;
+        }
+
+        public boolean hasRequiredFlowIpcV1_141Types() {
+            return hasRequiredFlowIpcV1_141LoginFormErrorFocusRetryTargetHiddenSourceTypes()
+                    && hasRequiredFlowIpcV1_140Types();
+        }
+
+        public boolean hasRequiredFlowIpcV1_142LoginFormErrorFocusRetryTargetAppRootHiddenAncestorTypes() {
+            return loginFormErrorFocusRetryTargetAppRootHiddenAncestorMatrixDomObserved;
+        }
+
+        public boolean hasRequiredFlowIpcV1_142Types() {
+            return hasRequiredFlowIpcV1_142LoginFormErrorFocusRetryTargetAppRootHiddenAncestorTypes()
+                    && hasRequiredFlowIpcV1_141Types();
+        }
+
+        public boolean hasRequiredFlowIpcV1_143LoginFormErrorFocusRetryTargetVisibleOwnerTypes() {
+            return loginFormErrorFocusRetryTargetVisibleOwnerMatrixDomObserved;
+        }
+
+        public boolean hasRequiredFlowIpcV1_143Types() {
+            return hasRequiredFlowIpcV1_143LoginFormErrorFocusRetryTargetVisibleOwnerTypes()
+                    && hasRequiredFlowIpcV1_142Types();
+        }
+
+        public boolean hasRequiredFlowIpcV1_144LoginFormErrorFocusRetryTargetVisibleOwnerFocusTypes() {
+            return loginFormErrorFocusRetryTargetVisibleOwnerFocusMatrixDomObserved;
+        }
+
+        public boolean hasRequiredFlowIpcV1_144Types() {
+            return hasRequiredFlowIpcV1_144LoginFormErrorFocusRetryTargetVisibleOwnerFocusTypes()
+                    && hasRequiredFlowIpcV1_143Types();
+        }
+
+        public boolean hasRequiredFlowIpcV1_145LoginFormErrorFocusRetryTargetVisibleOwnerFocusContainmentTypes() {
+            return loginFormErrorFocusRetryTargetVisibleOwnerFocusContainmentMatrixDomObserved;
+        }
+
+        public boolean hasRequiredFlowIpcV1_145Types() {
+            return hasRequiredFlowIpcV1_145LoginFormErrorFocusRetryTargetVisibleOwnerFocusContainmentTypes()
+                    && hasRequiredFlowIpcV1_144Types();
+        }
+
+        public boolean hasRequiredFlowIpcV1_146LoginFormErrorFocusRetryTargetVisibleOwnerFocusContainmentStabilityTypes() {
+            return loginFormErrorFocusRetryTargetVisibleOwnerFocusContainmentStabilityMatrixDomObserved;
+        }
+
+        public boolean hasRequiredFlowIpcV1_146Types() {
+            return hasRequiredFlowIpcV1_146LoginFormErrorFocusRetryTargetVisibleOwnerFocusContainmentStabilityTypes()
+                    && hasRequiredFlowIpcV1_145Types();
+        }
+
         private boolean hasCurrentAppBuildFrontendOutputSuccessorEvidence() {
             return currentAppBuildFrontendOutputV132ManifestObserved
                     && currentAppBuildFrontendOutputV132RequestObserved
@@ -9551,6 +16005,174 @@ public final class DesktopTraceInspector {
                     + frameworkAppWindowTitleCommandObserved + "/" + frameworkAppWindowTitleResultObserved);
             System.out.println("framework app clipboard command/result observed: "
                     + frameworkAppClipboardCommandObserved + "/" + frameworkAppClipboardResultObserved);
+            System.out.println("native clipboard read matrix command/result/permission/text/DOM observed: "
+                    + nativeClipboardReadMatrixCommandObserved + "/"
+                    + nativeClipboardReadMatrixResultObserved + "/"
+                    + nativeClipboardReadMatrixPermissionObserved + "/"
+                    + nativeClipboardReadMatrixTextObserved + "/"
+                    + nativeClipboardReadMatrixDomObserved);
+            System.out.println("RichTextEditor theme variant matrix DOM observed: "
+                    + richTextEditorThemeVariantMatrixDomObserved);
+            System.out.println("Button theme variant matrix DOM observed: "
+                    + buttonThemeVariantMatrixDomObserved);
+            System.out.println("TextField theme variant matrix DOM observed: "
+                    + textFieldThemeVariantMatrixDomObserved);
+            System.out.println("Select theme variant matrix DOM observed: "
+                    + selectThemeVariantMatrixDomObserved);
+            System.out.println("ComboBox theme variant matrix DOM observed: "
+                    + comboBoxThemeVariantMatrixDomObserved);
+            System.out.println("DatePicker theme variant matrix DOM observed: "
+                    + datePickerThemeVariantMatrixDomObserved);
+            System.out.println("MultiSelectComboBox theme variant matrix DOM observed: "
+                    + multiSelectComboBoxThemeVariantMatrixDomObserved);
+            System.out.println("TimePicker theme variant matrix DOM observed: "
+                    + timePickerThemeVariantMatrixDomObserved);
+            System.out.println("TextArea theme variant matrix DOM observed: "
+                    + textAreaThemeVariantMatrixDomObserved);
+            System.out.println("EmailField theme variant matrix DOM observed: "
+                    + emailFieldThemeVariantMatrixDomObserved);
+            System.out.println("IntegerField theme variant matrix DOM observed: "
+                    + integerFieldThemeVariantMatrixDomObserved);
+            System.out.println("PasswordField theme variant matrix DOM observed: "
+                    + passwordFieldThemeVariantMatrixDomObserved);
+            System.out.println("BigDecimalField theme variant matrix DOM observed: "
+                    + bigDecimalFieldThemeVariantMatrixDomObserved);
+            System.out.println("Checkbox theme variant matrix DOM observed: "
+                    + checkboxThemeVariantMatrixDomObserved);
+            System.out.println("RadioButtonGroup theme variant matrix DOM observed: "
+                    + radioButtonGroupThemeVariantMatrixDomObserved);
+            System.out.println("Tabs theme variant matrix DOM observed: "
+                    + tabsThemeVariantMatrixDomObserved);
+            System.out.println("Details theme variant matrix DOM observed: "
+                    + detailsThemeVariantMatrixDomObserved);
+            System.out.println("MenuBar theme variant matrix DOM observed: "
+                    + menuBarThemeVariantMatrixDomObserved);
+            System.out.println("Grid theme variant matrix DOM observed: "
+                    + gridThemeVariantMatrixDomObserved);
+            System.out.println("Avatar theme variant matrix DOM observed: "
+                    + avatarThemeVariantMatrixDomObserved);
+            System.out.println("AvatarGroup theme variant matrix DOM observed: "
+                    + avatarGroupThemeVariantMatrixDomObserved);
+            System.out.println("MessageInput theme variant matrix DOM observed: "
+                    + messageInputThemeVariantMatrixDomObserved);
+            System.out.println("SideNav theme variant matrix DOM observed: "
+                    + sideNavThemeVariantMatrixDomObserved);
+            System.out.println("MessageList markdown matrix DOM observed: "
+                    + messageListMarkdownMatrixDomObserved);
+            System.out.println("LoginOverlay property matrix DOM observed: "
+                    + loginOverlayPropertyMatrixDomObserved);
+            System.out.println("LoginOverlay forgot password event matrix DOM observed: "
+                    + loginOverlayForgotPasswordEventMatrixDomObserved);
+            System.out.println("LoginOverlay login event matrix DOM observed: "
+                    + loginOverlayLoginEventMatrixDomObserved);
+            System.out.println("LoginOverlay invalid login event matrix DOM observed: "
+                    + loginOverlayInvalidLoginEventMatrixDomObserved);
+            System.out.println("LoginOverlay close lifecycle matrix DOM observed: "
+                    + loginOverlayCloseLifecycleMatrixDomObserved);
+            System.out.println("LoginOverlay recovery login matrix DOM observed: "
+                    + loginOverlayRecoveryLoginMatrixDomObserved);
+            System.out.println("LoginOverlay server reopen matrix DOM observed: "
+                    + loginOverlayServerReopenMatrixDomObserved);
+            System.out.println("LoginOverlay showErrorMessage matrix DOM observed: "
+                    + loginOverlayShowErrorMatrixDomObserved);
+            System.out.println("LoginOverlay full i18n matrix DOM observed: "
+                    + loginOverlayFullI18nMatrixDomObserved);
+            System.out.println("LoginOverlay no-autofocus matrix DOM observed: "
+                    + loginOverlayNoAutofocusMatrixDomObserved);
+            System.out.println("LoginOverlay autofocus control matrix DOM observed: "
+                    + loginOverlayAutofocusControlMatrixDomObserved);
+            System.out.println("LoginOverlay ESC close matrix DOM observed: "
+                    + loginOverlayEscCloseMatrixDomObserved);
+            System.out.println("LoginOverlay outside close matrix DOM observed: "
+                    + loginOverlayOutsideCloseMatrixDomObserved);
+            System.out.println("LoginOverlay Tab traversal matrix DOM observed: "
+                    + loginOverlayTabTraversalMatrixDomObserved);
+            System.out.println("LoginOverlay Shift+Tab traversal matrix DOM observed: "
+                    + loginOverlayShiftTabTraversalMatrixDomObserved);
+            System.out.println("LoginOverlay autofill attributes matrix DOM observed: "
+                    + loginOverlayAutofillAttributesMatrixDomObserved);
+            System.out.println("LoginOverlay modal a11y semantics matrix DOM observed: "
+                    + loginOverlayA11ySemanticsMatrixDomObserved);
+            System.out.println("LoginOverlay error a11y matrix DOM observed: "
+                    + loginOverlayErrorA11yMatrixDomObserved);
+            System.out.println("LoginOverlay error focus matrix DOM observed: "
+                    + loginOverlayErrorFocusMatrixDomObserved);
+            System.out.println("LoginOverlay error focus retry matrix DOM observed: "
+                    + loginOverlayErrorFocusRetryMatrixDomObserved);
+            System.out.println("LoginOverlay error focus retry target matrix DOM observed: "
+                    + loginOverlayErrorFocusRetryTargetMatrixDomObserved);
+            System.out.println("LoginOverlay disabled guard matrix DOM observed: "
+                    + loginOverlayDisabledGuardMatrixDomObserved);
+            System.out.println("LoginOverlay disabled keyboard guard matrix DOM observed: "
+                    + loginOverlayDisabledKeyboardGuardMatrixDomObserved);
+            System.out.println("LoginOverlay action post matrix DOM observed: "
+                    + loginOverlayActionPostMatrixDomObserved);
+            System.out.println("LoginOverlay submit button matrix DOM observed: "
+                    + loginOverlaySubmitButtonMatrixDomObserved);
+            System.out.println("LoginOverlay Enter submit matrix DOM observed: "
+                    + loginOverlayEnterSubmitMatrixDomObserved);
+            System.out.println("LoginForm property matrix DOM observed: "
+                    + loginFormPropertyMatrixDomObserved);
+            System.out.println("LoginForm login event matrix DOM observed: "
+                    + loginFormLoginEventMatrixDomObserved);
+            System.out.println("LoginForm invalid login event matrix DOM observed: "
+                    + loginFormInvalidLoginEventMatrixDomObserved);
+            System.out.println("LoginForm forgot password event matrix DOM observed: "
+                    + loginFormForgotPasswordEventMatrixDomObserved);
+            System.out.println("LoginForm action post matrix DOM observed: "
+                    + loginFormActionPostMatrixDomObserved);
+            System.out.println("LoginForm submit button matrix DOM observed: "
+                    + loginFormSubmitButtonMatrixDomObserved);
+            System.out.println("LoginForm enter submit matrix DOM observed: "
+                    + loginFormEnterSubmitMatrixDomObserved);
+            System.out.println("LoginForm recovery login matrix DOM observed: "
+                    + loginFormRecoveryLoginMatrixDomObserved);
+            System.out.println("LoginForm enabled lifecycle matrix DOM observed: "
+                    + loginFormEnabledLifecycleMatrixDomObserved);
+            System.out.println("LoginForm disabled guard matrix DOM observed: "
+                    + loginFormDisabledGuardMatrixDomObserved);
+            System.out.println("LoginForm disabled keyboard guard matrix DOM observed: "
+                    + loginFormDisabledKeyboardGuardMatrixDomObserved);
+            System.out.println("LoginForm no-autofocus matrix DOM observed: "
+                    + loginFormNoAutofocusMatrixDomObserved);
+            System.out.println("LoginForm autofocus control matrix DOM observed: "
+                    + loginFormAutofocusControlMatrixDomObserved);
+            System.out.println("LoginForm Tab traversal matrix DOM observed: "
+                    + loginFormTabTraversalMatrixDomObserved);
+            System.out.println("LoginForm Shift+Tab traversal matrix DOM observed: "
+                    + loginFormShiftTabTraversalMatrixDomObserved);
+            System.out.println("LoginForm autofill attributes matrix DOM observed: "
+                    + loginFormAutofillAttributesMatrixDomObserved);
+            System.out.println("LoginForm a11y semantics matrix DOM observed: "
+                    + loginFormA11ySemanticsMatrixDomObserved);
+            System.out.println("LoginForm full i18n matrix DOM observed: "
+                    + loginFormFullI18nMatrixDomObserved);
+            System.out.println("LoginForm showErrorMessage matrix DOM observed: "
+                    + loginFormShowErrorMatrixDomObserved);
+            System.out.println("LoginForm error a11y matrix DOM observed: "
+                    + loginFormErrorA11yMatrixDomObserved);
+            System.out.println("LoginForm error focus matrix DOM observed: "
+                    + loginFormErrorFocusMatrixDomObserved);
+            System.out.println("LoginForm error focus retry matrix DOM observed: "
+                    + loginFormErrorFocusRetryMatrixDomObserved);
+            System.out.println("LoginForm error focus retry target matrix DOM observed: "
+                    + loginFormErrorFocusRetryTargetMatrixDomObserved);
+            System.out.println("LoginForm error focus retry target state matrix DOM observed: "
+                    + loginFormErrorFocusRetryTargetStateMatrixDomObserved);
+            System.out.println("LoginForm error focus retry target layout matrix DOM observed: "
+                    + loginFormErrorFocusRetryTargetLayoutMatrixDomObserved);
+            System.out.println("LoginForm error focus retry target hidden source matrix DOM observed: "
+                    + loginFormErrorFocusRetryTargetHiddenSourceMatrixDomObserved);
+            System.out.println("LoginForm error focus retry target app-root hidden ancestor DOM observed: "
+                    + loginFormErrorFocusRetryTargetAppRootHiddenAncestorMatrixDomObserved);
+            System.out.println("LoginForm error focus retry target visible owner DOM observed: "
+                    + loginFormErrorFocusRetryTargetVisibleOwnerMatrixDomObserved);
+            System.out.println("LoginForm error focus retry target visible owner focus DOM observed: "
+                    + loginFormErrorFocusRetryTargetVisibleOwnerFocusMatrixDomObserved);
+            System.out.println("LoginForm error focus retry target visible owner focus containment DOM observed: "
+                    + loginFormErrorFocusRetryTargetVisibleOwnerFocusContainmentMatrixDomObserved);
+            System.out.println("LoginForm error focus retry target visible owner focus containment stability DOM observed: "
+                    + loginFormErrorFocusRetryTargetVisibleOwnerFocusContainmentStabilityMatrixDomObserved);
             System.out.println("framework app notification command/result observed: "
                     + frameworkAppNotificationCommandObserved + "/" + frameworkAppNotificationResultObserved);
             System.out.println("first meaningful paint observed: " + firstMeaningfulPaintObserved);
@@ -9578,6 +16200,104 @@ public final class DesktopTraceInspector {
                     + frameworkDataComponentMatrixValidatePatchObserved);
             System.out.println("framework data component matrix DOM observed: "
                     + frameworkDataComponentMatrixDomObserved);
+            System.out.println("framework input component matrix bootstrap observed: "
+                    + frameworkInputComponentMatrixBootstrapObserved);
+            System.out.println("framework input component matrix event RPC observed: decision/notes/email/score/secret/time="
+                    + frameworkInputComponentMatrixDecisionEventRpcObserved + "/"
+                    + frameworkInputComponentMatrixNotesEventRpcObserved + "/"
+                    + frameworkInputComponentMatrixEmailEventRpcObserved + "/"
+                    + frameworkInputComponentMatrixScoreEventRpcObserved + "/"
+                    + frameworkInputComponentMatrixSecretEventRpcObserved + "/"
+                    + frameworkInputComponentMatrixReviewTimeEventRpcObserved);
+            System.out.println("framework input component matrix patch observed: decision/notes/email/score/secret/time="
+                    + frameworkInputComponentMatrixDecisionPatchObserved + "/"
+                    + frameworkInputComponentMatrixNotesPatchObserved + "/"
+                    + frameworkInputComponentMatrixEmailPatchObserved + "/"
+                    + frameworkInputComponentMatrixScorePatchObserved + "/"
+                    + frameworkInputComponentMatrixSecretPatchObserved + "/"
+                    + frameworkInputComponentMatrixReviewTimePatchObserved);
+            System.out.println("framework input component matrix DOM observed: "
+                    + frameworkInputComponentMatrixDomObserved);
+            System.out.println("framework navigation component matrix bootstrap observed: "
+                    + frameworkNavigationComponentMatrixBootstrapObserved);
+            System.out.println("framework navigation component matrix event RPC observed: assignees/tabs/details/accordion/menu="
+                    + frameworkNavigationComponentMatrixAssigneesEventRpcObserved + "/"
+                    + frameworkNavigationComponentMatrixTabsEventRpcObserved + "/"
+                    + frameworkNavigationComponentMatrixDetailsEventRpcObserved + "/"
+                    + frameworkNavigationComponentMatrixAccordionEventRpcObserved + "/"
+                    + frameworkNavigationComponentMatrixMenuEventRpcObserved);
+            System.out.println("framework navigation component matrix patch observed: assignees/tabs/details/accordion/menu="
+                    + frameworkNavigationComponentMatrixAssigneesPatchObserved + "/"
+                    + frameworkNavigationComponentMatrixTabsPatchObserved + "/"
+                    + frameworkNavigationComponentMatrixDetailsPatchObserved + "/"
+                    + frameworkNavigationComponentMatrixAccordionPatchObserved + "/"
+                    + frameworkNavigationComponentMatrixMenuPatchObserved);
+            System.out.println("framework navigation component matrix DOM observed: "
+                    + frameworkNavigationComponentMatrixDomObserved);
+            System.out.println("framework overlay component matrix bootstrap observed: "
+                    + frameworkOverlayComponentMatrixBootstrapObserved);
+            System.out.println("framework overlay component matrix event RPC observed: context-open/context-item/grid-open/grid-item/popover="
+                    + frameworkOverlayComponentMatrixContextMenuOpenEventRpcObserved + "/"
+                    + frameworkOverlayComponentMatrixContextMenuItemEventRpcObserved + "/"
+                    + frameworkOverlayComponentMatrixGridContextMenuOpenEventRpcObserved + "/"
+                    + frameworkOverlayComponentMatrixGridContextMenuItemEventRpcObserved + "/"
+                    + frameworkOverlayComponentMatrixPopoverOpenEventRpcObserved);
+            System.out.println("framework overlay component matrix patch observed: context-open/context-item/grid-open/grid-item/popover="
+                    + frameworkOverlayComponentMatrixContextMenuOpenPatchObserved + "/"
+                    + frameworkOverlayComponentMatrixContextMenuItemPatchObserved + "/"
+                    + frameworkOverlayComponentMatrixGridContextMenuOpenPatchObserved + "/"
+                    + frameworkOverlayComponentMatrixGridContextMenuItemPatchObserved + "/"
+                    + frameworkOverlayComponentMatrixPopoverOpenPatchObserved);
+            System.out.println("framework overlay component matrix DOM observed: "
+                    + frameworkOverlayComponentMatrixDomObserved);
+            System.out.println("framework rich content component matrix bootstrap observed: "
+                    + frameworkRichContentComponentMatrixBootstrapObserved);
+            System.out.println("framework rich content component matrix event RPC observed: avatar/message/side-nav/login-open/login-submit="
+                    + frameworkRichContentComponentMatrixAvatarEventRpcObserved + "/"
+                    + frameworkRichContentComponentMatrixMessageEventRpcObserved + "/"
+                    + frameworkRichContentComponentMatrixSideNavEventRpcObserved + "/"
+                    + frameworkRichContentComponentMatrixLoginOpenEventRpcObserved + "/"
+                    + frameworkRichContentComponentMatrixLoginSubmitEventRpcObserved);
+            System.out.println("framework rich content component matrix patch observed: avatar/message/side-nav/login-open/login-submit="
+                    + frameworkRichContentComponentMatrixAvatarPatchObserved + "/"
+                    + frameworkRichContentComponentMatrixMessagePatchObserved + "/"
+                    + frameworkRichContentComponentMatrixSideNavPatchObserved + "/"
+                    + frameworkRichContentComponentMatrixLoginOpenPatchObserved + "/"
+                    + frameworkRichContentComponentMatrixLoginSubmitPatchObserved);
+            System.out.println("framework rich content component matrix DOM observed: "
+                    + frameworkRichContentComponentMatrixDomObserved);
+            System.out.println("framework rich text editor matrix bootstrap/event/patch/DOM observed: "
+                    + frameworkRichTextEditorMatrixBootstrapObserved + "/"
+                    + frameworkRichTextEditorMatrixValueEventRpcObserved + "/"
+                    + frameworkRichTextEditorMatrixValuePatchObserved + "/"
+                    + frameworkRichTextEditorMatrixDomObserved);
+            System.out.println("framework rich text editor behavior matrix bootstrap observed: "
+                    + frameworkRichTextEditorBehaviorMatrixBootstrapObserved);
+            System.out.println("framework rich text editor behavior matrix event RPC observed: selection/toolbar/keyboard/delta="
+                    + frameworkRichTextEditorBehaviorMatrixSelectionEventRpcObserved + "/"
+                    + frameworkRichTextEditorBehaviorMatrixToolbarEventRpcObserved + "/"
+                    + frameworkRichTextEditorBehaviorMatrixKeyboardEventRpcObserved + "/"
+                    + frameworkRichTextEditorBehaviorMatrixDeltaEventRpcObserved);
+            System.out.println("framework rich text editor behavior matrix patch observed: selection/toolbar/keyboard/delta/DOM="
+                    + frameworkRichTextEditorBehaviorMatrixSelectionPatchObserved + "/"
+                    + frameworkRichTextEditorBehaviorMatrixToolbarPatchObserved + "/"
+                    + frameworkRichTextEditorBehaviorMatrixKeyboardPatchObserved + "/"
+                    + frameworkRichTextEditorBehaviorMatrixDeltaPatchObserved + "/"
+                    + frameworkRichTextEditorBehaviorMatrixDomObserved);
+            System.out.println("framework lifecycle/focus behavior matrix bootstrap observed: "
+                    + frameworkLifecycleFocusBehaviorMatrixBootstrapObserved);
+            System.out.println("framework lifecycle/focus behavior matrix event RPC observed: focus/blur/attach/detach="
+                    + frameworkLifecycleFocusBehaviorMatrixFocusEventRpcObserved + "/"
+                    + frameworkLifecycleFocusBehaviorMatrixBlurEventRpcObserved + "/"
+                    + frameworkLifecycleFocusBehaviorMatrixAttachEventRpcObserved + "/"
+                    + frameworkLifecycleFocusBehaviorMatrixDetachEventRpcObserved);
+            System.out.println("framework lifecycle/focus behavior matrix patch observed: focus/blur/attach/detach="
+                    + frameworkLifecycleFocusBehaviorMatrixFocusPatchObserved + "/"
+                    + frameworkLifecycleFocusBehaviorMatrixBlurPatchObserved + "/"
+                    + frameworkLifecycleFocusBehaviorMatrixAttachPatchObserved + "/"
+                    + frameworkLifecycleFocusBehaviorMatrixDetachPatchObserved);
+            System.out.println("framework lifecycle/focus behavior matrix DOM observed: "
+                    + frameworkLifecycleFocusBehaviorMatrixDomObserved);
             System.out.println("Flow IPC v1.4 frontend asset pipeline observed: "
                     + frontendAssetPipelineV14Observed);
             System.out.println("Flow IPC v1.4 frontend artifact families observed: "
@@ -10006,6 +16726,50 @@ public final class DesktopTraceInspector {
                     + dataComponentResourceMatrixV147StageObserved + "/"
                     + dataComponentResourceMatrixV147CompleteStageObserved + "/"
                     + dataComponentResourceMatrixV147DomObserved);
+            System.out.println("Flow IPC v1.57 input component parity matrix manifest observed: "
+                    + inputComponentParityMatrixV157ManifestObserved);
+            System.out.println("Flow IPC v1.57 input component parity matrix stage/complete/DOM observed: "
+                    + inputComponentParityMatrixV157StageObserved + "/"
+                    + inputComponentParityMatrixV157CompleteStageObserved + "/"
+                    + inputComponentParityMatrixV157DomObserved);
+            System.out.println("Flow IPC v1.58 multi-value navigation disclosure matrix manifest observed: "
+                    + multiValueNavigationDisclosureMatrixV158ManifestObserved);
+            System.out.println("Flow IPC v1.58 multi-value navigation disclosure matrix stage/complete/DOM observed: "
+                    + multiValueNavigationDisclosureMatrixV158StageObserved + "/"
+                    + multiValueNavigationDisclosureMatrixV158CompleteStageObserved + "/"
+                    + multiValueNavigationDisclosureMatrixV158DomObserved);
+            System.out.println("Flow IPC v1.59 overlay context menu matrix manifest observed: "
+                    + overlayContextMenuMatrixV159ManifestObserved);
+            System.out.println("Flow IPC v1.59 overlay context menu matrix stage/complete/DOM observed: "
+                    + overlayContextMenuMatrixV159StageObserved + "/"
+                    + overlayContextMenuMatrixV159CompleteStageObserved + "/"
+                    + overlayContextMenuMatrixV159DomObserved);
+            System.out.println("Flow IPC v1.60 content app shell login matrix manifest observed: "
+                    + contentAppShellLoginMatrixV160ManifestObserved);
+            System.out.println("Flow IPC v1.60 content app shell login matrix stage/complete/DOM observed: "
+                    + contentAppShellLoginMatrixV160StageObserved + "/"
+                    + contentAppShellLoginMatrixV160CompleteStageObserved + "/"
+                    + contentAppShellLoginMatrixV160DomObserved);
+            System.out.println("Flow IPC v1.61 lifecycle/focus behavior matrix DOM observed: "
+                    + frameworkLifecycleFocusBehaviorMatrixDomObserved);
+            System.out.println("Flow IPC v1.62 RichTextEditor matrix manifest observed: "
+                    + richTextEditorMatrixV162ManifestObserved);
+            System.out.println("Flow IPC v1.62 RichTextEditor matrix stage/complete/DOM observed: "
+                    + richTextEditorMatrixV162StageObserved + "/"
+                    + richTextEditorMatrixV162CompleteStageObserved + "/"
+                    + richTextEditorMatrixV162DomObserved);
+            System.out.println("Flow IPC v1.63 RichTextEditor behavior matrix manifest observed: "
+                    + richTextEditorBehaviorMatrixV163ManifestObserved);
+            System.out.println("Flow IPC v1.63 RichTextEditor behavior matrix stage/complete/DOM observed: "
+                    + richTextEditorBehaviorMatrixV163StageObserved + "/"
+                    + richTextEditorBehaviorMatrixV163CompleteStageObserved + "/"
+                    + richTextEditorBehaviorMatrixV163DomObserved);
+            System.out.println("Flow IPC v1.64 RichTextEditor editing matrix manifest observed: "
+                    + richTextEditorEditingMatrixV164ManifestObserved);
+            System.out.println("Flow IPC v1.64 RichTextEditor editing matrix stage/complete/DOM observed: "
+                    + richTextEditorEditingMatrixV164StageObserved + "/"
+                    + richTextEditorEditingMatrixV164CompleteStageObserved + "/"
+                    + richTextEditorEditingMatrixV164DomObserved);
             System.out.println("Flow IPC v1.48 Grid lazy data provider manifest observed: "
                     + gridLazyDataProviderV148ManifestObserved);
             System.out.println("Flow IPC v1.48 Grid lazy data provider stage/complete/DOM observed: "
@@ -10078,6 +16842,8 @@ public final class DesktopTraceInspector {
             System.out.println("framework DownloadHandler save/open bootstrap/DOM observed: "
                     + frameworkDownloadHandlerSaveOpenBootstrapObserved + "/"
                     + frameworkDownloadHandlerSaveOpenDomObserved);
+            System.out.println("Flow IPC v1.56 frontend/resource pipeline basic closure DOM observed: "
+                    + frontendResourcePipelineBasicClosureV156DomObserved);
             System.out.println("Flow IPC v1.6 TextField graph manifest observed: "
                     + frontendTextFieldV16ManifestObserved);
             System.out.println("Flow IPC v1.6 TextField graph request observed: "

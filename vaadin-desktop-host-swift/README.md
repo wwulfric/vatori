@@ -1,6 +1,6 @@
 # Vaadin Desktop Swift Host
 
-This is the macOS native host mainline for Vaadin Desktop Framework.
+This is the macOS native host mainline for vatori, the Vaadin-based desktop framework.
 
 The host is written in Swift with AppKit and WKWebView. It owns the desktop process boundary:
 

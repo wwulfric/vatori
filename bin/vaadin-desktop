@@ -121,6 +121,13 @@ run_flow_ipc_frontend_build_preflight() {
   export VAADIN_DESKTOP_FLOW_IPC_FRONTEND_BUILD_V1_53=1
   export VAADIN_DESKTOP_FLOW_IPC_FRONTEND_BUILD_V1_54=1
   export VAADIN_DESKTOP_FLOW_IPC_FRONTEND_BUILD_V1_55=1
+  export VAADIN_DESKTOP_FLOW_IPC_FRONTEND_BUILD_V1_57=1
+  export VAADIN_DESKTOP_FLOW_IPC_FRONTEND_BUILD_V1_58=1
+  export VAADIN_DESKTOP_FLOW_IPC_FRONTEND_BUILD_V1_59=1
+  export VAADIN_DESKTOP_FLOW_IPC_FRONTEND_BUILD_V1_60=1
+  export VAADIN_DESKTOP_FLOW_IPC_FRONTEND_BUILD_V1_62=1
+  export VAADIN_DESKTOP_FLOW_IPC_FRONTEND_BUILD_V1_63=1
+  export VAADIN_DESKTOP_FLOW_IPC_FRONTEND_BUILD_V1_64=1
   export VAADIN_DESKTOP_FLOW_IPC_FRONTEND_BUILD_STEP_STATUS="skipped"
   export VAADIN_DESKTOP_FLOW_IPC_FRONTEND_BUILD_STEP_EXIT_CODE="-1"
   export VAADIN_DESKTOP_FLOW_IPC_FRONTEND_BUILD_STEP_DURATION_MILLIS="0"
@@ -187,6 +194,9 @@ run_flow_ipc_frontend_build_preflight() {
     cmd+=("-Dvaadin.productionMode=true")
     cmd+=("-Dvaadin.force.production.build=true")
     cmd+=("-Dfrontend.ignore.version.checks=true")
+    if [[ "${VAADIN_DESKTOP_FLOW_IPC_FRONTEND_BUILD_COMMERCIAL_WITH_BANNER:-}" == "1" ]]; then
+      cmd+=("-Dvaadin.commercialWithBanner=true")
+    fi
   fi
   cmd+=("$goal")
   local redacted_command
@@ -314,6 +324,14 @@ PLIST
     forward_env_if_set "VAADIN_DESKTOP_FLOW_IPC_FRONTEND_BUILD_V1_53"
     forward_env_if_set "VAADIN_DESKTOP_FLOW_IPC_FRONTEND_BUILD_V1_54"
     forward_env_if_set "VAADIN_DESKTOP_FLOW_IPC_FRONTEND_BUILD_V1_55"
+    forward_env_if_set "VAADIN_DESKTOP_FLOW_IPC_FRONTEND_BUILD_V1_57"
+    forward_env_if_set "VAADIN_DESKTOP_FLOW_IPC_FRONTEND_BUILD_V1_58"
+    forward_env_if_set "VAADIN_DESKTOP_FLOW_IPC_FRONTEND_BUILD_V1_59"
+    forward_env_if_set "VAADIN_DESKTOP_FLOW_IPC_FRONTEND_BUILD_V1_60"
+    forward_env_if_set "VAADIN_DESKTOP_FLOW_IPC_FRONTEND_BUILD_V1_62"
+    forward_env_if_set "VAADIN_DESKTOP_FLOW_IPC_FRONTEND_BUILD_V1_63"
+    forward_env_if_set "VAADIN_DESKTOP_FLOW_IPC_FRONTEND_BUILD_V1_64"
+    forward_env_if_set "VAADIN_DESKTOP_FLOW_IPC_FRONTEND_BUILD_COMMERCIAL_WITH_BANNER"
     forward_env_if_set "VAADIN_DESKTOP_FLOW_IPC_FRONTEND_BUILD_GOAL_NAME"
     forward_env_if_set "VAADIN_DESKTOP_FLOW_IPC_FRONTEND_BUILD_PRODUCTION_MODE"
     forward_env_if_set "VAADIN_DESKTOP_FLOW_IPC_FRONTEND_BUILD_FORCE_PRODUCTION_BUILD"
@@ -359,6 +377,364 @@ PLIST
     if [[ "${VAADIN_DESKTOP_FLOW_IPC_AUTO_DATA_COMPONENTS:-}" == "1" ]]; then
       OPEN_ENV_ARGS+=(--env "VAADIN_DESKTOP_FLOW_IPC_AUTO_DATA_COMPONENTS=1")
     fi
+    if [[ "${VAADIN_DESKTOP_FLOW_IPC_AUTO_INPUT_COMPONENTS:-}" == "1" ]]; then
+      OPEN_ENV_ARGS+=(--env "VAADIN_DESKTOP_FLOW_IPC_AUTO_INPUT_COMPONENTS=1")
+    fi
+    if [[ "${VAADIN_DESKTOP_FLOW_IPC_AUTO_NAVIGATION_COMPONENTS:-}" == "1" ]]; then
+      OPEN_ENV_ARGS+=(--env "VAADIN_DESKTOP_FLOW_IPC_AUTO_NAVIGATION_COMPONENTS=1")
+    fi
+    if [[ "${VAADIN_DESKTOP_FLOW_IPC_AUTO_OVERLAY_COMPONENTS:-}" == "1" ]]; then
+      OPEN_ENV_ARGS+=(--env "VAADIN_DESKTOP_FLOW_IPC_AUTO_OVERLAY_COMPONENTS=1")
+    fi
+    if [[ "${VAADIN_DESKTOP_FLOW_IPC_AUTO_RICH_CONTENT_COMPONENTS:-}" == "1" ]]; then
+      OPEN_ENV_ARGS+=(--env "VAADIN_DESKTOP_FLOW_IPC_AUTO_RICH_CONTENT_COMPONENTS=1")
+    fi
+    if [[ "${VAADIN_DESKTOP_FLOW_IPC_AUTO_RICH_TEXT_EDITOR:-}" == "1" ]]; then
+      OPEN_ENV_ARGS+=(--env "VAADIN_DESKTOP_FLOW_IPC_AUTO_RICH_TEXT_EDITOR=1")
+    fi
+    if [[ "${VAADIN_DESKTOP_FLOW_IPC_AUTO_RICH_TEXT_EDITOR_BEHAVIOR:-}" == "1" ]]; then
+      OPEN_ENV_ARGS+=(--env "VAADIN_DESKTOP_FLOW_IPC_AUTO_RICH_TEXT_EDITOR_BEHAVIOR=1")
+    fi
+    if [[ "${VAADIN_DESKTOP_FLOW_IPC_AUTO_RICH_TEXT_EDITOR_EDITING:-}" == "1" ]]; then
+      OPEN_ENV_ARGS+=(--env "VAADIN_DESKTOP_FLOW_IPC_AUTO_RICH_TEXT_EDITOR_EDITING=1")
+    fi
+    if [[ "${VAADIN_DESKTOP_FLOW_IPC_AUTO_RICH_TEXT_EDITOR_THEME:-}" == "1" ]]; then
+      OPEN_ENV_ARGS+=(--env "VAADIN_DESKTOP_FLOW_IPC_AUTO_RICH_TEXT_EDITOR_THEME=1")
+    fi
+    if [[ "${VAADIN_DESKTOP_FLOW_IPC_AUTO_NATIVE_CLIPBOARD_READ:-}" == "1" ]]; then
+      OPEN_ENV_ARGS+=(--env "VAADIN_DESKTOP_FLOW_IPC_AUTO_NATIVE_CLIPBOARD_READ=1")
+    fi
+    if [[ "${VAADIN_DESKTOP_FLOW_IPC_AUTO_BUTTON_THEME:-}" == "1" ]]; then
+      OPEN_ENV_ARGS+=(--env "VAADIN_DESKTOP_FLOW_IPC_AUTO_BUTTON_THEME=1")
+    fi
+    if [[ "${VAADIN_DESKTOP_FLOW_IPC_AUTO_TEXT_FIELD_THEME:-}" == "1" ]]; then
+      OPEN_ENV_ARGS+=(--env "VAADIN_DESKTOP_FLOW_IPC_AUTO_TEXT_FIELD_THEME=1")
+    fi
+    if [[ "${VAADIN_DESKTOP_FLOW_IPC_AUTO_SELECT_THEME:-}" == "1" ]]; then
+      OPEN_ENV_ARGS+=(--env "VAADIN_DESKTOP_FLOW_IPC_AUTO_SELECT_THEME=1")
+    fi
+    if [[ "${VAADIN_DESKTOP_FLOW_IPC_AUTO_COMBO_BOX_THEME:-}" == "1" ]]; then
+      OPEN_ENV_ARGS+=(--env "VAADIN_DESKTOP_FLOW_IPC_AUTO_COMBO_BOX_THEME=1")
+    fi
+    if [[ "${VAADIN_DESKTOP_FLOW_IPC_AUTO_DATE_PICKER_THEME:-}" == "1" ]]; then
+      OPEN_ENV_ARGS+=(--env "VAADIN_DESKTOP_FLOW_IPC_AUTO_DATE_PICKER_THEME=1")
+    fi
+    if [[ "${VAADIN_DESKTOP_FLOW_IPC_AUTO_MULTI_SELECT_COMBO_BOX_THEME:-}" == "1" ]]; then
+      OPEN_ENV_ARGS+=(--env "VAADIN_DESKTOP_FLOW_IPC_AUTO_MULTI_SELECT_COMBO_BOX_THEME=1")
+    fi
+    if [[ "${VAADIN_DESKTOP_FLOW_IPC_AUTO_TIME_PICKER_THEME:-}" == "1" ]]; then
+      OPEN_ENV_ARGS+=(--env "VAADIN_DESKTOP_FLOW_IPC_AUTO_TIME_PICKER_THEME=1")
+    fi
+    if [[ "${VAADIN_DESKTOP_FLOW_IPC_AUTO_TEXT_AREA_THEME:-}" == "1" ]]; then
+      OPEN_ENV_ARGS+=(--env "VAADIN_DESKTOP_FLOW_IPC_AUTO_TEXT_AREA_THEME=1")
+    fi
+    if [[ "${VAADIN_DESKTOP_FLOW_IPC_AUTO_EMAIL_FIELD_THEME:-}" == "1" ]]; then
+      OPEN_ENV_ARGS+=(--env "VAADIN_DESKTOP_FLOW_IPC_AUTO_EMAIL_FIELD_THEME=1")
+    fi
+    if [[ "${VAADIN_DESKTOP_FLOW_IPC_AUTO_INTEGER_FIELD_THEME:-}" == "1" ]]; then
+      OPEN_ENV_ARGS+=(--env "VAADIN_DESKTOP_FLOW_IPC_AUTO_INTEGER_FIELD_THEME=1")
+    fi
+    if [[ "${VAADIN_DESKTOP_FLOW_IPC_AUTO_PASSWORD_FIELD_THEME:-}" == "1" ]]; then
+      OPEN_ENV_ARGS+=(--env "VAADIN_DESKTOP_FLOW_IPC_AUTO_PASSWORD_FIELD_THEME=1")
+    fi
+    if [[ "${VAADIN_DESKTOP_FLOW_IPC_AUTO_BIG_DECIMAL_FIELD_THEME:-}" == "1" ]]; then
+      OPEN_ENV_ARGS+=(--env "VAADIN_DESKTOP_FLOW_IPC_AUTO_BIG_DECIMAL_FIELD_THEME=1")
+    fi
+    if [[ "${VAADIN_DESKTOP_FLOW_IPC_AUTO_CHECKBOX_THEME:-}" == "1" ]]; then
+      OPEN_ENV_ARGS+=(--env "VAADIN_DESKTOP_FLOW_IPC_AUTO_CHECKBOX_THEME=1")
+    fi
+    if [[ "${VAADIN_DESKTOP_FLOW_IPC_AUTO_RADIO_BUTTON_GROUP_THEME:-}" == "1" ]]; then
+      OPEN_ENV_ARGS+=(--env "VAADIN_DESKTOP_FLOW_IPC_AUTO_RADIO_BUTTON_GROUP_THEME=1")
+    fi
+    if [[ "${VAADIN_DESKTOP_FLOW_IPC_AUTO_TABS_THEME:-}" == "1" ]]; then
+      OPEN_ENV_ARGS+=(--env "VAADIN_DESKTOP_FLOW_IPC_AUTO_TABS_THEME=1")
+    fi
+    if [[ "${VAADIN_DESKTOP_FLOW_IPC_AUTO_DETAILS_THEME:-}" == "1" ]]; then
+      OPEN_ENV_ARGS+=(--env "VAADIN_DESKTOP_FLOW_IPC_AUTO_DETAILS_THEME=1")
+    fi
+    if [[ "${VAADIN_DESKTOP_FLOW_IPC_AUTO_MENU_BAR_THEME:-}" == "1" ]]; then
+      OPEN_ENV_ARGS+=(--env "VAADIN_DESKTOP_FLOW_IPC_AUTO_MENU_BAR_THEME=1")
+    fi
+    if [[ "${VAADIN_DESKTOP_FLOW_IPC_AUTO_GRID_THEME:-}" == "1" ]]; then
+      OPEN_ENV_ARGS+=(--env "VAADIN_DESKTOP_FLOW_IPC_AUTO_GRID_THEME=1")
+    fi
+    if [[ "${VAADIN_DESKTOP_FLOW_IPC_AUTO_AVATAR_THEME:-}" == "1" ]]; then
+      OPEN_ENV_ARGS+=(--env "VAADIN_DESKTOP_FLOW_IPC_AUTO_AVATAR_THEME=1")
+    fi
+    if [[ "${VAADIN_DESKTOP_FLOW_IPC_AUTO_AVATAR_GROUP_THEME:-}" == "1" ]]; then
+      OPEN_ENV_ARGS+=(--env "VAADIN_DESKTOP_FLOW_IPC_AUTO_AVATAR_GROUP_THEME=1")
+    fi
+    if [[ "${VAADIN_DESKTOP_FLOW_IPC_AUTO_MESSAGE_INPUT_THEME:-}" == "1" ]]; then
+      OPEN_ENV_ARGS+=(--env "VAADIN_DESKTOP_FLOW_IPC_AUTO_MESSAGE_INPUT_THEME=1")
+    fi
+    if [[ "${VAADIN_DESKTOP_FLOW_IPC_AUTO_SIDE_NAV_THEME:-}" == "1" ]]; then
+      OPEN_ENV_ARGS+=(--env "VAADIN_DESKTOP_FLOW_IPC_AUTO_SIDE_NAV_THEME=1")
+    fi
+    if [[ "${VAADIN_DESKTOP_FLOW_IPC_AUTO_MESSAGE_LIST_MARKDOWN:-}" == "1" ]]; then
+      OPEN_ENV_ARGS+=(--env "VAADIN_DESKTOP_FLOW_IPC_AUTO_MESSAGE_LIST_MARKDOWN=1")
+    fi
+    if [[ "${VAADIN_DESKTOP_FLOW_IPC_AUTO_LOGIN_OVERLAY_PROPERTIES:-}" == "1" ]]; then
+      OPEN_ENV_ARGS+=(--env "VAADIN_DESKTOP_FLOW_IPC_AUTO_LOGIN_OVERLAY_PROPERTIES=1")
+    fi
+    if [[ "${VAADIN_DESKTOP_FLOW_IPC_AUTO_LOGIN_OVERLAY_FORGOT_PASSWORD:-}" == "1" ]]; then
+      OPEN_ENV_ARGS+=(--env "VAADIN_DESKTOP_FLOW_IPC_AUTO_LOGIN_OVERLAY_FORGOT_PASSWORD=1")
+    fi
+    if [[ "${VAADIN_DESKTOP_FLOW_IPC_AUTO_LOGIN_OVERLAY_LOGIN:-}" == "1" ]]; then
+      OPEN_ENV_ARGS+=(--env "VAADIN_DESKTOP_FLOW_IPC_AUTO_LOGIN_OVERLAY_LOGIN=1")
+    fi
+    if [[ "${VAADIN_DESKTOP_FLOW_IPC_AUTO_LOGIN_OVERLAY_INVALID_LOGIN:-}" == "1" ]]; then
+      OPEN_ENV_ARGS+=(--env "VAADIN_DESKTOP_FLOW_IPC_AUTO_LOGIN_OVERLAY_INVALID_LOGIN=1")
+    fi
+    if [[ "${VAADIN_DESKTOP_FLOW_IPC_AUTO_LOGIN_OVERLAY_CLOSE:-}" == "1" ]]; then
+      OPEN_ENV_ARGS+=(--env "VAADIN_DESKTOP_FLOW_IPC_AUTO_LOGIN_OVERLAY_CLOSE=1")
+    fi
+    if [[ "${VAADIN_DESKTOP_FLOW_IPC_AUTO_LOGIN_OVERLAY_RECOVERY_LOGIN:-}" == "1" ]]; then
+      OPEN_ENV_ARGS+=(--env "VAADIN_DESKTOP_FLOW_IPC_AUTO_LOGIN_OVERLAY_RECOVERY_LOGIN=1")
+    fi
+    if [[ "${VAADIN_DESKTOP_FLOW_IPC_AUTO_LOGIN_OVERLAY_SERVER_REOPEN:-}" == "1" ]]; then
+      OPEN_ENV_ARGS+=(--env "VAADIN_DESKTOP_FLOW_IPC_AUTO_LOGIN_OVERLAY_SERVER_REOPEN=1")
+    fi
+    if [[ "${VAADIN_DESKTOP_FLOW_IPC_AUTO_LOGIN_OVERLAY_SHOW_ERROR:-}" == "1" ]]; then
+      OPEN_ENV_ARGS+=(--env "VAADIN_DESKTOP_FLOW_IPC_AUTO_LOGIN_OVERLAY_SHOW_ERROR=1")
+    fi
+    if [[ "${VAADIN_DESKTOP_FLOW_IPC_AUTO_LOGIN_OVERLAY_ERROR_A11Y:-}" == "1" ]]; then
+      OPEN_ENV_ARGS+=(--env "VAADIN_DESKTOP_FLOW_IPC_AUTO_LOGIN_OVERLAY_ERROR_A11Y=1")
+    fi
+    if [[ "${VAADIN_DESKTOP_FLOW_IPC_AUTO_LOGIN_OVERLAY_ERROR_FOCUS:-}" == "1" ]]; then
+      OPEN_ENV_ARGS+=(--env "VAADIN_DESKTOP_FLOW_IPC_AUTO_LOGIN_OVERLAY_ERROR_FOCUS=1")
+    fi
+    if [[ "${VAADIN_DESKTOP_FLOW_IPC_AUTO_LOGIN_OVERLAY_ERROR_FOCUS_RETRY:-}" == "1" ]]; then
+      OPEN_ENV_ARGS+=(--env "VAADIN_DESKTOP_FLOW_IPC_AUTO_LOGIN_OVERLAY_ERROR_FOCUS_RETRY=1")
+    fi
+    if [[ "${VAADIN_DESKTOP_FLOW_IPC_AUTO_LOGIN_OVERLAY_ERROR_FOCUS_RETRY_TARGET:-}" == "1" ]]; then
+      OPEN_ENV_ARGS+=(--env "VAADIN_DESKTOP_FLOW_IPC_AUTO_LOGIN_OVERLAY_ERROR_FOCUS_RETRY_TARGET=1")
+    fi
+    if [[ "${VAADIN_DESKTOP_FLOW_IPC_AUTO_LOGIN_OVERLAY_ACTION_POST:-}" == "1" ]]; then
+      OPEN_ENV_ARGS+=(--env "VAADIN_DESKTOP_FLOW_IPC_AUTO_LOGIN_OVERLAY_ACTION_POST=1")
+    fi
+    if [[ "${VAADIN_DESKTOP_FLOW_IPC_AUTO_LOGIN_OVERLAY_SUBMIT_BUTTON:-}" == "1" ]]; then
+      OPEN_ENV_ARGS+=(--env "VAADIN_DESKTOP_FLOW_IPC_AUTO_LOGIN_OVERLAY_SUBMIT_BUTTON=1")
+    fi
+    if [[ "${VAADIN_DESKTOP_FLOW_IPC_AUTO_LOGIN_OVERLAY_ENTER_SUBMIT:-}" == "1" ]]; then
+      OPEN_ENV_ARGS+=(--env "VAADIN_DESKTOP_FLOW_IPC_AUTO_LOGIN_OVERLAY_ENTER_SUBMIT=1")
+    fi
+    if [[ "${VAADIN_DESKTOP_FLOW_IPC_AUTO_LOGIN_OVERLAY_I18N_FULL:-}" == "1" ]]; then
+      OPEN_ENV_ARGS+=(--env "VAADIN_DESKTOP_FLOW_IPC_AUTO_LOGIN_OVERLAY_I18N_FULL=1")
+    fi
+    if [[ "${VAADIN_DESKTOP_FLOW_IPC_AUTO_LOGIN_OVERLAY_NO_AUTOFOCUS:-}" == "1" ]]; then
+      OPEN_ENV_ARGS+=(--env "VAADIN_DESKTOP_FLOW_IPC_AUTO_LOGIN_OVERLAY_NO_AUTOFOCUS=1")
+    fi
+    if [[ "${VAADIN_DESKTOP_FLOW_IPC_AUTO_LOGIN_OVERLAY_AUTOFOCUS_CONTROL:-}" == "1" ]]; then
+      OPEN_ENV_ARGS+=(--env "VAADIN_DESKTOP_FLOW_IPC_AUTO_LOGIN_OVERLAY_AUTOFOCUS_CONTROL=1")
+    fi
+    if [[ "${VAADIN_DESKTOP_FLOW_IPC_AUTO_LOGIN_OVERLAY_ESC_CLOSE:-}" == "1" ]]; then
+      OPEN_ENV_ARGS+=(--env "VAADIN_DESKTOP_FLOW_IPC_AUTO_LOGIN_OVERLAY_ESC_CLOSE=1")
+    fi
+    if [[ "${VAADIN_DESKTOP_FLOW_IPC_AUTO_LOGIN_OVERLAY_OUTSIDE_CLOSE:-}" == "1" ]]; then
+      OPEN_ENV_ARGS+=(--env "VAADIN_DESKTOP_FLOW_IPC_AUTO_LOGIN_OVERLAY_OUTSIDE_CLOSE=1")
+    fi
+    if [[ "${VAADIN_DESKTOP_FLOW_IPC_AUTO_LOGIN_OVERLAY_TAB_TRAVERSAL:-}" == "1" ]]; then
+      OPEN_ENV_ARGS+=(--env "VAADIN_DESKTOP_FLOW_IPC_AUTO_LOGIN_OVERLAY_TAB_TRAVERSAL=1")
+    fi
+    if [[ "${VAADIN_DESKTOP_FLOW_IPC_AUTO_LOGIN_OVERLAY_DISABLED_GUARD:-}" == "1" ]]; then
+      OPEN_ENV_ARGS+=(--env "VAADIN_DESKTOP_FLOW_IPC_AUTO_LOGIN_OVERLAY_DISABLED_GUARD=1")
+    fi
+    if [[ "${VAADIN_DESKTOP_FLOW_IPC_AUTO_LOGIN_OVERLAY_DISABLED_KEYBOARD_GUARD:-}" == "1" ]]; then
+      OPEN_ENV_ARGS+=(--env "VAADIN_DESKTOP_FLOW_IPC_AUTO_LOGIN_OVERLAY_DISABLED_KEYBOARD_GUARD=1")
+    fi
+    if [[ "${VAADIN_DESKTOP_FLOW_IPC_AUTO_LOGIN_FORM_PROPERTIES:-}" == "1" ]]; then
+      OPEN_ENV_ARGS+=(--env "VAADIN_DESKTOP_FLOW_IPC_AUTO_LOGIN_FORM_PROPERTIES=1")
+    fi
+    if [[ "${VAADIN_DESKTOP_FLOW_IPC_AUTO_LOGIN_FORM_LOGIN:-}" == "1" ]]; then
+      OPEN_ENV_ARGS+=(--env "VAADIN_DESKTOP_FLOW_IPC_AUTO_LOGIN_FORM_LOGIN=1")
+    fi
+    if [[ "${VAADIN_DESKTOP_FLOW_IPC_AUTO_LOGIN_FORM_INVALID_LOGIN:-}" == "1" ]]; then
+      OPEN_ENV_ARGS+=(--env "VAADIN_DESKTOP_FLOW_IPC_AUTO_LOGIN_FORM_INVALID_LOGIN=1")
+    fi
+    if [[ "${VAADIN_DESKTOP_FLOW_IPC_AUTO_LOGIN_FORM_FORGOT_PASSWORD:-}" == "1" ]]; then
+      OPEN_ENV_ARGS+=(--env "VAADIN_DESKTOP_FLOW_IPC_AUTO_LOGIN_FORM_FORGOT_PASSWORD=1")
+    fi
+    if [[ "${VAADIN_DESKTOP_FLOW_IPC_AUTO_LOGIN_FORM_ACTION_POST:-}" == "1" ]]; then
+      OPEN_ENV_ARGS+=(--env "VAADIN_DESKTOP_FLOW_IPC_AUTO_LOGIN_FORM_ACTION_POST=1")
+    fi
+    if [[ "${VAADIN_DESKTOP_FLOW_IPC_AUTO_LOGIN_FORM_SUBMIT_BUTTON:-}" == "1" ]]; then
+      OPEN_ENV_ARGS+=(--env "VAADIN_DESKTOP_FLOW_IPC_AUTO_LOGIN_FORM_SUBMIT_BUTTON=1")
+    fi
+    if [[ "${VAADIN_DESKTOP_FLOW_IPC_AUTO_LOGIN_FORM_ENTER_SUBMIT:-}" == "1" ]]; then
+      OPEN_ENV_ARGS+=(--env "VAADIN_DESKTOP_FLOW_IPC_AUTO_LOGIN_FORM_ENTER_SUBMIT=1")
+    fi
+    if [[ "${VAADIN_DESKTOP_FLOW_IPC_AUTO_LOGIN_FORM_RECOVERY_LOGIN:-}" == "1" ]]; then
+      OPEN_ENV_ARGS+=(--env "VAADIN_DESKTOP_FLOW_IPC_AUTO_LOGIN_FORM_RECOVERY_LOGIN=1")
+    fi
+    if [[ "${VAADIN_DESKTOP_FLOW_IPC_AUTO_LOGIN_FORM_ENABLED_LIFECYCLE:-}" == "1" ]]; then
+      OPEN_ENV_ARGS+=(--env "VAADIN_DESKTOP_FLOW_IPC_AUTO_LOGIN_FORM_ENABLED_LIFECYCLE=1")
+    fi
+    if [[ "${VAADIN_DESKTOP_FLOW_IPC_AUTO_LOGIN_FORM_DISABLED_GUARD:-}" == "1" ]]; then
+      OPEN_ENV_ARGS+=(--env "VAADIN_DESKTOP_FLOW_IPC_AUTO_LOGIN_FORM_DISABLED_GUARD=1")
+    fi
+    if [[ "${VAADIN_DESKTOP_FLOW_IPC_AUTO_LOGIN_FORM_DISABLED_KEYBOARD_GUARD:-}" == "1" ]]; then
+      OPEN_ENV_ARGS+=(--env "VAADIN_DESKTOP_FLOW_IPC_AUTO_LOGIN_FORM_DISABLED_KEYBOARD_GUARD=1")
+    fi
+    if [[ "${VAADIN_DESKTOP_FLOW_IPC_AUTO_LOGIN_FORM_NO_AUTOFOCUS:-}" == "1" ]]; then
+      OPEN_ENV_ARGS+=(--env "VAADIN_DESKTOP_FLOW_IPC_AUTO_LOGIN_FORM_NO_AUTOFOCUS=1")
+    fi
+    if [[ "${VAADIN_DESKTOP_FLOW_IPC_AUTO_LOGIN_FORM_AUTOFOCUS_CONTROL:-}" == "1" ]]; then
+      OPEN_ENV_ARGS+=(--env "VAADIN_DESKTOP_FLOW_IPC_AUTO_LOGIN_FORM_AUTOFOCUS_CONTROL=1")
+    fi
+    if [[ "${VAADIN_DESKTOP_FLOW_IPC_AUTO_LOGIN_FORM_I18N_FULL:-}" == "1" ]]; then
+      OPEN_ENV_ARGS+=(--env "VAADIN_DESKTOP_FLOW_IPC_AUTO_LOGIN_FORM_I18N_FULL=1")
+    fi
+    if [[ "${VAADIN_DESKTOP_FLOW_IPC_AUTO_LOGIN_FORM_SHOW_ERROR:-}" == "1" ]]; then
+      OPEN_ENV_ARGS+=(--env "VAADIN_DESKTOP_FLOW_IPC_AUTO_LOGIN_FORM_SHOW_ERROR=1")
+    fi
+    if [[ "${VAADIN_DESKTOP_FLOW_IPC_AUTO_LOGIN_FORM_ERROR_A11Y:-}" == "1" ]]; then
+      OPEN_ENV_ARGS+=(--env "VAADIN_DESKTOP_FLOW_IPC_AUTO_LOGIN_FORM_ERROR_A11Y=1")
+    fi
+    if [[ "${VAADIN_DESKTOP_FLOW_IPC_AUTO_LOGIN_FORM_ERROR_FOCUS:-}" == "1" ]]; then
+      OPEN_ENV_ARGS+=(--env "VAADIN_DESKTOP_FLOW_IPC_AUTO_LOGIN_FORM_ERROR_FOCUS=1")
+    fi
+    if [[ "${VAADIN_DESKTOP_FLOW_IPC_AUTO_LOGIN_FORM_ERROR_FOCUS_RETRY:-}" == "1" ]]; then
+      OPEN_ENV_ARGS+=(--env "VAADIN_DESKTOP_FLOW_IPC_AUTO_LOGIN_FORM_ERROR_FOCUS_RETRY=1")
+    fi
+    if [[ "${VAADIN_DESKTOP_FLOW_IPC_AUTO_LOGIN_FORM_ERROR_FOCUS_RETRY_TARGET:-}" == "1" ]]; then
+      OPEN_ENV_ARGS+=(--env "VAADIN_DESKTOP_FLOW_IPC_AUTO_LOGIN_FORM_ERROR_FOCUS_RETRY_TARGET=1")
+    fi
+    if [[ "${VAADIN_DESKTOP_FLOW_IPC_AUTO_LOGIN_FORM_ERROR_FOCUS_RETRY_TARGET_STATE:-}" == "1" ]]; then
+      OPEN_ENV_ARGS+=(--env "VAADIN_DESKTOP_FLOW_IPC_AUTO_LOGIN_FORM_ERROR_FOCUS_RETRY_TARGET_STATE=1")
+    fi
+    if [[ "${VAADIN_DESKTOP_FLOW_IPC_AUTO_LOGIN_FORM_ERROR_FOCUS_RETRY_TARGET_LAYOUT:-}" == "1" ]]; then
+      OPEN_ENV_ARGS+=(--env "VAADIN_DESKTOP_FLOW_IPC_AUTO_LOGIN_FORM_ERROR_FOCUS_RETRY_TARGET_LAYOUT=1")
+    fi
+    if [[ "${VAADIN_DESKTOP_FLOW_IPC_AUTO_LOGIN_FORM_ERROR_FOCUS_RETRY_TARGET_HIDDEN_SOURCE:-}" == "1" ]]; then
+      OPEN_ENV_ARGS+=(--env "VAADIN_DESKTOP_FLOW_IPC_AUTO_LOGIN_FORM_ERROR_FOCUS_RETRY_TARGET_HIDDEN_SOURCE=1")
+    fi
+    if [[ "${VAADIN_DESKTOP_FLOW_IPC_AUTO_LOGIN_FORM_ERROR_FOCUS_RETRY_TARGET_VISIBLE_OWNER:-}" == "1" ]]; then
+      OPEN_ENV_ARGS+=(--env "VAADIN_DESKTOP_FLOW_IPC_AUTO_LOGIN_FORM_ERROR_FOCUS_RETRY_TARGET_VISIBLE_OWNER=1")
+    fi
+    if [[ "${VAADIN_DESKTOP_FLOW_IPC_AUTO_LOGIN_FORM_ERROR_FOCUS_RETRY_TARGET_VISIBLE_OWNER_FOCUS:-}" == "1" ]]; then
+      OPEN_ENV_ARGS+=(--env "VAADIN_DESKTOP_FLOW_IPC_AUTO_LOGIN_FORM_ERROR_FOCUS_RETRY_TARGET_VISIBLE_OWNER_FOCUS=1")
+    fi
+    if [[ "${VAADIN_DESKTOP_FLOW_IPC_AUTO_LOGIN_FORM_ERROR_FOCUS_RETRY_TARGET_VISIBLE_OWNER_FOCUS_CONTAINMENT:-}" == "1" ]]; then
+      OPEN_ENV_ARGS+=(--env "VAADIN_DESKTOP_FLOW_IPC_AUTO_LOGIN_FORM_ERROR_FOCUS_RETRY_TARGET_VISIBLE_OWNER_FOCUS_CONTAINMENT=1")
+    fi
+    if [[ "${VAADIN_DESKTOP_FLOW_IPC_AUTO_LOGIN_FORM_ERROR_FOCUS_RETRY_TARGET_VISIBLE_OWNER_FOCUS_CONTAINMENT_STABILITY:-}" == "1" ]]; then
+      OPEN_ENV_ARGS+=(--env "VAADIN_DESKTOP_FLOW_IPC_AUTO_LOGIN_FORM_ERROR_FOCUS_RETRY_TARGET_VISIBLE_OWNER_FOCUS_CONTAINMENT_STABILITY=1")
+    fi
+    SWIFT_HOST_EXTRA_ARGS=()
+    if [[ "${VAADIN_DESKTOP_FLOW_IPC_AUTO_LOGIN_FORM_ENABLED_LIFECYCLE:-}" == "1" ]]; then
+      SWIFT_HOST_EXTRA_ARGS+=(--flow-ipc-auto-login-form-enabled-lifecycle)
+    fi
+    if [[ "${VAADIN_DESKTOP_FLOW_IPC_AUTO_LOGIN_FORM_DISABLED_GUARD:-}" == "1" ]]; then
+      SWIFT_HOST_EXTRA_ARGS+=(--flow-ipc-auto-login-form-disabled-guard)
+    fi
+    if [[ "${VAADIN_DESKTOP_FLOW_IPC_AUTO_LOGIN_FORM_DISABLED_KEYBOARD_GUARD:-}" == "1" ]]; then
+      SWIFT_HOST_EXTRA_ARGS+=(--flow-ipc-auto-login-form-disabled-keyboard-guard)
+    fi
+    if [[ "${VAADIN_DESKTOP_FLOW_IPC_AUTO_LOGIN_FORM_NO_AUTOFOCUS:-}" == "1" ]]; then
+      SWIFT_HOST_EXTRA_ARGS+=(--flow-ipc-auto-login-form-no-autofocus)
+    fi
+    if [[ "${VAADIN_DESKTOP_FLOW_IPC_AUTO_LOGIN_FORM_AUTOFOCUS_CONTROL:-}" == "1" ]]; then
+      SWIFT_HOST_EXTRA_ARGS+=(--flow-ipc-auto-login-form-autofocus-control)
+    fi
+    if [[ "${VAADIN_DESKTOP_FLOW_IPC_AUTO_LOGIN_FORM_TAB_TRAVERSAL:-}" == "1" ]]; then
+      SWIFT_HOST_EXTRA_ARGS+=(--flow-ipc-auto-login-form-tab-traversal)
+    fi
+    if [[ "${VAADIN_DESKTOP_FLOW_IPC_AUTO_LOGIN_FORM_SHIFT_TAB_TRAVERSAL:-}" == "1" ]]; then
+      SWIFT_HOST_EXTRA_ARGS+=(--flow-ipc-auto-login-form-shift-tab-traversal)
+    fi
+    if [[ "${VAADIN_DESKTOP_FLOW_IPC_AUTO_LOGIN_FORM_AUTOFILL_ATTRIBUTES:-}" == "1" ]]; then
+      SWIFT_HOST_EXTRA_ARGS+=(--flow-ipc-auto-login-form-autofill-attributes)
+    fi
+    if [[ "${VAADIN_DESKTOP_FLOW_IPC_AUTO_LOGIN_FORM_A11Y_SEMANTICS:-}" == "1" ]]; then
+      SWIFT_HOST_EXTRA_ARGS+=(--flow-ipc-auto-login-form-a11y-semantics)
+    fi
+    if [[ "${VAADIN_DESKTOP_FLOW_IPC_AUTO_LOGIN_FORM_I18N_FULL:-}" == "1" ]]; then
+      SWIFT_HOST_EXTRA_ARGS+=(--flow-ipc-auto-login-form-i18n-full)
+    fi
+    if [[ "${VAADIN_DESKTOP_FLOW_IPC_AUTO_LOGIN_FORM_SHOW_ERROR:-}" == "1" ]]; then
+      SWIFT_HOST_EXTRA_ARGS+=(--flow-ipc-auto-login-form-show-error)
+    fi
+    if [[ "${VAADIN_DESKTOP_FLOW_IPC_AUTO_LOGIN_FORM_ERROR_A11Y:-}" == "1" ]]; then
+      SWIFT_HOST_EXTRA_ARGS+=(--flow-ipc-auto-login-form-error-a11y)
+    fi
+    if [[ "${VAADIN_DESKTOP_FLOW_IPC_AUTO_LOGIN_FORM_ERROR_FOCUS:-}" == "1" ]]; then
+      SWIFT_HOST_EXTRA_ARGS+=(--flow-ipc-auto-login-form-error-focus)
+    fi
+    if [[ "${VAADIN_DESKTOP_FLOW_IPC_AUTO_LOGIN_FORM_ERROR_FOCUS_RETRY:-}" == "1" ]]; then
+      SWIFT_HOST_EXTRA_ARGS+=(--flow-ipc-auto-login-form-error-focus-retry)
+    fi
+    if [[ "${VAADIN_DESKTOP_FLOW_IPC_AUTO_LOGIN_FORM_ERROR_FOCUS_RETRY_TARGET:-}" == "1" ]]; then
+      SWIFT_HOST_EXTRA_ARGS+=(--flow-ipc-auto-login-form-error-focus-retry-target)
+    fi
+    if [[ "${VAADIN_DESKTOP_FLOW_IPC_AUTO_LOGIN_FORM_ERROR_FOCUS_RETRY_TARGET_STATE:-}" == "1" ]]; then
+      SWIFT_HOST_EXTRA_ARGS+=(--flow-ipc-auto-login-form-error-focus-retry-target-state)
+    fi
+    if [[ "${VAADIN_DESKTOP_FLOW_IPC_AUTO_LOGIN_FORM_ERROR_FOCUS_RETRY_TARGET_LAYOUT:-}" == "1" ]]; then
+      SWIFT_HOST_EXTRA_ARGS+=(--flow-ipc-auto-login-form-error-focus-retry-target-layout)
+    fi
+    if [[ "${VAADIN_DESKTOP_FLOW_IPC_AUTO_LOGIN_FORM_ERROR_FOCUS_RETRY_TARGET_HIDDEN_SOURCE:-}" == "1" ]]; then
+      SWIFT_HOST_EXTRA_ARGS+=(--flow-ipc-auto-login-form-error-focus-retry-target-hidden-source)
+    fi
+    if [[ "${VAADIN_DESKTOP_FLOW_IPC_AUTO_LOGIN_FORM_ERROR_FOCUS_RETRY_TARGET_VISIBLE_OWNER:-}" == "1" ]]; then
+      SWIFT_HOST_EXTRA_ARGS+=(--flow-ipc-auto-login-form-error-focus-retry-target-visible-owner)
+    fi
+    if [[ "${VAADIN_DESKTOP_FLOW_IPC_AUTO_LOGIN_FORM_ERROR_FOCUS_RETRY_TARGET_VISIBLE_OWNER_FOCUS:-}" == "1" ]]; then
+      SWIFT_HOST_EXTRA_ARGS+=(--flow-ipc-auto-login-form-error-focus-retry-target-visible-owner-focus)
+    fi
+    if [[ "${VAADIN_DESKTOP_FLOW_IPC_AUTO_LOGIN_FORM_ERROR_FOCUS_RETRY_TARGET_VISIBLE_OWNER_FOCUS_CONTAINMENT:-}" == "1" ]]; then
+      SWIFT_HOST_EXTRA_ARGS+=(--flow-ipc-auto-login-form-error-focus-retry-target-visible-owner-focus-containment)
+    fi
+    if [[ "${VAADIN_DESKTOP_FLOW_IPC_AUTO_LOGIN_FORM_ERROR_FOCUS_RETRY_TARGET_VISIBLE_OWNER_FOCUS_CONTAINMENT_STABILITY:-}" == "1" ]]; then
+      SWIFT_HOST_EXTRA_ARGS+=(--flow-ipc-auto-login-form-error-focus-retry-target-visible-owner-focus-containment-stability)
+    fi
+    if [[ "${VAADIN_DESKTOP_FLOW_IPC_AUTO_LOGIN_OVERLAY_ERROR_A11Y:-}" == "1" ]]; then
+      SWIFT_HOST_EXTRA_ARGS+=(--flow-ipc-auto-login-overlay-error-a11y)
+    fi
+    if [[ "${VAADIN_DESKTOP_FLOW_IPC_AUTO_LOGIN_OVERLAY_ERROR_FOCUS:-}" == "1" ]]; then
+      SWIFT_HOST_EXTRA_ARGS+=(--flow-ipc-auto-login-overlay-error-focus)
+    fi
+    if [[ "${VAADIN_DESKTOP_FLOW_IPC_AUTO_LOGIN_OVERLAY_ERROR_FOCUS_RETRY:-}" == "1" ]]; then
+      SWIFT_HOST_EXTRA_ARGS+=(--flow-ipc-auto-login-overlay-error-focus-retry)
+    fi
+    if [[ "${VAADIN_DESKTOP_FLOW_IPC_AUTO_LOGIN_OVERLAY_ERROR_FOCUS_RETRY_TARGET:-}" == "1" ]]; then
+      SWIFT_HOST_EXTRA_ARGS+=(--flow-ipc-auto-login-overlay-error-focus-retry-target)
+    fi
+    if [[ "${VAADIN_DESKTOP_FLOW_IPC_AUTO_LOGIN_OVERLAY_I18N_FULL:-}" == "1" ]]; then
+      SWIFT_HOST_EXTRA_ARGS+=(--flow-ipc-auto-login-overlay-i18n-full)
+    fi
+    if [[ "${VAADIN_DESKTOP_FLOW_IPC_AUTO_LOGIN_OVERLAY_NO_AUTOFOCUS:-}" == "1" ]]; then
+      SWIFT_HOST_EXTRA_ARGS+=(--flow-ipc-auto-login-overlay-no-autofocus)
+    fi
+    if [[ "${VAADIN_DESKTOP_FLOW_IPC_AUTO_LOGIN_OVERLAY_AUTOFOCUS_CONTROL:-}" == "1" ]]; then
+      SWIFT_HOST_EXTRA_ARGS+=(--flow-ipc-auto-login-overlay-autofocus-control)
+    fi
+    if [[ "${VAADIN_DESKTOP_FLOW_IPC_AUTO_LOGIN_OVERLAY_ESC_CLOSE:-}" == "1" ]]; then
+      SWIFT_HOST_EXTRA_ARGS+=(--flow-ipc-auto-login-overlay-esc-close)
+    fi
+    if [[ "${VAADIN_DESKTOP_FLOW_IPC_AUTO_LOGIN_OVERLAY_OUTSIDE_CLOSE:-}" == "1" ]]; then
+      SWIFT_HOST_EXTRA_ARGS+=(--flow-ipc-auto-login-overlay-outside-close)
+    fi
+    if [[ "${VAADIN_DESKTOP_FLOW_IPC_AUTO_LOGIN_OVERLAY_TAB_TRAVERSAL:-}" == "1" ]]; then
+      SWIFT_HOST_EXTRA_ARGS+=(--flow-ipc-auto-login-overlay-tab-traversal)
+    fi
+    if [[ "${VAADIN_DESKTOP_FLOW_IPC_AUTO_LOGIN_OVERLAY_SHIFT_TAB_TRAVERSAL:-}" == "1" ]]; then
+      SWIFT_HOST_EXTRA_ARGS+=(--flow-ipc-auto-login-overlay-shift-tab-traversal)
+    fi
+    if [[ "${VAADIN_DESKTOP_FLOW_IPC_AUTO_LOGIN_OVERLAY_AUTOFILL_ATTRIBUTES:-}" == "1" ]]; then
+      SWIFT_HOST_EXTRA_ARGS+=(--flow-ipc-auto-login-overlay-autofill-attributes)
+    fi
+    if [[ "${VAADIN_DESKTOP_FLOW_IPC_AUTO_LOGIN_OVERLAY_A11Y_SEMANTICS:-}" == "1" ]]; then
+      SWIFT_HOST_EXTRA_ARGS+=(--flow-ipc-auto-login-overlay-a11y-semantics)
+    fi
+    if [[ "${VAADIN_DESKTOP_FLOW_IPC_AUTO_LOGIN_OVERLAY_DISABLED_GUARD:-}" == "1" ]]; then
+      SWIFT_HOST_EXTRA_ARGS+=(--flow-ipc-auto-login-overlay-disabled-guard)
+    fi
+    if [[ "${VAADIN_DESKTOP_FLOW_IPC_AUTO_LOGIN_OVERLAY_DISABLED_KEYBOARD_GUARD:-}" == "1" ]]; then
+      SWIFT_HOST_EXTRA_ARGS+=(--flow-ipc-auto-login-overlay-disabled-keyboard-guard)
+    fi
+    if [[ "${VAADIN_DESKTOP_FLOW_IPC_AUTO_LIFECYCLE_FOCUS:-}" == "1" ]]; then
+      OPEN_ENV_ARGS+=(--env "VAADIN_DESKTOP_FLOW_IPC_AUTO_LIFECYCLE_FOCUS=1")
+    fi
     if [[ "${VAADIN_DESKTOP_FLOW_IPC_AUTO_LAZY_DATA:-}" == "1" ]]; then
       OPEN_ENV_ARGS+=(--env "VAADIN_DESKTOP_FLOW_IPC_AUTO_LAZY_DATA=1")
     fi
@@ -385,6 +761,9 @@ PLIST
     fi
     if [[ "${VAADIN_DESKTOP_FLOW_IPC_AUTO_SHUTDOWN:-}" == "1" ]]; then
       OPEN_ENV_ARGS+=(--env "VAADIN_DESKTOP_FLOW_IPC_AUTO_SHUTDOWN=1")
+    fi
+    if [[ -n "${VAADIN_DESKTOP_FLOW_IPC_AUTO_SHUTDOWN_TIMEOUT_SECONDS:-}" ]]; then
+      OPEN_ENV_ARGS+=(--env "VAADIN_DESKTOP_FLOW_IPC_AUTO_SHUTDOWN_TIMEOUT_SECONDS=$VAADIN_DESKTOP_FLOW_IPC_AUTO_SHUTDOWN_TIMEOUT_SECONDS")
     fi
     OPEN_BACKGROUND=0
     if [[ "${VAADIN_DESKTOP_HOST_NO_ACTIVATE:-}" == "1" ]]; then
@@ -436,19 +815,39 @@ PLIST
     }
     run_swift_host_open() {
       if [[ "$OPEN_BACKGROUND" == "1" ]]; then
-        open -n -W -g -o "$SWIFT_HOST_STDOUT" --stderr "$SWIFT_HOST_STDERR" "${OPEN_ENV_ARGS[@]}" "$SWIFT_HOST_APP" --args \
-          --module "$MODULE" \
-          --repo-root "$ROOT" \
-          --maven-repo "$MAVEN_REPO" \
-          --maven-executable "$MVN_EXE" \
-          --transport "$SWIFT_TRANSPORT"
+        if [[ "${#SWIFT_HOST_EXTRA_ARGS[@]}" -gt 0 ]]; then
+          open -n -W -g -o "$SWIFT_HOST_STDOUT" --stderr "$SWIFT_HOST_STDERR" "${OPEN_ENV_ARGS[@]}" "$SWIFT_HOST_APP" --args \
+            --module "$MODULE" \
+            --repo-root "$ROOT" \
+            --maven-repo "$MAVEN_REPO" \
+            --maven-executable "$MVN_EXE" \
+            --transport "$SWIFT_TRANSPORT" \
+            "${SWIFT_HOST_EXTRA_ARGS[@]}"
+        else
+          open -n -W -g -o "$SWIFT_HOST_STDOUT" --stderr "$SWIFT_HOST_STDERR" "${OPEN_ENV_ARGS[@]}" "$SWIFT_HOST_APP" --args \
+            --module "$MODULE" \
+            --repo-root "$ROOT" \
+            --maven-repo "$MAVEN_REPO" \
+            --maven-executable "$MVN_EXE" \
+            --transport "$SWIFT_TRANSPORT"
+        fi
       else
-        open -n -W -o "$SWIFT_HOST_STDOUT" --stderr "$SWIFT_HOST_STDERR" "${OPEN_ENV_ARGS[@]}" "$SWIFT_HOST_APP" --args \
-          --module "$MODULE" \
-          --repo-root "$ROOT" \
-          --maven-repo "$MAVEN_REPO" \
-          --maven-executable "$MVN_EXE" \
-          --transport "$SWIFT_TRANSPORT"
+        if [[ "${#SWIFT_HOST_EXTRA_ARGS[@]}" -gt 0 ]]; then
+          open -n -W -o "$SWIFT_HOST_STDOUT" --stderr "$SWIFT_HOST_STDERR" "${OPEN_ENV_ARGS[@]}" "$SWIFT_HOST_APP" --args \
+            --module "$MODULE" \
+            --repo-root "$ROOT" \
+            --maven-repo "$MAVEN_REPO" \
+            --maven-executable "$MVN_EXE" \
+            --transport "$SWIFT_TRANSPORT" \
+            "${SWIFT_HOST_EXTRA_ARGS[@]}"
+        else
+          open -n -W -o "$SWIFT_HOST_STDOUT" --stderr "$SWIFT_HOST_STDERR" "${OPEN_ENV_ARGS[@]}" "$SWIFT_HOST_APP" --args \
+            --module "$MODULE" \
+            --repo-root "$ROOT" \
+            --maven-repo "$MAVEN_REPO" \
+            --maven-executable "$MVN_EXE" \
+            --transport "$SWIFT_TRANSPORT"
+        fi
       fi
     }
     trap cleanup_tail EXIT

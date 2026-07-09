@@ -1,6 +1,6 @@
 # Framework Architecture
 
-Vaadin Desktop Framework v0 is a staged implementation of the architecture described in `docs/flow-over-ipc-design.md`.
+vatori v0 is a staged implementation of the Vaadin-based desktop framework architecture described in `docs/flow-over-ipc-design.md`.
 
 ## Current v0 Stack
 

@@ -108,6 +108,13 @@ final class FlowClientResources {
             "META-INF/vatori/dev-bundle-entry/vaadin-checkbox.js";
     private static final String DEV_BUNDLE_SELECT_ENTRY_JS =
             "META-INF/vatori/dev-bundle-entry/vaadin-select.js";
+    private static final String LOGIN_FORM_COMPONENT_CLASS =
+            "com.vaadin.flow.component.login.LoginForm";
+    private static final String LOGIN_FORM_TAG = "vaadin-login-form";
+    private static final String LOGIN_FORM_REQUESTED_MODULE =
+            "@vaadin/login/src/vaadin-login-form.js";
+    private static final String LOGIN_FORM_PRODUCTION_BUILD_RESOURCE_VERSION =
+            "flow-ipc-login-form-production-build-resource-v1_101";
     private static final String THEME_STATIC_CSS =
             "META-INF/resources/frontend/themes/vatori-flow-ipc-smoke/theme-static.css";
     private static final String FLOW_LAZY_DEPENDENCY_JS =
@@ -744,6 +751,154 @@ final class FlowClientResources {
             "full-grid-virtualization,lazy-data-provider,upload-download,theme-variants,dev-mode-vite-parity,installer-packaging,durable-reconnect";
     private static final String DATA_COMPONENT_RESOURCE_MATRIX_NEXT_STEP =
             "turn bounded data and binder component evidence into deeper Grid/VirtualList virtualization or Upload/Download resource parity";
+    private static final String INPUT_COMPONENT_PARITY_MATRIX_VERSION =
+            "flow-ipc-input-component-parity-matrix-v1_57";
+    private static final String INPUT_COMPONENT_PARITY_MATRIX_SOURCE =
+            "frontend-resource-pipeline-basic-closure-v1_56";
+    private static final String INPUT_COMPONENT_PARITY_MATRIX_SCOPE =
+            "framework-validation-app-common-input-components";
+    private static final String INPUT_COMPONENT_PARITY_MATRIX_TARGET_TAGS =
+            "vaadin-radio-group,vaadin-text-area,vaadin-email-field,vaadin-integer-field,vaadin-password-field,vaadin-time-picker";
+    private static final String INPUT_COMPONENT_PARITY_MATRIX_JAVA_CLASSES =
+            "com.vaadin.flow.component.radiobutton.RadioButtonGroup,com.vaadin.flow.component.textfield.TextArea,com.vaadin.flow.component.textfield.EmailField,com.vaadin.flow.component.textfield.IntegerField,com.vaadin.flow.component.textfield.PasswordField,com.vaadin.flow.component.timepicker.TimePicker";
+    private static final String INPUT_COMPONENT_PARITY_MATRIX_COMPONENT_IDS =
+            "framework-decision,framework-notes,framework-contact-email,framework-score,framework-secret,framework-review-time,framework-input-matrix-status";
+    private static final String INPUT_COMPONENT_PARITY_MATRIX_MODULE_SPECIFIERS =
+            "@vaadin/radio-group/src/vaadin-radio-group.js,@vaadin/text-area/src/vaadin-text-area.js,@vaadin/email-field/src/vaadin-email-field.js,@vaadin/integer-field/src/vaadin-integer-field.js,@vaadin/password-field/src/vaadin-password-field.js,@vaadin/time-picker/src/vaadin-time-picker.js";
+    private static final String INPUT_COMPONENT_PARITY_MATRIX_ACCEPTABLE_FAILURES =
+            "input-component-tag-not-registered,input-component-event-rpc-missing,input-component-patch-missing,resource-specifier-unresolved,browser-import-error";
+    private static final String INPUT_COMPONENT_PARITY_MATRIX_REMAINING_BLOCKERS =
+            "multi-value-inputs,rich-text-and-file-adjacent-components,menus-navigation-overlay-components,theme-variants,dev-mode-vite-parity,installer-packaging,durable-reconnect";
+    private static final String INPUT_COMPONENT_PARITY_MATRIX_NEXT_STEP =
+            "continue broadening component parity into multi-value input, navigation/menu/overlay, theme, and remaining Vaadin component families";
+    private static final String MULTI_VALUE_NAVIGATION_DISCLOSURE_MATRIX_VERSION =
+            "flow-ipc-multi-value-navigation-disclosure-matrix-v1_58";
+    private static final String MULTI_VALUE_NAVIGATION_DISCLOSURE_MATRIX_SOURCE =
+            "input-component-parity-matrix-v1_57";
+    private static final String MULTI_VALUE_NAVIGATION_DISCLOSURE_MATRIX_SCOPE =
+            "framework-validation-app-multi-value-navigation-disclosure-menu";
+    private static final String MULTI_VALUE_NAVIGATION_DISCLOSURE_MATRIX_TARGET_TAGS =
+            "vaadin-multi-select-combo-box,vaadin-tabs,vaadin-tab,vaadin-details,vaadin-accordion,vaadin-menu-bar";
+    private static final String MULTI_VALUE_NAVIGATION_DISCLOSURE_MATRIX_JAVA_CLASSES =
+            "com.vaadin.flow.component.combobox.MultiSelectComboBox,com.vaadin.flow.component.tabs.Tabs,com.vaadin.flow.component.tabs.Tab,com.vaadin.flow.component.details.Details,com.vaadin.flow.component.accordion.Accordion,com.vaadin.flow.component.menubar.MenuBar";
+    private static final String MULTI_VALUE_NAVIGATION_DISCLOSURE_MATRIX_COMPONENT_IDS =
+            "framework-assignees,framework-nav-tabs,framework-nav-tab-audit,framework-details,framework-accordion,framework-menu,framework-menu-audit,framework-navigation-matrix-status";
+    private static final String MULTI_VALUE_NAVIGATION_DISCLOSURE_MATRIX_MODULE_SPECIFIERS =
+            "@vaadin/multi-select-combo-box/src/vaadin-multi-select-combo-box.js,@vaadin/tabs/src/vaadin-tabs.js,@vaadin/tabs/src/vaadin-tab.js,@vaadin/details/src/vaadin-details.js,@vaadin/accordion/src/vaadin-accordion.js,@vaadin/menu-bar/src/vaadin-menu-bar.js";
+    private static final String MULTI_VALUE_NAVIGATION_DISCLOSURE_MATRIX_ACCEPTABLE_FAILURES =
+            "multi-value-component-tag-not-registered,navigation-component-event-rpc-missing,navigation-component-patch-missing,resource-specifier-unresolved,browser-import-error,overlay-focus-keyboard-behavior-not-covered";
+    private static final String MULTI_VALUE_NAVIGATION_DISCLOSURE_MATRIX_REMAINING_BLOCKERS =
+            "context-menu-rich-overlay-behavior,overlay-focus-keyboard-parity,theme-variants,dev-mode-vite-parity,installer-packaging,durable-reconnect";
+    private static final String MULTI_VALUE_NAVIGATION_DISCLOSURE_MATRIX_NEXT_STEP =
+            "turn this bounded multi-value/navigation/disclosure/menu matrix into broader overlay, keyboard, focus and theme parity";
+    private static final String OVERLAY_CONTEXT_MENU_MATRIX_VERSION =
+            "flow-ipc-overlay-context-menu-matrix-v1_59";
+    private static final String OVERLAY_CONTEXT_MENU_MATRIX_SOURCE =
+            "multi-value-navigation-disclosure-matrix-v1_58";
+    private static final String OVERLAY_CONTEXT_MENU_MATRIX_SCOPE =
+            "framework-validation-app-context-menu-grid-context-menu-popover";
+    private static final String OVERLAY_CONTEXT_MENU_MATRIX_TARGET_TAGS =
+            "vaadin-context-menu,vaadin-popover,vaadin-grid";
+    private static final String OVERLAY_CONTEXT_MENU_MATRIX_JAVA_CLASSES =
+            "com.vaadin.flow.component.contextmenu.ContextMenu,com.vaadin.flow.component.grid.contextmenu.GridContextMenu,com.vaadin.flow.component.popover.Popover";
+    private static final String OVERLAY_CONTEXT_MENU_MATRIX_COMPONENT_IDS =
+            "framework-context-menu-target,framework-context-menu,framework-context-menu-audit,framework-grid-context-menu,framework-grid-context-menu-audit,framework-popover-target,framework-popover,framework-overlay-matrix-status";
+    private static final String OVERLAY_CONTEXT_MENU_MATRIX_MODULE_SPECIFIERS =
+            "@vaadin/context-menu/src/vaadin-context-menu.js,@vaadin/grid/src/vaadin-grid.js,@vaadin/popover/src/vaadin-popover.js";
+    private static final String OVERLAY_CONTEXT_MENU_MATRIX_ACCEPTABLE_FAILURES =
+            "overlay-component-tag-not-registered,overlay-component-event-rpc-missing,overlay-component-patch-missing,resource-specifier-unresolved,browser-import-error,overlay-focus-keyboard-behavior-not-covered";
+    private static final String OVERLAY_CONTEXT_MENU_MATRIX_REMAINING_BLOCKERS =
+            "overlay-focus-keyboard-parity,rich-text-editor,avatar-message-components,theme-variants,dev-mode-vite-parity,installer-packaging,durable-reconnect";
+    private static final String OVERLAY_CONTEXT_MENU_MATRIX_NEXT_STEP =
+            "turn bounded context menu and popover event parity into full overlay focus, keyboard, positioning and rich component parity";
+    private static final String CONTENT_APP_SHELL_LOGIN_MATRIX_VERSION =
+            "flow-ipc-content-app-shell-login-matrix-v1_60";
+    private static final String CONTENT_APP_SHELL_LOGIN_MATRIX_SOURCE =
+            "overlay-context-menu-matrix-v1_59";
+    private static final String CONTENT_APP_SHELL_LOGIN_MATRIX_SCOPE =
+            "framework-validation-app-avatar-message-side-nav-login-overlay";
+    private static final String CONTENT_APP_SHELL_LOGIN_MATRIX_TARGET_TAGS =
+            "vaadin-avatar,vaadin-avatar-group,vaadin-message-list,vaadin-message-input,vaadin-side-nav,vaadin-side-nav-item,vaadin-login-overlay,vaadin-login-form";
+    private static final String CONTENT_APP_SHELL_LOGIN_MATRIX_JAVA_CLASSES =
+            "com.vaadin.flow.component.avatar.Avatar,com.vaadin.flow.component.avatar.AvatarGroup,com.vaadin.flow.component.messages.MessageList,com.vaadin.flow.component.messages.MessageInput,com.vaadin.flow.component.sidenav.SideNav,com.vaadin.flow.component.sidenav.SideNavItem,com.vaadin.flow.component.login.LoginOverlay,com.vaadin.flow.component.login.LoginForm";
+    private static final String CONTENT_APP_SHELL_LOGIN_MATRIX_COMPONENT_IDS =
+            "framework-avatar,framework-avatar-group,framework-message-list,framework-message-input,framework-side-nav,framework-side-nav-audit,framework-login-overlay,framework-login-form,framework-rich-content-status";
+    private static final String CONTENT_APP_SHELL_LOGIN_MATRIX_MODULE_SPECIFIERS =
+            "@vaadin/avatar/src/vaadin-avatar.js,@vaadin/avatar-group/src/vaadin-avatar-group.js,@vaadin/message-list/src/vaadin-message-list.js,@vaadin/message-input/src/vaadin-message-input.js,@vaadin/side-nav/src/vaadin-side-nav.js,@vaadin/side-nav/src/vaadin-side-nav-item.js,@vaadin/login/src/vaadin-login-overlay.js,@vaadin/login/src/vaadin-login-form.js";
+    private static final String CONTENT_APP_SHELL_LOGIN_MATRIX_ACCEPTABLE_FAILURES =
+            "content-component-tag-not-registered,content-component-event-rpc-missing,content-component-patch-missing,resource-specifier-unresolved,browser-import-error,login-overlay-event-shape-not-covered,side-nav-router-navigation-not-covered";
+    private static final String CONTENT_APP_SHELL_LOGIN_MATRIX_REMAINING_BLOCKERS =
+            "rich-text-editor,full-login-security-flow,side-nav-router-navigation,theme-variants,overlay-focus-keyboard-parity,dev-mode-vite-parity,installer-packaging,durable-reconnect";
+    private static final String CONTENT_APP_SHELL_LOGIN_MATRIX_NEXT_STEP =
+            "turn bounded content, message, side navigation and login overlay event parity into richer editor, app-shell navigation and auth flow parity";
+    private static final String RICH_TEXT_EDITOR_MATRIX_VERSION =
+            "flow-ipc-rich-text-editor-matrix-v1_62";
+    private static final String RICH_TEXT_EDITOR_MATRIX_SOURCE =
+            "lifecycle-focus-behavior-matrix-v1_61";
+    private static final String RICH_TEXT_EDITOR_MATRIX_SCOPE =
+            "framework-validation-app-rich-text-editor";
+    private static final String RICH_TEXT_EDITOR_MATRIX_TARGET_TAGS =
+            "vaadin-rich-text-editor";
+    private static final String RICH_TEXT_EDITOR_MATRIX_JAVA_CLASSES =
+            "com.vaadin.flow.component.richtexteditor.RichTextEditor";
+    private static final String RICH_TEXT_EDITOR_MATRIX_COMPONENT_IDS =
+            "framework-rich-text-editor,framework-rich-text-editor-status";
+    private static final String RICH_TEXT_EDITOR_MATRIX_MODULE_SPECIFIERS =
+            "@vaadin/rich-text-editor/src/vaadin-rich-text-editor.js";
+    private static final String RICH_TEXT_EDITOR_MATRIX_ACCEPTABLE_FAILURES =
+            "rich-text-editor-tag-not-registered,rich-text-editor-event-rpc-missing,rich-text-editor-patch-missing,resource-specifier-unresolved,browser-import-error,rich-text-editor-selection-toolbar-not-covered";
+    private static final String RICH_TEXT_EDITOR_MATRIX_REMAINING_BLOCKERS =
+            "rich-text-editor-selection-toolbar-parity,theme-variants,dev-mode-vite-parity,overlay-focus-keyboard-parity,installer-packaging,durable-reconnect";
+    private static final String RICH_TEXT_EDITOR_MATRIX_NEXT_STEP =
+            "turn bounded RichTextEditor value-change parity into full editor toolbar, selection, keyboard and theme parity";
+    private static final String RICH_TEXT_EDITOR_BEHAVIOR_MATRIX_VERSION =
+            "flow-ipc-rich-text-editor-behavior-matrix-v1_63";
+    private static final String RICH_TEXT_EDITOR_BEHAVIOR_MATRIX_SOURCE =
+            "rich-text-editor-matrix-v1_62";
+    private static final String RICH_TEXT_EDITOR_BEHAVIOR_MATRIX_SCOPE =
+            "framework-validation-app-rich-text-editor-toolbar-selection-keyboard";
+    private static final String RICH_TEXT_EDITOR_BEHAVIOR_MATRIX_TARGET_TAGS =
+            "vaadin-rich-text-editor";
+    private static final String RICH_TEXT_EDITOR_BEHAVIOR_MATRIX_JAVA_CLASSES =
+            "com.vaadin.flow.component.richtexteditor.RichTextEditor,com.vaadin.flow.component.richtexteditor.RichTextEditorVariant";
+    private static final String RICH_TEXT_EDITOR_BEHAVIOR_MATRIX_COMPONENT_IDS =
+            "framework-rich-text-editor,framework-rich-text-editor-status,framework-rich-text-editor-behavior-status";
+    private static final String RICH_TEXT_EDITOR_BEHAVIOR_MATRIX_MODULE_SPECIFIERS =
+            "@vaadin/rich-text-editor/src/vaadin-rich-text-editor.js";
+    private static final String RICH_TEXT_EDITOR_BEHAVIOR_MATRIX_EXPECTED_EVENTS =
+            "vatori-rich-text-editor-selection,vatori-rich-text-editor-toolbar,keydown,value-changed";
+    private static final String RICH_TEXT_EDITOR_BEHAVIOR_MATRIX_EXPECTED_BEHAVIOR =
+            "selection-range,toolbar-bold,keyboard-bold,delta-html-value,compact-theme-variant";
+    private static final String RICH_TEXT_EDITOR_BEHAVIOR_MATRIX_ACCEPTABLE_FAILURES =
+            "rich-text-editor-toolbar-not-rendered,rich-text-editor-quill-api-missing,rich-text-editor-selection-event-rpc-missing,rich-text-editor-toolbar-event-rpc-missing,rich-text-editor-keyboard-event-rpc-missing,rich-text-editor-delta-html-event-rpc-missing,browser-import-error";
+    private static final String RICH_TEXT_EDITOR_BEHAVIOR_MATRIX_REMAINING_BLOCKERS =
+            "full-rich-text-editor-toolbar-parity,clipboard,full-selection-range-parity,theme-variants,dev-mode-vite-parity,overlay-focus-keyboard-parity,installer-packaging,durable-reconnect";
+    private static final String RICH_TEXT_EDITOR_BEHAVIOR_MATRIX_NEXT_STEP =
+            "turn bounded RichTextEditor toolbar, selection, keyboard and delta/html behavior into full editing, clipboard, selection and theme parity";
+    private static final String RICH_TEXT_EDITOR_EDITING_MATRIX_VERSION =
+            "flow-ipc-rich-text-editor-editing-matrix-v1_64";
+    private static final String RICH_TEXT_EDITOR_EDITING_MATRIX_SOURCE =
+            "rich-text-editor-behavior-matrix-v1_63";
+    private static final String RICH_TEXT_EDITOR_EDITING_MATRIX_SCOPE =
+            "framework-validation-app-rich-text-editor-format-clipboard-link-list";
+    private static final String RICH_TEXT_EDITOR_EDITING_MATRIX_TARGET_TAGS =
+            "vaadin-rich-text-editor";
+    private static final String RICH_TEXT_EDITOR_EDITING_MATRIX_JAVA_CLASSES =
+            "com.vaadin.flow.component.richtexteditor.RichTextEditor,com.vaadin.flow.component.richtexteditor.RichTextEditorVariant";
+    private static final String RICH_TEXT_EDITOR_EDITING_MATRIX_COMPONENT_IDS =
+            "framework-rich-text-editor,framework-rich-text-editor-status,framework-rich-text-editor-behavior-status,framework-rich-text-editor-editing-status";
+    private static final String RICH_TEXT_EDITOR_EDITING_MATRIX_MODULE_SPECIFIERS =
+            "@vaadin/rich-text-editor/src/vaadin-rich-text-editor.js";
+    private static final String RICH_TEXT_EDITOR_EDITING_MATRIX_EXPECTED_EVENTS =
+            "vatori-rich-text-editor-format,vatori-rich-text-editor-clipboard,vatori-rich-text-editor-link";
+    private static final String RICH_TEXT_EDITOR_EDITING_MATRIX_EXPECTED_BEHAVIOR =
+            "italic-format,ordered-list,link-format,clear-format,clipboard-copy-paste,extended-selection-range,compact-theme-variant";
+    private static final String RICH_TEXT_EDITOR_EDITING_MATRIX_ACCEPTABLE_FAILURES =
+            "rich-text-editor-quill-api-missing,rich-text-editor-format-event-rpc-missing,rich-text-editor-clipboard-event-rpc-missing,rich-text-editor-link-event-rpc-missing,rich-text-editor-editing-patch-missing,browser-import-error";
+    private static final String RICH_TEXT_EDITOR_EDITING_MATRIX_REMAINING_BLOCKERS =
+            "native-clipboard-integration,full-rich-text-editor-toolbar-parity,full-selection-range-parity,theme-variants,accessibility,dev-mode-vite-parity,overlay-focus-keyboard-parity,installer-packaging,durable-reconnect";
+    private static final String RICH_TEXT_EDITOR_EDITING_MATRIX_NEXT_STEP =
+            "turn bounded RichTextEditor format, clipboard, link/list and extended selection evidence into complete editor behavior, native clipboard, theme and accessibility parity";
     private static final String GRID_LAZY_DATA_PROVIDER_VERSION =
             "flow-ipc-grid-lazy-data-provider-v1_48";
     private static final String GRID_LAZY_DATA_PROVIDER_SOURCE =
@@ -1482,14 +1637,14 @@ final class FlowClientResources {
         manifest.put("componentTag", "vaadin-big-decimal-field");
         manifest.put("primaryResource", BIG_DECIMAL_FIELD_JS);
         manifest.put("resolverStrategy", "generic-component-frontend-manifest-v1_3");
-        manifest.put("componentCount", 4);
-        manifest.put("componentTags", List.of("vaadin-big-decimal-field", "vaadin-checkbox",
-                "vaadin-select", "vaadin-text-field"));
-        manifest.put("primaryResources", List.of(BIG_DECIMAL_FIELD_JS,
-                DEV_BUNDLE_CHECKBOX_ENTRY_JS,
-                DEV_BUNDLE_SELECT_ENTRY_JS,
+        String loginFormProductionArtifact = currentAppProductionBuildArtifactContaining(
+                productionBuildRootPath(appModuleDirectory()), LOGIN_FORM_TAG);
+        List<String> componentTags = new ArrayList<>(List.of("vaadin-big-decimal-field",
+                "vaadin-checkbox", "vaadin-select", "vaadin-text-field"));
+        List<String> primaryResources = new ArrayList<>(List.of(BIG_DECIMAL_FIELD_JS,
+                DEV_BUNDLE_CHECKBOX_ENTRY_JS, DEV_BUNDLE_SELECT_ENTRY_JS,
                 DEV_BUNDLE_TEXT_FIELD_ENTRY_JS));
-        manifest.put("components", List.of(
+        List<Map<String, Object>> components = new ArrayList<>(List.of(
                 Map.of("componentClass", "com.vaadin.flow.component.textfield.BigDecimalField",
                         "componentTag", "vaadin-big-decimal-field",
                         "primaryResource", BIG_DECIMAL_FIELD_JS,
@@ -1513,6 +1668,20 @@ final class FlowClientResources {
                         "requestedModule", "@vaadin/text-field/src/vaadin-text-field.js",
                         "resourceOrigin", "vaadin-dev-bundle-text-field-entry",
                         "productionBundleReady", true)));
+        if (!loginFormProductionArtifact.isBlank()) {
+            componentTags.add(LOGIN_FORM_TAG);
+            primaryResources.add(loginFormProductionArtifact);
+            components.add(Map.of("componentClass", LOGIN_FORM_COMPONENT_CLASS,
+                    "componentTag", LOGIN_FORM_TAG,
+                    "primaryResource", loginFormProductionArtifact,
+                    "requestedModule", LOGIN_FORM_REQUESTED_MODULE,
+                    "resourceOrigin", "current-app-production-webapp-build-login-form",
+                    "productionBundleReady", true));
+        }
+        manifest.put("componentCount", componentTags.size());
+        manifest.put("componentTags", componentTags);
+        manifest.put("primaryResources", primaryResources);
+        manifest.put("components", components);
         manifest.put("requestedComponent", "com.vaadin.flow.component.textfield.TextField");
         manifest.put("substituteReason", "TextField class is available but its npm frontend graph is not classpath-resolved in this smoke runtime; BigDecimalField provides a real TextField-family classpath frontend module.");
         manifest.put("classpath", true);
@@ -1640,6 +1809,8 @@ final class FlowClientResources {
         if (!Files.isDirectory(productionBuildRoot)) {
             return;
         }
+        String loginFormArtifact = currentAppProductionBuildArtifactContaining(productionBuildRoot,
+                LOGIN_FORM_TAG);
         try (Stream<Path> stream = Files.list(productionBuildRoot)) {
             for (Path artifact : stream
                     .filter(Files::isRegularFile)
@@ -1652,7 +1823,8 @@ final class FlowClientResources {
                         artifact,
                         "vaadin-current-app-production-build-resource",
                         true,
-                        currentAppProductionBuildAttributes(evidence, virtualPath));
+                        currentAppProductionBuildAttributes(evidence, virtualPath,
+                                virtualPath.equals(loginFormArtifact)));
             }
         } catch (IOException error) {
             throw new IllegalStateException("Unable to inspect current app production build output "
@@ -2948,9 +3120,602 @@ final class FlowClientResources {
                 DATA_COMPONENT_RESOURCE_MATRIX_REMAINING_BLOCKERS);
         attributes.put("dataComponentResourceMatrixNextResolutionStep",
                 DATA_COMPONENT_RESOURCE_MATRIX_NEXT_STEP);
+        attributes.putAll(inputComponentParityMatrixAttributes(evidence, buildStep, selectedArtifacts,
+                handoffReady));
+        return attributes;
+    }
+
+    private static Map<String, Object> inputComponentParityMatrixAttributes(
+            CurrentAppBuildFrontendOutputEvidence evidence,
+            FrontendBuildStepEvidence buildStep,
+            String selectedArtifacts,
+            boolean handoffReady) {
+        Path module = appModuleDirectory();
+        String appShape = packagingRuntimeHandoffAppShape(module);
+        boolean frameworkApp = "framework-validation-app".equals(appShape);
+        Map<String, Object> attributes = new LinkedHashMap<>();
+        attributes.put("inputComponentParityMatrixVersion", INPUT_COMPONENT_PARITY_MATRIX_VERSION);
+        attributes.put("inputComponentParityMatrixSource", INPUT_COMPONENT_PARITY_MATRIX_SOURCE);
+        attributes.put("inputComponentParityMatrixScope", INPUT_COMPONENT_PARITY_MATRIX_SCOPE);
+        attributes.put("inputComponentParityMatrixAppShape", appShape);
+        attributes.put("inputComponentParityMatrixTargetTags", INPUT_COMPONENT_PARITY_MATRIX_TARGET_TAGS);
+        attributes.put("inputComponentParityMatrixJavaClasses", INPUT_COMPONENT_PARITY_MATRIX_JAVA_CLASSES);
+        attributes.put("inputComponentParityMatrixComponentIds", INPUT_COMPONENT_PARITY_MATRIX_COMPONENT_IDS);
+        attributes.put("inputComponentParityMatrixModuleSpecifiers",
+                INPUT_COMPONENT_PARITY_MATRIX_MODULE_SPECIFIERS);
+        attributes.put("inputComponentParityMatrixSelectedArtifacts", selectedArtifacts);
+        attributes.put("inputComponentParityMatrixSelectedArtifactCount", csvValues(selectedArtifacts).size());
+        attributes.put("inputComponentParityMatrixGeneratedImportsOwnerSource",
+                CURRENT_APP_GENERATED_IMPORTS_OWNER_RUNTIME_CONTRACT_SOURCE);
+        attributes.put("inputComponentParityMatrixGeneratedImportsOwnerArtifact",
+                CURRENT_APP_BUILD_FRONTEND_GENERATED_IMPORTS_JS);
+        attributes.put("inputComponentParityMatrixProductionSupportArtifact",
+                evidence.sourceGeneratedImportsRootProductionSupportArtifact());
+        attributes.put("inputComponentParityMatrixProductionSupportSha256",
+                evidence.productionGeneratedImportsSha256());
+        attributes.put("inputComponentParityMatrixProductionSupportBytes",
+                evidence.productionGeneratedImportsBytes());
+        attributes.put("inputComponentParityMatrixProductionEntryArtifact",
+                evidence.productionEntryScriptVirtualPath());
+        attributes.put("inputComponentParityMatrixSourceChunkArtifact",
+                evidence.sourceChunkVirtualPath());
+        attributes.put("inputComponentParityMatrixSourceChunkStatus",
+                evidence.sourceChunkStatus());
+        attributes.put("inputComponentParityMatrixResolvedSpecifiers",
+                evidence.sourceGeneratedImportsRootResolvedSpecifiers());
+        attributes.put("inputComponentParityMatrixUnresolvedSpecifiers",
+                evidence.sourceGeneratedImportsRootUnresolvedSpecifiers());
+        attributes.put("inputComponentParityMatrixAllowedSchemes",
+                PACKAGING_FRONTEND_INVENTORY_ALLOWED_SCHEMES);
+        attributes.put("inputComponentParityMatrixIntegrityPolicy",
+                PACKAGING_FRONTEND_INVENTORY_INTEGRITY_POLICY);
+        attributes.put("inputComponentParityMatrixBuildGoal", buildStep.goal());
+        attributes.put("inputComponentParityMatrixBuildStatus", buildStep.status());
+        attributes.put("inputComponentParityMatrixOutputUsability", buildStep.outputUsability());
+        attributes.put("inputComponentParityMatrixFrameworkAppRequired", true);
+        attributes.put("inputComponentParityMatrixFrameworkAppObserved", frameworkApp);
+        attributes.put("inputComponentParityMatrixCliContractEnabled",
+                "1".equals(System.getenv("VAADIN_DESKTOP_FLOW_IPC_FRONTEND_BUILD_V1_57")));
+        attributes.put("inputComponentParityMatrixManifestReady", handoffReady && frameworkApp);
+        attributes.put("inputComponentParityMatrixRuntimeHandoffRequired", true);
+        attributes.put("inputComponentParityMatrixRuntimeHandoffReady", handoffReady);
+        attributes.put("inputComponentParityMatrixRuntimeHandoffSatisfied", false);
+        attributes.put("inputComponentParityMatrixStaged", false);
+        attributes.put("inputComponentParityMatrixCustomSchemeObserved", false);
+        attributes.put("inputComponentParityMatrixBlobFallbackObserved", false);
+        attributes.put("inputComponentParityMatrixNoLocalhost", true);
+        attributes.put("inputComponentParityMatrixFixtureSubstituted", false);
+        attributes.put("inputComponentParityMatrixAcceptableFailures",
+                INPUT_COMPONENT_PARITY_MATRIX_ACCEPTABLE_FAILURES);
+        attributes.put("inputComponentParityMatrixFailureLayer", frameworkApp
+                ? "framework-input-component-matrix-runtime-validation-pending"
+                : "framework-validation-app-not-selected");
+        attributes.put("inputComponentParityMatrixRemainingBlockers",
+                INPUT_COMPONENT_PARITY_MATRIX_REMAINING_BLOCKERS);
+        attributes.put("inputComponentParityMatrixNextResolutionStep",
+                INPUT_COMPONENT_PARITY_MATRIX_NEXT_STEP);
+        attributes.putAll(multiValueNavigationDisclosureMatrixAttributes(evidence, buildStep,
+                selectedArtifacts, handoffReady));
+        return attributes;
+    }
+
+    private static Map<String, Object> multiValueNavigationDisclosureMatrixAttributes(
+            CurrentAppBuildFrontendOutputEvidence evidence,
+            FrontendBuildStepEvidence buildStep,
+            String selectedArtifacts,
+            boolean handoffReady) {
+        Path module = appModuleDirectory();
+        String appShape = packagingRuntimeHandoffAppShape(module);
+        boolean frameworkApp = "framework-validation-app".equals(appShape);
+        Map<String, Object> attributes = new LinkedHashMap<>();
+        attributes.put("multiValueNavigationDisclosureMatrixVersion",
+                MULTI_VALUE_NAVIGATION_DISCLOSURE_MATRIX_VERSION);
+        attributes.put("multiValueNavigationDisclosureMatrixSource",
+                MULTI_VALUE_NAVIGATION_DISCLOSURE_MATRIX_SOURCE);
+        attributes.put("multiValueNavigationDisclosureMatrixScope",
+                MULTI_VALUE_NAVIGATION_DISCLOSURE_MATRIX_SCOPE);
+        attributes.put("multiValueNavigationDisclosureMatrixAppShape", appShape);
+        attributes.put("multiValueNavigationDisclosureMatrixTargetTags",
+                MULTI_VALUE_NAVIGATION_DISCLOSURE_MATRIX_TARGET_TAGS);
+        attributes.put("multiValueNavigationDisclosureMatrixJavaClasses",
+                MULTI_VALUE_NAVIGATION_DISCLOSURE_MATRIX_JAVA_CLASSES);
+        attributes.put("multiValueNavigationDisclosureMatrixComponentIds",
+                MULTI_VALUE_NAVIGATION_DISCLOSURE_MATRIX_COMPONENT_IDS);
+        attributes.put("multiValueNavigationDisclosureMatrixModuleSpecifiers",
+                MULTI_VALUE_NAVIGATION_DISCLOSURE_MATRIX_MODULE_SPECIFIERS);
+        attributes.put("multiValueNavigationDisclosureMatrixSelectedArtifacts", selectedArtifacts);
+        attributes.put("multiValueNavigationDisclosureMatrixSelectedArtifactCount",
+                csvValues(selectedArtifacts).size());
+        attributes.put("multiValueNavigationDisclosureMatrixGeneratedImportsOwnerSource",
+                CURRENT_APP_GENERATED_IMPORTS_OWNER_RUNTIME_CONTRACT_SOURCE);
+        attributes.put("multiValueNavigationDisclosureMatrixGeneratedImportsOwnerArtifact",
+                CURRENT_APP_BUILD_FRONTEND_GENERATED_IMPORTS_JS);
+        attributes.put("multiValueNavigationDisclosureMatrixProductionSupportArtifact",
+                evidence.sourceGeneratedImportsRootProductionSupportArtifact());
+        attributes.put("multiValueNavigationDisclosureMatrixProductionSupportSha256",
+                evidence.productionGeneratedImportsSha256());
+        attributes.put("multiValueNavigationDisclosureMatrixProductionSupportBytes",
+                evidence.productionGeneratedImportsBytes());
+        attributes.put("multiValueNavigationDisclosureMatrixProductionEntryArtifact",
+                evidence.productionEntryScriptVirtualPath());
+        attributes.put("multiValueNavigationDisclosureMatrixSourceChunkArtifact",
+                evidence.sourceChunkVirtualPath());
+        attributes.put("multiValueNavigationDisclosureMatrixSourceChunkStatus",
+                evidence.sourceChunkStatus());
+        attributes.put("multiValueNavigationDisclosureMatrixResolvedSpecifiers",
+                evidence.sourceGeneratedImportsRootResolvedSpecifiers());
+        attributes.put("multiValueNavigationDisclosureMatrixUnresolvedSpecifiers",
+                evidence.sourceGeneratedImportsRootUnresolvedSpecifiers());
+        attributes.put("multiValueNavigationDisclosureMatrixAllowedSchemes",
+                PACKAGING_FRONTEND_INVENTORY_ALLOWED_SCHEMES);
+        attributes.put("multiValueNavigationDisclosureMatrixIntegrityPolicy",
+                PACKAGING_FRONTEND_INVENTORY_INTEGRITY_POLICY);
+        attributes.put("multiValueNavigationDisclosureMatrixBuildGoal", buildStep.goal());
+        attributes.put("multiValueNavigationDisclosureMatrixBuildStatus", buildStep.status());
+        attributes.put("multiValueNavigationDisclosureMatrixOutputUsability",
+                buildStep.outputUsability());
+        attributes.put("multiValueNavigationDisclosureMatrixFrameworkAppRequired", true);
+        attributes.put("multiValueNavigationDisclosureMatrixFrameworkAppObserved", frameworkApp);
+        attributes.put("multiValueNavigationDisclosureMatrixCliContractEnabled",
+                "1".equals(System.getenv("VAADIN_DESKTOP_FLOW_IPC_FRONTEND_BUILD_V1_58")));
+        attributes.put("multiValueNavigationDisclosureMatrixManifestReady",
+                handoffReady && frameworkApp);
+        attributes.put("multiValueNavigationDisclosureMatrixRuntimeHandoffRequired", true);
+        attributes.put("multiValueNavigationDisclosureMatrixRuntimeHandoffReady", handoffReady);
+        attributes.put("multiValueNavigationDisclosureMatrixRuntimeHandoffSatisfied", false);
+        attributes.put("multiValueNavigationDisclosureMatrixStaged", false);
+        attributes.put("multiValueNavigationDisclosureMatrixCustomSchemeObserved", false);
+        attributes.put("multiValueNavigationDisclosureMatrixBlobFallbackObserved", false);
+        attributes.put("multiValueNavigationDisclosureMatrixNoLocalhost", true);
+        attributes.put("multiValueNavigationDisclosureMatrixFixtureSubstituted", false);
+        attributes.put("multiValueNavigationDisclosureMatrixAcceptableFailures",
+                MULTI_VALUE_NAVIGATION_DISCLOSURE_MATRIX_ACCEPTABLE_FAILURES);
+        attributes.put("multiValueNavigationDisclosureMatrixFailureLayer", frameworkApp
+                ? "framework-multi-value-navigation-disclosure-matrix-runtime-validation-pending"
+                : "framework-validation-app-not-selected");
+        attributes.put("multiValueNavigationDisclosureMatrixRemainingBlockers",
+                MULTI_VALUE_NAVIGATION_DISCLOSURE_MATRIX_REMAINING_BLOCKERS);
+        attributes.put("multiValueNavigationDisclosureMatrixNextResolutionStep",
+                MULTI_VALUE_NAVIGATION_DISCLOSURE_MATRIX_NEXT_STEP);
+        attributes.putAll(overlayContextMenuMatrixAttributes(evidence, buildStep,
+                selectedArtifacts, handoffReady));
+        return attributes;
+    }
+
+    private static Map<String, Object> overlayContextMenuMatrixAttributes(
+            CurrentAppBuildFrontendOutputEvidence evidence,
+            FrontendBuildStepEvidence buildStep,
+            String selectedArtifacts,
+            boolean handoffReady) {
+        Path module = appModuleDirectory();
+        String appShape = packagingRuntimeHandoffAppShape(module);
+        boolean frameworkApp = "framework-validation-app".equals(appShape);
+        Map<String, Object> attributes = new LinkedHashMap<>();
+        attributes.put("overlayContextMenuMatrixVersion",
+                OVERLAY_CONTEXT_MENU_MATRIX_VERSION);
+        attributes.put("overlayContextMenuMatrixSource",
+                OVERLAY_CONTEXT_MENU_MATRIX_SOURCE);
+        attributes.put("overlayContextMenuMatrixScope",
+                OVERLAY_CONTEXT_MENU_MATRIX_SCOPE);
+        attributes.put("overlayContextMenuMatrixAppShape", appShape);
+        attributes.put("overlayContextMenuMatrixTargetTags",
+                OVERLAY_CONTEXT_MENU_MATRIX_TARGET_TAGS);
+        attributes.put("overlayContextMenuMatrixJavaClasses",
+                OVERLAY_CONTEXT_MENU_MATRIX_JAVA_CLASSES);
+        attributes.put("overlayContextMenuMatrixComponentIds",
+                OVERLAY_CONTEXT_MENU_MATRIX_COMPONENT_IDS);
+        attributes.put("overlayContextMenuMatrixModuleSpecifiers",
+                OVERLAY_CONTEXT_MENU_MATRIX_MODULE_SPECIFIERS);
+        attributes.put("overlayContextMenuMatrixSelectedArtifacts", selectedArtifacts);
+        attributes.put("overlayContextMenuMatrixSelectedArtifactCount",
+                csvValues(selectedArtifacts).size());
+        attributes.put("overlayContextMenuMatrixGeneratedImportsOwnerSource",
+                CURRENT_APP_GENERATED_IMPORTS_OWNER_RUNTIME_CONTRACT_SOURCE);
+        attributes.put("overlayContextMenuMatrixGeneratedImportsOwnerArtifact",
+                CURRENT_APP_BUILD_FRONTEND_GENERATED_IMPORTS_JS);
+        attributes.put("overlayContextMenuMatrixProductionSupportArtifact",
+                evidence.sourceGeneratedImportsRootProductionSupportArtifact());
+        attributes.put("overlayContextMenuMatrixProductionSupportSha256",
+                evidence.productionGeneratedImportsSha256());
+        attributes.put("overlayContextMenuMatrixProductionSupportBytes",
+                evidence.productionGeneratedImportsBytes());
+        attributes.put("overlayContextMenuMatrixProductionEntryArtifact",
+                evidence.productionEntryScriptVirtualPath());
+        attributes.put("overlayContextMenuMatrixSourceChunkArtifact",
+                evidence.sourceChunkVirtualPath());
+        attributes.put("overlayContextMenuMatrixSourceChunkStatus",
+                evidence.sourceChunkStatus());
+        attributes.put("overlayContextMenuMatrixResolvedSpecifiers",
+                evidence.sourceGeneratedImportsRootResolvedSpecifiers());
+        attributes.put("overlayContextMenuMatrixUnresolvedSpecifiers",
+                evidence.sourceGeneratedImportsRootUnresolvedSpecifiers());
+        attributes.put("overlayContextMenuMatrixAllowedSchemes",
+                PACKAGING_FRONTEND_INVENTORY_ALLOWED_SCHEMES);
+        attributes.put("overlayContextMenuMatrixIntegrityPolicy",
+                PACKAGING_FRONTEND_INVENTORY_INTEGRITY_POLICY);
+        attributes.put("overlayContextMenuMatrixBuildGoal", buildStep.goal());
+        attributes.put("overlayContextMenuMatrixBuildStatus", buildStep.status());
+        attributes.put("overlayContextMenuMatrixOutputUsability",
+                buildStep.outputUsability());
+        attributes.put("overlayContextMenuMatrixFrameworkAppRequired", true);
+        attributes.put("overlayContextMenuMatrixFrameworkAppObserved", frameworkApp);
+        attributes.put("overlayContextMenuMatrixCliContractEnabled",
+                "1".equals(System.getenv("VAADIN_DESKTOP_FLOW_IPC_FRONTEND_BUILD_V1_59")));
+        attributes.put("overlayContextMenuMatrixManifestReady",
+                handoffReady && frameworkApp);
+        attributes.put("overlayContextMenuMatrixRuntimeHandoffRequired", true);
+        attributes.put("overlayContextMenuMatrixRuntimeHandoffReady", handoffReady);
+        attributes.put("overlayContextMenuMatrixRuntimeHandoffSatisfied", false);
+        attributes.put("overlayContextMenuMatrixStaged", false);
+        attributes.put("overlayContextMenuMatrixCustomSchemeObserved", false);
+        attributes.put("overlayContextMenuMatrixBlobFallbackObserved", false);
+        attributes.put("overlayContextMenuMatrixNoLocalhost", true);
+        attributes.put("overlayContextMenuMatrixFixtureSubstituted", false);
+        attributes.put("overlayContextMenuMatrixAcceptableFailures",
+                OVERLAY_CONTEXT_MENU_MATRIX_ACCEPTABLE_FAILURES);
+        attributes.put("overlayContextMenuMatrixFailureLayer", frameworkApp
+                ? "framework-overlay-context-menu-matrix-runtime-validation-pending"
+                : "framework-validation-app-not-selected");
+        attributes.put("overlayContextMenuMatrixRemainingBlockers",
+                OVERLAY_CONTEXT_MENU_MATRIX_REMAINING_BLOCKERS);
+        attributes.put("overlayContextMenuMatrixNextResolutionStep",
+                OVERLAY_CONTEXT_MENU_MATRIX_NEXT_STEP);
+        attributes.putAll(contentAppShellLoginMatrixAttributes(evidence, buildStep, selectedArtifacts,
+                handoffReady));
+        return attributes;
+    }
+
+    private static Map<String, Object> contentAppShellLoginMatrixAttributes(
+            CurrentAppBuildFrontendOutputEvidence evidence,
+            FrontendBuildStepEvidence buildStep,
+            String selectedArtifacts,
+            boolean handoffReady) {
+        Path module = appModuleDirectory();
+        String appShape = packagingRuntimeHandoffAppShape(module);
+        boolean frameworkApp = "framework-validation-app".equals(appShape);
+        boolean matrixHandoffReady = handoffReady
+                || productionChunkMatrixHandoffReady(evidence, buildStep);
+        Map<String, Object> attributes = new LinkedHashMap<>();
+        attributes.put("contentAppShellLoginMatrixVersion",
+                CONTENT_APP_SHELL_LOGIN_MATRIX_VERSION);
+        attributes.put("contentAppShellLoginMatrixSource",
+                CONTENT_APP_SHELL_LOGIN_MATRIX_SOURCE);
+        attributes.put("contentAppShellLoginMatrixScope",
+                CONTENT_APP_SHELL_LOGIN_MATRIX_SCOPE);
+        attributes.put("contentAppShellLoginMatrixAppShape", appShape);
+        attributes.put("contentAppShellLoginMatrixTargetTags",
+                CONTENT_APP_SHELL_LOGIN_MATRIX_TARGET_TAGS);
+        attributes.put("contentAppShellLoginMatrixJavaClasses",
+                CONTENT_APP_SHELL_LOGIN_MATRIX_JAVA_CLASSES);
+        attributes.put("contentAppShellLoginMatrixComponentIds",
+                CONTENT_APP_SHELL_LOGIN_MATRIX_COMPONENT_IDS);
+        attributes.put("contentAppShellLoginMatrixModuleSpecifiers",
+                CONTENT_APP_SHELL_LOGIN_MATRIX_MODULE_SPECIFIERS);
+        attributes.put("contentAppShellLoginMatrixSelectedArtifacts", selectedArtifacts);
+        attributes.put("contentAppShellLoginMatrixSelectedArtifactCount",
+                csvValues(selectedArtifacts).size());
+        attributes.put("contentAppShellLoginMatrixGeneratedImportsOwnerSource",
+                CURRENT_APP_GENERATED_IMPORTS_OWNER_RUNTIME_CONTRACT_SOURCE);
+        attributes.put("contentAppShellLoginMatrixGeneratedImportsOwnerArtifact",
+                CURRENT_APP_BUILD_FRONTEND_GENERATED_IMPORTS_JS);
+        attributes.put("contentAppShellLoginMatrixProductionSupportArtifact",
+                evidence.sourceGeneratedImportsRootProductionSupportArtifact());
+        attributes.put("contentAppShellLoginMatrixProductionSupportSha256",
+                evidence.productionGeneratedImportsSha256());
+        attributes.put("contentAppShellLoginMatrixProductionSupportBytes",
+                evidence.productionGeneratedImportsBytes());
+        attributes.put("contentAppShellLoginMatrixProductionEntryArtifact",
+                evidence.productionEntryScriptVirtualPath());
+        attributes.put("contentAppShellLoginMatrixSourceChunkArtifact",
+                evidence.sourceChunkVirtualPath());
+        attributes.put("contentAppShellLoginMatrixSourceChunkStatus",
+                evidence.sourceChunkStatus());
+        attributes.put("contentAppShellLoginMatrixResolvedSpecifiers",
+                evidence.sourceGeneratedImportsRootResolvedSpecifiers());
+        attributes.put("contentAppShellLoginMatrixUnresolvedSpecifiers",
+                evidence.sourceGeneratedImportsRootUnresolvedSpecifiers());
+        attributes.put("contentAppShellLoginMatrixAllowedSchemes",
+                PACKAGING_FRONTEND_INVENTORY_ALLOWED_SCHEMES);
+        attributes.put("contentAppShellLoginMatrixIntegrityPolicy",
+                PACKAGING_FRONTEND_INVENTORY_INTEGRITY_POLICY);
+        attributes.put("contentAppShellLoginMatrixBuildGoal", buildStep.goal());
+        attributes.put("contentAppShellLoginMatrixBuildStatus", buildStep.status());
+        attributes.put("contentAppShellLoginMatrixOutputUsability",
+                buildStep.outputUsability());
+        attributes.put("contentAppShellLoginMatrixFrameworkAppRequired", true);
+        attributes.put("contentAppShellLoginMatrixFrameworkAppObserved", frameworkApp);
+        attributes.put("contentAppShellLoginMatrixCliContractEnabled",
+                "1".equals(System.getenv("VAADIN_DESKTOP_FLOW_IPC_FRONTEND_BUILD_V1_60")));
+        attributes.put("contentAppShellLoginMatrixManifestReady",
+                matrixHandoffReady && frameworkApp);
+        attributes.put("contentAppShellLoginMatrixRuntimeHandoffRequired", true);
+        attributes.put("contentAppShellLoginMatrixRuntimeHandoffReady", matrixHandoffReady);
+        attributes.put("contentAppShellLoginMatrixRuntimeHandoffSatisfied", false);
+        attributes.put("contentAppShellLoginMatrixStaged", false);
+        attributes.put("contentAppShellLoginMatrixCustomSchemeObserved", false);
+        attributes.put("contentAppShellLoginMatrixBlobFallbackObserved", false);
+        attributes.put("contentAppShellLoginMatrixNoLocalhost", true);
+        attributes.put("contentAppShellLoginMatrixFixtureSubstituted", false);
+        attributes.put("contentAppShellLoginMatrixAcceptableFailures",
+                CONTENT_APP_SHELL_LOGIN_MATRIX_ACCEPTABLE_FAILURES);
+        attributes.put("contentAppShellLoginMatrixFailureLayer", frameworkApp
+                ? "framework-content-app-shell-login-matrix-runtime-validation-pending"
+                : "framework-validation-app-not-selected");
+        attributes.put("contentAppShellLoginMatrixRemainingBlockers",
+                CONTENT_APP_SHELL_LOGIN_MATRIX_REMAINING_BLOCKERS);
+        attributes.put("contentAppShellLoginMatrixNextResolutionStep",
+                CONTENT_APP_SHELL_LOGIN_MATRIX_NEXT_STEP);
+        attributes.putAll(richTextEditorMatrixAttributes(evidence, buildStep, selectedArtifacts,
+                handoffReady));
+        return attributes;
+    }
+
+    private static Map<String, Object> richTextEditorMatrixAttributes(
+            CurrentAppBuildFrontendOutputEvidence evidence,
+            FrontendBuildStepEvidence buildStep,
+            String selectedArtifacts,
+            boolean handoffReady) {
+        Path module = appModuleDirectory();
+        String appShape = packagingRuntimeHandoffAppShape(module);
+        boolean frameworkApp = "framework-validation-app".equals(appShape);
+        boolean matrixHandoffReady = handoffReady
+                || productionChunkMatrixHandoffReady(evidence, buildStep);
+        Map<String, Object> attributes = new LinkedHashMap<>();
+        attributes.put("richTextEditorMatrixVersion", RICH_TEXT_EDITOR_MATRIX_VERSION);
+        attributes.put("richTextEditorMatrixSource", RICH_TEXT_EDITOR_MATRIX_SOURCE);
+        attributes.put("richTextEditorMatrixScope", RICH_TEXT_EDITOR_MATRIX_SCOPE);
+        attributes.put("richTextEditorMatrixAppShape", appShape);
+        attributes.put("richTextEditorMatrixTargetTags", RICH_TEXT_EDITOR_MATRIX_TARGET_TAGS);
+        attributes.put("richTextEditorMatrixJavaClasses", RICH_TEXT_EDITOR_MATRIX_JAVA_CLASSES);
+        attributes.put("richTextEditorMatrixComponentIds", RICH_TEXT_EDITOR_MATRIX_COMPONENT_IDS);
+        attributes.put("richTextEditorMatrixModuleSpecifiers",
+                RICH_TEXT_EDITOR_MATRIX_MODULE_SPECIFIERS);
+        attributes.put("richTextEditorMatrixSelectedArtifacts", selectedArtifacts);
+        attributes.put("richTextEditorMatrixSelectedArtifactCount",
+                csvValues(selectedArtifacts).size());
+        attributes.put("richTextEditorMatrixGeneratedImportsOwnerSource",
+                CURRENT_APP_GENERATED_IMPORTS_OWNER_RUNTIME_CONTRACT_SOURCE);
+        attributes.put("richTextEditorMatrixGeneratedImportsOwnerArtifact",
+                CURRENT_APP_BUILD_FRONTEND_GENERATED_IMPORTS_JS);
+        attributes.put("richTextEditorMatrixProductionSupportArtifact",
+                evidence.sourceGeneratedImportsRootProductionSupportArtifact());
+        attributes.put("richTextEditorMatrixProductionSupportSha256",
+                evidence.productionGeneratedImportsSha256());
+        attributes.put("richTextEditorMatrixProductionSupportBytes",
+                evidence.productionGeneratedImportsBytes());
+        attributes.put("richTextEditorMatrixProductionEntryArtifact",
+                evidence.productionEntryScriptVirtualPath());
+        attributes.put("richTextEditorMatrixSourceChunkArtifact",
+                evidence.sourceChunkVirtualPath());
+        attributes.put("richTextEditorMatrixSourceChunkStatus",
+                evidence.sourceChunkStatus());
+        attributes.put("richTextEditorMatrixResolvedSpecifiers",
+                evidence.sourceGeneratedImportsRootResolvedSpecifiers());
+        attributes.put("richTextEditorMatrixUnresolvedSpecifiers",
+                evidence.sourceGeneratedImportsRootUnresolvedSpecifiers());
+        attributes.put("richTextEditorMatrixAllowedSchemes",
+                PACKAGING_FRONTEND_INVENTORY_ALLOWED_SCHEMES);
+        attributes.put("richTextEditorMatrixIntegrityPolicy",
+                PACKAGING_FRONTEND_INVENTORY_INTEGRITY_POLICY);
+        attributes.put("richTextEditorMatrixBuildGoal", buildStep.goal());
+        attributes.put("richTextEditorMatrixBuildStatus", buildStep.status());
+        attributes.put("richTextEditorMatrixOutputUsability", buildStep.outputUsability());
+        attributes.put("richTextEditorMatrixFrameworkAppRequired", true);
+        attributes.put("richTextEditorMatrixFrameworkAppObserved", frameworkApp);
+        attributes.put("richTextEditorMatrixCliContractEnabled",
+                "1".equals(System.getenv("VAADIN_DESKTOP_FLOW_IPC_FRONTEND_BUILD_V1_62")));
+        attributes.put("richTextEditorMatrixManifestReady", matrixHandoffReady && frameworkApp);
+        attributes.put("richTextEditorMatrixRuntimeHandoffRequired", true);
+        attributes.put("richTextEditorMatrixRuntimeHandoffReady", matrixHandoffReady);
+        attributes.put("richTextEditorMatrixRuntimeHandoffSatisfied", false);
+        attributes.put("richTextEditorMatrixStaged", false);
+        attributes.put("richTextEditorMatrixCustomSchemeObserved", false);
+        attributes.put("richTextEditorMatrixBlobFallbackObserved", false);
+        attributes.put("richTextEditorMatrixNoLocalhost", true);
+        attributes.put("richTextEditorMatrixFixtureSubstituted", false);
+        attributes.put("richTextEditorMatrixAcceptableFailures",
+                RICH_TEXT_EDITOR_MATRIX_ACCEPTABLE_FAILURES);
+        attributes.put("richTextEditorMatrixFailureLayer", frameworkApp
+                ? "framework-rich-text-editor-matrix-runtime-validation-pending"
+                : "framework-validation-app-not-selected");
+        attributes.put("richTextEditorMatrixRemainingBlockers",
+                RICH_TEXT_EDITOR_MATRIX_REMAINING_BLOCKERS);
+        attributes.put("richTextEditorMatrixNextResolutionStep",
+                RICH_TEXT_EDITOR_MATRIX_NEXT_STEP);
+        attributes.putAll(richTextEditorBehaviorMatrixAttributes(evidence, buildStep,
+                selectedArtifacts, handoffReady));
+        return attributes;
+    }
+
+    private static Map<String, Object> richTextEditorBehaviorMatrixAttributes(
+            CurrentAppBuildFrontendOutputEvidence evidence,
+            FrontendBuildStepEvidence buildStep,
+            String selectedArtifacts,
+            boolean handoffReady) {
+        Path module = appModuleDirectory();
+        String appShape = packagingRuntimeHandoffAppShape(module);
+        boolean frameworkApp = "framework-validation-app".equals(appShape);
+        boolean matrixHandoffReady = handoffReady
+                || productionChunkMatrixHandoffReady(evidence, buildStep);
+        Map<String, Object> attributes = new LinkedHashMap<>();
+        attributes.put("richTextEditorBehaviorMatrixVersion",
+                RICH_TEXT_EDITOR_BEHAVIOR_MATRIX_VERSION);
+        attributes.put("richTextEditorBehaviorMatrixSource",
+                RICH_TEXT_EDITOR_BEHAVIOR_MATRIX_SOURCE);
+        attributes.put("richTextEditorBehaviorMatrixScope",
+                RICH_TEXT_EDITOR_BEHAVIOR_MATRIX_SCOPE);
+        attributes.put("richTextEditorBehaviorMatrixAppShape", appShape);
+        attributes.put("richTextEditorBehaviorMatrixTargetTags",
+                RICH_TEXT_EDITOR_BEHAVIOR_MATRIX_TARGET_TAGS);
+        attributes.put("richTextEditorBehaviorMatrixJavaClasses",
+                RICH_TEXT_EDITOR_BEHAVIOR_MATRIX_JAVA_CLASSES);
+        attributes.put("richTextEditorBehaviorMatrixComponentIds",
+                RICH_TEXT_EDITOR_BEHAVIOR_MATRIX_COMPONENT_IDS);
+        attributes.put("richTextEditorBehaviorMatrixModuleSpecifiers",
+                RICH_TEXT_EDITOR_BEHAVIOR_MATRIX_MODULE_SPECIFIERS);
+        attributes.put("richTextEditorBehaviorMatrixExpectedEvents",
+                RICH_TEXT_EDITOR_BEHAVIOR_MATRIX_EXPECTED_EVENTS);
+        attributes.put("richTextEditorBehaviorMatrixExpectedBehavior",
+                RICH_TEXT_EDITOR_BEHAVIOR_MATRIX_EXPECTED_BEHAVIOR);
+        attributes.put("richTextEditorBehaviorMatrixSelectedArtifacts", selectedArtifacts);
+        attributes.put("richTextEditorBehaviorMatrixSelectedArtifactCount",
+                csvValues(selectedArtifacts).size());
+        attributes.put("richTextEditorBehaviorMatrixGeneratedImportsOwnerSource",
+                CURRENT_APP_GENERATED_IMPORTS_OWNER_RUNTIME_CONTRACT_SOURCE);
+        attributes.put("richTextEditorBehaviorMatrixGeneratedImportsOwnerArtifact",
+                CURRENT_APP_BUILD_FRONTEND_GENERATED_IMPORTS_JS);
+        attributes.put("richTextEditorBehaviorMatrixProductionSupportArtifact",
+                evidence.sourceGeneratedImportsRootProductionSupportArtifact());
+        attributes.put("richTextEditorBehaviorMatrixProductionSupportSha256",
+                evidence.productionGeneratedImportsSha256());
+        attributes.put("richTextEditorBehaviorMatrixProductionSupportBytes",
+                evidence.productionGeneratedImportsBytes());
+        attributes.put("richTextEditorBehaviorMatrixProductionEntryArtifact",
+                evidence.productionEntryScriptVirtualPath());
+        attributes.put("richTextEditorBehaviorMatrixSourceChunkArtifact",
+                evidence.sourceChunkVirtualPath());
+        attributes.put("richTextEditorBehaviorMatrixSourceChunkStatus",
+                evidence.sourceChunkStatus());
+        attributes.put("richTextEditorBehaviorMatrixResolvedSpecifiers",
+                evidence.sourceGeneratedImportsRootResolvedSpecifiers());
+        attributes.put("richTextEditorBehaviorMatrixUnresolvedSpecifiers",
+                evidence.sourceGeneratedImportsRootUnresolvedSpecifiers());
+        attributes.put("richTextEditorBehaviorMatrixAllowedSchemes",
+                PACKAGING_FRONTEND_INVENTORY_ALLOWED_SCHEMES);
+        attributes.put("richTextEditorBehaviorMatrixIntegrityPolicy",
+                PACKAGING_FRONTEND_INVENTORY_INTEGRITY_POLICY);
+        attributes.put("richTextEditorBehaviorMatrixBuildGoal", buildStep.goal());
+        attributes.put("richTextEditorBehaviorMatrixBuildStatus", buildStep.status());
+        attributes.put("richTextEditorBehaviorMatrixOutputUsability",
+                buildStep.outputUsability());
+        attributes.put("richTextEditorBehaviorMatrixFrameworkAppRequired", true);
+        attributes.put("richTextEditorBehaviorMatrixFrameworkAppObserved", frameworkApp);
+        attributes.put("richTextEditorBehaviorMatrixCliContractEnabled",
+                "1".equals(System.getenv("VAADIN_DESKTOP_FLOW_IPC_FRONTEND_BUILD_V1_63")));
+        attributes.put("richTextEditorBehaviorMatrixManifestReady",
+                matrixHandoffReady && frameworkApp);
+        attributes.put("richTextEditorBehaviorMatrixRuntimeHandoffRequired", true);
+        attributes.put("richTextEditorBehaviorMatrixRuntimeHandoffReady", matrixHandoffReady);
+        attributes.put("richTextEditorBehaviorMatrixRuntimeHandoffSatisfied", false);
+        attributes.put("richTextEditorBehaviorMatrixStaged", false);
+        attributes.put("richTextEditorBehaviorMatrixCustomSchemeObserved", false);
+        attributes.put("richTextEditorBehaviorMatrixBlobFallbackObserved", false);
+        attributes.put("richTextEditorBehaviorMatrixNoLocalhost", true);
+        attributes.put("richTextEditorBehaviorMatrixFixtureSubstituted", false);
+        attributes.put("richTextEditorBehaviorMatrixAcceptableFailures",
+                RICH_TEXT_EDITOR_BEHAVIOR_MATRIX_ACCEPTABLE_FAILURES);
+        attributes.put("richTextEditorBehaviorMatrixFailureLayer", frameworkApp
+                ? "framework-rich-text-editor-behavior-matrix-runtime-validation-pending"
+                : "framework-validation-app-not-selected");
+        attributes.put("richTextEditorBehaviorMatrixRemainingBlockers",
+                RICH_TEXT_EDITOR_BEHAVIOR_MATRIX_REMAINING_BLOCKERS);
+        attributes.put("richTextEditorBehaviorMatrixNextResolutionStep",
+                RICH_TEXT_EDITOR_BEHAVIOR_MATRIX_NEXT_STEP);
+        attributes.putAll(richTextEditorEditingMatrixAttributes(evidence, buildStep,
+                selectedArtifacts, handoffReady));
+        return attributes;
+    }
+
+    private static Map<String, Object> richTextEditorEditingMatrixAttributes(
+            CurrentAppBuildFrontendOutputEvidence evidence,
+            FrontendBuildStepEvidence buildStep,
+            String selectedArtifacts,
+            boolean handoffReady) {
+        Path module = appModuleDirectory();
+        String appShape = packagingRuntimeHandoffAppShape(module);
+        boolean frameworkApp = "framework-validation-app".equals(appShape);
+        boolean matrixHandoffReady = handoffReady
+                || productionChunkMatrixHandoffReady(evidence, buildStep);
+        Map<String, Object> attributes = new LinkedHashMap<>();
+        attributes.put("richTextEditorEditingMatrixVersion",
+                RICH_TEXT_EDITOR_EDITING_MATRIX_VERSION);
+        attributes.put("richTextEditorEditingMatrixSource",
+                RICH_TEXT_EDITOR_EDITING_MATRIX_SOURCE);
+        attributes.put("richTextEditorEditingMatrixScope",
+                RICH_TEXT_EDITOR_EDITING_MATRIX_SCOPE);
+        attributes.put("richTextEditorEditingMatrixAppShape", appShape);
+        attributes.put("richTextEditorEditingMatrixTargetTags",
+                RICH_TEXT_EDITOR_EDITING_MATRIX_TARGET_TAGS);
+        attributes.put("richTextEditorEditingMatrixJavaClasses",
+                RICH_TEXT_EDITOR_EDITING_MATRIX_JAVA_CLASSES);
+        attributes.put("richTextEditorEditingMatrixComponentIds",
+                RICH_TEXT_EDITOR_EDITING_MATRIX_COMPONENT_IDS);
+        attributes.put("richTextEditorEditingMatrixModuleSpecifiers",
+                RICH_TEXT_EDITOR_EDITING_MATRIX_MODULE_SPECIFIERS);
+        attributes.put("richTextEditorEditingMatrixExpectedEvents",
+                RICH_TEXT_EDITOR_EDITING_MATRIX_EXPECTED_EVENTS);
+        attributes.put("richTextEditorEditingMatrixExpectedBehavior",
+                RICH_TEXT_EDITOR_EDITING_MATRIX_EXPECTED_BEHAVIOR);
+        attributes.put("richTextEditorEditingMatrixSelectedArtifacts", selectedArtifacts);
+        attributes.put("richTextEditorEditingMatrixSelectedArtifactCount",
+                csvValues(selectedArtifacts).size());
+        attributes.put("richTextEditorEditingMatrixGeneratedImportsOwnerSource",
+                CURRENT_APP_GENERATED_IMPORTS_OWNER_RUNTIME_CONTRACT_SOURCE);
+        attributes.put("richTextEditorEditingMatrixGeneratedImportsOwnerArtifact",
+                CURRENT_APP_BUILD_FRONTEND_GENERATED_IMPORTS_JS);
+        attributes.put("richTextEditorEditingMatrixProductionSupportArtifact",
+                evidence.sourceGeneratedImportsRootProductionSupportArtifact());
+        attributes.put("richTextEditorEditingMatrixProductionSupportSha256",
+                evidence.productionGeneratedImportsSha256());
+        attributes.put("richTextEditorEditingMatrixProductionSupportBytes",
+                evidence.productionGeneratedImportsBytes());
+        attributes.put("richTextEditorEditingMatrixProductionEntryArtifact",
+                evidence.productionEntryScriptVirtualPath());
+        attributes.put("richTextEditorEditingMatrixSourceChunkArtifact",
+                evidence.sourceChunkVirtualPath());
+        attributes.put("richTextEditorEditingMatrixSourceChunkStatus",
+                evidence.sourceChunkStatus());
+        attributes.put("richTextEditorEditingMatrixResolvedSpecifiers",
+                evidence.sourceGeneratedImportsRootResolvedSpecifiers());
+        attributes.put("richTextEditorEditingMatrixUnresolvedSpecifiers",
+                evidence.sourceGeneratedImportsRootUnresolvedSpecifiers());
+        attributes.put("richTextEditorEditingMatrixAllowedSchemes",
+                PACKAGING_FRONTEND_INVENTORY_ALLOWED_SCHEMES);
+        attributes.put("richTextEditorEditingMatrixIntegrityPolicy",
+                PACKAGING_FRONTEND_INVENTORY_INTEGRITY_POLICY);
+        attributes.put("richTextEditorEditingMatrixBuildGoal", buildStep.goal());
+        attributes.put("richTextEditorEditingMatrixBuildStatus", buildStep.status());
+        attributes.put("richTextEditorEditingMatrixOutputUsability",
+                buildStep.outputUsability());
+        attributes.put("richTextEditorEditingMatrixFrameworkAppRequired", true);
+        attributes.put("richTextEditorEditingMatrixFrameworkAppObserved", frameworkApp);
+        attributes.put("richTextEditorEditingMatrixCliContractEnabled",
+                "1".equals(System.getenv("VAADIN_DESKTOP_FLOW_IPC_FRONTEND_BUILD_V1_64")));
+        attributes.put("richTextEditorEditingMatrixManifestReady",
+                matrixHandoffReady && frameworkApp);
+        attributes.put("richTextEditorEditingMatrixRuntimeHandoffRequired", true);
+        attributes.put("richTextEditorEditingMatrixRuntimeHandoffReady", matrixHandoffReady);
+        attributes.put("richTextEditorEditingMatrixRuntimeHandoffSatisfied", false);
+        attributes.put("richTextEditorEditingMatrixStaged", false);
+        attributes.put("richTextEditorEditingMatrixCustomSchemeObserved", false);
+        attributes.put("richTextEditorEditingMatrixBlobFallbackObserved", false);
+        attributes.put("richTextEditorEditingMatrixNoLocalhost", true);
+        attributes.put("richTextEditorEditingMatrixFixtureSubstituted", false);
+        attributes.put("richTextEditorEditingMatrixAcceptableFailures",
+                RICH_TEXT_EDITOR_EDITING_MATRIX_ACCEPTABLE_FAILURES);
+        attributes.put("richTextEditorEditingMatrixFailureLayer", frameworkApp
+                ? "framework-rich-text-editor-editing-matrix-runtime-validation-pending"
+                : "framework-validation-app-not-selected");
+        attributes.put("richTextEditorEditingMatrixRemainingBlockers",
+                RICH_TEXT_EDITOR_EDITING_MATRIX_REMAINING_BLOCKERS);
+        attributes.put("richTextEditorEditingMatrixNextResolutionStep",
+                RICH_TEXT_EDITOR_EDITING_MATRIX_NEXT_STEP);
         attributes.putAll(gridLazyDataProviderAttributes(evidence, buildStep, selectedArtifacts,
                 handoffReady));
         return attributes;
+    }
+
+    private static boolean productionChunkMatrixHandoffReady(
+            CurrentAppBuildFrontendOutputEvidence evidence,
+            FrontendBuildStepEvidence buildStep) {
+        return evidence.sourceGeneratedImportsObserved()
+                && "available".equals(evidence.sourceChunkStatus())
+                && !evidence.sourceChunkVirtualPath().isBlank()
+                && !evidence.productionEntryScriptVirtualPath().isBlank()
+                && !evidence.productionBuildJsVirtualPaths().isBlank()
+                && evidence.statsObserved()
+                && evidence.prodBundleObserved()
+                && "success".equals(buildStep.status());
     }
 
     private static Map<String, Object> gridLazyDataProviderAttributes(
@@ -3818,7 +4583,8 @@ final class FlowClientResources {
     }
 
     private static Map<String, Object> currentAppProductionBuildAttributes(
-            CurrentAppBuildFrontendOutputEvidence evidence, String virtualPath) {
+            CurrentAppBuildFrontendOutputEvidence evidence, String virtualPath,
+            boolean loginFormPrimaryResource) {
         Map<String, Object> attributes = new LinkedHashMap<>();
         attributes.put("componentFrontendResource", true);
         attributes.put("currentAppBuildFrontendResource", true);
@@ -3850,6 +4616,20 @@ final class FlowClientResources {
         attributes.put("browserExecutionPlan", "stage-current-app-production-build-module-with-relative-rewrites-v1_34");
         attributes.put("importRewrites", currentAppProductionBuildImportRewrites(evidence, virtualPath));
         attributes.put("transitiveImports", currentAppProductionBuildTransitiveImports(evidence, virtualPath));
+        if (loginFormPrimaryResource) {
+            attributes.put("componentPrimary", true);
+            attributes.put("componentClass", LOGIN_FORM_COMPONENT_CLASS);
+            attributes.put("componentTag", LOGIN_FORM_TAG);
+            attributes.put("requestedModule", LOGIN_FORM_REQUESTED_MODULE);
+            attributes.put("resourceOrigin", "current-app-production-webapp-build-login-form");
+            attributes.put("executionPolicy", "execute-current-app-login-form-production-build-v1_101");
+            attributes.put("lookupKind", "LoginForm-current-app-production-build-resource-v1_101");
+            attributes.put("loginFormProductionBuildResourceVersion",
+                    LOGIN_FORM_PRODUCTION_BUILD_RESOURCE_VERSION);
+            attributes.put("loginFormProductionBuildResourceArtifact", virtualPath);
+            attributes.put("loginFormProductionBuildResourceNoLocalhost", true);
+            attributes.put("loginFormProductionBuildResourceFixtureSubstituted", false);
+        }
         attributes.putAll(currentAppGeneratedImportsRootPackageGraphAttributes(evidence));
         attributes.putAll(currentAppBuildFrontendOutputAttributes());
         return attributes;
@@ -5089,6 +5869,34 @@ final class FlowClientResources {
                     .toList());
         } catch (IOException ignored) {
             return "";
+        }
+    }
+
+    private static String currentAppProductionBuildArtifactContaining(Path productionBuildRoot, String marker) {
+        if (!Files.isDirectory(productionBuildRoot) || marker == null || marker.isBlank()) {
+            return "";
+        }
+        try (Stream<Path> stream = Files.list(productionBuildRoot)) {
+            for (Path path : stream
+                    .filter(Files::isRegularFile)
+                    .filter(file -> file.getFileName().toString().endsWith(".js"))
+                    .sorted()
+                    .toList()) {
+                if (fileContains(path, marker)) {
+                    return currentAppProductionBuildVirtualPath(path);
+                }
+            }
+        } catch (IOException ignored) {
+            return "";
+        }
+        return "";
+    }
+
+    private static boolean fileContains(Path file, String marker) {
+        try {
+            return Files.readString(file, StandardCharsets.UTF_8).contains(marker);
+        } catch (IOException ignored) {
+            return false;
         }
     }
 

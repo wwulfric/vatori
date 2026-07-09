@@ -1,0 +1,4 @@
+interface:
+  display_name: "Flow Component Parity"
+  short_description: "推进 Vaadin Flow 组件 parity 切片"
+  default_prompt: "Use $flow-component-parity to complete one verifiable Vaadin Flow component parity slice."

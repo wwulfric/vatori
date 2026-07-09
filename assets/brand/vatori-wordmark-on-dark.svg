@@ -1,0 +1,8 @@
+<svg xmlns="http://www.w3.org/2000/svg" width="1600" height="520" viewBox="0 0 1600 520" role="img" aria-labelledby="title desc">
+  <title id="title">vatori wordmark for dark backgrounds</title>
+  <desc id="desc">The selected vatori icon paired with a warm-white lowercase wordmark for dark backgrounds.</desc>
+  <image href="vatori-icon-1024.png" x="64" y="64" width="392" height="392" preserveAspectRatio="xMidYMid meet"/>
+  <text x="536" y="338" fill="#FFFCF4"
+        font-family="Avenir Next, Avenir, Helvetica Neue, Helvetica, Arial, sans-serif"
+        font-size="202" font-weight="700" letter-spacing="0">vatori</text>
+</svg>

@@ -51,9 +51,9 @@ For historical or narrower slices, keep the gate in `DesktopTraceInspector` and
 the verification recipe in documentation. Do not add one permanent `.ndjson`
 file per version.
 
-Older `docs/goal-*.md` files may mention trace files that were captured during a
-specific development milestone. Treat those as historical notes about what was
-run at the time, not as current repository fixtures that must exist in Git.
+Do not add per-run goal snapshots such as `docs/goal-*.md`, or archive
+directories for those snapshots. Use git history, CI artifacts, release assets
+or external storage when milestone evidence must be retained.
 
 ## Examples vs Test Apps
 

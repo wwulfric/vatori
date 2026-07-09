@@ -17,10 +17,16 @@ check_forbidden_path() {
   case "$path" in
     .build/*|\
     .m2/*|\
+    .DS_Store|\
+    */.DS_Store|\
+    docs/goal-*.md|\
+    docs/archive/goals/*|\
     */target/*|\
     target/*|\
     vaadin-desktop-host-tauri/*|\
-    docs/traces/*.ndjson|\
+    docs/traces/*|\
+    assets/brand/vatori.iconset/*|\
+    assets/brand/vatori-wordmark.svg.png|\
     */src/main/frontend/generated/*|\
     */src/main/frontend/index.html|\
     */src/main/bundles/*|\
@@ -53,6 +59,36 @@ check_size() {
   fi
 }
 
+check_top_level_docs() {
+  local docs=(AGENTS.md README.md README.zh-CN.md)
+  local path pattern
+
+  for path in "${docs[@]}"; do
+    [[ -f "$path" ]] || continue
+
+    if grep -En '^(<<<<<<<|=======|>>>>>>>)' "$path" >/dev/null; then
+      fail "top-level doc contains merge conflict markers: $path"
+    fi
+
+    if grep -Ein 'kiss|skill store|/kiss|\$kiss|docs/kiss' "$path" >/dev/null; then
+      fail "top-level doc contains unrelated KISS/skill-store content: $path"
+    fi
+
+    for pattern in \
+      'v1\.[0-9]' \
+      'v1_[0-9]' \
+      'goal-[0-9]' \
+      'Goal [0-9]' \
+      '--require-flow-ipc-v1_[0-9]' \
+      'FLOW_IPC_FRONTEND_BUILD_GOAL'
+    do
+      if grep -En -- "$pattern" "$path" >/dev/null; then
+        fail "top-level doc contains implementation batch or trace-gate detail: $path ($pattern)"
+      fi
+    done
+  done
+}
+
 while IFS= read -r -d '' path; do
   if [[ ! -e "$path" ]]; then
     continue
@@ -60,6 +96,8 @@ while IFS= read -r -d '' path; do
   check_forbidden_path "$path"
   check_size "$path"
 done < <(git ls-files -z)
+
+check_top_level_docs
 
 if (( failed )); then
   exit 1

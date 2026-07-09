@@ -1,0 +1,4 @@
+interface:
+  display_name: "Vatori Postmortem"
+  short_description: "Curated fix-to-postmortem workflow for vatori"
+  default_prompt: "Use $postmortem to analyze representative vatori fix commits since the last release tag and update ./postmortem/."

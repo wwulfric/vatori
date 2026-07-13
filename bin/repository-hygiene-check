@@ -80,13 +80,48 @@ check_top_level_docs() {
       'goal-[0-9]' \
       'Goal [0-9]' \
       '--require-flow-ipc-v1_[0-9]' \
-      'FLOW_IPC_FRONTEND_BUILD_GOAL'
+      'FLOW_IPC_FRONTEND_BUILD_(MAVEN_)?GOAL'
     do
       if grep -En -- "$pattern" "$path" >/dev/null; then
         fail "top-level doc contains implementation batch or trace-gate detail: $path ($pattern)"
       fi
     done
   done
+}
+
+check_swift_host_launcher_contract() {
+  local host_config="vaadin-desktop-host-swift/Sources/VaadinDesktopHost/HostConfig.swift"
+  local launcher="bin/vaadin-desktop-swift-host-launch"
+  local missing=()
+  local token
+
+  [[ -f "$host_config" && -f "$launcher" ]] || return 0
+
+  while IFS= read -r token; do
+    [[ -n "$token" ]] || continue
+    if ! grep -Fq -- "$token" "$launcher"; then
+      missing+=("$token")
+    fi
+  done < <(
+    grep -Eoh 'environment\["VAADIN_DESKTOP_[A-Z0-9_]+"\]' "$host_config" \
+      | sed -E 's/.*"([^"]+)".*/\1/' \
+      | sort -u
+  )
+
+  while IFS= read -r token; do
+    [[ -n "$token" ]] || continue
+    if ! grep -Fq -- "$token" "$launcher"; then
+      missing+=("$token")
+    fi
+  done < <(
+    grep -Eoh 'case "--flow-ipc-auto-[^"]+"' "$host_config" \
+      | sed -E 's/.*"([^"]+)".*/\1/' \
+      | sort -u
+  )
+
+  if (( ${#missing[@]} > 0 )); then
+    fail "Swift HostConfig env/CLI token is not represented by launcher: ${missing[*]}"
+  fi
 }
 
 while IFS= read -r -d '' path; do
@@ -98,6 +133,7 @@ while IFS= read -r -d '' path; do
 done < <(git ls-files -z)
 
 check_top_level_docs
+check_swift_host_launcher_contract
 
 if (( failed )); then
   exit 1

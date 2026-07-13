@@ -1645,13 +1645,14 @@ public final class FlowClientResourceSmokeMain {
                 && !Objects.equals(pluginStatus, "unknown")) {
             throw new IllegalStateException(label + " plugin status has unexpected value: " + pluginStatus);
         }
-        Object goalResult = metadata.get("frontendBuildPreflightGoalResult");
-        if (!Objects.equals(goalResult, "skipped")
-                && !Objects.equals(goalResult, "version-unavailable")
-                && !Objects.equals(goalResult, "plugin-unavailable")
-                && !Objects.equals(goalResult, "success")
-                && !Objects.equals(goalResult, "failed")) {
-            throw new IllegalStateException(label + " goal result has unexpected value: " + goalResult);
+        Object mavenGoalResult = metadata.get("frontendBuildPreflightMavenGoalResult");
+        if (!Objects.equals(mavenGoalResult, "skipped")
+                && !Objects.equals(mavenGoalResult, "version-unavailable")
+                && !Objects.equals(mavenGoalResult, "plugin-unavailable")
+                && !Objects.equals(mavenGoalResult, "success")
+                && !Objects.equals(mavenGoalResult, "failed")) {
+            throw new IllegalStateException(
+                    label + " Maven goal result has unexpected value: " + mavenGoalResult);
         }
         Object outputUsability = metadata.get("frontendBuildPreflightOutputUsability");
         if (!Objects.equals(outputUsability, "not-inspected")
@@ -1667,7 +1668,7 @@ public final class FlowClientResourceSmokeMain {
         Object failureLayer = metadata.get("frontendBuildPreflightFailureLayer");
         if (!Objects.equals(failureLayer, "frontend-build-preflight-not-enabled")
                 && !Objects.equals(failureLayer, "frontend-build-plugin-unavailable")
-                && !Objects.equals(failureLayer, "frontend-build-goal-failed-before-output")
+                && !Objects.equals(failureLayer, "frontend-build-maven-goal-failed-before-output")
                 && !Objects.equals(failureLayer, "frontend-build-plugin-resolved-output-incomplete")
                 && !Objects.equals(failureLayer, "current-app-build-output-has-no-generated-lazy-chunk")
                 && !Objects.equals(failureLayer, "current-app-build-output-generated-chunk-file-missing")

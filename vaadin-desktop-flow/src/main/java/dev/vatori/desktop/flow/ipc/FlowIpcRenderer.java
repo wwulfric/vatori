@@ -11,11 +11,97 @@ import java.util.ArrayList;
 import java.util.IdentityHashMap;
 import java.util.LinkedHashMap;
 import java.util.List;
+import java.util.Locale;
 import java.util.Map;
 import java.util.Optional;
+import java.util.Set;
 import java.util.concurrent.atomic.AtomicInteger;
 
 final class FlowIpcRenderer {
+    private static final String REDACTED_VALUE = "[redacted]";
+
+    private static final Set<String> RENDERER_ATTRIBUTE_NAMES = Set.of(
+            "aria-activedescendant",
+            "aria-autocomplete",
+            "aria-checked",
+            "aria-controls",
+            "aria-describedby",
+            "aria-disabled",
+            "aria-expanded",
+            "aria-haspopup",
+            "aria-hidden",
+            "aria-invalid",
+            "aria-label",
+            "aria-labelledby",
+            "aria-live",
+            "aria-modal",
+            "aria-multiline",
+            "aria-owns",
+            "aria-placeholder",
+            "aria-pressed",
+            "aria-readonly",
+            "aria-required",
+            "aria-selected",
+            "autocomplete",
+            "autocapitalize",
+            "autocorrect",
+            "checked",
+            "disabled",
+            "hidden",
+            "inputmode",
+            "invalid",
+            "max",
+            "maxlength",
+            "min",
+            "minlength",
+            "name",
+            "opened",
+            "pattern",
+            "placeholder",
+            "readonly",
+            "required",
+            "role",
+            "selected",
+            "slot",
+            "spellcheck",
+            "step",
+            "tabindex",
+            "theme",
+            "title",
+            "type");
+
+    private static final Set<String> RENDERER_PROPERTY_NAMES = Set.of(
+            "allowCustomValue",
+            "autofocus",
+            "autocomplete",
+            "checked",
+            "clearButtonVisible",
+            "disabled",
+            "errorMessage",
+            "helperText",
+            "i18n",
+            "indeterminate",
+            "inputmode",
+            "invalid",
+            "label",
+            "manualValidation",
+            "max",
+            "maxlength",
+            "min",
+            "minlength",
+            "name",
+            "opened",
+            "pattern",
+            "placeholder",
+            "readOnly",
+            "readonly",
+            "required",
+            "requiredIndicatorVisible",
+            "selected",
+            "step",
+            "theme",
+            "title");
+
     private final IdentityHashMap<Component, String> ids = new IdentityHashMap<>();
     private final Map<String, Component> components = new LinkedHashMap<>();
     private final AtomicInteger sequence = new AtomicInteger();
@@ -123,7 +209,7 @@ final class FlowIpcRenderer {
         try {
             Element element = component.getElement();
             element.getAttributeNames()
-                    .filter(name -> !"id".equalsIgnoreCase(name))
+                    .filter(FlowIpcRenderer::isAllowedRendererAttributeName)
                     .forEach(name -> attributes.put(name, element.getAttribute(name)));
         } catch (UnsupportedOperationException error) {
             return Map.of();
@@ -136,7 +222,7 @@ final class FlowIpcRenderer {
         try {
             Element element = component.getElement();
             element.getPropertyNames()
-                    .filter(FlowIpcRenderer::isSafePrimitivePropertyName)
+                    .filter(FlowIpcRenderer::isAllowedRendererPropertyName)
                     .forEach(name -> {
                         Object value = rendererPropertyValue(name, element.getPropertyRaw(name));
                         if (value != null) {
@@ -149,11 +235,41 @@ final class FlowIpcRenderer {
         return properties;
     }
 
-    private static boolean isSafePrimitivePropertyName(String name) {
-        return !("id".equals(name)
-                || "innerHTML".equals(name)
-                || "outerHTML".equals(name)
-                || "textContent".equals(name));
+    private static boolean isAllowedRendererAttributeName(String name) {
+        if (name == null || name.isBlank()) {
+            return false;
+        }
+        String normalized = name.toLowerCase(Locale.ROOT);
+        return !isSensitiveRendererStateName(normalized)
+                && (RENDERER_ATTRIBUTE_NAMES.contains(normalized) || normalized.startsWith("aria-"));
+    }
+
+    private static boolean isAllowedRendererPropertyName(String name) {
+        if (name == null || name.isBlank()) {
+            return false;
+        }
+        return RENDERER_PROPERTY_NAMES.contains(name) && !isSensitiveRendererStateName(name);
+    }
+
+    private static boolean isSensitiveRendererStateName(String name) {
+        String normalized = name.toLowerCase(Locale.ROOT);
+        return normalized.contains("password")
+                || normalized.contains("passwd")
+                || normalized.contains("pwd")
+                || normalized.contains("secret")
+                || normalized.contains("token")
+                || normalized.contains("csrf")
+                || normalized.contains("credential")
+                || normalized.contains("authorization")
+                || normalized.contains("cookie")
+                || normalized.contains("session")
+                || normalized.contains("apikey")
+                || normalized.contains("api-key")
+                || normalized.contains("privatekey")
+                || normalized.contains("private-key")
+                || normalized.contains("securitykey")
+                || normalized.contains("security-key")
+                || "value".equals(normalized);
     }
 
     private static Object rendererPropertyValue(String name, Serializable value) {
@@ -162,7 +278,7 @@ final class FlowIpcRenderer {
             return primitiveValue;
         }
         if ("i18n".equals(name) && value instanceof JsonNode jsonValue) {
-            return jsonValue(jsonValue);
+            return jsonValue(name, jsonValue);
         }
         return null;
     }
@@ -174,21 +290,24 @@ final class FlowIpcRenderer {
         return null;
     }
 
-    private static Object jsonValue(JsonNode node) {
+    private static Object jsonValue(String name, JsonNode node) {
+        if (isSensitiveRendererStateName(name)) {
+            return REDACTED_VALUE;
+        }
         if (node == null || node.isMissingNode() || node.isNull()) {
             return null;
         }
         if (node.isObject()) {
             Map<String, Object> values = new LinkedHashMap<>();
             for (Map.Entry<String, JsonNode> entry : node.properties()) {
-                values.put(entry.getKey(), jsonValue(entry.getValue()));
+                values.put(entry.getKey(), jsonValue(entry.getKey(), entry.getValue()));
             }
             return values;
         }
         if (node.isArray()) {
             List<Object> values = new ArrayList<>();
             for (JsonNode value : node.values()) {
-                values.add(jsonValue(value));
+                values.add(jsonValue(name, value));
             }
             return values;
         }

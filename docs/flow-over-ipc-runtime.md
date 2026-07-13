@@ -202,7 +202,7 @@ Compile both runtimes:
 ```bash
 source /Users/bytedance/.sdkman/bin/sdkman-init.sh
 mvn -o -Dmaven.repo.local=/Users/bytedance/IdeaProjects/vatori/.m2/repository -DskipTests compile
-CLANG_MODULE_CACHE_PATH=/Users/bytedance/IdeaProjects/vatori/.build/clang-module-cache /usr/bin/swiftc vaadin-desktop-host-swift/Sources/VaadinDesktopHost/main.swift -o /private/tmp/VaadinDesktopHost-flow-ipc-check
+CLANG_MODULE_CACHE_PATH=/Users/bytedance/IdeaProjects/vatori/.build/clang-module-cache /usr/bin/swiftc vaadin-desktop-host-swift/Sources/VaadinDesktopHost/*.swift -o /private/tmp/VaadinDesktopHost-flow-ipc-check
 ```
 
 Run a real-window smoke verification:

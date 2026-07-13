@@ -1,0 +1,60 @@
+#!/usr/bin/env bash
+set -euo pipefail
+
+ROOT="${1:?repo root is required}"
+
+if [[ ! -x /usr/bin/swiftc ]]; then
+  echo "swiftc not found at /usr/bin/swiftc. Install Xcode command line tools before running the Swift host." >&2
+  exit 1
+fi
+
+SWIFT_HOST_BUILD="$ROOT/.build/vaadin-desktop-host-swift"
+SWIFT_HOST_APP="$SWIFT_HOST_BUILD/VaadinDesktopHost.app"
+SWIFT_HOST_CONTENTS="$SWIFT_HOST_APP/Contents"
+SWIFT_HOST_MACOS="$SWIFT_HOST_CONTENTS/MacOS"
+SWIFT_HOST_RESOURCES="$SWIFT_HOST_CONTENTS/Resources"
+SWIFT_HOST_EXE="$SWIFT_HOST_MACOS/VaadinDesktopHost"
+SWIFT_MODULE_CACHE="$ROOT/.build/clang-module-cache"
+
+rm -rf "$SWIFT_HOST_RESOURCES"
+mkdir -p "$SWIFT_HOST_MACOS"
+mkdir -p "$SWIFT_HOST_RESOURCES"
+mkdir -p "$SWIFT_MODULE_CACHE"
+cat > "$SWIFT_HOST_CONTENTS/Info.plist" <<'PLIST'
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE plist PUBLIC "-//Apple//DTD PLIST 1.0//EN" "http://www.apple.com/DTDs/PropertyList-1.0.dtd">
+<plist version="1.0">
+<dict>
+    <key>CFBundleExecutable</key>
+    <string>VaadinDesktopHost</string>
+    <key>CFBundleIdentifier</key>
+    <string>dev.vatori.desktop.host.swift</string>
+    <key>CFBundleName</key>
+    <string>Vaadin Desktop Host</string>
+    <key>CFBundlePackageType</key>
+    <string>APPL</string>
+    <key>LSMinimumSystemVersion</key>
+    <string>12.0</string>
+    <key>NSHighResolutionCapable</key>
+    <true/>
+    <key>NSAppTransportSecurity</key>
+    <dict>
+        <key>NSAllowsLocalNetworking</key>
+        <true/>
+    </dict>
+</dict>
+</plist>
+PLIST
+
+SWIFT_HOST_SOURCES=("$ROOT"/vaadin-desktop-host-swift/Sources/VaadinDesktopHost/*.swift)
+CLANG_MODULE_CACHE_PATH="$SWIFT_MODULE_CACHE" /usr/bin/swiftc \
+  "${SWIFT_HOST_SOURCES[@]}" \
+  -o "$SWIFT_HOST_EXE"
+
+if [[ -d "$ROOT/vaadin-desktop-host-swift/Resources" ]]; then
+  cp -R "$ROOT/vaadin-desktop-host-swift/Resources/." "$SWIFT_HOST_RESOURCES/"
+fi
+
+if command -v codesign >/dev/null 2>&1; then
+  codesign --force --sign - "$SWIFT_HOST_APP" >/dev/null 2>&1 || true
+fi

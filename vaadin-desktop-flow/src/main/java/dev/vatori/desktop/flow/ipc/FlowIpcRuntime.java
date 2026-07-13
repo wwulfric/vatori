@@ -21,8 +21,6 @@ import java.util.LinkedHashMap;
 import java.util.Map;
 import java.util.Objects;
 import java.util.concurrent.atomic.AtomicLong;
-import java.util.regex.Matcher;
-import java.util.regex.Pattern;
 
 final class FlowIpcRuntime {
     static final String PREFIX = "VFIPC1 ";
@@ -75,17 +73,20 @@ final class FlowIpcRuntime {
     }
 
     private void handle(String json) {
-        String type = JsonFields.topLevelString(json, "type");
-        String id = JsonFields.topLevelString(json, "id");
-        String correlationId = JsonFields.topLevelString(json, "correlationId");
+        String id = null;
+        String correlationId = null;
         try {
+            FlowIpcInboundEnvelope envelope = FlowIpcInboundEnvelope.parse(json);
+            String type = envelope.type();
+            id = envelope.id();
+            correlationId = envelope.correlationId();
             switch (type == null ? "" : type) {
-                case "bootstrapRequest" -> bootstrap(json, id, correlationId);
-                case "resourceRequest" -> handleResourceRequest(json, id, correlationId);
-                case "uploadRequest" -> handleUploadRequest(json, id, correlationId);
-                case "event" -> handleEvent(json, id, correlationId);
-                case "resync" -> handleResync(json, id, correlationId);
-                case "error" -> handleClientError(json, id);
+                case "bootstrapRequest" -> bootstrap(envelope, id, correlationId);
+                case "resourceRequest" -> handleResourceRequest(envelope, id, correlationId);
+                case "uploadRequest" -> handleUploadRequest(envelope, id, correlationId);
+                case "event" -> handleEvent(envelope, id, correlationId);
+                case "resync" -> handleResync(envelope, id, correlationId);
+                case "error" -> handleClientError(envelope, id);
                 case "shutdown" -> System.exit(0);
                 default -> sendError("unknownMessage", "Unsupported Flow IPC message type: " + type, id, correlationId);
             }
@@ -99,9 +100,9 @@ final class FlowIpcRuntime {
         }
     }
 
-    private void bootstrap(String json, String id, String correlationId) {
+    private void bootstrap(FlowIpcInboundEnvelope envelope, String id, String correlationId) {
         ensureBootstrapped();
-        validateEnvelopeScope(json);
+        validateEnvelopeScope(envelope);
         Map<String, Object> payload = new LinkedHashMap<>();
         payload.put("transport", "flow-ipc");
         payload.put("compatibilityMode", false);
@@ -123,24 +124,24 @@ final class FlowIpcRuntime {
         sendServerInitiatedPushes(id, correlationId);
     }
 
-    private void handleResourceRequest(String json, String id, String correlationId) {
+    private void handleResourceRequest(FlowIpcInboundEnvelope envelope, String id, String correlationId) {
         ensureBootstrapped();
-        validateEnvelopeScope(json);
-        validateSecurityKey(json);
-        String path = JsonFields.string(json, "path");
+        validateEnvelopeScope(envelope);
+        validateSecurityKey(envelope);
+        String path = envelope.string("path");
         if (path == null || path.isBlank()) {
             sendError("resourceNotFound", "Unknown Flow IPC resource: " + path, id, correlationId);
             return;
         }
         Map<String, Object> response;
         if (isDynamicStreamResourcePath(path)) {
-            int rangeStart = JsonFields.integer(json, "streamResourceRangeStart", -1);
-            int rangeEndInclusive = JsonFields.integer(json, "streamResourceRangeEndInclusive", -1);
-            boolean chunkedDownload = JsonFields.bool(json, "streamResourceChunkedDownload", false);
-            int chunkIndex = JsonFields.integer(json, "streamResourceChunkIndex", -1);
-            int chunkCount = JsonFields.integer(json, "streamResourceChunkCount", -1);
-            int chunkSize = JsonFields.integer(json, "streamResourceChunkSize", -1);
-            boolean downloadHandlerSaveOpen = JsonFields.booleanValue(json, "downloadHandlerSaveOpen", false);
+            int rangeStart = envelope.integer("streamResourceRangeStart", -1);
+            int rangeEndInclusive = envelope.integer("streamResourceRangeEndInclusive", -1);
+            boolean chunkedDownload = envelope.booleanValue("streamResourceChunkedDownload", false);
+            int chunkIndex = envelope.integer("streamResourceChunkIndex", -1);
+            int chunkCount = envelope.integer("streamResourceChunkCount", -1);
+            int chunkSize = envelope.integer("streamResourceChunkSize", -1);
+            boolean downloadHandlerSaveOpen = envelope.booleanValue("downloadHandlerSaveOpen", false);
             response = new LinkedHashMap<>(flowSession.streamResourceResponse(path, rangeStart, rangeEndInclusive)
                     .orElseGet(() -> {
                         Map<String, Object> missing = new LinkedHashMap<>();
@@ -186,13 +187,13 @@ final class FlowIpcRuntime {
             if (downloadHandlerSaveOpen) {
                 response.put("downloadHandlerSaveOpenRequested", true);
                 response.put("downloadHandlerSaveTargetPath",
-                        Objects.toString(JsonFields.string(json, "downloadSaveTargetPath"), ""));
+                        Objects.toString(envelope.string("downloadSaveTargetPath"), ""));
                 response.put("downloadHandlerOpenAfterSaveRequested",
-                        JsonFields.booleanValue(json, "downloadOpenAfterSave", false));
+                        envelope.booleanValue("downloadOpenAfterSave", false));
                 response.put("downloadHandlerUserGesture",
-                        Objects.toString(JsonFields.string(json, "downloadUserGesture"), ""));
+                        Objects.toString(envelope.string("downloadUserGesture"), ""));
                 response.put("downloadHandlerWindowLabel",
-                        Objects.toString(JsonFields.string(json, "downloadWindowLabel"), "main"));
+                        Objects.toString(envelope.string("downloadWindowLabel"), "main"));
             }
         } else if (flowClientResources.contains(path)) {
             response = new LinkedHashMap<>(flowClientResources.response(path));
@@ -200,11 +201,11 @@ final class FlowIpcRuntime {
             sendError("resourceNotFound", "Unknown Flow IPC resource: " + path, id, correlationId);
             return;
         }
-        String purpose = JsonFields.string(json, "purpose");
+        String purpose = envelope.string("purpose");
         if (purpose != null && !purpose.isBlank()) {
             response.put("requestPurpose", purpose);
         }
-        String lookupKind = JsonFields.string(json, "lookupKind");
+        String lookupKind = envelope.string("lookupKind");
         if (lookupKind != null && !lookupKind.isBlank()) {
             response.put("lookupKind", lookupKind);
         }
@@ -220,47 +221,47 @@ final class FlowIpcRuntime {
         return path != null && path.startsWith("/") ? path.substring(1) : path;
     }
 
-    private void handleUploadRequest(String json, String id, String correlationId) {
+    private void handleUploadRequest(FlowIpcInboundEnvelope envelope, String id, String correlationId) {
         ensureBootstrapped();
-        validateEnvelopeScope(json);
-        validateSecurityKey(json);
-        String path = JsonFields.string(json, "path");
+        validateEnvelopeScope(envelope);
+        validateSecurityKey(envelope);
+        String path = envelope.string("path");
         if (path == null || path.isBlank()) {
             sendError("uploadTargetNotFound", "Unknown Flow IPC upload target: " + path, id, correlationId);
             return;
         }
-        String fileName = JsonFields.string(json, "uploadFileName");
+        String fileName = envelope.string("uploadFileName");
         if (fileName == null || fileName.isBlank()) {
             fileName = "flow-ipc-upload-v1_53.txt";
         }
-        String contentType = JsonFields.string(json, "uploadContentType");
+        String contentType = envelope.string("uploadContentType");
         if (contentType == null || contentType.isBlank()) {
             contentType = "application/octet-stream";
         }
-        String bodyMode = JsonFields.string(json, "uploadBodyMode");
+        String bodyMode = envelope.string("uploadBodyMode");
         if (bodyMode == null || bodyMode.isBlank()) {
             bodyMode = "raw-xhr-compatible";
         }
-        String multipartBoundary = JsonFields.string(json, "uploadMultipartBoundary");
-        String fileContentType = JsonFields.string(json, "uploadFileContentType");
+        String multipartBoundary = envelope.string("uploadMultipartBoundary");
+        String fileContentType = envelope.string("uploadFileContentType");
         if (fileContentType == null || fileContentType.isBlank()) {
             fileContentType = contentType;
         }
-        String fileSha256 = JsonFields.string(json, "uploadFileSha256");
-        String progressCheckpoints = JsonFields.string(json, "uploadProgressCheckpoints");
-        String progressTerminalStatus = JsonFields.string(json, "uploadProgressTerminalStatus");
-        String cancelProbeResult = JsonFields.string(json, "uploadCancelProbeResult");
-        String cancelFailureLayer = JsonFields.string(json, "uploadCancelFailureLayer");
-        String bodyBase64 = JsonFields.string(json, "uploadBodyBase64");
+        String fileSha256 = envelope.string("uploadFileSha256");
+        String progressCheckpoints = envelope.string("uploadProgressCheckpoints");
+        String progressTerminalStatus = envelope.string("uploadProgressTerminalStatus");
+        String cancelProbeResult = envelope.string("uploadCancelProbeResult");
+        String cancelFailureLayer = envelope.string("uploadCancelFailureLayer");
+        String bodyBase64 = envelope.string("uploadBodyBase64");
         byte[] bytes = bodyBase64 == null || bodyBase64.isBlank()
                 ? new byte[0]
                 : Base64.getDecoder().decode(bodyBase64);
-        long fileBytes = JsonFields.longValue(json, "uploadFileBytes", bytes.length);
-        long progressTotalBytes = JsonFields.longValue(json, "uploadProgressTotalBytes", bytes.length);
-        long progressDeliveredBytes = JsonFields.longValue(json, "uploadProgressDeliveredBytes", bytes.length);
+        long fileBytes = envelope.longValue("uploadFileBytes", bytes.length);
+        long progressTotalBytes = envelope.longValue("uploadProgressTotalBytes", bytes.length);
+        long progressDeliveredBytes = envelope.longValue("uploadProgressDeliveredBytes", bytes.length);
         boolean progressConsumedByVaadinClient =
-                JsonFields.booleanValue(json, "uploadProgressConsumedByVaadinClient", false);
-        boolean cancelProbeAttempted = JsonFields.booleanValue(json, "uploadCancelProbeAttempted", false);
+                envelope.booleanValue("uploadProgressConsumedByVaadinClient", false);
+        boolean cancelProbeAttempted = envelope.booleanValue("uploadCancelProbeAttempted", false);
         DesktopFlowRuntimeSession.UploadRequestMetadata metadata =
                 new DesktopFlowRuntimeSession.UploadRequestMetadata(
                         bodyMode,
@@ -279,11 +280,11 @@ final class FlowIpcRuntime {
         DesktopFlowRuntimeSession.FlowUploadResponse response =
                 flowSession.uploadResourceResponse(path, fileName, contentType, bytes, metadata);
         Map<String, Object> payload = new LinkedHashMap<>(response.payload());
-        String purpose = JsonFields.string(json, "purpose");
+        String purpose = envelope.string("purpose");
         if (purpose != null && !purpose.isBlank()) {
             payload.put("requestPurpose", purpose);
         }
-        String lookupKind = JsonFields.string(json, "lookupKind");
+        String lookupKind = envelope.string("lookupKind");
         if (lookupKind != null && !lookupKind.isBlank()) {
             payload.put("lookupKind", lookupKind);
         }
@@ -295,12 +296,12 @@ final class FlowIpcRuntime {
         }
     }
 
-    private void handleClientError(String json, String id) {
-        String code = JsonFields.string(json, "code");
+    private void handleClientError(FlowIpcInboundEnvelope envelope, String id) {
+        String code = envelope.errorString("code");
         if (code == null || code.isBlank()) {
             code = "webviewError";
         }
-        String message = JsonFields.string(json, "message");
+        String message = envelope.errorString("message");
         if (message == null || message.isBlank()) {
             message = "WebView reported a Flow IPC error";
         }
@@ -380,14 +381,14 @@ final class FlowIpcRuntime {
         }
     }
 
-    private void handleEvent(String json, String id, String correlationId) {
+    private void handleEvent(FlowIpcInboundEnvelope envelope, String id, String correlationId) {
         ensureBootstrapped();
-        validateEnvelopeScope(json);
-        validateSecurityKey(json);
-        String uidlRpc = JsonFields.object(json, "uidlRpc");
+        validateEnvelopeScope(envelope);
+        validateSecurityKey(envelope);
+        String uidlRpc = envelope.objectJson("uidlRpc");
         if (uidlRpc != null && !uidlRpc.isBlank()) {
-            String dispatch = JsonFields.string(json, "dispatch");
-            int clientId = JsonFields.integer(uidlRpc, "clientId", -1);
+            String dispatch = envelope.string("dispatch");
+            int clientId = envelope.objectInteger("uidlRpc", "clientId", -1);
             if (clientId >= 0) {
                 clientToServerSequence.accumulateAndGet(clientId + 1L, Math::max);
             }
@@ -399,8 +400,8 @@ final class FlowIpcRuntime {
             return;
         }
 
-        String action = JsonFields.string(json, "action");
-        String componentId = JsonFields.string(json, "componentId");
+        String action = envelope.string("action");
+        String componentId = envelope.string("componentId");
         if (!"click".equals(action)) {
             sendError("unsupportedEvent", "Only click events are supported by the v1 minimum adapter.", id, correlationId);
             return;
@@ -416,14 +417,14 @@ final class FlowIpcRuntime {
         }
     }
 
-    private void handleResync(String json, String id, String correlationId) {
+    private void handleResync(FlowIpcInboundEnvelope envelope, String id, String correlationId) {
         ensureBootstrapped();
-        validateEnvelopeScope(json);
-        validateSecurityKey(json);
-        String uidlRpc = JsonFields.object(json, "uidlRpc");
+        validateEnvelopeScope(envelope);
+        validateSecurityKey(envelope);
+        String uidlRpc = envelope.objectJson("uidlRpc");
         if (uidlRpc != null && !uidlRpc.isBlank()) {
-            String dispatch = JsonFields.string(json, "dispatch");
-            int clientId = JsonFields.integer(uidlRpc, "clientId", -1);
+            String dispatch = envelope.string("dispatch");
+            int clientId = envelope.objectInteger("uidlRpc", "clientId", -1);
             try {
                 FlowPatchResponse response = flowSession.handleClientMessage(uidlRpc, clientId, true);
                 sendPatch("resync", id, correlationId, response,
@@ -436,22 +437,22 @@ final class FlowIpcRuntime {
         sendPatch("resync", id, correlationId);
     }
 
-    private void validateEnvelopeScope(String json) {
-        String sessionId = JsonFields.string(json, "sessionId");
+    private void validateEnvelopeScope(FlowIpcInboundEnvelope envelope) {
+        String sessionId = envelope.sessionId();
         if (!Objects.equals(flowSession.sessionId(), sessionId)) {
             throw new IllegalArgumentException("Flow IPC sessionId mismatch: expected "
                     + flowSession.sessionId() + " but got " + sessionId);
         }
 
-        String uiId = JsonFields.string(json, "uiId");
+        String uiId = envelope.uiId();
         if (!Objects.equals(IPC_UI_ID, uiId)) {
             throw new IllegalArgumentException("Flow IPC uiId mismatch: expected "
                     + IPC_UI_ID + " but got " + uiId);
         }
     }
 
-    private void validateSecurityKey(String json) {
-        String securityKey = JsonFields.string(json, "securityKey");
+    private void validateSecurityKey(FlowIpcInboundEnvelope envelope) {
+        String securityKey = envelope.string("securityKey");
         if (!Objects.equals(flowSession.securityKey(), securityKey)) {
             throw new SecurityException("Invalid Flow IPC securityKey");
         }
@@ -604,170 +605,5 @@ final class FlowIpcRuntime {
 
     private static String correlationIdOr(String id, String correlationId) {
         return correlationId == null || correlationId.isBlank() ? id : correlationId;
-    }
-
-    private static final class JsonFields {
-        private static final Pattern STRING_FIELD = Pattern.compile(
-                "\"%s\"\\s*:\\s*\"((?:\\\\.|[^\"])*)\"");
-
-        private JsonFields() {
-        }
-
-        static String string(String json, String field) {
-            Matcher matcher = Pattern.compile(String.format(STRING_FIELD.pattern(), Pattern.quote(field))).matcher(json);
-            if (!matcher.find()) {
-                return null;
-            }
-            return unescape(matcher.group(1));
-        }
-
-        static int integer(String json, String field, int fallback) {
-            Matcher matcher = Pattern.compile(
-                    "\"" + Pattern.quote(field) + "\"\\s*:\\s*(-?\\d+)").matcher(json);
-            if (!matcher.find()) {
-                return fallback;
-            }
-            return Integer.parseInt(matcher.group(1));
-        }
-
-        static long longValue(String json, String field, long fallback) {
-            Matcher matcher = Pattern.compile(
-                    "\"" + Pattern.quote(field) + "\"\\s*:\\s*(-?\\d+)").matcher(json);
-            if (!matcher.find()) {
-                return fallback;
-            }
-            return Long.parseLong(matcher.group(1));
-        }
-
-        static boolean bool(String json, String field, boolean fallback) {
-            Matcher matcher = Pattern.compile(
-                    "\"" + Pattern.quote(field) + "\"\\s*:\\s*(true|false)").matcher(json);
-            if (!matcher.find()) {
-                return fallback;
-            }
-            return Boolean.parseBoolean(matcher.group(1));
-        }
-
-        static boolean booleanValue(String json, String field, boolean fallback) {
-            return bool(json, field, fallback);
-        }
-
-        static String object(String json, String field) {
-            Matcher matcher = Pattern.compile(
-                    "\"" + Pattern.quote(field) + "\"\\s*:\\s*\\{").matcher(json);
-            if (!matcher.find()) {
-                return null;
-            }
-            int start = matcher.end() - 1;
-            int depth = 0;
-            boolean inString = false;
-            boolean escaped = false;
-            for (int index = start; index < json.length(); index++) {
-                char character = json.charAt(index);
-                if (escaped) {
-                    escaped = false;
-                    continue;
-                }
-                if (character == '\\') {
-                    escaped = inString;
-                    continue;
-                }
-                if (character == '"') {
-                    inString = !inString;
-                    continue;
-                }
-                if (inString) {
-                    continue;
-                }
-                if (character == '{') {
-                    depth++;
-                } else if (character == '}') {
-                    depth--;
-                    if (depth == 0) {
-                        return json.substring(start, index + 1);
-                    }
-                }
-            }
-            return null;
-        }
-
-        private static String unescape(String value) {
-            return value.replace("\\\"", "\"")
-                    .replace("\\/", "/")
-                    .replace("\\\\", "\\")
-                    .replace("\\n", "\n")
-                    .replace("\\r", "\r")
-                    .replace("\\t", "\t");
-        }
-
-        static String topLevelString(String json, String field) {
-            if (json == null || json.isBlank()) {
-                return null;
-            }
-
-            int depth = 0;
-            for (int index = 0; index < json.length(); ) {
-                char character = json.charAt(index);
-                if (character == '"') {
-                    JsonString parsed = parseJsonString(json, index);
-                    if (depth == 1 && field.equals(parsed.value())) {
-                        int cursor = skipWhitespace(json, parsed.end() + 1);
-                        if (cursor < json.length() && json.charAt(cursor) == ':') {
-                            cursor = skipWhitespace(json, cursor + 1);
-                            if (cursor < json.length() && json.charAt(cursor) == '"') {
-                                return parseJsonString(json, cursor).value();
-                            }
-                        }
-                    }
-                    index = parsed.end() + 1;
-                    continue;
-                }
-                if (character == '{' || character == '[') {
-                    depth++;
-                } else if (character == '}' || character == ']') {
-                    depth--;
-                }
-                index++;
-            }
-            return null;
-        }
-
-        private static int skipWhitespace(String json, int index) {
-            int cursor = index;
-            while (cursor < json.length() && Character.isWhitespace(json.charAt(cursor))) {
-                cursor++;
-            }
-            return cursor;
-        }
-
-        private static JsonString parseJsonString(String json, int quoteIndex) {
-            StringBuilder value = new StringBuilder();
-            boolean escaped = false;
-            for (int index = quoteIndex + 1; index < json.length(); index++) {
-                char character = json.charAt(index);
-                if (escaped) {
-                    value.append(switch (character) {
-                        case '"' -> '"';
-                        case '\\' -> '\\';
-                        case '/' -> '/';
-                        case 'n' -> '\n';
-                        case 'r' -> '\r';
-                        case 't' -> '\t';
-                        default -> character;
-                    });
-                    escaped = false;
-                } else if (character == '\\') {
-                    escaped = true;
-                } else if (character == '"') {
-                    return new JsonString(value.toString(), index);
-                } else {
-                    value.append(character);
-                }
-            }
-            return new JsonString(value.toString(), json.length() - 1);
-        }
-
-        private record JsonString(String value, int end) {
-        }
     }
 }

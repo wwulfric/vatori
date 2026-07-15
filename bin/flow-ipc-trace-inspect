@@ -10,5 +10,43 @@ if [[ -f /Users/bytedance/.sdkman/bin/sdkman-init.sh ]]; then
 fi
 
 mvn -q -o -Dmaven.repo.local="$ROOT/.m2/repository" -pl vaadin-desktop-devtools -am -DskipTests compile
-exec java -cp "$ROOT/vaadin-desktop-devtools/target/classes" \
-  dev.vatori.desktop.devtools.DesktopTraceInspector "$@"
+
+trace_file=""
+trace_gates=""
+trace_help="0"
+for argument in "$@"; do
+  case "$argument" in
+    --help)
+      trace_help="1"
+      ;;
+    --require-flow-ipc-standard-bundle-runtime|\
+    --require-flow-ipc-standard-bundle-framework-app|\
+    --require-flow-ipc-standard-bundle-sidecar-recovery)
+      if [[ -n "$trace_gates" ]]; then
+        trace_gates+=","
+      fi
+      trace_gates+="$argument"
+      ;;
+    --*)
+      echo "Unknown option: $argument" >&2
+      exit 2
+      ;;
+    *)
+      if [[ -n "$trace_file" ]]; then
+        echo "Only one trace file may be inspected at a time." >&2
+        exit 2
+      fi
+      trace_file="$argument"
+      ;;
+  esac
+done
+
+export VATORI_TRACE_INSPECT_FILE="$trace_file"
+export VATORI_TRACE_INSPECT_GATES="$trace_gates"
+export VATORI_TRACE_INSPECT_HELP="$trace_help"
+
+exec mvn -q -o -Dmaven.repo.local="$ROOT/.m2/repository" \
+  -pl vaadin-desktop-devtools \
+  -Dexec.mainClass=dev.vatori.desktop.devtools.StandardBundleTraceInspector \
+  -Dexec.classpathScope=runtime \
+  org.codehaus.mojo:exec-maven-plugin:3.6.2:java

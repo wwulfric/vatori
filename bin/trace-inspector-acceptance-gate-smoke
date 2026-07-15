@@ -16,9 +16,9 @@ if ! command -v mvn >/dev/null 2>&1; then
   exit 1
 fi
 
-mvn -o -Dmaven.repo.local="$MAVEN_REPO" -pl vaadin-desktop-devtools -am -DskipTests test-compile
+mvn -o -Dmaven.repo.local="$MAVEN_REPO" -pl vaadin-desktop-devtools -am -DskipTests install
 mvn -q -o -Dmaven.repo.local="$MAVEN_REPO" \
   -pl vaadin-desktop-devtools \
-  -Dexec.mainClass=dev.vatori.desktop.devtools.AcceptanceGateSmokeMain \
+  -Dexec.mainClass=dev.vatori.desktop.devtools.StandardBundleTraceInspectorSmokeMain \
   -Dexec.classpathScope=test \
   org.codehaus.mojo:exec-maven-plugin:3.6.2:java

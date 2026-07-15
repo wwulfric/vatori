@@ -4,7 +4,6 @@ import com.vaadin.flow.server.VaadinRequest;
 import com.vaadin.flow.server.VaadinService;
 import com.vaadin.flow.server.VaadinSession;
 import com.vaadin.flow.server.WrappedSession;
-import com.vaadin.flow.shared.ApplicationConstants;
 import jakarta.servlet.AsyncContext;
 import jakarta.servlet.DispatcherType;
 import jakarta.servlet.ReadListener;
@@ -26,9 +25,8 @@ import java.io.BufferedReader;
 import java.io.ByteArrayInputStream;
 import java.io.IOException;
 import java.io.InputStream;
-import java.io.StringReader;
+import java.io.InputStreamReader;
 import java.io.UnsupportedEncodingException;
-import java.net.URLEncoder;
 import java.nio.charset.StandardCharsets;
 import java.security.Principal;
 import java.util.ArrayList;
@@ -39,93 +37,91 @@ import java.util.LinkedHashMap;
 import java.util.List;
 import java.util.Locale;
 import java.util.Map;
+import java.util.Objects;
 import java.util.Optional;
 import java.util.regex.Pattern;
 
 final class DesktopVaadinRequest implements VaadinRequest, HttpServletRequest {
     private final VaadinService service;
     private final WrappedSession wrappedSession;
-    private final byte[] bodyBytes;
+    private final RequestBody body;
     private final Map<String, String[]> parameters;
     private final Map<String, Object> attributes = new LinkedHashMap<>();
     private final Map<String, String> headers = new LinkedHashMap<>();
     private final Locale locale;
     private final String pathInfo;
+    private final String queryString;
+    private final String requestUrl;
     private final String method;
     private final String contentType;
-    private final List<Part> parts;
+    private List<Part> parts;
 
     private DesktopVaadinRequest(VaadinService service, WrappedSession wrappedSession,
                                  byte[] bodyBytes, Map<String, String[]> parameters, Locale locale,
-                                 String pathInfo, String method, String contentType,
+                                 String pathInfo, String queryString, String requestUrl,
+                                 String method, String contentType,
+                                 Map<String, String> headers) {
+        this(service, wrappedSession, RequestBody.buffered(bodyBytes), parameters, locale,
+                pathInfo, queryString, requestUrl, method, contentType, headers);
+    }
+
+    private DesktopVaadinRequest(VaadinService service, WrappedSession wrappedSession,
+                                 RequestBody body, Map<String, String[]> parameters, Locale locale,
+                                 String pathInfo, String queryString, String requestUrl,
+                                 String method, String contentType,
                                  Map<String, String> headers) {
         this.service = service;
         this.wrappedSession = wrappedSession;
-        this.bodyBytes = bodyBytes == null ? new byte[0] : bodyBytes.clone();
+        this.body = Objects.requireNonNull(body, "body");
         this.parameters = Map.copyOf(parameters);
         this.locale = locale == null ? Locale.getDefault() : locale;
         this.pathInfo = pathInfo == null || pathInfo.isBlank() ? "/" : pathInfo;
+        this.queryString = queryString;
+        this.requestUrl = requestUrl == null || requestUrl.isBlank()
+                ? "https://desktop" + this.pathInfo
+                : requestUrl;
         this.method = method == null || method.isBlank() ? "POST" : method;
         this.contentType = contentType == null || contentType.isBlank() ? "application/json" : contentType;
         this.headers.putAll(headers == null ? Map.of() : headers);
-        this.parts = parseMultipartParts(this.bodyBytes, this.contentType);
+        this.parts = body.bufferedBytes == null
+                ? null
+                : parseMultipartParts(body.bufferedBytes, this.contentType);
     }
 
-    static DesktopVaadinRequest uidl(VaadinSession session, FlowClientMessage message) {
-        Map<String, String[]> parameters = new LinkedHashMap<>();
-        parameters.put(ApplicationConstants.REQUEST_TYPE_PARAMETER,
-                new String[]{ApplicationConstants.REQUEST_TYPE_UIDL});
-        parameters.put(ApplicationConstants.UI_ID_PARAMETER,
-                new String[]{String.valueOf(message.uiId())});
+    static DesktopVaadinRequest http(VaadinSession session, byte[] bodyBytes,
+                                     Map<String, String[]> parameters, String path,
+                                     String queryString, String requestUrl, String method,
+                                     String contentType, Map<String, String> headers) {
         return new DesktopVaadinRequest(
                 session.getService(),
-                session.getSession() == null ? new DesktopWrappedSession(message.sessionId()) : session.getSession(),
-                message.requestBody().getBytes(StandardCharsets.UTF_8),
-                parameters,
-                Locale.getDefault(),
-                "/",
-                "POST",
-                "application/json",
-                Map.of());
-    }
-
-    static DesktopVaadinRequest upload(VaadinSession session, String sessionId, int uiId, String path,
-                                       byte[] bodyBytes, String fileName, String contentType) {
-        Map<String, String[]> parameters = new LinkedHashMap<>();
-        parameters.put(ApplicationConstants.UI_ID_PARAMETER, new String[]{String.valueOf(uiId)});
-        String effectiveContentType = contentType == null || contentType.isBlank()
-                ? "application/octet-stream"
-                : contentType;
-        Map<String, String> headers = new LinkedHashMap<>();
-        headers.put("Content-Type", effectiveContentType);
-        headers.put("X-Filename", URLEncoder.encode(
-                fileName == null || fileName.isBlank() ? "unknown" : fileName,
-                StandardCharsets.UTF_8));
-        return new DesktopVaadinRequest(
-                session.getService(),
-                session.getSession() == null ? new DesktopWrappedSession(sessionId) : session.getSession(),
+                session.getSession(),
                 bodyBytes,
                 parameters,
                 Locale.getDefault(),
                 path,
-                "POST",
-                effectiveContentType,
+                queryString,
+                requestUrl,
+                method,
+                contentType,
                 headers);
     }
 
-    static DesktopVaadinRequest download(VaadinSession session, String sessionId, int uiId, String path) {
-        Map<String, String[]> parameters = new LinkedHashMap<>();
-        parameters.put(ApplicationConstants.UI_ID_PARAMETER, new String[]{String.valueOf(uiId)});
+    static DesktopVaadinRequest http(VaadinSession session, InputStream body, long contentLength,
+                                     Map<String, String[]> parameters, String path,
+                                     String queryString, String requestUrl, String method,
+                                     String contentType, Map<String, String> headers) {
         return new DesktopVaadinRequest(
                 session.getService(),
-                session.getSession() == null ? new DesktopWrappedSession(sessionId) : session.getSession(),
-                new byte[0],
+                session.getSession(),
+                RequestBody.streaming(body, contentLength),
                 parameters,
                 Locale.getDefault(),
                 path,
-                "GET",
-                "application/octet-stream",
-                Map.of("Accept", "*/*"));
+                queryString,
+                requestUrl,
+                method,
+                contentType,
+                headers);
     }
 
     @Override
@@ -141,17 +137,18 @@ final class DesktopVaadinRequest implements VaadinRequest, HttpServletRequest {
 
     @Override
     public int getContentLength() {
-        return bodyBytes.length;
+        long length = body.contentLength;
+        return length < 0 || length > Integer.MAX_VALUE ? -1 : (int) length;
     }
 
     @Override
     public long getContentLengthLong() {
-        return bodyBytes.length;
+        return body.contentLength;
     }
 
     @Override
     public ServletInputStream getInputStream() {
-        return new ByteArrayServletInputStream(bodyBytes);
+        return body.stream;
     }
 
     @Override
@@ -271,7 +268,7 @@ final class DesktopVaadinRequest implements VaadinRequest, HttpServletRequest {
 
     @Override
     public BufferedReader getReader() throws IOException {
-        return new BufferedReader(new StringReader(new String(bodyBytes, StandardCharsets.UTF_8)));
+        return new BufferedReader(new InputStreamReader(getInputStream(), StandardCharsets.UTF_8));
     }
 
     @Override
@@ -417,7 +414,7 @@ final class DesktopVaadinRequest implements VaadinRequest, HttpServletRequest {
 
     @Override
     public String getQueryString() {
-        return null;
+        return queryString;
     }
 
     @Override
@@ -432,7 +429,7 @@ final class DesktopVaadinRequest implements VaadinRequest, HttpServletRequest {
 
     @Override
     public StringBuffer getRequestURL() {
-        return new StringBuffer("https://desktop").append(getRequestURI());
+        return new StringBuffer(requestUrl);
     }
 
     @Override
@@ -486,13 +483,16 @@ final class DesktopVaadinRequest implements VaadinRequest, HttpServletRequest {
     }
 
     @Override
-    public Collection<Part> getParts() {
+    public synchronized Collection<Part> getParts() throws IOException {
+        if (parts == null) {
+            parts = parseMultipartParts(body.stream.readAllBytes(), contentType);
+        }
         return parts;
     }
 
     @Override
-    public Part getPart(String name) {
-        return parts.stream()
+    public Part getPart(String name) throws IOException {
+        return getParts().stream()
                 .filter(part -> part.getName().equals(name))
                 .findFirst()
                 .orElse(null);
@@ -504,11 +504,19 @@ final class DesktopVaadinRequest implements VaadinRequest, HttpServletRequest {
     }
 
     Optional<Part> firstPart() {
-        return parts.stream().findFirst();
+        try {
+            return getParts().stream().findFirst();
+        } catch (IOException error) {
+            throw new IllegalStateException("Unable to parse desktop multipart request", error);
+        }
     }
 
     int partCount() {
-        return parts.size();
+        try {
+            return getParts().size();
+        } catch (IOException error) {
+            throw new IllegalStateException("Unable to parse desktop multipart request", error);
+        }
     }
 
     private static List<Part> parseMultipartParts(byte[] bodyBytes, String contentType) {
@@ -646,16 +654,17 @@ final class DesktopVaadinRequest implements VaadinRequest, HttpServletRequest {
         return null;
     }
 
-    private static final class ByteArrayServletInputStream extends ServletInputStream {
-        private final ByteArrayInputStream input;
+    private static final class DesktopServletInputStream extends ServletInputStream {
+        private final InputStream input;
+        private boolean finished;
 
-        private ByteArrayServletInputStream(byte[] bytes) {
-            this.input = new ByteArrayInputStream(bytes == null ? new byte[0] : bytes);
+        private DesktopServletInputStream(InputStream input) {
+            this.input = Objects.requireNonNull(input, "input");
         }
 
         @Override
         public boolean isFinished() {
-            return input.available() == 0;
+            return finished;
         }
 
         @Override
@@ -669,8 +678,44 @@ final class DesktopVaadinRequest implements VaadinRequest, HttpServletRequest {
         }
 
         @Override
-        public int read() {
-            return input.read();
+        public int read() throws IOException {
+            int value = input.read();
+            finished = value < 0;
+            return value;
+        }
+
+        @Override
+        public int read(byte[] bytes, int offset, int length) throws IOException {
+            int read = input.read(bytes, offset, length);
+            finished = read < 0;
+            return read;
+        }
+
+        @Override
+        public void close() throws IOException {
+            finished = true;
+            input.close();
+        }
+    }
+
+    private static final class RequestBody {
+        private final byte[] bufferedBytes;
+        private final long contentLength;
+        private final ServletInputStream stream;
+
+        private RequestBody(byte[] bufferedBytes, long contentLength, InputStream stream) {
+            this.bufferedBytes = bufferedBytes;
+            this.contentLength = contentLength;
+            this.stream = new DesktopServletInputStream(stream);
+        }
+
+        private static RequestBody buffered(byte[] bytes) {
+            byte[] copy = bytes == null ? new byte[0] : bytes.clone();
+            return new RequestBody(copy, copy.length, new ByteArrayInputStream(copy));
+        }
+
+        private static RequestBody streaming(InputStream stream, long contentLength) {
+            return new RequestBody(null, contentLength, stream);
         }
     }
 

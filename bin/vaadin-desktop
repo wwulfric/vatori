@@ -17,8 +17,14 @@ fi
 
 COMMAND="${1:-help}"
 MODULE="${2:-examples/counter-app}"
-if [[ "$COMMAND" == "dev-ipc" && $# -lt 2 ]]; then
-  MODULE="test-apps/flow-over-ipc-smoke-app"
+if [[ "$COMMAND" == "dev-ipc" || "$COMMAND" == "run-ipc" ]] && [[ $# -lt 2 ]]; then
+  echo "$COMMAND requires an explicit application module." >&2
+  echo "Usage: bin/vaadin-desktop $COMMAND <module>" >&2
+  exit 2
+fi
+
+if [[ "$COMMAND" == "dev-ipc" || "$COMMAND" == "run-ipc" ]]; then
+  export VAADIN_DESKTOP_FLOW_IPC_STANDARD_BUNDLE=1
 fi
 MAVEN_REPO="${MAVEN_REPO:-$ROOT/.m2/repository}"
 MODULE_POM="$ROOT/$MODULE/pom.xml"
@@ -40,7 +46,8 @@ install_module_with_dependencies() {
   if [[ "${VAADIN_DESKTOP_MAVEN_OFFLINE:-}" == "1" ]]; then
     maven_mode="-o"
   fi
-  mvn "$maven_mode" -Dmaven.repo.local="$MAVEN_REPO" -f "$ROOT/pom.xml" -pl "$MODULE" -am -DskipTests install
+  mvn "$maven_mode" -Dmaven.repo.local="$MAVEN_REPO" -f "$ROOT/pom.xml" -pl "$MODULE" -am \
+    -DskipTests -Dmaven.jar.forceCreation=true install
 }
 
 
@@ -74,9 +81,12 @@ Usage:
 Examples:
   bin/vaadin-desktop dev examples/counter-app
   bin/vaadin-desktop dev-swift test-apps/vaadin-desktop-smoke-app
+  bin/vaadin-desktop dev-ipc examples/counter-app
   bin/vaadin-desktop dev-ipc test-apps/flow-over-ipc-smoke-app
   bin/vaadin-desktop dev-ipc test-apps/flow-over-ipc-framework-app
   bin/vaadin-desktop dev test-apps/vaadin-desktop-smoke-app
+
+dev-ipc always uses the application's standard Vaadin production bundle.
 USAGE
     ;;
   *)

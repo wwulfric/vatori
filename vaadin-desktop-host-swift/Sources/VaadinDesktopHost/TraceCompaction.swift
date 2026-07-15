@@ -1,9 +1,35 @@
 import Foundation
+import CoreFoundation
+
+private func traceBoolean(_ value: Any) -> Bool? {
+    guard let number = value as? NSNumber,
+          CFGetTypeID(number) == CFBooleanGetTypeID() else {
+        return nil
+    }
+    return number.boolValue
+}
+
+func detailedFlowIpcTraceEnabled() -> Bool {
+    ProcessInfo.processInfo.environment["VAADIN_DESKTOP_FLOW_IPC_TRACE_DETAIL"] == "full"
+}
+
+private func optionalResourceLoadTracePrefixes() -> [String] {
+    []
+}
+
+private func optionalDomTracePrefixes() -> [String] {
+    []
+}
+
+private func optionalEnvelopeTracePrefixes() -> [String] {
+    []
+}
 
 func isSensitiveTraceKey(_ key: String) -> Bool {
     let normalized = key.lowercased()
     return normalized == "securitykey"
         || normalized == "csrftoken"
+        || normalized == "pushid"
         || normalized == "vaadin-security-key"
 }
 
@@ -59,19 +85,8 @@ func compactResourceLoadTrace(_ payload: [String: Any]) -> [String: Any] {
         "currentAppFrontendBuild",
         "currentAppBuildFrontend",
         "currentAppGenerated",
-        "currentAppProduction",
-        "broaderComponentResourceMatrix",
-        "dataComponentResourceMatrix",
-        "gridLazyDataProvider",
-        "gridScrollVirtualization",
-        "inputComponentParityMatrix",
-        "multiValueNavigationDisclosureMatrix",
-        "overlayContextMenuMatrix",
-        "contentAppShellLoginMatrix",
-        "richTextEditorMatrix",
-        "richTextEditorBehaviorMatrix",
-        "richTextEditorEditingMatrix"
-    ]
+        "currentAppProduction"
+    ] + optionalResourceLoadTracePrefixes()
     var compact: [String: Any] = [:]
     for (key, value) in payload {
         let keep = scalarKeys.contains(key)
@@ -83,10 +98,10 @@ func compactResourceLoadTrace(_ payload: [String: Any]) -> [String: Any] {
             compact[key] = text.count <= 512
                 ? text
                 : String(text.prefix(512)) + "...[truncated]"
+        } else if let bool = traceBoolean(value) {
+            compact[key] = bool
         } else if let number = value as? NSNumber {
             compact[key] = number
-        } else if let bool = value as? Bool {
-            compact[key] = bool
         } else if let int = value as? Int {
             compact[key] = int
         } else if let int64 = value as? Int64 {
@@ -114,7 +129,7 @@ func compactScalarTracePayload(_ payload: [String: Any],
         }
         if let text = value as? String {
             compact[key] = compactTraceString(text, maxLength: maxStringLength)
-        } else if let bool = value as? Bool {
+        } else if let bool = traceBoolean(value) {
             compact[key] = bool
         } else if let number = value as? NSNumber {
             compact[key] = number
@@ -144,68 +159,11 @@ func compactWebViewDomTracePayload(_ payload: [String: Any]) -> [String: Any] {
     ]
     let diagnosticPrefixes = [
         "flowClientEngine",
-        "frameworkApp",
-        "frameworkRichContentComponentMatrix",
-        "frameworkRichTextEditorMatrix",
-        "frameworkRichTextEditorBehaviorMatrix",
-        "frameworkRichTextEditorEditingMatrix",
-        "contentAppShellLoginMatrix",
-        "messageListMarkdownMatrix",
-        "loginOverlayPropertyMatrix",
-        "loginOverlayForgotPasswordEventMatrix",
-        "loginOverlayLoginEventMatrix",
-        "loginOverlayInvalidLoginEventMatrix",
-        "loginOverlayCloseLifecycleMatrix",
-        "loginOverlayRecoveryLoginMatrix",
-        "loginOverlayServerReopenMatrix",
-        "loginOverlayShowErrorMatrix",
-        "loginOverlayErrorA11yMatrix",
-        "loginOverlayErrorFocusMatrix",
-        "loginOverlayErrorFocusRetryMatrix",
-        "loginOverlayErrorFocusRetryTargetMatrix",
-        "loginOverlayFullI18nMatrix",
-        "loginOverlayNoAutofocusMatrix",
-        "loginOverlayAutofocusControlMatrix",
-        "loginOverlayEscCloseMatrix",
-        "loginOverlayOutsideCloseMatrix",
-        "loginOverlayTabTraversalMatrix",
-        "loginOverlayShiftTabTraversalMatrix",
-        "loginOverlayAutofillAttributesMatrix",
-        "loginOverlayA11ySemanticsMatrix",
-        "loginOverlayDisabledGuardMatrix",
-        "loginOverlayDisabledKeyboardGuardMatrix",
-        "loginOverlayActionPostMatrix",
-        "loginOverlaySubmitButtonMatrix",
-        "loginOverlayEnterSubmitMatrix",
-        "loginFormPropertyMatrix",
-        "loginFormLoginEventMatrix",
-        "loginFormInvalidLoginEventMatrix",
-        "loginFormForgotPasswordEventMatrix",
-        "loginFormActionPostMatrix",
-        "loginFormTabTraversalMatrix",
-        "loginFormShiftTabTraversalMatrix",
-        "loginFormAutofillAttributesMatrix",
-        "loginFormA11ySemanticsMatrix",
-        "loginFormFullI18nMatrix",
-        "loginFormShowErrorMatrix",
-        "loginFormErrorA11yMatrix",
-        "loginFormErrorFocusMatrix",
-        "loginFormErrorFocusRetryMatrix",
-        "loginFormErrorFocusRetryTargetMatrix",
-        "loginFormErrorFocusRetryTargetStateMatrix",
-        "loginFormErrorFocusRetryTargetLayoutMatrix",
-        "loginFormErrorFocusRetryTargetHiddenSourceMatrix",
-        "loginFormErrorFocusRetryTargetVisibleOwnerMatrix",
-        "loginFormErrorFocusRetryTargetVisibleOwnerFocusMatrix",
-        "loginFormErrorFocusRetryTargetVisibleOwnerFocusContainmentMatrix",
-        "loginFormErrorFocusRetryTargetVisibleOwnerFocusContainmentStabilityMatrix",
-        "richTextEditorMatrix",
-        "richTextEditorBehaviorMatrix",
-        "richTextEditorEditingMatrix",
+        "standardBundle",
         "currentAppGeneratedImportsOwnerRuntimeContract",
         "currentAppGeneratedImportsOwnerSideEffect",
         "frontendResourcePipelineBasicClosure"
-    ]
+    ] + optionalDomTracePrefixes()
     var compact: [String: Any] = [:]
     for (key, value) in payload {
         let keepDiagnostic = diagnosticPrefixes.contains { key.hasPrefix($0) }
@@ -213,8 +171,12 @@ func compactWebViewDomTracePayload(_ payload: [String: Any]) -> [String: Any] {
             if alwaysKeep.contains(key) || keepDiagnostic || !text.isEmpty {
                 compact[key] = compactTraceString(text, maxLength: 1024)
             }
-        } else if let bool = value as? Bool {
-            if bool || alwaysKeep.contains(key) || keepDiagnostic || key.hasSuffix("FixtureSubstituted") {
+        } else if let bool = traceBoolean(value) {
+            var keepBoolean = bool || alwaysKeep.contains(key) || keepDiagnostic
+#if VATORI_FLOW_IPC_ACCEPTANCE
+            keepBoolean = keepBoolean || key.hasSuffix("FixtureSubstituted")
+#endif
+            if keepBoolean {
                 compact[key] = bool
             }
         } else if let number = value as? NSNumber {
@@ -251,10 +213,15 @@ func compactFlowIpcTracePayload(_ payload: [String: Any],
         "route",
         "sessionId",
         "uiId",
+        "windowId",
         "transport",
         "compatibilityMode",
         "serverSequence",
         "serverSequenceScope",
+        "chunkSequence",
+        "chunkCount",
+        "credit",
+        "contentLength",
         "resourceUrl",
         "resourceUrlPath",
         "sourcePath",
@@ -290,25 +257,11 @@ func compactFlowIpcTracePayload(_ payload: [String: Any],
         "currentApp",
         "productionBundleRuntimeOwner",
         "componentProductionOwner",
-        "broaderComponentResourceMatrix",
-        "dataComponentResourceMatrix",
-        "gridLazyDataProvider",
-        "gridScrollVirtualization",
-        "inputComponentParityMatrix",
-        "multiValueNavigationDisclosureMatrix",
-        "overlayContextMenuMatrix",
-        "contentAppShellLoginMatrix",
-        "richTextEditorMatrix",
-        "richTextEditorBehaviorMatrix",
-        "richTextEditorEditingMatrix",
         "streamResource",
         "uploadReceiver",
         "uploadMultipart",
-        "downloadHandlerSaveOpen",
-        "frameworkStreamResource",
-        "frameworkUpload",
-        "frameworkDownloadHandler"
-    ]
+        "downloadHandlerSaveOpen"
+    ] + optionalEnvelopeTracePrefixes()
     var compact: [String: Any] = [:]
     for (key, value) in payload {
         let keep = scalarKeys.contains(key)
@@ -325,8 +278,12 @@ func compactFlowIpcTracePayload(_ payload: [String: Any],
             if !text.isEmpty || key.hasSuffix("UnresolvedSpecifiers") {
                 compact[key] = compactTraceString(text, maxLength: maxStringLength)
             }
-        } else if let bool = value as? Bool {
-            if bool || key.hasSuffix("FixtureSubstituted") || key.hasSuffix("FullBodyOmitted") {
+        } else if let bool = traceBoolean(value) {
+            var keepBoolean = bool || key.hasSuffix("FullBodyOmitted")
+#if VATORI_FLOW_IPC_ACCEPTANCE
+            keepBoolean = keepBoolean || key.hasSuffix("FixtureSubstituted")
+#endif
+            if keepBoolean {
                 compact[key] = bool
             }
         } else if let number = value as? NSNumber {
@@ -384,4 +341,162 @@ func compactResourceManifestPayload(_ payload: [String: Any]) -> [String: Any] {
         compact["resourcesRedacted"] = true
     }
     return compact
+}
+
+private func copyTraceScalars(
+    from payload: [String: Any],
+    keys: Set<String>,
+    into compact: inout [String: Any],
+    maxStringLength: Int = 256
+) {
+    for key in keys {
+        guard let value = payload[key] else {
+            continue
+        }
+        if isSensitiveTraceKey(key) {
+            compact[key] = redactedTraceValue(value)
+        } else if let text = value as? String {
+            compact[key] = compactTraceString(text, maxLength: maxStringLength)
+        } else if let bool = traceBoolean(value) {
+            compact[key] = bool
+        } else if let number = value as? NSNumber {
+            compact[key] = number
+        } else if let int = value as? Int {
+            compact[key] = int
+        } else if let int64 = value as? Int64 {
+            compact[key] = int64
+        } else if let double = value as? Double {
+            compact[key] = double
+        }
+    }
+}
+
+private func compactEnvelopeTracePayload(_ payload: [String: Any]) -> [String: Any] {
+    var compact: [String: Any] = ["traceDetail": "compact"]
+    copyTraceScalars(
+        from: payload,
+        keys: ["source", "target", "transport", "command"],
+        into: &compact)
+    guard let envelope = payload["envelope"] as? [String: Any] else {
+        compact["fieldCount"] = payload.count
+        return compact
+    }
+    copyTraceScalars(
+        from: envelope,
+        keys: ["type", "id", "correlationId", "sessionId", "uiId", "windowId", "route"],
+        into: &compact)
+    guard let envelopePayload = envelope["payload"] as? [String: Any] else {
+        return compact
+    }
+    compact["payloadFieldCount"] = envelopePayload.count
+    copyTraceScalars(
+        from: envelopePayload,
+        keys: [
+            "path", "url", "method", "requestId", "purpose", "requestPurpose",
+            "lookupKind", "artifactFamily", "status", "statusText", "statusCode",
+            "mimeType", "contentType", "bytes", "sha256",
+            "bodyBytes", "bodyRedacted", "serverSequence", "compatibilityMode",
+            "chunkSequence", "chunkCount", "credit", "contentLength",
+            "failureLayer", "noLocalhostProof", "connectionId", "flowUiId",
+            "pushSequence", "lastSeenServerSyncId", "resync", "uidlBytes",
+            "uidlRedacted"
+        ],
+        into: &compact,
+        maxStringLength: 384)
+    if let flowResources = envelopePayload["flowClientResources"] as? [String: Any] {
+        compact["flowClientResourceCount"] = flowResources["resourceCount"]
+            ?? flowResources["count"]
+            ?? (flowResources["resources"] as? [Any])?.count
+            ?? 0
+    }
+    if let componentResources = envelopePayload["componentFrontendResources"] as? [String: Any] {
+        compact["componentFrontendResourceCount"] = componentResources["resourceCount"]
+            ?? componentResources["count"]
+            ?? (componentResources["resources"] as? [Any])?.count
+            ?? 0
+    }
+    if let uidl = envelopePayload["uidl"] as? [String: Any] {
+        compact["uidlBodyBytes"] = uidl["bodyBytes"]
+            ?? (uidl["body"] as? String)?.utf8.count
+            ?? 0
+    }
+    if let bodyBase64 = envelopePayload["bodyBase64"] as? String {
+        compact["bodyBytes"] = Data(base64Encoded: bodyBase64)?.count ?? 0
+        compact["bodyRedacted"] = true
+    }
+    if let headers = envelopePayload["headers"] as? [String: Any] {
+        compact["headerCount"] = headers.count
+        compact["headerNames"] = headers.keys.sorted().joined(separator: ",")
+    }
+    return compact
+}
+
+private func compactWebViewTracePayload(_ payload: [String: Any]) -> [String: Any] {
+    var compact: [String: Any] = [
+        "traceDetail": "compact",
+        "fieldCount": payload.count
+    ]
+    copyTraceScalars(
+        from: payload,
+        keys: [
+            "label", "readyState", "title", "location", "hasVaadinRoot", "elementCount",
+            "resultBytes", "resultRedacted", "flowClientEngineErrorCode",
+            "flowClientEngineInitialized", "flowClientEngineBootstrapDomBound",
+            "flowClientEngineEventPatchConsumed", "flowClientEngineResyncPatchConsumed"
+        ],
+        into: &compact,
+        maxStringLength: 384)
+    var trueCount = 0
+    var falseCount = 0
+    var nonEmptyStringCount = 0
+    var completeCount = 0
+    for (key, value) in payload {
+        if let bool = traceBoolean(value) {
+            if bool {
+                trueCount += 1
+                if key.hasSuffix("Complete") {
+                    completeCount += 1
+                }
+            } else {
+                falseCount += 1
+            }
+        } else if let text = value as? String, !text.isEmpty {
+            nonEmptyStringCount += 1
+        }
+    }
+    compact["trueFieldCount"] = trueCount
+    compact["falseFieldCount"] = falseCount
+    compact["completeFieldCount"] = completeCount
+    compact["nonEmptyStringFieldCount"] = nonEmptyStringCount
+    return compact
+}
+
+private func compactCloseTracePayload(_ payload: [String: Any]) -> [String: Any] {
+    var compact: [String: Any] = ["traceDetail": "compact"]
+    copyTraceScalars(from: payload, keys: ["label", "reason"], into: &compact)
+    if let readiness = payload["readiness"] as? String {
+        compact["readinessBytes"] = readiness.utf8.count
+        compact["readinessComplete"] = readiness.contains("\"complete\":true")
+    }
+    return compact
+}
+
+func compactHostProtocolTracePayload(type: String, payload: [String: Any]) -> [String: Any] {
+    switch type {
+    case "opaqueHttpRequest", "opaqueHttpResponse", "opaquePush",
+         "opaqueHttpStreamOpen", "opaqueHttpStreamChunk", "opaqueHttpStreamEnd",
+         "opaqueHttpStreamCancel", "opaqueHttpStreamRequestCredit",
+         "opaqueHttpStreamResponse", "opaqueHttpStreamResponseChunk",
+         "opaqueHttpStreamResponseEnd", "opaqueHttpStreamResponseCredit",
+         "opaqueHttpStreamError",
+         "opaquePushConnected", "opaquePushConnect", "opaquePushDisconnect",
+         "opaquePushResync":
+        return compactEnvelopeTracePayload(payload)
+    case "webview.dom":
+        return compactWebViewTracePayload(payload)
+    case "window.closeRequested":
+        return compactCloseTracePayload(payload)
+    default:
+        return payload
+    }
 }

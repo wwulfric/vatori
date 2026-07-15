@@ -88,9 +88,6 @@ import java.util.concurrent.atomic.AtomicReference;
 import java.util.stream.IntStream;
 
 @Route("")
-@com.vaadin.flow.component.dependency.JavaScript(
-        value = "context://vatori-flow-ipc-lazy-v1_10.js",
-        loadMode = com.vaadin.flow.shared.ui.LoadMode.LAZY)
 public class FlowOverIpcFrameworkView extends VerticalLayout {
     private final VerticalLayout updateList = new VerticalLayout();
     private int revision;
@@ -105,6 +102,7 @@ public class FlowOverIpcFrameworkView extends VerticalLayout {
         setWidthFull();
 
         H1 title = new H1("Flow IPC Framework Desk");
+        Span standardPushStatus = StandardBundlePushProbe.attachTo(this);
         Span status = new Span("Ready for framework validation");
         status.setId("framework-status");
 
@@ -139,6 +137,13 @@ public class FlowOverIpcFrameworkView extends VerticalLayout {
 
         Span matrixStatus = new Span("Component matrix: pending");
         matrixStatus.setId("framework-matrix-status");
+        dueDate.addValueChangeListener(event -> {
+            LocalDate value = event.getValue();
+            if (value != null) {
+                dueDateValue = value.toString();
+            }
+            matrixStatus.setText("Due date changed: " + dueDateValue);
+        });
 
         RadioButtonGroup<String> decision = new RadioButtonGroup<>("Decision");
         decision.setId("framework-decision");
@@ -384,7 +389,7 @@ public class FlowOverIpcFrameworkView extends VerticalLayout {
         loginForm.setId("framework-login-form");
         loginForm.setI18n(loginI18n);
         loginForm.setForgotPasswordButtonVisible(true);
-        final String loginFormActionPostPath = "flow-ipc-login-form-action-v1_101";
+        final String loginFormActionPostPath = "flow-ipc-login-form-action";
         loginForm.setEnabled(true);
         loginForm.setError(false);
         Span loginFormStatus = new Span("LoginForm idle");
@@ -433,7 +438,7 @@ public class FlowOverIpcFrameworkView extends VerticalLayout {
                     + password.length() + " action="
                     + loginFormActionPostPath);
         });
-        final String loginOverlayActionPostPath = "flow-ipc-login-overlay-action-v1_116";
+        final String loginOverlayActionPostPath = "flow-ipc-login-overlay-action";
         LoginOverlay loginOverlayActionPost = new LoginOverlay(loginI18n);
         loginOverlayActionPost.setId("framework-login-overlay-action-post");
         loginOverlayActionPost.setTitle("Flow IPC LoginOverlay action post");
@@ -843,15 +848,15 @@ public class FlowOverIpcFrameworkView extends VerticalLayout {
                     ? (valueNode == null ? "" : valueNode.asString())
                     : detailValueNode.asString();
             String htmlValue = htmlValueNode == null ? "" : htmlValueNode.asString();
-            if (value.contains("Flow IPC rich text v1.63")
-                    || htmlValue.contains("Flow IPC rich text v1.63")) {
+            if (value.contains("Flow IPC rich text")
+                    || htmlValue.contains("Flow IPC rich text")) {
                 richTextEditorValueObserved.set(true);
-                richTextEditorBehaviorStatus.setText("Rich text behavior delta/html: Flow IPC rich text v1.63 bold="
+                richTextEditorBehaviorStatus.setText("Rich text behavior delta/html: Flow IPC rich text bold="
                         + (value.contains("bold") || htmlValue.contains("strong")));
                 return;
             }
-            String marker = value.contains("Flow IPC rich text v1.62")
-                    ? "Flow IPC rich text v1.62"
+            String marker = value.contains("Flow IPC rich text")
+                    ? "Flow IPC rich text"
                     : value;
             richTextEditorStatus.setText("Rich text changed: " + marker);
         }).addEventData("event.detail.value")
@@ -903,7 +908,7 @@ public class FlowOverIpcFrameworkView extends VerticalLayout {
             richTextEditorClipboardObserved.set(true);
             richTextEditorEditingStatus.setText("Rich text editing clipboard: "
                     + operation + " text=" + text + " html=" + html.contains("<strong>"));
-            Desktop.current().clipboard().writeText("Flow IPC native clipboard v1.65 | " + text);
+            Desktop.current().clipboard().writeText("Flow IPC native clipboard | " + text);
             Desktop.current().clipboard().readText();
         }).addEventData("event.detail.operation")
                 .addEventData("event.detail.text")
@@ -1039,14 +1044,14 @@ public class FlowOverIpcFrameworkView extends VerticalLayout {
         lazyGridReport.setId("framework-lazy-grid-report");
 
         byte[] streamResourceBytes = """
-                Flow IPC StreamResource v1.50
+                Flow IPC StreamResource
                 owner=framework-validation-app
                 transport=flow-ipc-resource-request
                 """.getBytes(StandardCharsets.UTF_8);
-        StreamResource streamResource = new StreamResource("flow-ipc-framework-v1_50.txt",
+        StreamResource streamResource = new StreamResource("flow-ipc-framework-stream-resource.txt",
                 (stream, session) -> stream.write(streamResourceBytes));
         streamResource.setContentType("text/plain; charset=UTF-8");
-        streamResource.setHeader("X-Vatori-Flow-IPC", "stream-resource-v1_50");
+        streamResource.setHeader("X-Vatori-Flow-IPC", "stream-resource");
 
         Anchor streamResourceDownload = new Anchor(streamResource, "Download StreamResource");
         streamResourceDownload.setId("framework-stream-resource-download");
@@ -1056,10 +1061,10 @@ public class FlowOverIpcFrameworkView extends VerticalLayout {
         streamResourceStatus.setId("framework-stream-resource-status");
 
         byte[] binaryStreamResourceBytes = binaryStreamResourceBytes();
-        StreamResource binaryStreamResource = new StreamResource("flow-ipc-framework-v1_51.bin",
+        StreamResource binaryStreamResource = new StreamResource("flow-ipc-framework-binary-stream-resource.bin",
                 (stream, session) -> stream.write(binaryStreamResourceBytes));
         binaryStreamResource.setContentType("application/octet-stream");
-        binaryStreamResource.setHeader("X-Vatori-Flow-IPC", "stream-resource-range-v1_51");
+        binaryStreamResource.setHeader("X-Vatori-Flow-IPC", "stream-resource-range");
 
         Anchor streamResourceRangeDownload = new Anchor(binaryStreamResource, "Download Binary StreamResource");
         streamResourceRangeDownload.setId("framework-stream-resource-range-download");
@@ -1072,14 +1077,14 @@ public class FlowOverIpcFrameworkView extends VerticalLayout {
         streamResourceChunksStatus.setId("framework-stream-resource-chunks-status");
 
         byte[] downloadHandlerBytes = """
-                Flow IPC DownloadHandler v1.55
+                Flow IPC DownloadHandler
                 owner=framework-validation-app
                 transport=flow-ipc-resource-request-to-native-save
                 """.getBytes(StandardCharsets.UTF_8);
         DownloadHandler inputStreamDownloadHandler = DownloadHandler.fromInputStream(
                 event -> new DownloadResponse(
                         new ByteArrayInputStream(downloadHandlerBytes),
-                        "flow-ipc-download-handler-v1_55.txt",
+                        "flow-ipc-download-handler.txt",
                         "text/plain; charset=UTF-8",
                         downloadHandlerBytes.length));
         DownloadHandler namedDownloadHandler = new DownloadHandler() {
@@ -1090,12 +1095,24 @@ public class FlowOverIpcFrameworkView extends VerticalLayout {
 
             @Override
             public String getUrlPostfix() {
-                return "flow-ipc-download-handler-v1_55.txt";
+                return "flow-ipc-download-handler.txt";
             }
         };
         Anchor downloadHandlerSaveOpen = new Anchor(namedDownloadHandler,
                 "DownloadHandler Save/Open");
         downloadHandlerSaveOpen.setId("framework-download-handler-save-open");
+
+        byte[] standardStreamingDownloadBytes = standardStreamingDownloadBytes();
+        DownloadHandler standardStreamingDownloadHandler = DownloadHandler.fromInputStream(
+                event -> new DownloadResponse(
+                        new ByteArrayInputStream(standardStreamingDownloadBytes),
+                        "flow-ipc-standard-streaming.bin",
+                        "application/octet-stream",
+                        standardStreamingDownloadBytes.length));
+        Anchor standardStreamingDownload = new Anchor(
+                standardStreamingDownloadHandler,
+                "Standard bundle streaming probe");
+        standardStreamingDownload.setId("framework-standard-streaming-download");
 
         Span downloadHandlerSaveOpenStatus = new Span("DownloadHandler save/open: pending");
         downloadHandlerSaveOpenStatus.setId("framework-download-handler-save-open-status");
@@ -1104,8 +1121,8 @@ public class FlowOverIpcFrameworkView extends VerticalLayout {
         uploadStatus.setId("framework-upload-status");
         Upload upload = new Upload(UploadHandler.inMemory((metadata, bytes) -> {
             String body = new String(bytes, StandardCharsets.UTF_8);
-            boolean multipartMarker = body.contains("Flow IPC Upload Multipart v1.54");
-            boolean marker = multipartMarker || body.contains("Flow IPC Upload v1.53");
+            boolean multipartMarker = body.contains("Flow IPC Upload Multipart");
+            boolean marker = multipartMarker || body.contains("Flow IPC Upload");
             String prefix = multipartMarker ? "Multipart upload received: " : "Upload received: ";
             uploadStatus.setText(prefix + metadata.fileName()
                     + " bytes=" + bytes.length
@@ -1115,7 +1132,7 @@ public class FlowOverIpcFrameworkView extends VerticalLayout {
         }));
         upload.setId("framework-upload");
         upload.setMaxFiles(1);
-        upload.setMaxFileSize(512);
+        upload.setMaxFileSize(1024 * 1024);
         upload.setAcceptedFileTypes("text/plain", ".txt");
         upload.setAutoUpload(false);
 
@@ -1296,7 +1313,7 @@ public class FlowOverIpcFrameworkView extends VerticalLayout {
             String mode = expedited.getValue() ? "expedited" : "standard";
             String update = "Revision " + revision + ": budget " + budgetText
                     + ", mode " + mode + ", priority " + priorityValue;
-            String clipboardText = update + " | Flow IPC native clipboard v1.65";
+            String clipboardText = update + " | Flow IPC native clipboard";
             status.setText(update);
             latestUpdate.setText(update);
             Desktop.current().setWindowTitle("Flow IPC Framework App - " + revision);
@@ -1314,7 +1331,7 @@ public class FlowOverIpcFrameworkView extends VerticalLayout {
         appendUpdate("Renderer owned by Flow client engine");
         updateList.add(latestUpdate);
 
-        add(title, budget, expedited, priority, reviewer, dueDate, decision, notes,
+        add(title, standardPushStatus, budget, expedited, priority, reviewer, dueDate, decision, notes,
                 contactEmail, score, secret, reviewTime, inputMatrixStatus, assignees, navTabs,
                 auditDetails, queueAccordion, menu, navigationMatrixStatus,
                 contextMenuTarget, popoverTarget, popover, overlayMatrixStatus, openDialog, detailsDialog,
@@ -1351,6 +1368,7 @@ public class FlowOverIpcFrameworkView extends VerticalLayout {
                 grid, lazyGrid, lazyGridStatus, lazyGridReport, streamResourceDownload,
                 streamResourceStatus, streamResourceRangeDownload, streamResourceRangeStatus,
                 streamResourceChunksStatus, downloadHandlerSaveOpen, downloadHandlerSaveOpenStatus,
+                standardStreamingDownload,
                 upload, uploadStatus, virtualList, formLayout, apply, status, componentStatus, matrixStatus,
                 updateList);
     }
@@ -1382,10 +1400,21 @@ public class FlowOverIpcFrameworkView extends VerticalLayout {
         for (int index = 0; index < bytes.length; index++) {
             bytes[index] = (byte) ((index * 31 + 17) & 0xff);
         }
-        byte[] marker = "Flow IPC Binary StreamResource v1.51\n".getBytes(StandardCharsets.UTF_8);
+        byte[] marker = "Flow IPC Binary StreamResource\n".getBytes(StandardCharsets.UTF_8);
         System.arraycopy(marker, 0, bytes, 0, marker.length);
-        byte[] tail = "\nrange-tail=v1_51".getBytes(StandardCharsets.UTF_8);
+        byte[] tail = "\nrange-tail=stream-resource-range".getBytes(StandardCharsets.UTF_8);
         System.arraycopy(tail, 0, bytes, bytes.length - tail.length, tail.length);
+        return bytes;
+    }
+
+    private static byte[] standardStreamingDownloadBytes() {
+        byte[] bytes = new byte[512 * 1024 + 73];
+        for (int index = 0; index < bytes.length; index++) {
+            bytes[index] = (byte) ('a' + index % 26);
+        }
+        byte[] marker = "Flow IPC Standard Bundle Streaming Download\n"
+                .getBytes(StandardCharsets.UTF_8);
+        System.arraycopy(marker, 0, bytes, 0, marker.length);
         return bytes;
     }
 

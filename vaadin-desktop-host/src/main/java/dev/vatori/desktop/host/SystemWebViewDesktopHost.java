@@ -12,26 +12,35 @@ import java.nio.charset.StandardCharsets;
 import java.nio.file.Files;
 import java.nio.file.Path;
 import java.nio.file.StandardCopyOption;
+import java.util.LinkedHashMap;
 import java.util.Locale;
 import java.util.Map;
 
 public final class SystemWebViewDesktopHost implements DesktopHost {
     private static final String MACOS_HOST_RESOURCE = "/dev/vatori/desktop/host/macos-webview-host.swift";
 
-    private final DesktopHost fallback;
+    private final DesktopHost failureFallback;
+    private final String fallbackName;
     private final IpcTraceLogger trace = new IpcTraceLogger(System.out, "system-webview-host");
 
-    public SystemWebViewDesktopHost(DesktopHost fallback) {
-        this.fallback = fallback;
+    public SystemWebViewDesktopHost() {
+        this(null, "disabled");
+    }
+
+    public SystemWebViewDesktopHost(DesktopHost failureFallback) {
+        this(failureFallback, failureFallback == null ? "disabled" : "compatibility");
+    }
+
+    public SystemWebViewDesktopHost(DesktopHost failureFallback, String fallbackName) {
+        this.failureFallback = failureFallback;
+        this.fallbackName = fallbackName == null || fallbackName.isBlank() ? "enabled" : fallbackName;
     }
 
     @Override
     public void launch(DesktopContext context) {
         if (!isMacOs()) {
-            trace.trace("error", "host.unsupportedPlatform", Map.of(
-                    "os", System.getProperty("os.name", "unknown"),
-                    "fallback", "compatibility"));
-            fallback.launch(context);
+            handleLaunchFailure(context, "host.unsupportedPlatform",
+                    Map.of("os", System.getProperty("os.name", "unknown")), null);
             return;
         }
 
@@ -40,9 +49,33 @@ public final class SystemWebViewDesktopHost implements DesktopHost {
             pumpHostOutput(process);
             watchHostExit(process);
         } catch (IOException error) {
-            trace.trace("error", "host.start", Map.of("message", error.getMessage(), "fallback", "compatibility"));
-            fallback.launch(context);
+            handleLaunchFailure(context, "host.start", Map.of("message", error.getMessage()), error);
         }
+    }
+
+    private void handleLaunchFailure(DesktopContext context, String event, Map<String, ?> details, Throwable cause) {
+        trace.trace("error", event, withFallback(details));
+        if (failureFallback != null) {
+            failureFallback.launch(context);
+            return;
+        }
+        throw new IllegalStateException(failureMessage(event, details), cause);
+    }
+
+    private Map<String, Object> withFallback(Map<String, ?> details) {
+        Map<String, Object> fields = new LinkedHashMap<>();
+        fields.putAll(details);
+        fields.put("fallback", fallbackName);
+        return fields;
+    }
+
+    private String failureMessage(String event, Map<String, ?> details) {
+        Object message = details.get("message");
+        Object os = details.get("os");
+        String detail = message != null ? message.toString() : "os=" + os;
+        return "System WebView desktop host failed (" + event + "): " + detail
+                + ". Set VAADIN_DESKTOP_HOST=compatibility/headless/browser for an explicit compatibility host, "
+                + "or set VAADIN_DESKTOP_HOST_FALLBACK=compatibility to allow fallback.";
     }
 
     private Process startMacOsHost(DesktopContext context) throws IOException {

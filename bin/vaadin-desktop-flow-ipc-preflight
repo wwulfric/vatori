@@ -1,216 +1,60 @@
-# Flow IPC frontend build preflight helpers for bin/vaadin-desktop.
-# This file is sourced and expects ROOT, MODULE, COMMAND, MAVEN_REPO and MODULE_POM.
+#!/usr/bin/env bash
 
-redact_for_trace() {
-  local value="$1"
-  value="${value//$ROOT/\$REPO}"
-  value="${value//$HOME/\$HOME}"
-  printf '%s' "$value"
-}
-
-single_line_log_summary() {
-  local file="$1"
-  if [[ ! -f "$file" ]]; then
-    return 0
-  fi
-  tail -n 12 "$file" | tr '\n' ' ' | tr -s ' ' | cut -c 1-1200
-}
-
-classify_frontend_build_output_usability() {
-  local module_dir="$ROOT/$MODULE"
-  local target_dir="$module_dir/target"
-  local source_generated_dir="$module_dir/src/main/frontend/generated/flow"
-  if [[ ! -d "$target_dir" ]]; then
-    if [[ -f "$source_generated_dir/generated-flow-imports.js" ]]; then
-      if find "$source_generated_dir/chunks" -type f -name 'chunk-*.js' 2>/dev/null | grep -q .; then
-        printf '%s' "source-generated-imports-and-chunk"
-      else
-        printf '%s' "source-generated-imports-no-chunk"
-      fi
-      return 0
-    fi
-    printf '%s' "output-missing"
-    return 0
-  fi
-  if [[ -f "$source_generated_dir/generated-flow-imports.js" ]]; then
-    if find "$source_generated_dir/chunks" -type f -name 'chunk-*.js' 2>/dev/null | grep -q .; then
-      printf '%s' "source-generated-imports-and-chunk"
-    else
-      printf '%s' "source-generated-imports-no-chunk"
-    fi
-    return 0
-  fi
-  if find "$target_dir" -type f -path '*/chunks/chunk-*.js' 2>/dev/null | grep -q .; then
-    printf '%s' "usable-generated-chunk"
-    return 0
-  fi
-  if find "$target_dir/classes/META-INF/VAADIN/webapp/VAADIN/build" -type f -name 'generated-flow-imports*.js' 2>/dev/null | grep -q .; then
-    printf '%s' "production-generated-imports-bundled"
-    return 0
-  fi
-  if find "$target_dir" -type f -name 'generated-flow-imports*.js' 2>/dev/null | grep -q .; then
-    printf '%s' "generated-imports-no-chunk"
-    return 0
-  fi
-  if [[ -f "$module_dir/src/main/bundles/prod.bundle" ]]; then
-    printf '%s' "production-bundle-only"
-    return 0
-  fi
-  if [[ -d "$module_dir/src/main/frontend/generated" ]] \
-      || [[ -d "$module_dir/frontend/generated" ]] \
-      || [[ -d "$target_dir/frontend/generated" ]]; then
-    printf '%s' "prepare-frontend-generated-scaffold-no-generated-imports"
-    return 0
-  fi
-  printf '%s' "output-incomplete"
-}
+# Sourced by bin/vaadin-desktop. Expects ROOT, MODULE, COMMAND, MAVEN_REPO and MODULE_POM.
 
 run_flow_ipc_frontend_build_preflight() {
   if [[ "$COMMAND" != "dev-ipc" && "$COMMAND" != "run-ipc" ]]; then
     return 0
   fi
-  export VAADIN_DESKTOP_FLOW_IPC_FRONTEND_BUILD_V1_30=1
-  export VAADIN_DESKTOP_FLOW_IPC_FRONTEND_BUILD_V1_31=1
-  export VAADIN_DESKTOP_FLOW_IPC_FRONTEND_BUILD_V1_32=1
-  export VAADIN_DESKTOP_FLOW_IPC_FRONTEND_BUILD_V1_44=1
-  export VAADIN_DESKTOP_FLOW_IPC_FRONTEND_BUILD_V1_45=1
-  export VAADIN_DESKTOP_FLOW_IPC_FRONTEND_BUILD_V1_46=1
-  export VAADIN_DESKTOP_FLOW_IPC_FRONTEND_BUILD_V1_47=1
-  export VAADIN_DESKTOP_FLOW_IPC_FRONTEND_BUILD_V1_48=1
-  export VAADIN_DESKTOP_FLOW_IPC_FRONTEND_BUILD_V1_49=1
-  export VAADIN_DESKTOP_FLOW_IPC_FRONTEND_BUILD_V1_50=1
-  export VAADIN_DESKTOP_FLOW_IPC_FRONTEND_BUILD_V1_51=1
-  export VAADIN_DESKTOP_FLOW_IPC_FRONTEND_BUILD_V1_52=1
-  export VAADIN_DESKTOP_FLOW_IPC_FRONTEND_BUILD_V1_53=1
-  export VAADIN_DESKTOP_FLOW_IPC_FRONTEND_BUILD_V1_54=1
-  export VAADIN_DESKTOP_FLOW_IPC_FRONTEND_BUILD_V1_55=1
-  export VAADIN_DESKTOP_FLOW_IPC_FRONTEND_BUILD_V1_57=1
-  export VAADIN_DESKTOP_FLOW_IPC_FRONTEND_BUILD_V1_58=1
-  export VAADIN_DESKTOP_FLOW_IPC_FRONTEND_BUILD_V1_59=1
-  export VAADIN_DESKTOP_FLOW_IPC_FRONTEND_BUILD_V1_60=1
-  export VAADIN_DESKTOP_FLOW_IPC_FRONTEND_BUILD_V1_62=1
-  export VAADIN_DESKTOP_FLOW_IPC_FRONTEND_BUILD_V1_63=1
-  export VAADIN_DESKTOP_FLOW_IPC_FRONTEND_BUILD_V1_64=1
-  export VAADIN_DESKTOP_FLOW_IPC_FRONTEND_BUILD_STEP_STATUS="skipped"
-  export VAADIN_DESKTOP_FLOW_IPC_FRONTEND_BUILD_STEP_EXIT_CODE="-1"
-  export VAADIN_DESKTOP_FLOW_IPC_FRONTEND_BUILD_STEP_DURATION_MILLIS="0"
-  export VAADIN_DESKTOP_FLOW_IPC_FRONTEND_BUILD_OUTPUT_ROOTS="$(redact_for_trace "$MODULE/src/main/frontend/generated,$MODULE/src/main/bundles,$MODULE/target,$MODULE/target/frontend/generated,$MODULE/target/classes/META-INF/VAADIN/webapp/VAADIN/build,$MODULE/target/classes/META-INF/VAADIN/config")"
-  export VAADIN_DESKTOP_FLOW_IPC_FRONTEND_BUILD_STEP_COMMAND=""
-  export VAADIN_DESKTOP_FLOW_IPC_FRONTEND_BUILD_STEP_SUMMARY=""
-  export VAADIN_DESKTOP_FLOW_IPC_FRONTEND_BUILD_STDOUT_LOG=""
-  export VAADIN_DESKTOP_FLOW_IPC_FRONTEND_BUILD_STDERR_LOG=""
-  export VAADIN_DESKTOP_FLOW_IPC_FRONTEND_BUILD_AVAILABILITY_MODE="offline-default"
-  export VAADIN_DESKTOP_FLOW_IPC_FRONTEND_BUILD_EFFECTIVE_MAVEN_MODE="-o"
-  export VAADIN_DESKTOP_FLOW_IPC_FRONTEND_BUILD_PLUGIN_COORDINATES=""
-  export VAADIN_DESKTOP_FLOW_IPC_FRONTEND_BUILD_PLUGIN_RESOLUTION_STATUS="not-attempted"
-  export VAADIN_DESKTOP_FLOW_IPC_FRONTEND_BUILD_MAVEN_GOAL_RESULT="skipped"
-  export VAADIN_DESKTOP_FLOW_IPC_FRONTEND_BUILD_GOAL_RESULT="$VAADIN_DESKTOP_FLOW_IPC_FRONTEND_BUILD_MAVEN_GOAL_RESULT"
-  export VAADIN_DESKTOP_FLOW_IPC_FRONTEND_BUILD_OUTPUT_USABILITY="not-inspected"
-  local requested_goal="${VAADIN_DESKTOP_FLOW_IPC_FRONTEND_BUILD_MAVEN_GOAL:-${VAADIN_DESKTOP_FLOW_IPC_FRONTEND_BUILD_GOAL:-prepare-frontend}}"
-  if [[ "$requested_goal" != "prepare-frontend" && "$requested_goal" != "build-frontend" ]]; then
-    requested_goal="prepare-frontend"
+
+  local vaadin_version
+  vaadin_version="$(sed -n 's:.*<vaadin.version>\(.*\)</vaadin.version>.*:\1:p' "$ROOT/pom.xml" | head -n 1)"
+  if [[ -z "$vaadin_version" ]]; then
+    echo "vaadin.version not found in $ROOT/pom.xml" >&2
+    return 1
   fi
-  export VAADIN_DESKTOP_FLOW_IPC_FRONTEND_BUILD_MAVEN_GOAL_NAME="$requested_goal"
-  export VAADIN_DESKTOP_FLOW_IPC_FRONTEND_BUILD_GOAL_NAME="$VAADIN_DESKTOP_FLOW_IPC_FRONTEND_BUILD_MAVEN_GOAL_NAME"
-  export VAADIN_DESKTOP_FLOW_IPC_FRONTEND_BUILD_PRODUCTION_MODE="false"
-  export VAADIN_DESKTOP_FLOW_IPC_FRONTEND_BUILD_FORCE_PRODUCTION_BUILD="false"
-  export VAADIN_DESKTOP_FLOW_IPC_FRONTEND_BUILD_IGNORE_VERSION_CHECKS="false"
-  if [[ "${VAADIN_DESKTOP_FLOW_IPC_PREPARE_FRONTEND:-}" != "1" ]]; then
-    return 0
+
+  local maven_mode="-U"
+  if [[ "${VAADIN_DESKTOP_MAVEN_OFFLINE:-}" == "1" ]]; then
+    maven_mode="-o"
   fi
 
   local build_dir="$ROOT/.build/flow-ipc-frontend-build"
-  local stdout_log="$build_dir/$requested_goal.out.log"
-  local stderr_log="$build_dir/$requested_goal.err.log"
+  local stdout_log="$build_dir/build-frontend.out.log"
+  local stderr_log="$build_dir/build-frontend.err.log"
   mkdir -p "$build_dir"
-  : > "$stdout_log"
-  : > "$stderr_log"
 
-  local vaadin_version="${VAADIN_DESKTOP_VAADIN_VERSION:-}"
-  if [[ -z "$vaadin_version" ]]; then
-    vaadin_version="$(sed -n 's:.*<vaadin.version>\(.*\)</vaadin.version>.*:\1:p' "$ROOT/pom.xml" | head -n 1)"
+  local command=(
+    mvn "$maven_mode"
+    "-Dmaven.repo.local=$MAVEN_REPO"
+    -f "$MODULE_POM"
+    -DskipTests
+    -Dvaadin.productionMode=true
+    -Dvaadin.force.production.build=true
+    -Dfrontend.ignore.version.checks=true
+  )
+  if [[ "${VAADIN_DESKTOP_FLOW_IPC_FRONTEND_BUILD_COMMERCIAL_WITH_BANNER:-}" == "1" ]]; then
+    command+=(-Dvaadin.commercialWithBanner=true)
   fi
-  local maven_mode="-o"
-  export VAADIN_DESKTOP_FLOW_IPC_FRONTEND_BUILD_AVAILABILITY_MODE="offline-default"
-  if [[ "${VAADIN_DESKTOP_MAVEN_OFFLINE:-}" == "1" ]]; then
-    maven_mode="-o"
-    export VAADIN_DESKTOP_FLOW_IPC_FRONTEND_BUILD_AVAILABILITY_MODE="forced-offline"
-  elif [[ "${VAADIN_DESKTOP_FLOW_IPC_FRONTEND_BUILD_ONLINE:-}" == "1" ]]; then
-    maven_mode="-U"
-    export VAADIN_DESKTOP_FLOW_IPC_FRONTEND_BUILD_AVAILABILITY_MODE="explicit-online-local-repo"
-  fi
-  export VAADIN_DESKTOP_FLOW_IPC_FRONTEND_BUILD_EFFECTIVE_MAVEN_MODE="$maven_mode"
+  command+=("com.vaadin:vaadin-maven-plugin:${vaadin_version}:build-frontend" package)
 
-  if [[ -z "$vaadin_version" ]]; then
-    export VAADIN_DESKTOP_FLOW_IPC_FRONTEND_BUILD_STEP_STATUS="unavailable"
-    export VAADIN_DESKTOP_FLOW_IPC_FRONTEND_BUILD_STEP_SUMMARY="vaadin.version not found in root pom"
-    export VAADIN_DESKTOP_FLOW_IPC_FRONTEND_BUILD_PLUGIN_RESOLUTION_STATUS="version-unavailable"
-    export VAADIN_DESKTOP_FLOW_IPC_FRONTEND_BUILD_MAVEN_GOAL_RESULT="version-unavailable"
-    export VAADIN_DESKTOP_FLOW_IPC_FRONTEND_BUILD_GOAL_RESULT="$VAADIN_DESKTOP_FLOW_IPC_FRONTEND_BUILD_MAVEN_GOAL_RESULT"
-    return 0
+  echo "Building standard Vaadin production bundle for $MODULE"
+  if ! "${command[@]}" >"$stdout_log" 2>"$stderr_log"; then
+    echo "Standard Vaadin production bundle build failed." >&2
+    tail -n 20 "$stderr_log" >&2
+    return 1
   fi
 
-  local goal="com.vaadin:vaadin-maven-plugin:${vaadin_version}:${requested_goal}"
-  export VAADIN_DESKTOP_FLOW_IPC_FRONTEND_BUILD_PLUGIN_COORDINATES="com.vaadin:vaadin-maven-plugin:${vaadin_version}"
-  local cmd=(mvn "$maven_mode" "-Dmaven.repo.local=$MAVEN_REPO" -f "$MODULE_POM" -DskipTests)
-  if [[ "$requested_goal" == "build-frontend" ]]; then
-    export VAADIN_DESKTOP_FLOW_IPC_FRONTEND_BUILD_PRODUCTION_MODE="true"
-    export VAADIN_DESKTOP_FLOW_IPC_FRONTEND_BUILD_FORCE_PRODUCTION_BUILD="true"
-    export VAADIN_DESKTOP_FLOW_IPC_FRONTEND_BUILD_IGNORE_VERSION_CHECKS="true"
-    cmd+=("-Dvaadin.productionMode=true")
-    cmd+=("-Dvaadin.force.production.build=true")
-    cmd+=("-Dfrontend.ignore.version.checks=true")
-    if [[ "${VAADIN_DESKTOP_FLOW_IPC_FRONTEND_BUILD_COMMERCIAL_WITH_BANNER:-}" == "1" ]]; then
-      cmd+=("-Dvaadin.commercialWithBanner=true")
-    fi
+  local webapp_root="$ROOT/$MODULE/target/classes/META-INF/VAADIN/webapp"
+  if [[ ! -f "$webapp_root/index.html" ]]; then
+    echo "Standard Vaadin production bundle is incomplete: $webapp_root/index.html" >&2
+    return 1
   fi
-  cmd+=("$goal")
-  local redacted_command
-  redacted_command="$(printf '%q ' "${cmd[@]}")"
-  redacted_command="$(redact_for_trace "$redacted_command")"
-  export VAADIN_DESKTOP_FLOW_IPC_FRONTEND_BUILD_STEP_COMMAND="$redacted_command"
-  export VAADIN_DESKTOP_FLOW_IPC_FRONTEND_BUILD_STDOUT_LOG="$(redact_for_trace "$stdout_log")"
-  export VAADIN_DESKTOP_FLOW_IPC_FRONTEND_BUILD_STDERR_LOG="$(redact_for_trace "$stderr_log")"
+  if ! find "$ROOT/$MODULE/target" -maxdepth 1 -type f -name '*.jar' \
+      ! -name '*.jar.original' | grep -q .; then
+    echo "Production bundle build did not produce a runnable JAR for $MODULE." >&2
+    return 1
+  fi
 
-  echo "Running Flow IPC frontend build preflight: $redacted_command"
-  local started_at ended_at status
-  started_at="$(date +%s)"
-  set +e
-  "${cmd[@]}" >"$stdout_log" 2>"$stderr_log"
-  status=$?
-  set -e
-  ended_at="$(date +%s)"
-
-  export VAADIN_DESKTOP_FLOW_IPC_FRONTEND_BUILD_STEP_EXIT_CODE="$status"
-  export VAADIN_DESKTOP_FLOW_IPC_FRONTEND_BUILD_STEP_DURATION_MILLIS="$(((ended_at - started_at) * 1000))"
-  local summary
-  summary="$(single_line_log_summary "$stderr_log")"
-  if [[ -z "$summary" ]]; then
-    summary="$(single_line_log_summary "$stdout_log")"
-  fi
-  export VAADIN_DESKTOP_FLOW_IPC_FRONTEND_BUILD_STEP_SUMMARY="$summary"
-  local plugin_jar="$MAVEN_REPO/com/vaadin/vaadin-maven-plugin/$vaadin_version/vaadin-maven-plugin-$vaadin_version.jar"
-  if [[ "$status" == "0" ]]; then
-    export VAADIN_DESKTOP_FLOW_IPC_FRONTEND_BUILD_STEP_STATUS="success"
-    export VAADIN_DESKTOP_FLOW_IPC_FRONTEND_BUILD_PLUGIN_RESOLUTION_STATUS="resolved"
-    export VAADIN_DESKTOP_FLOW_IPC_FRONTEND_BUILD_MAVEN_GOAL_RESULT="success"
-    export VAADIN_DESKTOP_FLOW_IPC_FRONTEND_BUILD_GOAL_RESULT="$VAADIN_DESKTOP_FLOW_IPC_FRONTEND_BUILD_MAVEN_GOAL_RESULT"
-    export VAADIN_DESKTOP_FLOW_IPC_FRONTEND_BUILD_OUTPUT_USABILITY="$(classify_frontend_build_output_usability)"
-  elif grep -Eiq "No plugin found|PluginResolutionException|Could not find artifact|could not be resolved|Plugin .* was not found" "$stdout_log" "$stderr_log"; then
-    export VAADIN_DESKTOP_FLOW_IPC_FRONTEND_BUILD_STEP_STATUS="unavailable"
-    export VAADIN_DESKTOP_FLOW_IPC_FRONTEND_BUILD_PLUGIN_RESOLUTION_STATUS="missing"
-    export VAADIN_DESKTOP_FLOW_IPC_FRONTEND_BUILD_MAVEN_GOAL_RESULT="plugin-unavailable"
-    export VAADIN_DESKTOP_FLOW_IPC_FRONTEND_BUILD_GOAL_RESULT="$VAADIN_DESKTOP_FLOW_IPC_FRONTEND_BUILD_MAVEN_GOAL_RESULT"
-  else
-    export VAADIN_DESKTOP_FLOW_IPC_FRONTEND_BUILD_STEP_STATUS="failed"
-    if [[ -f "$plugin_jar" ]]; then
-      export VAADIN_DESKTOP_FLOW_IPC_FRONTEND_BUILD_PLUGIN_RESOLUTION_STATUS="resolved"
-    else
-      export VAADIN_DESKTOP_FLOW_IPC_FRONTEND_BUILD_PLUGIN_RESOLUTION_STATUS="unknown"
-    fi
-    export VAADIN_DESKTOP_FLOW_IPC_FRONTEND_BUILD_MAVEN_GOAL_RESULT="failed"
-    export VAADIN_DESKTOP_FLOW_IPC_FRONTEND_BUILD_GOAL_RESULT="$VAADIN_DESKTOP_FLOW_IPC_FRONTEND_BUILD_MAVEN_GOAL_RESULT"
-    export VAADIN_DESKTOP_FLOW_IPC_FRONTEND_BUILD_OUTPUT_USABILITY="$(classify_frontend_build_output_usability)"
-  fi
-  echo "Flow IPC frontend build preflight status: $VAADIN_DESKTOP_FLOW_IPC_FRONTEND_BUILD_STEP_STATUS ($status)"
+  echo "Standard Vaadin production bundle ready"
 }

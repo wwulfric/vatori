@@ -57,6 +57,7 @@ public final class IpcJson {
         values.put("correlationId", envelope.correlationId());
         values.put("sessionId", envelope.sessionId());
         values.put("uiId", envelope.uiId());
+        values.put("windowId", envelope.windowId());
         values.put("route", envelope.route());
         values.put("payload", envelope.payload());
         values.put("error", envelope.error());

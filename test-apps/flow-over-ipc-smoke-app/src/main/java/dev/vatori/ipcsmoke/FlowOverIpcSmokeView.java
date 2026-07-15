@@ -2,7 +2,6 @@ package dev.vatori.ipcsmoke;
 
 import com.vaadin.flow.component.button.Button;
 import com.vaadin.flow.component.checkbox.Checkbox;
-import com.vaadin.flow.component.dependency.JavaScript;
 import com.vaadin.flow.component.html.H1;
 import com.vaadin.flow.component.html.Input;
 import com.vaadin.flow.component.html.Span;
@@ -11,7 +10,6 @@ import com.vaadin.flow.component.select.Select;
 import com.vaadin.flow.component.textfield.BigDecimalField;
 import com.vaadin.flow.component.textfield.TextField;
 import com.vaadin.flow.router.Route;
-import com.vaadin.flow.shared.ui.LoadMode;
 import dev.vatori.desktop.Desktop;
 import dev.vatori.desktop.DesktopCommand;
 import tools.jackson.databind.JsonNode;
@@ -23,7 +21,6 @@ import java.nio.file.Path;
 import java.util.Map;
 
 @Route("")
-@JavaScript(value = "context://vatori-flow-ipc-lazy-v1_10.js", loadMode = LoadMode.LAZY)
 public class FlowOverIpcSmokeView extends VerticalLayout {
     private static final Path MODULE_BUILD = Path.of(System.getProperty("user.dir")).resolve(".build");
     private static final Path DOWNLOAD_TARGET = MODULE_BUILD.resolve("flow-ipc-download-smoke.txt");
@@ -44,6 +41,8 @@ public class FlowOverIpcSmokeView extends VerticalLayout {
 
         Span fileTransferStatus = new Span("File transfer: pending");
         fileTransferStatus.setId("ipc-file-transfer-status");
+
+        Span standardPushStatus = StandardBundlePushProbe.attachTo(this);
 
         Button button = new Button("Increment over IPC", event -> {
             count++;
@@ -67,7 +66,7 @@ public class FlowOverIpcSmokeView extends VerticalLayout {
         list.add(new Span("3 Replace-root patch over IPC READY"));
         list.add(new Span("4 Desktop command/capabilityResult over IPC READY"));
 
-        add(title, button, status, list, fileTransferStatus);
+        add(title, button, status, list, fileTransferStatus, standardPushStatus);
 
         Input textInput = new Input();
         textInput.setId("ipc-text-input");

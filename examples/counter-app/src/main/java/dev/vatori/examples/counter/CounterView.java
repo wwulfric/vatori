@@ -5,13 +5,14 @@ import com.vaadin.flow.component.html.H1;
 import com.vaadin.flow.component.html.Span;
 import com.vaadin.flow.component.orderedlayout.VerticalLayout;
 import com.vaadin.flow.router.Route;
+import com.vaadin.flow.router.RouterLink;
 import dev.vatori.desktop.Desktop;
 
 @Route("")
 public class CounterView extends VerticalLayout {
     private int count;
 
-    public CounterView() {
+    public CounterView(CounterApplicationService applicationService) {
         setPadding(true);
         setSpacing(true);
 
@@ -25,7 +26,7 @@ public class CounterView extends VerticalLayout {
         });
         increment.setId("counter-button");
 
-        add(new H1("Vaadin Desktop Counter"), value, increment);
+        add(new H1(applicationService.title()), value, increment,
+                new RouterLink("Details", CounterDetailsView.class));
     }
 }
-

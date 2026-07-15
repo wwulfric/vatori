@@ -3,13 +3,17 @@ import Cocoa
 final class DesktopCommandExecutor {
     private let config: HostConfig
     private let capabilityManifest: CapabilityManifest
+    private let windowId: String
     weak var window: NSWindow?
     private var fileDialogInFlight = false
     private var fileTransferPanelInFlight = false
 
-    init(config: HostConfig, capabilityManifest: CapabilityManifest) {
+    init(config: HostConfig,
+         capabilityManifest: CapabilityManifest,
+         windowId: String = "main") {
         self.config = config
         self.capabilityManifest = capabilityManifest
+        self.windowId = windowId
     }
 
     func execute(_ command: String,
@@ -137,11 +141,17 @@ final class DesktopCommandExecutor {
         panel.allowsMultipleSelection = allowsMultipleSelection
         panel.canCreateDirectories = false
 
-        if config.flowIpcAutoFileDialogCancel {
+        let acceptanceAutoCancel: Bool
+#if VATORI_FLOW_IPC_ACCEPTANCE
+        acceptanceAutoCancel = config.flowIpcAutoFileDialogCancel
+        if acceptanceAutoCancel {
             DispatchQueue.main.asyncAfter(deadline: .now() + 0.2) {
                 panel.cancel(nil)
             }
         }
+#else
+        acceptanceAutoCancel = false
+#endif
 
         let finish: (NSApplication.ModalResponse) -> Void = { response in
             self.fileDialogInFlight = false
@@ -155,7 +165,7 @@ final class DesktopCommandExecutor {
                 "paths": paths,
                 "allowsMultipleSelection": allowsMultipleSelection,
                 "securityScoped": false,
-                "autoCanceled": response != .OK && self.config.flowIpcAutoFileDialogCancel
+                "autoCanceled": response != .OK && acceptanceAutoCancel
             ]
             if paths.count == 1 {
                 result["path"] = paths[0]
@@ -488,7 +498,7 @@ final class DesktopCommandExecutor {
         payload["permissionMode"] = capabilityManifest.permissionMode
         payload["permissionDecision"] = decision
         payload["permissionReason"] = reason ?? capabilityManifest.allowedReason(result["command"] as? String ?? "")
-        payload["permissionScope"] = "window:main"
+        payload["permissionScope"] = "window:\(windowId)"
         payload["permissionManifestLoaded"] = capabilityManifest.loaded
         payload["permissionManifestPath"] = capabilityManifest.path
         payload["permissionManifestCommands"] = capabilityManifest.allowedCommands.sorted().joined(separator: ",")

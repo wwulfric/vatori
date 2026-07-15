@@ -38,31 +38,6 @@ func uidlTraceSearchIndex(_ body: String) -> String {
     return result.joined(separator: ",")
 }
 
-func redactedUidlPayload(_ payload: [String: Any]) -> [String: Any] {
-    var copy = compactFlowIpcTracePayload(payload)
-    if let clientState = payload["clientState"] as? [String: Any] {
-        let redactedClientState = redactedSensitiveRpcValue(clientState) as? [String: Any] ?? clientState
-        copy["clientState"] = compactScalarTracePayload(redactedClientState, maxStringLength: 256)
-    }
-    if let flowClientResources = payload["flowClientResources"] as? [String: Any] {
-        copy["flowClientResources"] = compactResourceManifestPayload(flowClientResources)
-    }
-    if let componentFrontendResources = payload["componentFrontendResources"] as? [String: Any] {
-        copy["componentFrontendResources"] = compactResourceManifestPayload(componentFrontendResources)
-    }
-    guard var uidl = payload["uidl"] as? [String: Any],
-          let body = uidl["body"] as? String else {
-        return copy
-    }
-    uidl["bodyPreview"] = compactTraceString(body, maxLength: 768)
-    uidl["bodyBytes"] = body.utf8.count
-    uidl["bodyRedacted"] = true
-    uidl["bodySearchIndex"] = uidlTraceSearchIndex(body)
-    uidl.removeValue(forKey: "body")
-    copy["uidl"] = uidl
-    return copy
-}
-
 func redactedSensitiveRpcValue(_ value: Any, key: String = "") -> Any {
     let normalizedKey = key.lowercased()
     if isSensitiveTraceKey(key) {
@@ -87,52 +62,36 @@ func redactedSensitiveRpcValue(_ value: Any, key: String = "") -> Any {
     return value
 }
 
-func redactedEventPayload(_ payload: [String: Any]) -> [String: Any] {
-    redactedSensitiveRpcValue(payload) as? [String: Any] ?? payload
-}
-
 func redactedFlowIpcEnvelope(_ object: [String: Any]) -> [String: Any] {
     if let type = object["type"] as? String,
-       ["bootstrapResponse", "push", "patch", "resync"].contains(type),
-       let payload = object["payload"] as? [String: Any] {
-        var copy = object
-        copy["payload"] = redactedUidlPayload(payload)
-        return copy
-    }
-
-    if object["type"] as? String == "event",
-       let payload = object["payload"] as? [String: Any] {
-        var copy = object
-        copy["payload"] = redactedEventPayload(payload)
-        return copy
-    }
-
-    if object["type"] as? String == "resourceResponse",
+       type.hasPrefix("opaqueHttpStream"),
        var payload = object["payload"] as? [String: Any],
-       let body = payload["body"] as? String {
+       let bodyBase64 = payload["bodyBase64"] as? String {
         var copy = object
-        payload = redactedSensitiveRpcValue(payload) as? [String: Any] ?? payload
-        payload["bodyPreview"] = String(body.prefix(96))
-        payload["bodyBytes"] = body.utf8.count
+        payload["bodyBytes"] = Data(base64Encoded: bodyBase64)?.count ?? 0
         payload["bodyRedacted"] = true
-        payload.removeValue(forKey: "body")
-        copy["payload"] = compactFlowIpcTracePayload(payload, maxStringLength: 768)
+        payload.removeValue(forKey: "bodyBase64")
+        copy["payload"] = redactedSensitiveRpcValue(payload)
         return copy
     }
 
-    if object["type"] as? String == "resourceResponse",
-       let payload = object["payload"] as? [String: Any] {
+    if object["type"] as? String == "opaquePush",
+       var payload = object["payload"] as? [String: Any],
+       let uidl = payload["uidl"] as? String {
         var copy = object
-        let redacted = redactedSensitiveRpcValue(payload) as? [String: Any] ?? payload
-        copy["payload"] = compactFlowIpcTracePayload(redacted, maxStringLength: 768)
+        payload["uidlBytes"] = uidl.utf8.count
+        payload["uidlRedacted"] = true
+        payload["uidlSearchIndex"] = uidlTraceSearchIndex(uidl)
+        payload.removeValue(forKey: "uidl")
+        copy["payload"] = payload
         return copy
     }
 
-    if object["type"] as? String == "resourceRequest",
+    if let type = object["type"] as? String,
+       ["opaquePushConnect", "opaquePushDisconnect", "opaquePushResync"].contains(type),
        let payload = object["payload"] as? [String: Any] {
         var copy = object
-        let redacted = redactedSensitiveRpcValue(payload) as? [String: Any] ?? payload
-        copy["payload"] = compactFlowIpcTracePayload(redacted, maxStringLength: 768)
+        copy["payload"] = redactedSensitiveRpcValue(payload)
         return copy
     }
 
@@ -154,16 +113,19 @@ func redactedFlowIpcEnvelope(_ object: [String: Any]) -> [String: Any] {
     return object
 }
 
-func redactedJavaStdoutLine(_ line: String) -> String {
+func summarizedJavaStdoutLine(_ line: String) -> String {
     guard line.hasPrefix("VFIPC1 ") else {
         return line
     }
     let raw = String(line.dropFirst(7))
     guard let data = raw.data(using: .utf8),
-          let object = try? JSONSerialization.jsonObject(with: data) as? [String: Any],
-          let redacted = try? JSONSerialization.data(withJSONObject: redactedFlowIpcEnvelope(object)),
-          let text = String(data: redacted, encoding: .utf8) else {
-        return line
+          let object = try? JSONSerialization.jsonObject(with: data) as? [String: Any] else {
+        return "VFIPC1 invalid bytes=\(raw.utf8.count)"
     }
-    return "VFIPC1 \(text)"
+    let type = object["type"] as? String ?? "unknown"
+    let id = object["id"] as? String ?? ""
+    let correlationId = object["correlationId"] as? String ?? ""
+    let payload = object["payload"] as? [String: Any] ?? [:]
+    let path = compactTraceString(payload["path"] as? String ?? "", maxLength: 256)
+    return "VFIPC1 type=\(type) id=\(id) correlationId=\(correlationId) bytes=\(raw.utf8.count) payloadFields=\(payload.count) path=\(path)"
 }

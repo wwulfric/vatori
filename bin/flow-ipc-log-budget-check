@@ -1,0 +1,40 @@
+#!/usr/bin/env bash
+set -euo pipefail
+
+LOG_FILE="${1:-}"
+MAX_BYTES="${VAADIN_DESKTOP_FLOW_IPC_LOG_MAX_BYTES:-2097152}"
+MAX_LINE_BYTES="${VAADIN_DESKTOP_FLOW_IPC_LOG_MAX_LINE_BYTES:-32768}"
+
+if [[ -z "$LOG_FILE" || ! -f "$LOG_FILE" ]]; then
+  echo "Usage: $0 <host.out.log>" >&2
+  exit 2
+fi
+
+TOTAL_BYTES="$(wc -c < "$LOG_FILE" | tr -d '[:space:]')"
+read -r LARGEST_LINE_BYTES LARGEST_LINE_NUMBER < <(
+  LC_ALL=C awk '
+    length($0) > largest {
+      largest = length($0)
+      line_number = NR
+    }
+    END {
+      print largest + 0, line_number + 0
+    }
+  ' "$LOG_FILE"
+)
+
+FAILED=0
+if (( TOTAL_BYTES > MAX_BYTES )); then
+  echo "Flow IPC compact log exceeds total budget: ${TOTAL_BYTES} > ${MAX_BYTES} bytes" >&2
+  FAILED=1
+fi
+if (( LARGEST_LINE_BYTES > MAX_LINE_BYTES )); then
+  echo "Flow IPC compact log line ${LARGEST_LINE_NUMBER} exceeds line budget: ${LARGEST_LINE_BYTES} > ${MAX_LINE_BYTES} bytes" >&2
+  FAILED=1
+fi
+
+if (( FAILED != 0 )); then
+  exit 1
+fi
+
+echo "Flow IPC compact log budget OK: ${TOTAL_BYTES} bytes total, ${LARGEST_LINE_BYTES} bytes max line"

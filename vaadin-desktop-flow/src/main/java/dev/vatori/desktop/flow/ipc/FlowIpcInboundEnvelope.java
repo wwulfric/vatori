@@ -5,6 +5,10 @@ import tools.jackson.databind.JsonNode;
 import tools.jackson.databind.ObjectMapper;
 import tools.jackson.databind.json.JsonMapper;
 
+import java.util.Collections;
+import java.util.LinkedHashMap;
+import java.util.Map;
+
 final class FlowIpcInboundEnvelope {
     private static final ObjectMapper JSON = JsonMapper.builder().build();
 
@@ -51,6 +55,10 @@ final class FlowIpcInboundEnvelope {
         return topLevelString("uiId");
     }
 
+    String windowId() {
+        return topLevelString("windowId");
+    }
+
     String string(String field) {
         return stringValue(field(field));
     }
@@ -83,6 +91,30 @@ final class FlowIpcInboundEnvelope {
         } catch (JacksonException error) {
             throw new IllegalArgumentException("Unable to serialize Flow IPC field " + field, error);
         }
+    }
+
+    Map<String, String> stringMap(String field) {
+        JsonNode node = field(field);
+        if (node == null || !node.isObject()) {
+            return Map.of();
+        }
+        Map<String, String> values = new LinkedHashMap<>();
+        node.properties().forEach(entry -> {
+            JsonNode value = entry.getValue();
+            if (value != null && value.isString()) {
+                values.put(entry.getKey(), value.stringValue());
+            }
+        });
+        return Map.copyOf(values);
+    }
+
+    @SuppressWarnings("unchecked")
+    Map<String, Object> payloadMap() {
+        if (payload == null) {
+            return Map.of();
+        }
+        Map<String, Object> values = JSON.convertValue(payload, Map.class);
+        return Collections.unmodifiableMap(new LinkedHashMap<>(values));
     }
 
     int objectInteger(String objectField, String nestedField, int fallback) {

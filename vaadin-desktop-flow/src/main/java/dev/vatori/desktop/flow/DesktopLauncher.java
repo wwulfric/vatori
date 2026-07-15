@@ -6,6 +6,7 @@ import dev.vatori.desktop.DesktopContextHolder;
 import dev.vatori.desktop.host.DesktopHost;
 import dev.vatori.desktop.host.DesktopHosts;
 import dev.vatori.desktop.host.DesktopNativeBridges;
+import dev.vatori.desktop.flow.ipc.FlowIpcLauncher;
 import org.springframework.boot.builder.SpringApplicationBuilder;
 import org.springframework.context.ConfigurableApplicationContext;
 
@@ -21,6 +22,19 @@ public final class DesktopLauncher {
     public static ConfigurableApplicationContext launch(Class<?> springBootApplicationClass,
                                                         DesktopApplication application,
                                                         String[] args) {
+        if (flowIpcTransportRequested()) {
+            ConfigurableApplicationContext context =
+                    FlowIpcSpringApplication.start(springBootApplicationClass, args);
+            try {
+                FlowIpcRouteCatalog routes =
+                        FlowIpcRouteResolver.resolve(springBootApplicationClass);
+                FlowIpcLauncher.launchSpringApplication(
+                        routes.rootRoute(), routes.routes(), application, args, context);
+            } finally {
+                context.close();
+            }
+            return null;
+        }
         return launch(springBootApplicationClass, application, args, DesktopHosts.defaultHost());
     }
 
@@ -50,6 +64,14 @@ public final class DesktopLauncher {
         properties.put("vaadin.desktop.compatibility-mode", "true");
         properties.put("vaadin.launch-browser", "false");
         return properties;
+    }
+
+    private static boolean flowIpcTransportRequested() {
+        String transport = System.getProperty("vaadin.desktop.transport");
+        if (transport == null || transport.isBlank()) {
+            transport = System.getenv("VAADIN_DESKTOP_TRANSPORT");
+        }
+        return "flow-ipc".equalsIgnoreCase(transport);
     }
 
     private static int resolvePort(ConfigurableApplicationContext context) {

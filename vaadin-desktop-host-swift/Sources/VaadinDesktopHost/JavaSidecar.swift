@@ -1,33 +1,53 @@
 import Cocoa
 
+struct JavaSidecarTermination {
+    let generation: Int
+    let processIdentifier: Int32
+    let status: Int32
+    let reason: Process.TerminationReason
+    let expected: Bool
+}
+
 final class JavaSidecar {
     private let config: HostConfig
     private let onApplicationURL: (URL) -> Void
     private let onFlowIpcEnvelope: (String, [String: Any]) -> Void
+    private let onTermination: (JavaSidecarTermination) -> Void
     private var process: Process?
     private var stdinPipe: Pipe?
     private var stdoutPipe: Pipe?
     private var stderrPipe: Pipe?
+    private var generation = 0
+    private var runningGeneration: Int?
+    private var shutdownRequested = false
 
     init(config: HostConfig,
          onApplicationURL: @escaping (URL) -> Void,
-         onFlowIpcEnvelope: @escaping (String, [String: Any]) -> Void) {
+         onFlowIpcEnvelope: @escaping (String, [String: Any]) -> Void,
+         onTermination: @escaping (JavaSidecarTermination) -> Void) {
         self.config = config
         self.onApplicationURL = onApplicationURL
         self.onFlowIpcEnvelope = onFlowIpcEnvelope
+        self.onTermination = onTermination
     }
 
-    func start() {
+    @discardableResult
+    func start() -> Bool {
+        guard !shutdownRequested,
+              process?.isRunning != true else {
+            return false
+        }
         let modulePom = "\(config.module)/pom.xml"
         guard FileManager.default.fileExists(atPath: modulePom) else {
             trace("send", "error", [
                 "code": "moduleNotFound",
                 "message": "Module pom not found: \(modulePom)"
             ])
-            NSApp.terminate(nil)
-            return
+            return false
         }
 
+        generation += 1
+        let launchGeneration = generation
         let process = Process()
         process.currentDirectoryURL = URL(fileURLWithPath: config.repoRoot)
         let launchPlan = JavaSidecarLaunchPlan.make(config: config, modulePom: modulePom)
@@ -53,30 +73,31 @@ final class JavaSidecar {
         self.stdoutPipe = stdoutPipe
         self.stderrPipe = stderrPipe
         self.process = process
+        runningGeneration = launchGeneration
 
         let stdoutReader = LineReader { [weak self] line in
-            self?.handleStdout(line)
+            self?.handleStdout(line, generation: launchGeneration)
         }
-        stdoutPipe.fileHandleForReading.readabilityHandler = { handle in
+        stdoutPipe.fileHandleForReading.readabilityHandler = { [weak self] handle in
+            guard self?.runningGeneration == launchGeneration else {
+                return
+            }
             stdoutReader.append(handle.availableData)
         }
 
-        stderrPipe.fileHandleForReading.readabilityHandler = { handle in
+        stderrPipe.fileHandleForReading.readabilityHandler = { [weak self] handle in
+            guard self?.runningGeneration == launchGeneration else {
+                return
+            }
             let data = handle.availableData
             if !data.isEmpty, let text = String(data: data, encoding: .utf8) {
                 FileHandle.standardError.write(("[java:err] \(text)").data(using: .utf8)!)
             }
         }
 
-        process.terminationHandler = { process in
-            trace("recv", "sidecar.exit", [
-                "status": process.terminationStatus,
-                "reason": process.terminationReason.rawValue
-            ])
-            if process.terminationStatus != 0 {
-                DispatchQueue.main.async {
-                    NSApp.terminate(nil)
-                }
+        process.terminationHandler = { [weak self] process in
+            DispatchQueue.main.async {
+                self?.handleTermination(process, generation: launchGeneration)
             }
         }
 
@@ -85,28 +106,41 @@ final class JavaSidecar {
             "modulePom": modulePom,
             "jar": launchPlan.directJar ?? "",
             "nativeBridge": "host-protocol",
-            "transport": config.transport
+            "transport": config.transport,
+            "generation": launchGeneration
         ])
 
         do {
             try process.run()
+            trace("recv", "sidecar.started", [
+                "generation": launchGeneration,
+                "processIdentifier": process.processIdentifier,
+                "transport": config.transport
+            ])
+            return true
         } catch {
+            clearProcess(generation: launchGeneration)
             trace("send", "error", [
                 "code": "sidecarStartFailed",
-                "message": error.localizedDescription
+                "message": error.localizedDescription,
+                "generation": launchGeneration
             ])
-            NSApp.terminate(nil)
+            return false
         }
     }
 
     func terminate() {
+        guard !shutdownRequested else {
+            return
+        }
+        shutdownRequested = true
         if config.transport == "flow-ipc" {
             trace("send", "shutdown", [
                 "target": "java-sidecar",
                 "transport": "flow-ipc",
                 "reason": "host-terminate"
             ])
-            sendFlowIpc("{\"version\":\"flow-ipc-v1\",\"type\":\"shutdown\",\"id\":\"shutdown\",\"correlationId\":\"shutdown\",\"sessionId\":\"flow-ipc-session\",\"uiId\":\"main\",\"route\":\"\",\"payload\":{},\"error\":null,\"timestamp\":0}")
+            sendFlowIpc("{\"version\":\"flow-ipc-v1\",\"type\":\"shutdown\",\"id\":\"shutdown\",\"correlationId\":\"shutdown\",\"sessionId\":\"flow-ipc-session\",\"uiId\":\"main\",\"windowId\":\"main\",\"route\":\"\",\"payload\":{},\"error\":null,\"timestamp\":0}")
         }
         stdoutPipe?.fileHandleForReading.readabilityHandler = nil
         stderrPipe?.fileHandleForReading.readabilityHandler = nil
@@ -116,27 +150,82 @@ final class JavaSidecar {
         }
     }
 
-    func sendFlowIpc(_ envelope: String) {
-        guard let stdinPipe else {
+    @discardableResult
+    func sendFlowIpc(_ envelope: String) -> Bool {
+        guard let stdinPipe,
+              process?.isRunning == true,
+              runningGeneration != nil else {
             trace("send", "flow-ipc.sidecarWrite", [
                 "target": "java-sidecar",
-                "status": "missing-stdin-pipe"
+                "status": "sidecar-unavailable"
             ])
-            return
+            return false
         }
         let line = "VFIPC1 \(envelope)\n"
-        if let data = line.data(using: .utf8) {
-            stdinPipe.fileHandleForWriting.write(data)
+        guard let data = line.data(using: .utf8) else {
+            return false
+        }
+        do {
+            try stdinPipe.fileHandleForWriting.write(contentsOf: data)
             trace("send", "flow-ipc.sidecarWrite", [
                 "target": "java-sidecar",
                 "status": "written",
                 "bytes": data.count
             ])
+            return true
+        } catch {
+            trace("send", "flow-ipc.sidecarWrite", [
+                "target": "java-sidecar",
+                "status": "write-failed",
+                "message": error.localizedDescription
+            ])
+            return false
         }
     }
 
-    private func handleStdout(_ line: String) {
-        print("[java] \(redactedJavaStdoutLine(line))")
+    var processIdentifier: Int32? {
+        guard process?.isRunning == true else {
+            return nil
+        }
+        return process?.processIdentifier
+    }
+
+    @discardableResult
+    func terminateForRecovery(reason: String) -> Bool {
+        guard !shutdownRequested,
+              let process,
+              process.isRunning else {
+            return false
+        }
+        trace("send", "sidecar.recoveryTerminated", [
+            "generation": runningGeneration ?? 0,
+            "processIdentifier": process.processIdentifier,
+            "reason": reason
+        ])
+        process.terminate()
+        return true
+    }
+
+#if VATORI_FLOW_IPC_ACCEPTANCE
+    @discardableResult
+    func terminateUnexpectedlyForAcceptance() -> Bool {
+        guard let process, process.isRunning else {
+            return false
+        }
+        trace("send", "sidecar.failureInjected", [
+            "generation": runningGeneration ?? 0,
+            "processIdentifier": process.processIdentifier
+        ])
+        process.terminate()
+        return true
+    }
+#endif
+
+    private func handleStdout(_ line: String, generation: Int) {
+        guard runningGeneration == generation else {
+            return
+        }
+        print("[java] \(summarizedJavaStdoutLine(line))")
         fflush(stdout)
 
         if line.hasPrefix("VDP1 ") {
@@ -144,7 +233,7 @@ final class JavaSidecar {
         }
 
         if line.hasPrefix("VFIPC1 ") {
-            handleFlowIpcEnvelope(String(line.dropFirst(7)))
+            handleFlowIpcEnvelope(String(line.dropFirst(7)), generation: generation)
         }
 
         if line.hasPrefix("Application URL: ") {
@@ -157,7 +246,7 @@ final class JavaSidecar {
         }
     }
 
-    private func handleFlowIpcEnvelope(_ envelope: String) {
+    private func handleFlowIpcEnvelope(_ envelope: String, generation: Int) {
         guard let data = envelope.data(using: .utf8),
               let object = try? JSONSerialization.jsonObject(with: data) as? [String: Any] else {
             trace("send", "error", [
@@ -167,8 +256,48 @@ final class JavaSidecar {
             return
         }
         DispatchQueue.main.async {
+            guard self.runningGeneration == generation else {
+                return
+            }
             self.onFlowIpcEnvelope(envelope, object)
         }
+    }
+
+    private func handleTermination(_ process: Process, generation: Int) {
+        guard runningGeneration == generation else {
+            return
+        }
+        let termination = JavaSidecarTermination(
+            generation: generation,
+            processIdentifier: process.processIdentifier,
+            status: process.terminationStatus,
+            reason: process.terminationReason,
+            expected: shutdownRequested)
+        clearProcess(generation: generation)
+        trace("recv", "sidecar.exit", [
+            "generation": termination.generation,
+            "processIdentifier": termination.processIdentifier,
+            "status": termination.status,
+            "reason": termination.reason.rawValue,
+            "expected": termination.expected
+        ])
+        onTermination(termination)
+    }
+
+    private func clearProcess(generation: Int) {
+        guard runningGeneration == generation else {
+            return
+        }
+        stdoutPipe?.fileHandleForReading.readabilityHandler = nil
+        stderrPipe?.fileHandleForReading.readabilityHandler = nil
+        try? stdinPipe?.fileHandleForWriting.close()
+        try? stdoutPipe?.fileHandleForReading.close()
+        try? stderrPipe?.fileHandleForReading.close()
+        stdinPipe = nil
+        stdoutPipe = nil
+        stderrPipe = nil
+        process = nil
+        runningGeneration = nil
     }
 
     private func handleHostProtocolEnvelope(_ envelope: String) {

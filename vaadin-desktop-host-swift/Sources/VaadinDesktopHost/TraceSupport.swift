@@ -11,11 +11,14 @@ extension String {
 }
 
 func trace(_ direction: String, _ type: String, _ payload: [String: Any]) {
+    let emittedPayload = detailedFlowIpcTraceEnabled()
+        ? payload
+        : compactHostProtocolTracePayload(type: type, payload: payload)
     let object: [String: Any] = [
         "direction": direction,
         "type": type,
         "at": nowMillis(),
-        "payload": payload
+        "payload": emittedPayload
     ]
     if let data = try? JSONSerialization.data(withJSONObject: object, options: []),
        let text = String(data: data, encoding: .utf8) {

@@ -115,7 +115,8 @@ native host.
 - `vaadin-desktop-host-swift`: Swift/AppKit/WKWebView host.
 - `test-support/vaadin-desktop-host-swift-acceptance`: repository-only Swift and
   WKWebView automation support for explicit native-host acceptance profiles.
-- `vaadin-desktop-devtools`: trace inspector and acceptance diagnostics.
+- `test-support/vaadin-desktop-trace-inspector`: repository-only trace gates,
+  built directly by validation commands and excluded from the framework reactor.
 - `vaadin-desktop-cli`: developer command entry.
 - `examples/*`: developer-shaped examples.
 - `test-apps/*`: validation fixtures and framework-shape smoke apps.
@@ -124,7 +125,9 @@ The macOS host follows the same dependency direction. `vaadin-desktop-host-swift
 contains only the ordinary host and standard-bundle bridge. Repository acceptance
 builds explicitly add the small `VaadinDesktopHostAcceptanceSupport` automation
 overlay from `test-support/vaadin-desktop-host-swift-acceptance`; normal builds
-neither compile nor package those sources.
+neither compile nor package those sources. The production host calls a neutral
+`HostRuntimeHooks` contract; the build profile selects either the no-op production
+factory or the repository-only acceptance implementation.
 
 ## Relationship to Tauri and Electron
 

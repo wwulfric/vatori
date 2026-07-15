@@ -20,8 +20,12 @@ The guard checks for:
 - accidental cache directories and generated artifacts.
 - framework/test-support dependency direction, typed-runtime ownership and
   acceptance-fixture leakage.
-- retired custom-shell/test-support paths and the minimal devtools source
-  allowlist.
+- retired custom-shell paths and repository-only trace-inspector ownership.
+
+Framework production sources may contain neutral extension points, but not
+acceptance flags, fixture names, fault-injection APIs or deterministic test-path
+shortcuts. Test-support modules stay outside the root Maven reactor and are built
+only by their validation wrappers.
 
 Keep the guard when changing docs, agent instructions, acceptance gate names or
 generated-resource fixtures.

@@ -69,12 +69,14 @@ adapter、Flow IPC scope 和浏览器 bridge 测试。具体子命令以脚本�
 
 ## 仓库地图
 
+详细的依赖方向、发布边界和代码放置规则见
+[仓库结构与心智模型](docs/repository-structure.md)。
+
 - `vaadin-desktop-core`：公开的 Java desktop runtime API。
 - `vaadin-desktop-ipc`：IPC envelope 和 trace primitives。
 - `vaadin-desktop-host`：Java host abstraction、显式 compatibility host 和 native bridge support。
 - `vaadin-desktop-host-swift`：面向 macOS native runtime 路径的 Swift/AppKit/WKWebView host。
 - `vaadin-desktop-flow`：Vaadin Flow / Spring Boot launcher、标准 production bundle runtime 和 opaque IPC transport adapter。
-- `vaadin-desktop-devtools`：标准 production bundle 的 trace inspector 和 Flow IPC gates。
 - `vaadin-desktop-cli`：CLI scaffold；shell 入口是 `bin/vaadin-desktop`。
 - `bin/`：本地开发、smoke 检查和仓库卫生检查的 shell 入口。
 - `docs/`：当前架构、runtime、protocol 和 acceptance 文档。
@@ -82,6 +84,7 @@ adapter、Flow IPC scope 和浏览器 bridge 测试。具体子命令以脚本�
 - `.agents/`：仓库本地 Codex workflow skills。
 - `examples/`：小而清晰的开发者示例。
 - `test-apps/`：带确定性 hook 和更广断言面的验证 app。
+- `test-support/`：仅供仓库验收使用的自动化和 trace gates，不进入公开框架依赖图。
 
 ## Examples vs Test Apps
 
@@ -112,6 +115,7 @@ blocker diagnostics 的边界。
 ## 文档
 
 - [Getting Started](docs/getting-started.md)
+- [仓库结构与心智模型](docs/repository-structure.md)
 - [Framework Architecture](docs/framework-architecture.md)
 - [Flow Integration](docs/flow-integration.md)
 - [Flow over IPC Runtime](docs/flow-over-ipc-runtime.md)

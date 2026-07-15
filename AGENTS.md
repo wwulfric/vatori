@@ -13,21 +13,11 @@
 - 桌面 host 拥有系统 WebView、原生能力、生命周期、打包和更新路径。
 - IPC 最终成为 bootstrap、event、patch、command 和 capability result 的传输层。
 
-## 当前结构
+## 仓库结构
 
-- `vaadin-desktop-core`：公开的 Java desktop API。
-- `vaadin-desktop-ipc`：IPC envelope 和 trace 基础结构。
-- `vaadin-desktop-host`：Java host abstraction、显式 compatibility host 和 native bridge support。
-- `vaadin-desktop-host-swift`：面向 macOS native runtime 主线的 Swift/AppKit/WKWebView host。
-- `test-support/vaadin-desktop-host-swift-acceptance`：仅供仓库内显式 native-host acceptance profile 使用的 Swift/WKWebView 自动化源码和资源；默认 host 构建不得编译或打包。
-- `vaadin-desktop-flow`：真实 Vaadin Flow/Spring Boot launcher、标准 production bundle runtime 和 opaque IPC transport adapter。
-- `vaadin-desktop-devtools`：标准 production bundle 的 Flow IPC trace inspector。
-- `vaadin-desktop-cli`：CLI scaffold。
-- `examples/*`：真实 Vaadin Flow 示例应用。
-- `test-apps/vaadin-desktop-smoke-app`：独立的开发者形态 smoke app。
-- `test-apps/flow-over-ipc-smoke-app`：受限 `dev-ipc` runtime 的 no-HTTP Flow IPC smoke app。
-- `test-apps/flow-over-ipc-framework-app`：更接近普通开发者项目形态的 no-HTTP Flow IPC validation app。
-- `vaadin-desktop-flow/src/main/java/dev/vatori/desktop/flow/transport`：围绕 `DesktopFlowOpaqueHttpSession`、`DesktopFlowVaadinService`、`DesktopVaadinRequest` 和 `DesktopVaadinResponse` 的 opaque request adapter。
+模块职责、依赖方向、发布边界和代码放置规则统一以
+`docs/repository-structure.md` 为准。开始跨模块修改或新增目录前先阅读该文档；不要在
+`AGENTS.md` 中复制目录清单或维护第二份结构说明。
 
 ## Runtime 边界
 
@@ -134,6 +124,7 @@ Vaadin：
 ## 文档地图
 
 - `README.md`：项目入口地图和 quick start。
+- `docs/repository-structure.md`：仓库心智模型、模块所有权、依赖方向和代码放置规则。
 - `docs/framework-architecture.md`：当前架构与目标架构。
 - `docs/getting-started.md`：开发者 workflow。
 - `docs/flow-integration.md`：今天如何集成真实 Vaadin Flow。
@@ -158,6 +149,8 @@ Vaadin：
 - 不要移除或隐藏当前 Flow 仍然依赖 Servlet/HTTP/WebSocket 的事实。
 - 不要把框架收缩成一次性的示例应用。
 - 保持 example app 是开发者形态：它们应该像外部用户一样依赖 framework modules。
+- framework module 的 `src/main`、Swift host `Sources` 和 production resources 只能包含框架能力与通用扩展点；fixture、自动化参数、故障注入、gate 和测试专用 API 必须放在 `src/test`、`test-apps` 或 `test-support`。
+- 根 Maven reactor 只聚合 framework modules、examples 和 test apps；`test-support` 由对应验证命令显式构建，不得成为 framework artifact 的依赖。
 - 除非明确要求，不要编辑本地 Tauri 或 Vaadin upstream source checkout。
 - 优先使用小而可 review 的模块和清晰 adapter 边界。
 - 搜索源码时使用 `rg` / `rg --files`。

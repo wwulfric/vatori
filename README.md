@@ -84,6 +84,9 @@ artifacts, release assets or external archives when needed.
 
 ## Repository Map
 
+See [Repository Structure and Mental Model](docs/repository-structure.md) for
+dependency direction, publishing boundaries and placement rules.
+
 - `vaadin-desktop-core`: public Java desktop runtime API.
 - `vaadin-desktop-ipc`: IPC envelope and trace primitives.
 - `vaadin-desktop-host`: Java host abstractions, explicit compatibility host and
@@ -92,7 +95,6 @@ artifacts, release assets or external archives when needed.
   runtime path.
 - `vaadin-desktop-flow`: Vaadin Flow/Spring Boot launcher, standard production
   bundle runtime and opaque IPC transport adapter.
-- `vaadin-desktop-devtools`: standard-bundle trace inspector and Flow IPC gates.
 - `vaadin-desktop-cli`: CLI scaffold; shell entry is `bin/vaadin-desktop`.
 - `bin/`: shell entry points for local development, smoke checks and hygiene.
 - `docs/`: current architecture, runtime, protocol and acceptance docs.
@@ -101,6 +103,8 @@ artifacts, release assets or external archives when needed.
 - `examples/`: small developer-facing sample apps.
 - `test-apps/`: validation apps with deterministic hooks and broader assertion
   surfaces.
+- `test-support/`: repository-only acceptance automation and trace gates; it is
+  outside the published framework dependency graph.
 
 ## Examples vs Test Apps
 
@@ -134,6 +138,7 @@ blocker diagnostics should stay explicit when describing current behavior.
 ## Documentation
 
 - [Getting Started](docs/getting-started.md)
+- [Repository Structure and Mental Model](docs/repository-structure.md)
 - [Framework Architecture](docs/framework-architecture.md)
 - [Flow Integration](docs/flow-integration.md)
 - [Flow over IPC Runtime](docs/flow-over-ipc-runtime.md)

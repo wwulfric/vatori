@@ -1,8 +1,13 @@
 # IPC Protocol
 
-Framework v0 keeps the envelope designed in `flow-ipc-protocol/protocol-v0.md` and starts moving it into `vaadin-desktop-ipc`. The next-stage host path adds Host Protocol v0 for Java sidecar, native host and WebView bridge coordination.
+The shared host envelope lives in `vaadin-desktop-ipc`. It is intentionally
+small: one message per envelope, stable correlation fields, a payload object and
+an optional error object. The Swift host path adds Host Protocol tracing for Java
+sidecar, native host and WebView bridge coordination.
 
-Flow IPC Protocol v1 is documented in `docs/ipc-protocol-v1.md`. It adds `version`, `route` and `timestamp`, plus `bootstrapRequest`, `bootstrapResponse`, `event`, `patch`, `push` and `resync` for the `dev-ipc` runtime slice.
+Flow IPC Protocol v1 is documented in `docs/ipc-protocol-v1.md`. It adds scoped
+window identity, opaque request streaming, push transport, native capability
+correlation and lifecycle messages for the `dev-ipc` runtime.
 
 ## Envelope
 
@@ -30,19 +35,9 @@ Fields:
 
 ## Message Types
 
-Planned minimum:
-
-- `launch`
-- `ready`
-- `window.created`
-- `window.closed`
-- `bootstrap`
-- `event`
-- `patch`
-- `command`
-- `capabilityResult`
-- `error`
-- `shutdown`
+Stable message families are opaque HTTP stream, opaque push, native
+`command`/`capabilityResult`, window lifecycle, `ready`, `error` and `shutdown`.
+Bootstrap, events and UIDL patches remain opaque bodies owned by Vaadin.
 
 Current implementation status:
 

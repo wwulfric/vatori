@@ -5,7 +5,7 @@ vatori 是一个基于 Vaadin 的 Desktop Framework，用于构建桌面级 Vaad
 这不是一个已经完成的应用壳，也还不是最终版 Flow over IPC runtime。当前仓库有两条有用的运行路径：
 
 - **Compatibility mode**：真实 Vaadin Flow / Spring Boot app 运行在 `127.0.0.1`，原生 macOS WebView host 打开桌面窗口。
-- **Flow IPC 切片**：面向受限 Flow 验证面的实验性 no-localhost 路径。已覆盖的验证面里，bootstrap、event、UIDL patch、frontend resource 和部分 desktop capability 通过 IPC 传输。
+- **Flow IPC 切片**：运行应用标准 Vaadin production bundle 的实验性 no-localhost 路径。浏览器请求通过 opaque IPC bridge 交给 Vaadin 正常的 request-handler chain。
 
 README 只保留入口地图；详细的 Flow IPC 证据和设计说明放在 `docs/` 里。
 
@@ -24,7 +24,7 @@ README 只保留入口地图；详细的 Flow IPC 证据和设计说明放在 `d
 bash bin/vaadin-desktop dev examples/counter-app
 bash bin/vaadin-desktop dev test-apps/vaadin-desktop-smoke-app
 bash bin/vaadin-desktop dev-swift test-apps/vaadin-desktop-smoke-app
-bash bin/vaadin-desktop dev-ipc test-apps/flow-over-ipc-smoke-app
+bash bin/vaadin-desktop dev-ipc examples/counter-app
 bash bin/vaadin-desktop dev-ipc test-apps/flow-over-ipc-framework-app
 ```
 
@@ -36,7 +36,7 @@ bash bin/vaadin-desktop dev-ipc test-apps/flow-over-ipc-framework-app
 | --- | --- | --- | --- |
 | `dev` | `bash bin/vaadin-desktop dev examples/counter-app` | Local HTTP compatibility | 默认开发循环，使用原生 macOS WebView host。 |
 | `dev-swift` | `bash bin/vaadin-desktop dev-swift test-apps/vaadin-desktop-smoke-app` | Local HTTP compatibility | Swift/AppKit host 路径，包含 Java sidecar 生命周期和 host protocol trace。 |
-| `dev-ipc` | `bash bin/vaadin-desktop dev-ipc test-apps/flow-over-ipc-smoke-app` | `VFIPC1` stdin/stdout IPC | no-localhost Flow IPC 切片，覆盖当前 bootstrap/event/patch/resource/capability 验证面。 |
+| `dev-ipc` | `bash bin/vaadin-desktop dev-ipc examples/counter-app` | 基于 `VFIPC1` 的 opaque request IPC | no-localhost 标准 Vaadin production bundle 路径，覆盖当前 Flow 验证面。 |
 
 Compatibility mode 的 host 选择：
 
@@ -46,6 +46,11 @@ VAADIN_DESKTOP_HOST=headless bash bin/vaadin-desktop dev examples/counter-app
 VAADIN_DESKTOP_HOST=browser bash bin/vaadin-desktop dev examples/counter-app
 ```
 
+`system-webview` 默认 fail-fast。需要 compatibility host 时，显式使用
+`VAADIN_DESKTOP_HOST=compatibility`、`headless` 或 `browser`。如果本地开发确实
+需要从 `system-webview` 自动退回 compatibility，可设置
+`VAADIN_DESKTOP_HOST_FALLBACK=compatibility`。
+
 ## 验证
 
 运行集中式非窗口检查：
@@ -54,23 +59,11 @@ VAADIN_DESKTOP_HOST=browser bash bin/vaadin-desktop dev examples/counter-app
 bash bin/verify-smoke
 ```
 
-`bin/verify-smoke` 会运行仓库卫生检查和聚焦的 UIDL/resource smoke checks：
+`bin/verify-smoke` 会运行仓库卫生检查、inspector 契约检查、opaque HTTP
+adapter、Flow IPC scope 和浏览器 bridge 测试。具体子命令以脚本本身为准。
 
-```bash
-bash bin/repository-hygiene-check
-bash bin/uidl-adapter-smoke
-bash bin/uidl-rpc-smoke
-bash bin/flow-ipc-scope-smoke
-bash bin/flow-client-resource-smoke
-```
-
-运行无人值守 framework window 检查：
-
-```bash
-VAADIN_DESKTOP_HOST_NO_ACTIVATE=1 VAADIN_DESKTOP_FLOW_IPC_AUTO_FRAMEWORK_UPDATE=1 VAADIN_DESKTOP_FLOW_IPC_AUTO_SHUTDOWN=1 bash bin/vaadin-desktop dev-ipc test-apps/flow-over-ipc-framework-app
-```
-
-随后根据本次验证面运行对应的 `bin/flow-ipc-trace-inspect` gate。具体 gate 名称保留在 inspector 和验收文档中，不写死在 README。
+真实窗口自动化和 trace gate 验收记录在 `docs/acceptance-tools.md`。具体 gate
+名称保留在 inspector 和验收文档中，不写死在 README。
 
 完整 `.ndjson` trace 是生成产物，不按版本逐个提交。验收契约保留在 inspector 和 smoke 脚本里。需要长期保存的 trace 应进入 CI artifact、release asset 或外部归档。
 
@@ -78,15 +71,17 @@ VAADIN_DESKTOP_HOST_NO_ACTIVATE=1 VAADIN_DESKTOP_FLOW_IPC_AUTO_FRAMEWORK_UPDATE=
 
 - `vaadin-desktop-core`：公开的 Java desktop runtime API。
 - `vaadin-desktop-ipc`：IPC envelope 和 trace primitives。
-- `vaadin-desktop-host`：macOS system WebView fallback、compatibility host 和 Java native bridge 实现。
+- `vaadin-desktop-host`：Java host abstraction、显式 compatibility host 和 native bridge support。
 - `vaadin-desktop-host-swift`：面向 macOS native runtime 路径的 Swift/AppKit/WKWebView host。
-- `vaadin-desktop-flow`：Vaadin Flow / Spring Boot launcher、Flow IPC runtime 和 UIDL adapter 切片。
-- `vaadin-desktop-devtools`：trace inspector scaffold 和 Flow IPC gates。
+- `vaadin-desktop-flow`：Vaadin Flow / Spring Boot launcher、标准 production bundle runtime 和 opaque IPC transport adapter。
+- `vaadin-desktop-devtools`：标准 production bundle 的 trace inspector 和 Flow IPC gates。
 - `vaadin-desktop-cli`：CLI scaffold；shell 入口是 `bin/vaadin-desktop`。
+- `bin/`：本地开发、smoke 检查和仓库卫生检查的 shell 入口。
+- `docs/`：当前架构、runtime、protocol 和 acceptance 文档。
+- `assets/`：品牌源文件和正式导出资产。
+- `.agents/`：仓库本地 Codex workflow skills。
 - `examples/`：小而清晰的开发者示例。
 - `test-apps/`：带确定性 hook 和更广断言面的验证 app。
-- `flow-transport-adapter-spike`：Vaadin Flow transport 边界分析。
-- `prototypes/phase0-phase1-spike`：更早的非 HTTP mock transport 和 IPC 验证。
 
 ## Examples vs Test Apps
 
@@ -105,33 +100,14 @@ VAADIN_DESKTOP_HOST_NO_ACTIVATE=1 VAADIN_DESKTOP_FLOW_IPC_AUTO_FRAMEWORK_UPDATE=
 
 如果一个场景既适合做文档又适合做测试，把简单的开发者故事放在 `examples/`，把完整断言面放在 `test-apps/`。
 
-## 当前状态
+## 状态和路线
 
-已实现：
+稳定路线在 `docs/roadmap.md`。当前 Flow IPC runtime 边界在
+`docs/flow-over-ipc-runtime.md`；验收工具在 `docs/acceptance-tools.md`。
 
-- 真实 Vaadin Flow app modules 和示例项目。
-- Java desktop API：window title、notification、clipboard、file dialog、bounded file transfer 和 menu facade。
-- macOS WebView compatibility host。
-- Swift/AppKit host，负责 Java sidecar 生命周期和 host protocol trace。
-- Flow IPC runtime 切片，对当前 smoke apps 覆盖真实 server-side UIDL bootstrap/event/patch。
-- Flow client resource loading 和 frontend artifact resolver 的当前验证面证据。
-- framework-shaped validation app，覆盖代表性 Flow 组件、Binder validation、常用输入组件、多值/导航/展开/菜单组件、bounded overlay/context-menu 组件、StreamResource、Upload、DownloadHandler 和部分 desktop capability calls。
-- 当前验证面的基本 no-localhost frontend/resource pipeline 闭环。
-- 通过 `bin/verify-smoke` 进行集中式仓库卫生和 smoke 验证。
-
-进行中：
-
-- rich content、app shell 和 login 组件 coverage，目标覆盖 Avatar、MessageList、MessageInput、SideNav 和 LoginOverlay。该工作仍由显式 validation gate 约束，不能描述为已完成。
-
-仍未完成：
-
-- 完整 Flow client event coverage 和 UIDL parity。
-- dev-mode/Vite parity，以及泛化 frontend owner/runtime reuse。
-- durable push、reconnect 和 resync semantics。
-- 完整 Grid virtualization 和大文件 Upload/Download streaming。
-- 完整 overlay focus/keyboard/native context-menu behavior、rich overlay behavior、theme variants 和更深的 focus/accessibility 行为。
-- 生产级 native capability permission model。
-- packaging、signing 和 auto-update。
+不要把当前 Flow IPC validation surface 描述为完整产品级 parity。描述当前行为时，
+必须明确 compatibility mode、focused validation gate、fallback classification 和
+blocker diagnostics 的边界。
 
 ## 文档
 

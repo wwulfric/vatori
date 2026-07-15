@@ -75,11 +75,11 @@ check_top_level_docs() {
     fi
 
     for pattern in \
-      'v1\.[0-9]' \
-      'v1_[0-9]' \
+      'v1''\.[0-9]' \
+      'v1''_[0-9]' \
       'goal-[0-9]' \
       'Goal [0-9]' \
-      '--require-flow-ipc-v1_[0-9]' \
+      '--require-flow-ipc-''v1''_[0-9]' \
       'FLOW_IPC_FRONTEND_BUILD_(MAVEN_)?GOAL'
     do
       if grep -En -- "$pattern" "$path" >/dev/null; then
@@ -89,8 +89,105 @@ check_top_level_docs() {
   done
 }
 
+check_docs_no_versioned_residue() {
+  local paths=(
+    AGENTS.md
+    README.md
+    README.zh-CN.md
+    docs/*.md
+    test-apps/README.md
+    test-apps/flow-over-ipc-smoke-app/README.md
+    test-apps/flow-over-ipc-framework-app/README.md
+    vaadin-desktop-host-swift/README.md
+    test-support/README.md
+    test-support/vaadin-desktop-host-swift-acceptance/README.md
+  )
+  local path pattern
+
+  for path in "${paths[@]}"; do
+    [[ -f "$path" ]] || continue
+    for pattern in \
+      'v1''\.[0-9]' \
+      'v1''_[0-9]' \
+      'V1''_[0-9]' \
+      'FLOW_IPC_''V1' \
+      '--require-flow-ipc-''v1' \
+      'Flow IPC message ''v' \
+      'Slice[0-9]' \
+      'slice[0-9]' \
+      'goal-[0-9]' \
+      'goal_[0-9]' \
+      'VAADIN_DESKTOP_FLOW_IPC_LEGACY_SHELL' \
+      'FlowIpcShell' \
+      'vaadin-desktop-flow-test-support'
+    do
+      if grep -En -- "$pattern" "$path" >/dev/null; then
+        fail "doc contains versioned implementation residue: $path ($pattern)"
+      fi
+    done
+  done
+}
+
+check_trace_inspector_contract() {
+  local wrapper="bin/flow-ipc-trace-inspect"
+  local main_source="vaadin-desktop-devtools/src/main/java/dev/vatori/desktop/devtools"
+  local test_source="vaadin-desktop-devtools/src/test/java/dev/vatori/desktop/devtools"
+  [[ -f "$wrapper" ]] || return 0
+
+  if ! grep -Fq 'StandardBundleTraceInspector' "$wrapper"; then
+    fail "trace inspector wrapper must use the standard-bundle inspector"
+  fi
+  if grep -Fq 'DesktopTraceInspector' "$wrapper"; then
+    fail "trace inspector wrapper still selects the historical gate system"
+  fi
+
+  local unexpected_source
+  unexpected_source="$(find "$main_source" -type f ! -name 'StandardBundleTraceInspector.java' -print -quit)"
+  if [[ -n "$unexpected_source" ]]; then
+    fail "historical trace inspector source returned: $unexpected_source"
+  fi
+  unexpected_source="$(find "$test_source" -type f ! -name 'StandardBundleTraceInspectorSmokeMain.java' -print -quit)"
+  if [[ -n "$unexpected_source" ]]; then
+    fail "historical trace inspector test returned: $unexpected_source"
+  fi
+  if [[ ! -f "$main_source/StandardBundleTraceInspector.java" \
+      || ! -f "$test_source/StandardBundleTraceInspectorSmokeMain.java" ]]; then
+    fail "standard-bundle trace inspector source or smoke is missing"
+  fi
+  if grep -Fq '<artifactId>vaadin-desktop-ipc</artifactId>' vaadin-desktop-devtools/pom.xml; then
+    fail "standalone trace inspector must not depend on the framework IPC module"
+  fi
+
+  local retired_smoke
+  for retired_smoke in \
+    uidl-adapter-smoke \
+    uidl-rpc-smoke \
+    flow-client-resource-smoke \
+    flow-ipc-renderer-smoke
+  do
+    if grep -Fq "$retired_smoke" bin/verify-smoke; then
+      fail "verify-smoke still invokes retired typed-shell check: $retired_smoke"
+    fi
+  done
+}
+
+check_retired_flow_ipc_scaffolding() {
+  local retired_path
+  for retired_path in \
+    vaadin-desktop-flow-test-support \
+    test-support/vaadin-desktop-host-swift-acceptance/Resources/FlowIpcShell \
+    test-support/vaadin-desktop-host-swift-acceptance/Resources/FlowIpcShell.html \
+    test-support/vaadin-desktop-host-swift-acceptance/Resources/FlowIpcShell.css
+  do
+    if [[ -e "$retired_path" ]]; then
+      fail "retired Flow IPC scaffolding returned: $retired_path"
+    fi
+  done
+}
+
 check_swift_host_launcher_contract() {
   local host_config="vaadin-desktop-host-swift/Sources/VaadinDesktopHost/HostConfig.swift"
+  local acceptance_config="test-support/vaadin-desktop-host-swift-acceptance/Sources/VaadinDesktopHostAcceptanceSupport/FlowIpcAutomationFlags.swift"
   local launcher="bin/vaadin-desktop-swift-host-launch"
   local missing=()
   local token
@@ -103,7 +200,7 @@ check_swift_host_launcher_contract() {
       missing+=("$token")
     fi
   done < <(
-    grep -Eoh 'environment\["VAADIN_DESKTOP_[A-Z0-9_]+"\]' "$host_config" \
+    grep -Eoh 'environment\["VAADIN_DESKTOP_[A-Z0-9_]+"\]' "$host_config" "$acceptance_config" \
       | sed -E 's/.*"([^"]+)".*/\1/' \
       | sort -u
   )
@@ -124,6 +221,95 @@ check_swift_host_launcher_contract() {
   fi
 }
 
+check_framework_test_boundaries() {
+  local production_roots=(
+    vaadin-desktop-flow/src/main
+    vaadin-desktop-host-swift/Sources/VaadinDesktopHost
+  )
+  local pattern match
+
+  for pattern in \
+    'test-apps/flow-over-ipc' \
+    'strict-smoke-app|framework-validation-app' \
+    'FlowIpc(ComponentMatrix|DynamicResource)Attributes' \
+    'owner-(runtime|dependency)-positive-fixture' \
+    'generated-flow-imports-chunk-fixture|chunk-fixture\.js' \
+    'vatori-flow-ipc-smoke|FlowIpcGeneratedLazyProbeView|dev\.vatori\.ipcsmoke' \
+    'VAADIN_DESKTOP_FLOW_IPC_AUTO_' \
+    '(broaderComponentResource|dataComponentResource|inputComponentParity|multiValueNavigationDisclosure|overlayContextMenu|contentAppShellLogin|richTextEditor[A-Za-z0-9]*)Matrix'
+  do
+    match="$(rg -n -m 1 -e "$pattern" "${production_roots[@]}" || true)"
+    if [[ -n "$match" ]]; then
+      fail "acceptance fixture leaked into production source: $match"
+    fi
+  done
+
+  local legacy_flow_runtime_source
+  legacy_flow_runtime_source="$(find vaadin-desktop-flow/src/main/java/dev/vatori/desktop/flow \
+    -type f \( \
+      -name 'FlowClientResources.java' -o \
+      -name 'FlowIpcRuntime.java' -o \
+      -name 'FlowIpcRenderer.java' -o \
+      -name 'FlowIpcRuntimeContributor*.java' -o \
+      -name 'FlowIpc*Attributes.java' -o \
+      -name 'FlowIpc*Evidence.java' -o \
+      -name 'FlowIpcFrontendBuildEnvironment.java' -o \
+      -name 'FlowIpcBuildOutputScanner.java' -o \
+      -name 'FlowIpcClasspathResources.java' -o \
+      -name 'FlowIpcDiagnostics.java' -o \
+      -name 'FlowIpcJavaScriptModuleGraph.java' -o \
+      -name 'GeneratedLoadOnDemandChunkFileRegistry.java' -o \
+      -name 'LegacyFlowResourceAdapter.java' -o \
+      -name 'DesktopFlowRuntimeSession.java' -o \
+      -name 'FlowClientMessage.java' -o \
+      -name 'FlowPatchResponse.java' -o \
+      -name 'FlowTransportAdapter.java' -o \
+      -name 'UidlFlowTransportAdapter.java' \
+    \) -print -quit)"
+  if [[ -n "$legacy_flow_runtime_source" ]]; then
+    fail "legacy typed Flow runtime must not exist in production source: $legacy_flow_runtime_source"
+  fi
+
+  local forbidden_resource
+  for forbidden_resource in \
+    vaadin-desktop-host-swift/Sources/VaadinDesktopHostAcceptanceSupport \
+    vaadin-desktop-host-swift/Sources/VaadinDesktopHost/FlowIpcShell.swift \
+    vaadin-desktop-host-swift/Sources/VaadinDesktopHost/FlowIpcRuntimeInspectionScript.swift \
+    vaadin-desktop-host-swift/Sources/VaadinDesktopHost/WebViewDiagnostics.swift \
+    vaadin-desktop-host-swift/Resources/FlowIpcShell.html \
+    vaadin-desktop-host-swift/Resources/FlowIpcShell.css \
+    vaadin-desktop-host-swift/Resources/FlowIpcShell \
+    vaadin-desktop-host-swift/Resources/FlowIpcShell/Acceptance \
+    vaadin-desktop-flow/src/main/resources/META-INF/vatori/generated/flow/generated-flow-imports-chunk-fixture.js \
+    vaadin-desktop-flow/src/main/resources/META-INF/vatori/generated/flow/chunks/chunk-fixture.js \
+    vaadin-desktop-flow/src/main/resources/META-INF/vatori/production-owner/owner-runtime-positive-fixture.js \
+    vaadin-desktop-flow/src/main/resources/META-INF/vatori/production-owner/owner-dependency-positive-fixture.js
+  do
+    if [[ -e "$forbidden_resource" ]]; then
+      case "$forbidden_resource" in
+        vaadin-desktop-host-swift/*)
+          fail "Swift host acceptance support belongs in test-support/vaadin-desktop-host-swift-acceptance: $forbidden_resource"
+          ;;
+        *)
+          fail "obsolete Flow IPC fixture remains in production resources: $forbidden_resource"
+          ;;
+      esac
+    fi
+  done
+
+  local dependency_owner
+  while IFS= read -r dependency_owner; do
+    case "$dependency_owner" in
+      pom.xml|\
+      vaadin-desktop-flow-test-support/pom.xml)
+        ;;
+      *)
+        fail "framework or example depends on validation-only test support: $dependency_owner"
+        ;;
+    esac
+  done < <(rg -l 'vaadin-desktop-flow-test-support' --glob 'pom.xml' . | sed 's#^\./##')
+}
+
 while IFS= read -r -d '' path; do
   if [[ ! -e "$path" ]]; then
     continue
@@ -133,7 +319,11 @@ while IFS= read -r -d '' path; do
 done < <(git ls-files -z)
 
 check_top_level_docs
+check_docs_no_versioned_residue
 check_swift_host_launcher_contract
+check_framework_test_boundaries
+check_trace_inspector_contract
+check_retired_flow_ipc_scaffolding
 
 if (( failed )); then
   exit 1

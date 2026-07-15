@@ -17,18 +17,17 @@
 
 - `vaadin-desktop-core`：公开的 Java desktop API。
 - `vaadin-desktop-ipc`：IPC envelope 和 trace 基础结构。
-- `vaadin-desktop-host`：macOS WKWebView fallback、compatibility host 和 Java native bridge 实现。
-- `vaadin-desktop-host-swift`：面向 macOS native runtime 主线的 Swift/AppKit/WKWebView host spike。
-- `vaadin-desktop-flow`：真实 Vaadin Flow/Spring Boot launcher，加上 Flow IPC runtime 和 UIDL adapter 切片。
-- `vaadin-desktop-devtools`：Flow IPC trace inspector scaffold。
+- `vaadin-desktop-host`：Java host abstraction、显式 compatibility host 和 native bridge support。
+- `vaadin-desktop-host-swift`：面向 macOS native runtime 主线的 Swift/AppKit/WKWebView host。
+- `test-support/vaadin-desktop-host-swift-acceptance`：仅供仓库内显式 native-host acceptance profile 使用的 Swift/WKWebView 自动化源码和资源；默认 host 构建不得编译或打包。
+- `vaadin-desktop-flow`：真实 Vaadin Flow/Spring Boot launcher、标准 production bundle runtime 和 opaque IPC transport adapter。
+- `vaadin-desktop-devtools`：标准 production bundle 的 Flow IPC trace inspector。
 - `vaadin-desktop-cli`：CLI scaffold。
 - `examples/*`：真实 Vaadin Flow 示例应用。
 - `test-apps/vaadin-desktop-smoke-app`：独立的开发者形态 smoke app。
 - `test-apps/flow-over-ipc-smoke-app`：受限 `dev-ipc` runtime 的 no-HTTP Flow IPC smoke app。
 - `test-apps/flow-over-ipc-framework-app`：更接近普通开发者项目形态的 no-HTTP Flow IPC validation app。
-- `prototypes/phase0-phase1-spike`：更早的非 HTTP mock Flow transport / IPC 验证。
-- `flow-transport-adapter-spike`：代码级 Vaadin Flow UIDL/event/patch 边界分析。
-- `vaadin-desktop-flow/src/main/java/dev/vatori/desktop/flow/transport`：围绕 `UidlRequestHandler`、`UidlWriter`、`DesktopVaadinRequest`、`DesktopVaadinResponse` 和 `DesktopFlowRuntimeSession` 的已编译 UIDL adapter 切片。
+- `vaadin-desktop-flow/src/main/java/dev/vatori/desktop/flow/transport`：围绕 `DesktopFlowOpaqueHttpSession`、`DesktopFlowVaadinService`、`DesktopVaadinRequest` 和 `DesktopVaadinResponse` 的 opaque request adapter。
 
 ## Runtime 边界
 
@@ -36,11 +35,11 @@
 
 `dev-swift` 运行 `vaadin-desktop-host-swift`：Swift/AppKit host 把 Java app 作为 sidecar 启动，在 sidecar 打印 `Application URL: ...` 后打开 WKWebView 窗口，以 `HOST_PROTOCOL ...` 形式记录 Host Protocol v0 trace，读取 `VDP1 ` Java command envelope，并在窗口关闭时杀掉 Java 进程。它仍通过 localhost HTTP compatibility mode 加载 Flow UI。
 
-`dev-ipc` 是 no-localhost IPC 切片：Swift host 加载本地 WKWebView HTML shell，通过 `VFIPC1` stdin/stdout envelope 与 Java 通信。它验证 WebView event -> Java listener -> desktop command/capabilityResult -> UIDL patch -> WebView 的闭环，并通过真实 Flow client engine 消费 bootstrap、ordered push、event patch 和 recovery resync。
+`dev-ipc` 是 no-localhost IPC 切片：构建并加载应用自己的标准 Vaadin production bundle，通过 document-start opaque request bridge 和 `VFIPC1` stdin/stdout envelope 把 HTTP-shaped 请求交给 Java 侧 Vaadin request-handler chain。Host 和 bridge 不解析 bootstrap 或 UIDL，也不存在自定义 Flow client shell fallback。
 
-`dev-ipc` 的验证面会持续扩展。`AGENTS.md` 只记录稳定边界和工作约束，不记录具体实现批次或 trace gate 名称；当前状态和验收要求以 `docs/flow-over-ipc-runtime.md`、`docs/acceptance-tools.md`、`docs/roadmap.md` 和 `DesktopTraceInspector` 为准。
+`dev-ipc` 的验证面会持续扩展。`AGENTS.md` 只记录稳定边界和工作约束，不记录具体实现批次、临时状态或 trace gate 名称。当前状态和验收要求以 `docs/flow-over-ipc-runtime.md`、`docs/acceptance-tools.md`、`docs/roadmap.md` 和 `bin/flow-ipc-trace-inspect` 为准。
 
-仍然不要宣称这些已经完成：真实 app/build generated chunk-file 产品化泛化、dev-mode/Vite、完整 Grid scroll virtualization、完整 Upload/Download streaming、parallel/retry/resume chunks、完整 overlay focus/keyboard/native context-menu、rich overlay behavior parity、theme variants、installer packaging、durable reconnect。
+不要把 bounded validation surface 描述成 full product parity。只要相关能力仍依赖 compatibility mode、fixture hook、fallback path、blocker classification 或 focused validation gate，就必须明确其边界。
 
 ## 构建和运行
 
@@ -63,39 +62,21 @@ mvn -o -Dmaven.repo.local=/Users/bytedance/IdeaProjects/vatori/.m2/repository -D
 ```bash
 bash bin/vaadin-desktop dev test-apps/vaadin-desktop-smoke-app
 bash bin/vaadin-desktop dev-swift test-apps/vaadin-desktop-smoke-app
+bash bin/vaadin-desktop dev-ipc examples/counter-app
 bash bin/vaadin-desktop dev-ipc test-apps/flow-over-ipc-smoke-app
 bash bin/vaadin-desktop dev-ipc test-apps/flow-over-ipc-framework-app
 ```
 
-可重复的 smoke app 真实窗口验证：
+真实窗口、自动化 hook 和 trace gate 验收以 `docs/acceptance-tools.md`、`docs/flow-over-ipc-runtime.md` 和 `bin/flow-ipc-trace-inspect --help` 为准；不要在 `AGENTS.md` 固化单次运行组合。
 
-```bash
-VAADIN_DESKTOP_HOST_NO_ACTIVATE=1 VAADIN_DESKTOP_FLOW_IPC_AUTO_CLICK=1 VAADIN_DESKTOP_FLOW_IPC_AUTO_VAADIN_TEXT_FIELD_REAL=1 VAADIN_DESKTOP_FLOW_IPC_AUTO_RESYNC=1 VAADIN_DESKTOP_FLOW_IPC_AUTO_ERROR=1 VAADIN_DESKTOP_FLOW_IPC_AUTO_FILE_DIALOG_CANCEL=1 VAADIN_DESKTOP_FLOW_IPC_AUTO_SHUTDOWN=1 bash bin/vaadin-desktop dev-ipc test-apps/flow-over-ipc-smoke-app
-```
-
-可重复的 framework app 真实窗口验证：
-
-```bash
-VAADIN_DESKTOP_HOST_NO_ACTIVATE=1 VAADIN_DESKTOP_FLOW_IPC_AUTO_FRAMEWORK_UPDATE=1 VAADIN_DESKTOP_FLOW_IPC_AUTO_SHUTDOWN=1 bash bin/vaadin-desktop dev-ipc test-apps/flow-over-ipc-framework-app
-```
-
-随后根据本次改动涉及的验收面运行对应的 `bin/flow-ipc-trace-inspect` gate。具体 gate 名称以 `DesktopTraceInspector` 和 `docs/acceptance-tools.md` 为准，不在 `AGENTS.md` 固化。
-
-验证 server-side UIDL writer adapter：
+验证 production opaque adapter 和标准 runtime：
 
 ```bash
 bash bin/verify-smoke
 ```
 
-`bin/verify-smoke` 会运行：
-
-```bash
-bash bin/repository-hygiene-check
-bash bin/uidl-adapter-smoke
-bash bin/uidl-rpc-smoke
-bash bin/flow-ipc-scope-smoke
-bash bin/flow-client-resource-smoke
-```
+具体子检查由 `bin/verify-smoke` 和 `docs/acceptance-tools.md` 维护，不在本文件
+复制其内部命令清单。
 
 Host 选择：
 
@@ -105,7 +86,11 @@ VAADIN_DESKTOP_HOST=headless bash bin/vaadin-desktop dev examples/counter-app
 VAADIN_DESKTOP_HOST=browser bash bin/vaadin-desktop dev examples/counter-app
 ```
 
-完整 `.ndjson` trace 是生成产物，不按版本逐个提交。验收契约保留在 `DesktopTraceInspector`；需要长期保存的 trace 应进入 CI artifact、release asset 或外部归档。
+`system-webview` 默认 fail-fast；需要 compatibility host 时显式设置
+`VAADIN_DESKTOP_HOST=compatibility`、`headless` 或 `browser`。只有在本地开发需要
+自动兜底时，才设置 `VAADIN_DESKTOP_HOST_FALLBACK=compatibility`。
+
+完整 `.ndjson` trace 是生成产物，不按版本逐个提交。验收契约由 `bin/flow-ipc-trace-inspect` 暴露；需要长期保存的 trace 应进入 CI artifact、release asset 或外部归档。
 
 启动 system WebView host 会打开 macOS UI 进程。结束一个 turn 前，应停止长时间运行的 dev session。
 
@@ -148,7 +133,7 @@ Vaadin：
 
 ## 文档地图
 
-- `README.md`：当前 quick start 和状态。
+- `README.md`：项目入口地图和 quick start。
 - `docs/framework-architecture.md`：当前架构与目标架构。
 - `docs/getting-started.md`：开发者 workflow。
 - `docs/flow-integration.md`：今天如何集成真实 Vaadin Flow。
@@ -159,8 +144,7 @@ Vaadin：
 - `docs/acceptance-tools.md`：trace gate、smoke harness、真实窗口验收 hook 和 runtime diagnostics 的边界说明。
 - `docs/native-host.md`：当前 WKWebView host 和 host roadmap。
 - `docs/roadmap.md`：工程路线。
-- `docs/flow-over-ipc-design.md`：原始中文设计包。
-- `docs/flow-over-ipc-implementation.md`：Phase 0/1 prototype notes。
+- `docs/flow-over-ipc-design.md`：历史中文设计包；当前实现状态以 runtime、acceptance、roadmap 和架构文档为准。
 
 ## 项目技能
 

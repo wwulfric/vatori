@@ -11,9 +11,9 @@ IPC runtime. The repository currently has two useful runtime paths:
 
 - **Compatibility mode**: a real Vaadin Flow/Spring Boot app runs on
   `127.0.0.1`, and a native macOS WebView host opens it in a desktop window.
-- **Flow IPC slice**: an experimental no-localhost path for a constrained Flow
-  surface. Bootstrap, events, UIDL patches, frontend resources and selected
-  desktop capabilities travel over IPC for the covered validation surface.
+- **Flow IPC slice**: an experimental no-localhost path that runs the
+  application's standard Vaadin production bundle. Browser requests cross an
+  opaque IPC bridge and are handled by Vaadin's normal request-handler chain.
 
 The README is intentionally a map. Detailed Flow IPC evidence and design notes
 live under `docs/`.
@@ -34,7 +34,7 @@ Common runs:
 bash bin/vaadin-desktop dev examples/counter-app
 bash bin/vaadin-desktop dev test-apps/vaadin-desktop-smoke-app
 bash bin/vaadin-desktop dev-swift test-apps/vaadin-desktop-smoke-app
-bash bin/vaadin-desktop dev-ipc test-apps/flow-over-ipc-smoke-app
+bash bin/vaadin-desktop dev-ipc examples/counter-app
 bash bin/vaadin-desktop dev-ipc test-apps/flow-over-ipc-framework-app
 ```
 
@@ -47,7 +47,7 @@ alive until the app/window is closed.
 | --- | --- | --- | --- |
 | `dev` | `bash bin/vaadin-desktop dev examples/counter-app` | Local HTTP compatibility | Default developer loop with a native macOS WebView host. |
 | `dev-swift` | `bash bin/vaadin-desktop dev-swift test-apps/vaadin-desktop-smoke-app` | Local HTTP compatibility | Swift/AppKit host path with Java sidecar lifecycle and host protocol tracing. |
-| `dev-ipc` | `bash bin/vaadin-desktop dev-ipc test-apps/flow-over-ipc-smoke-app` | `VFIPC1` stdin/stdout IPC | No-localhost Flow IPC slice for covered bootstrap/event/patch/resource/capability behavior. |
+| `dev-ipc` | `bash bin/vaadin-desktop dev-ipc examples/counter-app` | Opaque requests over `VFIPC1` IPC | No-localhost standard Vaadin production bundle path for the covered Flow surface. |
 
 Host selection for compatibility mode:
 
@@ -57,6 +57,11 @@ VAADIN_DESKTOP_HOST=headless bash bin/vaadin-desktop dev examples/counter-app
 VAADIN_DESKTOP_HOST=browser bash bin/vaadin-desktop dev examples/counter-app
 ```
 
+`system-webview` is fail-fast by default. Use `VAADIN_DESKTOP_HOST=compatibility`,
+`headless` or `browser` for an explicit compatibility host. To preserve a local
+development fallback from `system-webview`, set
+`VAADIN_DESKTOP_HOST_FALLBACK=compatibility`.
+
 ## Verification
 
 Run the central non-window checks:
@@ -65,26 +70,13 @@ Run the central non-window checks:
 bash bin/verify-smoke
 ```
 
-`bin/verify-smoke` runs repository hygiene plus focused UIDL/resource smoke
-checks:
+`bin/verify-smoke` runs repository hygiene, inspector contract checks, opaque
+HTTP adapter tests, Flow IPC scope tests and browser bridge tests. The script is
+the source of truth for its current subcommands.
 
-```bash
-bash bin/repository-hygiene-check
-bash bin/uidl-adapter-smoke
-bash bin/uidl-rpc-smoke
-bash bin/flow-ipc-scope-smoke
-bash bin/flow-client-resource-smoke
-```
-
-Run an unattended framework-window check:
-
-```bash
-VAADIN_DESKTOP_HOST_NO_ACTIVATE=1 VAADIN_DESKTOP_FLOW_IPC_AUTO_FRAMEWORK_UPDATE=1 VAADIN_DESKTOP_FLOW_IPC_AUTO_SHUTDOWN=1 bash bin/vaadin-desktop dev-ipc test-apps/flow-over-ipc-framework-app
-```
-
-Then run the relevant `bin/flow-ipc-trace-inspect` gate for the surface being
-validated. Gate names live in the inspector and acceptance docs, not in this
-README.
+Window automation and trace-gate validation are documented in
+`docs/acceptance-tools.md`. Gate names live in the inspector and acceptance docs,
+not in this README.
 
 Full `.ndjson` traces are generated artifacts and are not committed per version.
 Acceptance lives in the inspector and smoke scripts. Preserve traces as CI
@@ -94,20 +86,21 @@ artifacts, release assets or external archives when needed.
 
 - `vaadin-desktop-core`: public Java desktop runtime API.
 - `vaadin-desktop-ipc`: IPC envelope and trace primitives.
-- `vaadin-desktop-host`: macOS system WebView fallback, compatibility host and
-  Java native bridge implementations.
+- `vaadin-desktop-host`: Java host abstractions, explicit compatibility host and
+  native bridge support.
 - `vaadin-desktop-host-swift`: Swift/AppKit/WKWebView host for the native macOS
   runtime path.
-- `vaadin-desktop-flow`: Vaadin Flow/Spring Boot launcher, Flow IPC runtime and
-  UIDL adapter slices.
-- `vaadin-desktop-devtools`: trace inspector scaffold and Flow IPC gates.
+- `vaadin-desktop-flow`: Vaadin Flow/Spring Boot launcher, standard production
+  bundle runtime and opaque IPC transport adapter.
+- `vaadin-desktop-devtools`: standard-bundle trace inspector and Flow IPC gates.
 - `vaadin-desktop-cli`: CLI scaffold; shell entry is `bin/vaadin-desktop`.
+- `bin/`: shell entry points for local development, smoke checks and hygiene.
+- `docs/`: current architecture, runtime, protocol and acceptance docs.
+- `assets/`: brand source assets and generated distribution-ready exports.
+- `.agents/`: repository-local skills for recurring Codex workflows.
 - `examples/`: small developer-facing sample apps.
 - `test-apps/`: validation apps with deterministic hooks and broader assertion
   surfaces.
-- `flow-transport-adapter-spike`: Vaadin Flow transport boundary analysis.
-- `prototypes/phase0-phase1-spike`: earlier non-HTTP mock transport and IPC
-  validation.
 
 ## Examples vs Test Apps
 
@@ -128,43 +121,15 @@ If a scenario is useful both as documentation and as a test, keep the simple
 developer story in `examples/` and the exhaustive assertion surface in
 `test-apps/`.
 
-## Current Status
+## Status And Roadmap
 
-Implemented:
+The stable roadmap lives in `docs/roadmap.md`. Current Flow IPC runtime boundaries
+live in `docs/flow-over-ipc-runtime.md`; acceptance tooling lives in
+`docs/acceptance-tools.md`.
 
-- Real Vaadin Flow app modules and sample projects.
-- Java desktop API for window title, notifications, clipboard, file dialog,
-  bounded file transfer and menu facade.
-- macOS WebView compatibility host.
-- Swift/AppKit host that owns Java sidecar lifecycle and host protocol tracing.
-- Flow IPC runtime slice with real server-side UIDL bootstrap/event/patch
-  handling for the covered smoke apps.
-- Flow client resource loading and frontend artifact resolver evidence for the
-  current validation surface.
-- Framework-shaped validation app covering representative Flow components,
-  Binder validation, common input components, multi-value/navigation/disclosure
-  and menu components, bounded overlay/context-menu components, StreamResource,
-  Upload, DownloadHandler and selected desktop capability calls.
-- Basic no-localhost frontend/resource pipeline closure for the current
-  validation surface.
-- Central hygiene and smoke verification through `bin/verify-smoke`.
-
-In progress:
-
-- Rich content, app shell and login component coverage for Avatar, MessageList,
-  MessageInput, SideNav and LoginOverlay. This work is still behind explicit
-  validation gates and should not be described as complete.
-
-Still open:
-
-- Full Flow client event coverage and UIDL parity.
-- Dev-mode/Vite parity and generalized frontend owner/runtime reuse.
-- Durable push, reconnect and resync semantics.
-- Full Grid virtualization and large-file Upload/Download streaming.
-- Full overlay focus/keyboard/native context-menu behavior, rich overlay
-  behavior, theme variants and deeper focus/accessibility behavior.
-- Production native capability permission model.
-- Packaging, signing and auto-update.
+Do not treat the current Flow IPC validation surface as full product parity.
+Compatibility mode, focused validation gates, fallback classifications and
+blocker diagnostics should stay explicit when describing current behavior.
 
 ## Documentation
 

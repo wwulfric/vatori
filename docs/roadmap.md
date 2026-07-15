@@ -34,6 +34,9 @@ Status: active product direction with broad validation coverage, not full parity
 
 - Keep carving Vaadin Flow bootstrap, event, patch, push, resource and capability
   behavior out of Servlet/HTTP/WebSocket assumptions.
+- Keep the standard Vaadin production webapp plus opaque HTTP-shaped IPC bridge
+  as the only `dev-ipc` architecture. Do not maintain a second custom Flow
+  client or shell path.
 - Preserve the Java Flow programming model for application code.
 - Keep the no-localhost validation apps developer-shaped where possible, with
   deterministic hooks isolated to `test-apps/`.
@@ -67,8 +70,9 @@ Status: future work.
 
 - Full Flow client event coverage and UIDL parity.
 - Dev-mode/Vite parity and generalized frontend owner/runtime reuse.
-- Durable push, reconnect and resync semantics.
-- Full Grid virtualization and large-file Upload/Download streaming.
+- Cross-process application-state restoration and repeated-failure recovery
+  policy beyond the bounded host restart contract.
+- Full Grid virtualization and Upload/Download retry/resume behavior.
 - Full overlay, focus, keyboard and accessibility behavior.
 - Production native capability permissions and file grants.
 - Packaging, signing and auto-update.

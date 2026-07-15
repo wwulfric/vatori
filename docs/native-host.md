@@ -1,105 +1,95 @@
 # Native Host
 
-## Mainline Host Spike
+`vaadin-desktop-host-swift` is the current macOS native host prototype. It uses
+Swift, AppKit and WKWebView so the host can own window lifecycle, WebView setup,
+resource loading and desktop capability execution.
 
-`vaadin-desktop-host-swift` is the next-stage macOS mainline host prototype. It uses Swift, AppKit and WKWebView so the native runtime can directly own macOS window lifecycle and platform behavior.
+## Compatibility Host Path
 
-Run:
+`dev-swift` starts the Java app as a sidecar, waits for `Application URL: ...` and
+opens that localhost URL in WKWebView. This validates native host behavior while
+keeping Flow UI transport in compatibility mode.
+
+The older Java `system-webview` launcher in `vaadin-desktop-host` is fail-fast by
+default. If it cannot start the macOS WebView host, it throws instead of silently
+falling back to compatibility mode. Use `VAADIN_DESKTOP_HOST=compatibility`,
+`headless` or `browser` for an explicit compatibility host. For local development
+only, `VAADIN_DESKTOP_HOST_FALLBACK=compatibility` opts into the old fallback
+behavior.
+
+## Flow IPC Host Path
+
+`dev-ipc` starts the Java app as a Flow IPC sidecar, packages the application's
+standard Vaadin production webapp and serves it from the local `vatori-app://`
+scheme. The host:
+
+- connects to Java through `VFIPC1` stdin/stdout envelopes.
+- installs a document-start bridge that adapts application-origin XHR, Fetch and
+  Atmosphere calls to opaque IPC exchanges.
+- forwards method, URL, headers and body bytes without inspecting Vaadin request
+  parameters, bootstrap data or UIDL.
+- records `HOST_PROTOCOL` trace lines for launch, resource, command/result and
+  shutdown evidence.
+- owns AppKit file dialog, clipboard, notification and file-transfer capability
+  behavior for accepted smoke paths.
+
+Repository acceptance builds additionally compile DOM inspection and snapshot
+support from `test-support/vaadin-desktop-host-swift-acceptance`; default host
+builds neither inspect nor capture application windows. Acceptance traces are
+compact by default: resource bodies are summarized, repeated Java envelopes are
+logged once, and DOM diagnostics are reduced to readiness counters. Set
+`VAADIN_DESKTOP_FLOW_IPC_TRACE_DETAIL=full` only when a run must retain the
+complete metadata consumed by `flow-ipc-trace-inspect`.
+
+## Standard Production Bundle Path
+
+The standard bundle is the default `dev-ipc` path. The launcher runs Vaadin's
+production frontend build, refreshes the runnable application JAR and fails fast
+if the webapp is missing. It has no custom shell fallback.
+
+An explicit acceptance build can add the repository-only standard-bundle
+framework driver from `test-support`. Normal host builds do not compile that
+driver, and standard-bundle application resources contain neither the legacy
+shell nor its acceptance JavaScript.
+
+Unexpected sidecar exits use a bounded restart policy on this standard bundle
+path. The host fails outstanding opaque requests, disconnects old push
+subscriptions, keeps each NSWindow/WKWebView, and reloads the production webapp
+after a replacement sidecar reports ready. `VAADIN_DESKTOP_FLOW_IPC_SIDECAR_RESTART_LIMIT`
+sets the restart limit (`3` by default, `0` disables it), while
+`VAADIN_DESKTOP_FLOW_IPC_SIDECAR_RECOVERY_READY_TIMEOUT_SECONDS` bounds each
+replacement's ready wait. Compatibility paths remain separate.
+Recovery creates new Flow sessions and does not preserve process-local server UI
+state.
+
+Each Flow IPC window has a `FlowIpcWindowContext` containing its host-assigned
+scope, NSWindow, WKWebView and desktop command executor. Incoming Java envelopes
+must match that scope before they are delivered. Closing a window sends
+`windowClosed` and removes only that context; the sidecar exits after the final
+window closes.
+
+## Build
 
 ```bash
-bash bin/vaadin-desktop dev-swift test-apps/vaadin-desktop-smoke-app
+bash bin/vaadin-desktop-build-swift-host /Users/bytedance/IdeaProjects/vatori
 ```
 
-Responsibilities implemented now:
+The build script uses `/usr/bin/swiftc`. Standard-bundle launches copy
+`META-INF/VAADIN/webapp` and the opaque bridge into the app resources. Explicit
+acceptance builds additionally compile the repository-only automation overlay.
 
-- starts the Java Vaadin app as a sidecar with `VAADIN_DESKTOP_HOST=headless`,
-- opens a native AppKit `NSWindow` with `WKWebView` after the sidecar prints `Application URL: ...`,
-- traces host lifecycle messages as `HOST_PROTOCOL ...`,
-- emits `webview.dom` inspection and writes `.build/vaadin-desktop-host-swift/window-snapshot.png` after WebView render,
-- reads Java desktop command envelopes prefixed with `VDP1 `,
-- closes the Java process when the desktop window closes,
-- in `dev-ipc`, loads a local WebView shell, receives WebView messages through `WKScriptMessageHandler`, forwards them to Java stdin and delivers Java `VFIPC1` responses back to WebView JavaScript,
-- in `dev-ipc`, has the WebView request all advertised Flow client classpath resources through `VFIPC1 resourceRequest`, echoes v1.4 artifact family / module specifier / dependency / execution policy metadata in requests, imports `FlowBootstrap.js` and `FlowClient.js` as Blob-backed ES modules, calls `FlowBootstrap.init` with an IPC bootstrap config, then calls `FlowClient.init` and records DOM diagnostics,
-- in `dev-ipc`, classifies Flow client resources as executed, verified-only, intentionally-not-executed or execution-failed, and performs a dynamic no-HTTP `flow-client-lazy-lookup` probe for `Flow.js`,
-- in `dev-ipc`, requests the real `META-INF/resources/frontend/vaadin-big-decimal-field.js` Vaadin component frontend module plus focused Vaadin dev-bundle TextField, Checkbox and Select entries through IPC, stages real artifact bodies as Blob-backed module URLs, executes BigDecimalField with manifest `importRewrites`, resolves Lit CSS through a focused extracted helper, executes the TextField/Checkbox/Select entries, records every stage as `resourceStage`, resolves the focused TextField production `indexhtml` side-effect blocker with stable resource-path module identity, requests and injects one theme/static classpath CSS resource, verifies one repository-local Vaadin generated-flow-imports fixture resource, executes one real Vaadin dev-bundle `generated-flow-imports-*.js` chunk through the staged generated/lazy path after rewriting its markdown helper relative import to a stable staged dependency, executes one Flow `LoadMode.LAZY` dependency through the visible DependencyLoader and IPC resolver, verifies production/dev graph resources, records production owner boundaries through v1.20, records a v1.21 unified frontend resolver summary across Blob staging, `vatori-resource` file-backed loading, verified-only resources, strict blockers and accepted gaps, proves a v1.22 Vaadin-shaped generated chunk-file fixture through the same no-localhost staging/import path, proves a v1.23 Vaadin-shaped production owner positive fixture through the production-owner custom-scheme path, records a v1.24 frontend pipeline closure decision contract, records a v1.25 packaged frontend baseline over host-owned inventory and custom-scheme/file-backed loader metadata, records a v1.26 generated lazy source boundary over Vaadin source/build inputs, records a v1.27 generated lazy real-build probe over a real route/lazy JavaScript input, records a v1.28 generated lazy build lifecycle trace over scanner/build/runtime artifact evidence, records a v1.29 generated lazy app build output connection trace over current app build-output discovery/fallback evidence, records a v1.30 current app frontend build-output materialization trace over build-preflight/output inventory evidence, records a v1.31 frontend build preflight availability trace over plugin resolution/goal success/scaffold-only output evidence, and keeps blockers for dev-mode/Vite execution, production owner import/side-effect success and real app/build generated chunk-file parity explicit,
-- in `dev-ipc`, records Flow IPC push ordering diagnostics, including delivered push order, duplicate/late ignored order and ordering-recovery resync reason,
-- in `dev-ipc`, handles `VFIPC1 command` for `window.setTitle`, `clipboard.writeText`, trace-only `notification.show`, `fileDialog.openFile` through AppKit `NSOpenPanel` and bounded `fileTransfer.download` / `fileTransfer.selectUploadFile` smoke paths, then emits `capabilityResult`.
+## Automation Hooks
 
-Current compatibility boundary:
+Automation environment variables live in the Swift host because only the host can
+drive the real WKWebView DOM, file dialog cancellation, snapshot timing and
+window shutdown path. They must remain opt-in and suitable for unattended local or
+CI smoke runs.
 
-- In `dev` and `dev-swift`, Flow bootstrap, client events, UIDL/patch responses and push still run through the embedded Spring Boot localhost server.
-- Desktop runtime commands can cross Java -> native host as Host Protocol v0 trace envelopes, but synchronous native return values are still scaffolded.
-- The WebView loads a local HTTP URL today. This is explicitly not the final Flow over IPC transport.
-- `dev-ipc` does not load a local HTTP URL for the smoke app and uses `VFIPC1` for desktop commands. The WebView bridge sends click events, native input/checkbox changes, `BigDecimalField`, real `TextField` and `Checkbox` Web Component changes and ordering-recovery resync from the visible Flow client, Java includes real `UidlWriter`/`UidlRequestHandler` output in IPC payloads, two server-initiated push UIDL updates are queued until the Flow client engine is ready and then delivered into it, one controlled duplicate/late probe is ignored with diagnostics, and the advertised Flow client resources are loaded from the Java sidecar classpath through IPC. v1.5-v1.20 prove Blob staging, stable module identity, generated/lazy execution boundaries, host-owned `vatori-resource` loading and production owner ordering/side-effect/owner-owned runtime fallback evidence. v1.21 adds a host-visible frontend resolver contract summary with observed families, body integrity, stable identity, cache/cleanup, `blob` and `vatori-resource` scheme usage, verified-only resources, strict blockers and accepted gaps. v1.22 proves that a Vaadin-shaped generated chunk-file table can be resolved, staged, imported and side-effect verified through the same no-localhost resource path, while the current real app/build still has a v1.12 no-op generated-flow-imports table. v1.23 proves that a Vaadin-shaped production owner runtime can be resolved, served through the production-owner `vatori-resource` namespace, imported and side-effect verified when it exposes the expected owner contract; the real production owner blocker remains explicit. v1.24 records the closure decision over those proofs and blockers, including the next product path. v1.25 records the packaged frontend baseline for host-owned inventory, custom-scheme/file-backed loading, diagnostic Blob fallback, integrity and cleanup metadata. v1.26 records the Vaadin generated-lazy source boundary and confirms a build/SPI step is still required before real app/build generated chunk parity. v1.27 observes a real route/lazy JavaScript app input and narrows the current gap to scanner/build output connection. v1.28 records scanner/build/update-imports/runtime artifact evidence and narrows the current gap to stale packaged dev-bundle usage. v1.29 records current app build-output discovery/fallback evidence and narrows the current gap to missing generated imports in the app build output. v1.30 records an opt-in current app frontend build preflight/output inventory path. v1.31 proves the Vaadin Maven plugin resolves and `prepare-frontend` succeeds in explicit online/local-repo mode, then narrows the current gap to scaffold-only output with no current-app generated imports/chunks. Focused Vaadin dev-bundle TextField/Checkbox/Select entries import real production chunk classes through their staged component path and are not counted as production owner success. The registered Flow client now owns the visible bootstrap, click/change-event patch, push and recovery resync path through IPC-backed bridge methods.
+Use `VAADIN_DESKTOP_HOST_NO_ACTIVATE=1` for automated runs so the validation
+window does not steal focus.
 
-Verification note: on some managed macOS desktops, global `screencapture` or coordinate clicking can hit a `loginwindow`/MDM overlay instead of normal app windows. In that case, use the WindowServer entry for `Vaadin Desktop Host`, `HOST_PROTOCOL webview.dom`, the `VAADIN_DESKTOP_FLOW_IPC_AUTO_CLICK=1` / `VAADIN_DESKTOP_FLOW_IPC_AUTO_VAADIN_TEXT_FIELD_REAL=1` / `VAADIN_DESKTOP_FLOW_IPC_AUTO_RESYNC=1` / `VAADIN_DESKTOP_FLOW_IPC_AUTO_ERROR=1` WebView smoke hooks, `VAADIN_DESKTOP_FLOW_IPC_AUTO_FILE_DIALOG_CANCEL=1` for unattended native file dialog cancellation, `VAADIN_DESKTOP_FLOW_IPC_AUTO_SHUTDOWN=1` for unattended shutdown evidence and `window-snapshot.png` as the reliable verification artifacts. Add `VAADIN_DESKTOP_HOST_NO_ACTIVATE=1` before the command when a verification run should open without stealing keyboard focus; the Swift host will skip `NSRunningApplication.activate(...)` and trace `window.activation` with `mode=no-activate`.
+## Current Limits
 
-## macOS Fallback Host
-
-`SystemWebViewDesktopHost` is the default host on macOS. It:
-
-- receives the local Vaadin URL,
-- creates a temporary `.app` bundle,
-- compiles the bundled Swift host with `/usr/bin/swiftc`,
-- opens a native WKWebView window,
-- logs bootstrap and host-exit trace events,
-- terminates the Java app when the window process exits by default.
-
-This is a real desktop window, but it still uses **compatibility HTTP transport**. It is not final Flow over IPC.
-
-`CompatibilityDesktopHost` is still available as a fallback. It:
-
-- receives the local Vaadin URL,
-- logs bootstrap trace,
-- optionally opens the default browser,
-- marks the app as compatibility mode.
-
-Select a host with:
-
-```bash
-VAADIN_DESKTOP_HOST=system-webview bash bin/vaadin-desktop dev examples/counter-app
-VAADIN_DESKTOP_HOST=headless bash bin/vaadin-desktop dev examples/counter-app
-VAADIN_DESKTOP_HOST=browser bash bin/vaadin-desktop dev examples/counter-app
-```
-
-`CompatibilityNativeBridge` handles desktop API calls by logging trace and returning deterministic results. Clipboard is backed by in-memory state.
-
-`SystemWebViewDesktopHost` remains useful as a small macOS fallback, but it is no longer the long-term mainline.
-
-## Capability Permission Model
-
-`dev-ipc` now reads the permission mode from `desktop-capabilities.json` when a manifest
-is present and records a `capabilityManifest` trace event. Supported modes are:
-
-- `allow-all-dev`: development default; commands are allowed when no manifest is present,
-  or when a loaded manifest lists the command.
-- `manifest-enforced`: a loaded manifest is required, and commands must be listed for
-  the window.
-- `trace-only-dry-run`: commands execute, but permission metadata records whether a
-  loaded manifest would have allowed or denied the command.
-
-The current host allows the known v1 commands for the single main window:
-
-- `window.setTitle`
-- `clipboard.writeText`
-- `fileDialog.openFile`
-- `fileTransfer.download`
-- `fileTransfer.selectUploadFile`
-- `notification.show`
-
-Every `capabilityResult` includes `permissionMode`, `permissionDecision`, `permissionReason` and `permissionScope`. The Flow IPC smoke app uses `permissionMode=manifest-enforced`; known commands must be listed for the `main` window and successful calls are marked `permissionDecision=allowed` with `permissionReason=manifest-allow`. The smoke view also sends an intentionally undeclared `diagnostics.deniedCapability` command, which is rejected with `permissionDecision=denied` and `permissionReason=manifest-denied`. Results include `permissionManifestLoaded`, `permissionManifestPath` and `permissionManifestCommands`. `fileDialog.openFile` now returns AppKit panel result metadata (`canceled`, `paths`, `allowsMultipleSelection`, `securityScoped=false`, `autoCanceled`) but does not yet create security-scoped bookmarks. `fileTransfer.download` and `fileTransfer.selectUploadFile` are v1.1 smoke boundaries: they support controlled test paths, byte-count metadata and redacted trace bodies, but they are not production file streaming or Vaadin Upload/Download parity. This is intentionally still a development permission system. The production direction is a stricter manifest-gated model with per-window, per-origin, user-gesture and per-capability grants.
-
-## Next Native Host Work
-
-The real host still needs to:
-
-- replace the controlled push ordering/resync recovery smoke with a durable queue, ack and reconnect model,
-- replace the remaining real app/build generated chunk-file parity, production owner import/side-effect success and dev-mode/Vite blockers with broader real frontend execution now that v1.25 has established the packaged frontend baseline, v1.26 has identified the generated-lazy build/SPI boundary, v1.27 has added a real lazy route probe, v1.28 has isolated stale packaged dev-bundle usage, v1.29 has isolated missing current app generated imports and v1.30 has added an auditable frontend build-preflight/output inventory path,
-- replace the bounded controlled-path file-transfer smoke with streaming upload/download, native progress/cancel semantics and sandbox-safe file grants,
-- replace the development manifest modes with production capability grants, user-gesture checks and security-scoped file permissions.
-
-## Why Not Call This Final
-
-Embedding a localhost URL in WKWebView is compatibility mode. It is useful for proving framework ergonomics, real Flow app structure and desktop host lifecycle, but it is not Flow over IPC.
-
-The `dev-ipc` path is the first real no-HTTP IPC slice, but it is not final either: it proves host/WebView/Java message flow, visible Flow client ownership for bootstrap, click-event patches, native input/checkbox change-event patches, real Vaadin Web Component event patches (`BigDecimalField`, `TextField`, `Checkbox`, plus framework-app `Select` coverage), ordered server pushes, duplicate/late ignored diagnostics, ordering-recovery resync, IPC-backed Flow client XHR/event/resync dispatch, listener-driven patches, server-side UIDL generation, Flow client module initialization, bootstrap UIDL binding, v1.5-v1.20 frontend staging/generated-lazy/production-owner evidence, v1.21 unified frontend resolver contract evidence, v1.22 generated chunk-file positive fixture evidence, v1.23 production owner positive fixture evidence, v1.24 closure decision evidence, v1.25 packaged frontend baseline evidence, v1.26 generated lazy source boundary evidence, v1.27 generated lazy real-build probe evidence, v1.28 generated lazy build lifecycle evidence, v1.29 generated lazy app build-output connection evidence, v1.30 current app frontend build-output materialization evidence, resource execution classification/lazy lookup diagnostics, and a bounded controlled-path file-transfer capability boundary. The repository-local UIDL applier remains as a diagnostic fallback, while broader component coverage, real app/build generated chunk-file parity, production owner import/side-effect success, dev-mode/Vite execution, full upload/download streaming and durable push/reconnect semantics remain future work.
+The host proves bounded no-localhost Flow IPC behavior. It does not yet provide
+full production packaging, durable reconnect, complete native menu/context-menu
+parity or cross-platform host parity.

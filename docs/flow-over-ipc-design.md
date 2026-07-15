@@ -660,17 +660,21 @@ Spike: Extract a minimal FlowTransport SPI and run one Flow UI without Servlet.
 - Dev mode、hot reload、frontend build 与桌面 host 的集成边界。
 - Native Image 下 Flow desktop runtime 的反射配置成本。
 
-## 9. 建议拆分的工程 issue
+## 9. 后续工程面
 
-1. `flow-transport-spi`: 盘点并草拟 transport-neutral SPI。
-2. `flow-inmemory-prototype`: 用内存 transport 跑通 button click。
-3. `flow-ipc-protocol-v0`: 定义 message envelope、error model、sync semantics。
-4. `desktop-host-spike`: 用 Tauri 或最小 WebView host 启动 Java sidecar。
-5. `flow-webview-bootstrap`: 让 WebView 从本地资源加载 Flow client engine。
-6. `desktop-capability-model`: 设计 manifest 和 Java typed API。
-7. `runtime-packaging-benchmark`: 比较完整 JVM、jlink、Native Image。
-8. `security-threat-model`: 建立 WebView compromise 和 local capability 威胁模型。
-9. `developer-cli-prototype`: 设计 `vaadin desktop dev/package` 最小 CLI。
+这份设计包中的早期原型任务已经被当前主线吸收：协议 envelope 位于
+`vaadin-desktop-ipc`，Flow transport adapter 位于 `vaadin-desktop-flow`，真实
+host 路径位于 `vaadin-desktop-host-swift`，开发入口位于 `bin/vaadin-desktop`。
+后续工作应继续落到当前模块、living docs 和验收工具里，而不是重新建立
+一次性 prototype 目录。
+
+仍需推进的工程面：
+
+1. 让 WebView 从本地资源加载完整 Flow client engine 和 app artifacts。
+2. 完善 desktop capability manifest 和 Java typed API。
+3. 比较完整 JVM、jlink、Native Image 的打包边界。
+4. 建立 WebView compromise 和 local capability 威胁模型。
+5. 收敛 `vaadin desktop dev/package` 的开发者命令体验。
 
 ## 10. 参考资料
 

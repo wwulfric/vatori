@@ -9,7 +9,10 @@ if [[ -f /Users/bytedance/.sdkman/bin/sdkman-init.sh ]]; then
   set -u
 fi
 
-mvn -q -o -Dmaven.repo.local="$ROOT/.m2/repository" -pl vaadin-desktop-devtools -am -DskipTests compile
+TRACE_INSPECTOR_POM="$ROOT/test-support/vaadin-desktop-trace-inspector/pom.xml"
+mvn -q -o -Dmaven.repo.local="$ROOT/.m2/repository" \
+  -f "$TRACE_INSPECTOR_POM" \
+  -DskipTests compile
 
 trace_file=""
 trace_gates=""
@@ -46,7 +49,7 @@ export VATORI_TRACE_INSPECT_GATES="$trace_gates"
 export VATORI_TRACE_INSPECT_HELP="$trace_help"
 
 exec mvn -q -o -Dmaven.repo.local="$ROOT/.m2/repository" \
-  -pl vaadin-desktop-devtools \
-  -Dexec.mainClass=dev.vatori.desktop.devtools.StandardBundleTraceInspector \
+  -f "$TRACE_INSPECTOR_POM" \
+  -Dexec.mainClass=dev.vatori.desktop.testsupport.trace.StandardBundleTraceInspector \
   -Dexec.classpathScope=runtime \
   org.codehaus.mojo:exec-maven-plugin:3.6.2:java

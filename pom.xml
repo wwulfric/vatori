@@ -22,7 +22,6 @@
         <module>vaadin-desktop-ipc</module>
         <module>vaadin-desktop-host</module>
         <module>vaadin-desktop-flow</module>
-        <module>vaadin-desktop-devtools</module>
         <module>vaadin-desktop-cli</module>
         <module>examples/counter-app</module>
         <module>examples/grid-app</module>

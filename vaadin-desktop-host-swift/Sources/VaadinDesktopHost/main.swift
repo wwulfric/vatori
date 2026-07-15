@@ -5,9 +5,6 @@ final class WebViewHost: NSObject, NSApplicationDelegate, NSWindowDelegate, WKNa
     let config: HostConfig
     private let capabilityManifest: CapabilityManifest
     let commandExecutor: DesktopCommandExecutor
-#if VATORI_FLOW_IPC_ACCEPTANCE
-    private let diagnostics: WebViewDiagnostics
-#endif
     private let standardBundleSchemeHandler: FlowIpcStandardBundleSchemeHandler
     private var sidecarController: FlowIpcSidecarController?
     private var windowsById: [String: FlowIpcWindowContext] = [:]
@@ -24,15 +21,21 @@ final class WebViewHost: NSObject, NSApplicationDelegate, NSWindowDelegate, WKNa
         windowsById[windowId]
     }
 
+    var sidecarProcessIdentifier: Int32? {
+        sidecarController?.processIdentifier
+    }
+
+    @discardableResult
+    func requestSidecarRecovery(reason: String) -> Bool {
+        sidecarController?.requestRecovery(reason: reason) == true
+    }
+
     init(config: HostConfig) {
         let capabilityManifest = CapabilityManifest.load(module: config.module)
         self.config = config
         self.capabilityManifest = capabilityManifest
         self.commandExecutor = DesktopCommandExecutor(config: config,
                                                       capabilityManifest: capabilityManifest)
-#if VATORI_FLOW_IPC_ACCEPTANCE
-        self.diagnostics = WebViewDiagnostics(repoRoot: config.repoRoot)
-#endif
         self.standardBundleSchemeHandler = FlowIpcStandardBundleSchemeHandler(module: config.module)
     }
 
@@ -156,9 +159,9 @@ final class WebViewHost: NSObject, NSApplicationDelegate, NSWindowDelegate, WKNa
             source: scope.documentStartScript,
             injectionTime: .atDocumentStart,
             forMainFrameOnly: true))
-#if VATORI_FLOW_IPC_ACCEPTANCE
-        userContentController.addFlowIpcAutomationScripts(config: config)
-#endif
+        config.runtimeHooks.configureUserContentController(
+            userContentController,
+            config: config)
         userContentController.add(self, name: "flowIpc")
 
         let configuration = WKWebViewConfiguration()
@@ -277,11 +280,7 @@ final class WebViewHost: NSObject, NSApplicationDelegate, NSWindowDelegate, WKNa
                 return
             }
             openFlowIpcWindow(scope: .main)
-#if VATORI_FLOW_IPC_ACCEPTANCE
-            if config.flowIpcAutoMultiWindow {
-                openFlowIpcWindow(scope: .window("secondary"))
-            }
-#endif
+            config.runtimeHooks.didOpenInitialFlowIpcWindow(host: self)
             return
         }
         guard let context = flowIpcContext(for: object) else {
@@ -528,14 +527,9 @@ final class WebViewHost: NSObject, NSApplicationDelegate, NSWindowDelegate, WKNa
                     "title": webView.title ?? "",
                     "windowSharingType": compatibilityWindow?.sharingType.rawValue ?? -1
                 ])
-#if VATORI_FLOW_IPC_ACCEPTANCE
-                DispatchQueue.main.asyncAfter(deadline: .now() + 0.8) {
-                    self.diagnostics.inspect(webView)
-                }
-                DispatchQueue.main.asyncAfter(deadline: .now() + 1.2) {
-                    self.diagnostics.writeSnapshot(webView)
-                }
-#endif
+                config.runtimeHooks.didFinishCompatibilityNavigation(
+                    host: self,
+                    webView: webView)
             }
             return
         }
@@ -553,155 +547,8 @@ final class WebViewHost: NSObject, NSApplicationDelegate, NSWindowDelegate, WKNa
             "title": webView.title ?? "",
             "windowSharingType": context.window.sharingType.rawValue
         ])
-
-#if VATORI_FLOW_IPC_ACCEPTANCE
-        let verificationSchedule = FlowIpcVerificationSchedule(config: config)
-        if !config.flowIpcAutoShutdown {
-            for delay in verificationSchedule.inspectionDelaysSeconds {
-                DispatchQueue.main.asyncAfter(deadline: .now() + delay) {
-                    self.diagnostics.inspect(webView)
-                }
-            }
-        }
-        DispatchQueue.main.asyncAfter(deadline: .now() + verificationSchedule.snapshotDelaySeconds) {
-            self.diagnostics.writeSnapshot(webView)
-        }
-        if config.flowIpcAutoShutdown {
-            scheduleAutoShutdown(context, verificationSchedule: verificationSchedule)
-        }
-#endif
+        config.runtimeHooks.didFinishFlowIpcNavigation(host: self, context: context)
     }
-
-#if VATORI_FLOW_IPC_ACCEPTANCE
-    @discardableResult
-    func terminateSidecarForRecoveryAcceptance() -> Bool {
-        sidecarController?.terminateUnexpectedlyForAcceptance() == true
-    }
-
-    func sidecarRecoveryProcessSnapshotForAcceptance() -> (
-        previous: Int32,
-        current: Int32,
-        replaced: Bool
-    ) {
-        sidecarController?.recoveryProcessSnapshotForAcceptance()
-            ?? (previous: 0, current: 0, replaced: false)
-    }
-
-    private func scheduleAutoShutdown(
-        _ context: FlowIpcWindowContext,
-        verificationSchedule: FlowIpcVerificationSchedule
-    ) {
-        if config.flowIpcAutoSidecarRestart {
-            scheduleStandardBundleSidecarRestartAcceptance(
-                context,
-                timeoutSeconds: verificationSchedule.autoShutdownTimeoutSeconds)
-            return
-        }
-        if config.flowIpcAutoMultiWindow {
-            scheduleMultiWindowAcceptanceIfReady()
-            return
-        }
-        if config.flowIpcAutoFrameworkUpdate {
-            scheduleStandardBundleFrameworkAcceptance(
-                context,
-                timeoutSeconds: verificationSchedule.autoShutdownTimeoutSeconds)
-            return
-        }
-
-        let deadline = Date().addingTimeInterval(verificationSchedule.autoShutdownTimeoutSeconds)
-        pollAutoShutdownReadiness(context, deadline: deadline)
-    }
-
-    private func pollAutoShutdownReadiness(
-        _ context: FlowIpcWindowContext,
-        deadline: Date
-    ) {
-        let script = """
-              (() => {
-                const diagnostics = window.VaadinDesktopIpcDiagnostics || {};
-                const clients = window.Vaadin && window.Vaadin.Flow && window.Vaadin.Flow.clients
-                  ? Object.keys(window.Vaadin.Flow.clients).filter((name) => name !== 'TypeScript')
-                  : [];
-                if (Number(diagnostics.standardBundlePushMessageCount || 0) >= 1
-                    && Number(diagnostics.standardBundlePushReconnectCount || 0) === 0
-                    && !diagnostics.standardBundlePushReconnectTriggered) {
-                  diagnostics.standardBundlePushReconnectTriggered = true;
-                  window.VaadinDesktopPush?.reconnectForTest?.(true);
-                }
-                const pushStatus = document.querySelector('#ipc-standard-push-status')
-                  ?.textContent || '';
-                const pushProbeRequired = pushStatus.length > 0;
-                const pushProbeComplete = !pushProbeRequired || (
-                  diagnostics.standardBundlePushBridgeInstalled === true
-                    && diagnostics.standardBundlePushConnected === true
-                    && Number(diagnostics.standardBundlePushMessageCount || 0) >= 3
-                    && Number(diagnostics.standardBundlePushReconnectCount || 0) >= 1
-                    && Number(diagnostics.standardBundlePushResyncCount || 0) >= 1
-                    && pushStatus.includes('Standard push 2 READY')
-                );
-                return JSON.stringify({
-                  complete: diagnostics.standardBundleFirstMeaningfulPaintReported === true
-                    && diagnostics.standardBundleCookieBridgeInstalled === true
-                    && pushProbeComplete
-                    && Number(diagnostics.standardBundleOpaqueRequestCount || 0) >= 2
-                    && Number(diagnostics.standardBundleOpaqueResponseCount || 0) >= 2
-                    && (!diagnostics.standardBundleStreamingProbeRequired
-                      || diagnostics.standardBundleStreamingProbeComplete === true)
-                    && clients.length > 0
-                    && !diagnostics.standardBundleBrowserError
-                    && !diagnostics.standardBundleOpaqueRequestError
-                    && !diagnostics.standardBundleOpaqueResponseError,
-                  requestCount: Number(diagnostics.standardBundleOpaqueRequestCount || 0),
-                  responseCount: Number(diagnostics.standardBundleOpaqueResponseCount || 0),
-                  streamingProbeRequired:
-                    diagnostics.standardBundleStreamingProbeRequired === true,
-                  streamingProbeComplete:
-                    diagnostics.standardBundleStreamingProbeComplete === true,
-                  streamingUploadBytes:
-                    Number(diagnostics.standardBundleStreamingUploadBytes || 0),
-                  streamingDownloadBytes:
-                    Number(diagnostics.standardBundleStreamingDownloadBytes || 0),
-                  streamingProbeError: diagnostics.standardBundleStreamingProbeError || '',
-                  cookieBridgeInstalled: diagnostics.standardBundleCookieBridgeInstalled === true,
-                  cookieCount: Number(diagnostics.standardBundleCookieCount || 0),
-                  pushConnected: diagnostics.standardBundlePushConnected === true,
-                  pushMessageCount: Number(diagnostics.standardBundlePushMessageCount || 0),
-                  pushReconnectCount: Number(diagnostics.standardBundlePushReconnectCount || 0),
-                  pushResyncCount: Number(diagnostics.standardBundlePushResyncCount || 0),
-                  pushProbeRequired,
-                  pushProbeComplete,
-                  pushStatus,
-                  flowClientCount: clients.length,
-                  browserError: diagnostics.standardBundleBrowserError || '',
-                  requestError: diagnostics.standardBundleOpaqueRequestError || '',
-                  responseError: diagnostics.standardBundleOpaqueResponseError || '',
-                  pushError: diagnostics.standardBundlePushError || ''
-                });
-              })()
-              """
-        context.webView.evaluateJavaScript(script) { result, _ in
-            let readiness = result as? String ?? "{}"
-            if readiness.contains("\"complete\":true") || Date() >= deadline {
-                self.diagnostics.inspect(context.webView) {
-                    self.diagnostics.writeSnapshot(context.webView) {
-                        trace("recv", "window.closeRequested", [
-                            "label": context.scope.windowId,
-                            "reason": readiness.contains("\"complete\":true")
-                                ? "flow-ipc-auto-shutdown-complete"
-                                : "flow-ipc-auto-shutdown-timeout",
-                            "readiness": readiness
-                        ])
-                        context.window.close()
-                    }
-                }
-                return
-            }
-            DispatchQueue.main.asyncAfter(deadline: .now() + 2.0) {
-                self.pollAutoShutdownReadiness(context, deadline: deadline)
-            }
-        }
-    }
-#endif
 
     func webView(_ webView: WKWebView, didFail navigation: WKNavigation!, withError error: Error) {
         trace("send", "error", [
@@ -720,6 +567,11 @@ final class WebViewHost: NSObject, NSApplicationDelegate, NSWindowDelegate, WKNa
 
 
 let config = HostConfig.parse()
+if config.module.isEmpty {
+    FileHandle.standardError.write(Data(
+        "Vaadin Desktop Host requires --module <application-module>\n".utf8))
+    exit(2)
+}
 let application = NSApplication.shared
 let delegate = WebViewHost(config: config)
 application.delegate = delegate

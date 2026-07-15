@@ -1,4 +1,4 @@
-package dev.vatori.desktop.devtools;
+package dev.vatori.desktop.testsupport.trace;
 
 import tools.jackson.core.JacksonException;
 import tools.jackson.databind.JsonNode;

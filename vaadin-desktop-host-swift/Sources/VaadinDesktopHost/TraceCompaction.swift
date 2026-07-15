@@ -172,10 +172,7 @@ func compactWebViewDomTracePayload(_ payload: [String: Any]) -> [String: Any] {
                 compact[key] = compactTraceString(text, maxLength: 1024)
             }
         } else if let bool = traceBoolean(value) {
-            var keepBoolean = bool || alwaysKeep.contains(key) || keepDiagnostic
-#if VATORI_FLOW_IPC_ACCEPTANCE
-            keepBoolean = keepBoolean || key.hasSuffix("FixtureSubstituted")
-#endif
+            let keepBoolean = bool || alwaysKeep.contains(key) || keepDiagnostic
             if keepBoolean {
                 compact[key] = bool
             }
@@ -279,10 +276,7 @@ func compactFlowIpcTracePayload(_ payload: [String: Any],
                 compact[key] = compactTraceString(text, maxLength: maxStringLength)
             }
         } else if let bool = traceBoolean(value) {
-            var keepBoolean = bool || key.hasSuffix("FullBodyOmitted")
-#if VATORI_FLOW_IPC_ACCEPTANCE
-            keepBoolean = keepBoolean || key.hasSuffix("FixtureSubstituted")
-#endif
+            let keepBoolean = bool || key.hasSuffix("FullBodyOmitted")
             if keepBoolean {
                 compact[key] = bool
             }

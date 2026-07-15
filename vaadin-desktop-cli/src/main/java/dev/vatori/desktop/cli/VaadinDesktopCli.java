@@ -5,8 +5,7 @@ public final class VaadinDesktopCli {
     }
 
     public static void main(String[] args) {
-        System.out.println("Vaadin Desktop CLI v0");
-        System.out.println("Use bin/vaadin-desktop dev examples/counter-app");
+        System.out.println("Vaadin Desktop CLI");
+        System.out.println("Use bin/vaadin-desktop <command> <application-module>");
     }
 }
-

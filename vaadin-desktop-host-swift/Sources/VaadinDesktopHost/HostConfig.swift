@@ -1,14 +1,12 @@
 import Foundation
 
 struct HostConfig {
-    var module: String = "examples/counter-app"
+    var runtimeHooks: any HostRuntimeHooks = makeHostRuntimeHooks()
+    var module: String = ""
     var repoRoot: String = FileManager.default.currentDirectoryPath
     var mavenRepo: String = ""
     var mavenExecutable: String = "mvn"
     var transport: String = "compatibility-http"
-    var flowIpcAcceptanceFlags: Set<String> = []
-    var flowIpcAcceptanceValues: [String: String] = [:]
-    var flowIpcAcceptanceHarnessEnabled: Bool = false
     var flowIpcStandardBundleEnabled: Bool = false
     var flowIpcSidecarRestartLimit: Int = 3
     var flowIpcSidecarRecoveryReadyTimeoutSeconds: Double = 15
@@ -48,9 +46,6 @@ struct HostConfig {
             case "--height":
                 config.height = Double(arguments.next() ?? "") ?? config.height
             default:
-#if VATORI_FLOW_IPC_ACCEPTANCE
-                config.applyFlowIpcAcceptanceArgument(argument)
-#endif
                 continue
             }
         }
@@ -58,12 +53,10 @@ struct HostConfig {
         if config.mavenRepo.isEmpty {
             config.mavenRepo = "\(config.repoRoot)/.m2/repository"
         }
-        if !config.module.hasPrefix("/") {
+        if !config.module.isEmpty, !config.module.hasPrefix("/") {
             config.module = "\(config.repoRoot)/\(config.module)"
         }
-#if VATORI_FLOW_IPC_ACCEPTANCE
-        config.configureFlowIpcAcceptance(environment)
-#endif
+        config.runtimeHooks.configure(environment: environment)
         config.hostNoActivate = environment["VAADIN_DESKTOP_HOST_NO_ACTIVATE"] == "1"
         config.flowIpcStandardBundleEnabled =
             environment["VAADIN_DESKTOP_FLOW_IPC_STANDARD_BUNDLE"] == "1"

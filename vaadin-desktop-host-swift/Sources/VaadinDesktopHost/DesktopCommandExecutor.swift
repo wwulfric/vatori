@@ -127,7 +127,6 @@ final class DesktopCommandExecutor {
                 "paths": [],
                 "allowsMultipleSelection": allowsMultipleSelection,
                 "securityScoped": false,
-                "autoCanceled": false,
                 "error": "File dialog already in progress"
             ])
             return
@@ -141,18 +140,6 @@ final class DesktopCommandExecutor {
         panel.allowsMultipleSelection = allowsMultipleSelection
         panel.canCreateDirectories = false
 
-        let acceptanceAutoCancel: Bool
-#if VATORI_FLOW_IPC_ACCEPTANCE
-        acceptanceAutoCancel = config.flowIpcAutoFileDialogCancel
-        if acceptanceAutoCancel {
-            DispatchQueue.main.asyncAfter(deadline: .now() + 0.2) {
-                panel.cancel(nil)
-            }
-        }
-#else
-        acceptanceAutoCancel = false
-#endif
-
         let finish: (NSApplication.ModalResponse) -> Void = { response in
             self.fileDialogInFlight = false
             let paths = response == .OK ? panel.urls.map(\.path) : []
@@ -164,8 +151,7 @@ final class DesktopCommandExecutor {
                 "canceled": response != .OK,
                 "paths": paths,
                 "allowsMultipleSelection": allowsMultipleSelection,
-                "securityScoped": false,
-                "autoCanceled": response != .OK && acceptanceAutoCancel
+                "securityScoped": false
             ]
             if paths.count == 1 {
                 result["path"] = paths[0]
@@ -188,20 +174,6 @@ final class DesktopCommandExecutor {
         let body = args["body"] as? String ?? ""
         let bodyData = body.data(using: .utf8) ?? Data()
         let declaredByteCount = integerArg(args, "byteCount", fallback: bodyData.count)
-
-        if let targetPath = args["targetPath"] as? String, !targetPath.isBlank {
-            let targetURL = resolvedTransferURL(targetPath)
-            completion(downloadWriteResult(command: command,
-                                           mode: "controlled-test-path",
-                                           targetURL: targetURL,
-                                           suggestedName: suggestedName,
-                                           mimeType: mimeType,
-                                           bodyEncoding: bodyEncoding,
-                                           bodyData: bodyData,
-                                           declaredByteCount: declaredByteCount,
-                                           usedSavePanel: false))
-            return
-        }
 
         if fileTransferPanelInFlight {
             completion([
@@ -312,16 +284,6 @@ final class DesktopCommandExecutor {
                                   completion: @escaping ([String: Any]) -> Void) {
         let title = args["title"] as? String ?? "Select File"
         let readBytesLimit = integerArg(args, "readBytesLimit", fallback: 64 * 1024)
-
-        if let testPath = args["testPath"] as? String, !testPath.isBlank {
-            completion(uploadSelectionResult(command: command,
-                                             mode: "controlled-test-path",
-                                             title: title,
-                                             selectedURL: resolvedTransferURL(testPath),
-                                             readBytesLimit: readBytesLimit,
-                                             usedOpenPanel: false))
-            return
-        }
 
         if fileTransferPanelInFlight {
             completion([
@@ -452,14 +414,6 @@ final class DesktopCommandExecutor {
             "readBytesLimit": readBytesLimit,
             "usedOpenPanel": usedOpenPanel
         ]
-    }
-
-    private func resolvedTransferURL(_ rawPath: String) -> URL {
-        let expanded = NSString(string: rawPath).expandingTildeInPath
-        if expanded.hasPrefix("/") {
-            return URL(fileURLWithPath: expanded)
-        }
-        return URL(fileURLWithPath: config.repoRoot).appendingPathComponent(expanded)
     }
 
     func redactedTransferPath(_ path: String) -> String {

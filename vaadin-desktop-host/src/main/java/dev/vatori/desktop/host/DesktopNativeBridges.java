@@ -15,7 +15,7 @@ public final class DesktopNativeBridges {
                 "compatibility");
         return switch (requested.toLowerCase(Locale.ROOT)) {
             case "host-protocol", "stdio", "stdout-v0" -> new HostProtocolNativeBridge();
-            case "compatibility", "mock", "inmemory" -> new CompatibilityNativeBridge();
+            case "compatibility" -> new CompatibilityNativeBridge();
             default -> throw new IllegalArgumentException("Unsupported Vaadin desktop native bridge: " + requested);
         };
     }

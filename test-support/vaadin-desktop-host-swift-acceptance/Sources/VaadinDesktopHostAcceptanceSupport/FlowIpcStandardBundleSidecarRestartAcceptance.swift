@@ -15,6 +15,7 @@ private var flowIpcStandardBundleSidecarRestartPhase =
 private var flowIpcStandardBundleSidecarRestartDeadline = Date.distantPast
 private var flowIpcStandardBundleInitialWindowIdentifier: ObjectIdentifier?
 private var flowIpcStandardBundleInitialWebViewIdentifier: ObjectIdentifier?
+private var flowIpcStandardBundleInitialProcessIdentifier: Int32?
 
 extension WebViewHost {
     func scheduleStandardBundleSidecarRestartAcceptance(
@@ -32,6 +33,7 @@ extension WebViewHost {
             timeoutSeconds > 0 ? timeoutSeconds : 60)
         flowIpcStandardBundleInitialWindowIdentifier = ObjectIdentifier(context.window)
         flowIpcStandardBundleInitialWebViewIdentifier = ObjectIdentifier(context.webView)
+        flowIpcStandardBundleInitialProcessIdentifier = sidecarProcessIdentifier
         pollStandardBundleSidecarRestartAcceptance(context)
     }
 
@@ -87,7 +89,7 @@ extension WebViewHost {
                         state: state)
                     return
                 }
-                guard self.terminateSidecarForRecoveryAcceptance() else {
+                guard self.requestSidecarRecovery(reason: "acceptance-fault-injection") else {
                     self.finishStandardBundleSidecarRestartAcceptance(
                         context,
                         success: false,
@@ -98,7 +100,7 @@ extension WebViewHost {
                 flowIpcStandardBundleSidecarRestartPhase = .waitingForRecovery
                 self.retryStandardBundleSidecarRestartAcceptance(context)
             case .waitingForRecovery:
-                let process = self.sidecarRecoveryProcessSnapshotForAcceptance()
+                let process = self.sidecarAcceptanceProcessSnapshot()
                 let serverUiStateReset = self.sidecarRestartString(state, "textFieldStatus")
                     .contains("Vaadin TextField: pending")
                 guard context.recoveryGeneration >= 1,
@@ -136,7 +138,7 @@ extension WebViewHost {
                         state: state)
                     return
                 }
-                let process = self.sidecarRecoveryProcessSnapshotForAcceptance()
+                let process = self.sidecarAcceptanceProcessSnapshot()
                 self.finishStandardBundleSidecarRestartAcceptance(
                     context,
                     success: true,
@@ -230,6 +232,16 @@ extension WebViewHost {
         webView.evaluateJavaScript(script) { result, _ in
             completion(result as? Bool == true)
         }
+    }
+
+    private func sidecarAcceptanceProcessSnapshot() -> (
+        previous: Int32,
+        current: Int32,
+        replaced: Bool
+    ) {
+        let previous = flowIpcStandardBundleInitialProcessIdentifier ?? 0
+        let current = sidecarProcessIdentifier ?? 0
+        return (previous, current, previous > 0 && current > 0 && previous != current)
     }
 
     private func retryOrFailStandardBundleSidecarRestartAcceptance(

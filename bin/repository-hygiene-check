@@ -101,6 +101,7 @@ check_docs_no_versioned_residue() {
     vaadin-desktop-host-swift/README.md
     test-support/README.md
     test-support/vaadin-desktop-host-swift-acceptance/README.md
+    test-support/vaadin-desktop-trace-inspector/README.md
   )
   local path pattern
 
@@ -130,8 +131,9 @@ check_docs_no_versioned_residue() {
 
 check_trace_inspector_contract() {
   local wrapper="bin/flow-ipc-trace-inspect"
-  local main_source="vaadin-desktop-devtools/src/main/java/dev/vatori/desktop/devtools"
-  local test_source="vaadin-desktop-devtools/src/test/java/dev/vatori/desktop/devtools"
+  local module="test-support/vaadin-desktop-trace-inspector"
+  local main_source="$module/src/main/java/dev/vatori/desktop/testsupport/trace"
+  local test_source="$module/src/test/java/dev/vatori/desktop/testsupport/trace"
   [[ -f "$wrapper" ]] || return 0
 
   if ! grep -Fq 'StandardBundleTraceInspector' "$wrapper"; then
@@ -154,8 +156,11 @@ check_trace_inspector_contract() {
       || ! -f "$test_source/StandardBundleTraceInspectorSmokeMain.java" ]]; then
     fail "standard-bundle trace inspector source or smoke is missing"
   fi
-  if grep -Fq '<artifactId>vaadin-desktop-ipc</artifactId>' vaadin-desktop-devtools/pom.xml; then
+  if grep -Fq '<artifactId>vaadin-desktop-ipc</artifactId>' "$module/pom.xml"; then
     fail "standalone trace inspector must not depend on the framework IPC module"
+  fi
+  if grep -Fq '<module>test-support/' pom.xml; then
+    fail "repository-only test support must not be part of the framework reactor"
   fi
 
   local retired_smoke
@@ -211,7 +216,7 @@ check_swift_host_launcher_contract() {
       missing+=("$token")
     fi
   done < <(
-    grep -Eoh 'case "--flow-ipc-auto-[^"]+"' "$host_config" \
+    grep -Eoh 'case "--flow-ipc-auto-[^"]+"' "$host_config" "$acceptance_config" \
       | sed -E 's/.*"([^"]+)".*/\1/' \
       | sort -u
   )
@@ -223,8 +228,13 @@ check_swift_host_launcher_contract() {
 
 check_framework_test_boundaries() {
   local production_roots=(
+    vaadin-desktop-core/src/main
+    vaadin-desktop-ipc/src/main
+    vaadin-desktop-host/src/main
     vaadin-desktop-flow/src/main
+    vaadin-desktop-cli/src/main
     vaadin-desktop-host-swift/Sources/VaadinDesktopHost
+    vaadin-desktop-host-swift/Resources
   )
   local pattern match
 
@@ -235,7 +245,9 @@ check_framework_test_boundaries() {
     'owner-(runtime|dependency)-positive-fixture' \
     'generated-flow-imports-chunk-fixture|chunk-fixture\.js' \
     'vatori-flow-ipc-smoke|FlowIpcGeneratedLazyProbeView|dev\.vatori\.ipcsmoke' \
+    'examples/|test-apps/|test-support/' \
     'VAADIN_DESKTOP_FLOW_IPC_AUTO_' \
+    'VATORI_FLOW_IPC_ACCEPTANCE|Acceptance|acceptance|ForTest|testPath|controlled-test-path|FixtureSubstituted' \
     '(broaderComponentResource|dataComponentResource|inputComponentParity|multiValueNavigationDisclosure|overlayContextMenu|contentAppShellLogin|richTextEditor[A-Za-z0-9]*)Matrix'
   do
     match="$(rg -n -m 1 -e "$pattern" "${production_roots[@]}" || true)"
@@ -308,6 +320,12 @@ check_framework_test_boundaries() {
         ;;
     esac
   done < <(rg -l 'vaadin-desktop-flow-test-support' --glob 'pom.xml' . | sed 's#^\./##')
+
+  if [[ -d vaadin-desktop-devtools ]] \
+      && find vaadin-desktop-devtools -type f \
+        -not -path '*/target/*' -print -quit | grep -q .; then
+    fail "repository-only trace inspector must live under test-support"
+  fi
 }
 
 while IFS= read -r -d '' path; do

@@ -236,7 +236,20 @@ extension WebViewHost {
               && Number(diagnostics.standardBundlePushReconnectCount || 0) === 0
               && !diagnostics.standardBundlePushReconnectTriggered) {
             diagnostics.standardBundlePushReconnectTriggered = true;
-            window.VaadinDesktopPush?.reconnectForTest?.(true);
+            const push = window.VaadinDesktopPush;
+            push?.reconnect?.();
+            const connectionId = diagnostics.standardBundlePushActiveConnectionId;
+            if (connectionId) {
+              push?.receive?.({
+                type: 'opaquePush',
+                payload: {
+                  connectionId,
+                  pushSequence: Number(diagnostics.standardBundlePushLastSequence || 0) + 2,
+                  uidl: '',
+                  resync: false
+                }
+              });
+            }
           }
           const pushStatus = document.querySelector('#ipc-standard-push-status')?.textContent || '';
           const error = diagnostics.standardBundleBrowserError

@@ -7,10 +7,10 @@
         <groupId>dev.vatori</groupId>
         <artifactId>vaadin-desktop-parent</artifactId>
         <version>0.1.0-SNAPSHOT</version>
-        <relativePath>../pom.xml</relativePath>
+        <relativePath>../../pom.xml</relativePath>
     </parent>
-    <artifactId>vaadin-desktop-devtools</artifactId>
-    <name>Vaadin Desktop Devtools</name>
+    <artifactId>vaadin-desktop-trace-inspector-test-support</artifactId>
+    <name>Vaadin Desktop Trace Inspector Test Support</name>
     <dependencies>
         <dependency>
             <groupId>tools.jackson.core</groupId>

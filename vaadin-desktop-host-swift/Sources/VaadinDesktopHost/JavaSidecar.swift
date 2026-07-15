@@ -206,21 +206,6 @@ final class JavaSidecar {
         return true
     }
 
-#if VATORI_FLOW_IPC_ACCEPTANCE
-    @discardableResult
-    func terminateUnexpectedlyForAcceptance() -> Bool {
-        guard let process, process.isRunning else {
-            return false
-        }
-        trace("send", "sidecar.failureInjected", [
-            "generation": runningGeneration ?? 0,
-            "processIdentifier": process.processIdentifier
-        ])
-        process.terminate()
-        return true
-    }
-#endif
-
     private func handleStdout(_ line: String, generation: Int) {
         guard runningGeneration == generation else {
             return

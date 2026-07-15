@@ -16,9 +16,12 @@ if ! command -v mvn >/dev/null 2>&1; then
   exit 1
 fi
 
-mvn -o -Dmaven.repo.local="$MAVEN_REPO" -pl vaadin-desktop-devtools -am -DskipTests install
+TRACE_INSPECTOR_POM="$ROOT/test-support/vaadin-desktop-trace-inspector/pom.xml"
+mvn -o -Dmaven.repo.local="$MAVEN_REPO" \
+  -f "$TRACE_INSPECTOR_POM" \
+  -DskipTests install
 mvn -q -o -Dmaven.repo.local="$MAVEN_REPO" \
-  -pl vaadin-desktop-devtools \
-  -Dexec.mainClass=dev.vatori.desktop.devtools.StandardBundleTraceInspectorSmokeMain \
+  -f "$TRACE_INSPECTOR_POM" \
+  -Dexec.mainClass=dev.vatori.desktop.testsupport.trace.StandardBundleTraceInspectorSmokeMain \
   -Dexec.classpathScope=test \
   org.codehaus.mojo:exec-maven-plugin:3.6.2:java

@@ -14,18 +14,10 @@ import dev.vatori.desktop.Desktop;
 import dev.vatori.desktop.DesktopCommand;
 import tools.jackson.databind.JsonNode;
 
-import java.io.IOException;
-import java.nio.charset.StandardCharsets;
-import java.nio.file.Files;
-import java.nio.file.Path;
 import java.util.Map;
 
 @Route("")
 public class FlowOverIpcSmokeView extends VerticalLayout {
-    private static final Path MODULE_BUILD = Path.of(System.getProperty("user.dir")).resolve(".build");
-    private static final Path DOWNLOAD_TARGET = MODULE_BUILD.resolve("flow-ipc-download-smoke.txt");
-    private static final Path UPLOAD_SOURCE = MODULE_BUILD.resolve("flow-ipc-upload-smoke.txt");
-
     private int count;
 
     public FlowOverIpcSmokeView() {
@@ -51,11 +43,25 @@ public class FlowOverIpcSmokeView extends VerticalLayout {
             Desktop.current().notifications().show("Flow IPC", "Button clicked " + count + " time(s)");
             Desktop.current().clipboard().writeText("Vaadin Flow over IPC clicks: " + count);
             Desktop.current().fileDialog().openFile("Flow IPC File Dialog");
-            runFileTransferSmoke(fileTransferStatus);
             Desktop.current().nativeBridge().invoke(new DesktopCommand("diagnostics.deniedCapability",
                     Map.of("reason", "manifest-deny-smoke")));
         });
         button.setId("ipc-button");
+
+        Button download = new Button("Download text", event -> {
+            Desktop.current().fileTransfer().downloadText(
+                    "flow-ipc-download-smoke.txt",
+                    "text/plain; charset=utf-8",
+                    "Flow IPC download smoke\n");
+            fileTransferStatus.setText("File transfer: download requested");
+        });
+        download.setId("ipc-download-button");
+
+        Button upload = new Button("Select upload file", event -> {
+            Desktop.current().fileTransfer().selectUploadFile("Flow IPC Upload");
+            fileTransferStatus.setText("File transfer: upload requested");
+        });
+        upload.setId("ipc-upload-button");
 
         VerticalLayout list = new VerticalLayout();
         list.setId("ipc-list");
@@ -66,7 +72,7 @@ public class FlowOverIpcSmokeView extends VerticalLayout {
         list.add(new Span("3 Replace-root patch over IPC READY"));
         list.add(new Span("4 Desktop command/capabilityResult over IPC READY"));
 
-        add(title, button, status, list, fileTransferStatus, standardPushStatus);
+        add(title, button, download, upload, status, list, fileTransferStatus, standardPushStatus);
 
         Input textInput = new Input();
         textInput.setId("ipc-text-input");
@@ -148,19 +154,4 @@ public class FlowOverIpcSmokeView extends VerticalLayout {
         add(eventMatrix);
     }
 
-    private void runFileTransferSmoke(Span fileTransferStatus) {
-        try {
-            Files.createDirectories(UPLOAD_SOURCE.getParent());
-            Files.writeString(UPLOAD_SOURCE, "Flow IPC upload smoke\n", StandardCharsets.UTF_8);
-            Desktop.current().fileTransfer().downloadText(
-                    "flow-ipc-download-smoke.txt",
-                    "text/plain; charset=utf-8",
-                    "Flow IPC download smoke\n",
-                    DOWNLOAD_TARGET);
-            Desktop.current().fileTransfer().selectUploadFile("Flow IPC Upload", UPLOAD_SOURCE);
-            fileTransferStatus.setText("File transfer: requested");
-        } catch (IOException error) {
-            fileTransferStatus.setText("File transfer: failed " + error.getClass().getSimpleName());
-        }
-    }
 }

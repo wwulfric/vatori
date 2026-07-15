@@ -78,6 +78,7 @@
       queuedMessages: []
     };
     subscriptions.set(subscription.id, subscription);
+    diagnostics.standardBundlePushActiveConnectionId = subscription.id;
     connect(subscription);
     return {
       push() {
@@ -179,7 +180,7 @@
     }
   }
 
-  function reconnectForTest(simulateMissedMessage = false) {
+  function reconnect() {
     for (const subscription of subscriptions.values()) {
       subscription.connected = false;
       subscription.reopening = true;
@@ -188,13 +189,7 @@
         responseFor(subscription, 're-connecting'));
       postToHost('opaquePushDisconnect', connectionMetadata(subscription));
       const currentLastSeen = connectionMetadata(subscription).lastSeenServerSyncId;
-      connect(subscription, simulateMissedMessage
-        ? Math.max(-1, currentLastSeen - 1)
-        : currentLastSeen);
-      if (simulateMissedMessage) {
-        diagnostics.standardBundlePushMissedMessageSimulationCount =
-          Number(diagnostics.standardBundlePushMissedMessageSimulationCount || 0) + 1;
-      }
+      connect(subscription, currentLastSeen);
       diagnostics.standardBundlePushReconnectCount =
         Number(diagnostics.standardBundlePushReconnectCount || 0) + 1;
     }
@@ -215,7 +210,7 @@
     subscribe,
     unsubscribeUrl
   };
-  window.VaadinDesktopPush = { receive, reconnectForTest, sidecarDisconnected };
+  window.VaadinDesktopPush = { receive, reconnect, sidecarDisconnected };
   diagnostics.standardBundlePushBridgeInstalled = true;
   diagnostics.standardBundlePushTransport = 'opaque-ipc-push';
   diagnostics.standardBundlePushMessageCount = 0;

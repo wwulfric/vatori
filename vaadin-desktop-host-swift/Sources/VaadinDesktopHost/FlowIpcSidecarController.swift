@@ -11,8 +11,6 @@ final class FlowIpcSidecarController {
     private var recoveryInProgress = false
     private var restartAttempts = 0
     private var exitedProcessIdentifier: Int32?
-    private var lastRecoveryPreviousProcessIdentifier: Int32 = 0
-    private var lastRecoveryProcessIdentifier: Int32 = 0
 
     init(
         config: HostConfig,
@@ -47,6 +45,15 @@ final class FlowIpcSidecarController {
     @discardableResult
     func sendFlowIpc(_ envelope: String) -> Bool {
         sidecar.sendFlowIpc(envelope)
+    }
+
+    var processIdentifier: Int32? {
+        sidecar.processIdentifier
+    }
+
+    @discardableResult
+    func requestRecovery(reason: String) -> Bool {
+        sidecar.terminateForRecovery(reason: reason)
     }
 
     func handleReady() -> Bool {
@@ -181,26 +188,7 @@ final class FlowIpcSidecarController {
             "windowsReloaded": windows.count,
             "recoveryGeneration": highestRecoveryGeneration
         ])
-        lastRecoveryPreviousProcessIdentifier = previousProcessIdentifier
-        lastRecoveryProcessIdentifier = currentProcessIdentifier
         recoveryInProgress = false
         exitedProcessIdentifier = nil
     }
-
-#if VATORI_FLOW_IPC_ACCEPTANCE
-    @discardableResult
-    func terminateUnexpectedlyForAcceptance() -> Bool {
-        sidecar.terminateUnexpectedlyForAcceptance()
-    }
-
-    func recoveryProcessSnapshotForAcceptance() -> (
-        previous: Int32,
-        current: Int32,
-        replaced: Bool
-    ) {
-        let previous = lastRecoveryPreviousProcessIdentifier
-        let current = lastRecoveryProcessIdentifier
-        return (previous, current, previous > 0 && current > 0 && previous != current)
-    }
-#endif
 }

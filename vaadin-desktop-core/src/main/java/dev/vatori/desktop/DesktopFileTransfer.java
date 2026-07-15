@@ -1,7 +1,6 @@
 package dev.vatori.desktop;
 
 import java.nio.charset.StandardCharsets;
-import java.nio.file.Path;
 import java.util.LinkedHashMap;
 import java.util.Map;
 
@@ -14,7 +13,7 @@ public final class DesktopFileTransfer {
         this.nativeBridge = nativeBridge;
     }
 
-    public DesktopCommandResult downloadText(String suggestedName, String mimeType, String body, Path targetPath) {
+    public DesktopCommandResult downloadText(String suggestedName, String mimeType, String body) {
         String safeBody = body == null ? "" : body;
         int byteCount = safeBody.getBytes(StandardCharsets.UTF_8).length;
         if (byteCount > MAX_INLINE_DOWNLOAD_BYTES) {
@@ -32,19 +31,13 @@ public final class DesktopFileTransfer {
         payload.put("bodyEncoding", "utf-8");
         payload.put("byteCount", byteCount);
         payload.put("body", safeBody);
-        if (targetPath != null) {
-            payload.put("targetPath", targetPath.toString());
-        }
         return nativeBridge.invoke(new DesktopCommand("fileTransfer.download", payload));
     }
 
-    public DesktopCommandResult selectUploadFile(String title, Path testPath) {
+    public DesktopCommandResult selectUploadFile(String title) {
         Map<String, Object> payload = new LinkedHashMap<>();
         payload.put("title", title == null || title.isBlank() ? "Select File" : title);
         payload.put("readBytesLimit", MAX_INLINE_DOWNLOAD_BYTES);
-        if (testPath != null) {
-            payload.put("testPath", testPath.toString());
-        }
         return nativeBridge.invoke(new DesktopCommand("fileTransfer.selectUploadFile", payload));
     }
 }

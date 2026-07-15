@@ -102,19 +102,16 @@ context.VaadinDesktopPush.receive({
 });
 assert.deepEqual(receivedBodies, ['{"syncId":1}', '{"syncId":5}']);
 
-context.VaadinDesktopPush.reconnectForTest(true);
+context.VaadinDesktopPush.reconnect();
 assert.equal(reconnecting, 1);
 const reconnectMessages = messages.splice(0, 2);
 assert.deepEqual(reconnectMessages.map((message) => message.type), [
   'opaquePushDisconnect',
   'opaquePushConnect'
 ]);
-assert.equal(reconnectMessages[1].payload.lastSeenServerSyncId, 3);
+assert.equal(reconnectMessages[1].payload.lastSeenServerSyncId, 4);
 assert.equal(messages.length, 0);
-assert.equal(
-  context.VaadinDesktopIpcDiagnostics.standardBundlePushMissedMessageSimulationCount,
-  1
-);
+assert.equal(context.VaadinDesktopIpcDiagnostics.standardBundlePushReconnectCount, 1);
 assert.equal(context.VaadinDesktopIpcDiagnostics.standardBundlePushResyncCount, 1);
 context.VaadinDesktopPush.receive({
   type: 'opaquePushConnected',

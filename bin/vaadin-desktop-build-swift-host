@@ -55,7 +55,14 @@ if [[ "${VAADIN_DESKTOP_FLOW_IPC_ACCEPTANCE:-}" == "1" ]] \
   SWIFT_HOST_ACCEPTANCE=1
 fi
 
-SWIFT_HOST_SOURCES=("$SWIFT_HOST_SOURCE_ROOT"/Sources/VaadinDesktopHost/*.swift)
+SWIFT_HOST_SOURCES=()
+for source in "$SWIFT_HOST_SOURCE_ROOT"/Sources/VaadinDesktopHost/*.swift; do
+  if [[ "$SWIFT_HOST_ACCEPTANCE" == "1" \
+        && "$(basename "$source")" == "ProductionHostRuntimeHooksFactory.swift" ]]; then
+    continue
+  fi
+  SWIFT_HOST_SOURCES+=("$source")
+done
 if [[ "$SWIFT_HOST_ACCEPTANCE" == "1" ]]; then
   if [[ ! -d "$SWIFT_ACCEPTANCE_ROOT/Sources/VaadinDesktopHostAcceptanceSupport" ]]; then
     echo "Swift host acceptance sources are missing: $SWIFT_ACCEPTANCE_ROOT" >&2
@@ -63,7 +70,6 @@ if [[ "$SWIFT_HOST_ACCEPTANCE" == "1" ]]; then
   fi
   SWIFT_HOST_SOURCES+=("$SWIFT_ACCEPTANCE_ROOT"/Sources/VaadinDesktopHostAcceptanceSupport/*.swift)
   CLANG_MODULE_CACHE_PATH="$SWIFT_MODULE_CACHE" /usr/bin/swiftc \
-    -D VATORI_FLOW_IPC_ACCEPTANCE \
     "${SWIFT_HOST_SOURCES[@]}" \
     -o "$SWIFT_HOST_EXE"
 else

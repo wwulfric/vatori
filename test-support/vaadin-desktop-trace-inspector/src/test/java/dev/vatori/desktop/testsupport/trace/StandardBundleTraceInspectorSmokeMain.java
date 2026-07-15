@@ -1,4 +1,4 @@
-package dev.vatori.desktop.devtools;
+package dev.vatori.desktop.testsupport.trace;
 
 import java.io.ByteArrayOutputStream;
 import java.io.PrintStream;

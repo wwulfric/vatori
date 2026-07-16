@@ -8,16 +8,23 @@ import com.vaadin.flow.component.avatar.AvatarGroup.AvatarGroupItem;
 import com.vaadin.flow.component.avatar.AvatarGroupVariant;
 import com.vaadin.flow.component.avatar.AvatarVariant;
 import com.vaadin.flow.component.checkbox.Checkbox;
+import com.vaadin.flow.component.checkbox.CheckboxGroup;
+import com.vaadin.flow.component.checkbox.CheckboxGroupVariant;
 import com.vaadin.flow.component.checkbox.CheckboxVariant;
 import com.vaadin.flow.component.combobox.ComboBox;
 import com.vaadin.flow.component.combobox.ComboBoxVariant;
 import com.vaadin.flow.component.combobox.MultiSelectComboBox;
 import com.vaadin.flow.component.combobox.MultiSelectComboBoxVariant;
+import com.vaadin.flow.component.confirmdialog.ConfirmDialog;
 import com.vaadin.flow.component.contextmenu.ContextMenu;
 import com.vaadin.flow.component.contextmenu.MenuItem;
+import com.vaadin.flow.component.customfield.CustomField;
 import com.vaadin.flow.component.datepicker.DatePicker;
 import com.vaadin.flow.component.datepicker.DatePickerVariant;
+import com.vaadin.flow.component.datetimepicker.DateTimePicker;
+import com.vaadin.flow.component.datetimepicker.DateTimePickerVariant;
 import com.vaadin.flow.component.accordion.Accordion;
+import com.vaadin.flow.component.accordion.AccordionPanel;
 import com.vaadin.flow.component.details.Details;
 import com.vaadin.flow.component.details.DetailsVariant;
 import com.vaadin.flow.component.dialog.Dialog;
@@ -27,22 +34,35 @@ import com.vaadin.flow.component.grid.Grid;
 import com.vaadin.flow.component.grid.GridVariant;
 import com.vaadin.flow.component.html.H1;
 import com.vaadin.flow.component.html.Span;
+import com.vaadin.flow.component.listbox.ListBox;
+import com.vaadin.flow.component.listbox.MultiSelectListBox;
 import com.vaadin.flow.component.menubar.MenuBar;
 import com.vaadin.flow.component.menubar.MenuBarVariant;
+import com.vaadin.flow.component.notification.Notification;
+import com.vaadin.flow.component.notification.NotificationVariant;
+import com.vaadin.flow.component.orderedlayout.BoxSizing;
+import com.vaadin.flow.component.orderedlayout.FlexComponent;
+import com.vaadin.flow.component.orderedlayout.FlexLayout;
+import com.vaadin.flow.component.orderedlayout.HorizontalLayout;
+import com.vaadin.flow.component.orderedlayout.Scroller;
+import com.vaadin.flow.component.orderedlayout.ScrollerVariant;
 import com.vaadin.flow.component.orderedlayout.VerticalLayout;
 import com.vaadin.flow.component.popover.Popover;
+import com.vaadin.flow.component.progressbar.ProgressBar;
 import com.vaadin.flow.component.radiobutton.RadioButtonGroup;
 import com.vaadin.flow.component.radiobutton.RadioGroupVariant;
 import com.vaadin.flow.component.richtexteditor.RichTextEditor;
 import com.vaadin.flow.component.richtexteditor.RichTextEditorVariant;
 import com.vaadin.flow.component.select.Select;
 import com.vaadin.flow.component.select.SelectVariant;
+import com.vaadin.flow.component.splitlayout.SplitLayout;
 import com.vaadin.flow.component.tabs.Tab;
 import com.vaadin.flow.component.tabs.Tabs;
 import com.vaadin.flow.component.tabs.TabsVariant;
 import com.vaadin.flow.component.textfield.BigDecimalField;
 import com.vaadin.flow.component.textfield.EmailField;
 import com.vaadin.flow.component.textfield.IntegerField;
+import com.vaadin.flow.component.textfield.NumberField;
 import com.vaadin.flow.component.textfield.PasswordField;
 import com.vaadin.flow.component.textfield.TextArea;
 import com.vaadin.flow.component.textfield.TextAreaVariant;
@@ -51,8 +71,10 @@ import com.vaadin.flow.component.textfield.TextFieldVariant;
 import com.vaadin.flow.component.timepicker.TimePicker;
 import com.vaadin.flow.component.timepicker.TimePickerVariant;
 import com.vaadin.flow.component.upload.Upload;
+import com.vaadin.flow.component.upload.UploadFormat;
 import com.vaadin.flow.component.virtuallist.VirtualList;
 import com.vaadin.flow.data.binder.Binder;
+import com.vaadin.flow.data.provider.DataProvider;
 import com.vaadin.flow.component.grid.contextmenu.GridContextMenu;
 import com.vaadin.flow.component.grid.contextmenu.GridMenuItem;
 import com.vaadin.flow.component.login.LoginI18n;
@@ -80,11 +102,13 @@ import java.nio.charset.StandardCharsets;
 import java.math.BigDecimal;
 import java.time.Instant;
 import java.time.LocalDate;
+import java.time.LocalDateTime;
 import java.util.List;
 import java.util.Set;
 import java.util.concurrent.atomic.AtomicBoolean;
 import java.util.concurrent.atomic.AtomicInteger;
 import java.util.concurrent.atomic.AtomicReference;
+import java.util.stream.Collectors;
 import java.util.stream.IntStream;
 
 @Route("")
@@ -116,6 +140,32 @@ public class FlowOverIpcFrameworkView extends VerticalLayout {
         expedited.setId("framework-expedite");
         expedited.setHelperText("Routes through the fast lane");
         expedited.addThemeVariants(CheckboxVariant.LUMO_HELPER_ABOVE_FIELD);
+
+        CheckboxGroup<String> auditChannels = new CheckboxGroup<>("Audit channels");
+        auditChannels.setId("framework-checkbox-group");
+        auditChannels.setItems(List.of("security", "compliance", "qa", "release"));
+        auditChannels.setItemLabelGenerator(value -> switch (value) {
+            case "security" -> "Security review";
+            case "compliance" -> "Compliance review";
+            case "qa" -> "QA sign-off";
+            case "release" -> "Release desk";
+            default -> value;
+        });
+        auditChannels.setValue(Set.of("security"));
+        auditChannels.addThemeVariants(CheckboxGroupVariant.LUMO_VERTICAL);
+        Span checkboxGroupStatus = new Span("CheckboxGroup: value=security");
+        checkboxGroupStatus.setId("framework-checkbox-group-status");
+        auditChannels.addValueChangeListener(event -> {
+            String value = event.getValue().stream()
+                    .sorted()
+                    .collect(Collectors.joining(","));
+            checkboxGroupStatus.setText("CheckboxGroup client value: " + value);
+        });
+        Button checkboxGroupServerUpdate = new Button("Set CheckboxGroup", event -> {
+            auditChannels.setValue(Set.of("qa", "release"));
+            checkboxGroupStatus.setText("CheckboxGroup server value: qa,release");
+        });
+        checkboxGroupServerUpdate.setId("framework-checkbox-group-server-update");
 
         Select<String> priority = new Select<>();
         priority.setId("framework-priority");
@@ -151,6 +201,19 @@ public class FlowOverIpcFrameworkView extends VerticalLayout {
         decision.setValue("review");
         decision.addThemeVariants(RadioGroupVariant.LUMO_VERTICAL);
 
+        TextField caseTitle = new TextField("Case title");
+        caseTitle.setId("framework-case-title");
+        caseTitle.setValue("Initial title");
+        caseTitle.setClearButtonVisible(true);
+        caseTitle.addThemeVariants(TextFieldVariant.LUMO_SMALL);
+        Span textFieldStatus = new Span("TextField: value=Initial title");
+        textFieldStatus.setId("framework-text-field-status");
+        Button textFieldServerUpdate = new Button("Set TextField", event -> {
+            caseTitle.setValue("Server issued title");
+            textFieldStatus.setText("TextField server value: Server issued title");
+        });
+        textFieldServerUpdate.setId("framework-text-field-server-update");
+
         TextArea notes = new TextArea("Notes");
         notes.setId("framework-notes");
         notes.setValue("Initial notes");
@@ -168,6 +231,21 @@ public class FlowOverIpcFrameworkView extends VerticalLayout {
         score.setValue(4);
         score.addThemeVariants(TextFieldVariant.LUMO_SMALL);
 
+        NumberField riskScore = new NumberField("Risk score");
+        riskScore.setId("framework-risk-score");
+        riskScore.setMin(0);
+        riskScore.setMax(10);
+        riskScore.setStep(0.25);
+        riskScore.setValue(2.5);
+        riskScore.addThemeVariants(TextFieldVariant.LUMO_SMALL);
+        Span numberFieldStatus = new Span("NumberField: value=2.5");
+        numberFieldStatus.setId("framework-number-field-status");
+        Button numberFieldServerUpdate = new Button("Set NumberField", event -> {
+            riskScore.setValue(8.25);
+            numberFieldStatus.setText("NumberField server value: 8.25");
+        });
+        numberFieldServerUpdate.setId("framework-number-field-server-update");
+
         PasswordField secret = new PasswordField("Secret");
         secret.setId("framework-secret");
         secret.setValue("initial-secret");
@@ -178,14 +256,130 @@ public class FlowOverIpcFrameworkView extends VerticalLayout {
         reviewTime.setValue(java.time.LocalTime.of(9, 30));
         reviewTime.addThemeVariants(TimePickerVariant.LUMO_SMALL);
 
+        DateTimePicker reviewDateTime = new DateTimePicker("Review date and time");
+        reviewDateTime.setId("framework-review-date-time");
+        reviewDateTime.setValue(LocalDateTime.of(2026, 6, 15, 9, 30));
+        reviewDateTime.addThemeVariants(DateTimePickerVariant.LUMO_SMALL);
+        Span dateTimePickerStatus = new Span("DateTimePicker: value=2026-06-15T09:30");
+        dateTimePickerStatus.setId("framework-date-time-picker-status");
+        Button dateTimePickerServerUpdate = new Button("Set DateTimePicker", event -> {
+            reviewDateTime.setValue(LocalDateTime.of(2026, 8, 1, 16, 20));
+            dateTimePickerStatus.setText("DateTimePicker server value: 2026-08-01T16:20");
+        });
+        dateTimePickerServerUpdate.setId("framework-date-time-picker-server-update");
+
         Span inputMatrixStatus = new Span("Input matrix: pending");
         inputMatrixStatus.setId("framework-input-matrix-status");
+        decision.addValueChangeListener(event ->
+                inputMatrixStatus.setText("Decision changed: " + event.getValue()));
+        caseTitle.addValueChangeListener(event -> {
+            inputMatrixStatus.setText("TextField changed: " + event.getValue());
+            textFieldStatus.setText("TextField client value: " + event.getValue());
+        });
+        notes.addValueChangeListener(event ->
+                inputMatrixStatus.setText("Notes changed: " + event.getValue()));
+        contactEmail.addValueChangeListener(event ->
+                inputMatrixStatus.setText("Email changed: " + event.getValue()));
+        score.addValueChangeListener(event ->
+                inputMatrixStatus.setText("Score changed: " + event.getValue()));
+        riskScore.addValueChangeListener(event -> {
+            String value = event.getValue() == null ? "null" : event.getValue().toString();
+            inputMatrixStatus.setText("Risk changed: " + value);
+            numberFieldStatus.setText("NumberField client value: " + value);
+        });
+        secret.addValueChangeListener(event -> {
+            String value = event.getValue() == null ? "" : event.getValue();
+            inputMatrixStatus.setText("Secret changed: length=" + value.length());
+        });
+        reviewTime.addValueChangeListener(event ->
+                inputMatrixStatus.setText("Review time changed: " + event.getValue()));
+        reviewDateTime.addValueChangeListener(event -> {
+            LocalDateTime value = event.getValue();
+            String text = value == null ? "null" : value.toString();
+            inputMatrixStatus.setText("Review date-time changed: " + text);
+            dateTimePickerStatus.setText("DateTimePicker client value: " + text);
+        });
 
         MultiSelectComboBox<String> assignees = new MultiSelectComboBox<>("Assignees");
         assignees.setId("framework-assignees");
         assignees.setItems("ava", "sol", "kai");
         assignees.setValue(Set.of("ava"));
         assignees.addThemeVariants(MultiSelectComboBoxVariant.LUMO_SMALL);
+
+        ListBox<String> laneListBox = new ListBox<>();
+        laneListBox.setId("framework-list-box");
+        laneListBox.setItems(List.of("analysis", "build", "support"));
+        laneListBox.setItemLabelGenerator(value -> switch (value) {
+            case "analysis" -> "Analysis lane";
+            case "build" -> "Build lane";
+            case "support" -> "Support lane";
+            default -> value;
+        });
+        laneListBox.setValue("analysis");
+        Span listBoxStatus = new Span("ListBox: value=analysis");
+        listBoxStatus.setId("framework-list-box-status");
+        laneListBox.addValueChangeListener(event ->
+                listBoxStatus.setText("ListBox client value: " + event.getValue()));
+        Button listBoxServerUpdate = new Button("Set ListBox", event -> {
+            laneListBox.setValue("support");
+            listBoxStatus.setText("ListBox server value: support");
+        });
+        listBoxServerUpdate.setId("framework-list-box-server-update");
+
+        MultiSelectListBox<String> reviewStageListBox = new MultiSelectListBox<>();
+        reviewStageListBox.setId("framework-multi-select-list-box");
+        reviewStageListBox.setItems(List.of("triage", "design", "verify"));
+        reviewStageListBox.setItemLabelGenerator(value -> switch (value) {
+            case "triage" -> "Triage stage";
+            case "design" -> "Design stage";
+            case "verify" -> "Verify stage";
+            default -> value;
+        });
+        reviewStageListBox.setValue(Set.of("triage"));
+        Span multiSelectListBoxStatus = new Span("MultiSelectListBox: value=triage");
+        multiSelectListBoxStatus.setId("framework-multi-select-list-box-status");
+        reviewStageListBox.addValueChangeListener(event -> {
+            String value = event.getValue().stream()
+                    .sorted()
+                    .collect(Collectors.joining(","));
+            multiSelectListBoxStatus.setText("MultiSelectListBox client value: " + value);
+        });
+        Button multiSelectListBoxServerUpdate = new Button("Set MultiSelectListBox", event -> {
+            reviewStageListBox.setValue(Set.of("design", "verify"));
+            multiSelectListBoxStatus.setText("MultiSelectListBox server value: design,verify");
+        });
+        multiSelectListBoxServerUpdate.setId("framework-multi-select-list-box-server-update");
+
+        ReviewAssignmentField customAssignment = new ReviewAssignmentField();
+        Span customFieldStatus = new Span("CustomField: value=draft|queued");
+        customFieldStatus.setId("framework-custom-field-status");
+        customAssignment.addValueChangeListener(event ->
+                customFieldStatus.setText("CustomField client value: " + event.getValue()));
+        Button customFieldServerUpdate = new Button("Set CustomField", event -> {
+            customAssignment.setValue("deploy|approved");
+            customFieldStatus.setText("CustomField server value: deploy|approved");
+        });
+        customFieldServerUpdate.setId("framework-custom-field-server-update");
+
+        Span splitPrimary = new Span("Split primary pane");
+        splitPrimary.setId("framework-split-primary");
+        Span splitSecondary = new Span("Split secondary pane");
+        splitSecondary.setId("framework-split-secondary");
+        SplitLayout splitLayout = new SplitLayout(splitPrimary, splitSecondary);
+        splitLayout.setId("framework-split-layout");
+        splitLayout.setWidth("360px");
+        splitLayout.setHeight("96px");
+        splitLayout.setSplitterPosition(45);
+        Span splitLayoutStatus = new Span("SplitLayout: position=45.0");
+        splitLayoutStatus.setId("framework-split-layout-status");
+        splitLayout.addSplitterDragEndListener(event ->
+                splitLayoutStatus.setText("SplitLayout drag position: "
+                        + splitLayout.getSplitterPosition()));
+        Button splitLayoutServerUpdate = new Button("Set SplitLayout", event -> {
+            splitLayout.setSplitterPosition(62.5);
+            splitLayoutStatus.setText("SplitLayout server position: 62.5");
+        });
+        splitLayoutServerUpdate.setId("framework-split-layout-server-update");
 
         Tab overviewTab = new Tab("Overview");
         overviewTab.setId("framework-nav-tab-overview");
@@ -201,10 +395,36 @@ public class FlowOverIpcFrameworkView extends VerticalLayout {
 
         Accordion queueAccordion = new Accordion();
         queueAccordion.setId("framework-accordion");
-        queueAccordion.add("Queue", new Span("Queue disclosure content"));
+        AccordionPanel queuePanel = queueAccordion.add("Queue", new Span("Queue disclosure content"));
 
         Span navigationMatrixStatus = new Span("Navigation matrix: pending");
         navigationMatrixStatus.setId("framework-navigation-matrix-status");
+        Span assigneesStatus = new Span("Assignees: pending");
+        assigneesStatus.setId("framework-assignees-status");
+        assignees.addValueChangeListener(event -> {
+            String value = event.getValue().stream()
+                    .sorted()
+                    .collect(Collectors.joining(","));
+            String statusMessage = "Assignees changed: " + value;
+            assigneesStatus.setText(statusMessage);
+            navigationMatrixStatus.setText(statusMessage);
+        });
+        navTabs.addSelectedChangeListener(event -> {
+            if (event.getSelectedTab() == auditTab) {
+                navigationMatrixStatus.setText("Tab changed: audit");
+            } else {
+                navigationMatrixStatus.setText("Tab changed: overview");
+            }
+        });
+        auditDetails.addOpenedChangeListener(event ->
+                navigationMatrixStatus.setText("Details opened: " + event.isOpened()));
+        queueAccordion.addOpenedChangeListener(event -> {
+            if (event.getOpenedPanel().filter(panel -> panel == queuePanel).isPresent()) {
+                navigationMatrixStatus.setText("Accordion opened: queue");
+            } else {
+                navigationMatrixStatus.setText("Accordion closed");
+            }
+        });
 
         MenuBar menu = new MenuBar();
         menu.setId("framework-menu");
@@ -220,20 +440,14 @@ public class FlowOverIpcFrameworkView extends VerticalLayout {
 
         Span overlayMatrixStatus = new Span("Overlay matrix: pending");
         overlayMatrixStatus.setId("framework-overlay-matrix-status");
-        contextMenuTarget.addClickListener(event ->
-                overlayMatrixStatus.setText("Context menu opened: true"));
-        contextMenuTarget.getElement().addEventListener("vatori-context-menu-audit", event ->
-                overlayMatrixStatus.setText("Context menu action: audit"));
-        contextMenu.getElement().addEventListener("vatori-context-menu-open", event ->
-                overlayMatrixStatus.setText("Context menu opened: true"));
-
+        contextMenu.addOpenedChangeListener(event -> {
+            if (event.isOpened()) {
+                overlayMatrixStatus.setText("Context menu opened: true");
+            }
+        });
         MenuItem contextMenuAudit = contextMenu.addItem("Context Audit",
                 event -> overlayMatrixStatus.setText("Context menu action: audit"));
         contextMenuAudit.setId("framework-context-menu-audit");
-        contextMenuAudit.getElement().addEventListener("click", event ->
-                overlayMatrixStatus.setText("Context menu action: audit"));
-        contextMenu.getElement().addEventListener("vatori-context-menu-audit", event ->
-                overlayMatrixStatus.setText("Context menu action: audit"));
 
         Button popoverTarget = new Button("Popover Target");
         popoverTarget.setId("framework-popover-target");
@@ -241,31 +455,79 @@ public class FlowOverIpcFrameworkView extends VerticalLayout {
         popover.setId("framework-popover");
         popover.setTarget(popoverTarget);
         popover.setOpenOnClick(true);
-        popoverTarget.addClickListener(event ->
-                overlayMatrixStatus.setText("Popover opened: true"));
-        popoverTarget.getElement().addEventListener("vatori-popover-open", event ->
-                overlayMatrixStatus.setText("Popover opened: true"));
-        popover.getElement().addEventListener("vatori-popover-open", event ->
-                overlayMatrixStatus.setText("Popover opened: true"));
+        popover.addOpenedChangeListener(event -> {
+            if (event.isOpened()) {
+                overlayMatrixStatus.setText("Popover opened: true");
+            }
+        });
+
+        Span notificationStatus = new Span("Notification: pending");
+        notificationStatus.setId("framework-notification-status");
+        Button notificationOpen = new Button("Show Notification", event -> {
+            Notification notification = new Notification(
+                    "Flow IPC notification opened: audit", 0, Notification.Position.BOTTOM_START);
+            notification.setId("framework-notification");
+            notification.addThemeVariants(NotificationVariant.LUMO_SUCCESS);
+            notification.setAssertive(true);
+            notification.open();
+            overlayMatrixStatus.setText("Notification opened: true");
+            notificationStatus.setText("Notification opened: Flow IPC notification opened: audit");
+        });
+        notificationOpen.setId("framework-notification-open");
+
+        Span confirmDialogStatus = new Span("ConfirmDialog: pending");
+        confirmDialogStatus.setId("framework-confirm-dialog-status");
+        ConfirmDialog confirmDialog = new ConfirmDialog();
+        confirmDialog.setId("framework-confirm-dialog");
+        confirmDialog.setHeader("Flow IPC confirm");
+        confirmDialog.setText("Confirm audit action through Flow IPC");
+        confirmDialog.setConfirmText("Confirm audit");
+        confirmDialog.setCancelText("Cancel audit");
+        confirmDialog.setRejectText("Reject audit");
+        confirmDialog.setCancelable(true);
+        confirmDialog.setRejectable(true);
+        confirmDialog.addOpenedChangeListener(event -> {
+            if (event.isOpened()) {
+                overlayMatrixStatus.setText("ConfirmDialog opened: true");
+                confirmDialogStatus.setText("ConfirmDialog opened: requested");
+            }
+        });
+        confirmDialog.addConfirmListener(event -> {
+            overlayMatrixStatus.setText("ConfirmDialog confirmed: true");
+            confirmDialogStatus.setText("ConfirmDialog confirmed: audit");
+        });
+        confirmDialog.addCancelListener(event -> {
+            overlayMatrixStatus.setText("ConfirmDialog canceled: true");
+            confirmDialogStatus.setText("ConfirmDialog canceled: audit");
+        });
+        confirmDialog.addRejectListener(event -> {
+            overlayMatrixStatus.setText("ConfirmDialog rejected: true");
+            confirmDialogStatus.setText("ConfirmDialog rejected: audit");
+        });
+        Button confirmDialogOpen = new Button("Open Confirm Dialog", event -> {
+            confirmDialogStatus.setText("ConfirmDialog open requested");
+            confirmDialog.open();
+        });
+        confirmDialogOpen.setId("framework-confirm-dialog-open");
+
+        ProgressBar progressBar = new ProgressBar(0, 1, 0.25);
+        progressBar.setId("framework-progress-bar");
+        Span progressBarStatus = new Span("ProgressBar: value=0.25 indeterminate=false");
+        progressBarStatus.setId("framework-progress-bar-status");
+        Button progressValueUpdate = new Button("Set Progress Value", event -> {
+            progressBar.setIndeterminate(false);
+            progressBar.setValue(0.75);
+            progressBarStatus.setText("ProgressBar value: 0.75 indeterminate=false");
+        });
+        progressValueUpdate.setId("framework-progress-value-update");
+        Button progressIndeterminateUpdate = new Button("Set Progress Indeterminate", event -> {
+            progressBar.setIndeterminate(true);
+            progressBarStatus.setText("ProgressBar indeterminate: true value=0.75");
+        });
+        progressIndeterminateUpdate.setId("framework-progress-indeterminate-update");
 
         Span richContentStatus = new Span("Rich content: pending");
         richContentStatus.setId("framework-rich-content-status");
-        richContentStatus.getElement().addEventListener("vatori-avatar-click", event ->
-                richContentStatus.setText("Avatar clicked: ava"));
-        richContentStatus.getElement().addEventListener("vatori-message-submit", event -> {
-            JsonNode valueNode = event.getEventData().get("event.detail.value");
-            String value = valueNode == null ? "" : valueNode.asString();
-            richContentStatus.setText("Message submitted: " + value);
-        }).addEventData("event.detail.value");
-        richContentStatus.getElement().addEventListener("vatori-side-nav-audit", event ->
-                richContentStatus.setText("Side nav selected: audit"));
-        richContentStatus.getElement().addEventListener("vatori-login-overlay-open", event ->
-                richContentStatus.setText("Login overlay opened: true"));
-        richContentStatus.getElement().addEventListener("vatori-login-submit", event -> {
-            JsonNode usernameNode = event.getEventData().get("event.detail.username");
-            String username = usernameNode == null ? "" : usernameNode.asString();
-            richContentStatus.setText("Login submitted: " + username);
-        }).addEventData("event.detail.username");
 
         Avatar avatar = new Avatar("Ava Desktop");
         avatar.setId("framework-avatar");
@@ -274,8 +536,6 @@ public class FlowOverIpcFrameworkView extends VerticalLayout {
         avatar.setColorIndex(4);
         avatar.setTooltipEnabled(true);
         avatar.getElement().addEventListener("click", event ->
-                richContentStatus.setText("Avatar clicked: ava"));
-        avatar.getElement().addEventListener("vatori-avatar-click", event ->
                 richContentStatus.setText("Avatar clicked: ava"));
 
         AvatarGroup avatarGroup = new AvatarGroup(
@@ -305,16 +565,6 @@ public class FlowOverIpcFrameworkView extends VerticalLayout {
         });
         messageInput.setId("framework-message-input");
         messageInput.addThemeVariants(MessageInputVariant.AURA_ICON_BUTTON);
-        messageInput.getElement().addEventListener("vatori-message-submit", event -> {
-            JsonNode valueNode = event.getEventData().get("event.detail.value");
-            String value = valueNode == null ? "" : valueNode.asString();
-            messageList.addItem(new MessageListItem(
-                    "Echo: " + value,
-                    Instant.parse("2026-06-10T00:02:00Z"),
-                    "Flow IPC",
-                    "FI"));
-            richContentStatus.setText("Message submitted: " + value);
-        }).addEventData("event.detail.value");
 
         SideNav sideNav = new SideNav("Framework navigation");
         sideNav.setId("framework-side-nav");
@@ -324,8 +574,6 @@ public class FlowOverIpcFrameworkView extends VerticalLayout {
         SideNavItem sideNavAudit = new SideNavItem("Audit queue", "#audit-queue");
         sideNavAudit.setId("framework-side-nav-audit");
         sideNavAudit.getElement().addEventListener("click", event ->
-                richContentStatus.setText("Side nav selected: audit"));
-        sideNav.getElement().addEventListener("vatori-side-nav-audit", event ->
                 richContentStatus.setText("Side nav selected: audit"));
         sideNav.addItem(sideNavAudit);
 
@@ -349,8 +597,6 @@ public class FlowOverIpcFrameworkView extends VerticalLayout {
             loginOverlay.setOpened(opened);
             richContentStatus.setText("Login overlay opened: " + opened);
         }).addEventData("element.opened");
-        loginOverlay.getElement().addEventListener("vatori-login-overlay-open", event ->
-                richContentStatus.setText("Login overlay opened: true"));
         loginOverlay.addLoginListener(event -> {
             String password = event.getPassword() == null ? "" : event.getPassword();
             if ("invalid".equals(event.getUsername())) {
@@ -372,12 +618,6 @@ public class FlowOverIpcFrameworkView extends VerticalLayout {
                 loginOverlay.close();
             }
         });
-        loginOverlay.getElement().addEventListener("vatori-login-submit", event -> {
-            JsonNode usernameNode = event.getEventData().get("event.detail.username");
-            String username = usernameNode == null ? "" : usernameNode.asString();
-            richContentStatus.setText("Login submitted: " + username);
-            loginOverlay.close();
-        }).addEventData("event.detail.username");
         loginOverlay.addForgotPasswordListener(event ->
                 richContentStatus.setText("Login forgot password requested"));
         Button loginOverlayReopen = new Button("Open Login Overlay", event -> {
@@ -449,11 +689,11 @@ public class FlowOverIpcFrameworkView extends VerticalLayout {
         loginOverlayActionPost.setError(false);
         Span loginOverlayActionPostStatus = new Span("LoginOverlay action post idle");
         loginOverlayActionPostStatus.setId("framework-login-overlay-action-post-status");
-        loginOverlayActionPostStatus.getElement().addEventListener(
-                "vatori-login-overlay-action-post-open", event -> {
-                    loginOverlayActionPost.setOpened(true);
-                    loginOverlayActionPostStatus.setText("LoginOverlay action post opened: true");
-                });
+        Button loginOverlayActionPostOpen = new Button("Open LoginOverlay Action Post", event -> {
+            loginOverlayActionPost.setOpened(true);
+            loginOverlayActionPostStatus.setText("LoginOverlay action post opened: true");
+        });
+        loginOverlayActionPostOpen.setId("framework-login-overlay-action-post-open");
         loginOverlayActionPost.addLoginListener(event -> {
             String password = event.getPassword() == null ? "" : event.getPassword();
             loginOverlayActionPost.setEnabled(true);
@@ -462,6 +702,7 @@ public class FlowOverIpcFrameworkView extends VerticalLayout {
                     + event.getUsername() + " password-length="
                     + password.length() + " action="
                     + loginOverlayActionPostPath);
+            loginOverlayActionPost.close();
         });
         LoginOverlay loginOverlaySubmitButton = new LoginOverlay(loginI18n);
         loginOverlaySubmitButton.setId("framework-login-overlay-submit-button");
@@ -483,6 +724,7 @@ public class FlowOverIpcFrameworkView extends VerticalLayout {
             loginOverlaySubmitButton.setError(false);
             loginOverlaySubmitButtonStatus.setText("LoginOverlay submit button submitted: "
                     + event.getUsername() + " password-length=" + password.length());
+            loginOverlaySubmitButton.close();
         });
         LoginOverlay loginOverlayEnter = new LoginOverlay(loginI18n);
         loginOverlayEnter.setId("framework-login-overlay-enter");
@@ -599,6 +841,11 @@ public class FlowOverIpcFrameworkView extends VerticalLayout {
         loginOverlayFullI18n.setError(true);
         Span loginOverlayFullI18nStatus = new Span("LoginOverlay full i18n idle");
         loginOverlayFullI18nStatus.setId("framework-login-overlay-i18n-full-status");
+        loginOverlayFullI18nStatus.getElement().addEventListener(
+                "vatori-login-overlay-i18n-full-open", event -> {
+                    loginOverlayFullI18n.setOpened(true);
+                    loginOverlayFullI18nStatus.setText("LoginOverlay full i18n opened: true");
+                });
         LoginOverlay loginOverlayNoAutofocus = new LoginOverlay(loginI18n);
         loginOverlayNoAutofocus.setId("framework-login-overlay-no-autofocus");
         loginOverlayNoAutofocus.setTitle("Flow IPC Login no autofocus");
@@ -615,37 +862,35 @@ public class FlowOverIpcFrameworkView extends VerticalLayout {
             loginOverlayNoAutofocus.setOpened(true);
             loginOverlayNoAutofocusStatus.setText("LoginOverlay no autofocus opened: true");
         });
-        LoginOverlay loginOverlayAutofocusControl = new LoginOverlay(loginI18n);
-        loginOverlayAutofocusControl.setId("framework-login-overlay-autofocus-control");
-        loginOverlayAutofocusControl.setTitle("Flow IPC Login autofocus control");
-        loginOverlayAutofocusControl.setDescription("Framework validation");
-        loginOverlayAutofocusControl.setForgotPasswordButtonVisible(true);
-        loginOverlayAutofocusControl.setError(false);
+        loginOverlayNoAutofocus.getElement().addEventListener("vatori-login-overlay-no-autofocus-close", event -> {
+            loginOverlayNoAutofocus.setOpened(false);
+            loginOverlayNoAutofocusStatus.setText("LoginOverlay no autofocus closed: true");
+        });
+        VerticalLayout loginOverlayAutofocusControlHost = new VerticalLayout();
+        loginOverlayAutofocusControlHost.setId("framework-login-overlay-autofocus-control-host");
+        loginOverlayAutofocusControlHost.setPadding(false);
+        loginOverlayAutofocusControlHost.setSpacing(false);
         Span loginOverlayAutofocusControlStatus = new Span("LoginOverlay autofocus control idle");
         loginOverlayAutofocusControlStatus.setId("framework-login-overlay-autofocus-control-status");
-        loginOverlayAutofocusControl.getElement().addEventListener(
+        loginOverlayAutofocusControlStatus.getElement().addEventListener(
                 "vatori-login-overlay-autofocus-control-open", event -> {
+                    LoginOverlay loginOverlayAutofocusControl = new LoginOverlay(loginI18n);
+                    loginOverlayAutofocusControl.setId("framework-login-overlay-autofocus-control");
+                    loginOverlayAutofocusControl.setTitle("Flow IPC Login autofocus control");
+                    loginOverlayAutofocusControl.setDescription("Framework validation");
+                    loginOverlayAutofocusControl.setForgotPasswordButtonVisible(true);
+                    loginOverlayAutofocusControl.setError(false);
+                    loginOverlayAutofocusControl.getElement().addEventListener(
+                            "vatori-login-overlay-autofocus-control-close", closeEvent -> {
+                                loginOverlayAutofocusControl.setOpened(false);
+                                loginOverlayAutofocusControlStatus
+                                        .setText("LoginOverlay autofocus control closed: true");
+                            });
                     loginOverlayAutofocusControl.setOpened(true);
+                    loginOverlayAutofocusControlHost.removeAll();
+                    loginOverlayAutofocusControlHost.add(loginOverlayAutofocusControl);
                     loginOverlayAutofocusControlStatus.setText("LoginOverlay autofocus control opened: true");
                 });
-        LoginOverlay loginOverlayEscClose = new LoginOverlay(loginI18n);
-        loginOverlayEscClose.setId("framework-login-overlay-esc-close");
-        loginOverlayEscClose.setTitle("Flow IPC LoginOverlay ESC close");
-        loginOverlayEscClose.setDescription("Framework validation");
-        loginOverlayEscClose.setForgotPasswordButtonVisible(true);
-        loginOverlayEscClose.setError(false);
-        Span loginOverlayEscCloseStatus = new Span("LoginOverlay ESC close idle");
-        loginOverlayEscCloseStatus.setId("framework-login-overlay-esc-close-status");
-        loginOverlayEscClose.getElement().addEventListener("vatori-login-overlay-esc-open", event -> {
-            loginOverlayEscClose.setOpened(true);
-            loginOverlayEscCloseStatus.setText("LoginOverlay ESC close opened: true");
-        });
-        loginOverlayEscClose.getElement().addEventListener("opened-changed", event -> {
-            JsonNode openedNode = event.getEventData().get("element.opened");
-            boolean opened = openedNode != null && Boolean.parseBoolean(openedNode.asString());
-            loginOverlayEscClose.setOpened(opened);
-            loginOverlayEscCloseStatus.setText("LoginOverlay ESC close opened: " + opened);
-        }).addEventData("element.opened");
         LoginOverlay loginOverlayOutsideClose = new LoginOverlay(loginI18n);
         loginOverlayOutsideClose.setId("framework-login-overlay-outside-close");
         loginOverlayOutsideClose.setTitle("Flow IPC LoginOverlay outside close");
@@ -664,6 +909,25 @@ public class FlowOverIpcFrameworkView extends VerticalLayout {
             boolean opened = openedNode != null && Boolean.parseBoolean(openedNode.asString());
             loginOverlayOutsideClose.setOpened(opened);
             loginOverlayOutsideCloseStatus.setText("LoginOverlay outside close opened: " + opened);
+        }).addEventData("element.opened");
+        LoginOverlay loginOverlayEscapeKey = new LoginOverlay(loginI18n);
+        loginOverlayEscapeKey.setId("framework-login-overlay-escape-key");
+        loginOverlayEscapeKey.setTitle("Flow IPC LoginOverlay escape key");
+        loginOverlayEscapeKey.setDescription("Framework validation");
+        loginOverlayEscapeKey.setForgotPasswordButtonVisible(true);
+        loginOverlayEscapeKey.setError(false);
+        Span loginOverlayEscapeKeyStatus = new Span("LoginOverlay escape key idle");
+        loginOverlayEscapeKeyStatus.setId("framework-login-overlay-escape-key-status");
+        loginOverlayEscapeKey.getElement().addEventListener(
+                "vatori-login-overlay-escape-open", event -> {
+                    loginOverlayEscapeKey.setOpened(true);
+                    loginOverlayEscapeKeyStatus.setText("LoginOverlay escape key opened: true");
+                });
+        loginOverlayEscapeKey.getElement().addEventListener("opened-changed", event -> {
+            JsonNode openedNode = event.getEventData().get("element.opened");
+            boolean opened = openedNode != null && Boolean.parseBoolean(openedNode.asString());
+            loginOverlayEscapeKey.setOpened(opened);
+            loginOverlayEscapeKeyStatus.setText("LoginOverlay escape key opened: " + opened);
         }).addEventData("element.opened");
         LoginOverlay loginOverlayTabTraversal = new LoginOverlay(loginI18n);
         loginOverlayTabTraversal.setId("framework-login-overlay-tab-traversal");
@@ -705,6 +969,12 @@ public class FlowOverIpcFrameworkView extends VerticalLayout {
                     loginOverlayAutofillAttributesStatus.setText(
                             "LoginOverlay autofill attributes opened: true");
                 });
+        loginOverlayAutofillAttributes.getElement().addEventListener(
+                "vatori-login-overlay-autofill-attributes-close", event -> {
+                    loginOverlayAutofillAttributes.setOpened(false);
+                    loginOverlayAutofillAttributesStatus.setText(
+                            "LoginOverlay autofill attributes closed: true");
+                });
         LoginOverlay loginOverlayA11ySemantics = new LoginOverlay(loginI18n);
         loginOverlayA11ySemantics.setId("framework-login-overlay-a11y-semantics");
         loginOverlayA11ySemantics.setTitle("Flow IPC LoginOverlay a11y semantics");
@@ -719,6 +989,12 @@ public class FlowOverIpcFrameworkView extends VerticalLayout {
                     loginOverlayA11ySemanticsStatus.setText(
                             "LoginOverlay a11y semantics opened: true");
                 });
+        loginOverlayA11ySemantics.getElement().addEventListener(
+                "vatori-login-overlay-a11y-semantics-close", event -> {
+                    loginOverlayA11ySemantics.setOpened(false);
+                    loginOverlayA11ySemanticsStatus.setText(
+                            "LoginOverlay a11y semantics closed: true");
+                });
         LoginOverlay loginOverlayDisabledGuard = new LoginOverlay(loginI18n);
         loginOverlayDisabledGuard.setId("framework-login-overlay-disabled-guard");
         loginOverlayDisabledGuard.setTitle("Flow IPC Login disabled guard");
@@ -732,6 +1008,11 @@ public class FlowOverIpcFrameworkView extends VerticalLayout {
                 "vatori-login-overlay-disabled-guard-open", event -> {
                     loginOverlayDisabledGuard.setOpened(true);
                     loginOverlayDisabledGuardStatus.setText("LoginOverlay disabled guard opened: true");
+                });
+        loginOverlayDisabledGuardStatus.getElement().addEventListener(
+                "vatori-login-overlay-disabled-guard-close", event -> {
+                    loginOverlayDisabledGuard.setOpened(false);
+                    loginOverlayDisabledGuardStatus.setText("LoginOverlay disabled guard closed: true");
                 });
         loginOverlayDisabledGuard.addLoginListener(event -> {
             String password = event.getPassword() == null ? "" : event.getPassword();
@@ -769,18 +1050,31 @@ public class FlowOverIpcFrameworkView extends VerticalLayout {
         loginFormFullI18n.setError(true);
         Span loginFormFullI18nStatus = new Span("LoginForm full i18n idle");
         loginFormFullI18nStatus.setId("framework-login-form-i18n-full-status");
-        LoginForm loginFormNoAutofocus = new LoginForm();
-        loginFormNoAutofocus.setId("framework-login-form-no-autofocus");
-        loginFormNoAutofocus.setI18n(loginI18n);
-        loginFormNoAutofocus.setForgotPasswordButtonVisible(true);
-        loginFormNoAutofocus.setEnabled(true);
-        loginFormNoAutofocus.setError(false);
-        loginFormNoAutofocus.getElement().setProperty("noAutofocus", true);
-        loginFormNoAutofocus.getElement().setAttribute("no-autofocus", true);
-        loginFormNoAutofocus.addAttachListener(event -> event.getSource().getElement().executeJs(
-                "this.noAutofocus = true; this.setAttribute('no-autofocus', '');"));
         Span loginFormNoAutofocusStatus = new Span("LoginForm no autofocus idle");
         loginFormNoAutofocusStatus.setId("framework-login-form-no-autofocus-status");
+        VerticalLayout loginFormNoAutofocusHost = new VerticalLayout();
+        loginFormNoAutofocusHost.setId("framework-login-form-no-autofocus-host");
+        loginFormNoAutofocusHost.setPadding(false);
+        loginFormNoAutofocusHost.setSpacing(false);
+        AtomicInteger loginFormNoAutofocusRenderCount = new AtomicInteger();
+        loginFormNoAutofocusStatus.getElement().addEventListener(
+                "vatori-login-form-no-autofocus-render", event -> {
+                    LoginForm loginFormNoAutofocus = new LoginForm();
+                    loginFormNoAutofocus.setId("framework-login-form-no-autofocus");
+                    loginFormNoAutofocus.setI18n(loginI18n);
+                    loginFormNoAutofocus.setForgotPasswordButtonVisible(true);
+                    loginFormNoAutofocus.setEnabled(true);
+                    loginFormNoAutofocus.setError(false);
+                    loginFormNoAutofocus.getElement().setProperty("noAutofocus", true);
+                    loginFormNoAutofocus.getElement().setAttribute("no-autofocus", true);
+                    loginFormNoAutofocus.addAttachListener(attachEvent ->
+                            attachEvent.getSource().getElement().executeJs(
+                                    "this.noAutofocus = true; this.setAttribute('no-autofocus', '');"));
+                    loginFormNoAutofocusHost.removeAll();
+                    loginFormNoAutofocusHost.add(loginFormNoAutofocus);
+                    loginFormNoAutofocusStatus.setText("LoginForm no autofocus rendered: "
+                            + loginFormNoAutofocusRenderCount.incrementAndGet());
+                });
         LoginForm loginFormAutofocusControl = new LoginForm();
         loginFormAutofocusControl.setId("framework-login-form-autofocus-control");
         loginFormAutofocusControl.setI18n(loginI18n);
@@ -833,6 +1127,13 @@ public class FlowOverIpcFrameworkView extends VerticalLayout {
         richTextEditorBehaviorStatus.setId("framework-rich-text-editor-behavior-status");
         Span richTextEditorEditingStatus = new Span("RichTextEditor editing: pending");
         richTextEditorEditingStatus.setId("framework-rich-text-editor-editing-status");
+        richTextEditor.addValueChangeListener(event -> {
+            String value = event.getValue() == null ? "" : event.getValue();
+            if (value.contains("Flow IPC rich text")) {
+                richTextEditorStatus.setText("Rich text changed: Flow IPC rich text bold="
+                        + value.contains("strong"));
+            }
+        });
         AtomicBoolean richTextEditorSelectionObserved = new AtomicBoolean();
         AtomicBoolean richTextEditorToolbarObserved = new AtomicBoolean();
         AtomicBoolean richTextEditorKeyboardObserved = new AtomicBoolean();
@@ -855,10 +1156,12 @@ public class FlowOverIpcFrameworkView extends VerticalLayout {
                         + (value.contains("bold") || htmlValue.contains("strong")));
                 return;
             }
-            String marker = value.contains("Flow IPC rich text")
-                    ? "Flow IPC rich text"
-                    : value;
-            richTextEditorStatus.setText("Rich text changed: " + marker);
+            if (!value.isBlank()) {
+                String marker = value.contains("Flow IPC rich text")
+                        ? "Flow IPC rich text"
+                        : value;
+                richTextEditorStatus.setText("Rich text changed: " + marker);
+            }
         }).addEventData("event.detail.value")
                 .addEventData("element.value")
                 .addEventData("element.htmlValue");
@@ -993,23 +1296,18 @@ public class FlowOverIpcFrameworkView extends VerticalLayout {
         grid.addColumn(WorkItem::state).setHeader("State");
         grid.setItems(workItems);
         grid.setAllRowsVisible(true);
-        grid.addItemClickListener(event ->
-                overlayMatrixStatus.setText("Grid context menu opened: true"));
 
         GridContextMenu<WorkItem> gridContextMenu = grid.addContextMenu();
         gridContextMenu.setId("framework-grid-context-menu");
         gridContextMenu.setOpenOnClick(true);
-        grid.getElement().addEventListener("vatori-grid-context-menu-open", event ->
-                overlayMatrixStatus.setText("Grid context menu opened: true"));
-        grid.getElement().addEventListener("vatori-grid-context-menu-audit", event ->
-                overlayMatrixStatus.setText("Grid context menu action: audit"));
+        gridContextMenu.addGridContextMenuOpenedListener(event -> {
+            if (event.isOpened()) {
+                overlayMatrixStatus.setText("Grid context menu opened: true");
+            }
+        });
         GridMenuItem<WorkItem> gridContextMenuAudit = gridContextMenu.addItem("Grid Audit",
                 event -> overlayMatrixStatus.setText("Grid context menu action: audit"));
         gridContextMenuAudit.setId("framework-grid-context-menu-audit");
-        gridContextMenuAudit.getElement().addEventListener("click", event ->
-                overlayMatrixStatus.setText("Grid context menu action: audit"));
-        gridContextMenu.getElement().addEventListener("vatori-grid-context-menu-audit", event ->
-                overlayMatrixStatus.setText("Grid context menu action: audit"));
 
         Span lazyGridStatus = new Span("Lazy grid: pending");
         lazyGridStatus.setId("framework-lazy-grid-status");
@@ -1134,12 +1432,36 @@ public class FlowOverIpcFrameworkView extends VerticalLayout {
         upload.setMaxFiles(1);
         upload.setMaxFileSize(1024 * 1024);
         upload.setAcceptedFileTypes("text/plain", ".txt");
+        upload.setUploadFormat(UploadFormat.MULTIPART);
         upload.setAutoUpload(false);
 
+        List<String> virtualListItems = IntStream.rangeClosed(1, 80)
+                .mapToObj(index -> "Virtual queue item " + String.format("%03d", index))
+                .toList();
+        Span virtualListStatus = new Span("VirtualList: pending");
+        virtualListStatus.setId("framework-virtual-list-status");
+        AtomicInteger virtualListFetchCount = new AtomicInteger();
+        AtomicReference<String> virtualListLastRange = new AtomicReference<>("pending");
         VirtualList<String> virtualList = new VirtualList<>();
         virtualList.setId("framework-virtual-list");
-        virtualList.setItems(List.of("Queue alpha", "Queue beta", "Queue release"));
+        virtualList.setHeight("160px");
+        virtualList.setWidth("360px");
+        virtualList.setDataProvider(DataProvider.fromCallbacks(query -> {
+            int offset = query.getOffset();
+            int limit = query.getLimit();
+            int end = Math.min(offset + limit, virtualListItems.size());
+            int fetchCount = virtualListFetchCount.incrementAndGet();
+            virtualListLastRange.set(offset + "-" + end);
+            virtualListStatus.setText("VirtualList fetch " + fetchCount + ": " + offset + "-" + end);
+            return virtualListItems.stream().skip(offset).limit(limit);
+        }, query -> virtualListItems.size()));
         virtualList.setRenderer(item -> item);
+        Button virtualListScrollEnd = new Button("Scroll VirtualList End", event -> {
+            virtualList.scrollToIndex(79);
+            virtualListStatus.setText("VirtualList server scroll: 79 range="
+                    + virtualListLastRange.get());
+        });
+        virtualListScrollEnd.setId("framework-virtual-list-scroll-end");
 
         OwnerForm ownerForm = new OwnerForm();
         ownerForm.setOwner("platform");
@@ -1157,12 +1479,6 @@ public class FlowOverIpcFrameworkView extends VerticalLayout {
         Span validationStatus = new Span("Validation: pending");
         validationStatus.setId("framework-validation-status");
 
-        ownerName.getElement().addEventListener("change", event -> {
-            JsonNode valueNode = event.getEventData().get("element.value");
-            String value = valueNode == null ? "" : valueNode.asString();
-            ownerName.setValue(value);
-        }).addEventData("element.value");
-
         Button validateOwner = new Button("Validate Owner", event -> {
             if (binder.writeBeanIfValid(ownerForm)) {
                 validationStatus.setText("Validation accepted: " + ownerForm.getOwner());
@@ -1174,8 +1490,220 @@ public class FlowOverIpcFrameworkView extends VerticalLayout {
 
         FormLayout formLayout = new FormLayout();
         formLayout.setId("framework-form-layout");
+        formLayout.setResponsiveSteps(
+                new FormLayout.ResponsiveStep("0", 1),
+                new FormLayout.ResponsiveStep("360px", 2));
+        formLayout.setLabelWidth("96px");
+        formLayout.setLabelSpacing("12px");
+        formLayout.setColumnSpacing("18px");
+        formLayout.setRowSpacing("10px");
+        formLayout.setColumnWidth("16em");
+        formLayout.setMaxColumns(2);
+        formLayout.setMinColumns(1);
+        formLayout.setExpandFields(true);
+        formLayout.setLabelsAside(true);
+        Span formLayoutStatus = new Span("FormLayout: columns=2 colspan=2");
+        formLayoutStatus.setId("framework-form-layout-status");
         formLayout.addFormItem(ownerName, "Owner");
         formLayout.add(validateOwner, validationStatus);
+        formLayout.setColspan(validationStatus, 2);
+        formLayout.addClickListener(event ->
+                formLayoutStatus.setText("FormLayout clicked: true owner="
+                        + ownerForm.getOwner()));
+
+        Button formLayoutServerUpdate = new Button("Update FormLayout", event -> {
+            formLayout.setResponsiveSteps(
+                    new FormLayout.ResponsiveStep("0", 1),
+                    new FormLayout.ResponsiveStep("360px", 2),
+                    new FormLayout.ResponsiveStep("600px", 3));
+            formLayout.setMaxColumns(3);
+            formLayout.setColumnWidth("14em");
+            formLayout.setLabelWidth("112px");
+            formLayout.setLabelSpacing("16px");
+            formLayout.setColumnSpacing("24px");
+            formLayout.setRowSpacing("12px");
+            formLayout.setExpandColumns(true);
+            formLayout.setColspan(validationStatus, 3);
+            formLayoutStatus.setText("FormLayout server layout: max=3 colspan=3 label=112px column=24px");
+        });
+        formLayoutServerUpdate.setId("framework-form-layout-server-update");
+
+        Span horizontalLead = new Span("Queue");
+        horizontalLead.setId("framework-horizontal-layout-lead");
+        Span horizontalGrow = new Span("Review lane");
+        horizontalGrow.setId("framework-horizontal-layout-grow");
+        Span horizontalTail = new Span("Ready");
+        horizontalTail.setId("framework-horizontal-layout-tail");
+        HorizontalLayout horizontalLayout = new HorizontalLayout(horizontalLead, horizontalGrow, horizontalTail);
+        horizontalLayout.setId("framework-horizontal-layout");
+        horizontalLayout.setWidth("420px");
+        horizontalLayout.setHeight("72px");
+        horizontalLayout.setSpacing("14px");
+        horizontalLayout.setPadding(false);
+        horizontalLayout.setMargin(false);
+        horizontalLayout.setWrap(false);
+        horizontalLayout.setBoxSizing(BoxSizing.BORDER_BOX);
+        horizontalLayout.setAlignItems(FlexComponent.Alignment.CENTER);
+        horizontalLayout.setJustifyContentMode(FlexComponent.JustifyContentMode.BETWEEN);
+        horizontalLayout.setAlignSelf(FlexComponent.Alignment.END, horizontalTail);
+        horizontalLayout.setFlexGrow(1.0, horizontalGrow);
+        horizontalLayout.setFlexShrink(0.0, horizontalLead);
+        Span horizontalLayoutStatus = new Span("HorizontalLayout: between center grow=1");
+        horizontalLayoutStatus.setId("framework-horizontal-layout-status");
+        horizontalLayout.addClickListener(event ->
+                horizontalLayoutStatus.setText("HorizontalLayout clicked: true children="
+                        + horizontalLayout.getComponentCount()));
+        Button horizontalLayoutServerUpdate = new Button("Update HorizontalLayout", event -> {
+            horizontalLayout.setWidth("480px");
+            horizontalLayout.setSpacing("22px");
+            horizontalLayout.setPadding(true);
+            horizontalLayout.setMargin(true);
+            horizontalLayout.setWrap(true);
+            horizontalLayout.setBoxSizing(BoxSizing.CONTENT_BOX);
+            horizontalLayout.setAlignItems(FlexComponent.Alignment.STRETCH);
+            horizontalLayout.setJustifyContentMode(FlexComponent.JustifyContentMode.EVENLY);
+            horizontalLayout.setAlignSelf(FlexComponent.Alignment.BASELINE, horizontalTail);
+            horizontalLayout.setFlexGrow(2.0, horizontalGrow);
+            horizontalTail.setText("Aligned");
+            horizontalLayoutStatus.setText("HorizontalLayout server layout: evenly stretch grow=2 tail=baseline");
+        });
+        horizontalLayoutServerUpdate.setId("framework-horizontal-layout-server-update");
+
+        Span flexAlpha = new Span("Alpha");
+        flexAlpha.setId("framework-flex-layout-alpha");
+        Span flexBeta = new Span("Beta");
+        flexBeta.setId("framework-flex-layout-beta");
+        Span flexGamma = new Span("Gamma");
+        flexGamma.setId("framework-flex-layout-gamma");
+        FlexLayout flexLayout = new FlexLayout(flexAlpha, flexBeta, flexGamma);
+        flexLayout.setId("framework-flex-layout");
+        flexLayout.setWidth("420px");
+        flexLayout.setHeight("112px");
+        flexLayout.getStyle().set("gap", "8px");
+        flexLayout.setFlexWrap(FlexLayout.FlexWrap.WRAP);
+        flexLayout.setFlexDirection(FlexLayout.FlexDirection.ROW);
+        flexLayout.setAlignContent(FlexLayout.ContentAlignment.CENTER);
+        flexLayout.setJustifyContentMode(FlexComponent.JustifyContentMode.CENTER);
+        flexLayout.setAlignItems(FlexComponent.Alignment.CENTER);
+        flexLayout.setFlexBasis("120px", flexBeta);
+        flexLayout.setOrder(1, flexGamma);
+        flexLayout.setFlexGrow(1.0, flexBeta);
+        Span flexLayoutStatus = new Span("FlexLayout: wrap row basis=120 order=1");
+        flexLayoutStatus.setId("framework-flex-layout-status");
+        flexLayout.addClickListener(event ->
+                flexLayoutStatus.setText("FlexLayout clicked: true children="
+                        + flexLayout.getComponentCount()));
+        Button flexLayoutServerUpdate = new Button("Update FlexLayout", event -> {
+            flexLayout.setWidth("460px");
+            flexLayout.getStyle().set("gap", "18px");
+            flexLayout.setFlexWrap(FlexLayout.FlexWrap.WRAP_REVERSE);
+            flexLayout.setFlexDirection(FlexLayout.FlexDirection.COLUMN_REVERSE);
+            flexLayout.setAlignContent(FlexLayout.ContentAlignment.SPACE_BETWEEN);
+            flexLayout.setJustifyContentMode(FlexComponent.JustifyContentMode.AROUND);
+            flexLayout.setAlignItems(FlexComponent.Alignment.STRETCH);
+            flexLayout.setFlexBasis("180px", flexBeta);
+            flexLayout.setOrder(3, flexAlpha);
+            flexLayout.setFlexGrow(2.0, flexBeta);
+            flexGamma.setText("Gamma patched");
+            flexLayoutStatus.setText("FlexLayout server layout: column-reverse wrap-reverse basis=180 order=3");
+        });
+        flexLayoutServerUpdate.setId("framework-flex-layout-server-update");
+
+        Span verticalHeader = new Span("Inbox");
+        verticalHeader.setId("framework-vertical-layout-header");
+        Span verticalBody = new Span("Review stack");
+        verticalBody.setId("framework-vertical-layout-body");
+        Span verticalFooter = new Span("Queued");
+        verticalFooter.setId("framework-vertical-layout-footer");
+        VerticalLayout verticalLayout = new VerticalLayout(verticalHeader, verticalBody, verticalFooter);
+        verticalLayout.setId("framework-vertical-layout");
+        verticalLayout.setWidth("320px");
+        verticalLayout.setHeight("148px");
+        verticalLayout.setSpacing("10px");
+        verticalLayout.setPadding(false);
+        verticalLayout.setMargin(false);
+        verticalLayout.setBoxSizing(BoxSizing.BORDER_BOX);
+        verticalLayout.setAlignItems(FlexComponent.Alignment.START);
+        verticalLayout.setJustifyContentMode(FlexComponent.JustifyContentMode.BETWEEN);
+        verticalLayout.setHorizontalComponentAlignment(FlexComponent.Alignment.END, verticalBody);
+        verticalLayout.setFlexGrow(1.0, verticalFooter);
+        Span verticalLayoutStatus = new Span("VerticalLayout: between start grow=1 body=end");
+        verticalLayoutStatus.setId("framework-vertical-layout-status");
+        verticalLayout.addClickListener(event ->
+                verticalLayoutStatus.setText("VerticalLayout clicked: true children="
+                        + verticalLayout.getComponentCount()));
+        Button verticalLayoutServerUpdate = new Button("Update VerticalLayout", event -> {
+            verticalLayout.setWidth("360px");
+            verticalLayout.setHeight("168px");
+            verticalLayout.setSpacing("20px");
+            verticalLayout.setPadding(true);
+            verticalLayout.setMargin(true);
+            verticalLayout.setBoxSizing(BoxSizing.CONTENT_BOX);
+            verticalLayout.setAlignItems(FlexComponent.Alignment.STRETCH);
+            verticalLayout.setJustifyContentMode(FlexComponent.JustifyContentMode.EVENLY);
+            verticalLayout.setHorizontalComponentAlignment(FlexComponent.Alignment.CENTER, verticalBody);
+            verticalLayout.setFlexGrow(2.0, verticalFooter);
+            verticalFooter.setText("Dequeued");
+            verticalLayoutStatus.setText("VerticalLayout server layout: evenly stretch grow=2 body=center");
+        });
+        verticalLayoutServerUpdate.setId("framework-vertical-layout-server-update");
+
+        VerticalLayout scrollerContent = new VerticalLayout();
+        scrollerContent.setId("framework-scroller-content");
+        scrollerContent.setPadding(false);
+        scrollerContent.setSpacing(false);
+        scrollerContent.setWidth("280px");
+        scrollerContent.setHeight("520px");
+        IntStream.rangeClosed(1, 12).forEach(index -> {
+            Span row = new Span(String.format("Scroll item %02d", index));
+            if (index == 12) {
+                row.setId("framework-scroller-bottom");
+            }
+            row.getStyle()
+                    .set("display", "block")
+                    .set("height", "42px");
+            scrollerContent.add(row);
+        });
+        Scroller scroller = new Scroller(scrollerContent, Scroller.ScrollDirection.VERTICAL);
+        scroller.setId("framework-scroller");
+        scroller.setWidth("300px");
+        scroller.setHeight("128px");
+        scroller.addThemeVariants(ScrollerVariant.LUMO_OVERFLOW_INDICATORS);
+        Span scrollerStatus = new Span("Scroller: vertical ready");
+        scrollerStatus.setId("framework-scroller-status");
+        AtomicInteger scrollerScrollCount = new AtomicInteger();
+        scroller.getElement().addEventListener("scroll", event -> {
+            JsonNode topNode = event.getEventData().get("element.scrollTop");
+            int scrollTop = topNode == null ? -1 : topNode.asInt();
+            scrollerStatus.setText("Scroller scrolled: top=" + scrollTop
+                    + " count=" + scrollerScrollCount.incrementAndGet());
+        }).addEventData("element.scrollTop");
+        Button scrollerServerUpdate = new Button("Update Scroller", event -> {
+            HorizontalLayout horizontalScrollerContent = new HorizontalLayout();
+            horizontalScrollerContent.setId("framework-scroller-content");
+            horizontalScrollerContent.setPadding(false);
+            horizontalScrollerContent.setSpacing("12px");
+            horizontalScrollerContent.setWidth("760px");
+            horizontalScrollerContent.setHeight("88px");
+            IntStream.rangeClosed(1, 6).forEach(index -> {
+                Span item = new Span("Horizontal patched " + index);
+                if (index == 6) {
+                    item.setId("framework-scroller-horizontal-tail");
+                }
+                item.getStyle()
+                        .set("display", "inline-flex")
+                        .set("min-width", "116px")
+                        .set("height", "64px")
+                        .set("align-items", "center");
+                horizontalScrollerContent.add(item);
+            });
+            scroller.setContent(horizontalScrollerContent);
+            scroller.setScrollDirection(Scroller.ScrollDirection.HORIZONTAL);
+            scroller.setWidth("340px");
+            scroller.setHeight("96px");
+            scrollerStatus.setText("Scroller server layout: horizontal patched width=340");
+        });
+        scrollerServerUpdate.setId("framework-scroller-server-update");
 
         Dialog detailsDialog = new Dialog();
         detailsDialog.setId("framework-dialog");
@@ -1188,116 +1716,35 @@ public class FlowOverIpcFrameworkView extends VerticalLayout {
         Span latestUpdate = new Span("Revision pending");
         latestUpdate.setId("framework-latest-update");
         AtomicInteger frameworkBaseChangeCount = new AtomicInteger();
-
-        budget.getElement().addEventListener("change", event -> {
-            JsonNode valueNode = event.getEventData().get("element.value");
-            String value = valueNode == null ? "" : valueNode.asString();
-            componentStatus.setText("Budget changed: " + value
-                    + " change=" + frameworkBaseChangeCount.incrementAndGet());
-        }).addEventData("element.value");
-
-        expedited.getElement().addEventListener("change", event -> {
-            JsonNode checkedNode = event.getEventData().get("element.checked");
-            boolean checked = checkedNode != null && checkedNode.asBoolean();
-            componentStatus.setText("Expedite changed: " + (checked ? "yes" : "no")
-                    + " change=" + frameworkBaseChangeCount.incrementAndGet());
-        }).addEventData("element.checked");
-
-        priority.getElement().addEventListener("change", event -> {
-            JsonNode valueNode = event.getEventData().get("element.value");
-            String value = valueNode == null ? "" : valueNode.asString();
-            if (!value.isBlank()) {
-                priorityValue = value;
-            }
-            componentStatus.setText("Priority changed: " + priorityValue
-                    + " change=" + frameworkBaseChangeCount.incrementAndGet());
-        }).addEventData("element.value");
-
-        reviewer.getElement().addEventListener("change", event -> {
-            JsonNode valueNode = event.getEventData().get("element.value");
-            String value = valueNode == null ? "" : valueNode.asString();
-            if (!value.isBlank()) {
+        reviewer.addValueChangeListener(event -> {
+            String value = event.getValue();
+            if (value != null && !value.isBlank()) {
                 reviewerValue = value;
             }
             matrixStatus.setText("Reviewer changed: " + reviewerValue
                     + " change=" + frameworkBaseChangeCount.incrementAndGet());
-        }).addEventData("element.value");
+        });
 
-        dueDate.getElement().addEventListener("change", event -> {
-            JsonNode valueNode = event.getEventData().get("element.value");
-            String value = valueNode == null ? "" : valueNode.asString();
-            if (!value.isBlank()) {
-                dueDateValue = value;
+        budget.addValueChangeListener(event -> {
+            BigDecimal value = event.getValue();
+            componentStatus.setText("Budget changed: " + (value == null ? "" : value)
+                    + " change=" + frameworkBaseChangeCount.incrementAndGet());
+        });
+
+        expedited.addValueChangeListener(event -> {
+            boolean checked = Boolean.TRUE.equals(event.getValue());
+            componentStatus.setText("Expedite changed: " + (checked ? "yes" : "no")
+                    + " change=" + frameworkBaseChangeCount.incrementAndGet());
+        });
+
+        priority.addValueChangeListener(event -> {
+            String value = event.getValue();
+            if (value != null && !value.isBlank()) {
+                priorityValue = value;
             }
-            matrixStatus.setText("Due date changed: " + dueDateValue);
-        }).addEventData("element.value");
-
-        decision.getElement().addEventListener("change", event -> {
-            JsonNode valueNode = event.getEventData().get("element.value");
-            String value = valueNode == null ? "" : valueNode.asString();
-            inputMatrixStatus.setText("Decision changed: " + value);
-        }).addEventData("element.value");
-
-        notes.getElement().addEventListener("change", event -> {
-            JsonNode valueNode = event.getEventData().get("element.value");
-            String value = valueNode == null ? "" : valueNode.asString();
-            inputMatrixStatus.setText("Notes changed: " + value);
-        }).addEventData("element.value");
-
-        contactEmail.getElement().addEventListener("change", event -> {
-            JsonNode valueNode = event.getEventData().get("element.value");
-            String value = valueNode == null ? "" : valueNode.asString();
-            inputMatrixStatus.setText("Email changed: " + value);
-        }).addEventData("element.value");
-
-        score.getElement().addEventListener("change", event -> {
-            JsonNode valueNode = event.getEventData().get("element.value");
-            String value = valueNode == null ? "" : valueNode.asString();
-            inputMatrixStatus.setText("Score changed: " + value);
-        }).addEventData("element.value");
-
-        secret.getElement().addEventListener("change", event -> {
-            JsonNode valueNode = event.getEventData().get("element.value");
-            String value = valueNode == null ? "" : valueNode.asString();
-            inputMatrixStatus.setText("Secret changed: length=" + value.length());
-        }).addEventData("element.value");
-
-        reviewTime.getElement().addEventListener("change", event -> {
-            JsonNode valueNode = event.getEventData().get("element.value");
-            String value = valueNode == null ? "" : valueNode.asString();
-            inputMatrixStatus.setText("Review time changed: " + value);
-        }).addEventData("element.value");
-
-        assignees.getElement().addEventListener("selected-items-changed", event ->
-                navigationMatrixStatus.setText("Assignees changed: ava,sol"))
-                .addEventData("event.detail.value");
-
-        navTabs.getElement().addEventListener("selected-changed", event ->
-                navigationMatrixStatus.setText("Tab changed: audit"))
-                .addEventData("element.selected");
-
-        auditDetails.getElement().addEventListener("opened-changed", event ->
-                navigationMatrixStatus.setText("Details opened: true"))
-                .addEventData("element.opened");
-
-        queueAccordion.getElement().addEventListener("opened-changed", event ->
-                navigationMatrixStatus.setText("Accordion opened: queue"))
-                .addEventData("element.opened");
-
-        menu.getElement().addEventListener("click", event ->
-                navigationMatrixStatus.setText("Menu action: audit"));
-
-        contextMenu.getElement().addEventListener("opened-changed", event ->
-                overlayMatrixStatus.setText("Context menu opened: true"))
-                .addEventData("element.opened");
-
-        gridContextMenu.getElement().addEventListener("opened-changed", event ->
-                overlayMatrixStatus.setText("Grid context menu opened: true"))
-                .addEventData("element.opened");
-
-        popover.getElement().addEventListener("opened-changed", event ->
-                overlayMatrixStatus.setText("Popover opened: true"))
-                .addEventData("element.opened");
+            componentStatus.setText("Priority changed: " + priorityValue
+                    + " change=" + frameworkBaseChangeCount.incrementAndGet());
+        });
 
         Button openDialog = new Button("Open Details", event -> {
             String text = "Dialog opened: " + reviewerValue + " due " + dueDateValue;
@@ -1331,14 +1778,26 @@ public class FlowOverIpcFrameworkView extends VerticalLayout {
         appendUpdate("Renderer owned by Flow client engine");
         updateList.add(latestUpdate);
 
-        add(title, standardPushStatus, budget, expedited, priority, reviewer, dueDate, decision, notes,
-                contactEmail, score, secret, reviewTime, inputMatrixStatus, assignees, navTabs,
-                auditDetails, queueAccordion, menu, navigationMatrixStatus,
-                contextMenuTarget, popoverTarget, popover, overlayMatrixStatus, openDialog, detailsDialog,
+        add(title, standardPushStatus, budget, expedited,
+                auditChannels, checkboxGroupServerUpdate, checkboxGroupStatus,
+                priority, reviewer, dueDate, decision, caseTitle,
+                textFieldServerUpdate, textFieldStatus, notes,
+                contactEmail, score, riskScore, numberFieldServerUpdate, numberFieldStatus,
+                secret, reviewTime, reviewDateTime,
+                dateTimePickerServerUpdate, dateTimePickerStatus, inputMatrixStatus, assignees,
+                assigneesStatus, laneListBox, listBoxServerUpdate, listBoxStatus,
+                reviewStageListBox, multiSelectListBoxServerUpdate, multiSelectListBoxStatus,
+                customAssignment, customFieldServerUpdate, customFieldStatus,
+                splitLayout, splitLayoutServerUpdate, splitLayoutStatus,
+                navTabs, auditDetails, queueAccordion, menu, navigationMatrixStatus,
+                contextMenuTarget, popoverTarget, popover, notificationOpen, notificationStatus,
+                confirmDialogOpen, confirmDialog, confirmDialogStatus,
+                progressBar, progressValueUpdate, progressIndeterminateUpdate, progressBarStatus,
+                overlayMatrixStatus, openDialog, detailsDialog,
                 avatar, avatarGroup, messageList, messageInput, sideNav, loginOverlay,
                 loginOverlayReopen, richContentStatus, loginForm, loginFormStatus,
                 loginFormActionPost, loginFormActionPostStatus,
-                loginOverlayActionPost, loginOverlayActionPostStatus,
+                loginOverlayActionPostOpen, loginOverlayActionPost, loginOverlayActionPostStatus,
                 loginOverlaySubmitButton, loginOverlaySubmitButtonStatus,
                 loginOverlayEnter, loginOverlayEnterStatus,
                 loginFormShowError, loginFormShowErrorStatus,
@@ -1346,9 +1805,9 @@ public class FlowOverIpcFrameworkView extends VerticalLayout {
                 loginFormEnable, loginFormEnabled, loginFormEnabledStatus,
                 loginOverlayFullI18n, loginOverlayFullI18nStatus,
                 loginOverlayNoAutofocus, loginOverlayNoAutofocusStatus,
-                loginOverlayAutofocusControl, loginOverlayAutofocusControlStatus,
-                loginOverlayEscClose, loginOverlayEscCloseStatus,
+                loginOverlayAutofocusControlHost, loginOverlayAutofocusControlStatus,
                 loginOverlayOutsideClose, loginOverlayOutsideCloseStatus,
+                loginOverlayEscapeKey, loginOverlayEscapeKeyStatus,
                 loginOverlayTabTraversal, loginOverlayTabTraversalStatus,
                 loginOverlayShiftTabTraversal, loginOverlayShiftTabTraversalStatus,
                 loginOverlayAutofillAttributes, loginOverlayAutofillAttributesStatus,
@@ -1356,7 +1815,7 @@ public class FlowOverIpcFrameworkView extends VerticalLayout {
                 loginOverlayDisabledGuard, loginOverlayDisabledGuardStatus,
                 loginOverlayDisabledKeyboardGuard, loginOverlayDisabledKeyboardGuardStatus,
                 loginFormFullI18n, loginFormFullI18nStatus,
-                loginFormNoAutofocus, loginFormNoAutofocusStatus,
+                loginFormNoAutofocusStatus, loginFormNoAutofocusHost,
                 loginFormAutofocusControl, loginFormAutofocusControlStatus,
                 loginFormTabTraversal, loginFormTabTraversalStatus,
                 loginFormShiftTabTraversal, loginFormShiftTabTraversalStatus,
@@ -1369,7 +1828,13 @@ public class FlowOverIpcFrameworkView extends VerticalLayout {
                 streamResourceStatus, streamResourceRangeDownload, streamResourceRangeStatus,
                 streamResourceChunksStatus, downloadHandlerSaveOpen, downloadHandlerSaveOpenStatus,
                 standardStreamingDownload,
-                upload, uploadStatus, virtualList, formLayout, apply, status, componentStatus, matrixStatus,
+                upload, uploadStatus, virtualList, virtualListScrollEnd, virtualListStatus,
+                formLayout, formLayoutServerUpdate, formLayoutStatus,
+                horizontalLayout, horizontalLayoutServerUpdate, horizontalLayoutStatus,
+                flexLayout, flexLayoutServerUpdate, flexLayoutStatus,
+                verticalLayout, verticalLayoutServerUpdate, verticalLayoutStatus,
+                scroller, scrollerServerUpdate, scrollerStatus,
+                apply, status, componentStatus, matrixStatus,
                 updateList);
     }
 
@@ -1419,6 +1884,64 @@ public class FlowOverIpcFrameworkView extends VerticalLayout {
     }
 
     private record WorkItem(String id, String owner, String state) {
+    }
+
+    private static final class ReviewAssignmentField extends CustomField<String> {
+        private final TextField owner = new TextField("Owner");
+        private final TextField state = new TextField("State");
+        private boolean updatingPresentation;
+
+        private ReviewAssignmentField() {
+            setId("framework-custom-field");
+            setLabel("Custom assignment");
+            owner.setId("framework-custom-field-owner");
+            owner.addThemeVariants(TextFieldVariant.LUMO_SMALL);
+            state.setId("framework-custom-field-state");
+            state.addThemeVariants(TextFieldVariant.LUMO_SMALL);
+            owner.addValueChangeListener(event -> updateFromChildren());
+            state.addValueChangeListener(event -> updateFromChildren());
+            add(owner, state);
+            setValue("draft|queued");
+        }
+
+        @Override
+        protected String generateModelValue() {
+            return normalize(owner.getValue()) + "|" + normalize(state.getValue());
+        }
+
+        @Override
+        protected void setPresentationValue(String value) {
+            String[] parts = splitCustomFieldValue(value);
+            updatingPresentation = true;
+            try {
+                owner.setValue(parts[0]);
+                state.setValue(parts[1]);
+            } finally {
+                updatingPresentation = false;
+            }
+        }
+
+        private void updateFromChildren() {
+            if (!updatingPresentation) {
+                updateValue();
+            }
+        }
+
+        private static String normalize(String value) {
+            return value == null ? "" : value.trim();
+        }
+
+        private static String[] splitCustomFieldValue(String value) {
+            String normalized = normalize(value);
+            int separator = normalized.indexOf('|');
+            if (separator < 0) {
+                return new String[]{normalized, ""};
+            }
+            return new String[]{
+                    normalized.substring(0, separator),
+                    normalized.substring(separator + 1)
+            };
+        }
     }
 
     public static final class OwnerForm {

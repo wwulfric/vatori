@@ -1,0 +1,45 @@
+#!/usr/bin/env bash
+set -euo pipefail
+
+ROOT="${1:?repo root is required}"
+MODULE="${2:-}"
+TRANSPORT="${3:?transport is required}"
+ACCEPTANCE_ROOT="$ROOT/test-support/native-host-macos-acceptance"
+PRODUCTION_SOURCE_ROOT="$ROOT/native-hosts/macos/Sources/VaadinDesktopHost"
+PRODUCTION_FACTORY="ProductionHostRuntimeObserverFactory.swift"
+PRODUCTION_FACTORY_PATH="$PRODUCTION_SOURCE_ROOT/$PRODUCTION_FACTORY"
+HOST_APP="$ROOT/.build/native-hosts/macos/VaadinDesktopHost.app"
+HOST_EXE="$HOST_APP/Contents/MacOS/VaadinDesktopHost"
+MODULE_CACHE="$ROOT/.build/clang-module-cache"
+
+bash "$ROOT/bin/vaadin-desktop-build-macos-host" \
+  "$ROOT" "$MODULE" "$TRANSPORT"
+
+if [[ ! -d "$ACCEPTANCE_ROOT/Sources/VaadinDesktopHostAcceptanceSupport" ]]; then
+  echo "macOS host acceptance sources are missing: $ACCEPTANCE_ROOT" >&2
+  exit 1
+fi
+if [[ ! -f "$PRODUCTION_FACTORY_PATH" ]]; then
+  echo "macOS production host composition root is missing: $PRODUCTION_FACTORY_PATH" >&2
+  exit 1
+fi
+
+host_sources=()
+for source in "$PRODUCTION_SOURCE_ROOT"/*.swift; do
+  if [[ "$(basename "$source")" != "$PRODUCTION_FACTORY" ]]; then
+    host_sources+=("$source")
+  fi
+done
+host_sources+=(
+  "$ACCEPTANCE_ROOT"/Sources/VaadinDesktopHostAcceptanceSupport/*.swift
+)
+
+CLANG_MODULE_CACHE_PATH="$MODULE_CACHE" /usr/bin/swiftc \
+  "${host_sources[@]}" \
+  -o "$HOST_EXE"
+
+if command -v codesign >/dev/null 2>&1; then
+  codesign --force --sign - "$HOST_APP" >/dev/null 2>&1 || true
+fi
+
+echo "Built explicit macOS acceptance host: $HOST_APP"

@@ -21,9 +21,9 @@ The script itself is the source of truth for its subcommands.
 
 ## macOS Acceptance Build
 
-Normal host builds contain only production sources. Acceptance variables cause
-`bin/vaadin-desktop-build-macos-host` to compile the overlay from
-`test-support/native-host-macos-acceptance` for that run.
+Normal CLI and host builds contain only production sources. The repository-only
+runner under `test-support` explicitly compiles the acceptance overlay and then
+launches the resulting host.
 
 Representative unattended framework run:
 
@@ -32,12 +32,18 @@ VAADIN_DESKTOP_MACOS_NO_ACTIVATE=1 \
 VAADIN_DESKTOP_FLOW_IPC_TRACE_DETAIL=full \
 VAADIN_DESKTOP_FLOW_IPC_AUTO_FRAMEWORK_UPDATE=1 \
 VAADIN_DESKTOP_FLOW_IPC_AUTO_SHUTDOWN=1 \
-bash bin/vaadin-desktop dev test-apps/flow-over-ipc-framework-app
+bash test-support/native-host-macos-acceptance/bin/run \
+  dev test-apps/flow-over-ipc-framework-app
 ```
 
 Acceptance flags, DOM inspection, snapshots and fault injection must remain in
-test-support. Production host code may expose neutral runtime hooks but cannot
-know fixture ids or acceptance workflows.
+test-support. Production host code may expose a neutral runtime observer, but
+the production CLI, builder and launcher cannot know acceptance variables,
+fixture ids or test-support paths.
+
+For unattended runs, the test-support runner requires the completion trace for
+the selected acceptance family and exits nonzero when the app closes without
+reaching it.
 
 ## Trace Inspector
 

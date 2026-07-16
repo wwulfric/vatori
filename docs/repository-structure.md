@@ -71,7 +71,9 @@ framework artifact。框架源码不得引用应用类或应用资源。
 
 默认 macOS host build 只编译 production sources。只有显式 acceptance build 才加入
 test-support 源码。`test-support` 不进入根 Maven reactor，也不能成为 framework
-artifact 的依赖。
+artifact 的依赖。生产 CLI、builder 和 launcher 不能识别 acceptance 环境变量或
+`test-support` 路径；验收 host 由 `test-support/native-host-macos-acceptance/bin`
+独立组装和启动。
 
 ## 仓库配套目录
 

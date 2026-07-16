@@ -1,7 +1,7 @@
 import Cocoa
 import WebKit
 
-protocol HostRuntimeHooks: AnyObject {
+protocol HostRuntimeObserver: AnyObject {
     func configure(environment: [String: String])
     func configureUserContentController(
         _ userContentController: WKUserContentController,
@@ -12,7 +12,7 @@ protocol HostRuntimeHooks: AnyObject {
     func didFinishFlowIpcNavigation(host: WebViewHost, context: FlowIpcWindowContext)
 }
 
-extension HostRuntimeHooks {
+extension HostRuntimeObserver {
     func configure(environment: [String: String]) {}
 
     func configureUserContentController(
@@ -27,4 +27,4 @@ extension HostRuntimeHooks {
     func didFinishFlowIpcNavigation(host: WebViewHost, context: FlowIpcWindowContext) {}
 }
 
-final class ProductionHostRuntimeHooks: HostRuntimeHooks {}
+final class ProductionHostRuntimeObserver: HostRuntimeObserver {}

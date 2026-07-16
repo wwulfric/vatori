@@ -1,18 +1,26 @@
 # Swift/AppKit host launch helpers for bin/vaadin-desktop.
-# This file is sourced and expects ROOT, MODULE, COMMAND, MAVEN_REPO and PATH.
+# This file is sourced and expects ROOT, MODULE, MAVEN_REPO and PATH.
 
-run_macos_host_runtime() {
+macos_host_transport_for_command() {
+    case "$1" in
+      dev) printf '%s' "flow-ipc" ;;
+      dev-compat) printf '%s' "compatibility-http" ;;
+      *)
+        echo "Unsupported macOS host command: $1" >&2
+        return 2
+        ;;
+    esac
+}
+
+launch_built_macos_host_runtime() {
+    local macos_transport="${1:?macOS host transport is required}"
+    shift
+    local forwarded_environment_names=("$@")
     SWIFT_HOST_BUILD="$ROOT/.build/native-hosts/macos"
     SWIFT_HOST_APP="$SWIFT_HOST_BUILD/VaadinDesktopHost.app"
     SWIFT_HOST_EXE="$SWIFT_HOST_APP/Contents/MacOS/VaadinDesktopHost"
     SWIFT_HOST_BUNDLE_ID="dev.vatori.desktop.host.macos"
     MVN_EXE="$(command -v mvn)"
-    MACOS_TRANSPORT="flow-ipc"
-    if [[ "$COMMAND" == "dev-compat" ]]; then
-      MACOS_TRANSPORT="compatibility-http"
-    fi
-    bash "$ROOT/bin/vaadin-desktop-build-macos-host" \
-      "$ROOT" "$MODULE" "$MACOS_TRANSPORT"
     OPEN_ENV_ARGS=(--env "PATH=$PATH")
     forward_env_if_set() {
       local name="$1"
@@ -23,25 +31,12 @@ run_macos_host_runtime() {
     forward_env_if_set VAADIN_DESKTOP_FLOW_IPC_TRACE_DETAIL
     forward_env_if_set VAADIN_DESKTOP_FLOW_IPC_SIDECAR_RESTART_LIMIT
     forward_env_if_set VAADIN_DESKTOP_FLOW_IPC_SIDECAR_RECOVERY_READY_TIMEOUT_SECONDS
+    local name
+    for name in "${forwarded_environment_names[@]}"; do
+      forward_env_if_set "$name"
+    done
     if [[ -n "${JAVA_HOME:-}" ]]; then
       OPEN_ENV_ARGS+=(--env "JAVA_HOME=$JAVA_HOME")
-    fi
-    SWIFT_HOST_EXTRA_ARGS=()
-    for name in \
-      VAADIN_DESKTOP_FLOW_IPC_AUTO_FRAMEWORK_UPDATE \
-      VAADIN_DESKTOP_FLOW_IPC_AUTO_SIDECAR_RESTART \
-      VAADIN_DESKTOP_FLOW_IPC_AUTO_SHUTDOWN \
-      VAADIN_DESKTOP_FLOW_IPC_AUTO_UPLOAD_RECEIVER \
-      VAADIN_DESKTOP_FLOW_IPC_AUTO_DOWNLOAD_SAVE_OPEN \
-      VAADIN_DESKTOP_FLOW_IPC_AUTO_MULTI_WINDOW \
-      VAADIN_DESKTOP_FLOW_IPC_AUTO_FILE_DIALOG_CANCEL
-    do
-      if [[ "${!name:-}" == "1" ]]; then
-        OPEN_ENV_ARGS+=(--env "$name=1")
-      fi
-    done
-    if [[ -n "${VAADIN_DESKTOP_FLOW_IPC_AUTO_SHUTDOWN_TIMEOUT_SECONDS:-}" ]]; then
-      OPEN_ENV_ARGS+=(--env "VAADIN_DESKTOP_FLOW_IPC_AUTO_SHUTDOWN_TIMEOUT_SECONDS=$VAADIN_DESKTOP_FLOW_IPC_AUTO_SHUTDOWN_TIMEOUT_SECONDS")
     fi
     OPEN_BACKGROUND=0
     if [[ "${VAADIN_DESKTOP_MACOS_NO_ACTIVATE:-}" == "1" ]]; then
@@ -112,10 +107,7 @@ run_macos_host_runtime() {
         --repo-root "$ROOT" \
         --maven-repo "$MAVEN_REPO" \
         --maven-executable "$MVN_EXE" \
-        --transport "$MACOS_TRANSPORT")
-      if (( ${#SWIFT_HOST_EXTRA_ARGS[@]} > 0 )); then
-        open_args+=("${SWIFT_HOST_EXTRA_ARGS[@]}")
-      fi
+        --transport "$macos_transport")
       "${open_args[@]}"
     }
     trap cleanup_tail EXIT
@@ -126,12 +118,13 @@ run_macos_host_runtime() {
     set -e
     cleanup_tail
     trap - EXIT INT TERM
-    if [[ "$STATUS" == "0"
-          && "${VAADIN_DESKTOP_FLOW_IPC_AUTO_SHUTDOWN:-}" == "1"
-          && "${VAADIN_DESKTOP_FLOW_IPC_TRACE_DETAIL:-}" != "full" ]]; then
-      if ! bash "$ROOT/bin/flow-ipc-log-budget-check" "$SWIFT_HOST_STDOUT"; then
-        STATUS=1
-      fi
-    fi
     return "$STATUS"
+}
+
+run_macos_host_runtime() {
+    local macos_transport
+    macos_transport="$(macos_host_transport_for_command "$COMMAND")"
+    bash "$ROOT/bin/vaadin-desktop-build-macos-host" \
+      "$ROOT" "$MODULE" "$macos_transport"
+    launch_built_macos_host_runtime "$macos_transport"
 }

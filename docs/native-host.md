@@ -42,14 +42,19 @@ under `native-hosts/macos/Resources`. The build script creates:
 .build/native-hosts/macos/VaadinDesktopHost.app
 ```
 
-An explicit acceptance build additionally compiles
-`test-support/native-host-macos-acceptance`. Default builds contain no DOM
-inspection, screenshots, fault injection or automation flags.
+The production builder never reads `test-support` or acceptance environment
+variables. A separate repository-only builder under
+`test-support/native-host-macos-acceptance/bin` composes the production sources
+with its automation overlay. Default builds contain no DOM inspection,
+screenshots, fault injection or automation flags.
 
 ```bash
 bash bin/vaadin-desktop-build-macos-host \
   /Users/bytedance/IdeaProjects/vatori examples/counter-app flow-ipc
 ```
+
+Acceptance builds use the explicit test-support entrypoint documented in
+`docs/acceptance-tools.md`.
 
 ## Lifecycle
 

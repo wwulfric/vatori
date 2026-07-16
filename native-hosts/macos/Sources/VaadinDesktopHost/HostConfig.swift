@@ -20,7 +20,7 @@ enum HostConfigError: LocalizedError {
 }
 
 struct HostConfig {
-    var runtimeHooks: any HostRuntimeHooks = makeHostRuntimeHooks()
+    var runtimeObserver: any HostRuntimeObserver = makeHostRuntimeObserver()
     var module: String = ""
     var repoRoot: String = FileManager.default.currentDirectoryPath
     var mavenRepo: String = ""
@@ -71,7 +71,7 @@ struct HostConfig {
         if !config.module.isEmpty, !config.module.hasPrefix("/") {
             config.module = "\(config.repoRoot)/\(config.module)"
         }
-        config.runtimeHooks.configure(environment: environment)
+        config.runtimeObserver.configure(environment: environment)
         config.hostNoActivate = environment["VAADIN_DESKTOP_MACOS_NO_ACTIVATE"] == "1"
         if let restartLimitText = environment["VAADIN_DESKTOP_FLOW_IPC_SIDECAR_RESTART_LIMIT"],
            let restartLimit = Int(restartLimitText),

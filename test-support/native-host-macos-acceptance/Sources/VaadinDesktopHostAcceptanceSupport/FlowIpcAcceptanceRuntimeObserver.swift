@@ -2,7 +2,7 @@ import Cocoa
 import Foundation
 import WebKit
 
-extension FlowIpcAcceptanceRuntimeHooks {
+extension FlowIpcAcceptanceRuntimeObserver {
     func configureUserContentController(
         _ userContentController: WKUserContentController,
         config: HostConfig

@@ -178,7 +178,7 @@ final class WebViewHost: NSObject, NSApplicationDelegate, NSWindowDelegate, WKNa
             source: scope.documentStartScript,
             injectionTime: .atDocumentStart,
             forMainFrameOnly: true))
-        config.runtimeHooks.configureUserContentController(
+        config.runtimeObserver.configureUserContentController(
             userContentController,
             config: config)
         userContentController.add(self, name: "flowIpc")
@@ -320,7 +320,7 @@ final class WebViewHost: NSObject, NSApplicationDelegate, NSWindowDelegate, WKNa
                 openFlowIpcWindow(
                     scope: scope,
                     descriptor: ready.application.mainWindow)
-                config.runtimeHooks.didOpenInitialFlowIpcWindow(host: self)
+                config.runtimeObserver.didOpenInitialFlowIpcWindow(host: self)
             } else {
                 openCompatibilityWindow(ready: ready)
             }
@@ -598,7 +598,7 @@ final class WebViewHost: NSObject, NSApplicationDelegate, NSWindowDelegate, WKNa
                     "title": webView.title ?? "",
                     "windowSharingType": compatibilityWindow?.sharingType.rawValue ?? -1
                 ])
-                config.runtimeHooks.didFinishCompatibilityNavigation(
+                config.runtimeObserver.didFinishCompatibilityNavigation(
                     host: self,
                     webView: webView)
             }
@@ -618,7 +618,7 @@ final class WebViewHost: NSObject, NSApplicationDelegate, NSWindowDelegate, WKNa
             "title": webView.title ?? "",
             "windowSharingType": context.window.sharingType.rawValue
         ])
-        config.runtimeHooks.didFinishFlowIpcNavigation(host: self, context: context)
+        config.runtimeObserver.didFinishFlowIpcNavigation(host: self, context: context)
     }
 
     func webView(

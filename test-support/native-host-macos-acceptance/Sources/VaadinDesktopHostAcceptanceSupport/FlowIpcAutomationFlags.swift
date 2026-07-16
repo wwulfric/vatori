@@ -1,11 +1,11 @@
 import Cocoa
 import Foundation
 
-final class FlowIpcAcceptanceRuntimeHooks: HostRuntimeHooks {
+final class FlowIpcAcceptanceRuntimeObserver: HostRuntimeObserver {
     var flags: Set<String> = []
     var values: [String: String] = [:]
     var webViewDiagnostics: WebViewDiagnostics?
-    private var openPanelObserver: NSObjectProtocol?
+    private var openPanelObservers: [NSObjectProtocol] = []
 
     func flag(_ name: String) -> Bool {
         flags.contains(name)
@@ -61,69 +61,77 @@ final class FlowIpcAcceptanceRuntimeHooks: HostRuntimeHooks {
     }
 
     private func configureOpenPanelAutomation() {
-        if let openPanelObserver {
-            NotificationCenter.default.removeObserver(openPanelObserver)
-            self.openPanelObserver = nil
+        for observer in openPanelObservers {
+            NotificationCenter.default.removeObserver(observer)
         }
+        openPanelObservers.removeAll()
         guard flag("fileDialogCancel") else {
             return
         }
-        openPanelObserver = NotificationCenter.default.addObserver(
-            forName: NSWindow.didBecomeKeyNotification,
-            object: nil,
-            queue: .main
-        ) { notification in
-            guard let panel = notification.object as? NSOpenPanel else {
-                return
-            }
+
+        let cancelOpenPanel: (Notification) -> Void = { notification in
             DispatchQueue.main.asyncAfter(deadline: .now() + 0.2) {
-                panel.cancel(nil)
+                let panel = notification.object as? NSOpenPanel
+                    ?? (notification.object as? NSWindow)?.attachedSheet as? NSOpenPanel
+                if let panel {
+                    panel.cancel(nil)
+                }
             }
         }
+        openPanelObservers.append(NotificationCenter.default.addObserver(
+            forName: NSWindow.didBecomeKeyNotification,
+            object: nil,
+            queue: .main,
+            using: cancelOpenPanel))
+        openPanelObservers.append(NotificationCenter.default.addObserver(
+            forName: NSWindow.willBeginSheetNotification,
+            object: nil,
+            queue: .main,
+            using: cancelOpenPanel))
     }
 }
 
-func makeHostRuntimeHooks() -> any HostRuntimeHooks {
-    FlowIpcAcceptanceRuntimeHooks()
+func makeHostRuntimeObserver() -> any HostRuntimeObserver {
+    FlowIpcAcceptanceRuntimeObserver()
 }
 
 extension HostConfig {
-    private var flowIpcAcceptanceHooks: FlowIpcAcceptanceRuntimeHooks {
-        guard let hooks = runtimeHooks as? FlowIpcAcceptanceRuntimeHooks else {
-            preconditionFailure("Flow IPC acceptance hooks are not installed")
+    private var flowIpcAcceptanceObserver: FlowIpcAcceptanceRuntimeObserver {
+        guard let observer = runtimeObserver as? FlowIpcAcceptanceRuntimeObserver else {
+            preconditionFailure("Flow IPC acceptance observer is not installed")
         }
-        return hooks
+        return observer
     }
 
     var flowIpcAutoFrameworkUpdate: Bool {
-        flowIpcAcceptanceHooks.flag("frameworkUpdate")
+        flowIpcAcceptanceObserver.flag("frameworkUpdate")
     }
 
     var flowIpcAutoSidecarRestart: Bool {
-        flowIpcAcceptanceHooks.flag("sidecarRestart")
+        flowIpcAcceptanceObserver.flag("sidecarRestart")
     }
 
     var flowIpcAutoShutdown: Bool {
-        flowIpcAcceptanceHooks.flag("shutdown")
+        flowIpcAcceptanceObserver.flag("shutdown")
     }
 
     var flowIpcAutoUploadReceiver: Bool {
-        flowIpcAcceptanceHooks.flag("uploadReceiver")
+        flowIpcAcceptanceObserver.flag("uploadReceiver")
     }
 
     var flowIpcAutoDownloadSaveOpen: Bool {
-        flowIpcAcceptanceHooks.flag("downloadSaveOpen")
+        flowIpcAcceptanceObserver.flag("downloadSaveOpen")
     }
 
     var flowIpcAutoMultiWindow: Bool {
-        flowIpcAcceptanceHooks.flag("multiWindow")
+        flowIpcAcceptanceObserver.flag("multiWindow")
     }
 
     var flowIpcAutoFileDialogCancel: Bool {
-        flowIpcAcceptanceHooks.flag("fileDialogCancel")
+        flowIpcAcceptanceObserver.flag("fileDialogCancel")
     }
 
     var flowIpcAutoShutdownTimeoutSeconds: Double {
-        Double(flowIpcAcceptanceHooks.values["shutdownTimeoutSeconds"] ?? "") ?? 0
+        Double(flowIpcAcceptanceObserver.values["shutdownTimeoutSeconds"] ?? "") ?? 0
     }
 }

@@ -26,7 +26,6 @@ SWIFT_HOST_RESOURCES="$SWIFT_HOST_CONTENTS/Resources"
 SWIFT_HOST_EXE="$SWIFT_HOST_MACOS/VaadinDesktopHost"
 SWIFT_MODULE_CACHE="$ROOT/.build/clang-module-cache"
 SWIFT_HOST_SOURCE_ROOT="$ROOT/native-hosts/macos"
-SWIFT_ACCEPTANCE_ROOT="$ROOT/test-support/native-host-macos-acceptance"
 
 rm -rf "$SWIFT_HOST_RESOURCES"
 mkdir -p "$SWIFT_HOST_MACOS"
@@ -58,34 +57,10 @@ cat > "$SWIFT_HOST_CONTENTS/Info.plist" <<'PLIST'
 </plist>
 PLIST
 
-SWIFT_HOST_ACCEPTANCE=0
-if [[ "${VAADIN_DESKTOP_FLOW_IPC_ACCEPTANCE:-}" == "1" ]] \
-    || env | grep -Eq '^VAADIN_DESKTOP_FLOW_IPC_AUTO_[A-Z0-9_]+=1$'; then
-  SWIFT_HOST_ACCEPTANCE=1
-fi
-
-SWIFT_HOST_SOURCES=()
-for source in "$SWIFT_HOST_SOURCE_ROOT"/Sources/VaadinDesktopHost/*.swift; do
-  if [[ "$SWIFT_HOST_ACCEPTANCE" == "1" \
-        && "$(basename "$source")" == "ProductionHostRuntimeHooksFactory.swift" ]]; then
-    continue
-  fi
-  SWIFT_HOST_SOURCES+=("$source")
-done
-if [[ "$SWIFT_HOST_ACCEPTANCE" == "1" ]]; then
-  if [[ ! -d "$SWIFT_ACCEPTANCE_ROOT/Sources/VaadinDesktopHostAcceptanceSupport" ]]; then
-    echo "Swift host acceptance sources are missing: $SWIFT_ACCEPTANCE_ROOT" >&2
-    exit 1
-  fi
-  SWIFT_HOST_SOURCES+=("$SWIFT_ACCEPTANCE_ROOT"/Sources/VaadinDesktopHostAcceptanceSupport/*.swift)
-  CLANG_MODULE_CACHE_PATH="$SWIFT_MODULE_CACHE" /usr/bin/swiftc \
-    "${SWIFT_HOST_SOURCES[@]}" \
-    -o "$SWIFT_HOST_EXE"
-else
-  CLANG_MODULE_CACHE_PATH="$SWIFT_MODULE_CACHE" /usr/bin/swiftc \
-    "${SWIFT_HOST_SOURCES[@]}" \
-    -o "$SWIFT_HOST_EXE"
-fi
+SWIFT_HOST_SOURCES=("$SWIFT_HOST_SOURCE_ROOT"/Sources/VaadinDesktopHost/*.swift)
+CLANG_MODULE_CACHE_PATH="$SWIFT_MODULE_CACHE" /usr/bin/swiftc \
+  "${SWIFT_HOST_SOURCES[@]}" \
+  -o "$SWIFT_HOST_EXE"
 
 SWIFT_RESOURCE_ROOT="$SWIFT_HOST_SOURCE_ROOT/Resources"
 if [[ -d "$SWIFT_RESOURCE_ROOT" ]]; then

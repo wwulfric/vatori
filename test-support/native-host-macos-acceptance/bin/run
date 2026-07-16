@@ -1,0 +1,107 @@
+#!/usr/bin/env bash
+set -euo pipefail
+
+ROOT="$(cd "$(dirname "${BASH_SOURCE[0]}")/../../.." && pwd)"
+COMMAND="${1:-}"
+MODULE="${2:-}"
+MAVEN_REPO="${MAVEN_REPO:-$ROOT/.m2/repository}"
+MODULE_POM="$ROOT/$MODULE/pom.xml"
+
+case "$COMMAND" in
+  dev) TRANSPORT="flow-ipc" ;;
+  dev-compat) TRANSPORT="compatibility-http" ;;
+  *)
+    echo "Usage: test-support/native-host-macos-acceptance/bin/run dev|dev-compat <module>" >&2
+    exit 2
+    ;;
+esac
+
+if [[ "$(uname -s)" != "Darwin" ]]; then
+  echo "macOS native-host acceptance requires macOS." >&2
+  exit 1
+fi
+if [[ -z "$MODULE" || ! -f "$MODULE_POM" ]]; then
+  echo "Module not found: $MODULE" >&2
+  exit 1
+fi
+if ! command -v mvn >/dev/null 2>&1 && [[ -f "$HOME/.sdkman/bin/sdkman-init.sh" ]]; then
+  # shellcheck source=/dev/null
+  set +u
+  source "$HOME/.sdkman/bin/sdkman-init.sh"
+  set -u
+fi
+if ! command -v mvn >/dev/null 2>&1; then
+  echo "mvn not found. Install Maven or initialize SDKMAN before running this command." >&2
+  exit 1
+fi
+
+maven_mode="-U"
+if [[ "${VAADIN_DESKTOP_MAVEN_OFFLINE:-}" == "1" ]]; then
+  maven_mode="-o"
+fi
+mvn "$maven_mode" -Dmaven.repo.local="$MAVEN_REPO" \
+  -f "$ROOT/pom.xml" -pl "$MODULE" -am \
+  -DskipTests -Dmaven.jar.forceCreation=true install
+
+if [[ "$TRANSPORT" == "flow-ipc" ]]; then
+  # shellcheck source=/dev/null
+  source "$ROOT/bin/vaadin-desktop-build-flow-bundle"
+  build_standard_flow_bundle
+fi
+
+bash "$ROOT/test-support/native-host-macos-acceptance/bin/build-host" \
+  "$ROOT" "$MODULE" "$TRANSPORT"
+
+# shellcheck source=/dev/null
+source "$ROOT/bin/vaadin-desktop-macos-host-launch"
+acceptance_environment_names=(
+  VAADIN_DESKTOP_FLOW_IPC_AUTO_FRAMEWORK_UPDATE
+  VAADIN_DESKTOP_FLOW_IPC_AUTO_SIDECAR_RESTART
+  VAADIN_DESKTOP_FLOW_IPC_AUTO_SHUTDOWN
+  VAADIN_DESKTOP_FLOW_IPC_AUTO_UPLOAD_RECEIVER
+  VAADIN_DESKTOP_FLOW_IPC_AUTO_DOWNLOAD_SAVE_OPEN
+  VAADIN_DESKTOP_FLOW_IPC_AUTO_MULTI_WINDOW
+  VAADIN_DESKTOP_FLOW_IPC_AUTO_FILE_DIALOG_CANCEL
+  VAADIN_DESKTOP_FLOW_IPC_AUTO_SHUTDOWN_TIMEOUT_SECONDS
+)
+
+set +e
+launch_built_macos_host_runtime \
+  "$TRANSPORT" "${acceptance_environment_names[@]}"
+status=$?
+set -e
+
+host_log="$ROOT/.build/native-hosts/macos/host.out.log"
+require_completed_trace() {
+  local event_name="$1"
+  if ! grep -F "$event_name" "$host_log" | grep -Fq '"complete":true'; then
+    echo "macOS acceptance did not complete: $event_name" >&2
+    return 1
+  fi
+}
+
+if [[ "$status" == "0" && "${VAADIN_DESKTOP_FLOW_IPC_AUTO_SHUTDOWN:-}" == "1" ]]; then
+  if [[ "$TRANSPORT" == "compatibility-http" ]]; then
+    require_completed_trace "compatibility.capabilityAcceptance" || status=1
+  elif [[ "${VAADIN_DESKTOP_FLOW_IPC_AUTO_SIDECAR_RESTART:-}" == "1" ]]; then
+    require_completed_trace "standardBundle.sidecarRestartAcceptance" || status=1
+  elif [[ "${VAADIN_DESKTOP_FLOW_IPC_AUTO_MULTI_WINDOW:-}" == "1" ]]; then
+    require_completed_trace "multiWindow.acceptance" || status=1
+  elif [[ "${VAADIN_DESKTOP_FLOW_IPC_AUTO_FRAMEWORK_UPDATE:-}" == "1" ]]; then
+    require_completed_trace "standardBundle.frameworkAcceptance" || status=1
+  elif ! grep -Fq '"reason":"flow-ipc-auto-shutdown-complete"' "$host_log"; then
+    echo "macOS Flow IPC acceptance did not reach auto-shutdown readiness" >&2
+    status=1
+  fi
+fi
+
+if [[ "$status" == "0"
+      && "${VAADIN_DESKTOP_FLOW_IPC_AUTO_SHUTDOWN:-}" == "1"
+      && "${VAADIN_DESKTOP_FLOW_IPC_TRACE_DETAIL:-}" != "full" ]]; then
+  if ! bash "$ROOT/bin/flow-ipc-log-budget-check" \
+      "$host_log"; then
+    status=1
+  fi
+fi
+
+exit "$status"

@@ -193,36 +193,50 @@ check_retired_flow_ipc_scaffolding() {
 check_macos_host_launcher_contract() {
   local host_config="native-hosts/macos/Sources/VaadinDesktopHost/HostConfig.swift"
   local acceptance_config="test-support/native-host-macos-acceptance/Sources/VaadinDesktopHostAcceptanceSupport/FlowIpcAutomationFlags.swift"
-  local launcher="bin/vaadin-desktop-macos-host-launch"
+  local production_launcher="bin/vaadin-desktop-macos-host-launch"
+  local acceptance_runner="test-support/native-host-macos-acceptance/bin/run"
   local missing=()
   local token
 
-  [[ -f "$host_config" && -f "$launcher" ]] || return 0
+  [[ -f "$host_config" && -f "$production_launcher" \
+      && -f "$acceptance_config" && -f "$acceptance_runner" ]] || return 0
 
   while IFS= read -r token; do
     [[ -n "$token" ]] || continue
-    if ! grep -Fq -- "$token" "$launcher"; then
+    if ! grep -Fq -- "$token" "$production_launcher"; then
       missing+=("$token")
     fi
   done < <(
-    grep -Eoh 'environment\["VAADIN_DESKTOP_[A-Z0-9_]+"\]' "$host_config" "$acceptance_config" \
+    grep -Eoh 'environment\["VAADIN_DESKTOP_[A-Z0-9_]+"\]' "$host_config" \
       | sed -E 's/.*"([^"]+)".*/\1/' \
       | sort -u
   )
 
   while IFS= read -r token; do
     [[ -n "$token" ]] || continue
-    if ! grep -Fq -- "$token" "$launcher"; then
+    if ! grep -Fq -- "$token" "$acceptance_runner"; then
       missing+=("$token")
     fi
   done < <(
-    grep -Eoh 'case "--flow-ipc-auto-[^"]+"' "$host_config" "$acceptance_config" \
-      | sed -E 's/.*"([^"]+)".*/\1/' \
+    grep -Eoh '"VAADIN_DESKTOP_FLOW_IPC_AUTO_[A-Z0-9_]+"' "$acceptance_config" \
+      | tr -d '"' \
       | sort -u
   )
 
   if (( ${#missing[@]} > 0 )); then
-    fail "macOS HostConfig env/CLI token is not represented by launcher: ${missing[*]}"
+    fail "macOS host environment token is not represented by its launcher: ${missing[*]}"
+  fi
+
+  local production_boundary_match
+  production_boundary_match="$(rg -n -m 1 \
+    -e 'test-support/native-host-macos-acceptance' \
+    -e 'VAADIN_DESKTOP_FLOW_IPC_AUTO_' \
+    -e 'VAADIN_DESKTOP_FLOW_IPC_ACCEPTANCE' \
+    bin/vaadin-desktop \
+    bin/vaadin-desktop-build-macos-host \
+    bin/vaadin-desktop-macos-host-launch || true)"
+  if [[ -n "$production_boundary_match" ]]; then
+    fail "production macOS build/launch path knows acceptance support: $production_boundary_match"
   fi
 }
 

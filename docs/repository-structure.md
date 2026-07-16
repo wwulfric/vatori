@@ -1,123 +1,100 @@
 # 仓库结构与心智模型
 
-本文解释 vatori 仓库中每类代码的所有权、依赖方向和发布边界。它回答的不是
-“当前做到哪一步”，而是“某段代码为什么属于这里，以及新增代码应该放在哪里”。
+本文只描述长期所有权、依赖方向和代码放置规则，不记录当前 goal、单次验收结果或
+实现过程。
 
-## 一条主链路
-
-vatori 同时包含 Java 框架、macOS 原生 host、开发者示例和仓库验收设施。理解目录
-之前，先记住两条运行路径：
+## 运行主链
 
 ```text
-Vaadin 应用调用桌面能力
-  -> vaadin-desktop-core
-  -> Java native bridge / host protocol
-  -> vaadin-desktop-host-swift
-  -> AppKit、WKWebView 和 macOS 能力
-
-WKWebView 运行 Vaadin UI
-  -> 标准 Vaadin production bundle
-  -> production request / push bridge
-  -> vaadin-desktop-host-swift
-  -> VFIPC1
-  -> vaadin-desktop-flow 中的 Vaadin request-handler chain
+bin/vaadin-desktop
+  -> native-hosts/macos
+  -> AppKit + WKWebView
+  -> Java sidecar
+  -> vaadin-desktop-flow
 ```
 
-第一条链路处理窗口、剪贴板、通知和文件对话框等桌面命令。第二条链路处理
-bootstrap、UIDL、资源请求和 push。`vaadin-desktop-ipc` 为这些跨进程通信提供通用
-envelope 和 trace primitive，但不解释具体 UI 组件。
+平台和构建产物决定 native host。Java 应用不选择 host，也不包含 host fallback。
+当前只有 macOS 实现；未来平台实现放在 `native-hosts/<platform>`，并遵守同一个
+sidecar contract。
 
-## 框架模块
+两种 UI transport 复用同一条 native capability 与生命周期通道：
 
-所有顶层 `vaadin-desktop-*` 目录都是框架所有。它们可以有正常的 `src/test`，但
-`src/main`、Swift `Sources` 和 production `Resources` 只能包含可发布框架能力或
-通用扩展点。
+```text
+flow-ipc
+  standard Vaadin production bundle
+    -> opaque browser bridge -> VFIPC1 -> Vaadin request-handler chain
 
-| 目录 | 责任 | 不应包含 |
+compatibility-http
+  loopback Vaadin URL
+    -> WKWebView
+
+both
+  Java Desktop API <-> VFIPC1 command/capabilityResult <-> native host
+```
+
+## 发布模块
+
+| 目录 | 所有权 | 不应包含 |
 | --- | --- | --- |
-| `vaadin-desktop-core` | 开发者直接使用的 Java desktop API，例如窗口、剪贴板、通知、文件对话框和文件传输 | AppKit 实现、Vaadin transport、测试路径 |
-| `vaadin-desktop-ipc` | IPC envelope、JSON 和 trace primitive | Flow 组件语义、具体 host UI |
-| `vaadin-desktop-host` | Java host abstraction、host 选择、compatibility host 和 native bridge support | 示例应用、验收 fixture、macOS 主线自动化 |
-| `vaadin-desktop-flow` | Vaadin/Spring launcher、标准 bundle runtime、opaque request/push adapter 和 Flow session 生命周期 | 自定义 Flow client renderer、测试应用组件矩阵 |
-| `vaadin-desktop-host-swift` | macOS AppKit/WKWebView host、sidecar 生命周期、production bridge 和原生能力执行 | acceptance flags、截图脚本、故障注入 workflow |
-| `vaadin-desktop-cli` | 可发布 CLI artifact 的入口 | 仓库示例的硬编码路径、smoke orchestration |
+| `vaadin-desktop-core` | 开发者使用的 desktop API、application/window model、capability contract | Vaadin transport、平台实现、测试 fixture |
+| `vaadin-desktop-ipc` | `flow-ipc-v1` envelope 与通用 JSON/trace primitive | Flow 组件语义、host UI |
+| `vaadin-desktop-flow` | `DesktopLauncher`、Spring/Vaadin sidecar runtime、opaque request/push adapter、统一 native bridge | 平台 host 选择、自定义 Flow renderer、应用 fixture |
+| `vaadin-desktop-cli` | 可发布 CLI artifact 的入口 | 仓库 smoke orchestration、平台实现 |
+| `native-hosts/macos` | AppKit/WKWebView host、Java sidecar 生命周期、标准 bundle 装载、macOS capability 执行 | acceptance flags、DOM 断言、故障注入 |
 
-Java 模块的主要依赖方向是：
+Java 依赖方向固定为：
 
 ```text
-core <- ipc <- host
-  ^       ^      ^
-  +-------+------+- flow
+core <- ipc <- flow
 ```
 
-`core` 保持最小公开契约；`ipc` 可以表达 core command；`host` 使用 core 和 ipc；
-`flow` 负责把 Vaadin runtime 接到这几层。框架模块不得依赖 `examples`、`test-apps`
-或 `test-support`。
+`flow` 可以同时依赖 `core` 和 `ipc`。框架模块不得依赖 `examples`、`test-apps`
+或 `test-support`。standard production bundle 由 CLI/native-host build 生成和打包，
+不属于 `vaadin-desktop-flow` 的源码资源。
 
-## 示例与验证应用
-
-`examples` 和 `test-apps` 都是应用，但面向的读者不同。
+## 应用目录
 
 | 目录 | 用途 |
 | --- | --- |
-| `examples/counter-app` | 最小、易读的框架接入故事 |
-| `examples/grid-app` | Grid 和数据组件示例 |
-| `examples/desktop-capabilities-app` | 桌面 capability API 和 manifest 示例 |
-| `examples/component-gallery-app` | 面向开发者阅读的组件展示 |
-| `test-apps/vaadin-desktop-smoke-app` | compatibility 启动和基础 host 验证 |
-| `test-apps/flow-over-ipc-smoke-app` | 小型 no-localhost IPC 闭环验证 |
-| `test-apps/flow-over-ipc-framework-app` | 更广的 Flow 组件和 native capability 验收面 |
+| `examples` | 面向开发者阅读的最小接入和能力示例 |
+| `test-apps` | 带稳定 DOM id、确定性状态和广覆盖断言面的验证应用 |
 
-`examples` 应优先可读、简洁，并像外部项目一样只使用公开 API。`test-apps` 可以使用
-稳定 DOM id、明确状态文字和确定性操作，以便自动化检查。二者都只能依赖框架，不能
-被框架反向引用。
+两者都应像外部项目一样使用 `@SpringBootApplication`、`DesktopLauncher` 和公开
+framework artifact。框架源码不得引用应用类或应用资源。
 
-## 仓库测试支持
-
-`test-support` 保存不应发布给框架用户、也不应进入默认 runtime 的验收实现。
+## 测试支持
 
 | 目录 | 用途 |
 | --- | --- |
-| `test-support/vaadin-desktop-host-swift-acceptance` | 显式 acceptance profile 使用的 Swift/WKWebView 自动化、DOM 检查、截图、多窗口和 sidecar recovery workflow |
-| `test-support/vaadin-desktop-trace-inspector` | 读取 host trace 并执行仓库验收 gate 的独立工具 |
+| `test-support/native-host-macos-acceptance` | 显式 acceptance build 使用的 WKWebView 自动化、截图、多窗口和 sidecar recovery 驱动 |
+| `test-support/vaadin-desktop-trace-inspector` | 读取 `HOST_PROTOCOL` trace 的独立验收工具 |
 
-默认 Swift host 使用 production hook factory。只有显式 acceptance build 才用
-test-support factory 替换它并加入自动化源码。trace inspector 不属于根 Maven
-reactor，也不能成为任何 framework artifact 的依赖。
+默认 macOS host build 只编译 production sources。只有显式 acceptance build 才加入
+test-support 源码。`test-support` 不进入根 Maven reactor，也不能成为 framework
+artifact 的依赖。
 
 ## 仓库配套目录
 
 | 目录 | 用途 |
 | --- | --- |
-| `bin` | 框架启动、Swift host 构建、preflight、smoke、trace 和 hygiene 命令 |
-| `docs` | 稳定架构、协议、runtime 边界、验收工具和路线图 |
+| `bin` | 开发入口、platform host build、smoke、trace 与 hygiene 命令 |
+| `docs` | 当前架构、协议、runtime 边界、验收和路线图 |
 | `assets` | 品牌源文件和正式导出资产 |
-| `.agents` | 仓库本地 agent skills 和长期工作约束 |
+| `.agents` | 仓库本地 skills 与可复用 agent workflow |
 
-这些目录服务开发和维护，但不是 Java/Swift runtime artifact。`bin/vaadin-desktop`
-是开发者入口；其他 smoke、inspector 和 hygiene 命令主要服务仓库验证。
+`.build`、`.m2` 和各模块 `target` 都是本地生成物，不表达架构所有权，也不加入
+版本管理。
 
-## 本地生成目录
+## 放置规则
 
-`.build`、`.m2` 和各模块的 `target` 都是本地生成物：
+新增代码时依次判断：
 
-- `.build`：Swift app、frontend bundle、日志和截图。
-- `.m2`：项目本地 Maven repository。
-- `target`：Maven 编译、测试和打包输出。
+1. 外部应用是否直接调用？放 `vaadin-desktop-core`。
+2. 是否只定义跨进程 envelope/序列化？放 `vaadin-desktop-ipc`。
+3. 是否依赖 Vaadin request、session、route、push 或 Spring sidecar？放 `vaadin-desktop-flow`。
+4. 是否直接操作某个平台 WebView、窗口、sidecar 进程或 capability？放对应 `native-hosts/<platform>`。
+5. 是否只服务自动化、故障注入、截图或 gate？放 `test-support`。
+6. 是否是可读用户故事？放 `examples`；以机器断言为主则放 `test-apps`。
 
-它们不表达架构所有权，不应加入版本管理。即使它们出现在某个源码目录旁边，也不能
-据此判断该目录属于框架或测试。
-
-## 新代码放置判断
-
-新增内容时按以下顺序判断：
-
-1. 外部应用开发者是否需要调用它？需要则优先放 `vaadin-desktop-core`。
-2. 它是否只定义跨进程消息和序列化？是则放 `vaadin-desktop-ipc`。
-3. 它是否负责 Java host 选择或 native bridge？是则放 `vaadin-desktop-host`。
-4. 它是否依赖 Vaadin request、session、bundle 或 push？是则放 `vaadin-desktop-flow`。
-5. 它是否直接操作 AppKit、WKWebView 或 Java sidecar 进程？是则放 `vaadin-desktop-host-swift`。
-6. 它是否只为自动化、故障注入或验收 gate 服务？是则放 `test-support`。
-7. 它是否是可读的用户故事？是则放 `examples`；若以机器断言为主，则放 `test-apps`。
-
-无法明确归类通常意味着接口边界还没有想清楚，不应先把代码塞进最方便的模块。
+如果一段代码同时属于平台 runtime 和测试应用，先提取稳定 extension point，再把
+production implementation 与 acceptance overlay 分开放置。

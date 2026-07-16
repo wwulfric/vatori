@@ -14,11 +14,11 @@ import java.util.concurrent.ConcurrentHashMap;
 import java.util.concurrent.ConcurrentMap;
 
 final class StandardFlowIpcExchanges implements AutoCloseable {
-    private final StandardFlowIpcOutput output;
+    private final SidecarOutput output;
     private final ConcurrentMap<ExchangeKey, OpaqueHttpExchange> exchanges =
             new ConcurrentHashMap<>();
 
-    StandardFlowIpcExchanges(StandardFlowIpcOutput output) {
+    StandardFlowIpcExchanges(SidecarOutput output) {
         this.output = Objects.requireNonNull(output, "output");
     }
 
@@ -38,7 +38,7 @@ final class StandardFlowIpcExchanges implements AutoCloseable {
                 scope,
                 session,
                 requestId,
-                StandardFlowIpcOutput.correlationIdOr(id, correlationId),
+                SidecarOutput.correlationIdOr(id, correlationId),
                 Objects.requireNonNullElse(envelope.string("method"), "GET"),
                 requiredUrl(envelope),
                 envelope.stringMap("headers"),

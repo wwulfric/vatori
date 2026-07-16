@@ -16,77 +16,80 @@ if ! command -v mvn >/dev/null 2>&1; then
 fi
 
 COMMAND="${1:-help}"
-MODULE="${2:-examples/counter-app}"
-if [[ "$COMMAND" == "dev-ipc" || "$COMMAND" == "run-ipc" ]] && [[ $# -lt 2 ]]; then
-  echo "$COMMAND requires an explicit application module." >&2
-  echo "Usage: bin/vaadin-desktop $COMMAND <module>" >&2
-  exit 2
-fi
-
-if [[ "$COMMAND" == "dev-ipc" || "$COMMAND" == "run-ipc" ]]; then
-  export VAADIN_DESKTOP_FLOW_IPC_STANDARD_BUNDLE=1
-fi
+MODULE="${2:-}"
 MAVEN_REPO="${MAVEN_REPO:-$ROOT/.m2/repository}"
 MODULE_POM="$ROOT/$MODULE/pom.xml"
 
+require_macos() {
+  if [[ "$(uname -s)" != "Darwin" ]]; then
+    echo "Vaadin Desktop currently provides only native-hosts/macos." >&2
+    exit 1
+  fi
+}
+
 ensure_module() {
+  if [[ -z "$MODULE" ]]; then
+    echo "Usage: bin/vaadin-desktop $COMMAND <module>" >&2
+    exit 2
+  fi
   if [[ ! -f "$MODULE_POM" ]]; then
     echo "Module not found: $MODULE" >&2
     exit 1
   fi
 }
 
-# shellcheck source=/dev/null
-source "$ROOT/bin/vaadin-desktop-flow-ipc-preflight"
-# shellcheck source=/dev/null
-source "$ROOT/bin/vaadin-desktop-swift-host-launch"
+maven_mode() {
+  if [[ "${VAADIN_DESKTOP_MAVEN_OFFLINE:-}" == "1" ]]; then
+    printf '%s' "-o"
+  else
+    printf '%s' "-U"
+  fi
+}
 
 install_module_with_dependencies() {
-  local maven_mode="-U"
-  if [[ "${VAADIN_DESKTOP_MAVEN_OFFLINE:-}" == "1" ]]; then
-    maven_mode="-o"
-  fi
-  mvn "$maven_mode" -Dmaven.repo.local="$MAVEN_REPO" -f "$ROOT/pom.xml" -pl "$MODULE" -am \
+  mvn "$(maven_mode)" -Dmaven.repo.local="$MAVEN_REPO" \
+    -f "$ROOT/pom.xml" -pl "$MODULE" -am \
     -DskipTests -Dmaven.jar.forceCreation=true install
 }
 
+# shellcheck source=/dev/null
+source "$ROOT/bin/vaadin-desktop-build-flow-bundle"
+# shellcheck source=/dev/null
+source "$ROOT/bin/vaadin-desktop-macos-host-launch"
 
 case "$COMMAND" in
-  dev|run)
+  dev)
+    require_macos
     ensure_module
     install_module_with_dependencies
-    exec mvn -U -Dmaven.repo.local="$MAVEN_REPO" -f "$MODULE_POM" spring-boot:run
+    build_standard_flow_bundle
+    run_macos_host_runtime
     ;;
-  dev-swift|run-swift|dev-native|run-native|dev-ipc|run-ipc)
+  dev-compat)
+    require_macos
     ensure_module
     install_module_with_dependencies
-    run_flow_ipc_frontend_build_preflight
-    run_swift_host_runtime
-    exit "$?"
+    run_macos_host_runtime
     ;;
   package)
+    require_macos
     ensure_module
     install_module_with_dependencies
-    exec mvn -U -Dmaven.repo.local="$MAVEN_REPO" -f "$MODULE_POM" -Pproduction package
+    build_standard_flow_bundle
+    bash "$ROOT/bin/vaadin-desktop-build-macos-host" \
+      "$ROOT" "$MODULE" flow-ipc
+    echo "macOS host: $ROOT/.build/native-hosts/macos/VaadinDesktopHost.app"
     ;;
   help|--help|-h)
-    cat <<USAGE
+    cat <<'USAGE'
 Usage:
   bin/vaadin-desktop dev <module>
-  bin/vaadin-desktop dev-swift <module>
-  bin/vaadin-desktop dev-ipc <module>
-  bin/vaadin-desktop run <module>
+  bin/vaadin-desktop dev-compat <module>
   bin/vaadin-desktop package <module>
+  bin/vaadin-desktop help
 
-Examples:
-  bin/vaadin-desktop dev examples/counter-app
-  bin/vaadin-desktop dev-swift test-apps/vaadin-desktop-smoke-app
-  bin/vaadin-desktop dev-ipc examples/counter-app
-  bin/vaadin-desktop dev-ipc test-apps/flow-over-ipc-smoke-app
-  bin/vaadin-desktop dev-ipc test-apps/flow-over-ipc-framework-app
-  bin/vaadin-desktop dev test-apps/vaadin-desktop-smoke-app
-
-dev-ipc always uses the application's standard Vaadin production bundle.
+dev uses the standard Vaadin production bundle over Flow IPC.
+dev-compat uses the same native host with localhost HTTP UI transport.
 USAGE
     ;;
   *)

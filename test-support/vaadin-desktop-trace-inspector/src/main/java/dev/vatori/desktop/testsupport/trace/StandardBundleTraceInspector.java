@@ -207,17 +207,17 @@ public final class StandardBundleTraceInspector {
             typeCounts.merge(type.isBlank() ? "unknown" : type, 1, Integer::sum);
             JsonNode payload = root.path("payload");
             switch (type) {
-                case "launch" -> standardLaunch = "flow-ipc".equals(text(payload, "transport"))
-                        && bool(payload, "standardBundleMode")
-                        && !bool(payload, "compatibilityMode");
+                case "launch" -> standardLaunch =
+                        "flow-ipc".equals(text(payload, "transport"));
                 case "ready" -> {
                     JsonNode runtime = payload.path("envelope").path("payload");
                     standardJavaReady |= "standard-vaadin-bundle-opaque-ipc"
                             .equals(text(runtime, "runtime"))
                             && "opaque-http-stream-ipc"
                             .equals(text(runtime, "browserRequestTransport"))
-                            && bool(runtime, "standardBundleMode")
-                            && !bool(runtime, "compatibilityMode");
+                            && "flow-ipc".equals(text(runtime, "transport"))
+                            && "standard-production-bundle".equals(
+                            text(runtime, "flowClientResourceLoading"));
                 }
                 case "standardBundleReady" -> standardBundleReady |=
                         "opaque-http-stream-ipc".equals(text(payload, "requestTransport"));
@@ -274,9 +274,67 @@ public final class StandardBundleTraceInspector {
                     "complete", "standardBundleMode", "rootRendered", "flowClientOwned",
                     "opaqueRequestBridgeObserved", "opaqueResponseBridgeObserved",
                     "pushRecoveryObserved", "errorFree", "budgetEventObserved",
-                    "checkboxEventObserved", "selectEventObserved", "datePickerEventObserved",
-                    "dialogEventObserved", "formValidationObserved", "applyEventObserved",
-                    "serverStateUpdated", "nativeWindowTitleApplied", "nativeClipboardApplied")) {
+                    "checkboxEventObserved", "selectEventObserved",
+                    "comboBoxEventObserved", "datePickerEventObserved",
+                    "radioGroupEventObserved", "textFieldClientObserved",
+                    "textFieldServerObserved", "textAreaEventObserved",
+                    "emailFieldEventObserved", "integerFieldEventObserved",
+                    "checkboxGroupClientObserved", "checkboxGroupServerObserved",
+                    "passwordFieldEventObserved", "timePickerEventObserved",
+                    "multiSelectComboBoxEventObserved",
+                    "dialogEventObserved", "formValidationObserved",
+                    "formLayoutClickObserved", "formLayoutServerObserved",
+                    "horizontalLayoutClickObserved", "horizontalLayoutServerObserved",
+                    "flexLayoutClickObserved", "flexLayoutServerObserved",
+                    "verticalLayoutClickObserved", "verticalLayoutServerObserved",
+                    "scrollerClientObserved", "scrollerServerObserved",
+                    "applyEventObserved",
+                    "avatarClickObserved", "messageInputSubmitObserved",
+                    "richTextEditorEditObserved",
+                    "loginOverlaySubmitObserved",
+                    "loginOverlayForgotPasswordObserved",
+                    "loginOverlayShowErrorObserved", "loginFormSubmitObserved",
+                    "loginFormForgotPasswordObserved",
+                    "loginOverlayActionPostSubmitObserved",
+                    "loginFormActionPostSubmitObserved",
+                    "loginOverlaySubmitButtonObserved",
+                    "loginFormSubmitButtonObserved",
+                    "loginFormShowErrorObserved",
+                    "loginFormEnabledLifecycleObserved",
+                    "loginFormFullI18nObserved",
+                    "loginFormAutofillAttributesObserved",
+                    "loginFormA11ySemanticsObserved",
+                    "loginFormNoAutofocusObserved",
+                    "loginOverlayAutofocusControlObserved",
+                    "loginOverlayNoAutofocusObserved",
+                    "loginOverlayOutsideClickPreventedObserved",
+                    "loginOverlayEscapeKeyPreventedObserved",
+                    "loginOverlayAutofillAttributesObserved",
+                    "loginOverlayA11ySemanticsObserved",
+                    "loginOverlayFullI18nObserved",
+                    "tabsSelectionObserved", "detailsOpenObserved",
+                    "accordionOpenObserved",
+                    "menuBarActionObserved", "sideNavSelectionObserved",
+                    "contextMenuOpenObserved", "contextMenuItemClickObserved",
+                    "gridContextMenuOpenObserved", "gridContextMenuItemClickObserved",
+                    "lazyGridScrollObserved",
+                    "virtualListClientObserved", "virtualListServerObserved",
+                    "popoverOpenObserved",
+                    "notificationOpenObserved",
+                    "confirmDialogOpenObserved", "confirmDialogConfirmObserved",
+                    "confirmDialogCancelObserved", "confirmDialogRejectObserved",
+                    "progressBarValueObserved", "progressBarIndeterminateObserved",
+                    "dateTimePickerClientObserved", "dateTimePickerServerObserved",
+                    "numberFieldClientObserved", "numberFieldServerObserved",
+                    "splitLayoutDragObserved", "splitLayoutServerObserved",
+                    "listBoxClientObserved", "listBoxServerObserved",
+                    "multiSelectListBoxClientObserved", "multiSelectListBoxServerObserved",
+                    "customFieldClientObserved", "customFieldServerObserved",
+                    "uploadSubmitObserved",
+                    "streamResourceFetchObserved", "binaryStreamResourceFetchObserved",
+                    "downloadHandlerFetchObserved", "standardStreamingDownloadFetchObserved",
+                    "serverStateUpdated", "nativeWindowTitleApplied",
+                    "nativeClipboardApplied")) {
                 require(missing, bool(payload, field), "framework " + field);
             }
         }

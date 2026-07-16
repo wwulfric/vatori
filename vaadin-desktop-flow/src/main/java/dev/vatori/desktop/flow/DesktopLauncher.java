@@ -1,63 +1,80 @@
 package dev.vatori.desktop.flow;
 
 import dev.vatori.desktop.DesktopApplication;
-import dev.vatori.desktop.DesktopContext;
-import dev.vatori.desktop.DesktopContextHolder;
-import dev.vatori.desktop.host.DesktopHost;
-import dev.vatori.desktop.host.DesktopHosts;
-import dev.vatori.desktop.host.DesktopNativeBridges;
-import dev.vatori.desktop.flow.ipc.FlowIpcLauncher;
+import dev.vatori.desktop.flow.ipc.SidecarRuntime;
 import org.springframework.boot.builder.SpringApplicationBuilder;
 import org.springframework.context.ConfigurableApplicationContext;
 
 import java.lang.reflect.Method;
 import java.net.URI;
 import java.util.LinkedHashMap;
+import java.util.Locale;
 import java.util.Map;
+import java.util.Objects;
 
+/** Starts a Vaadin application as a native-host-owned Java sidecar. */
 public final class DesktopLauncher {
+    private static final String TRANSPORT_PROPERTY = "vaadin.desktop.transport";
+    private static final String TRANSPORT_ENVIRONMENT = "VAADIN_DESKTOP_TRANSPORT";
+
     private DesktopLauncher() {
     }
 
-    public static ConfigurableApplicationContext launch(Class<?> springBootApplicationClass,
-                                                        DesktopApplication application,
-                                                        String[] args) {
-        if (flowIpcTransportRequested()) {
-            ConfigurableApplicationContext context =
-                    FlowIpcSpringApplication.start(springBootApplicationClass, args);
-            try {
-                FlowIpcRouteCatalog routes =
-                        FlowIpcRouteResolver.resolve(springBootApplicationClass);
-                FlowIpcLauncher.launchSpringApplication(
-                        routes.rootRoute(), routes.routes(), application, args, context);
-            } finally {
-                context.close();
-            }
-            return null;
+    public static void launch(
+            Class<?> springBootApplicationClass,
+            DesktopApplication application,
+            String[] args) {
+        Objects.requireNonNull(springBootApplicationClass, "springBootApplicationClass");
+        Objects.requireNonNull(application, "application");
+        switch (requiredTransport()) {
+            case FLOW_IPC -> launchFlow(springBootApplicationClass, application, args);
+            case COMPATIBILITY_HTTP ->
+                    launchCompatibility(springBootApplicationClass, application, args);
         }
-        return launch(springBootApplicationClass, application, args, DesktopHosts.defaultHost());
     }
 
-    public static ConfigurableApplicationContext launch(Class<?> springBootApplicationClass,
-                                                        DesktopApplication application,
-                                                        String[] args,
-                                                        DesktopHost host) {
-        ConfigurableApplicationContext context = new SpringApplicationBuilder(springBootApplicationClass)
-                .properties(defaultProperties())
+    private static void launchFlow(
+            Class<?> springBootApplicationClass,
+            DesktopApplication application,
+            String[] args) {
+        ConfigurableApplicationContext context =
+                FlowIpcSpringApplication.start(springBootApplicationClass, args);
+        try {
+            FlowIpcRouteCatalog routes =
+                    FlowIpcRouteResolver.resolve(springBootApplicationClass);
+            SidecarRuntime.runFlow(
+                    routes.rootRoute(), routes.routes(), application, args, context);
+        } finally {
+            context.close();
+        }
+    }
+
+    private static void launchCompatibility(
+            Class<?> springBootApplicationClass,
+            DesktopApplication application,
+            String[] args) {
+        ConfigurableApplicationContext context = new SpringApplicationBuilder(
+                springBootApplicationClass)
+                .properties(compatibilityProperties())
                 .run(args);
-
-        URI appUri = URI.create("http://127.0.0.1:" + resolvePort(context) + "/");
-        DesktopContext desktopContext = new DesktopContext(
-                application,
-                appUri,
-                DesktopNativeBridges.defaultBridge(),
-                parseLaunchArguments(args));
-        DesktopContextHolder.set(desktopContext);
-        host.launch(desktopContext);
-        return context;
+        URI applicationUri = URI.create(
+                "http://127.0.0.1:" + resolvePort(context) + "/");
+        runCompatibilitySidecar(context, application, args, applicationUri);
     }
 
-    private static Map<String, Object> defaultProperties() {
+    static void runCompatibilitySidecar(
+            ConfigurableApplicationContext context,
+            DesktopApplication application,
+            String[] args,
+            URI applicationUri) {
+        try {
+            SidecarRuntime.runCompatibility(application, applicationUri, args);
+        } finally {
+            context.close();
+        }
+    }
+
+    private static Map<String, Object> compatibilityProperties() {
         Map<String, Object> properties = new LinkedHashMap<>();
         properties.put("server.address", "127.0.0.1");
         properties.put("server.port", "0");
@@ -66,12 +83,23 @@ public final class DesktopLauncher {
         return properties;
     }
 
-    private static boolean flowIpcTransportRequested() {
-        String transport = System.getProperty("vaadin.desktop.transport");
+    private static SidecarTransport requiredTransport() {
+        String transport = System.getProperty(TRANSPORT_PROPERTY);
         if (transport == null || transport.isBlank()) {
-            transport = System.getenv("VAADIN_DESKTOP_TRANSPORT");
+            transport = System.getenv(TRANSPORT_ENVIRONMENT);
         }
-        return "flow-ipc".equalsIgnoreCase(transport);
+        if (transport == null || transport.isBlank()) {
+            throw new IllegalStateException(
+                    "Desktop sidecar transport is missing. Start the application through "
+                            + "bin/vaadin-desktop dev or dev-compat.");
+        }
+        return switch (transport.toLowerCase(Locale.ROOT)) {
+            case "flow-ipc" -> SidecarTransport.FLOW_IPC;
+            case "compatibility-http" -> SidecarTransport.COMPATIBILITY_HTTP;
+            default -> throw new IllegalStateException(
+                    "Unknown desktop sidecar transport '" + transport
+                            + "'. Start the application through bin/vaadin-desktop.");
+        };
     }
 
     private static int resolvePort(ConfigurableApplicationContext context) {
@@ -81,18 +109,13 @@ public final class DesktopLauncher {
             Method getPort = webServer.getClass().getMethod("getPort");
             return ((Number) getPort.invoke(webServer)).intValue();
         } catch (ReflectiveOperationException error) {
-            throw new IllegalStateException("Unable to resolve embedded web server port.", error);
+            throw new IllegalStateException(
+                    "Unable to resolve embedded web server port.", error);
         }
     }
 
-    private static Map<String, String> parseLaunchArguments(String[] args) {
-        Map<String, String> values = new LinkedHashMap<>();
-        for (String arg : args == null ? new String[0] : args) {
-            if (arg.startsWith("--") && arg.contains("=")) {
-                int split = arg.indexOf('=');
-                values.put(arg.substring(2, split), arg.substring(split + 1));
-            }
-        }
-        return values;
+    private enum SidecarTransport {
+        FLOW_IPC,
+        COMPATIBILITY_HTTP
     }
 }

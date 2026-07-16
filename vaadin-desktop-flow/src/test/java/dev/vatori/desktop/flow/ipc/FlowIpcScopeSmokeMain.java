@@ -3,15 +3,19 @@ package dev.vatori.desktop.flow.ipc;
 import com.vaadin.flow.component.button.Button;
 import com.vaadin.flow.component.orderedlayout.VerticalLayout;
 import com.vaadin.flow.router.Route;
+import dev.vatori.desktop.DesktopApplication;
 import dev.vatori.desktop.DesktopCommand;
 import dev.vatori.desktop.DesktopCommandResult;
 import dev.vatori.desktop.flow.transport.DesktopFlowHttpResponseHead;
 import dev.vatori.desktop.flow.transport.DesktopFlowOpaqueHttpSession;
 import dev.vatori.desktop.flow.transport.DesktopFlowOpaqueHttpSessionRegistry;
 
+import java.io.BufferedReader;
 import java.io.ByteArrayInputStream;
 import java.io.ByteArrayOutputStream;
 import java.io.InputStream;
+import java.io.PipedReader;
+import java.io.PipedWriter;
 import java.io.PrintStream;
 import java.nio.charset.StandardCharsets;
 import java.util.ArrayList;
@@ -31,8 +35,10 @@ public final class FlowIpcScopeSmokeMain {
         verifyOpaqueResponseBackpressureAndCancel();
         verifyOpaqueSessionRegistry();
         verifyWindowCloseScopeBeforeCancellation();
+        verifyWindowCloseFollowsQueuedRequests();
         verifyStandardBundleRejectsUnknownTransport();
         verifyNativeCapabilityCorrelation();
+        verifyMessageLoopReadsCapabilityResultWhileHandlerWaits();
         System.out.println("standard Flow IPC transport smoke passed");
     }
 
@@ -41,8 +47,7 @@ public final class FlowIpcScopeSmokeMain {
                 + envelope("unsupportedMessage", "unsupported", "flow-ipc-session", "main") + "\n"
                 + FlowIpcWire.PREFIX
                 + envelope("shutdown", "standard-shutdown", "flow-ipc-session", "main") + "\n";
-        String output = captureRuntime(input, new StandardFlowIpcRuntime(
-                ScopeSmokeView.class, List.of(ScopeSmokeView.class), null));
+        String output = captureRuntime(input);
         if (!output.contains("\"runtime\":\"standard-vaadin-bundle-opaque-ipc\"")
                 || !output.contains("\"uidlFallback\":\"none\"")
                 || !output.contains("\"id\":\"unsupported\"")
@@ -55,8 +60,9 @@ public final class FlowIpcScopeSmokeMain {
     private static void verifyNativeCapabilityCorrelation() throws Exception {
         ByteArrayOutputStream output = new ByteArrayOutputStream();
         FlowIpcScope scope = new FlowIpcScope("main", "flow-ipc-session", "main");
-        FlowIpcNativeBridge bridge = new FlowIpcNativeBridge(
+        SidecarOutput sidecarOutput = new SidecarOutput(
                 new PrintStream(output, true, StandardCharsets.UTF_8), "", scope);
+        SidecarNativeBridge bridge = new SidecarNativeBridge(sidecarOutput, scope);
         AtomicReference<DesktopCommandResult> result = new AtomicReference<>();
         Thread caller = Thread.ofVirtual().start(() -> result.set(bridge.invoke(
                 new DesktopCommand("clipboard.readText", Map.of()))));
@@ -82,17 +88,78 @@ public final class FlowIpcScopeSmokeMain {
         }
     }
 
-    private static String captureRuntime(String input, StandardFlowIpcRuntime runtime) {
+    private static void verifyMessageLoopReadsCapabilityResultWhileHandlerWaits()
+            throws Exception {
+        ByteArrayOutputStream output = new ByteArrayOutputStream();
+        FlowIpcScope scope = new FlowIpcScope("main", "flow-ipc-session", "main");
+        SidecarOutput sidecarOutput = new SidecarOutput(
+                new PrintStream(output, true, StandardCharsets.UTF_8), "", scope);
+        SidecarNativeBridge bridge = new SidecarNativeBridge(sidecarOutput, scope);
+        PipedWriter inputWriter = new PipedWriter();
+        SidecarMessageLoop messageLoop = new SidecarMessageLoop(
+                new BufferedReader(new PipedReader(inputWriter)),
+                sidecarOutput,
+                bridge,
+                scope);
+        AtomicReference<DesktopCommandResult> result = new AtomicReference<>();
+        messageLoop.register("invokeCapability", (ignoredScope, envelope, id, correlationId) ->
+                result.set(bridge.invoke(new DesktopCommand(
+                        "clipboard.readText", Map.of()))));
+        Thread loop = Thread.ofVirtual().start(messageLoop::run);
+        inputWriter.write(FlowIpcWire.PREFIX
+                + envelope("invokeCapability", "invoke", "flow-ipc-session", "main")
+                + "\n");
+        inputWriter.flush();
+        for (int attempt = 0; attempt < 100
+                && !output.toString(StandardCharsets.UTF_8)
+                        .contains("\"type\":\"command\""); attempt++) {
+            Thread.sleep(5);
+        }
+        if (!output.toString(StandardCharsets.UTF_8).contains("\"type\":\"command\"")) {
+            throw new IllegalStateException(
+                    "Sidecar handler did not emit a native capability command");
+        }
+        inputWriter.write(FlowIpcWire.PREFIX + """
+                {"type":"capabilityResult","id":"capability-desktop-command-1",
+                 "correlationId":"desktop-command-1","sessionId":"flow-ipc-session",
+                 "uiId":"main","windowId":"main",
+                 "payload":{"success":true,"text":"from-message-loop"}}
+                """.replace("\n", "") + "\n");
+        inputWriter.write(FlowIpcWire.PREFIX
+                + envelope("shutdown", "shutdown", "flow-ipc-session", "main")
+                + "\n");
+        inputWriter.flush();
+        inputWriter.close();
+        loop.join(1000);
+        DesktopCommandResult commandResult = result.get();
+        if (loop.isAlive() || commandResult == null || !commandResult.success()
+                || !"from-message-loop".equals(commandResult.payload().get("text"))) {
+            throw new IllegalStateException(
+                    "Sidecar reader could not correlate a capability result while its handler waited");
+        }
+    }
+
+    private static String captureRuntime(String input) {
         InputStream originalIn = System.in;
-        PrintStream originalOut = System.out;
         ByteArrayOutputStream captured = new ByteArrayOutputStream();
         try {
             System.setIn(new ByteArrayInputStream(input.getBytes(StandardCharsets.UTF_8)));
-            System.setOut(new PrintStream(captured, true, StandardCharsets.UTF_8));
+            FlowIpcScope scope = new FlowIpcScope("main", "flow-ipc-session", "main");
+            SidecarOutput output = new SidecarOutput(
+                    new PrintStream(captured, true, StandardCharsets.UTF_8), "", scope);
+            SidecarNativeBridge nativeBridge = new SidecarNativeBridge(output, scope);
+            StandardFlowIpcRuntime runtime = new StandardFlowIpcRuntime(
+                    "",
+                    List.of(ScopeSmokeView.class),
+                    null,
+                    DesktopApplication.builder("Scope Smoke").build(),
+                    output,
+                    nativeBridge,
+                    scope);
             runtime.run();
+            nativeBridge.close();
         } finally {
             System.setIn(originalIn);
-            System.setOut(originalOut);
         }
         return captured.toString(StandardCharsets.UTF_8);
     }
@@ -229,8 +296,8 @@ public final class FlowIpcScopeSmokeMain {
 
     private static void verifyWindowCloseScopeBeforeCancellation() {
         FlowIpcScope owner = new FlowIpcScope("main", "flow-ipc-session", "main");
-        StandardFlowIpcOutput output = new StandardFlowIpcOutput("", owner);
-        FlowIpcNativeBridge nativeBridge = new FlowIpcNativeBridge("", owner);
+        SidecarOutput output = new SidecarOutput("", owner);
+        SidecarNativeBridge nativeBridge = new SidecarNativeBridge(output, owner);
         StandardFlowIpcSessions sessions = new StandardFlowIpcSessions(
                 List.of(ScopeSmokeView.class), null, output, nativeBridge);
         AtomicBoolean cancellationAttempted = new AtomicBoolean();
@@ -252,6 +319,44 @@ public final class FlowIpcScopeSmokeMain {
         } finally {
             sessions.close();
             nativeBridge.close();
+        }
+    }
+
+    private static void verifyWindowCloseFollowsQueuedRequests() {
+        String input = FlowIpcWire.PREFIX
+                + envelope("queuedRequest", "queued", "flow-ipc-session", "main") + "\n"
+                + FlowIpcWire.PREFIX
+                + envelope("windowClosed", "closed", "flow-ipc-session", "main") + "\n";
+        FlowIpcScope scope = new FlowIpcScope("main", "flow-ipc-session", "main");
+        SidecarOutput output = new SidecarOutput(
+                new PrintStream(new ByteArrayOutputStream()), "", scope);
+        SidecarNativeBridge nativeBridge = new SidecarNativeBridge(output, scope);
+        SidecarMessageLoop messageLoop = new SidecarMessageLoop(
+                new BufferedReader(new java.io.StringReader(input)),
+                output,
+                nativeBridge,
+                scope);
+        AtomicInteger stage = new AtomicInteger();
+        messageLoop.register("queuedRequest", (ignoredScope, envelope, id, correlationId) -> {
+            try {
+                Thread.sleep(50);
+            } catch (InterruptedException error) {
+                Thread.currentThread().interrupt();
+                throw new IllegalStateException("Queued request was interrupted", error);
+            }
+            stage.compareAndSet(0, 1);
+        });
+        messageLoop.onWindowClosed(ignored -> {
+            if (!stage.compareAndSet(1, 2)) {
+                throw new IllegalStateException(
+                        "Window close overtook an earlier sidecar request");
+            }
+            messageLoop.requestShutdown();
+        });
+        messageLoop.run();
+        if (stage.get() != 2) {
+            throw new IllegalStateException(
+                    "Window close did not run after the queued sidecar request");
         }
     }
 

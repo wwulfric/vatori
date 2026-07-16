@@ -20,7 +20,6 @@
     <modules>
         <module>vaadin-desktop-core</module>
         <module>vaadin-desktop-ipc</module>
-        <module>vaadin-desktop-host</module>
         <module>vaadin-desktop-flow</module>
         <module>vaadin-desktop-cli</module>
         <module>examples/counter-app</module>

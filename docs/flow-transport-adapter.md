@@ -1,82 +1,66 @@
 # Flow Transport Adapter
 
-The adapter work isolates Vaadin Flow server assumptions from the desktop
-transport. The goal is to keep the Flow Java programming model while moving the
-runtime transport from localhost HTTP toward IPC.
+The desktop adapter preserves Vaadin's browser/server protocol and replaces only
+the transport boundary.
 
-## Current Adapter Surface
-
-`vaadin-desktop-flow/src/main/java/dev/vatori/desktop/flow/transport` contains
-the production adapter around:
-
-- `DesktopFlowOpaqueHttpSession`
-- `DesktopFlowOpaqueHttpSessionRegistry`
-- `DesktopFlowVaadinService`
-- `DesktopVaadinRequest`
-- `DesktopVaadinResponse`
-
-The adapter creates desktop-owned Vaadin sessions and translates opaque
-HTTP-shaped requests into Vaadin request-handler calls. Bootstrap, UIDL, dynamic
-resources and other Flow traffic remain ordinary request bytes at the browser,
-native-host and IPC layers.
-
-## Boundary Finding
-
-The production Flow server boundary is the normal request-handler chain:
+## Request Path
 
 ```text
 opaque method + URL + headers + body
   -> DesktopVaadinRequest / DesktopVaadinResponse
-  -> VaadinService request handlers
-  -> bootstrap, UIDL, resource or push behavior selected by Vaadin
-  -> opaque status + headers + body
+  -> VaadinService.handleRequest()
+  -> Vaadin request-handler chain
+  -> opaque status + repeated headers + body
 ```
 
-This preserves Vaadin's own browser/server protocol and avoids a parallel
-component renderer or a request-type switch in the native host. The remaining
-hard boundary is Servlet-derived context: session lookup, deployment
-configuration, cookies, thread locals, async push and streaming lifecycle.
+`DesktopFlowOpaqueHttpSession` owns session-scoped request adaptation. It does
+not branch on static, bootstrap, UIDL, upload or download request type before
+calling Vaadin.
 
-## Current Resource Surface
+## Desktop Request Handlers
 
-The standard path uses Vaadin's production output unchanged. The native host
-serves the packaged webapp, while browser requests cross IPC as opaque method,
-URL, headers and body bytes. Java dispatches those requests through Vaadin's
-request-handler and static-resource paths; neither the host nor the bridge owns a
-Flow client resource catalog.
+The adapter registers two focused handlers:
 
-## Smoke Coverage
+- `DesktopClasspathResourceRequestHandler` serves safe GET/HEAD classpath
+  resources when no servlet static server exists.
+- `DesktopStreamResourceRequestHandler` handles only registered
+  `StreamResource` downloads because Vaadin's upstream download handler requires
+  `VaadinServletRequest` for `ServletContext` access.
+
+The desktop stream handler returns `false` for Upload, StreamReceiver and other
+dynamic resource types. Vaadin's standard `StreamRequestHandler` remains
+responsible for those paths.
+
+`DesktopFlowVaadinService` also supplies a classloader-backed `ResourceProvider`
+for Flow component and theme resources.
+
+## Streaming And Push
+
+Opaque request/response bodies use bounded chunks, credits and cancellation.
+The Java worker sees streaming servlet-compatible input/output adapters without
+the native host interpreting request semantics.
+
+Push uses a desktop `PushConnectionFactory` and Flow's normal UIDL writer. The
+browser bridge presents the narrow Atmosphere API expected by the standard Flow
+client and transports push messages opaquely.
+
+## Verification
 
 ```bash
 bash bin/opaque-http-adapter-smoke
 bash bin/flow-ipc-scope-smoke
-node test-support/vaadin-desktop-host-swift-acceptance/Tests/FlowIpcOpaqueHttpBridgeSmoke.mjs
-node test-support/vaadin-desktop-host-swift-acceptance/Tests/FlowIpcPushBridgeSmoke.mjs
+node test-support/native-host-macos-acceptance/Tests/flow-ipc-opaque-http-bridge-smoke.mjs
+node test-support/native-host-macos-acceptance/Tests/flow-ipc-push-bridge-smoke.mjs
 ```
 
-`opaque-http-adapter-smoke` verifies production request/response behavior,
-including classpath static resources, `HEAD` metadata and repeated `Set-Cookie`
-headers.
+The adapter smoke verifies handler ordering, classpath GET/HEAD, repeated
+`Set-Cookie`, StreamResource content/headers and VaadinSession context. Scope and
+browser smokes cover window isolation, backpressure, cancellation and push
+reconnect/resync.
 
-The browser bridge smokes verify bounded request/response streaming,
-backpressure, cancellation and push reconnect/resync behavior without loading a
-custom Flow client.
+## Open Boundaries
 
-## Current Adapter Boundaries
-
-Completed for the standard runtime:
-
-- Opaque bootstrap and UIDL request dispatch through Vaadin handlers.
-- Click/change RPC dispatch through the standard Flow client and server.
-- Ordered push and recovery resync delivery to the visible Flow client.
-- Opaque request/response and streaming body transport over IPC.
-- Standard production webapp and classpath static-resource serving.
-
-Still open:
-
-- Dev-mode/Vite resource execution.
-- Durable push queue, ack and reconnect semantics.
-- Complete component parity across Flow's full surface.
-
-Do not document future adapter work as numbered milestones. Use semantic product
-surfaces and acceptance gates instead.
+- dev-mode/Vite resource execution;
+- durable push acknowledgement and reconnect semantics;
+- large-file retry/resume behavior;
+- complete Flow component and browser behavior parity.

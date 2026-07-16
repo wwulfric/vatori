@@ -30,7 +30,7 @@ Reference basis: adapted for this project from the ideas in `yetone/native-feel-
 3. Prefer local source references before web search:
    - Tauri: `/Users/bytedance/RustroverProjects/study/tauri` for process-model comparison only
    - Vaadin: `/Users/bytedance/IdeaProjects/study/vaadin`
-4. Keep compatibility mode explicit. A WebView loading `127.0.0.1` is acceptable during v0/v1 work, but it is not final Flow over IPC.
+4. Keep compatibility mode explicit. `dev-compat` loads `127.0.0.1` through the same native host and capability channel, but it is not Flow over IPC.
 5. Before claiming success, verify with a running desktop app, not only a browser tab or unit test.
 
 ## Tenets For This Stack
@@ -69,16 +69,8 @@ Run smoke app:
 bash bin/vaadin-desktop dev test-apps/vaadin-desktop-smoke-app
 ```
 
-Run Swift native host:
+Run the localhost compatibility transport through the same native host:
 
 ```bash
-bash bin/vaadin-desktop dev-swift test-apps/vaadin-desktop-smoke-app
-```
-
-Host variants:
-
-```bash
-VAADIN_DESKTOP_HOST=system-webview bash bin/vaadin-desktop dev examples/counter-app
-VAADIN_DESKTOP_HOST=headless bash bin/vaadin-desktop dev examples/counter-app
-VAADIN_DESKTOP_HOST=browser bash bin/vaadin-desktop dev examples/counter-app
+bash bin/vaadin-desktop dev-compat test-apps/vaadin-desktop-smoke-app
 ```

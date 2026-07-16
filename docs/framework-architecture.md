@@ -1,145 +1,107 @@
 # Framework Architecture
 
-vatori is a Vaadin-based desktop framework. The long-term shape is Flow over IPC:
-standard Vaadin Flow Java views run in a Java sidecar, while a native host owns the
-system WebView, lifecycle and platform capabilities.
+vatori is a Vaadin desktop framework. Application code keeps the Vaadin Flow
+Java programming model; a platform native host owns the system WebView, native
+capabilities, process lifecycle and packaging boundary.
 
-## Compatibility Mode
+## Ownership
 
 ```text
-Vaadin Flow view
-  -> vaadin-desktop-flow
-  -> embedded Spring Boot / Vaadin compatibility adapter
-  -> local loopback URL
-  -> native host
-  -> system WebView
+CLI/build selects platform host
+  -> macOS AppKit + WKWebView host
+  -> starts Java application as a sidecar
+  -> DesktopLauncher starts the host-declared UI transport adapter
+  -> both processes communicate over VFIPC1
 ```
 
-`dev` and `dev-swift` are real desktop host paths, but the Flow UI transport still
-uses local HTTP/Servlet/WebSocket assumptions. Keep this mode explicitly named as
-compatibility mode.
+Java does not select a WebView implementation and does not fall back to a browser,
+headless runner or embedded host. Running an application JAR without a valid
+sidecar transport fails with a CLI-oriented message.
 
-## Flow IPC Runtime
+## Flow IPC
+
+`dev` is the primary architecture:
 
 ```text
-Vaadin Flow view
-  -> DesktopLauncher / StandardFlowIpcRuntime
+application standard Vaadin production webapp
+  -> WKWebView local resource scheme
+  -> document-start opaque request/push bridge
+  -> VFIPC1 method, URL, headers and body bytes
+  -> DesktopVaadinRequest / DesktopVaadinResponse
+  -> VaadinService.handleRequest()
   -> Vaadin request-handler chain
-  -> opaque HTTP-shaped VFIPC1 exchanges
-  -> Swift/AppKit/WKWebView host bridge
-  -> standard Vaadin production webapp and Flow client
 ```
 
-`dev-ipc` removes localhost HTTP from the tested bootstrap, event, push, patch and
-resync path. Its default transport architecture is:
+Vaadin owns the production bundle, Flow client, bootstrap, UIDL, component event
+and rendering semantics. The native host and browser bridge do not parse UIDL or
+implement a parallel component runtime.
 
-```text
-standard Vaadin production webapp
-  -> WKWebView local static-resource scheme
-  -> opaque XMLHttpRequest / Fetch bridge
-  -> VFIPC1 method / URL / headers / body bytes
-  -> Vaadin request-handler chain + classpath static resources
-```
+Every browser request reaches `VaadinService.handleRequest()`. Desktop-specific
+request handlers compensate only for missing servlet infrastructure:
 
-Vaadin remains responsible for the production frontend,
-Flow client and UIDL semantics. The framework-specific browser code only needs to
-adapt the application origin and carry opaque request/response bytes; it does not
-recreate a Flow client or component runtime. The production webapp is built before
-launch and copied into the native app resources;
-common browser BodyInit forms, bounded request/response streaming, backpressure,
-Fetch/XHR cancellation, repeated response headers, cookie continuity and
-classpath static resources are covered by focused contracts. A narrow Atmosphere
-API shim carries standard Flow push UIDL over IPC;
-it does not parse UIDL or maintain component state. Server push uses Flow's
-`PushConnectionFactory` and `UidlWriter`, and in-process disconnect/reconnect is
-verified. A repository-only WKWebView driver verifies a representative
-framework-shaped workflow through the standard Flow client, including field and
-button events, server patches, push recovery and native command results. The
-Java runtime accepts only opaque bridge and lifecycle envelopes. There is no
-second Flow client, typed renderer or resource-staging fallback in the product
-path.
+- classpath resources are served from the packaged application classpath;
+- `StreamResource` downloads bypass an upstream servlet request cast;
+- Upload and StreamReceiver paths remain with Vaadin's standard stream handler.
 
-On an unexpected sidecar exit, this path keeps the host-owned NSWindow and
-WKWebView, terminates outstanding browser exchanges, performs a bounded Java
-restart and reloads the same production webapp after the new sidecar is ready.
-The Java process, `VaadinSession` and UI are replaced; only host-owned native
-window identity is retained. Durable application state must therefore live
-outside process-local UI state.
+Opaque request and response streaming uses bounded chunks, credit and
+cancellation. Flow push uses the standard client-facing Atmosphere surface and
+Flow's server-side push writer while carrying UIDL opaquely.
 
-For multiple windows, the native host assigns an immutable
-`windowId`/`sessionId`/`uiId` scope to each WKWebView and routes every response,
-push and capability result to the matching context. Java reuses one initialized
-`VaadinService` but creates an independent `VaadinSession` and UI per scope.
-Request ids are scoped by window, push sequences are scoped by session, and
-closing one window releases only that session.
+## Compatibility HTTP
 
-Current verified boundaries include:
+`dev-compat` starts the same native host and Java application model, but the
+WebView loads a random `127.0.0.1` Spring Boot/Vaadin URL. Servlet, HTTP and
+WebSocket behavior remains available for integrations that require a normal web
+application context.
 
-- Swift owns the Java sidecar lifecycle and opens the packaged production webapp.
-- Java starts the application's Spring context without a web server, registers
-  its annotated Flow routes and delegates component creation to Vaadin's
-  `SpringInstantiator`, including Vaadin UI/session scopes.
-- Bootstrap, click/change events, ordered pushes and recovery resync carry real
-  server-side UIDL.
-- The visible Flow client engine owns the rendered surface for the verified path.
-- The framework validation app exercises ordinary Flow APIs across common input,
-  navigation, data, overlay, rich text, theme and authentication surfaces.
+Compatibility is only a UI transport difference. Window, clipboard, notification,
+file dialog and other native commands still use the shared VFIPC1
+`command`/`capabilityResult` path and return real host results.
 
-Current explicit non-goals and blockers:
+## Sidecar Contract
 
-- Servlet filters, servlet-backed Spring Security and other beans that require a
-  `WebApplicationContext` are compatibility-mode integrations; the no-HTTP
-  runtime deliberately excludes Vaadin's servlet auto-configuration.
-- Full current app generated chunk parity is not complete.
-- Full production owner import/reusable side-effect parity is not complete.
-- Dev-mode/Vite execution is not complete.
-- Full Grid virtualization, Upload/Download retry and resume, overlay
-  keyboard/focus, theme system, cross-process application-state restoration and
-  installer packaging remain open.
+`DesktopLauncher.launch(...)` is a blocking `void` entry. It requires exactly
+one transport declared by the native host:
 
-Streaming extends the generic transport rather than the Flow client: bounded
-opaque chunks map onto Servlet input/output streams with receiver credit and
-cancellation. Multi-window routing likewise stays outside Flow semantics through
-host-assigned identities and a Java session/UI registry. Neither concern may
-introduce request-type branches for bootstrap, UIDL, Upload or Download in the
-native host.
+- `flow-ipc`: starts a non-web Spring context and the desktop Vaadin adapter;
+- `compatibility-http`: starts the embedded web server and publishes its loopback
+  URL in `ready`.
 
-## Modules
+Both modes use one stdin reader, one synchronized stdout writer and one native
+bridge. The Java `ready` message owns application name, metadata and main-window
+id/title/size. The host validates that descriptor before creating a window.
+Window close, host shutdown and stdin EOF terminate the control loop and close
+the Spring context.
 
-- `vaadin-desktop-core`: public Java desktop API.
-- `vaadin-desktop-flow`: compatibility launcher plus the standard-bundle opaque
-  Flow IPC runtime and adapter code.
-- `vaadin-desktop-ipc`: protocol envelopes and trace support.
-- `vaadin-desktop-host`: Java host abstractions, explicit compatibility host and
-  native bridge support.
-- `vaadin-desktop-host-swift`: Swift/AppKit/WKWebView host.
-- `test-support/vaadin-desktop-host-swift-acceptance`: repository-only Swift and
-  WKWebView automation support for explicit native-host acceptance profiles.
-- `test-support/vaadin-desktop-trace-inspector`: repository-only trace gates,
-  built directly by validation commands and excluded from the framework reactor.
-- `vaadin-desktop-cli`: developer command entry.
-- `examples/*`: developer-shaped examples.
-- `test-apps/*`: validation fixtures and framework-shape smoke apps.
+## Multi-Window And Recovery
 
-The macOS host follows the same dependency direction. `vaadin-desktop-host-swift`
-contains only the ordinary host and standard-bundle bridge. Repository acceptance
-builds explicitly add the small `VaadinDesktopHostAcceptanceSupport` automation
-overlay from `test-support/vaadin-desktop-host-swift-acceptance`; normal builds
-neither compile nor package those sources. The production host calls a neutral
-`HostRuntimeHooks` contract; the build profile selects either the no-op production
-factory or the repository-only acceptance implementation.
+For Flow IPC, the host assigns an immutable window/session/UI scope to each
+WKWebView. Java reuses one initialized Vaadin service and creates isolated
+sessions per scope. Requests, push and native capability results must match the
+scope before delivery; closing one window releases only its state.
 
-## Relationship to Tauri and Electron
+The macOS host can perform bounded sidecar restart while retaining host-owned
+windows. A recovered sidecar creates new Spring, VaadinSession and UI state; only
+native window identity survives. Durable application state must live outside
+process-local UI state.
 
-Like Tauri, the intended shape is a small native host plus system WebView plus a
-backend runtime. Unlike Electron, vatori does not bundle Chromium. The app model
-remains Vaadin Flow Java views instead of a JavaScript-first UI.
+## Build Boundary
 
-## Relationship to Vaadin Flow
+The CLI invokes Vaadin's production frontend build and packages
+`META-INF/VAADIN/webapp` into the selected native host. `vaadin-desktop-flow`
+consumes requests from that bundle but does not build or stage frontend output.
+Default host builds exclude repository acceptance sources and resources.
 
-The compatibility path uses real Vaadin Flow through `vaadin-spring-boot-starter`.
-The IPC path progressively isolates HTTP/Servlet/WebSocket assumptions behind
-adapter boundaries while preserving Flow's server-side programming model.
+Current implementation is macOS-only. Windows and Linux hosts are future
+implementations of the same ready, lifecycle, opaque transport and capability
+contract; they are not represented by placeholder modules.
 
-Architecture decisions should prefer adapter boundaries that keep Flow semantics
-visible and testable instead of one-off fixture behavior.
+## Explicit Limits
+
+- Flow IPC product parity is broader than a smoke shell but not complete across
+  every Vaadin component, focus, accessibility and browser edge case.
+- Dev-mode/Vite over IPC is not implemented; `dev` currently uses a production
+  bundle.
+- Servlet filters and servlet-backed security belong to compatibility mode until
+  a desktop-specific contract exists.
+- Native installers, signing, updates and full cross-platform hosts remain open.

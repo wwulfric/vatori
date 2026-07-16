@@ -1,14 +1,11 @@
 package dev.vatori.desktop.flow.ipc;
 
 import com.vaadin.flow.component.Component;
-import com.vaadin.flow.router.Route;
+import dev.vatori.desktop.DesktopApplication;
 import dev.vatori.desktop.flow.transport.DesktopFlowHttpResponse;
 import dev.vatori.desktop.flow.transport.DesktopFlowOpaqueHttpSession;
 import org.springframework.context.ApplicationContext;
 
-import java.io.BufferedReader;
-import java.io.IOException;
-import java.io.InputStreamReader;
 import java.nio.charset.StandardCharsets;
 import java.util.Base64;
 import java.util.Collection;
@@ -18,118 +15,72 @@ import java.util.Map;
 import java.util.Objects;
 
 final class StandardFlowIpcRuntime {
-    private static final String IPC_SESSION_ID = "flow-ipc-session";
-    private static final String IPC_UI_ID = "main";
-    private static final FlowIpcScope DEFAULT_SCOPE =
-            new FlowIpcScope("main", IPC_SESSION_ID, IPC_UI_ID);
-
     private final String route;
-    private final StandardFlowIpcOutput output;
+    private final DesktopApplication application;
+    private final SidecarOutput output;
     private final StandardFlowIpcSessions sessions;
     private final StandardFlowIpcExchanges exchanges;
-    private final FlowIpcNativeBridge nativeBridge;
-    private boolean shutdownRequested;
+    private final SidecarMessageLoop messageLoop;
 
     StandardFlowIpcRuntime(
-            Class<? extends Component> rootRouteClass,
-            Collection<Class<? extends Component>> routeClasses,
-            ApplicationContext applicationContext) {
-        this(rootRouteClass, routeClasses, applicationContext,
-                new FlowIpcNativeBridge(route(rootRouteClass), DEFAULT_SCOPE));
-    }
-
-    StandardFlowIpcRuntime(
-            Class<? extends Component> rootRouteClass,
+            String route,
             Collection<Class<? extends Component>> routeClasses,
             ApplicationContext applicationContext,
-            FlowIpcNativeBridge nativeBridge) {
-        Objects.requireNonNull(rootRouteClass, "rootRouteClass");
-        List<Class<? extends Component>> configuredRoutes = List.copyOf(routeClasses);
-        if (!configuredRoutes.contains(rootRouteClass)) {
-            throw new IllegalArgumentException("Flow IPC routes must contain the root route");
-        }
-        Route routeAnnotation = rootRouteClass.getAnnotation(Route.class);
-        this.route = routeAnnotation == null ? "" : routeAnnotation.value();
-        this.nativeBridge = Objects.requireNonNull(nativeBridge, "nativeBridge");
-        this.output = new StandardFlowIpcOutput(route, DEFAULT_SCOPE);
+            DesktopApplication application,
+            SidecarOutput output,
+            SidecarNativeBridge nativeBridge,
+            FlowIpcScope defaultScope) {
+        this.route = Objects.requireNonNullElse(route, "");
+        this.application = Objects.requireNonNull(application, "application");
+        this.output = Objects.requireNonNull(output, "output");
         this.sessions = new StandardFlowIpcSessions(
-                configuredRoutes, applicationContext, output, nativeBridge);
+                List.copyOf(routeClasses), applicationContext, output, nativeBridge);
         this.exchanges = new StandardFlowIpcExchanges(output);
+        this.messageLoop = new SidecarMessageLoop(output, nativeBridge, defaultScope);
+        registerHandlers();
     }
 
     void run() {
-        output.send("ready", "flow-ipc-ready", "flow-ipc-ready", Map.ofEntries(
-                Map.entry("transport", "flow-ipc"),
-                Map.entry("compatibilityMode", false),
-                Map.entry("route", route),
-                Map.entry("runtime", "standard-vaadin-bundle-opaque-ipc"),
-                Map.entry("uidlWriter", true),
-                Map.entry("uidlRpcDispatch", true),
-                Map.entry("flowClientResourceLoading", "standard-production-bundle"),
-                Map.entry("componentFrontendResourceLoading", "standard-production-bundle"),
-                Map.entry("uidlRpcProducer", "standard-flow-client"),
-                Map.entry("uidlConsumer", "standard-flow-client"),
-                Map.entry("uidlFallback", "none"),
-                Map.entry("standardBundleMode", true),
-                Map.entry("browserRequestTransport", "opaque-http-stream-ipc")));
-
-        try (BufferedReader reader = new BufferedReader(
-                new InputStreamReader(System.in, StandardCharsets.UTF_8))) {
-            String line;
-            while (!shutdownRequested && (line = reader.readLine()) != null) {
-                if (line.startsWith(FlowIpcWire.PREFIX)) {
-                    handle(line.substring(FlowIpcWire.PREFIX.length()));
-                }
-            }
-        } catch (IOException error) {
-            output.sendError(DEFAULT_SCOPE, "io",
-                    "Unable to read Flow IPC stdin: " + error.getMessage(), null, null);
+        Map<String, Object> ready = SidecarRuntime.readyPayload("flow-ipc", application);
+        ready.put("route", route);
+        ready.put("runtime", "standard-vaadin-bundle-opaque-ipc");
+        ready.put("uidlWriter", true);
+        ready.put("uidlRpcDispatch", true);
+        ready.put("flowClientResourceLoading", "standard-production-bundle");
+        ready.put("componentFrontendResourceLoading", "standard-production-bundle");
+        ready.put("uidlRpcProducer", "standard-flow-client");
+        ready.put("uidlConsumer", "standard-flow-client");
+        ready.put("uidlFallback", "none");
+        ready.put("browserRequestTransport", "opaque-http-stream-ipc");
+        output.send("ready", "sidecar-ready", "sidecar-ready", ready);
+        try {
+            messageLoop.run();
         } finally {
-            close();
+            exchanges.close();
+            sessions.close();
         }
     }
 
-    private void handle(String json) {
-        String id = null;
-        String correlationId = null;
-        FlowIpcScope scope = DEFAULT_SCOPE;
-        try {
-            FlowIpcInboundEnvelope envelope = FlowIpcInboundEnvelope.parse(json);
-            String type = Objects.requireNonNullElse(envelope.type(), "");
-            id = envelope.id();
-            correlationId = envelope.correlationId();
-            scope = FlowIpcScope.from(envelope, IPC_SESSION_ID, IPC_UI_ID);
-            switch (type) {
-                case "opaqueHttpRequest" ->
-                        handleBufferedRequest(scope, envelope, id, correlationId);
-                case "opaqueHttpStreamOpen" -> exchanges.open(
-                        scope, sessions.session(scope), envelope, id, correlationId);
-                case "opaqueHttpStreamChunk" -> exchanges.acceptChunk(scope, envelope);
-                case "opaqueHttpStreamEnd" -> exchanges.finishRequest(scope, envelope);
-                case "opaqueHttpStreamResponseCredit" ->
-                        exchanges.grantResponseCredits(scope, envelope);
-                case "opaqueHttpStreamCancel" -> exchanges.cancel(scope, envelope);
-                case "opaquePushConnect" ->
-                        sessions.connectPush(scope, envelope, id, correlationId);
-                case "opaquePushDisconnect" -> sessions.disconnectPush(scope, envelope);
-                case "opaquePushResync" -> sessions.resyncPush(scope, envelope);
-                case "capabilityResult" -> nativeBridge.complete(scope, envelope);
-                case "windowClosed" -> closeWindow(scope);
-                case "shutdown" -> shutdownRequested = true;
-                default -> output.sendError(scope, "unsupportedTransport",
-                        "Standard bundle mode accepts only opaque IPC bridge messages: " + type,
-                        id, correlationId);
-            }
-        } catch (SecurityException error) {
-            output.sendError(scope, "invalidScope", error.getMessage(), id, correlationId);
-        } catch (IllegalArgumentException | IllegalStateException error) {
-            output.sendError(scope, "invalidClientState", error.getMessage(), id, correlationId);
-        } catch (RuntimeException error) {
-            error.printStackTrace(System.err);
-            output.sendError(scope, "runtime",
-                    Objects.requireNonNullElse(error.getMessage(), error.toString()),
-                    id, correlationId);
-        }
+    private void registerHandlers() {
+        messageLoop.register("opaqueHttpRequest", this::handleBufferedRequest);
+        messageLoop.register("opaqueHttpStreamOpen", (scope, envelope, id, correlationId) ->
+                exchanges.open(scope, sessions.session(scope), envelope, id, correlationId));
+        messageLoop.register("opaqueHttpStreamChunk", (scope, envelope, id, correlationId) ->
+                exchanges.acceptChunk(scope, envelope));
+        messageLoop.register("opaqueHttpStreamEnd", (scope, envelope, id, correlationId) ->
+                exchanges.finishRequest(scope, envelope));
+        messageLoop.register("opaqueHttpStreamResponseCredit",
+                (scope, envelope, id, correlationId) ->
+                        exchanges.grantResponseCredits(scope, envelope));
+        messageLoop.register("opaqueHttpStreamCancel", (scope, envelope, id, correlationId) ->
+                exchanges.cancel(scope, envelope));
+        messageLoop.register("opaquePushConnect", sessions::connectPush);
+        messageLoop.register("opaquePushDisconnect", (scope, envelope, id, correlationId) ->
+                sessions.disconnectPush(scope, envelope));
+        messageLoop.register("opaquePushResync", (scope, envelope, id, correlationId) ->
+                sessions.resyncPush(scope, envelope));
+        messageLoop.onWindowClosed(scope ->
+                sessions.closeWindow(scope, () -> exchanges.cancelWindow(scope)));
     }
 
     private void handleBufferedRequest(
@@ -180,21 +131,6 @@ final class StandardFlowIpcRuntime {
         payload.put("bodyBase64", Base64.getEncoder().encodeToString(response.body()));
         payload.put("transport", "opaque-http-buffered-ipc");
         output.send(scope, "opaqueHttpResponse", output.nextId("http"),
-                StandardFlowIpcOutput.correlationIdOr(id, correlationId), payload);
-    }
-
-    private void closeWindow(FlowIpcScope scope) {
-        sessions.closeWindow(scope, () -> exchanges.cancelWindow(scope));
-    }
-
-    private void close() {
-        exchanges.close();
-        sessions.close();
-        nativeBridge.close();
-    }
-
-    private static String route(Class<? extends Component> routeClass) {
-        Route annotation = routeClass.getAnnotation(Route.class);
-        return annotation == null ? "" : annotation.value();
+                SidecarOutput.correlationIdOr(id, correlationId), payload);
     }
 }

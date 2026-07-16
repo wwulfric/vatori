@@ -2,11 +2,13 @@ package dev.vatori.ipcframework;
 
 import dev.vatori.desktop.DesktopApplication;
 import dev.vatori.desktop.DesktopWindow;
-import dev.vatori.desktop.flow.ipc.FlowIpcLauncher;
+import dev.vatori.desktop.flow.DesktopLauncher;
+import org.springframework.boot.autoconfigure.SpringBootApplication;
 
+@SpringBootApplication
 public class FlowOverIpcFrameworkApplication {
     public static void main(String[] args) {
-        FlowIpcLauncher.launch(FlowOverIpcFrameworkView.class,
+        DesktopLauncher.launch(FlowOverIpcFrameworkApplication.class,
                 DesktopApplication.builder("Flow IPC Framework App")
                         .mainWindow(DesktopWindow.builder("main")
                                 .title("Flow IPC Framework App")

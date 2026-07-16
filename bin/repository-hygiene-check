@@ -98,9 +98,9 @@ check_docs_no_versioned_residue() {
     test-apps/README.md
     test-apps/flow-over-ipc-smoke-app/README.md
     test-apps/flow-over-ipc-framework-app/README.md
-    vaadin-desktop-host-swift/README.md
+    native-hosts/macos/README.md
     test-support/README.md
-    test-support/vaadin-desktop-host-swift-acceptance/README.md
+    test-support/native-host-macos-acceptance/README.md
     test-support/vaadin-desktop-trace-inspector/README.md
   )
   local path pattern
@@ -180,9 +180,9 @@ check_retired_flow_ipc_scaffolding() {
   local retired_path
   for retired_path in \
     vaadin-desktop-flow-test-support \
-    test-support/vaadin-desktop-host-swift-acceptance/Resources/FlowIpcShell \
-    test-support/vaadin-desktop-host-swift-acceptance/Resources/FlowIpcShell.html \
-    test-support/vaadin-desktop-host-swift-acceptance/Resources/FlowIpcShell.css
+    test-support/native-host-macos-acceptance/Resources/FlowIpcShell \
+    test-support/native-host-macos-acceptance/Resources/FlowIpcShell.html \
+    test-support/native-host-macos-acceptance/Resources/FlowIpcShell.css
   do
     if [[ -e "$retired_path" ]]; then
       fail "retired Flow IPC scaffolding returned: $retired_path"
@@ -190,10 +190,10 @@ check_retired_flow_ipc_scaffolding() {
   done
 }
 
-check_swift_host_launcher_contract() {
-  local host_config="vaadin-desktop-host-swift/Sources/VaadinDesktopHost/HostConfig.swift"
-  local acceptance_config="test-support/vaadin-desktop-host-swift-acceptance/Sources/VaadinDesktopHostAcceptanceSupport/FlowIpcAutomationFlags.swift"
-  local launcher="bin/vaadin-desktop-swift-host-launch"
+check_macos_host_launcher_contract() {
+  local host_config="native-hosts/macos/Sources/VaadinDesktopHost/HostConfig.swift"
+  local acceptance_config="test-support/native-host-macos-acceptance/Sources/VaadinDesktopHostAcceptanceSupport/FlowIpcAutomationFlags.swift"
+  local launcher="bin/vaadin-desktop-macos-host-launch"
   local missing=()
   local token
 
@@ -222,7 +222,7 @@ check_swift_host_launcher_contract() {
   )
 
   if (( ${#missing[@]} > 0 )); then
-    fail "Swift HostConfig env/CLI token is not represented by launcher: ${missing[*]}"
+    fail "macOS HostConfig env/CLI token is not represented by launcher: ${missing[*]}"
   fi
 }
 
@@ -230,11 +230,10 @@ check_framework_test_boundaries() {
   local production_roots=(
     vaadin-desktop-core/src/main
     vaadin-desktop-ipc/src/main
-    vaadin-desktop-host/src/main
     vaadin-desktop-flow/src/main
     vaadin-desktop-cli/src/main
-    vaadin-desktop-host-swift/Sources/VaadinDesktopHost
-    vaadin-desktop-host-swift/Resources
+    native-hosts/macos/Sources/VaadinDesktopHost
+    native-hosts/macos/Resources
   )
   local pattern match
 
@@ -284,14 +283,14 @@ check_framework_test_boundaries() {
 
   local forbidden_resource
   for forbidden_resource in \
-    vaadin-desktop-host-swift/Sources/VaadinDesktopHostAcceptanceSupport \
-    vaadin-desktop-host-swift/Sources/VaadinDesktopHost/FlowIpcShell.swift \
-    vaadin-desktop-host-swift/Sources/VaadinDesktopHost/FlowIpcRuntimeInspectionScript.swift \
-    vaadin-desktop-host-swift/Sources/VaadinDesktopHost/WebViewDiagnostics.swift \
-    vaadin-desktop-host-swift/Resources/FlowIpcShell.html \
-    vaadin-desktop-host-swift/Resources/FlowIpcShell.css \
-    vaadin-desktop-host-swift/Resources/FlowIpcShell \
-    vaadin-desktop-host-swift/Resources/FlowIpcShell/Acceptance \
+    native-hosts/macos/Sources/VaadinDesktopHostAcceptanceSupport \
+    native-hosts/macos/Sources/VaadinDesktopHost/FlowIpcShell.swift \
+    native-hosts/macos/Sources/VaadinDesktopHost/FlowIpcRuntimeInspectionScript.swift \
+    native-hosts/macos/Sources/VaadinDesktopHost/WebViewDiagnostics.swift \
+    native-hosts/macos/Resources/FlowIpcShell.html \
+    native-hosts/macos/Resources/FlowIpcShell.css \
+    native-hosts/macos/Resources/FlowIpcShell \
+    native-hosts/macos/Resources/FlowIpcShell/Acceptance \
     vaadin-desktop-flow/src/main/resources/META-INF/vatori/generated/flow/generated-flow-imports-chunk-fixture.js \
     vaadin-desktop-flow/src/main/resources/META-INF/vatori/generated/flow/chunks/chunk-fixture.js \
     vaadin-desktop-flow/src/main/resources/META-INF/vatori/production-owner/owner-runtime-positive-fixture.js \
@@ -299,8 +298,8 @@ check_framework_test_boundaries() {
   do
     if [[ -e "$forbidden_resource" ]]; then
       case "$forbidden_resource" in
-        vaadin-desktop-host-swift/*)
-          fail "Swift host acceptance support belongs in test-support/vaadin-desktop-host-swift-acceptance: $forbidden_resource"
+        native-hosts/macos/*)
+          fail "macOS host acceptance support belongs in test-support/native-host-macos-acceptance: $forbidden_resource"
           ;;
         *)
           fail "obsolete Flow IPC fixture remains in production resources: $forbidden_resource"
@@ -328,6 +327,61 @@ check_framework_test_boundaries() {
   fi
 }
 
+check_single_native_host_contract() {
+  local retired_path
+  for retired_path in \
+    vaadin-desktop-host \
+    vaadin-desktop-host-swift \
+    test-support/vaadin-desktop-host-swift-acceptance \
+    bin/vaadin-desktop-build-swift-host \
+    bin/vaadin-desktop-swift-host-launch
+  do
+    if [[ -e "$retired_path" ]]; then
+      fail "retired host path returned: $retired_path"
+    fi
+  done
+
+  local search_roots=(
+    AGENTS.md
+    README.md
+    README.zh-CN.md
+    docs
+    bin
+    native-hosts
+    test-support
+    vaadin-desktop-core
+    vaadin-desktop-ipc
+    vaadin-desktop-flow
+    test-apps
+    examples
+    pom.xml
+  )
+  local pattern match
+  for pattern in \
+    'VDP1 ' \
+    'Application URL:' \
+    'VAADIN_DESKTOP_HOST[A-Z0-9_]*' \
+    'VAADIN_DESKTOP_NATIVE_BRIDGE' \
+    'VAADIN_DESKTOP_FLOW_IPC_STANDARD_BUNDLE' \
+    '\b(dev-ipc|run-ipc|dev-swift|run-swift|dev-native|run-native)\b' \
+    'FlowIpcLauncher' \
+    'HostProtocolNativeBridge'
+  do
+    match="$(rg -n -m 1 --glob '!repository-hygiene-check' \
+      -e "$pattern" "${search_roots[@]}" || true)"
+    if [[ -n "$match" ]]; then
+      fail "retired host contract returned: $match"
+    fi
+  done
+
+  if grep -Fq '<module>vaadin-desktop-host</module>' pom.xml; then
+    fail "retired Java host module returned to the Maven reactor"
+  fi
+  if rg -l '<artifactId>vaadin-desktop-host</artifactId>' --glob 'pom.xml' . >/dev/null; then
+    fail "a Maven module depends on the retired Java host artifact"
+  fi
+}
+
 while IFS= read -r -d '' path; do
   if [[ ! -e "$path" ]]; then
     continue
@@ -338,10 +392,11 @@ done < <(git ls-files -z)
 
 check_top_level_docs
 check_docs_no_versioned_residue
-check_swift_host_launcher_contract
+check_macos_host_launcher_contract
 check_framework_test_boundaries
 check_trace_inspector_contract
 check_retired_flow_ipc_scaffolding
+check_single_native_host_contract
 
 if (( failed )); then
   exit 1

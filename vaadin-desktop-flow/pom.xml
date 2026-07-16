@@ -19,11 +19,6 @@
         </dependency>
         <dependency>
             <groupId>dev.vatori</groupId>
-            <artifactId>vaadin-desktop-host</artifactId>
-            <version>${project.version}</version>
-        </dependency>
-        <dependency>
-            <groupId>dev.vatori</groupId>
             <artifactId>vaadin-desktop-ipc</artifactId>
             <version>${project.version}</version>
         </dependency>

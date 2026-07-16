@@ -1,18 +1,18 @@
 # vatori Component Gallery Example
 
 This example is a developer-facing gallery for checking how common Vaadin Flow
-components render and behave inside a vatori local desktop application window.
+components render and behave inside a vatori desktop application window.
 
-Run it in the current compatibility desktop host:
+Run it through the standard Flow IPC runtime:
 
 ```bash
 bash bin/vaadin-desktop dev examples/component-gallery-app
 ```
 
-Or run it without a visible window:
+Use the loopback compatibility transport when required:
 
 ```bash
-VAADIN_DESKTOP_HOST=headless bash bin/vaadin-desktop dev examples/component-gallery-app
+bash bin/vaadin-desktop dev-compat examples/component-gallery-app
 ```
 
 Coverage is intentionally practical rather than exhaustive. The app includes

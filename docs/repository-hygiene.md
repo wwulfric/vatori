@@ -64,7 +64,7 @@ tree from the repository map.
 Prefer semantic gate names:
 
 ```bash
-bash bin/flow-ipc-trace-inspect --require-flow-ipc-standard-bundle-framework-app .build/vaadin-desktop-host-swift/host.out.log
+bash bin/flow-ipc-trace-inspect --require-flow-ipc-standard-bundle-framework-app .build/native-hosts/macos/host.out.log
 ```
 
 Use `bash bin/flow-ipc-trace-inspect --help` for the current list.

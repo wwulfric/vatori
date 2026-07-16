@@ -54,12 +54,13 @@ public final class StandardBundleTraceInspectorSmokeMain {
     private static String validTrace() {
         StringBuilder trace = new StringBuilder();
         trace.append(protocol("launch", """
-                {"transport":"flow-ipc","standardBundleMode":true,"compatibilityMode":false}
+                {"transport":"flow-ipc"}
                 """));
         trace.append(protocol("ready", """
                 {"envelope":{"payload":{"runtime":"standard-vaadin-bundle-opaque-ipc",
                 "browserRequestTransport":"opaque-http-stream-ipc",
-                "standardBundleMode":true,"compatibilityMode":false}}}
+                "transport":"flow-ipc",
+                "flowClientResourceLoading":"standard-production-bundle"}}}
                 """));
         trace.append(protocol("standardBundleReady",
                 "{\"requestTransport\":\"opaque-http-stream-ipc\"}"));
@@ -79,9 +80,64 @@ public final class StandardBundleTraceInspectorSmokeMain {
                 "complete", "standardBundleMode", "rootRendered", "flowClientOwned",
                 "opaqueRequestBridgeObserved", "opaqueResponseBridgeObserved",
                 "pushRecoveryObserved", "errorFree", "budgetEventObserved",
-                "checkboxEventObserved", "selectEventObserved", "datePickerEventObserved",
-                "dialogEventObserved", "formValidationObserved", "applyEventObserved",
-                "serverStateUpdated", "nativeWindowTitleApplied", "nativeClipboardApplied")));
+                "checkboxEventObserved", "selectEventObserved",
+                "comboBoxEventObserved", "datePickerEventObserved",
+                "radioGroupEventObserved", "textFieldClientObserved",
+                "textFieldServerObserved", "textAreaEventObserved",
+                "emailFieldEventObserved", "integerFieldEventObserved",
+                "checkboxGroupClientObserved", "checkboxGroupServerObserved",
+                "passwordFieldEventObserved", "timePickerEventObserved",
+                "multiSelectComboBoxEventObserved",
+                "dialogEventObserved", "formValidationObserved",
+                "formLayoutClickObserved", "formLayoutServerObserved",
+                "horizontalLayoutClickObserved", "horizontalLayoutServerObserved",
+                "flexLayoutClickObserved", "flexLayoutServerObserved",
+                "verticalLayoutClickObserved", "verticalLayoutServerObserved",
+                "scrollerClientObserved", "scrollerServerObserved",
+                "avatarClickObserved", "messageInputSubmitObserved",
+                "richTextEditorEditObserved", "loginOverlaySubmitObserved",
+                "loginOverlayForgotPasswordObserved",
+                "loginOverlayShowErrorObserved", "loginFormSubmitObserved",
+                "loginFormForgotPasswordObserved",
+                "loginOverlayActionPostSubmitObserved",
+                "loginFormActionPostSubmitObserved",
+                "loginOverlaySubmitButtonObserved",
+                "loginFormSubmitButtonObserved",
+                "loginFormShowErrorObserved",
+                "loginFormEnabledLifecycleObserved",
+                "loginFormFullI18nObserved",
+                "loginFormAutofillAttributesObserved",
+                "loginFormA11ySemanticsObserved",
+                "loginFormNoAutofocusObserved",
+                "loginOverlayAutofocusControlObserved",
+                "loginOverlayNoAutofocusObserved",
+                "loginOverlayOutsideClickPreventedObserved",
+                "loginOverlayEscapeKeyPreventedObserved",
+                "loginOverlayAutofillAttributesObserved",
+                "loginOverlayA11ySemanticsObserved",
+                "loginOverlayFullI18nObserved",
+                "tabsSelectionObserved",
+                "detailsOpenObserved", "accordionOpenObserved", "menuBarActionObserved",
+                "sideNavSelectionObserved", "applyEventObserved", "contextMenuOpenObserved", "contextMenuItemClickObserved",
+                "gridContextMenuOpenObserved", "gridContextMenuItemClickObserved",
+                "lazyGridScrollObserved",
+                "virtualListClientObserved", "virtualListServerObserved",
+                "popoverOpenObserved",
+                "notificationOpenObserved",
+                "confirmDialogOpenObserved", "confirmDialogConfirmObserved",
+                "confirmDialogCancelObserved", "confirmDialogRejectObserved",
+                "progressBarValueObserved", "progressBarIndeterminateObserved",
+                "dateTimePickerClientObserved", "dateTimePickerServerObserved",
+                "numberFieldClientObserved", "numberFieldServerObserved",
+                "splitLayoutDragObserved", "splitLayoutServerObserved",
+                "listBoxClientObserved", "listBoxServerObserved",
+                "multiSelectListBoxClientObserved", "multiSelectListBoxServerObserved",
+                "customFieldClientObserved", "customFieldServerObserved",
+                "uploadSubmitObserved",
+                "streamResourceFetchObserved", "binaryStreamResourceFetchObserved",
+                "downloadHandlerFetchObserved", "standardStreamingDownloadFetchObserved",
+                "serverStateUpdated", "nativeWindowTitleApplied",
+                "nativeClipboardApplied")));
         trace.append(protocol("standardBundle.sidecarRestartAcceptance", """
                 {"complete":true,"standardBundleMode":true,"errorFree":true,
                 "processRestarted":true,"windowPreserved":true,"webViewPreserved":true,

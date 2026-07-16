@@ -1,94 +1,109 @@
-# Acceptance and Smoke Tools
+# Acceptance And Smoke Tools
 
-This document describes the repository tools used to verify Flow IPC behavior.
-These tools are not public runtime APIs.
+These tools verify repository and runtime contracts. They are not public
+framework APIs.
 
-## Main Commands
+## Non-Window Suite
 
 ```bash
-bash bin/repository-hygiene-check
-bash bin/trace-inspector-acceptance-gate-smoke
 bash bin/verify-smoke
-bash bin/flow-ipc-trace-inspect --help
 ```
 
-`bin/verify-smoke` runs the hygiene guard, inspector contract smoke, opaque HTTP
-adapter smoke, Flow IPC scope smoke and the browser-side opaque request/push
-bridge smokes.
+The script currently covers:
+
+- repository hygiene and trace-inspector contracts;
+- opaque request-handler integration and StreamResource behavior;
+- Flow IPC scope, backpressure, cancellation and capability correlation;
+- launcher transport, ready payload and Spring context lifecycle;
+- browser request and push bridge contracts.
+
+The script itself is the source of truth for its subcommands.
+
+## macOS Acceptance Build
+
+Normal host builds contain only production sources. Acceptance variables cause
+`bin/vaadin-desktop-build-macos-host` to compile the overlay from
+`test-support/native-host-macos-acceptance` for that run.
+
+Representative unattended framework run:
+
+```bash
+VAADIN_DESKTOP_MACOS_NO_ACTIVATE=1 \
+VAADIN_DESKTOP_FLOW_IPC_TRACE_DETAIL=full \
+VAADIN_DESKTOP_FLOW_IPC_AUTO_FRAMEWORK_UPDATE=1 \
+VAADIN_DESKTOP_FLOW_IPC_AUTO_SHUTDOWN=1 \
+bash bin/vaadin-desktop dev test-apps/flow-over-ipc-framework-app
+```
+
+Acceptance flags, DOM inspection, snapshots and fault injection must remain in
+test-support. Production host code may expose neutral runtime hooks but cannot
+know fixture ids or acceptance workflows.
 
 ## Trace Inspector
 
-`bin/flow-ipc-trace-inspect` reads host logs and verifies the supported
-standard-bundle acceptance gates. The CLI is the contract for the current gate
-set; gate names are not protocol negotiation flags or worklog milestones.
+The host writes compact operational logs to:
 
-Normal `dev-ipc` runs write compact operational traces. Generate inspector
-evidence explicitly with:
-
-```bash
-VAADIN_DESKTOP_FLOW_IPC_TRACE_DETAIL=full bash bin/vaadin-desktop dev-ipc <application-module>
+```text
+.build/native-hosts/macos/host.out.log
+.build/native-hosts/macos/host.err.log
 ```
 
-Full trace mode keeps resource and DOM acceptance metadata and disables live log
-following by default. Set `VAADIN_DESKTOP_HOST_LOG_FOLLOW=1` only when live full
-output is needed. Compact auto-shutdown runs invoke
-`bin/flow-ipc-log-budget-check`; the byte budgets can be overridden with
-`VAADIN_DESKTOP_FLOW_IPC_LOG_MAX_BYTES` and
-`VAADIN_DESKTOP_FLOW_IPC_LOG_MAX_LINE_BYTES`.
+Inspect supported gates with:
+
+```bash
+bash bin/flow-ipc-trace-inspect --help
+```
 
 Examples:
 
 ```bash
-bash bin/flow-ipc-trace-inspect --require-flow-ipc-standard-bundle-runtime .build/vaadin-desktop-host-swift/host.out.log
-bash bin/flow-ipc-trace-inspect --require-flow-ipc-standard-bundle-framework-app .build/vaadin-desktop-host-swift/host.out.log
-bash bin/flow-ipc-trace-inspect --require-flow-ipc-standard-bundle-sidecar-recovery .build/vaadin-desktop-host-swift/host.out.log
+bash bin/flow-ipc-trace-inspect \
+  --require-flow-ipc-standard-bundle-runtime \
+  .build/native-hosts/macos/host.out.log
+
+bash bin/flow-ipc-trace-inspect \
+  --require-flow-ipc-standard-bundle-framework-app \
+  .build/native-hosts/macos/host.out.log
+
+bash bin/flow-ipc-trace-inspect \
+  --require-flow-ipc-standard-bundle-sidecar-recovery \
+  .build/native-hosts/macos/host.out.log
 ```
 
-Use `--help` for the current complete list. Documentation should reference
-semantic gate names only; do not add numbered gate aliases or historical slice
-labels.
+Gate names describe semantic behavior; they are not wire negotiation or goal
+versions. `HOST_PROTOCOL` is an acceptance trace prefix, not sidecar framing.
 
-## Gate Families
+## Coverage Families
 
-The product-path gates are grouped by stable runtime behavior:
+- Runtime: production bundle load, opaque bootstrap/UIDL, push, first paint,
+  capability result and shutdown.
+- Framework app: representative input, selection, navigation, data, overlay,
+  layout, rich content, authentication, Avatar/resource, upload/download and
+  native capability workflows.
+- Multi-window: scoped sessions, request/push isolation and close behavior.
+- Recovery: retained native window/WebView, replaced Java process, fresh Flow
+  session and recovered interaction.
+- Compatibility: loopback UI load through the same host plus real native
+  capability result correlation.
 
-- Standard-bundle runtime: packaged production resources, Flow client loading,
-  opaque bootstrap/UIDL responses, push, first meaningful paint and shutdown.
-- Standard-bundle framework app: packaged Vaadin production output, opaque
-  request/push transport, standard Flow client ownership, representative input,
-  selection, date, dialog, form-validation and native-command workflows.
-- Standard-bundle sidecar recovery: one retained NSWindow/WKWebView, a replaced
-  Java process, two production-bundle loads/first paints, fresh Flow session and
-  push state, and a recovered component-event round trip.
+The complete assertion set lives in the acceptance source and trace inspector,
+not in this document.
 
-## Smoke Apps
+## Log Budget
 
-- `test-apps/flow-over-ipc-smoke-app` is the strict runtime fixture.
-- `test-apps/flow-over-ipc-framework-app` is the developer-shaped validation app.
-- `test-apps/vaadin-desktop-smoke-app` validates compatibility-mode desktop
-  launch behavior.
+Compact runs summarize resource bodies and repeated envelopes. Full detail is
+enabled only for evidence inspection:
 
-The smoke apps may contain deterministic ids and automation hooks. Examples
-should stay developer-shaped and should not depend on fixture ids.
+```bash
+VAADIN_DESKTOP_FLOW_IPC_TRACE_DETAIL=full bash bin/vaadin-desktop dev <module>
+```
 
-The standard production bundle uses a small WKWebView driver from
-`test-support`. It interacts with the rendered developer-shaped app
-through ordinary DOM events and records one semantic completion event; it does
-not add application runtime code to the production webapp.
-A second driver injects an unexpected sidecar exit and checks the bounded host
-recovery contract; neither driver ships in normal host builds.
+Set `VAADIN_DESKTOP_MACOS_LOG_FOLLOW=1` to follow full logs live. Compact
+auto-shutdown runs use `bin/flow-ipc-log-budget-check`; its size overrides remain
+repository test settings.
 
 ## Generated Artifacts
 
-Host logs, `.ndjson` traces, screenshots and downloaded files are generated
-artifacts. Keep them under `.build/`, CI artifacts, release assets or external
-archives. Do not commit one trace file per milestone.
-
-## Hygiene Guard
-
-`bin/repository-hygiene-check` protects top-level docs and agent instructions
-from process logs, historical goal files and numbered gate aliases. It also
-rejects custom shell/runtime remnants in production modules and validation-app
-fixtures in framework runtime, and prevents retired shell/test-support or the
-historical inspector source tree from returning. Keep that guard active when changing
-`AGENTS.md`, `README.md`, docs, host resources or acceptance gate naming.
+Logs, traces, screenshots, downloaded files and native apps stay under `.build`,
+CI artifacts, release assets or external storage. Do not commit one evidence file
+per milestone.

@@ -1,0 +1,119 @@
+#!/usr/bin/env bash
+set -euo pipefail
+
+ROOT="${1:?repo root is required}"
+MODULE="${2:-}"
+TRANSPORT="${3:?transport is required}"
+
+case "$TRANSPORT" in
+  flow-ipc|compatibility-http) ;;
+  *)
+    echo "Unsupported macOS host transport: $TRANSPORT" >&2
+    exit 2
+    ;;
+esac
+
+if [[ ! -x /usr/bin/swiftc ]]; then
+  echo "swiftc not found at /usr/bin/swiftc. Install Xcode command line tools before running the Swift host." >&2
+  exit 1
+fi
+
+SWIFT_HOST_BUILD="$ROOT/.build/native-hosts/macos"
+SWIFT_HOST_APP="$SWIFT_HOST_BUILD/VaadinDesktopHost.app"
+SWIFT_HOST_CONTENTS="$SWIFT_HOST_APP/Contents"
+SWIFT_HOST_MACOS="$SWIFT_HOST_CONTENTS/MacOS"
+SWIFT_HOST_RESOURCES="$SWIFT_HOST_CONTENTS/Resources"
+SWIFT_HOST_EXE="$SWIFT_HOST_MACOS/VaadinDesktopHost"
+SWIFT_MODULE_CACHE="$ROOT/.build/clang-module-cache"
+SWIFT_HOST_SOURCE_ROOT="$ROOT/native-hosts/macos"
+SWIFT_ACCEPTANCE_ROOT="$ROOT/test-support/native-host-macos-acceptance"
+
+rm -rf "$SWIFT_HOST_RESOURCES"
+mkdir -p "$SWIFT_HOST_MACOS"
+mkdir -p "$SWIFT_HOST_RESOURCES"
+mkdir -p "$SWIFT_MODULE_CACHE"
+cat > "$SWIFT_HOST_CONTENTS/Info.plist" <<'PLIST'
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE plist PUBLIC "-//Apple//DTD PLIST 1.0//EN" "http://www.apple.com/DTDs/PropertyList-1.0.dtd">
+<plist version="1.0">
+<dict>
+    <key>CFBundleExecutable</key>
+    <string>VaadinDesktopHost</string>
+    <key>CFBundleIdentifier</key>
+    <string>dev.vatori.desktop.host.macos</string>
+    <key>CFBundleName</key>
+    <string>Vaadin Desktop Host</string>
+    <key>CFBundlePackageType</key>
+    <string>APPL</string>
+    <key>LSMinimumSystemVersion</key>
+    <string>12.0</string>
+    <key>NSHighResolutionCapable</key>
+    <true/>
+    <key>NSAppTransportSecurity</key>
+    <dict>
+        <key>NSAllowsLocalNetworking</key>
+        <true/>
+    </dict>
+</dict>
+</plist>
+PLIST
+
+SWIFT_HOST_ACCEPTANCE=0
+if [[ "${VAADIN_DESKTOP_FLOW_IPC_ACCEPTANCE:-}" == "1" ]] \
+    || env | grep -Eq '^VAADIN_DESKTOP_FLOW_IPC_AUTO_[A-Z0-9_]+=1$'; then
+  SWIFT_HOST_ACCEPTANCE=1
+fi
+
+SWIFT_HOST_SOURCES=()
+for source in "$SWIFT_HOST_SOURCE_ROOT"/Sources/VaadinDesktopHost/*.swift; do
+  if [[ "$SWIFT_HOST_ACCEPTANCE" == "1" \
+        && "$(basename "$source")" == "ProductionHostRuntimeHooksFactory.swift" ]]; then
+    continue
+  fi
+  SWIFT_HOST_SOURCES+=("$source")
+done
+if [[ "$SWIFT_HOST_ACCEPTANCE" == "1" ]]; then
+  if [[ ! -d "$SWIFT_ACCEPTANCE_ROOT/Sources/VaadinDesktopHostAcceptanceSupport" ]]; then
+    echo "Swift host acceptance sources are missing: $SWIFT_ACCEPTANCE_ROOT" >&2
+    exit 1
+  fi
+  SWIFT_HOST_SOURCES+=("$SWIFT_ACCEPTANCE_ROOT"/Sources/VaadinDesktopHostAcceptanceSupport/*.swift)
+  CLANG_MODULE_CACHE_PATH="$SWIFT_MODULE_CACHE" /usr/bin/swiftc \
+    "${SWIFT_HOST_SOURCES[@]}" \
+    -o "$SWIFT_HOST_EXE"
+else
+  CLANG_MODULE_CACHE_PATH="$SWIFT_MODULE_CACHE" /usr/bin/swiftc \
+    "${SWIFT_HOST_SOURCES[@]}" \
+    -o "$SWIFT_HOST_EXE"
+fi
+
+SWIFT_RESOURCE_ROOT="$SWIFT_HOST_SOURCE_ROOT/Resources"
+if [[ -d "$SWIFT_RESOURCE_ROOT" ]]; then
+  cp "$SWIFT_RESOURCE_ROOT/FlowIpcOpaqueHttpBridge.js" "$SWIFT_HOST_RESOURCES/"
+  if [[ "$TRANSPORT" == "flow-ipc" ]]; then
+    if [[ -z "$MODULE" ]]; then
+      echo "application module is required for standard production bundle mode" >&2
+      exit 2
+    fi
+    if [[ "$MODULE" == /* ]]; then
+      MODULE_ROOT="$MODULE"
+    else
+      MODULE_ROOT="$ROOT/$MODULE"
+    fi
+    STANDARD_BUNDLE_ROOT="$MODULE_ROOT/target/classes/META-INF/VAADIN/webapp"
+    if [[ ! -f "$STANDARD_BUNDLE_ROOT/index.html" ]]; then
+      echo "standard Vaadin production bundle not found: $STANDARD_BUNDLE_ROOT" >&2
+      exit 1
+    fi
+    mkdir -p "$SWIFT_HOST_RESOURCES/FlowWebApp"
+    cp -R "$STANDARD_BUNDLE_ROOT/." "$SWIFT_HOST_RESOURCES/FlowWebApp/"
+    mkdir -p "$SWIFT_HOST_RESOURCES/FlowWebApp/__vatori"
+    cp "$SWIFT_RESOURCE_ROOT/FlowIpcPushBridge.js" \
+      "$SWIFT_HOST_RESOURCES/FlowWebApp/__vatori/FlowIpcPushBridge.js"
+    echo "Packaged standard Vaadin production bundle for Flow IPC"
+  fi
+fi
+
+if command -v codesign >/dev/null 2>&1; then
+  codesign --force --sign - "$SWIFT_HOST_APP" >/dev/null 2>&1 || true
+fi

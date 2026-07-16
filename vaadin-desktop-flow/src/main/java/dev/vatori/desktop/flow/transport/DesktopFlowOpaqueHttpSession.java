@@ -12,12 +12,10 @@ import java.io.InputStream;
 import java.io.OutputStream;
 import java.net.URI;
 import java.net.URLDecoder;
-import java.net.URLConnection;
 import java.nio.charset.StandardCharsets;
 import java.util.ArrayList;
 import java.util.LinkedHashMap;
 import java.util.List;
-import java.util.Locale;
 import java.util.Map;
 import java.util.Objects;
 import java.util.function.Consumer;
@@ -156,10 +154,6 @@ public final class DesktopFlowOpaqueHttpSession {
             Map<String, String> headers,
             byte[] body) {
         URI uri = URI.create(Objects.requireNonNull(url, "url"));
-        DesktopFlowHttpResponse staticResponse = staticResourceResponse(method, uri);
-        if (staticResponse != null) {
-            return staticResponse;
-        }
         Map<String, String[]> parameters = queryParameters(uri.getRawQuery());
         String path = uri.getRawPath();
         if (path == null || path.isBlank()) {
@@ -208,17 +202,6 @@ public final class DesktopFlowOpaqueHttpSession {
         Objects.requireNonNull(responseStart, "responseStart");
         Objects.requireNonNull(responseBody, "responseBody");
         URI uri = URI.create(Objects.requireNonNull(url, "url"));
-        DesktopFlowHttpResponse staticResponse = staticResourceResponse(method, uri);
-        if (staticResponse != null) {
-            responseStart.accept(new DesktopFlowHttpResponseHead(
-                    staticResponse.statusCode(),
-                    staticResponse.statusText(),
-                    staticResponse.headers()));
-            responseBody.write(staticResponse.body());
-            responseBody.flush();
-            return;
-        }
-
         Map<String, String[]> parameters = queryParameters(uri.getRawQuery());
         String path = uri.getRawPath();
         if (path == null || path.isBlank()) {
@@ -256,58 +239,6 @@ public final class DesktopFlowOpaqueHttpSession {
         } catch (ServiceException error) {
             throw new IllegalStateException("Vaadin request handling failed", error);
         }
-    }
-
-    private DesktopFlowHttpResponse staticResourceResponse(String method, URI uri) {
-        String normalizedMethod = Objects.requireNonNullElse(method, "GET").toUpperCase(Locale.ROOT);
-        if (!normalizedMethod.equals("GET") && !normalizedMethod.equals("HEAD")) {
-            return null;
-        }
-        String path = uri.getPath();
-        if (path == null || path.isBlank() || path.equals("/") || path.indexOf('\\') >= 0) {
-            return null;
-        }
-        List<String> segments = path.startsWith("/")
-                ? List.of(path.substring(1).split("/"))
-                : List.of(path.split("/"));
-        if (segments.stream().anyMatch(segment -> segment.isBlank()
-                || segment.equals(".") || segment.equals(".."))) {
-            return null;
-        }
-        String relativePath = String.join("/", segments);
-        for (String root : List.of("META-INF/VAADIN/webapp/", "META-INF/resources/")) {
-            try (InputStream stream = classpathResource(root + relativePath)) {
-                if (stream == null) {
-                    continue;
-                }
-                byte[] bytes = stream.readAllBytes();
-                String contentType = URLConnection.guessContentTypeFromName(relativePath);
-                if (contentType == null || contentType.isBlank()) {
-                    contentType = "application/octet-stream";
-                }
-                return new DesktopFlowHttpResponse(
-                        200,
-                        "OK",
-                        Map.of(
-                                "Content-Type", List.of(contentType),
-                                "Content-Length", List.of(String.valueOf(bytes.length)),
-                                "Cache-Control", List.of("no-cache")),
-                        normalizedMethod.equals("HEAD") ? new byte[0] : bytes);
-            } catch (IOException error) {
-                throw new IllegalStateException("Unable to read static resource " + relativePath, error);
-            }
-        }
-        return null;
-    }
-
-    private static InputStream classpathResource(String name) {
-        ClassLoader contextLoader = Thread.currentThread().getContextClassLoader();
-        InputStream stream = contextLoader == null ? null : contextLoader.getResourceAsStream(name);
-        if (stream != null) {
-            return stream;
-        }
-        ClassLoader frameworkLoader = DesktopFlowOpaqueHttpSession.class.getClassLoader();
-        return frameworkLoader == contextLoader ? null : frameworkLoader.getResourceAsStream(name);
     }
 
     private static Map<String, String[]> queryParameters(String rawQuery) {

@@ -7,7 +7,6 @@ target/
 .vscode/
 *.log
 .DS_Store
-vaadin-desktop-host-tauri/
 docs/traces/
 assets/brand/vatori.iconset/
 assets/brand/vatori-wordmark.svg.png

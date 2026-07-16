@@ -1,0 +1,137 @@
+# Swift/AppKit host launch helpers for bin/vaadin-desktop.
+# This file is sourced and expects ROOT, MODULE, COMMAND, MAVEN_REPO and PATH.
+
+run_macos_host_runtime() {
+    SWIFT_HOST_BUILD="$ROOT/.build/native-hosts/macos"
+    SWIFT_HOST_APP="$SWIFT_HOST_BUILD/VaadinDesktopHost.app"
+    SWIFT_HOST_EXE="$SWIFT_HOST_APP/Contents/MacOS/VaadinDesktopHost"
+    SWIFT_HOST_BUNDLE_ID="dev.vatori.desktop.host.macos"
+    MVN_EXE="$(command -v mvn)"
+    MACOS_TRANSPORT="flow-ipc"
+    if [[ "$COMMAND" == "dev-compat" ]]; then
+      MACOS_TRANSPORT="compatibility-http"
+    fi
+    bash "$ROOT/bin/vaadin-desktop-build-macos-host" \
+      "$ROOT" "$MODULE" "$MACOS_TRANSPORT"
+    OPEN_ENV_ARGS=(--env "PATH=$PATH")
+    forward_env_if_set() {
+      local name="$1"
+      if [[ -n "${!name:-}" ]]; then
+        OPEN_ENV_ARGS+=(--env "$name=${!name}")
+      fi
+    }
+    forward_env_if_set VAADIN_DESKTOP_FLOW_IPC_TRACE_DETAIL
+    forward_env_if_set VAADIN_DESKTOP_FLOW_IPC_SIDECAR_RESTART_LIMIT
+    forward_env_if_set VAADIN_DESKTOP_FLOW_IPC_SIDECAR_RECOVERY_READY_TIMEOUT_SECONDS
+    if [[ -n "${JAVA_HOME:-}" ]]; then
+      OPEN_ENV_ARGS+=(--env "JAVA_HOME=$JAVA_HOME")
+    fi
+    SWIFT_HOST_EXTRA_ARGS=()
+    for name in \
+      VAADIN_DESKTOP_FLOW_IPC_AUTO_FRAMEWORK_UPDATE \
+      VAADIN_DESKTOP_FLOW_IPC_AUTO_SIDECAR_RESTART \
+      VAADIN_DESKTOP_FLOW_IPC_AUTO_SHUTDOWN \
+      VAADIN_DESKTOP_FLOW_IPC_AUTO_UPLOAD_RECEIVER \
+      VAADIN_DESKTOP_FLOW_IPC_AUTO_DOWNLOAD_SAVE_OPEN \
+      VAADIN_DESKTOP_FLOW_IPC_AUTO_MULTI_WINDOW \
+      VAADIN_DESKTOP_FLOW_IPC_AUTO_FILE_DIALOG_CANCEL
+    do
+      if [[ "${!name:-}" == "1" ]]; then
+        OPEN_ENV_ARGS+=(--env "$name=1")
+      fi
+    done
+    if [[ -n "${VAADIN_DESKTOP_FLOW_IPC_AUTO_SHUTDOWN_TIMEOUT_SECONDS:-}" ]]; then
+      OPEN_ENV_ARGS+=(--env "VAADIN_DESKTOP_FLOW_IPC_AUTO_SHUTDOWN_TIMEOUT_SECONDS=$VAADIN_DESKTOP_FLOW_IPC_AUTO_SHUTDOWN_TIMEOUT_SECONDS")
+    fi
+    OPEN_BACKGROUND=0
+    if [[ "${VAADIN_DESKTOP_MACOS_NO_ACTIVATE:-}" == "1" ]]; then
+      OPEN_ENV_ARGS+=(--env "VAADIN_DESKTOP_MACOS_NO_ACTIVATE=1")
+      OPEN_BACKGROUND=1
+    fi
+    if [[ "${VAADIN_DESKTOP_MAVEN_OFFLINE:-}" == "1" ]]; then
+      OPEN_ENV_ARGS+=(--env "VAADIN_DESKTOP_MAVEN_OFFLINE=1")
+    fi
+    SWIFT_HOST_STDOUT="$SWIFT_HOST_BUILD/host.out.log"
+    SWIFT_HOST_STDERR="$SWIFT_HOST_BUILD/host.err.log"
+    : > "$SWIFT_HOST_STDOUT"
+    : > "$SWIFT_HOST_STDERR"
+    echo "Vaadin Desktop Host logs:"
+    echo "  stdout: $SWIFT_HOST_STDOUT"
+    echo "  stderr: $SWIFT_HOST_STDERR"
+    TAIL_PID=""
+    FOLLOW_HOST_LOGS="${VAADIN_DESKTOP_MACOS_LOG_FOLLOW:-}"
+    if [[ -z "$FOLLOW_HOST_LOGS" ]]; then
+      if [[ "${VAADIN_DESKTOP_FLOW_IPC_TRACE_DETAIL:-}" == "full" ]]; then
+        FOLLOW_HOST_LOGS=0
+      else
+        FOLLOW_HOST_LOGS=1
+      fi
+    fi
+    if [[ "$FOLLOW_HOST_LOGS" == "1" ]]; then
+      tail -n +1 -f "$SWIFT_HOST_STDOUT" "$SWIFT_HOST_STDERR" &
+      TAIL_PID=$!
+    else
+      echo "  live follow: disabled"
+    fi
+    cleanup_tail() {
+      if [[ -n "${TAIL_PID:-}" ]]; then
+        kill "$TAIL_PID" 2>/dev/null || true
+        wait "$TAIL_PID" 2>/dev/null || true
+        TAIL_PID=""
+      fi
+    }
+    request_swift_host_shutdown() {
+      if command -v osascript >/dev/null 2>&1; then
+        osascript -e "tell application id \"$SWIFT_HOST_BUNDLE_ID\" to quit" >/dev/null 2>&1 || true
+      fi
+      if command -v pgrep >/dev/null 2>&1; then
+        for _ in 1 2 3 4 5; do
+          pgrep -f "$SWIFT_HOST_EXE" >/dev/null 2>&1 || return 0
+          sleep 0.2
+        done
+      fi
+      if command -v pkill >/dev/null 2>&1; then
+        pkill -f "$SWIFT_HOST_EXE" >/dev/null 2>&1 || true
+      fi
+    }
+    handle_swift_host_interrupt() {
+      trap - INT TERM
+      request_swift_host_shutdown
+      cleanup_tail
+      exit 130
+    }
+    run_swift_host_open() {
+      local open_args=(open -n -W)
+      if [[ "$OPEN_BACKGROUND" == "1" ]]; then
+        open_args+=(-g)
+      fi
+      open_args+=(-o "$SWIFT_HOST_STDOUT" --stderr "$SWIFT_HOST_STDERR")
+      open_args+=("${OPEN_ENV_ARGS[@]}")
+      open_args+=("$SWIFT_HOST_APP" --args \
+        --module "$MODULE" \
+        --repo-root "$ROOT" \
+        --maven-repo "$MAVEN_REPO" \
+        --maven-executable "$MVN_EXE" \
+        --transport "$MACOS_TRANSPORT")
+      if (( ${#SWIFT_HOST_EXTRA_ARGS[@]} > 0 )); then
+        open_args+=("${SWIFT_HOST_EXTRA_ARGS[@]}")
+      fi
+      "${open_args[@]}"
+    }
+    trap cleanup_tail EXIT
+    trap handle_swift_host_interrupt INT TERM
+    set +e
+    run_swift_host_open
+    STATUS=$?
+    set -e
+    cleanup_tail
+    trap - EXIT INT TERM
+    if [[ "$STATUS" == "0"
+          && "${VAADIN_DESKTOP_FLOW_IPC_AUTO_SHUTDOWN:-}" == "1"
+          && "${VAADIN_DESKTOP_FLOW_IPC_TRACE_DETAIL:-}" != "full" ]]; then
+      if ! bash "$ROOT/bin/flow-ipc-log-budget-check" "$SWIFT_HOST_STDOUT"; then
+        STATUS=1
+      fi
+    fi
+    return "$STATUS"
+}

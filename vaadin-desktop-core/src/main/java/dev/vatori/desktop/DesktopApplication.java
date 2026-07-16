@@ -2,6 +2,7 @@ package dev.vatori.desktop;
 
 import java.util.LinkedHashMap;
 import java.util.Map;
+import java.util.Objects;
 
 public final class DesktopApplication {
     private final String name;
@@ -36,22 +37,30 @@ public final class DesktopApplication {
         private final Map<String, String> metadata = new LinkedHashMap<>();
 
         private Builder(String name) {
-            this.name = name;
+            this.name = requireText(name, "Application name");
         }
 
         public Builder mainWindow(DesktopWindow mainWindow) {
-            this.mainWindow = mainWindow;
+            this.mainWindow = Objects.requireNonNull(mainWindow, "mainWindow");
             return this;
         }
 
         public Builder metadata(String key, String value) {
-            metadata.put(key, value);
+            metadata.put(
+                    requireText(key, "Metadata key"),
+                    Objects.requireNonNull(value, "Metadata value"));
             return this;
         }
 
         public DesktopApplication build() {
             return new DesktopApplication(this);
         }
+
+        private static String requireText(String value, String name) {
+            if (value == null || value.isBlank()) {
+                throw new IllegalArgumentException(name + " must not be blank");
+            }
+            return value;
+        }
     }
 }
-

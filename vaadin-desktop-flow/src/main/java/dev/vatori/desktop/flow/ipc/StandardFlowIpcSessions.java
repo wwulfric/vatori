@@ -17,8 +17,8 @@ import java.util.concurrent.atomic.AtomicLong;
 final class StandardFlowIpcSessions implements AutoCloseable {
     private final List<Class<? extends Component>> routeClasses;
     private final ApplicationContext applicationContext;
-    private final StandardFlowIpcOutput output;
-    private final FlowIpcNativeBridge nativeBridge;
+    private final SidecarOutput output;
+    private final SidecarNativeBridge nativeBridge;
     private final ConcurrentMap<String, SessionContext> sessionsByWindow =
             new ConcurrentHashMap<>();
     private final ConcurrentMap<String, SessionContext> sessionsBySession =
@@ -28,8 +28,8 @@ final class StandardFlowIpcSessions implements AutoCloseable {
     StandardFlowIpcSessions(
             Collection<Class<? extends Component>> routeClasses,
             ApplicationContext applicationContext,
-            StandardFlowIpcOutput output,
-            FlowIpcNativeBridge nativeBridge) {
+            SidecarOutput output,
+            SidecarNativeBridge nativeBridge) {
         this.routeClasses = List.copyOf(routeClasses);
         this.applicationContext = applicationContext;
         this.output = Objects.requireNonNull(output, "output");
@@ -54,7 +54,7 @@ final class StandardFlowIpcSessions implements AutoCloseable {
         }
         context.session.validatePush(flowUiId, pushId);
         output.send(scope, "opaquePushConnected", output.nextId("push-connect"),
-                StandardFlowIpcOutput.correlationIdOr(id, correlationId),
+                SidecarOutput.correlationIdOr(id, correlationId),
                 Map.of(
                         "connectionId", connectionId,
                         "flowUiId", flowUiId,

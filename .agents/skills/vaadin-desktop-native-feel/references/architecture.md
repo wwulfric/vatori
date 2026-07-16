@@ -26,24 +26,18 @@ Layer 4: Native Capability Core
 
 ## This Repository's Current Shape
 
-Current v0:
-
 ```text
-SystemWebViewDesktopHost / vaadin-desktop-host-swift
-  -> local HTTP compatibility URL
-  -> Vaadin Flow/Spring Boot
+bin/vaadin-desktop
+  -> native-hosts/macos
+  -> AppKit + WKWebView
+  -> VFIPC1 sidecar channel
+  -> vaadin-desktop-flow
 ```
 
-Target:
-
-```text
-Swift/AppKit Host on macOS
-  -> host bridge / IPC
-  -> Flow transport adapter
-  -> Vaadin Flow runtime
-```
-
-The current host can be native-feeling at the window level while still being transport-incomplete. Keep that distinction visible in code names, trace logs and docs.
+Platform and packaged artifact select the native host. `dev` uses the standard
+Vaadin production bundle over Flow IPC. `dev-compat` uses the same host and
+native capability channel while loading the UI from localhost HTTP. Keep that
+transport distinction visible in code names, traces and docs.
 
 ## Placement Rules
 
@@ -68,17 +62,15 @@ The current host can be native-feeling at the window level while still being tra
 Use Swift/AppKit/WKWebView as the macOS native runtime mainline. Tauri remains useful as a reference architecture for process boundaries and capability concepts, not as the current implementation stack.
 
 ```text
-vaadin-desktop-host-swift/Sources/VaadinDesktopHost/main.swift
-vaadin-desktop-host/src/main/resources/dev/vatori/desktop/host/macos-webview-host.swift
+native-hosts/macos/Sources/VaadinDesktopHost/main.swift
 ```
 
-The host protocol should be designed before adding features. Minimum messages:
+The `VFIPC1` sidecar contract should be designed before adding features. Its
+common lifecycle and capability messages include:
 
-- `launch`
 - `ready`
-- `window.created`
-- `window.closed`
 - `command`
 - `capabilityResult`
+- `windowClosed`
 - `error`
 - `shutdown`

@@ -4,6 +4,7 @@ import com.vaadin.flow.component.Component;
 import com.vaadin.flow.component.PushConfiguration;
 import com.vaadin.flow.di.Instantiator;
 import com.vaadin.flow.di.Lookup;
+import com.vaadin.flow.di.ResourceProvider;
 import com.vaadin.flow.function.DeploymentConfiguration;
 import com.vaadin.flow.router.RouteConfiguration;
 import com.vaadin.flow.server.PwaRegistry;
@@ -25,6 +26,7 @@ import jakarta.servlet.http.HttpServletRequest;
 import org.springframework.context.ApplicationContext;
 
 import java.io.File;
+import java.io.IOException;
 import java.io.InputStream;
 import java.lang.reflect.Proxy;
 import java.net.URL;
@@ -139,6 +141,8 @@ final class DesktopFlowVaadinService extends VaadinService {
     @Override
     protected List<RequestHandler> createRequestHandlers() throws ServiceException {
         List<RequestHandler> handlers = super.createRequestHandlers();
+        handlers.add(new DesktopClasspathResourceRequestHandler());
+        handlers.add(new DesktopStreamResourceRequestHandler());
         handlers.add(new DesktopJavaScriptBootstrapHandler(pushConnectionFactory));
         return handlers;
     }
@@ -297,14 +301,22 @@ final class DesktopFlowVaadinService extends VaadinService {
     }
 
     private static final class DesktopFlowVaadinContext implements VaadinContext {
-        private static final Lookup EMPTY_LOOKUP = new Lookup() {
+        private static final ResourceProvider RESOURCE_PROVIDER =
+                new DesktopFlowResourceProvider();
+        private static final Lookup DESKTOP_LOOKUP = new Lookup() {
             @Override
             public <T> T lookup(Class<T> serviceClass) {
+                if (serviceClass.isInstance(RESOURCE_PROVIDER)) {
+                    return serviceClass.cast(RESOURCE_PROVIDER);
+                }
                 return null;
             }
 
             @Override
             public <T> Collection<T> lookupAll(Class<T> serviceClass) {
+                if (serviceClass.isInstance(RESOURCE_PROVIDER)) {
+                    return List.of(serviceClass.cast(RESOURCE_PROVIDER));
+                }
                 return Collections.emptyList();
             }
         };
@@ -312,7 +324,7 @@ final class DesktopFlowVaadinService extends VaadinService {
         private final Map<Class<?>, Object> attributes = new LinkedHashMap<>();
 
         private DesktopFlowVaadinContext() {
-            attributes.put(Lookup.class, EMPTY_LOOKUP);
+            attributes.put(Lookup.class, DESKTOP_LOOKUP);
         }
 
         @Override
@@ -349,6 +361,49 @@ final class DesktopFlowVaadinService extends VaadinService {
         @Override
         public String getContextParameter(String name) {
             return null;
+        }
+    }
+
+    private static final class DesktopFlowResourceProvider
+            implements ResourceProvider {
+
+        @Override
+        public URL getApplicationResource(String path) {
+            return classLoader().getResource(normalizeResourcePath(path));
+        }
+
+        @Override
+        public List<URL> getApplicationResources(String path)
+                throws IOException {
+            return Collections.list(
+                    classLoader().getResources(normalizeResourcePath(path)));
+        }
+
+        @Override
+        public URL getClientResource(String path) {
+            return getApplicationResource(path);
+        }
+
+        @Override
+        public InputStream getClientResourceAsStream(String path)
+                throws IOException {
+            URL resource = getClientResource(path);
+            return resource == null ? null : resource.openStream();
+        }
+
+        private static ClassLoader classLoader() {
+            ClassLoader contextClassLoader =
+                    Thread.currentThread().getContextClassLoader();
+            return contextClassLoader == null
+                    ? DesktopFlowVaadinService.class.getClassLoader()
+                    : contextClassLoader;
+        }
+
+        private static String normalizeResourcePath(String path) {
+            if (path == null || path.isBlank()) {
+                return "";
+            }
+            return path.startsWith("/") ? path.substring(1) : path;
         }
     }
 }

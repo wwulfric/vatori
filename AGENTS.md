@@ -1,176 +1,160 @@
 # Agent 指令
 
-适用范围：本文件适用于整个仓库。
+适用范围：整个仓库。
 
 ## 项目定位
 
-本仓库主线是 `vatori`：一个基于 Vaadin 的 Desktop Framework，用于创建桌面级 Vaadin Flow 应用，形态类似 Tauri + Vaadin Flow。
+vatori 是基于 Vaadin 的 Desktop Framework，不是某一个桌面应用。它保留 Vaadin
+Flow 的 Java UI 编程模型，并让 native host 拥有系统 WebView、原生能力、生命周期、
+平台打包和更新边界。
 
-目标不是做一个简单浏览器壳。长期方向是 Flow over IPC：
+主架构是标准 Vaadin production bundle + opaque Flow IPC。不要实现自定义 Flow
+client、UI renderer 或按组件解释 UIDL 的 host runtime。
 
-- 保留 Vaadin Flow 的 Java UI 编程模型。
-- 将 Servlet、HTTP、WebSocket 假设隔离在 adapter 后面。
-- 桌面 host 拥有系统 WebView、原生能力、生命周期、打包和更新路径。
-- IPC 最终成为 bootstrap、event、patch、command 和 capability result 的传输层。
-
-## 仓库结构
+## 仓库心智模型
 
 模块职责、依赖方向、发布边界和代码放置规则统一以
-`docs/repository-structure.md` 为准。开始跨模块修改或新增目录前先阅读该文档；不要在
-`AGENTS.md` 中复制目录清单或维护第二份结构说明。
+`docs/repository-structure.md` 为准。开始跨模块修改或新增目录前先阅读该文档；不要
+在 `AGENTS.md` 中复制目录清单或维护第二份结构说明。
+
+稳定运行主链：
+
+```text
+bin/vaadin-desktop
+  -> native-hosts/macos
+  -> AppKit + WKWebView
+  -> Java sidecar
+  -> vaadin-desktop-flow
+```
+
+平台和构建产物选择 native host。Java 应用不能选择 host，也不能包含浏览器、headless
+或 compatibility fallback。当前只有 macOS 实现；不要为了表达未来方向创建空的
+Windows/Linux 模块。
 
 ## Runtime 边界
 
-默认 `dev` 行为是在 `127.0.0.1` 随机端口启动真实 Vaadin Flow/Spring Boot 应用，再打开系统 WebView host 加载本地 Vaadin URL。这是真实 desktop WebView host，但 UI transport 仍是 local HTTP/Servlet/WebSocket compatibility mode；不要把它描述为最终 Flow over IPC。
+`dev` 是默认主线：CLI 构建应用的标准 Vaadin production bundle，macOS host 从本地
+resource scheme 加载它，并通过 document-start opaque request/push bridge 与 Java
+sidecar 交换 VFIPC1 envelope。Host 和 bridge 不解析 bootstrap 或 UIDL。
 
-`dev-swift` 运行 `vaadin-desktop-host-swift`：Swift/AppKit host 把 Java app 作为 sidecar 启动，在 sidecar 打印 `Application URL: ...` 后打开 WKWebView 窗口，以 `HOST_PROTOCOL ...` 形式记录 Host Protocol v0 trace，读取 `VDP1 ` Java command envelope，并在窗口关闭时杀掉 Java 进程。它仍通过 localhost HTTP compatibility mode 加载 Flow UI。
+`dev-compat` 使用同一个 macOS host，但 WKWebView 加载 Java sidecar 发布的随机
+`127.0.0.1` URL。Servlet、HTTP 和 WebSocket 仍属于 compatibility UI transport；
+native command/result、window lifecycle 和 shutdown 继续使用统一 VFIPC1 channel。
 
-`dev-ipc` 是 no-localhost IPC 切片：构建并加载应用自己的标准 Vaadin production bundle，通过 document-start opaque request bridge 和 `VFIPC1` stdin/stdout envelope 把 HTTP-shaped 请求交给 Java 侧 Vaadin request-handler chain。Host 和 bridge 不解析 bootstrap 或 UIDL，也不存在自定义 Flow client shell fallback。
+`DesktopLauncher.launch(...)` 是阻塞式应用入口。没有合法 sidecar transport 时，
+直接运行应用 JAR 必须失败。Java `ready` 提供 application metadata 和 main-window
+descriptor，host 验证后才能创建窗口。
 
-`dev-ipc` 的验证面会持续扩展。`AGENTS.md` 只记录稳定边界和工作约束，不记录具体实现批次、临时状态或 trace gate 名称。当前状态和验收要求以 `docs/flow-over-ipc-runtime.md`、`docs/acceptance-tools.md`、`docs/roadmap.md` 和 `bin/flow-ipc-trace-inspect` 为准。
-
-不要把 bounded validation surface 描述成 full product parity。只要相关能力仍依赖 compatibility mode、fixture hook、fallback path、blocker classification 或 focused validation gate，就必须明确其边界。
+不要把当前验证面描述成 full product parity。只要能力仍依赖 focused validation、
+fixture、compatibility transport 或未完成的产品边界，就明确说明限制。
 
 ## 构建和运行
 
-本机 Maven 通过 SDKMAN 可用。直接调用 Maven 前先 source SDKMAN：
+本机 Maven 通过 SDKMAN 可用。直接调用 Maven前先加载：
 
 ```bash
 source /Users/bytedance/.sdkman/bin/sdkman-init.sh
 ```
 
-使用项目本地 Maven repository，避免写入用户全局 Maven cache：
+使用仓库本地 Maven repository：
 
 ```bash
 mvn -o -Dmaven.repo.local=/Users/bytedance/IdeaProjects/vatori/.m2/repository -DskipTests compile
 ```
 
-需要运行 Python 工具或临时 Python 脚本时，统一使用 `uv` 管理运行时和依赖，例如 `uv run --with PyYAML python ...`；不要直接使用裸 `python3` 或 `pip install` 来处理项目任务依赖。
+需要 Python 时统一使用 `uv` 管理运行时和依赖，不要直接使用裸 `python3` 或
+`pip install` 处理项目依赖。
 
-常用入口：
-
-```bash
-bash bin/vaadin-desktop dev test-apps/vaadin-desktop-smoke-app
-bash bin/vaadin-desktop dev-swift test-apps/vaadin-desktop-smoke-app
-bash bin/vaadin-desktop dev-ipc examples/counter-app
-bash bin/vaadin-desktop dev-ipc test-apps/flow-over-ipc-smoke-app
-bash bin/vaadin-desktop dev-ipc test-apps/flow-over-ipc-framework-app
-```
-
-真实窗口、自动化 hook 和 trace gate 验收以 `docs/acceptance-tools.md`、`docs/flow-over-ipc-runtime.md` 和 `bin/flow-ipc-trace-inspect --help` 为准；不要在 `AGENTS.md` 固化单次运行组合。
-
-验证 production opaque adapter 和标准 runtime：
+稳定开发入口：
 
 ```bash
+bash bin/vaadin-desktop dev examples/counter-app
+bash bin/vaadin-desktop dev-compat examples/counter-app
+bash bin/vaadin-desktop package examples/counter-app
 bash bin/verify-smoke
 ```
 
-具体子检查由 `bin/verify-smoke` 和 `docs/acceptance-tools.md` 维护，不在本文件
-复制其内部命令清单。
+具体 acceptance 组合以 `docs/acceptance-tools.md` 和
+`bin/flow-ipc-trace-inspect --help` 为准，不在本文件复制单次运行参数。
 
-Host 选择：
+完整 trace、日志、截图和 native app 都是生成产物。长期证据应进入 CI artifact、
+release asset 或外部归档。启动真实窗口后，结束 turn 前停止长时间运行的 dev session。
 
-```bash
-VAADIN_DESKTOP_HOST=system-webview bash bin/vaadin-desktop dev examples/counter-app
-VAADIN_DESKTOP_HOST=headless bash bin/vaadin-desktop dev examples/counter-app
-VAADIN_DESKTOP_HOST=browser bash bin/vaadin-desktop dev examples/counter-app
-```
+## 本地参考源码
 
-`system-webview` 默认 fail-fast；需要 compatibility host 时显式设置
-`VAADIN_DESKTOP_HOST=compatibility`、`headless` 或 `browser`。只有在本地开发需要
-自动兜底时，才设置 `VAADIN_DESKTOP_HOST_FALLBACK=compatibility`。
+用户本机有只读上游 checkout。除非用户明确要求，不要编辑：
 
-完整 `.ndjson` trace 是生成产物，不按版本逐个提交。验收契约由 `bin/flow-ipc-trace-inspect` 暴露；需要长期保存的 trace 应进入 CI artifact、release asset 或外部归档。
-
-启动 system WebView host 会打开 macOS UI 进程。结束一个 turn 前，应停止长时间运行的 dev session。
-
-## 本地参考源码树
-
-用户本机有上游源码 checkout 可供研究。除非用户明确要求编辑，否则把它们视为只读参考。
-
-Tauri：
-
-```text
-/Users/bytedance/RustroverProjects/study/tauri
-```
+- Tauri：`/Users/bytedance/RustroverProjects/study/tauri`
+- Vaadin：`/Users/bytedance/IdeaProjects/study/vaadin`
 
 常用区域：
 
-- `crates/tauri`
-- `crates/tauri-runtime`
-- `crates/tauri-runtime-wry`
-- `crates/tauri-cli`
-- `crates/tauri-bundler`
-- `crates/tauri-utils`
+- Tauri：`crates/tauri`、`crates/tauri-runtime`、`crates/tauri-runtime-wry`、
+  `crates/tauri-cli`、`crates/tauri-bundler`、`crates/tauri-utils`
+- Vaadin：`flow/flow-server`、`flow/flow-client`、`flow/flow-push`、
+  `flow/vaadin-spring`、`platform/vaadin-spring-boot-starter`、
+  `platform/vaadin-maven-plugin`
 
-Vaadin：
-
-```text
-/Users/bytedance/IdeaProjects/study/vaadin
-```
-
-常用区域：
-
-- `flow/flow-server`
-- `flow/flow-client`
-- `flow/flow-push`
-- `flow/vaadin-spring`
-- `platform/vaadin-spring-boot-starter`
-- `platform/vaadin-maven-plugin`
-- `platform/vaadin-dev-bundle`
-
-做架构决策时，优先检查这些本地源码树，再考虑 web search。
+做架构决策时优先检查这些本地源码，再考虑 web search。
 
 ## 文档地图
 
-- `README.md`：项目入口地图和 quick start。
-- `docs/repository-structure.md`：仓库心智模型、模块所有权、依赖方向和代码放置规则。
-- `docs/framework-architecture.md`：当前架构与目标架构。
+- `README.md` / `README.zh-CN.md`：公开入口和稳定命令。
+- `docs/repository-structure.md`：仓库心智模型和放置规则。
+- `docs/framework-architecture.md`：运行时所有权和 transport 边界。
 - `docs/getting-started.md`：开发者 workflow。
-- `docs/flow-integration.md`：今天如何集成真实 Vaadin Flow。
-- `docs/ipc-protocol.md`：protocol envelope 和 message taxonomy。
-- `docs/ipc-protocol-v1.md`：Flow IPC v1 envelope 和 message taxonomy。
-- `docs/flow-over-ipc-runtime.md`：当前 `dev-ipc` runtime 切片和限制。
-- `docs/flow-transport-adapter.md`：当前 adapter 实现和下一个 UIDL 边界。
-- `docs/acceptance-tools.md`：trace gate、smoke harness、真实窗口验收 hook 和 runtime diagnostics 的边界说明。
-- `docs/native-host.md`：当前 WKWebView host 和 host roadmap。
+- `docs/flow-integration.md`：Vaadin Flow 集成方式。
+- `docs/ipc-protocol.md`：唯一 sidecar wire protocol。
+- `docs/flow-over-ipc-runtime.md`：当前 Flow IPC 能力和限制。
+- `docs/flow-transport-adapter.md`：request/push adapter 边界。
+- `docs/acceptance-tools.md`：smoke、真实窗口和 trace inspector。
+- `docs/native-host.md`：macOS host contract。
 - `docs/roadmap.md`：工程路线。
-- `docs/flow-over-ipc-design.md`：历史中文设计包；当前实现状态以 runtime、acceptance、roadmap 和架构文档为准。
 
 ## 项目技能
 
-- `.agents/skills/flow-component-parity`：当用户要求推进 Vaadin Flow 组件产品级 parity、Flow over IPC 组件覆盖、或从长期目标中选择并完成下一个可验证切片时使用。
-- `.agents/skills/vaadin-desktop-native-feel`：当工作触及 Swift/AppKit host 行为、WKWebView/WebView2 quirk、Vaadin Flow desktop UI 约定、desktop capability API、compatibility-mode 边界或 native-readiness review 时使用。
-- `.agents/skills/postmortem`：当需要从指定 git 范围分析 `fix:` 提交、筛选代表性事故，并生成或追加 vatori 专用中文复盘报告到 `postmortem/` 时使用。
+- `.agents/skills/flow-component-parity`：选择并闭合一个可验证的 Flow parity slice。
+- `.agents/skills/vaadin-desktop-native-feel`：native host、desktop UI 和 capability review。
+- `.agents/skills/postmortem`：从 git fix 范围生成事故复盘。
 
 ## 工程规则
 
-- 保持 compatibility mode 被明确命名和记录。
-- 不要移除或隐藏当前 Flow 仍然依赖 Servlet/HTTP/WebSocket 的事实。
-- 不要把框架收缩成一次性的示例应用。
-- 保持 example app 是开发者形态：它们应该像外部用户一样依赖 framework modules。
-- framework module 的 `src/main`、Swift host `Sources` 和 production resources 只能包含框架能力与通用扩展点；fixture、自动化参数、故障注入、gate 和测试专用 API 必须放在 `src/test`、`test-apps` 或 `test-support`。
-- 根 Maven reactor 只聚合 framework modules、examples 和 test apps；`test-support` 由对应验证命令显式构建，不得成为 framework artifact 的依赖。
-- 除非明确要求，不要编辑本地 Tauri 或 Vaadin upstream source checkout。
-- 优先使用小而可 review 的模块和清晰 adapter 边界。
-- 搜索源码时使用 `rg` / `rg --files`。
-- 文件编辑使用 `apply_patch`。
+- 保持 compatibility HTTP 被明确命名，不隐藏 Servlet/HTTP/WebSocket 依赖。
+- framework production sources 和 resources 只能包含通用框架能力；fixture、自动化、
+  故障注入和 gate 必须放在 `src/test`、`test-apps` 或 `test-support`。
+- examples 和 test apps 必须像外部用户一样依赖 framework modules，并通过
+  `@SpringBootApplication + DesktopLauncher` 启动。
+- 根 Maven reactor 聚合 framework、examples 和 test apps；`test-support` 由验证命令
+  显式构建，不能成为 framework artifact 的依赖。
+- Standard bundle 的构建和打包属于 CLI/native-host build；Flow module 只处理 Java
+  sidecar runtime 和 transport adapter。
+- 所有浏览器请求统一进入 `VaadinService.handleRequest()`。平台 host 不得按 bootstrap、
+  UIDL、Upload 或 Download 类型分支。
+- 搜索源码使用 `rg` / `rg --files`；文件编辑使用 `apply_patch`。
 - 文档变更至少运行 `git diff --check`。
-- 如果用户要求提交，按适合粒度提交 commit；提交信息使用 Conventional Commit 前缀，例如 `feat:`、`fix:`、`docs:`、`test:`、`chore:`、`refactor:`。
-- 除非明确要求，不要删除生成文件或用户文件。
+- 用户要求提交时使用合适粒度和 Conventional Commit 前缀。
+- 除非明确要求，不删除用户文件；不要覆盖未提交的并行工作。
 
 ## 顶层文档规则
 
-- `AGENTS.md` 是长期稳定的 agent 工作约束，不是进度日志、验收记录或临时决策缓存。
-- `README.md` / `README.zh-CN.md` 是项目入口地图，只描述稳定定位、运行方式、验证入口和高层状态。
-- 不要在这些顶层文件里写入具体实现批次、trace gate 名称、单次运行结果、长篇历史过程、误冲突内容或其他项目的说明。
-- 具体状态、验收细节和历史证据应写入 `docs/flow-over-ipc-runtime.md`、`docs/acceptance-tools.md`、`docs/roadmap.md`、专门的设计文档或 inspector 代码。
-- 除非项目定位、稳定命令、长期约束或公开入口发生变化，不要顺手修改这些顶层文件。
-- 修改这些顶层文件后，必须运行 `git diff --check -- AGENTS.md README.md README.zh-CN.md` 和 `bash bin/repository-hygiene-check`。
+`AGENTS.md` 是长期 agent 约束，不是进度日志、验收记录或临时决策缓存。
+README 是项目入口地图，只记录稳定定位、命令、验证入口和高层边界。
+
+不要在顶层文件写具体实现批次、trace gate 名称、单次运行结果、goal 版本、误冲突
+内容或长篇历史过程。除非稳定入口或长期约束发生变化，不要顺手修改这些文件。
+
+修改顶层文件后必须运行：
+
+```bash
+git diff --check -- AGENTS.md README.md README.zh-CN.md
+bash bin/repository-hygiene-check
+```
 
 ## 工作选择规则
 
-- 推进 Flow 组件 parity 时，每轮选择一个最小、可验证、可收口的切片；不要同时展开多个无关组件面。
-- 不要为了记录过程新建 `docs/goal-*.md` 或归档目录。当前目标和状态应收敛到现有 roadmap、runtime、acceptance 文档和代码验收面。
-- 如果需要保存单次运行证据，优先使用最终回答、git history、CI artifact、release asset 或外部归档，而不是仓库内过程日志。
-- 当无法在本轮闭合产品切片时，优先补齐能解除阻塞的 adapter、trace inspector、smoke harness 或文档契约。
+- 推进 Flow parity 时，每轮只选择一个最小、可验证、可收口的 slice。
+- 不为过程记录创建 `docs/goal-*.md`、归档目录或版本化源码名称。
+- 当前状态收敛到现有 runtime、acceptance、roadmap 文档和可执行验收面。
+- 单次运行证据优先保留在最终回答、git history、CI artifact 或 release asset。
+- 本轮无法闭合产品 slice 时，优先补齐能解除阻塞的 adapter、inspector、smoke 或
+  文档契约。

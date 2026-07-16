@@ -13,7 +13,7 @@ Postmortem 是项目知识库，不是提交流水账。默认记录能暴露新
 
 复盘报告只写与事故判断直接相关的项目事实，不在 skill 或报告里复述完整 runtime 状态。遇到 runtime、host 或验收边界时，先查 `docs/flow-over-ipc-runtime.md`、`docs/acceptance-tools.md` 和相关代码，再按以下原则落笔：
 
-- 明确区分 compatibility mode、当前 `dev-ipc` 切片和最终 Flow over IPC 目标；不要把局部验证写成完整能力完成。
+- 明确区分 `dev` 的 Flow IPC transport、`dev-compat` 的 localhost compatibility transport 和长期产品 parity；不要把局部验证写成完整能力完成。
 - 只声称代码、文档和验收证据已经证明的能力；未完成或未验证的能力写成限制、风险或后续行动。
 - 将事故知识写入 `./postmortem/`；只有稳定入口、长期约束或公开状态真的变化时，才建议修改顶层文档。
 - 把 trace 当作证据来源，引用 gate、关键事件和路径；不要要求提交完整生成 trace，除非用户明确需要归档。
@@ -118,10 +118,10 @@ git blame <sha>^ -- <changed-file>
 
 1. Flow-over-IPC runtime：bootstrap、event、patch、ordered push、recovery resync、VFIPC1 envelope、no-localhost shell。
 2. UIDL/Flow adapter：`UidlRequestHandler`、`UidlWriter`、`DesktopVaadinRequest`、`DesktopVaadinResponse`、`DesktopFlowRuntimeSession`。
-3. Swift/AppKit host：WKWebView load、sidecar launch/cleanup、window lifecycle、Host Protocol trace、VDP1 command envelope。
+3. Swift/AppKit host：WKWebView load、sidecar launch/cleanup、window lifecycle、`HOST_PROTOCOL` acceptance trace、`VFIPC1` sidecar envelope。
 4. Native capability bridge：file dialog、clipboard、notification、command/result、capabilityResult。
 5. Devtools and acceptance：`DesktopTraceInspector`、trace gates、auto smoke hooks、diagnostics false positive/negative。
-6. CLI/dev workflow：`bin/vaadin-desktop`、`dev`、`dev-swift`、`dev-ipc`、host selection。
+6. CLI/dev workflow：`bin/vaadin-desktop`、`dev`、`dev-compat`、平台 native host 构建与启动。
 7. Build and resources：Maven modules、offline `.m2`、generated Flow client resources、examples/test-apps as external developer shape。
 8. Documentation/runtime boundary：compatibility mode 被误表述、公开状态误导、顶层文档越界。
 
@@ -149,7 +149,7 @@ postmortem/NNN-short-topic.md
 
 通常应写成完整事故组块的情况：
 
-- `dev`、`dev-swift`、`dev-ipc` 或示例应用启动/关闭/交互失败。
+- `dev`、`dev-compat` 或示例应用启动/关闭/交互失败。
 - no-localhost IPC 闭环破坏：bootstrap、event、patch、push、resync、command/result 任一关键路径失效。
 - Flow/UIDL adapter 合同漂移，可能导致真实 Vaadin component 状态不同步。
 - Swift host 生命周期、sidecar cleanup、WKWebView 初始化、窗口关闭或进程回收出错。
@@ -170,7 +170,7 @@ postmortem/NNN-short-topic.md
 | 级别 | 标签 | vatori 判定标准 |
 |------|------|-----------------|
 | SEV-0 | Critical | 数据丢失、安全问题、进程失控，或主要 runtime 对所有用户完全不可用且无 workaround |
-| SEV-1 | High | `dev-ipc`/`dev-swift`/核心 Flow integration 在常见路径不可用，关键 release gate 失效，或公开架构边界被严重破坏 |
+| SEV-1 | High | `dev`/`dev-compat`/核心 Flow integration 在常见路径不可用，关键 release gate 失效，或公开架构边界被严重破坏 |
 | SEV-2 | Medium | 核心路径降级但有 workaround，特定 component/host/capability 失败，trace gate 误判，sidecar/window cleanup 可靠性问题 |
 | SEV-3 | Low | 窄边缘 case、desktop polish、诊断信息、文档漂移或非关键示例问题 |
 | SEV-4 | Trivial | 无用户影响，仅内部测试、fixture、格式或机械修复 |
@@ -222,7 +222,7 @@ postmortem/NNN-short-topic.md
 - **话题总数**：N
 - **事故总次数**：N
 - **按严重级别**：SEV-0: N, SEV-1: N, SEV-2: N, SEV-3: N, SEV-4: N
-- **按组件**：vaadin-desktop-flow: N, vaadin-desktop-host-swift: N, ...
+- **按组件**：vaadin-desktop-flow: N, native-hosts/macos: N, ...
 - **按根因**：IPC Protocol Drift: N, Trace/Acceptance Gap: N, ...
 - **分析的 fix 提交总数**：N
 - **入选事故组块数**：N
@@ -325,7 +325,7 @@ postmortem/NNN-short-topic.md
 
 #### 验证
 
-<新增测试、`bin/verify-smoke`、`dev-ipc` 自动真实窗口验证、trace inspector gate、Maven compile 等。只写真实运行过或 commit 中已有的验证。>
+<新增测试、`bin/verify-smoke`、`dev`/`dev-compat` 自动真实窗口验证、trace inspector gate、Maven compile 等。只写真实运行过或 commit 中已有的验证。>
 
 ### 影响
 
@@ -395,8 +395,8 @@ git diff --check -- .agents/skills/postmortem
 事故报告中的验证必须匹配事故影响面：
 
 - UIDL/adapter/server-side writer：优先 `bash bin/verify-smoke` 或相关 smoke。
-- Flow IPC runtime：运行对应 `dev-ipc` 自动真实窗口验证，并按 `docs/acceptance-tools.md` / `DesktopTraceInspector` 使用当前 gate。
-- Swift host/window/sidecar：运行 `dev-swift` 或相关 host smoke，结束前停止长时间运行的 dev session。
+- Flow IPC runtime：运行对应 `dev` 自动真实窗口验证，并按 `docs/acceptance-tools.md` 和当前 trace inspector 使用相应 gate。
+- macOS host/window/sidecar：运行 `dev`、`dev-compat` 或相关 host smoke，结束前停止长时间运行的 dev session。
 - 文档-only 事故：至少 `git diff --check`，并确认没有把 compatibility mode 或未完成能力写错。
 
 如果没有运行某项验证，明确写“未运行”及原因。不要把计划中的验证写成已经通过。
@@ -408,7 +408,7 @@ git diff --check -- .agents/skills/postmortem
 | 范围内没有 fix 提交 | 回复“在 `<range>` 中未找到 fix 提交，无需生成 postmortem。”不要创建空文件。 |
 | tag/ref 不存在 | 报错并列出近期 tag；不要猜测范围。 |
 | 工作区不干净 | 不回滚用户改动；只编辑 `postmortem/`，最终说明已有 dirty files。 |
-| fix 无 scope | 从修改文件推断组件，例如 `vaadin-desktop-host-swift/` → `host-swift`。 |
+| fix 无 scope | 从修改文件推断组件，例如 `native-hosts/macos/` → `host-macos`。 |
 | fix 数量很多 | 先分组，再强制代表性筛选；优先 SEV-0 到 SEV-2。 |
 | 同一事故跨多个 topic | 在主 topic 写完整事故，其他 topic 只加交叉引用。 |
 | 只能推断复现 | 如实写“复现方式需要进一步调查”，不要编造。 |

@@ -40,15 +40,19 @@ public final class DesktopWindow {
         private int height = 760;
 
         private Builder(String id) {
-            this.id = id;
+            this.id = requireText(id, "Window id");
         }
 
         public Builder title(String title) {
-            this.title = title;
+            this.title = requireText(title, "Window title");
             return this;
         }
 
         public Builder size(int width, int height) {
+            if (width <= 0 || height <= 0) {
+                throw new IllegalArgumentException(
+                        "Window width and height must be positive");
+            }
             this.width = width;
             this.height = height;
             return this;
@@ -57,6 +61,12 @@ public final class DesktopWindow {
         public DesktopWindow build() {
             return new DesktopWindow(this);
         }
+
+        private static String requireText(String value, String name) {
+            if (value == null || value.isBlank()) {
+                throw new IllegalArgumentException(name + " must not be blank");
+            }
+            return value;
+        }
     }
 }
-

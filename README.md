@@ -20,11 +20,11 @@ Requirements:
 bash bin/vaadin-desktop dev examples/counter-app
 ```
 
-Use the same native host with a loopback Vaadin UI transport when a Servlet web
-application context is required:
+Use the optional Spring Boot adapter when a Servlet web application context is
+required:
 
 ```bash
-bash bin/vaadin-desktop dev-compat examples/counter-app
+bash bin/vaadin-desktop dev-compat test-apps/vaadin-desktop-smoke-app
 ```
 
 Build the application and current platform host:
@@ -33,28 +33,31 @@ Build the application and current platform host:
 bash bin/vaadin-desktop package examples/counter-app
 ```
 
-`dev` builds and packages the standard production bundle. `dev-compat` loads a
-random `127.0.0.1` URL. Both modes use the same bidirectional sidecar channel for
-window lifecycle and real native capability results. Running an application JAR
-directly without a native-host transport fails fast.
+Both modes build the standard production bundle. `dev` stages it for local
+WKWebView loading; `dev-compat` lets Spring serve the same application from a
+random `127.0.0.1` URL. Both use the same bidirectional sidecar channel for window
+lifecycle and real native capability results. Running an application JAR directly
+without a native-host transport fails fast.
 
 ## Application Entry
 
-Applications use a normal Spring Boot main class and `DesktopLauncher`:
+The default runtime is pure Vaadin Flow. Applications register routes explicitly:
 
 ```java
-@SpringBootApplication
 public class MyDesktopApp {
     public static void main(String[] args) {
-        DesktopLauncher.launch(MyDesktopApp.class,
+        DesktopLauncher.launch(
                 DesktopApplication.builder("My App").build(),
+                DesktopFlowApplication.builder(MainView.class).build(),
                 args);
     }
 }
 ```
 
 `DesktopApplication` supplies metadata and the main window descriptor consumed
-by the native host. Routes remain ordinary Vaadin `@Route` components.
+by the native host. Routes remain ordinary Vaadin `@Route` components. Spring
+applications add `vaadin-desktop-spring-boot` and use `SpringDesktopLauncher`;
+only those applications can use `dev-compat`.
 
 ## Verification
 
@@ -80,7 +83,8 @@ The stable mental model and code placement rules live in
 
 - `vaadin-desktop-core`: public desktop application and capability API.
 - `vaadin-desktop-ipc`: sidecar envelope and serialization primitives.
-- `vaadin-desktop-flow`: Spring/Vaadin sidecar runtime and transport adapter.
+- `vaadin-desktop-flow`: pure Vaadin sidecar runtime and transport adapter.
+- `vaadin-desktop-spring-boot`: optional Spring DI and compatibility HTTP adapter.
 - `native-hosts/macos`: production AppKit/WKWebView host.
 - `examples`: readable developer applications.
 - `test-apps`: deterministic validation applications.

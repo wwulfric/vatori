@@ -14,7 +14,7 @@ The script currently covers:
 - repository hygiene and trace-inspector contracts;
 - opaque request-handler integration and StreamResource behavior;
 - Flow IPC scope, backpressure, cancellation and capability correlation;
-- launcher transport, ready payload and Spring context lifecycle;
+- launcher transport, ready payload, pure Flow EOF and optional Spring context lifecycle;
 - browser request and push bridge contracts.
 
 The script itself is the source of truth for its subcommands.

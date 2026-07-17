@@ -116,9 +116,9 @@ git blame <sha>^ -- <changed-file>
 
 优先匹配已有 `postmortem/NNN-*.md`。如果没有合适话题，再按以下维度分组：
 
-1. Flow-over-IPC runtime：bootstrap、event、patch、ordered push、recovery resync、VFIPC1 envelope、no-localhost shell。
+1. Flow-over-IPC runtime：bootstrap、event、patch、ordered push、recovery resync、VFIPC envelope、no-localhost shell。
 2. UIDL/Flow adapter：`UidlRequestHandler`、`UidlWriter`、`DesktopVaadinRequest`、`DesktopVaadinResponse`、`DesktopFlowRuntimeSession`。
-3. Swift/AppKit host：WKWebView load、sidecar launch/cleanup、window lifecycle、`HOST_PROTOCOL` acceptance trace、`VFIPC1` sidecar envelope。
+3. Swift/AppKit host：WKWebView load、sidecar launch/cleanup、window lifecycle、`HOST_PROTOCOL` acceptance trace、VFIPC sidecar envelope。
 4. Native capability bridge：file dialog、clipboard、notification、command/result、capabilityResult。
 5. Devtools and acceptance：`DesktopTraceInspector`、trace gates、auto smoke hooks、diagnostics false positive/negative。
 6. CLI/dev workflow：`bin/vaadin-desktop`、`dev`、`dev-compat`、平台 native host 构建与启动。

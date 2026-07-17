@@ -6,8 +6,8 @@
 ## 运行主链
 
 ```text
-bin/vaadin-desktop
-  -> native-hosts/macos
+bin/vaadin-desktop -> vaadin-desktop-cli
+  -> staged native-hosts/macos app
   -> AppKit + WKWebView
   -> Java sidecar
   -> vaadin-desktop-flow
@@ -22,14 +22,15 @@ sidecar contract。
 ```text
 flow-ipc
   standard Vaadin production bundle
-    -> opaque browser bridge -> VFIPC1 -> Vaadin request-handler chain
+    -> opaque browser bridge -> VFIPC + envelope version 1
+    -> Vaadin request-handler chain
 
 compatibility-http
   loopback Vaadin URL
     -> WKWebView
 
 both
-  Java Desktop API <-> VFIPC1 command/capabilityResult <-> native host
+  Java Desktop API <-> sidecar command/capabilityResult <-> native host
 ```
 
 ## 发布模块
@@ -37,18 +38,19 @@ both
 | 目录 | 所有权 | 不应包含 |
 | --- | --- | --- |
 | `vaadin-desktop-core` | 开发者使用的 desktop API、application/window model、capability contract | Vaadin transport、平台实现、测试 fixture |
-| `vaadin-desktop-ipc` | `flow-ipc-v1` envelope 与通用 JSON/trace primitive | Flow 组件语义、host UI |
-| `vaadin-desktop-flow` | `DesktopLauncher`、Spring/Vaadin sidecar runtime、opaque request/push adapter、统一 native bridge | 平台 host 选择、自定义 Flow renderer、应用 fixture |
-| `vaadin-desktop-cli` | 可发布 CLI artifact 的入口 | 仓库 smoke orchestration、平台实现 |
+| `vaadin-desktop-ipc` | sidecar envelope、`VFIPC ` framing 与通用 JSON/trace primitive | Flow 组件语义、host UI |
+| `vaadin-desktop-flow` | `DesktopFlowApplication`、纯 Vaadin sidecar runtime、opaque request/push adapter、统一 native bridge | Spring、route scanning、平台 host 选择、自定义 Flow renderer |
+| `vaadin-desktop-spring-boot` | 可选 Spring DI、route scanning、Vaadin scopes 和 compatibility HTTP | 纯 Flow runtime、平台实现 |
+| `vaadin-desktop-cli` | Maven/frontend build、唯一 runnable JAR 发现、platform staging 和命令入口 | 应用 runtime、平台 capability 实现 |
 | `native-hosts/macos` | AppKit/WKWebView host、Java sidecar 生命周期、标准 bundle 装载、macOS capability 执行 | acceptance flags、DOM 断言、故障注入 |
 
 Java 依赖方向固定为：
 
 ```text
-core <- ipc <- flow
+core <- ipc <- flow <- spring-boot adapter
 ```
 
-`flow` 可以同时依赖 `core` 和 `ipc`。框架模块不得依赖 `examples`、`test-apps`
+`flow` 可以同时依赖 `core` 和 `ipc`，Spring adapter 依赖 `flow`。框架模块不得依赖 `examples`、`test-apps`
 或 `test-support`。standard production bundle 由 CLI/native-host build 生成和打包，
 不属于 `vaadin-desktop-flow` 的源码资源。
 
@@ -59,8 +61,9 @@ core <- ipc <- flow
 | `examples` | 面向开发者阅读的最小接入和能力示例 |
 | `test-apps` | 带稳定 DOM id、确定性状态和广覆盖断言面的验证应用 |
 
-两者都应像外部项目一样使用 `@SpringBootApplication`、`DesktopLauncher` 和公开
-framework artifact。框架源码不得引用应用类或应用资源。
+两者都应像外部项目一样只使用公开 framework artifact。纯 Flow 应用显式声明 routes
+并使用 `DesktopLauncher`；Spring 应用使用 `SpringDesktopLauncher`。框架源码不得
+引用应用类或应用资源。
 
 ## 测试支持
 
@@ -93,10 +96,11 @@ artifact 的依赖。生产 CLI、builder 和 launcher 不能识别 acceptance �
 
 1. 外部应用是否直接调用？放 `vaadin-desktop-core`。
 2. 是否只定义跨进程 envelope/序列化？放 `vaadin-desktop-ipc`。
-3. 是否依赖 Vaadin request、session、route、push 或 Spring sidecar？放 `vaadin-desktop-flow`。
-4. 是否直接操作某个平台 WebView、窗口、sidecar 进程或 capability？放对应 `native-hosts/<platform>`。
-5. 是否只服务自动化、故障注入、截图或 gate？放 `test-support`。
-6. 是否是可读用户故事？放 `examples`；以机器断言为主则放 `test-apps`。
+3. 是否依赖 Vaadin request、session、route 或 push？放 `vaadin-desktop-flow`。
+4. 是否只为 Spring DI、route scanning 或 HTTP compatibility 服务？放 `vaadin-desktop-spring-boot`。
+5. 是否直接操作某个平台 WebView、窗口、sidecar 进程或 capability？放对应 `native-hosts/<platform>`。
+6. 是否只服务自动化、故障注入、截图或 gate？放 `test-support`。
+7. 是否是可读用户故事？放 `examples`；以机器断言为主则放 `test-apps`。
 
 如果一段代码同时属于平台 runtime 和测试应用，先提取稳定 extension point，再把
 production implementation 与 acceptance overlay 分开放置。

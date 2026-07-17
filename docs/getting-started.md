@@ -6,63 +6,38 @@
 - Maven 3.9+
 - macOS with `/usr/bin/swiftc`
 
-Repository scripts initialize SDKMAN when needed and use `.m2/repository` as the
-local Maven cache.
+Repository commands use `.m2/repository` as the local Maven cache.
 
-## Run Flow IPC
+## Run Pure Flow
 
 ```bash
 bash bin/vaadin-desktop dev examples/counter-app
 ```
 
-The command builds the application's standard Vaadin production webapp and
-runnable JAR, packages the webapp into the macOS host, starts the Java sidecar and
-opens WKWebView. Browser requests and push cross VFIPC1 opaquely; Vaadin's
-standard client owns bootstrap, UIDL and rendering.
+The Java CLI builds one runnable sidecar JAR and the standard Vaadin production
+webapp, stages both into a macOS app, and starts that app. WKWebView browser
+requests and push cross `VFIPC ` framing opaquely; Vaadin's standard client owns
+bootstrap, UIDL and rendering.
 
-The launch fails if the production bundle, runnable sidecar or structured Java
-`ready` descriptor is missing.
+## Create A Pure Flow Application
 
-## Run Compatibility HTTP
-
-```bash
-bash bin/vaadin-desktop dev-compat examples/counter-app
-```
-
-The same macOS host starts the sidecar and loads its random loopback URL. Use
-this mode for Servlet filters, servlet-backed security or other integrations
-that require a normal web server. Native capability calls still use VFIPC1 and
-return real host results.
-
-## Package
-
-```bash
-bash bin/vaadin-desktop package examples/counter-app
-```
-
-The current command produces the application package output and development
-macOS host app under `.build/native-hosts/macos`. Installer signing,
-notarization and distribution are not complete.
-
-## Create An Application
-
-1. Create a Maven module.
-2. Depend on `dev.vatori:vaadin-desktop-flow`.
-3. Add `com.vaadin:vaadin-spring-boot-starter` and optional `vaadin-dev`.
-4. Add a Spring Boot application class that calls `DesktopLauncher.launch(...)`.
-5. Define ordinary Vaadin Flow views with `@Route`.
+Depend on `vaadin-desktop-flow`, `flow-html-components` and the component modules
+the application actually uses. Do not add Spring or `vaadin-dev` to the default
+runtime. The application build must produce exactly one JAR with `Main-Class`;
+repository examples use Maven Shade for this contract.
 
 ```java
-@SpringBootApplication
 public class MyDesktopApp {
     public static void main(String[] args) {
-        DesktopLauncher.launch(MyDesktopApp.class,
+        DesktopLauncher.launch(
                 DesktopApplication.builder("My App")
                         .mainWindow(DesktopWindow.builder("main")
                                 .title("My App")
                                 .size(1000, 720)
                                 .build())
                         .build(),
+                DesktopFlowApplication.builder(
+                        MainView.class, DetailsView.class).build(),
                 args);
     }
 }
@@ -77,8 +52,48 @@ public class MainView extends VerticalLayout {
 }
 ```
 
-Application name, window id/title and dimensions must be valid because Java
-publishes them in `ready` and the native host uses them to create the window.
+Routes are explicit, exactly one route is rooted at `""`, and the default
+instantiator requires constructible route classes. Applications needing another
+DI mechanism can provide an `InstantiatorFactory`.
+
+## Use Spring Boot
+
+Add `vaadin-desktop-spring-boot` and use `SpringDesktopLauncher` when Spring DI,
+Spring route scanning or a Servlet web application is required:
+
+```java
+@SpringBootApplication
+public class SpringDesktopApp {
+    public static void main(String[] args) {
+        SpringDesktopLauncher.launch(
+                SpringDesktopApp.class,
+                DesktopApplication.builder("Spring App").build(),
+                args);
+    }
+}
+```
+
+Spring applications support both commands:
+
+```bash
+bash bin/vaadin-desktop dev test-apps/vaadin-desktop-smoke-app
+bash bin/vaadin-desktop dev-compat test-apps/vaadin-desktop-smoke-app
+```
+
+`dev-compat` builds the production frontend, then loads it from a random loopback
+URL through Spring. It preserves Servlet filters, web security and WebSocket
+behavior. Pure Flow launchers reject this transport.
+
+## Package
+
+```bash
+bash bin/vaadin-desktop package examples/counter-app
+```
+
+Output is `.build/native-hosts/macos/VaadinDesktopHost.app`. It contains
+`Sidecar/application.jar`, `FlowWebApp`, the capability manifest and
+`VatoriHost.json`; it does not depend on the source repository after staging.
+Embedded JREs, installer signing and notarization are not complete.
 
 ## Verify
 
@@ -86,12 +101,4 @@ publishes them in `ready` and the native host uses them to create the window.
 bash bin/verify-smoke
 ```
 
-The suite checks repository boundaries, sidecar launcher lifecycle, request
-handler integration, scope isolation, trace inspector contracts and browser
-bridges. See `docs/acceptance-tools.md` for real-window automation.
-
-## Current Limits
-
-Flow IPC uses a production frontend build even for the development command.
-Dev-mode/Vite over IPC, complete Flow product parity, installers and non-macOS
-hosts remain open.
+See `docs/acceptance-tools.md` for explicit real-window automation.

@@ -1,36 +1,52 @@
 # Flow Integration
 
-Applications use one programming and launch model for both UI transports:
+## Pure Flow
+
+The default application model is:
 
 ```text
-@SpringBootApplication + @Route components + DesktopLauncher
+@Route components + DesktopFlowApplication + DesktopLauncher
 ```
 
-The native host declares the transport. Application code does not select host or
-transport and does not call an alternate Flow-specific launcher.
+`DesktopFlowApplication` explicitly lists every route, requires exactly one root
+route and optionally accepts a Vaadin `InstantiatorFactory`. The default is
+Vaadin `DefaultInstantiator`; the framework does not add a classpath scanner.
 
-## Flow IPC
-
-`dev` starts a non-web Spring context, discovers annotated routes under the
-application package and uses Vaadin's Spring instantiator and scopes. The standard
-Vaadin production client sends ordinary bootstrap, UIDL, event and resource
+The standard production client sends bootstrap, UIDL, event and resource
 requests through an opaque bridge. Java converts only the HTTP-shaped boundary
-and delegates every request to `VaadinService.handleRequest()`.
+and delegates every request to `VaadinService.handleRequest()`. Desktop handlers
+supply classpath resources and adapt the servlet-only `StreamResource` download
+path. Upload and StreamReceiver use Vaadin's standard stream handler.
 
-Standard classpath resources and `StreamResource` downloads are represented by
-desktop request handlers inside Vaadin's handler chain. Upload and StreamReceiver
-requests continue through Vaadin's standard stream handler.
+## Spring Boot Adapter
 
-## Compatibility HTTP
+Applications that add `vaadin-desktop-spring-boot` use:
 
-`dev-compat` starts the application's normal embedded web server on loopback.
-Vaadin servlet auto-configuration, filters and WebSocket behavior remain active.
-The native host receives the URL in the same structured `ready` handshake used
-by Flow IPC.
+```text
+@SpringBootApplication + @Route components + SpringDesktopLauncher
+```
 
-Compatibility changes only the WebView UI transport. Desktop API calls use the
-same `NativeBridge`, command correlation and capability result validation as
-Flow IPC.
+For Flow IPC, the adapter creates a non-web Spring context, scans routes,
+provides `SpringInstantiator` and registers Vaadin scopes. For
+`compatibility-http`, it starts the embedded server on loopback and publishes
+the URL through the normal `ready` handshake.
+
+Compatibility changes only UI transport. Desktop API calls use the same native
+bridge, command correlation and scoped capability results.
+
+## Multiple Windows
+
+Flow IPC applications may call:
+
+```java
+Desktop.current().windows().open(
+        DesktopWindow.builder("details").route("details").build());
+Desktop.current().windows().close("details");
+```
+
+The route must be relative and registered in `DesktopFlowApplication`. Each
+window receives an isolated Vaadin session and UI. Compatibility HTTP remains
+single-window.
 
 ## Validation Application
 
@@ -38,16 +54,12 @@ Flow IPC.
 bash bin/vaadin-desktop dev test-apps/flow-over-ipc-framework-app
 ```
 
-The validation app uses the same public launch shape as examples while exposing
-deterministic state for broader Flow component and native capability checks.
+This app uses the same public pure Flow entry as external applications while
+exposing deterministic state for broader validation.
 
-## Open Integration Boundaries
+## Open Boundaries
 
-- dynamic routes outside application-package discovery;
-- desktop-native alternatives for servlet-backed authentication/security;
+- desktop-native alternatives for servlet-backed authentication and security;
 - dev-mode/Vite frontend workflow over IPC;
 - complete component, focus, overlay, accessibility and resource parity;
-- production packaging and cross-platform host implementations.
-
-Use semantic capability names in docs and tests. Do not encode implementation
-batch or goal versions in application or framework source.
+- embedded JREs, production installers and non-macOS hosts.

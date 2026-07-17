@@ -23,6 +23,8 @@ check_forbidden_path() {
     docs/archive/goals/*|\
     */target/*|\
     target/*|\
+    */node_modules/*|\
+    node_modules/*|\
     vaadin-desktop-host-tauri/*|\
     docs/traces/*|\
     assets/brand/vatori.iconset/*|\
@@ -30,6 +32,7 @@ check_forbidden_path() {
     */src/main/frontend/generated/*|\
     */src/main/frontend/index.html|\
     */src/main/bundles/*|\
+    */vite.generated.ts|\
     *.class|\
     *.jar|\
     *.war|\
@@ -245,6 +248,7 @@ check_framework_test_boundaries() {
     vaadin-desktop-core/src/main
     vaadin-desktop-ipc/src/main
     vaadin-desktop-flow/src/main
+    vaadin-desktop-spring-boot/src/main
     vaadin-desktop-cli/src/main
     native-hosts/macos/Sources/VaadinDesktopHost
     native-hosts/macos/Resources
@@ -366,6 +370,8 @@ check_single_native_host_contract() {
     vaadin-desktop-core
     vaadin-desktop-ipc
     vaadin-desktop-flow
+    vaadin-desktop-spring-boot
+    vaadin-desktop-cli
     test-apps
     examples
     pom.xml
@@ -396,6 +402,69 @@ check_single_native_host_contract() {
   fi
 }
 
+check_runtime_boundary_contract() {
+  local match
+  match="$(rg -n -m 1 --glob '!repository-hygiene-check' \
+    -e 'VFIPC1' -e 'flow-ipc-v1' \
+    AGENTS.md README.md README.zh-CN.md docs bin native-hosts test-support \
+    vaadin-desktop-core vaadin-desktop-ipc vaadin-desktop-flow \
+    vaadin-desktop-spring-boot vaadin-desktop-cli examples test-apps || true)"
+  if [[ -n "$match" ]]; then
+    fail "retired sidecar protocol version encoding returned: $match"
+  fi
+
+  match="$(rg -n -m 1 \
+    -e 'DesktopMenu' -e 'menu\.setApplicationMenu' \
+    vaadin-desktop-core vaadin-desktop-flow vaadin-desktop-spring-boot \
+    native-hosts examples test-apps || true)"
+  if [[ -n "$match" ]]; then
+    fail "unimplemented desktop menu API returned: $match"
+  fi
+
+  match="$(rg -n -m 1 \
+    -e 'org\.springframework' -e 'com\.vaadin\.flow\.spring' \
+    vaadin-desktop-flow/src examples test-apps/flow-over-ipc-smoke-app \
+    test-apps/flow-over-ipc-framework-app || true)"
+  if [[ -n "$match" ]]; then
+    fail "Spring leaked into the pure Flow runtime or application: $match"
+  fi
+  match="$(rg -n -m 1 '<artifactId>vaadin-dev</artifactId>' \
+    examples test-apps/flow-over-ipc-smoke-app \
+    test-apps/flow-over-ipc-framework-app || true)"
+  if [[ -n "$match" ]]; then
+    fail "vaadin-dev leaked Spring/Copilot dependencies into a pure Flow app: $match"
+  fi
+
+  match="$(rg -n -m 1 \
+    -e 'pom\.xml' -e 'spring-boot:run' -e 'mavenExecutable' \
+    -e 'mavenRepo' -e 'repoRoot' -e 'config\.module' \
+    -e 'VAADIN_DESKTOP_MODULE' -e 'VAADIN_DESKTOP_REPO_ROOT' \
+    native-hosts/macos/Sources native-hosts/macos/Resources || true)"
+  if [[ -n "$match" ]]; then
+    fail "macOS host understands repository or Maven build state: $match"
+  fi
+
+  if ! grep -Fq 'ProcessBuilder' \
+      vaadin-desktop-cli/src/main/java/dev/vatori/desktop/cli/VaadinDesktopCli.java; then
+    fail "Java CLI no longer owns build and platform process orchestration"
+  fi
+  if ! grep -Fq 'Sidecar/application.jar' bin/vaadin-desktop-build-macos-host \
+      || ! grep -Fq 'VatoriHost.json' bin/vaadin-desktop-build-macos-host; then
+    fail "macOS builder no longer stages the sidecar JAR and launch manifest"
+  fi
+  if grep -Eq -- '--(module|repo-root|maven-repo|maven-executable)' \
+      bin/vaadin-desktop-macos-host-launch; then
+    fail "macOS launcher passes repository/build arguments to Swift"
+  fi
+  if [[ -e bin/vaadin-desktop-build-flow-bundle ]]; then
+    fail "shell frontend builder returned; Java CLI must own the production bundle"
+  fi
+  if ! grep -Fq 'bin/vaadin-desktop" package' \
+      test-support/native-host-macos-acceptance/bin/run; then
+    fail "native-host acceptance no longer reuses the Java CLI build boundary"
+  fi
+}
+
 while IFS= read -r -d '' path; do
   if [[ ! -e "$path" ]]; then
     continue
@@ -411,6 +480,7 @@ check_framework_test_boundaries
 check_trace_inspector_contract
 check_retired_flow_ipc_scaffolding
 check_single_native_host_contract
+check_runtime_boundary_contract
 
 if (( failed )); then
   exit 1

@@ -20,8 +20,8 @@ client、UI renderer 或按组件解释 UIDL 的 host runtime。
 稳定运行主链：
 
 ```text
-bin/vaadin-desktop
-  -> native-hosts/macos
+bin/vaadin-desktop -> vaadin-desktop-cli
+  -> staged native-hosts/macos app
   -> AppKit + WKWebView
   -> Java sidecar
   -> vaadin-desktop-flow
@@ -33,17 +33,20 @@ Windows/Linux 模块。
 
 ## Runtime 边界
 
-`dev` 是默认主线：CLI 构建应用的标准 Vaadin production bundle，macOS host 从本地
-resource scheme 加载它，并通过 document-start opaque request/push bridge 与 Java
-sidecar 交换 VFIPC1 envelope。Host 和 bridge 不解析 bootstrap 或 UIDL。
+`dev` 是默认主线：Java CLI 构建 runnable sidecar JAR 和标准 Vaadin production
+bundle，再将二者及 launch manifest 暂存进 macOS app。Host 只从 bundle 读取相对
+路径，通过 document-start opaque request/push bridge 与纯 Flow Java sidecar 交换
+`VFIPC ` + 数字 `version: 1` envelope。Host 和 bridge 不解析 bootstrap 或 UIDL。
 
-`dev-compat` 使用同一个 macOS host，但 WKWebView 加载 Java sidecar 发布的随机
-`127.0.0.1` URL。Servlet、HTTP 和 WebSocket 仍属于 compatibility UI transport；
-native command/result、window lifecycle 和 shutdown 继续使用统一 VFIPC1 channel。
+`dev-compat` 只适用于引入 `vaadin-desktop-spring-boot` adapter 的应用。它使用同一个
+macOS host，但 WKWebView 加载 Spring sidecar 发布的随机 `127.0.0.1` URL。Servlet、
+HTTP 和 WebSocket 仍属于 compatibility UI transport；native command/result、窗口
+生命周期和 shutdown 继续使用统一 sidecar channel。
 
-`DesktopLauncher.launch(...)` 是阻塞式应用入口。没有合法 sidecar transport 时，
-直接运行应用 JAR 必须失败。Java `ready` 提供 application metadata 和 main-window
-descriptor，host 验证后才能创建窗口。
+`DesktopLauncher.launch(...)` 是纯 Flow 的阻塞式应用入口，接收显式 route 集合；
+Spring 应用使用 `SpringDesktopLauncher`。没有合法 sidecar transport 时直接运行应用
+JAR 必须失败。Java `ready` 提供 application metadata 和 main-window descriptor，
+host 验证后才能创建窗口。
 
 不要把当前验证面描述成 full product parity。只要能力仍依赖 focused validation、
 fixture、compatibility transport 或未完成的产品边界，就明确说明限制。
@@ -69,7 +72,7 @@ mvn -o -Dmaven.repo.local=/Users/bytedance/IdeaProjects/vatori/.m2/repository -D
 
 ```bash
 bash bin/vaadin-desktop dev examples/counter-app
-bash bin/vaadin-desktop dev-compat examples/counter-app
+bash bin/vaadin-desktop dev-compat test-apps/vaadin-desktop-smoke-app
 bash bin/vaadin-desktop package examples/counter-app
 bash bin/verify-smoke
 ```
@@ -120,14 +123,19 @@ release asset 或外部归档。启动真实窗口后，结束 turn 前停止长
 ## 工程规则
 
 - 保持 compatibility HTTP 被明确命名，不隐藏 Servlet/HTTP/WebSocket 依赖。
+- `vaadin-desktop-flow` 和默认 examples 不得依赖 Spring；Spring、route scanning、
+  scopes 和 compatibility HTTP 只能进入 `vaadin-desktop-spring-boot` adapter。
 - framework production sources 和 resources 只能包含通用框架能力；fixture、自动化、
   故障注入和 gate 必须放在 `src/test`、`test-apps` 或 `test-support`。
-- examples 和 test apps 必须像外部用户一样依赖 framework modules，并通过
-  `@SpringBootApplication + DesktopLauncher` 启动。
+- examples 和 test apps 必须像外部用户一样依赖 framework modules。纯 Flow 应用使用
+  `DesktopFlowApplication + DesktopLauncher`；Spring 应用使用
+  `@SpringBootApplication + SpringDesktopLauncher`。
 - 根 Maven reactor 聚合 framework、examples 和 test apps；`test-support` 由验证命令
   显式构建，不能成为 framework artifact 的依赖。
 - Standard bundle 的构建和打包属于 CLI/native-host build；Flow module 只处理 Java
   sidecar runtime 和 transport adapter。
+- Swift host 只能读取 bundle 内 `VatoriHost.json` 及相对资源路径，不得理解 Maven、
+  module、repository、`pom.xml` 或执行应用构建。
 - 所有浏览器请求统一进入 `VaadinService.handleRequest()`。平台 host 不得按 bootstrap、
   UIDL、Upload 或 Download 类型分支。
 - 搜索源码使用 `rg` / `rg --files`；文件编辑使用 `apply_patch`。

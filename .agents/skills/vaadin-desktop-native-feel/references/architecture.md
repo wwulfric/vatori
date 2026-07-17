@@ -30,7 +30,7 @@ Layer 4: Native Capability Core
 bin/vaadin-desktop
   -> native-hosts/macos
   -> AppKit + WKWebView
-  -> VFIPC1 sidecar channel
+  -> VFIPC sidecar channel (envelope version 1)
   -> vaadin-desktop-flow
 ```
 
@@ -65,8 +65,8 @@ Use Swift/AppKit/WKWebView as the macOS native runtime mainline. Tauri remains u
 native-hosts/macos/Sources/VaadinDesktopHost/main.swift
 ```
 
-The `VFIPC1` sidecar contract should be designed before adding features. Its
-common lifecycle and capability messages include:
+The `VFIPC ` framing prefix and numeric envelope `version` form the sidecar
+contract. Design its lifecycle before adding features. Common messages include:
 
 - `ready`
 - `command`

@@ -19,11 +19,10 @@ vatori 是一个 Vaadin 桌面端开发框架。应用开发者继续使用 Java
 bash bin/vaadin-desktop dev examples/counter-app
 ```
 
-当应用需要 Servlet WebApplicationContext 时，使用同一个 native host 加载 loopback
-Vaadin URL：
+当应用需要 Servlet WebApplicationContext 时，使用可选 Spring Boot adapter：
 
 ```bash
-bash bin/vaadin-desktop dev-compat examples/counter-app
+bash bin/vaadin-desktop dev-compat test-apps/vaadin-desktop-smoke-app
 ```
 
 构建应用和当前平台 host：
@@ -32,28 +31,30 @@ bash bin/vaadin-desktop dev-compat examples/counter-app
 bash bin/vaadin-desktop package examples/counter-app
 ```
 
-`dev` 构建并打包标准 production bundle；`dev-compat` 加载随机
-`127.0.0.1` URL。两种模式都通过同一条双向 sidecar channel 处理窗口生命周期和
-真实 native capability result。直接运行应用 JAR 而没有 native-host transport 会
-立即失败。
+两种模式都会构建标准 production bundle。`dev` 将其暂存给 WKWebView 本地加载；
+`dev-compat` 由 Spring 从随机 `127.0.0.1` URL 提供同一应用。两种模式都通过同一条
+双向 sidecar channel 处理窗口生命周期和真实 native capability result。直接运行应用
+JAR 而没有 native-host transport 会立即失败。
 
 ## 应用入口
 
-应用使用普通 Spring Boot main class 和 `DesktopLauncher`：
+默认 runtime 是纯 Vaadin Flow，应用显式注册 route：
 
 ```java
-@SpringBootApplication
 public class MyDesktopApp {
     public static void main(String[] args) {
-        DesktopLauncher.launch(MyDesktopApp.class,
+        DesktopLauncher.launch(
                 DesktopApplication.builder("My App").build(),
+                DesktopFlowApplication.builder(MainView.class).build(),
                 args);
     }
 }
 ```
 
 `DesktopApplication` 提供 native host 创建主窗口所需的 metadata、id、title 和
-size。页面仍然是普通 Vaadin `@Route` 组件。
+size。页面仍然是普通 Vaadin `@Route` 组件。Spring 应用额外依赖
+`vaadin-desktop-spring-boot` 并使用 `SpringDesktopLauncher`，只有这类应用可以使用
+`dev-compat`。
 
 ## 验证
 
@@ -77,7 +78,8 @@ bash bin/verify-smoke
 
 - `vaadin-desktop-core`：公开 desktop application 和 capability API。
 - `vaadin-desktop-ipc`：sidecar envelope 和序列化基础设施。
-- `vaadin-desktop-flow`：Spring/Vaadin sidecar runtime 和 transport adapter。
+- `vaadin-desktop-flow`：纯 Vaadin sidecar runtime 和 transport adapter。
+- `vaadin-desktop-spring-boot`：可选 Spring DI 和 compatibility HTTP adapter。
 - `native-hosts/macos`：production AppKit/WKWebView host。
 - `examples`：可读的开发者应用。
 - `test-apps`：确定性的验证应用。

@@ -19,7 +19,8 @@ Status: implemented on macOS, open cross-platform.
 
 - One platform-selected AppKit/WKWebView host.
 - Structured application/window `ready` handshake.
-- Shared VFIPC1 lifecycle and capability channel for both UI transports.
+- Stable `VFIPC ` framing and numeric envelope version for both UI transports.
+- Bundle launch manifest and repository-independent sidecar staging.
 - Explicit production and acceptance build boundaries.
 - Bounded sidecar replacement for Flow IPC.
 
@@ -36,8 +37,8 @@ Status: active product direction with broad validation, not full parity.
 - Keep the standard Vaadin production webapp and opaque request bridge as the
   only browser runtime.
 - Keep all browser requests inside Vaadin's request-handler chain.
-- Preserve ordinary Spring Boot, `DesktopLauncher` and `@Route` application
-  shape.
+- Preserve pure `DesktopFlowApplication + DesktopLauncher` as the default and
+  Spring Boot as an optional adapter.
 - Continue component, resource, event, push and multi-window parity one
   verifiable semantic slice at a time.
 
@@ -55,6 +56,8 @@ Status: real command/result path, production permission model incomplete.
 
 - Keep clipboard, dialogs, notification, window and file transfer behind public
   desktop APIs and manifest authorization.
+- Add a complete application-menu model only when native click events and Java
+  callback correlation are defined.
 - Complete sandbox-safe file grants, progress, cancellation, retry and resume.
 - Keep capability correlation transport-independent and auditable without
   committing generated logs.
@@ -63,7 +66,7 @@ Status: real command/result path, production permission model incomplete.
 
 Status: future work.
 
-- Define application/native-host packaging layout and frontend inventory.
+- Add an embedded JRE to the existing application/native-host staging layout.
 - Measure startup, memory and package size.
 - Add installers, signing/notarization, update strategy and release automation.
 

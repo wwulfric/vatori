@@ -1,6 +1,7 @@
 prototypes/**/out/
 *.class
 target/
+node_modules/
 .build/
 .m2/
 .idea/
@@ -13,3 +14,4 @@ assets/brand/vatori-wordmark.svg.png
 **/src/main/frontend/generated/
 **/src/main/frontend/index.html
 **/src/main/bundles/
+**/vite.generated.ts

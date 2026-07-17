@@ -1,10 +1,10 @@
 package dev.vatori.desktop.flow.ipc;
 
 import com.vaadin.flow.component.Component;
+import com.vaadin.flow.di.InstantiatorFactory;
 import dev.vatori.desktop.DesktopApplication;
 import dev.vatori.desktop.flow.transport.DesktopFlowHttpResponse;
 import dev.vatori.desktop.flow.transport.DesktopFlowOpaqueHttpSession;
-import org.springframework.context.ApplicationContext;
 
 import java.nio.charset.StandardCharsets;
 import java.util.Base64;
@@ -25,7 +25,7 @@ final class StandardFlowIpcRuntime {
     StandardFlowIpcRuntime(
             String route,
             Collection<Class<? extends Component>> routeClasses,
-            ApplicationContext applicationContext,
+            InstantiatorFactory instantiatorFactory,
             DesktopApplication application,
             SidecarOutput output,
             SidecarNativeBridge nativeBridge,
@@ -34,7 +34,7 @@ final class StandardFlowIpcRuntime {
         this.application = Objects.requireNonNull(application, "application");
         this.output = Objects.requireNonNull(output, "output");
         this.sessions = new StandardFlowIpcSessions(
-                List.copyOf(routeClasses), applicationContext, output, nativeBridge);
+                List.copyOf(routeClasses), instantiatorFactory, output, nativeBridge);
         this.exchanges = new StandardFlowIpcExchanges(output);
         this.messageLoop = new SidecarMessageLoop(output, nativeBridge, defaultScope);
         registerHandlers();
@@ -85,7 +85,7 @@ final class StandardFlowIpcRuntime {
 
     private void handleBufferedRequest(
             FlowIpcScope scope,
-            FlowIpcInboundEnvelope envelope,
+            SidecarInboundEnvelope envelope,
             String id,
             String correlationId) {
         try {
@@ -119,7 +119,7 @@ final class StandardFlowIpcRuntime {
 
     private void sendBufferedResponse(
             FlowIpcScope scope,
-            FlowIpcInboundEnvelope envelope,
+            SidecarInboundEnvelope envelope,
             String id,
             String correlationId,
             DesktopFlowHttpResponse response) {

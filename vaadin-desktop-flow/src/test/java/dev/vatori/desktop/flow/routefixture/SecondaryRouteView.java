@@ -5,9 +5,7 @@ import com.vaadin.flow.router.Route;
 
 @Route("secondary")
 public final class SecondaryRouteView extends Div {
-    public SecondaryRouteView(
-            RouteDiscoveryService service,
-            RouteScopedLabel scopedLabel) {
-        setText(service.message("secondary", scopedLabel));
+    public SecondaryRouteView() {
+        setText("Pure secondary route");
     }
 }

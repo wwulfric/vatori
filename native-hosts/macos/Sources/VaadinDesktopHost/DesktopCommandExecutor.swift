@@ -1,4 +1,5 @@
 import Cocoa
+import UserNotifications
 
 final class DesktopCommandExecutor {
     private let config: HostConfig
@@ -19,12 +20,12 @@ final class DesktopCommandExecutor {
     func execute(_ command: String,
                  args: [String: Any],
                  completion: @escaping ([String: Any]) -> Void) {
-        if !capabilityManifest.allows(command) {
+        if !capabilityManifest.allows(command, windowId: windowId) {
             completion(capabilityPermission([
                 "success": false,
                 "command": command,
-                "error": capabilityErrorMessage(reason: capabilityManifest.denialReason(command))
-            ], decision: "denied", reason: capabilityManifest.denialReason(command)))
+                "error": capabilityErrorMessage(reason: capabilityManifest.denialReason(command, windowId: windowId))
+            ], decision: "denied", reason: capabilityManifest.denialReason(command, windowId: windowId)))
             return
         }
         switch command {
@@ -71,13 +72,9 @@ final class DesktopCommandExecutor {
                 "textLength": text.count
             ]))
         case "notification.show":
-            completion(capabilityPermission([
-                "success": true,
-                "command": command,
-                "mode": "trace-only",
-                "title": args["title"] as? String ?? "",
-                "body": args["body"] as? String ?? ""
-            ]))
+            showNotification(args: args, command: command) { result in
+                completion(self.capabilityPermission(result))
+            }
         case "fileDialog.openFile":
             openFileDialog(args: args, command: command) { result in
                 completion(self.capabilityPermission(result))
@@ -109,6 +106,99 @@ final class DesktopCommandExecutor {
             return "Command not allowed by desktop-capabilities.json"
         default:
             return "Unsupported desktop command"
+        }
+    }
+
+    private func showNotification(
+        args: [String: Any],
+        command: String,
+        completion: @escaping ([String: Any]) -> Void
+    ) {
+        let title = args["title"] as? String ?? ""
+        let body = args["body"] as? String ?? ""
+        guard !title.trimmingCharacters(in: .whitespacesAndNewlines).isEmpty else {
+            completion([
+                "success": false,
+                "command": command,
+                "mode": "native-user-notifications",
+                "error": "Notification title must not be blank"
+            ])
+            return
+        }
+        let center = UNUserNotificationCenter.current()
+        center.getNotificationSettings { settings in
+            switch settings.authorizationStatus {
+            case .authorized, .provisional, .ephemeral:
+                self.scheduleNotification(
+                    center: center, command: command, title: title, body: body,
+                    completion: completion)
+            case .notDetermined:
+                center.requestAuthorization(options: [.alert, .sound]) { granted, error in
+                    guard granted, error == nil else {
+                        completion([
+                            "success": false,
+                            "command": command,
+                            "mode": "native-user-notifications",
+                            "error": error?.localizedDescription
+                                ?? "Notification permission was denied"
+                        ])
+                        return
+                    }
+                    self.scheduleNotification(
+                        center: center, command: command, title: title, body: body,
+                        completion: completion)
+                }
+            case .denied:
+                completion([
+                    "success": false,
+                    "command": command,
+                    "mode": "native-user-notifications",
+                    "error": "Notification permission was denied"
+                ])
+            @unknown default:
+                completion([
+                    "success": false,
+                    "command": command,
+                    "mode": "native-user-notifications",
+                    "error": "Unsupported notification authorization state"
+                ])
+            }
+        }
+    }
+
+    private func scheduleNotification(
+        center: UNUserNotificationCenter,
+        command: String,
+        title: String,
+        body: String,
+        completion: @escaping ([String: Any]) -> Void
+    ) {
+        let content = UNMutableNotificationContent()
+        content.title = title
+        content.body = body
+        content.sound = .default
+        let identifier = "vatori-\(UUID().uuidString)"
+        center.add(UNNotificationRequest(
+            identifier: identifier,
+            content: content,
+            trigger: nil)) { error in
+            if let error {
+                completion([
+                    "success": false,
+                    "command": command,
+                    "mode": "native-user-notifications",
+                    "error": error.localizedDescription
+                ])
+            } else {
+                completion([
+                    "success": true,
+                    "command": command,
+                    "mode": "native-user-notifications",
+                    "notificationId": identifier,
+                    "title": title,
+                    "body": body
+                ])
+            }
         }
     }
 
@@ -420,10 +510,6 @@ final class DesktopCommandExecutor {
         if path.isBlank {
             return ""
         }
-        if path.hasPrefix(config.repoRoot) {
-            let suffix = String(path.dropFirst(config.repoRoot.count)).trimmingCharacters(in: CharacterSet(charactersIn: "/"))
-            return "$REPO/" + suffix
-        }
         return URL(fileURLWithPath: path).lastPathComponent
     }
 
@@ -451,11 +537,15 @@ final class DesktopCommandExecutor {
         var payload = result
         payload["permissionMode"] = capabilityManifest.permissionMode
         payload["permissionDecision"] = decision
-        payload["permissionReason"] = reason ?? capabilityManifest.allowedReason(result["command"] as? String ?? "")
+        payload["permissionReason"] = reason ?? capabilityManifest.allowedReason(
+            result["command"] as? String ?? "", windowId: windowId)
         payload["permissionScope"] = "window:\(windowId)"
         payload["permissionManifestLoaded"] = capabilityManifest.loaded
         payload["permissionManifestPath"] = capabilityManifest.path
-        payload["permissionManifestCommands"] = capabilityManifest.allowedCommands.sorted().joined(separator: ",")
+        payload["permissionManifestCommands"] = capabilityManifest
+            .commandsByWindow[windowId, default: []]
+            .sorted()
+            .joined(separator: ",")
         return payload
     }
 

@@ -14,12 +14,13 @@
     <dependencies>
         <dependency>
             <groupId>dev.vatori</groupId>
-            <artifactId>vaadin-desktop-flow</artifactId>
+            <artifactId>vaadin-desktop-spring-boot</artifactId>
             <version>${project.version}</version>
         </dependency>
         <dependency>
             <groupId>com.vaadin</groupId>
             <artifactId>vaadin-spring-boot-starter</artifactId>
+            <version>${vaadin.version}</version>
         </dependency>
         <dependency>
             <groupId>com.vaadin</groupId>
@@ -32,8 +33,18 @@
             <plugin>
                 <groupId>org.springframework.boot</groupId>
                 <artifactId>spring-boot-maven-plugin</artifactId>
+                <version>${spring-boot.version}</version>
+                <configuration>
+                    <mainClass>dev.vatori.smoke.SmokeApplication</mainClass>
+                </configuration>
+                <executions>
+                    <execution>
+                        <goals>
+                            <goal>repackage</goal>
+                        </goals>
+                    </execution>
+                </executions>
             </plugin>
         </plugins>
     </build>
 </project>
-

@@ -72,7 +72,7 @@ final class SidecarNativeBridge implements NativeBridge, AutoCloseable {
         scopesBySession.remove(scope.sessionId(), scope);
     }
 
-    void complete(FlowIpcScope scope, FlowIpcInboundEnvelope envelope) {
+    void complete(FlowIpcScope scope, SidecarInboundEnvelope envelope) {
         String correlationId = envelope.correlationId();
         if (correlationId == null || correlationId.isBlank()) {
             throw new IllegalArgumentException("Capability result correlation id is required");

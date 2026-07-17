@@ -12,7 +12,8 @@ import dev.vatori.desktop.Desktop;
 public class CounterView extends VerticalLayout {
     private int count;
 
-    public CounterView(CounterApplicationService applicationService) {
+    public CounterView() {
+        CounterApplicationService applicationService = new CounterApplicationService();
         setPadding(true);
         setSpacing(true);
 

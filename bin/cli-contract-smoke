@@ -1,0 +1,18 @@
+#!/usr/bin/env bash
+set -euo pipefail
+
+ROOT="$(cd "$(dirname "${BASH_SOURCE[0]}")/.." && pwd)"
+MAVEN_REPO="${MAVEN_REPO:-$ROOT/.m2/repository}"
+
+if ! command -v mvn >/dev/null 2>&1 && [[ -f "$HOME/.sdkman/bin/sdkman-init.sh" ]]; then
+  # shellcheck source=/dev/null
+  set +u
+  source "$HOME/.sdkman/bin/sdkman-init.sh"
+  set -u
+fi
+
+mvn -q -o -Dmaven.repo.local="$MAVEN_REPO" \
+  -pl vaadin-desktop-cli -DskipTests test-compile \
+  org.codehaus.mojo:exec-maven-plugin:3.6.2:java \
+  -Dexec.mainClass=dev.vatori.desktop.cli.VaadinDesktopCliSmokeMain \
+  -Dexec.classpathScope=test

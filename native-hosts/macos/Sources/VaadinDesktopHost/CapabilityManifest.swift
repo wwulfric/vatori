@@ -1,99 +1,111 @@
 import Foundation
 
+private struct CapabilityManifestDocument: Decodable {
+    struct Window: Decodable {
+        let label: String
+        let commands: [String]
+    }
+
+    let schemaVersion: Int
+    let permissionMode: String
+    let windows: [Window]
+}
+
 struct CapabilityManifest {
     let path: String
     let loaded: Bool
     let permissionMode: String
-    let allowedCommands: Set<String>
+    let commandsByWindow: [String: Set<String>]
     let parseError: String
 
-    static func load(module: String) -> CapabilityManifest {
-        let path = "\(module)/desktop-capabilities.json"
-        guard FileManager.default.fileExists(atPath: path) else {
-            return CapabilityManifest(path: path,
-                                      loaded: false,
-                                      permissionMode: "allow-all-dev",
-                                      allowedCommands: [],
-                                      parseError: "")
-        }
-        guard let data = FileManager.default.contents(atPath: path) else {
-            return CapabilityManifest(path: path,
-                                      loaded: true,
-                                      permissionMode: "allow-all-dev",
-                                      allowedCommands: [],
-                                      parseError: "manifest-unreadable")
+    static func load(from url: URL) -> CapabilityManifest {
+        let path = "$APP/Contents/Resources/\(url.lastPathComponent)"
+        guard FileManager.default.fileExists(atPath: url.path) else {
+            return invalid(path: path, loaded: false, error: "manifest-missing")
         }
         do {
-            let json = try JSONSerialization.jsonObject(with: data)
-            guard let object = json as? [String: Any] else {
-                return CapabilityManifest(path: path,
-                                          loaded: true,
-                                          permissionMode: "allow-all-dev",
-                                          allowedCommands: [],
-                                          parseError: "manifest-root-not-object")
+            let document = try JSONDecoder().decode(
+                CapabilityManifestDocument.self,
+                from: Data(contentsOf: url))
+            guard document.schemaVersion == 1 else {
+                return invalid(
+                    path: path, loaded: true,
+                    error: "unsupported-schema-version-\(document.schemaVersion)")
             }
-            let permissionMode = object["permissionMode"] as? String ?? "allow-all-dev"
-            let windows = object["windows"] as? [[String: Any]] ?? []
-            var commands = Set<String>()
-            for window in windows where (window["label"] as? String ?? "main") == "main" {
-                if let values = window["commands"] as? [String] {
-                    commands.formUnion(values)
-                }
-                if let values = window["capabilities"] as? [String] {
-                    commands.formUnion(values)
-                }
+            let modes = Set(["allow-all-dev", "manifest-enforced", "trace-only-dry-run"])
+            guard modes.contains(document.permissionMode) else {
+                return invalid(
+                    path: path, loaded: true,
+                    error: "unsupported-permission-mode")
             }
-            return CapabilityManifest(path: path,
-                                      loaded: true,
-                                      permissionMode: permissionMode,
-                                      allowedCommands: commands,
-                                      parseError: "")
+            var commandsByWindow: [String: Set<String>] = [:]
+            for window in document.windows {
+                guard isValidSidecarIdentifier(window.label),
+                      commandsByWindow[window.label] == nil,
+                      window.commands.allSatisfy(isValidSidecarIdentifier) else {
+                    return invalid(
+                        path: path, loaded: true,
+                        error: "invalid-window-capability-entry")
+                }
+                commandsByWindow[window.label] = Set(window.commands)
+            }
+            return CapabilityManifest(
+                path: path,
+                loaded: true,
+                permissionMode: document.permissionMode,
+                commandsByWindow: commandsByWindow,
+                parseError: "")
         } catch {
-            return CapabilityManifest(path: path,
-                                      loaded: true,
-                                      permissionMode: "allow-all-dev",
-                                      allowedCommands: [],
-                                      parseError: error.localizedDescription)
+            return invalid(
+                path: path, loaded: true,
+                error: error.localizedDescription)
         }
     }
 
-    func allows(_ command: String) -> Bool {
-        if permissionMode == "trace-only-dry-run" {
-            return true
-        }
+    private static func invalid(
+        path: String,
+        loaded: Bool,
+        error: String
+    ) -> CapabilityManifest {
+        CapabilityManifest(
+            path: path,
+            loaded: loaded,
+            permissionMode: "invalid",
+            commandsByWindow: [:],
+            parseError: error)
+    }
+
+    func allows(_ command: String, windowId: String) -> Bool {
         if !parseError.isEmpty {
             return false
         }
-        if permissionMode == "manifest-enforced" {
-            return loaded && allowedCommands.contains(command)
-        }
-        if !loaded {
+        if permissionMode == "trace-only-dry-run" || permissionMode == "allow-all-dev" {
             return true
         }
-        return allowedCommands.contains(command)
+        return permissionMode == "manifest-enforced"
+            && commandsByWindow[windowId, default: []].contains(command)
     }
 
-    func denialReason(_ command: String) -> String {
+    func denialReason(_ command: String, windowId: String) -> String {
         if !parseError.isEmpty {
-            return "manifest-invalid"
+            return loaded ? "manifest-invalid" : "manifest-missing"
         }
-        if permissionMode == "manifest-enforced" && !loaded {
-            return "manifest-missing"
-        }
-        if loaded && !allowedCommands.contains(command) {
+        if !commandsByWindow[windowId, default: []].contains(command) {
             return "manifest-denied"
         }
         return "unsupported-command"
     }
 
-    func allowedReason(_ command: String) -> String {
+    func allowedReason(_ command: String, windowId: String) -> String {
         if permissionMode == "trace-only-dry-run" {
-            if loaded && !allowedCommands.contains(command) {
+            if !commandsByWindow[windowId, default: []].contains(command) {
                 return "dry-run-would-deny"
             }
-            return loaded ? "dry-run-manifest-allow" : "dry-run-development-default"
+            return "dry-run-manifest-allow"
         }
-        return loaded ? "manifest-allow" : "development-default"
+        return permissionMode == "allow-all-dev"
+            ? "development-default"
+            : "manifest-allow"
     }
 
     func tracePayload() -> [String: Any] {
@@ -101,7 +113,7 @@ struct CapabilityManifest {
             "path": path,
             "loaded": loaded,
             "permissionMode": permissionMode,
-            "allowedCommands": allowedCommands.sorted(),
+            "commandsByWindow": commandsByWindow.mapValues { $0.sorted() },
             "parseError": parseError
         ]
     }

@@ -2,6 +2,7 @@ import Cocoa
 import WebKit
 
 protocol HostRuntimeObserver: AnyObject {
+    var hostNoActivate: Bool { get }
     func configure(environment: [String: String])
     func configureUserContentController(
         _ userContentController: WKUserContentController,
@@ -13,6 +14,8 @@ protocol HostRuntimeObserver: AnyObject {
 }
 
 extension HostRuntimeObserver {
+    var hostNoActivate: Bool { false }
+
     func configure(environment: [String: String]) {}
 
     func configureUserContentController(

@@ -11,20 +11,14 @@
     </parent>
     <artifactId>flow-over-ipc-smoke-app</artifactId>
     <name>Flow over IPC Smoke App</name>
+    <properties>
+        <vaadin.desktop.main-class>dev.vatori.ipcsmoke.FlowOverIpcSmokeApplication</vaadin.desktop.main-class>
+    </properties>
     <dependencies>
         <dependency>
             <groupId>dev.vatori</groupId>
             <artifactId>vaadin-desktop-flow</artifactId>
             <version>${project.version}</version>
-        </dependency>
-        <dependency>
-            <groupId>com.vaadin</groupId>
-            <artifactId>vaadin-spring-boot-starter</artifactId>
-        </dependency>
-        <dependency>
-            <groupId>com.vaadin</groupId>
-            <artifactId>vaadin-dev</artifactId>
-            <optional>true</optional>
         </dependency>
         <dependency>
             <groupId>com.vaadin</groupId>
@@ -54,11 +48,8 @@
     <build>
         <plugins>
             <plugin>
-                <groupId>org.springframework.boot</groupId>
-                <artifactId>spring-boot-maven-plugin</artifactId>
-                <configuration>
-                    <mainClass>dev.vatori.ipcsmoke.FlowOverIpcSmokeApplication</mainClass>
-                </configuration>
+                <groupId>org.apache.maven.plugins</groupId>
+                <artifactId>maven-shade-plugin</artifactId>
             </plugin>
         </plugins>
     </build>

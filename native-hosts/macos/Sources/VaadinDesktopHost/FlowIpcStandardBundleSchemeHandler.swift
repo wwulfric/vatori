@@ -8,17 +8,8 @@ final class FlowIpcStandardBundleSchemeHandler: NSObject, WKURLSchemeHandler {
     private let rootURL: URL
     private let rootTracePath: String
 
-    init(module: String) {
-        let packagedRoot = Bundle.main.resourceURL?
-            .appendingPathComponent("FlowWebApp")
-            .standardizedFileURL
-            .resolvingSymlinksInPath()
-        let developmentRoot = URL(fileURLWithPath: module)
-            .appendingPathComponent("target")
-            .appendingPathComponent("classes")
-            .appendingPathComponent("META-INF")
-            .appendingPathComponent("VAADIN")
-            .appendingPathComponent("webapp")
+    init(rootURL: URL?) {
+        let packagedRoot = rootURL?
             .standardizedFileURL
             .resolvingSymlinksInPath()
         if let packagedRoot,
@@ -27,8 +18,8 @@ final class FlowIpcStandardBundleSchemeHandler: NSObject, WKURLSchemeHandler {
             self.rootURL = packagedRoot
             self.rootTracePath = "$APP/Contents/Resources/FlowWebApp"
         } else {
-            self.rootURL = developmentRoot
-            self.rootTracePath = "$MODULE/target/classes/META-INF/VAADIN/webapp"
+            self.rootURL = URL(fileURLWithPath: "/__vatori_missing_flow_webapp__")
+            self.rootTracePath = "$APP/Contents/Resources/FlowWebApp"
         }
     }
 
@@ -38,6 +29,13 @@ final class FlowIpcStandardBundleSchemeHandler: NSObject, WKURLSchemeHandler {
 
     var entryURL: URL {
         URL(string: "\(Self.schemeName)://app/")!
+    }
+
+    func entryURL(for route: String) -> URL {
+        if route.isEmpty {
+            return entryURL
+        }
+        return URL(string: "\(Self.schemeName)://app/\(route)") ?? entryURL
     }
 
     var redactedRoot: String {
@@ -104,9 +102,12 @@ final class FlowIpcStandardBundleSchemeHandler: NSObject, WKURLSchemeHandler {
             return nil
         }
         var isDirectory: ObjCBool = false
-        guard FileManager.default.fileExists(atPath: candidate.path, isDirectory: &isDirectory),
-              !isDirectory.boolValue else {
-            return nil
+        if !FileManager.default.fileExists(atPath: candidate.path, isDirectory: &isDirectory)
+                || isDirectory.boolValue {
+            guard candidate.pathExtension.isEmpty else {
+                return nil
+            }
+            return rootURL.appendingPathComponent("index.html")
         }
         return candidate
     }

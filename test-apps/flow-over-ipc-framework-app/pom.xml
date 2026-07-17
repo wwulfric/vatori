@@ -11,20 +11,14 @@
     </parent>
     <artifactId>flow-over-ipc-framework-app</artifactId>
     <name>Flow over IPC Framework Validation App</name>
+    <properties>
+        <vaadin.desktop.main-class>dev.vatori.ipcframework.FlowOverIpcFrameworkApplication</vaadin.desktop.main-class>
+    </properties>
     <dependencies>
         <dependency>
             <groupId>dev.vatori</groupId>
             <artifactId>vaadin-desktop-flow</artifactId>
             <version>${project.version}</version>
-        </dependency>
-        <dependency>
-            <groupId>com.vaadin</groupId>
-            <artifactId>vaadin-spring-boot-starter</artifactId>
-        </dependency>
-        <dependency>
-            <groupId>com.vaadin</groupId>
-            <artifactId>vaadin-dev</artifactId>
-            <optional>true</optional>
         </dependency>
         <dependency>
             <groupId>com.vaadin</groupId>
@@ -170,11 +164,8 @@
                 </configuration>
             </plugin>
             <plugin>
-                <groupId>org.springframework.boot</groupId>
-                <artifactId>spring-boot-maven-plugin</artifactId>
-                <configuration>
-                    <mainClass>dev.vatori.ipcframework.FlowOverIpcFrameworkApplication</mainClass>
-                </configuration>
+                <groupId>org.apache.maven.plugins</groupId>
+                <artifactId>maven-shade-plugin</artifactId>
             </plugin>
         </plugins>
     </build>

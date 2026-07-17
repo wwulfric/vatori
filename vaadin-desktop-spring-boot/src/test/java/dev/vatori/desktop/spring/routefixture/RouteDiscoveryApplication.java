@@ -1,7 +1,7 @@
-package dev.vatori.desktop.flow.launcherfixture;
+package dev.vatori.desktop.spring.routefixture;
 
 import org.springframework.boot.autoconfigure.SpringBootApplication;
 
 @SpringBootApplication
-public class LauncherContractApplication {
+public class RouteDiscoveryApplication {
 }

@@ -7,6 +7,7 @@ import com.vaadin.flow.component.html.Span;
 import com.vaadin.flow.component.orderedlayout.VerticalLayout;
 import com.vaadin.flow.router.Route;
 import dev.vatori.desktop.Desktop;
+import dev.vatori.desktop.DesktopCommandResult;
 
 import java.util.List;
 
@@ -19,14 +20,17 @@ public class SmokeView extends VerticalLayout {
         setSpacing(true);
 
         Span status = new Span("Clicks: 0");
-        status.setId("smoke-status");
+        status.setId("ipc-status");
 
-        Button button = new Button("Increment and notify", event -> {
+        Button button = new Button("Increment and update window", event -> {
             count++;
-            status.setText("Clicks: " + count);
-            Desktop.current().notifications().show("Smoke App", "Button clicked " + count + " time(s)");
+            DesktopCommandResult result = Desktop.current()
+                    .setWindowTitle("Vaadin Desktop Smoke App - " + count);
+            status.setText(result.success()
+                    ? "Clicks: " + count
+                    : "Capability failed: " + result.error());
         });
-        button.setId("smoke-button");
+        button.setId("ipc-button");
 
         Grid<Row> grid = new Grid<>(Row.class, false);
         grid.setId("smoke-grid");
@@ -44,4 +48,3 @@ public class SmokeView extends VerticalLayout {
     public record Row(int id, String name, String state) {
     }
 }
-

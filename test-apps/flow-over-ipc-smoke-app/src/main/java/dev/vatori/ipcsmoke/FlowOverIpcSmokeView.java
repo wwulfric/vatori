@@ -12,6 +12,8 @@ import com.vaadin.flow.component.textfield.TextField;
 import com.vaadin.flow.router.Route;
 import dev.vatori.desktop.Desktop;
 import dev.vatori.desktop.DesktopCommand;
+import dev.vatori.desktop.DesktopCommandResult;
+import dev.vatori.desktop.DesktopWindow;
 import tools.jackson.databind.JsonNode;
 
 import java.util.Map;
@@ -63,6 +65,28 @@ public class FlowOverIpcSmokeView extends VerticalLayout {
         });
         upload.setId("ipc-upload-button");
 
+        Span windowStatus = new Span("Window: pending");
+        windowStatus.setId("ipc-window-status");
+        Button openWindow = new Button("Open secondary window", event -> {
+            DesktopCommandResult result = Desktop.current().windows().open(
+                    DesktopWindow.builder("secondary")
+                            .title("Vaadin Flow over IPC - Secondary")
+                            .size(860, 640)
+                            .route("secondary")
+                            .build());
+            windowStatus.setText(result.success()
+                    ? "Window: secondary opened"
+                    : "Window: open failed - " + result.error());
+        });
+        openWindow.setId("ipc-open-secondary-window-button");
+        Button closeWindow = new Button("Close secondary window", event -> {
+            DesktopCommandResult result = Desktop.current().windows().close("secondary");
+            windowStatus.setText(result.success()
+                    ? "Window: secondary closing"
+                    : "Window: close failed - " + result.error());
+        });
+        closeWindow.setId("ipc-close-secondary-window-button");
+
         VerticalLayout list = new VerticalLayout();
         list.setId("ipc-list");
         list.setPadding(false);
@@ -72,7 +96,8 @@ public class FlowOverIpcSmokeView extends VerticalLayout {
         list.add(new Span("3 Replace-root patch over IPC READY"));
         list.add(new Span("4 Desktop command/capabilityResult over IPC READY"));
 
-        add(title, button, download, upload, status, list, fileTransferStatus, standardPushStatus);
+        add(title, button, download, upload, openWindow, closeWindow, status, list,
+                fileTransferStatus, windowStatus, standardPushStatus);
 
         Input textInput = new Input();
         textInput.setId("ipc-text-input");

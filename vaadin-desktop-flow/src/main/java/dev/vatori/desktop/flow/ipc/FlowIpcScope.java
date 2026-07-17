@@ -4,7 +4,7 @@ import java.util.Objects;
 
 record FlowIpcScope(String windowId, String sessionId, String uiId) {
     static FlowIpcScope from(
-            FlowIpcInboundEnvelope envelope,
+            SidecarInboundEnvelope envelope,
             String defaultSessionId,
             String defaultUiId) {
         String uiId = Objects.requireNonNullElse(envelope.uiId(), defaultUiId);

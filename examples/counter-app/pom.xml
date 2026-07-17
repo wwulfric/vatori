@@ -11,6 +11,9 @@
     </parent>
     <artifactId>counter-app</artifactId>
     <name>Vaadin Desktop Counter Example</name>
+    <properties>
+        <vaadin.desktop.main-class>dev.vatori.examples.counter.CounterApplication</vaadin.desktop.main-class>
+    </properties>
     <dependencies>
         <dependency>
             <groupId>dev.vatori</groupId>
@@ -19,21 +22,23 @@
         </dependency>
         <dependency>
             <groupId>com.vaadin</groupId>
-            <artifactId>vaadin-spring-boot-starter</artifactId>
+            <artifactId>flow-html-components</artifactId>
         </dependency>
         <dependency>
             <groupId>com.vaadin</groupId>
-            <artifactId>vaadin-dev</artifactId>
-            <optional>true</optional>
+            <artifactId>vaadin-button-flow</artifactId>
+        </dependency>
+        <dependency>
+            <groupId>com.vaadin</groupId>
+            <artifactId>vaadin-ordered-layout-flow</artifactId>
         </dependency>
     </dependencies>
     <build>
         <plugins>
             <plugin>
-                <groupId>org.springframework.boot</groupId>
-                <artifactId>spring-boot-maven-plugin</artifactId>
+                <groupId>org.apache.maven.plugins</groupId>
+                <artifactId>maven-shade-plugin</artifactId>
             </plugin>
         </plugins>
     </build>
 </project>
-

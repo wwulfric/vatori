@@ -1,7 +1,7 @@
 package dev.vatori.desktop.flow.transport;
 
 import com.vaadin.flow.component.Component;
-import org.springframework.context.ApplicationContext;
+import com.vaadin.flow.di.InstantiatorFactory;
 
 import java.util.Collection;
 import java.util.Objects;
@@ -19,11 +19,11 @@ public final class DesktopFlowOpaqueHttpSessionRegistry implements AutoCloseable
     private DesktopFlowOpaqueHttpSessionRegistry(
             String appId,
             Collection<Class<? extends Component>> routeClasses,
-            ApplicationContext applicationContext,
+            InstantiatorFactory instantiatorFactory,
             Consumer<DesktopFlowPushMessage> pushSender) {
         this.service = new DesktopFlowVaadinService(
                 appId, true, Objects.requireNonNull(pushSender, "pushSender"),
-                applicationContext);
+                instantiatorFactory);
         service.registerRoutes(routeClasses);
         service.initialize();
     }
@@ -42,10 +42,10 @@ public final class DesktopFlowOpaqueHttpSessionRegistry implements AutoCloseable
     public static DesktopFlowOpaqueHttpSessionRegistry create(
             String appId,
             Collection<Class<? extends Component>> routeClasses,
-            ApplicationContext applicationContext,
+            InstantiatorFactory instantiatorFactory,
             Consumer<DesktopFlowPushMessage> pushSender) {
         return new DesktopFlowOpaqueHttpSessionRegistry(
-                appId, routeClasses, applicationContext, pushSender);
+                appId, routeClasses, instantiatorFactory, pushSender);
     }
 
     public static DesktopFlowOpaqueHttpSessionRegistry create(

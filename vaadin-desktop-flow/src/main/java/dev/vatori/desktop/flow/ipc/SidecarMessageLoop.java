@@ -1,5 +1,6 @@
 package dev.vatori.desktop.flow.ipc;
 
+import dev.vatori.desktop.ipc.SidecarWire;
 import java.io.BufferedReader;
 import java.io.IOException;
 import java.io.InputStreamReader;
@@ -71,8 +72,13 @@ final class SidecarMessageLoop {
         try {
             String line;
             while (!shutdownRequested && (line = reader.readLine()) != null) {
-                if (line.startsWith(FlowIpcWire.PREFIX)) {
-                    handle(line.substring(FlowIpcWire.PREFIX.length()));
+                if (line.startsWith(SidecarWire.PREFIX)) {
+                    handle(line.substring(SidecarWire.PREFIX.length()));
+                } else if (!line.isBlank()) {
+                    output.sendError(defaultScope, "protocolFraming",
+                            "Sidecar input must start with '" + SidecarWire.PREFIX + "'",
+                            null, null);
+                    requestShutdown();
                 }
             }
         } catch (IOException error) {
@@ -99,7 +105,7 @@ final class SidecarMessageLoop {
         String correlationId = null;
         FlowIpcScope scope = defaultScope;
         try {
-            FlowIpcInboundEnvelope envelope = FlowIpcInboundEnvelope.parse(json);
+            SidecarInboundEnvelope envelope = SidecarInboundEnvelope.parse(json);
             String type = Objects.requireNonNullElse(envelope.type(), "");
             id = envelope.id();
             correlationId = envelope.correlationId();
@@ -140,6 +146,9 @@ final class SidecarMessageLoop {
                     }
                 }
             }
+        } catch (SidecarProtocolException error) {
+            output.sendError(scope, "protocolVersion", error.getMessage(), id, correlationId);
+            requestShutdown();
         } catch (SecurityException error) {
             output.sendError(scope, "invalidScope", error.getMessage(), id, correlationId);
         } catch (IllegalArgumentException | IllegalStateException error) {
@@ -155,7 +164,7 @@ final class SidecarMessageLoop {
     private void invokeHandler(
             Handler handler,
             FlowIpcScope scope,
-            FlowIpcInboundEnvelope envelope,
+            SidecarInboundEnvelope envelope,
             String id,
             String correlationId) {
         try {
@@ -176,7 +185,7 @@ final class SidecarMessageLoop {
     interface Handler {
         void handle(
                 FlowIpcScope scope,
-                FlowIpcInboundEnvelope envelope,
+                SidecarInboundEnvelope envelope,
                 String id,
                 String correlationId);
     }

@@ -49,6 +49,7 @@ const socket = context.vaadinPush.atmosphere.subscribe({
 });
 
 const connect = messages.shift();
+assert.equal(connect.version, 1);
 assert.equal(connect.type, 'opaquePushConnect');
 assert.equal(connect.windowId, 'secondary');
 assert.equal(connect.sessionId, 'flow-ipc-session-secondary');
@@ -59,12 +60,14 @@ assert.equal(connect.payload.lastSeenServerSyncId, 4);
 const connectionId = connect.payload.connectionId;
 
 context.VaadinDesktopPush.receive({
+  version: 1,
   type: 'opaquePushConnected',
   payload: { connectionId }
 });
 assert.equal(opened, 1);
 
 context.VaadinDesktopPush.receive({
+  version: 1,
   type: 'opaquePush',
   payload: { connectionId, pushSequence: 1, uidl: '{"syncId":1}', resync: false }
 });
@@ -73,6 +76,7 @@ assert.equal(context.VaadinDesktopIpcDiagnostics.standardBundlePushFirstSequence
 assert.equal(context.VaadinDesktopIpcDiagnostics.standardBundlePushLastSequence, 1);
 
 context.VaadinDesktopPush.receive({
+  version: 1,
   type: 'opaquePush',
   payload: { connectionId, pushSequence: 1, uidl: 'duplicate', resync: false }
 });
@@ -80,6 +84,7 @@ assert.equal(receivedBodies.length, 1);
 assert.equal(context.VaadinDesktopIpcDiagnostics.standardBundlePushDuplicateCount, 1);
 
 context.VaadinDesktopPush.receive({
+  version: 1,
   type: 'opaquePush',
   payload: { connectionId, pushSequence: 3, uidl: 'gap', resync: false }
 });
@@ -87,6 +92,7 @@ assert.equal(messages.shift().type, 'opaquePushResync');
 assert.equal(context.VaadinDesktopIpcDiagnostics.standardBundlePushGapCount, 1);
 
 context.VaadinDesktopPush.receive({
+  version: 1,
   type: 'opaquePush',
   payload: { connectionId, pushSequence: 4, uidl: 'still waiting', resync: false }
 });
@@ -97,6 +103,7 @@ assert.equal(
 );
 
 context.VaadinDesktopPush.receive({
+  version: 1,
   type: 'opaquePush',
   payload: { connectionId, pushSequence: 5, uidl: '{"syncId":5}', resync: true }
 });
@@ -114,6 +121,7 @@ assert.equal(messages.length, 0);
 assert.equal(context.VaadinDesktopIpcDiagnostics.standardBundlePushReconnectCount, 1);
 assert.equal(context.VaadinDesktopIpcDiagnostics.standardBundlePushResyncCount, 1);
 context.VaadinDesktopPush.receive({
+  version: 1,
   type: 'opaquePushConnected',
   payload: { connectionId }
 });

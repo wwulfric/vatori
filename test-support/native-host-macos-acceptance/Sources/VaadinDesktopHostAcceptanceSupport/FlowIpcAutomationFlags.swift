@@ -4,6 +4,8 @@ import Foundation
 final class FlowIpcAcceptanceRuntimeObserver: HostRuntimeObserver {
     var flags: Set<String> = []
     var values: [String: String] = [:]
+    var repositoryRoot: String = FileManager.default.temporaryDirectory.path
+    var hostNoActivate = false
     var webViewDiagnostics: WebViewDiagnostics?
     private var openPanelObservers: [NSObjectProtocol] = []
 
@@ -12,6 +14,11 @@ final class FlowIpcAcceptanceRuntimeObserver: HostRuntimeObserver {
     }
 
     func configure(environment: [String: String]) {
+        hostNoActivate = environment["VAADIN_DESKTOP_MACOS_NO_ACTIVATE"] == "1"
+        if let configuredRoot = environment["VAADIN_DESKTOP_ACCEPTANCE_REPO_ROOT"],
+           !configuredRoot.isEmpty {
+            repositoryRoot = configuredRoot
+        }
         setFlag(
             "frameworkUpdate",
             from: "VAADIN_DESKTOP_FLOW_IPC_AUTO_FRAMEWORK_UPDATE",

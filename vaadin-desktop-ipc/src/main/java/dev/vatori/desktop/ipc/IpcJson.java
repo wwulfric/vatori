@@ -22,7 +22,7 @@ public final class IpcJson {
             appendString(json, string);
         } else if (value instanceof Number || value instanceof Boolean) {
             json.append(value);
-        } else if (value instanceof FlowIpcEnvelope envelope) {
+        } else if (value instanceof SidecarEnvelope envelope) {
             appendFlowEnvelope(json, envelope);
         } else if (value instanceof Map<?, ?> map) {
             appendMap(json, map);
@@ -35,7 +35,7 @@ public final class IpcJson {
         }
     }
 
-    private static void appendFlowEnvelope(StringBuilder json, FlowIpcEnvelope envelope) {
+    private static void appendFlowEnvelope(StringBuilder json, SidecarEnvelope envelope) {
         Map<String, Object> values = new LinkedHashMap<>();
         values.put("version", envelope.version());
         values.put("type", envelope.type());

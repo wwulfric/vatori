@@ -25,7 +25,7 @@ final class StandardFlowIpcExchanges implements AutoCloseable {
     void open(
             FlowIpcScope scope,
             DesktopFlowOpaqueHttpSession session,
-            FlowIpcInboundEnvelope envelope,
+            SidecarInboundEnvelope envelope,
             String id,
             String correlationId) {
         String requestId = requiredRequestId(envelope);
@@ -52,7 +52,7 @@ final class StandardFlowIpcExchanges implements AutoCloseable {
                 OpaqueHttpRequestBodyInputStream.INITIAL_CREDITS);
     }
 
-    void acceptChunk(FlowIpcScope scope, FlowIpcInboundEnvelope envelope) {
+    void acceptChunk(FlowIpcScope scope, SidecarInboundEnvelope envelope) {
         OpaqueHttpExchange exchange = requiredExchange(scope, envelope);
         byte[] bytes;
         try {
@@ -69,14 +69,14 @@ final class StandardFlowIpcExchanges implements AutoCloseable {
         exchange.requestBody.accept(envelope.integer("chunkSequence", -1), bytes);
     }
 
-    void finishRequest(FlowIpcScope scope, FlowIpcInboundEnvelope envelope) {
+    void finishRequest(FlowIpcScope scope, SidecarInboundEnvelope envelope) {
         OpaqueHttpExchange exchange = requiredExchange(scope, envelope);
         exchange.requestBody.finish(
                 envelope.integer("chunkCount", -1),
                 envelope.longValue("bodyBytes", -1));
     }
 
-    void grantResponseCredits(FlowIpcScope scope, FlowIpcInboundEnvelope envelope) {
+    void grantResponseCredits(FlowIpcScope scope, SidecarInboundEnvelope envelope) {
         String requestId = requiredRequestId(envelope);
         OpaqueHttpExchange exchange = exchanges.get(
                 new ExchangeKey(scope.windowId(), requestId));
@@ -86,7 +86,7 @@ final class StandardFlowIpcExchanges implements AutoCloseable {
         }
     }
 
-    void cancel(FlowIpcScope scope, FlowIpcInboundEnvelope envelope) {
+    void cancel(FlowIpcScope scope, SidecarInboundEnvelope envelope) {
         String requestId = requiredRequestId(envelope);
         ExchangeKey key = new ExchangeKey(scope.windowId(), requestId);
         OpaqueHttpExchange exchange = exchanges.get(key);
@@ -116,7 +116,7 @@ final class StandardFlowIpcExchanges implements AutoCloseable {
         });
     }
 
-    static String requiredUrl(FlowIpcInboundEnvelope envelope) {
+    static String requiredUrl(SidecarInboundEnvelope envelope) {
         String url = envelope.string("url");
         if (url == null || url.isBlank()) {
             throw new IllegalArgumentException("Opaque HTTP request URL is required");
@@ -126,7 +126,7 @@ final class StandardFlowIpcExchanges implements AutoCloseable {
 
     private OpaqueHttpExchange requiredExchange(
             FlowIpcScope scope,
-            FlowIpcInboundEnvelope envelope) {
+            SidecarInboundEnvelope envelope) {
         String requestId = requiredRequestId(envelope);
         OpaqueHttpExchange exchange = exchanges.get(
                 new ExchangeKey(scope.windowId(), requestId));
@@ -138,7 +138,7 @@ final class StandardFlowIpcExchanges implements AutoCloseable {
         return exchange;
     }
 
-    private static String requiredRequestId(FlowIpcInboundEnvelope envelope) {
+    private static String requiredRequestId(SidecarInboundEnvelope envelope) {
         String requestId = Objects.requireNonNullElse(
                 envelope.string("requestId"), envelope.id());
         if (requestId == null || requestId.isBlank()) {

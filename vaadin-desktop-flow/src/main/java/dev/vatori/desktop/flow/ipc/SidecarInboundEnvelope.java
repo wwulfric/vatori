@@ -1,5 +1,6 @@
 package dev.vatori.desktop.flow.ipc;
 
+import dev.vatori.desktop.ipc.SidecarEnvelope;
 import tools.jackson.core.JacksonException;
 import tools.jackson.databind.JsonNode;
 import tools.jackson.databind.ObjectMapper;
@@ -9,16 +10,25 @@ import java.util.Collections;
 import java.util.LinkedHashMap;
 import java.util.Map;
 
-final class FlowIpcInboundEnvelope {
+final class SidecarInboundEnvelope {
     private static final ObjectMapper JSON = JsonMapper.builder().build();
 
     private final JsonNode root;
     private final JsonNode payload;
     private final JsonNode error;
 
-    private FlowIpcInboundEnvelope(JsonNode root) {
+    private SidecarInboundEnvelope(JsonNode root) {
         if (root == null || !root.isObject()) {
-            throw new IllegalArgumentException("Flow IPC envelope must be a JSON object");
+            throw new SidecarProtocolException("Sidecar envelope must be a JSON object");
+        }
+        JsonNode version = root.get("version");
+        if (version == null || !version.isIntegralNumber()) {
+            throw new SidecarProtocolException(
+                    "Sidecar envelope version must be the number " + SidecarEnvelope.VERSION);
+        }
+        if (version.asInt() != SidecarEnvelope.VERSION) {
+            throw new SidecarProtocolException(
+                    "Unsupported sidecar envelope version: " + version.asText());
         }
         this.root = root;
         JsonNode payloadNode = root.get("payload");
@@ -27,11 +37,11 @@ final class FlowIpcInboundEnvelope {
         this.error = errorNode != null && errorNode.isObject() ? errorNode : null;
     }
 
-    static FlowIpcInboundEnvelope parse(String json) {
+    static SidecarInboundEnvelope parse(String json) {
         try {
-            return new FlowIpcInboundEnvelope(JSON.readTree(json));
+            return new SidecarInboundEnvelope(JSON.readTree(json));
         } catch (JacksonException error) {
-            throw new IllegalArgumentException("Invalid Flow IPC JSON envelope", error);
+            throw new SidecarProtocolException("Invalid sidecar JSON envelope", error);
         }
     }
 
@@ -89,7 +99,7 @@ final class FlowIpcInboundEnvelope {
         try {
             return JSON.writeValueAsString(node);
         } catch (JacksonException error) {
-            throw new IllegalArgumentException("Unable to serialize Flow IPC field " + field, error);
+            throw new IllegalArgumentException("Unable to serialize sidecar field " + field, error);
         }
     }
 
@@ -152,5 +162,15 @@ final class FlowIpcInboundEnvelope {
 
     private static long longValue(JsonNode node, long fallback) {
         return node != null && node.isIntegralNumber() ? node.asLong() : fallback;
+    }
+}
+
+final class SidecarProtocolException extends IllegalArgumentException {
+    SidecarProtocolException(String message) {
+        super(message);
+    }
+
+    SidecarProtocolException(String message, Throwable cause) {
+        super(message, cause);
     }
 }

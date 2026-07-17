@@ -12,6 +12,16 @@
         "fileTransfer.download",
         "fileTransfer.selectUploadFile"
       ]
+    },
+    {
+      "label": "secondary",
+      "commands": [
+        "window.open",
+        "window.close",
+        "window.setTitle",
+        "notification.show",
+        "clipboard.writeText"
+      ]
     }
   ]
 }

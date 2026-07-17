@@ -12,9 +12,14 @@ if ! command -v mvn >/dev/null 2>&1 && [[ -f "$HOME/.sdkman/bin/sdkman-init.sh" 
 fi
 
 mvn -o -Dmaven.repo.local="$MAVEN_REPO" \
-  -pl vaadin-desktop-flow -am -DskipTests test-compile
+  -pl vaadin-desktop-spring-boot -am -DskipTests test-compile
 mvn -q -o -Dmaven.repo.local="$MAVEN_REPO" \
   -pl vaadin-desktop-flow \
   -Dexec.mainClass=dev.vatori.desktop.flow.LauncherContractSmokeMain \
+  -Dexec.classpathScope=test \
+  org.codehaus.mojo:exec-maven-plugin:3.6.2:java
+mvn -q -o -Dmaven.repo.local="$MAVEN_REPO" \
+  -pl vaadin-desktop-spring-boot \
+  -Dexec.mainClass=dev.vatori.desktop.spring.SpringLauncherContractSmokeMain \
   -Dexec.classpathScope=test \
   org.codehaus.mojo:exec-maven-plugin:3.6.2:java

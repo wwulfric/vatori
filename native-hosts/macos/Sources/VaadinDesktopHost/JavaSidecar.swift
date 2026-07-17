@@ -10,7 +10,7 @@ struct JavaSidecarTermination {
 
 final class JavaSidecar {
     private let config: HostConfig
-    private let onFlowIpcEnvelope: (String, [String: Any]) -> Void
+    private let onSidecarEnvelope: (String, [String: Any]) -> Void
     private let onTermination: (JavaSidecarTermination) -> Void
     private var process: Process?
     private var stdinPipe: Pipe?
@@ -22,10 +22,10 @@ final class JavaSidecar {
     private let stdinLock = NSLock()
 
     init(config: HostConfig,
-         onFlowIpcEnvelope: @escaping (String, [String: Any]) -> Void,
+         onSidecarEnvelope: @escaping (String, [String: Any]) -> Void,
          onTermination: @escaping (JavaSidecarTermination) -> Void) {
         self.config = config
-        self.onFlowIpcEnvelope = onFlowIpcEnvelope
+        self.onSidecarEnvelope = onSidecarEnvelope
         self.onTermination = onTermination
     }
 
@@ -35,27 +35,16 @@ final class JavaSidecar {
               process?.isRunning != true else {
             return false
         }
-        let modulePom = "\(config.module)/pom.xml"
-        guard FileManager.default.fileExists(atPath: modulePom) else {
-            trace("send", "error", [
-                "code": "moduleNotFound",
-                "message": "Module pom not found: \(modulePom)"
-            ])
-            return false
-        }
-
         generation += 1
         let launchGeneration = generation
         let process = Process()
-        process.currentDirectoryURL = URL(fileURLWithPath: config.repoRoot)
-        let launchPlan = JavaSidecarLaunchPlan.make(config: config, modulePom: modulePom)
+        process.currentDirectoryURL = config.sidecarJarURL.deletingLastPathComponent()
+        let launchPlan = JavaSidecarLaunchPlan.make(config: config)
         process.executableURL = URL(fileURLWithPath: launchPlan.executable)
         process.arguments = launchPlan.arguments
 
         var environment = ProcessInfo.processInfo.environment
         environment["VAADIN_DESKTOP_TRANSPORT"] = config.transport.rawValue
-        environment["VAADIN_DESKTOP_REPO_ROOT"] = config.repoRoot
-        environment["VAADIN_DESKTOP_MODULE"] = config.module
         process.environment = environment
 
         let stdinPipe = Pipe()
@@ -98,8 +87,7 @@ final class JavaSidecar {
 
         trace("send", "launch.sidecar", [
             "command": launchPlan.commandSummary,
-            "modulePom": modulePom,
-            "jar": launchPlan.directJar ?? "",
+            "jar": "$APP/Contents/Resources/Sidecar/application.jar",
             "transport": config.transport.rawValue,
             "generation": launchGeneration
         ])
@@ -133,7 +121,7 @@ final class JavaSidecar {
             "transport": config.transport.rawValue,
             "reason": "host-terminate"
         ])
-        sendFlowIpc("{\"version\":\"flow-ipc-v1\",\"type\":\"shutdown\",\"id\":\"shutdown\",\"correlationId\":\"shutdown\",\"payload\":{},\"error\":null,\"timestamp\":0}")
+        sendSidecarEnvelope("{\"version\":1,\"type\":\"shutdown\",\"id\":\"shutdown\",\"correlationId\":\"shutdown\",\"payload\":{},\"error\":null,\"timestamp\":0}")
         try? stdinPipe?.fileHandleForWriting.close()
         if let process, process.isRunning {
             let deadline = Date().addingTimeInterval(1)
@@ -150,7 +138,7 @@ final class JavaSidecar {
     }
 
     @discardableResult
-    func sendFlowIpc(_ envelope: String) -> Bool {
+    func sendSidecarEnvelope(_ envelope: String) -> Bool {
         stdinLock.lock()
         defer { stdinLock.unlock() }
         guard let stdinPipe,
@@ -162,7 +150,7 @@ final class JavaSidecar {
             ])
             return false
         }
-        let line = "VFIPC1 \(envelope)\n"
+        let line = "\(sidecarWirePrefix)\(envelope)\n"
         guard let data = line.data(using: .utf8) else {
             return false
         }
@@ -214,25 +202,38 @@ final class JavaSidecar {
         print("[java] \(summarizedJavaStdoutLine(line))")
         fflush(stdout)
 
-        if line.hasPrefix("VFIPC1 ") {
-            handleFlowIpcEnvelope(String(line.dropFirst(7)), generation: generation)
+        if line.hasPrefix(sidecarWirePrefix) {
+            handleSidecarEnvelope(
+                String(line.dropFirst(sidecarWirePrefix.count)),
+                generation: generation)
         }
     }
 
-    private func handleFlowIpcEnvelope(_ envelope: String, generation: Int) {
+    private func handleSidecarEnvelope(_ envelope: String, generation: Int) {
         guard let data = envelope.data(using: .utf8),
               let object = try? JSONSerialization.jsonObject(with: data) as? [String: Any] else {
             trace("send", "error", [
-                "code": "invalidFlowIpcEnvelope",
+                "code": "invalidSidecarEnvelope",
                 "raw": envelope
             ])
+            return
+        }
+        guard hasValidSidecarVersion(object) else {
+            trace("send", "error", [
+                "code": "unsupportedSidecarVersion",
+                "version": object["version"] ?? NSNull()
+            ])
+            DispatchQueue.main.async {
+                self.terminate()
+                NSApp.terminate(nil)
+            }
             return
         }
         DispatchQueue.main.async {
             guard self.runningGeneration == generation else {
                 return
             }
-            self.onFlowIpcEnvelope(envelope, object)
+            self.onSidecarEnvelope(envelope, object)
         }
     }
 

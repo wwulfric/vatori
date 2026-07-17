@@ -8,7 +8,8 @@ import com.vaadin.flow.router.RouterLink;
 
 @Route("details")
 public final class CounterDetailsView extends VerticalLayout {
-    public CounterDetailsView(CounterApplicationService applicationService) {
+    public CounterDetailsView() {
+        CounterApplicationService applicationService = new CounterApplicationService();
         setPadding(true);
         setSpacing(true);
         add(new H2("Counter details"), new Paragraph(applicationService.details()),

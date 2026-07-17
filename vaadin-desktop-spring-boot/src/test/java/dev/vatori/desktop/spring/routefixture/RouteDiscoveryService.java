@@ -1,4 +1,4 @@
-package dev.vatori.desktop.flow.routefixture;
+package dev.vatori.desktop.spring.routefixture;
 
 import org.springframework.stereotype.Service;
 

@@ -114,18 +114,18 @@ func redactedFlowIpcEnvelope(_ object: [String: Any]) -> [String: Any] {
 }
 
 func summarizedJavaStdoutLine(_ line: String) -> String {
-    guard line.hasPrefix("VFIPC1 ") else {
+    guard line.hasPrefix(sidecarWirePrefix) else {
         return line
     }
-    let raw = String(line.dropFirst(7))
+    let raw = String(line.dropFirst(sidecarWirePrefix.count))
     guard let data = raw.data(using: .utf8),
           let object = try? JSONSerialization.jsonObject(with: data) as? [String: Any] else {
-        return "VFIPC1 invalid bytes=\(raw.utf8.count)"
+        return "VFIPC invalid bytes=\(raw.utf8.count)"
     }
     let type = object["type"] as? String ?? "unknown"
     let id = object["id"] as? String ?? ""
     let correlationId = object["correlationId"] as? String ?? ""
     let payload = object["payload"] as? [String: Any] ?? [:]
     let path = compactTraceString(payload["path"] as? String ?? "", maxLength: 256)
-    return "VFIPC1 type=\(type) id=\(id) correlationId=\(correlationId) bytes=\(raw.utf8.count) payloadFields=\(payload.count) path=\(path)"
+    return "VFIPC type=\(type) id=\(id) correlationId=\(correlationId) bytes=\(raw.utf8.count) payloadFields=\(payload.count) path=\(path)"
 }

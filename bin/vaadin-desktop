@@ -9,91 +9,19 @@ if ! command -v mvn >/dev/null 2>&1 && [[ -f "$HOME/.sdkman/bin/sdkman-init.sh" 
   source "$HOME/.sdkman/bin/sdkman-init.sh"
   set -u
 fi
-
 if ! command -v mvn >/dev/null 2>&1; then
   echo "mvn not found. Install Maven or initialize SDKMAN before running this command." >&2
   exit 1
 fi
 
-COMMAND="${1:-help}"
-MODULE="${2:-}"
 MAVEN_REPO="${MAVEN_REPO:-$ROOT/.m2/repository}"
-MODULE_POM="$ROOT/$MODULE/pom.xml"
+MAVEN_MODE="-U"
+if [[ "${VAADIN_DESKTOP_MAVEN_OFFLINE:-}" == "1" ]]; then
+  MAVEN_MODE="-o"
+fi
 
-require_macos() {
-  if [[ "$(uname -s)" != "Darwin" ]]; then
-    echo "Vaadin Desktop currently provides only native-hosts/macos." >&2
-    exit 1
-  fi
-}
+mvn "$MAVEN_MODE" -Dmaven.repo.local="$MAVEN_REPO" \
+  -f "$ROOT/pom.xml" -pl vaadin-desktop-cli -am -DskipTests package >/dev/null
 
-ensure_module() {
-  if [[ -z "$MODULE" ]]; then
-    echo "Usage: bin/vaadin-desktop $COMMAND <module>" >&2
-    exit 2
-  fi
-  if [[ ! -f "$MODULE_POM" ]]; then
-    echo "Module not found: $MODULE" >&2
-    exit 1
-  fi
-}
-
-maven_mode() {
-  if [[ "${VAADIN_DESKTOP_MAVEN_OFFLINE:-}" == "1" ]]; then
-    printf '%s' "-o"
-  else
-    printf '%s' "-U"
-  fi
-}
-
-install_module_with_dependencies() {
-  mvn "$(maven_mode)" -Dmaven.repo.local="$MAVEN_REPO" \
-    -f "$ROOT/pom.xml" -pl "$MODULE" -am \
-    -DskipTests -Dmaven.jar.forceCreation=true install
-}
-
-# shellcheck source=/dev/null
-source "$ROOT/bin/vaadin-desktop-build-flow-bundle"
-# shellcheck source=/dev/null
-source "$ROOT/bin/vaadin-desktop-macos-host-launch"
-
-case "$COMMAND" in
-  dev)
-    require_macos
-    ensure_module
-    install_module_with_dependencies
-    build_standard_flow_bundle
-    run_macos_host_runtime
-    ;;
-  dev-compat)
-    require_macos
-    ensure_module
-    install_module_with_dependencies
-    run_macos_host_runtime
-    ;;
-  package)
-    require_macos
-    ensure_module
-    install_module_with_dependencies
-    build_standard_flow_bundle
-    bash "$ROOT/bin/vaadin-desktop-build-macos-host" \
-      "$ROOT" "$MODULE" flow-ipc
-    echo "macOS host: $ROOT/.build/native-hosts/macos/VaadinDesktopHost.app"
-    ;;
-  help|--help|-h)
-    cat <<'USAGE'
-Usage:
-  bin/vaadin-desktop dev <module>
-  bin/vaadin-desktop dev-compat <module>
-  bin/vaadin-desktop package <module>
-  bin/vaadin-desktop help
-
-dev uses the standard Vaadin production bundle over Flow IPC.
-dev-compat uses the same native host with localhost HTTP UI transport.
-USAGE
-    ;;
-  *)
-    echo "Unknown command: $COMMAND" >&2
-    exit 1
-    ;;
-esac
+exec java -Dvatori.repo.root="$ROOT" \
+  -jar "$ROOT/vaadin-desktop-cli/target/vaadin-desktop-cli-0.1.0-SNAPSHOT.jar" "$@"

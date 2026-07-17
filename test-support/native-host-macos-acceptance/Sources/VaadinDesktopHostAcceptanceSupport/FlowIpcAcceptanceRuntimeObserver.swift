@@ -11,9 +11,6 @@ extension FlowIpcAcceptanceRuntimeObserver {
     }
 
     func didOpenInitialFlowIpcWindow(host: WebViewHost) {
-        if host.config.flowIpcAutoMultiWindow {
-            host.openFlowIpcWindow(scope: .window("secondary"))
-        }
     }
 
     func didFinishCompatibilityNavigation(host: WebViewHost, webView: WKWebView) {
@@ -60,7 +57,7 @@ extension FlowIpcAcceptanceRuntimeObserver {
         if let webViewDiagnostics {
             return webViewDiagnostics
         }
-        let diagnostics = WebViewDiagnostics(repoRoot: host.config.repoRoot)
+        let diagnostics = WebViewDiagnostics(repoRoot: repositoryRoot)
         webViewDiagnostics = diagnostics
         return diagnostics
     }

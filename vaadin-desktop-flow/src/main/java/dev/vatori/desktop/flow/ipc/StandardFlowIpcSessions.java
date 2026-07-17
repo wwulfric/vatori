@@ -1,10 +1,10 @@
 package dev.vatori.desktop.flow.ipc;
 
 import com.vaadin.flow.component.Component;
+import com.vaadin.flow.di.InstantiatorFactory;
 import dev.vatori.desktop.flow.transport.DesktopFlowOpaqueHttpSession;
 import dev.vatori.desktop.flow.transport.DesktopFlowOpaqueHttpSessionRegistry;
 import dev.vatori.desktop.flow.transport.DesktopFlowPushMessage;
-import org.springframework.context.ApplicationContext;
 
 import java.util.Collection;
 import java.util.List;
@@ -16,7 +16,7 @@ import java.util.concurrent.atomic.AtomicLong;
 
 final class StandardFlowIpcSessions implements AutoCloseable {
     private final List<Class<? extends Component>> routeClasses;
-    private final ApplicationContext applicationContext;
+    private final InstantiatorFactory instantiatorFactory;
     private final SidecarOutput output;
     private final SidecarNativeBridge nativeBridge;
     private final ConcurrentMap<String, SessionContext> sessionsByWindow =
@@ -27,11 +27,11 @@ final class StandardFlowIpcSessions implements AutoCloseable {
 
     StandardFlowIpcSessions(
             Collection<Class<? extends Component>> routeClasses,
-            ApplicationContext applicationContext,
+            InstantiatorFactory instantiatorFactory,
             SidecarOutput output,
             SidecarNativeBridge nativeBridge) {
         this.routeClasses = List.copyOf(routeClasses);
-        this.applicationContext = applicationContext;
+        this.instantiatorFactory = instantiatorFactory;
         this.output = Objects.requireNonNull(output, "output");
         this.nativeBridge = Objects.requireNonNull(nativeBridge, "nativeBridge");
     }
@@ -42,7 +42,7 @@ final class StandardFlowIpcSessions implements AutoCloseable {
 
     void connectPush(
             FlowIpcScope scope,
-            FlowIpcInboundEnvelope envelope,
+            SidecarInboundEnvelope envelope,
             String id,
             String correlationId) {
         SessionContext context = context(scope);
@@ -63,7 +63,7 @@ final class StandardFlowIpcSessions implements AutoCloseable {
                 envelope.integer("lastSeenServerSyncId", -1));
     }
 
-    void disconnectPush(FlowIpcScope scope, FlowIpcInboundEnvelope envelope) {
+    void disconnectPush(FlowIpcScope scope, SidecarInboundEnvelope envelope) {
         SessionContext context = sessionsByWindow.get(scope.windowId());
         if (context != null) {
             context.requireScope(scope);
@@ -74,7 +74,7 @@ final class StandardFlowIpcSessions implements AutoCloseable {
         }
     }
 
-    void resyncPush(FlowIpcScope scope, FlowIpcInboundEnvelope envelope) {
+    void resyncPush(FlowIpcScope scope, SidecarInboundEnvelope envelope) {
         context(scope).session.resyncPush(
                 envelope.integer("flowUiId", -1),
                 requiredPushMetadata(envelope, "connectionId"),
@@ -126,7 +126,7 @@ final class StandardFlowIpcSessions implements AutoCloseable {
             }
             if (sessionRegistry == null) {
                 sessionRegistry = DesktopFlowOpaqueHttpSessionRegistry.create(
-                        "flow-ipc", routeClasses, applicationContext, this::sendPush);
+                        "flow-ipc", routeClasses, instantiatorFactory, this::sendPush);
             }
             SessionContext sessionOwner = sessionsBySession.get(scope.sessionId());
             if (sessionOwner != null) {
@@ -164,7 +164,7 @@ final class StandardFlowIpcSessions implements AutoCloseable {
     }
 
     private static String requiredPushMetadata(
-            FlowIpcInboundEnvelope envelope,
+            SidecarInboundEnvelope envelope,
             String name) {
         String value = envelope.string(name);
         if (value == null || value.isBlank()) {

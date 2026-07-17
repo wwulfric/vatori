@@ -1,6 +1,7 @@
 package dev.vatori.desktop.flow.ipc;
 
-import dev.vatori.desktop.ipc.FlowIpcEnvelope;
+import dev.vatori.desktop.ipc.SidecarEnvelope;
+import dev.vatori.desktop.ipc.SidecarWire;
 import dev.vatori.desktop.ipc.IpcJson;
 
 import java.io.PrintStream;
@@ -9,7 +10,7 @@ import java.util.Map;
 import java.util.Objects;
 import java.util.concurrent.atomic.AtomicLong;
 
-/** The single synchronized VFIPC1 writer shared by every sidecar transport. */
+/** The single synchronized sidecar writer shared by every UI transport. */
 final class SidecarOutput {
     private final PrintStream out;
     private final String route;
@@ -47,7 +48,7 @@ final class SidecarOutput {
             long nextServerSequence = serverSequence.incrementAndGet();
             sequencedPayload.put("serverSequence", nextServerSequence);
             sequencedPayload.put("serverSequenceScope", "java-sidecar-to-webview");
-            write(FlowIpcEnvelope.message(
+            write(SidecarEnvelope.message(
                     type,
                     id,
                     correlationId,
@@ -67,7 +68,7 @@ final class SidecarOutput {
             String id,
             String correlationId) {
         synchronized (outputLock) {
-            write(FlowIpcEnvelope.error(
+            write(SidecarEnvelope.error(
                     id == null ? nextId("error") : id,
                     correlationId,
                     scope.sessionId(),
@@ -93,8 +94,8 @@ final class SidecarOutput {
         return copy;
     }
 
-    private void write(FlowIpcEnvelope envelope) {
-        out.println(FlowIpcWire.PREFIX + IpcJson.stringify(envelope));
+    private void write(SidecarEnvelope envelope) {
+        out.println(SidecarWire.PREFIX + IpcJson.stringify(envelope));
         out.flush();
     }
 }

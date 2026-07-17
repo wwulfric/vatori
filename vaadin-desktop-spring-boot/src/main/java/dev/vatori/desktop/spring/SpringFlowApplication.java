@@ -1,4 +1,4 @@
-package dev.vatori.desktop.flow;
+package dev.vatori.desktop.spring;
 
 import com.vaadin.flow.spring.VaadinScopesConfig;
 import org.springframework.boot.Banner;
@@ -9,12 +9,12 @@ import org.springframework.context.ConfigurableApplicationContext;
 import java.util.LinkedHashMap;
 import java.util.Map;
 
-final class FlowIpcSpringApplication {
+final class SpringFlowApplication {
     private static final String EXCLUDED_VAADIN_WEB_AUTO_CONFIGURATIONS = String.join(",",
             "com.vaadin.flow.spring.SpringBootAutoConfiguration",
             "com.vaadin.flow.spring.SpringSecurityAutoConfiguration");
 
-    private FlowIpcSpringApplication() {
+    private SpringFlowApplication() {
     }
 
     static ConfigurableApplicationContext start(Class<?> applicationClass, String[] args) {

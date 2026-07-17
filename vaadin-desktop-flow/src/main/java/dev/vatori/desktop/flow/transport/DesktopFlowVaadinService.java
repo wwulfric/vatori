@@ -3,6 +3,7 @@ package dev.vatori.desktop.flow.transport;
 import com.vaadin.flow.component.Component;
 import com.vaadin.flow.component.PushConfiguration;
 import com.vaadin.flow.di.Instantiator;
+import com.vaadin.flow.di.InstantiatorFactory;
 import com.vaadin.flow.di.Lookup;
 import com.vaadin.flow.di.ResourceProvider;
 import com.vaadin.flow.function.DeploymentConfiguration;
@@ -19,11 +20,11 @@ import com.vaadin.flow.server.VaadinSession;
 import com.vaadin.flow.server.WrappedSession;
 import com.vaadin.flow.server.communication.JavaScriptBootstrapHandler;
 import com.vaadin.flow.server.communication.PushConnectionFactory;
+import com.vaadin.flow.server.startup.ApplicationConfigurationFactory;
 import com.vaadin.flow.server.startup.ApplicationRouteRegistry;
+import com.vaadin.flow.server.startup.DefaultApplicationConfigurationFactory;
 import com.vaadin.flow.shared.communication.PushMode;
-import com.vaadin.flow.spring.SpringInstantiator;
 import jakarta.servlet.http.HttpServletRequest;
-import org.springframework.context.ApplicationContext;
 
 import java.io.File;
 import java.io.IOException;
@@ -47,7 +48,7 @@ import java.util.function.Supplier;
 final class DesktopFlowVaadinService extends VaadinService {
     private final String appId;
     private final ApplicationRouteRegistry routeRegistry;
-    private final ApplicationContext applicationContext;
+    private final InstantiatorFactory instantiatorFactory;
     private final PushConnectionFactory pushConnectionFactory;
 
     DesktopFlowVaadinService(String appId) {
@@ -69,11 +70,11 @@ final class DesktopFlowVaadinService extends VaadinService {
             String appId,
             boolean productionMode,
             Consumer<DesktopFlowPushMessage> pushSender,
-            ApplicationContext applicationContext) {
+            InstantiatorFactory instantiatorFactory) {
         super(deploymentConfiguration(productionMode, pushSender != null));
         this.appId = appId == null || appId.isBlank() ? "flow-ipc" : appId;
         this.routeRegistry = ApplicationRouteRegistry.getInstance(getContext());
-        this.applicationContext = applicationContext;
+        this.instantiatorFactory = instantiatorFactory;
         this.pushConnectionFactory = pushSender == null
                 ? null
                 : ui -> new DesktopIpcPushConnection(ui, pushSender);
@@ -117,25 +118,18 @@ final class DesktopFlowVaadinService extends VaadinService {
 
     @Override
     protected Optional<Instantiator> loadInstantiators() throws ServiceException {
-        if (applicationContext == null) {
+        if (instantiatorFactory == null) {
             return super.loadInstantiators();
         }
         Optional<Instantiator> spiInstantiator = super.loadInstantiators();
-        List<Instantiator> springInstantiators = applicationContext
-                .getBeansOfType(Instantiator.class)
-                .values()
-                .stream()
-                .toList();
-        if (spiInstantiator.isPresent() && !springInstantiators.isEmpty()) {
+        Instantiator configuredInstantiator = instantiatorFactory.createInstantitor(this);
+        if (spiInstantiator.isPresent() && configuredInstantiator != null) {
             throw new ServiceException(
-                    "Multiple Flow IPC instantiators: Java SPI and Spring beans");
-        }
-        if (spiInstantiator.isEmpty() && springInstantiators.isEmpty()) {
-            return Optional.of(new SpringInstantiator(this, applicationContext));
+                    "Multiple Flow IPC instantiators: Java SPI and configured factory");
         }
         return spiInstantiator.isPresent()
                 ? spiInstantiator
-                : springInstantiators.stream().findFirst();
+                : Optional.ofNullable(configuredInstantiator);
     }
 
     @Override
@@ -303,11 +297,17 @@ final class DesktopFlowVaadinService extends VaadinService {
     private static final class DesktopFlowVaadinContext implements VaadinContext {
         private static final ResourceProvider RESOURCE_PROVIDER =
                 new DesktopFlowResourceProvider();
+        private static final ApplicationConfigurationFactory
+                APPLICATION_CONFIGURATION_FACTORY =
+                new DefaultApplicationConfigurationFactory();
         private static final Lookup DESKTOP_LOOKUP = new Lookup() {
             @Override
             public <T> T lookup(Class<T> serviceClass) {
                 if (serviceClass.isInstance(RESOURCE_PROVIDER)) {
                     return serviceClass.cast(RESOURCE_PROVIDER);
+                }
+                if (serviceClass.isInstance(APPLICATION_CONFIGURATION_FACTORY)) {
+                    return serviceClass.cast(APPLICATION_CONFIGURATION_FACTORY);
                 }
                 return null;
             }
@@ -316,6 +316,10 @@ final class DesktopFlowVaadinService extends VaadinService {
             public <T> Collection<T> lookupAll(Class<T> serviceClass) {
                 if (serviceClass.isInstance(RESOURCE_PROVIDER)) {
                     return List.of(serviceClass.cast(RESOURCE_PROVIDER));
+                }
+                if (serviceClass.isInstance(APPLICATION_CONFIGURATION_FACTORY)) {
+                    return List.of(serviceClass.cast(
+                            APPLICATION_CONFIGURATION_FACTORY));
                 }
                 return Collections.emptyList();
             }

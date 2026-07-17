@@ -2,8 +2,10 @@
 set -euo pipefail
 
 ROOT="${1:?repo root is required}"
-MODULE="${2:-}"
-TRANSPORT="${3:?transport is required}"
+TRANSPORT="${2:?transport is required}"
+APPLICATION_JAR="${3:?runnable sidecar JAR is required}"
+WEBAPP_ROOT="${4:-}"
+CAPABILITY_MANIFEST="${5:-}"
 
 case "$TRANSPORT" in
   flow-ipc|compatibility-http) ;;
@@ -17,21 +19,29 @@ if [[ ! -x /usr/bin/swiftc ]]; then
   echo "swiftc not found at /usr/bin/swiftc. Install Xcode command line tools before running the Swift host." >&2
   exit 1
 fi
+if [[ ! -f "$APPLICATION_JAR" ]]; then
+  echo "Runnable sidecar JAR not found: $APPLICATION_JAR" >&2
+  exit 1
+fi
+if [[ "$TRANSPORT" == "flow-ipc" && ! -f "$WEBAPP_ROOT/index.html" ]]; then
+  echo "Standard Vaadin production bundle not found: $WEBAPP_ROOT" >&2
+  exit 1
+fi
 
-SWIFT_HOST_BUILD="$ROOT/.build/native-hosts/macos"
-SWIFT_HOST_APP="$SWIFT_HOST_BUILD/VaadinDesktopHost.app"
-SWIFT_HOST_CONTENTS="$SWIFT_HOST_APP/Contents"
-SWIFT_HOST_MACOS="$SWIFT_HOST_CONTENTS/MacOS"
-SWIFT_HOST_RESOURCES="$SWIFT_HOST_CONTENTS/Resources"
-SWIFT_HOST_EXE="$SWIFT_HOST_MACOS/VaadinDesktopHost"
-SWIFT_MODULE_CACHE="$ROOT/.build/clang-module-cache"
-SWIFT_HOST_SOURCE_ROOT="$ROOT/native-hosts/macos"
+HOST_BUILD="$ROOT/.build/native-hosts/macos"
+HOST_APP="$HOST_BUILD/VaadinDesktopHost.app"
+HOST_CONTENTS="$HOST_APP/Contents"
+HOST_MACOS="$HOST_CONTENTS/MacOS"
+HOST_RESOURCES="$HOST_CONTENTS/Resources"
+HOST_EXE="$HOST_MACOS/VaadinDesktopHost"
+MODULE_CACHE="$ROOT/.build/clang-module-cache"
+SOURCE_ROOT="$ROOT/native-hosts/macos"
 
-rm -rf "$SWIFT_HOST_RESOURCES"
-mkdir -p "$SWIFT_HOST_MACOS"
-mkdir -p "$SWIFT_HOST_RESOURCES"
-mkdir -p "$SWIFT_MODULE_CACHE"
-cat > "$SWIFT_HOST_CONTENTS/Info.plist" <<'PLIST'
+rm -rf "$HOST_APP"
+mkdir -p "$HOST_MACOS" "$HOST_RESOURCES/Sidecar" "$MODULE_CACHE"
+cp "$APPLICATION_JAR" "$HOST_RESOURCES/Sidecar/application.jar"
+
+cat > "$HOST_CONTENTS/Info.plist" <<'PLIST'
 <?xml version="1.0" encoding="UTF-8"?>
 <!DOCTYPE plist PUBLIC "-//Apple//DTD PLIST 1.0//EN" "http://www.apple.com/DTDs/PropertyList-1.0.dtd">
 <plist version="1.0">
@@ -57,38 +67,53 @@ cat > "$SWIFT_HOST_CONTENTS/Info.plist" <<'PLIST'
 </plist>
 PLIST
 
-SWIFT_HOST_SOURCES=("$SWIFT_HOST_SOURCE_ROOT"/Sources/VaadinDesktopHost/*.swift)
-CLANG_MODULE_CACHE_PATH="$SWIFT_MODULE_CACHE" /usr/bin/swiftc \
-  "${SWIFT_HOST_SOURCES[@]}" \
-  -o "$SWIFT_HOST_EXE"
+SWIFT_SOURCES=("$SOURCE_ROOT"/Sources/VaadinDesktopHost/*.swift)
+CLANG_MODULE_CACHE_PATH="$MODULE_CACHE" /usr/bin/swiftc \
+  "${SWIFT_SOURCES[@]}" \
+  -framework UserNotifications \
+  -o "$HOST_EXE"
 
-SWIFT_RESOURCE_ROOT="$SWIFT_HOST_SOURCE_ROOT/Resources"
-if [[ -d "$SWIFT_RESOURCE_ROOT" ]]; then
-  cp "$SWIFT_RESOURCE_ROOT/FlowIpcOpaqueHttpBridge.js" "$SWIFT_HOST_RESOURCES/"
-  if [[ "$TRANSPORT" == "flow-ipc" ]]; then
-    if [[ -z "$MODULE" ]]; then
-      echo "application module is required for standard production bundle mode" >&2
-      exit 2
-    fi
-    if [[ "$MODULE" == /* ]]; then
-      MODULE_ROOT="$MODULE"
-    else
-      MODULE_ROOT="$ROOT/$MODULE"
-    fi
-    STANDARD_BUNDLE_ROOT="$MODULE_ROOT/target/classes/META-INF/VAADIN/webapp"
-    if [[ ! -f "$STANDARD_BUNDLE_ROOT/index.html" ]]; then
-      echo "standard Vaadin production bundle not found: $STANDARD_BUNDLE_ROOT" >&2
-      exit 1
-    fi
-    mkdir -p "$SWIFT_HOST_RESOURCES/FlowWebApp"
-    cp -R "$STANDARD_BUNDLE_ROOT/." "$SWIFT_HOST_RESOURCES/FlowWebApp/"
-    mkdir -p "$SWIFT_HOST_RESOURCES/FlowWebApp/__vatori"
-    cp "$SWIFT_RESOURCE_ROOT/FlowIpcPushBridge.js" \
-      "$SWIFT_HOST_RESOURCES/FlowWebApp/__vatori/FlowIpcPushBridge.js"
-    echo "Packaged standard Vaadin production bundle for Flow IPC"
-  fi
+cp "$SOURCE_ROOT/Resources/FlowIpcOpaqueHttpBridge.js" "$HOST_RESOURCES/"
+WEBAPP_JSON="null"
+if [[ "$TRANSPORT" == "flow-ipc" ]]; then
+  mkdir -p "$HOST_RESOURCES/FlowWebApp/__vatori"
+  cp -R "$WEBAPP_ROOT/." "$HOST_RESOURCES/FlowWebApp/"
+  cp "$SOURCE_ROOT/Resources/FlowIpcPushBridge.js" \
+    "$HOST_RESOURCES/FlowWebApp/__vatori/FlowIpcPushBridge.js"
+  WEBAPP_JSON='"FlowWebApp"'
 fi
+
+if [[ -n "$CAPABILITY_MANIFEST" ]]; then
+  if [[ ! -f "$CAPABILITY_MANIFEST" ]]; then
+    echo "Capability manifest not found: $CAPABILITY_MANIFEST" >&2
+    exit 1
+  fi
+  cp "$CAPABILITY_MANIFEST" "$HOST_RESOURCES/desktop-capabilities.json"
+else
+  cat > "$HOST_RESOURCES/desktop-capabilities.json" <<'JSON'
+{"schemaVersion":1,"permissionMode":"allow-all-dev","windows":[]}
+JSON
+fi
+
+RESTART_LIMIT="${VAADIN_DESKTOP_FLOW_IPC_SIDECAR_RESTART_LIMIT:-3}"
+READY_TIMEOUT="${VAADIN_DESKTOP_FLOW_IPC_SIDECAR_RECOVERY_READY_TIMEOUT_SECONDS:-15}"
+cat > "$HOST_RESOURCES/VatoriHost.json" <<JSON
+{
+  "version": 1,
+  "transport": "$TRANSPORT",
+  "sidecarJar": "Sidecar/application.jar",
+  "webApp": $WEBAPP_JSON,
+  "opaqueBridge": "FlowIpcOpaqueHttpBridge.js",
+  "capabilityManifest": "desktop-capabilities.json",
+  "recovery": {
+    "restartLimit": $RESTART_LIMIT,
+    "readyTimeoutSeconds": $READY_TIMEOUT
+  }
+}
+JSON
 
 if command -v codesign >/dev/null 2>&1; then
-  codesign --force --sign - "$SWIFT_HOST_APP" >/dev/null 2>&1 || true
+  codesign --force --sign - "$HOST_APP" >/dev/null 2>&1 || true
 fi
+
+echo "Built macOS host: $HOST_APP"

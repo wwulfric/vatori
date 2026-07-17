@@ -11,5 +11,19 @@
     </parent>
     <artifactId>vaadin-desktop-cli</artifactId>
     <name>Vaadin Desktop CLI</name>
+    <build>
+        <plugins>
+            <plugin>
+                <groupId>org.apache.maven.plugins</groupId>
+                <artifactId>maven-jar-plugin</artifactId>
+                <configuration>
+                    <archive>
+                        <manifest>
+                            <mainClass>dev.vatori.desktop.cli.VaadinDesktopCli</mainClass>
+                        </manifest>
+                    </archive>
+                </configuration>
+            </plugin>
+        </plugins>
+    </build>
 </project>
-

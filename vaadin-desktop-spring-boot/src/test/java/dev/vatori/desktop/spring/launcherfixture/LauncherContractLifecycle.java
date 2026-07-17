@@ -1,4 +1,4 @@
-package dev.vatori.desktop.flow.launcherfixture;
+package dev.vatori.desktop.spring.launcherfixture;
 
 import org.springframework.beans.factory.DisposableBean;
 import org.springframework.stereotype.Component;

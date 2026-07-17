@@ -2,9 +2,7 @@ package dev.vatori.desktop.flow;
 
 import dev.vatori.desktop.DesktopApplication;
 import dev.vatori.desktop.DesktopWindow;
-import dev.vatori.desktop.flow.launcherfixture.LauncherContractApplication;
-import dev.vatori.desktop.flow.launcherfixture.LauncherContractLifecycle;
-import org.springframework.context.support.GenericApplicationContext;
+import dev.vatori.desktop.flow.launcherfixture.LauncherContractView;
 
 import java.io.ByteArrayInputStream;
 import java.io.ByteArrayOutputStream;
@@ -24,22 +22,17 @@ public final class LauncherContractSmokeMain {
         verifyRejectedTransport("browser", "Unknown desktop sidecar transport");
         String flowOutput = launchUntilInput("flow-ipc", new byte[0]);
         assertReady(flowOutput, "flow-ipc", false);
-        String compatibilityOutput = launchCompatibilityUntilShutdown(
-                "VFIPC1 {\"type\":\"shutdown\",\"id\":\"contract-shutdown\",\"payload\":{}}\n"
-                        .getBytes(StandardCharsets.UTF_8));
-        assertReady(compatibilityOutput, "compatibility-http", true);
-        if (LauncherContractLifecycle.closedContexts() != 2) {
-            throw new IllegalStateException(
-                    "DesktopLauncher did not close Spring contexts after EOF and shutdown");
-        }
+        verifyRejectedTransport("compatibility-http", "SpringDesktopLauncher");
         System.out.println("Desktop launcher contract smoke passed");
     }
 
     private static void verifyApplicationDescriptorValidation() {
         expectInvalid(() -> DesktopApplication.builder(" "), "application name");
         expectInvalid(() -> DesktopWindow.builder(""), "window id");
+        expectInvalid(() -> DesktopWindow.builder("secondary window"), "window id syntax");
         expectInvalid(() -> DesktopWindow.builder("main").title(" "), "window title");
         expectInvalid(() -> DesktopWindow.builder("main").size(0, 640), "window size");
+        expectInvalid(() -> DesktopWindow.builder("main").route("../admin"), "window route");
     }
 
     private static void expectInvalid(Runnable action, String contract) {
@@ -61,7 +54,7 @@ public final class LauncherContractSmokeMain {
             }
             try {
                 DesktopLauncher.launch(
-                        LauncherContractApplication.class, application(), new String[0]);
+                        application(), flowApplication(), new String[0]);
                 throw new IllegalStateException(
                         "DesktopLauncher accepted invalid transport " + transport);
             } catch (IllegalStateException expected) {
@@ -85,7 +78,7 @@ public final class LauncherContractSmokeMain {
             System.setOut(new PrintStream(captured, true, StandardCharsets.UTF_8));
             try {
                 DesktopLauncher.launch(
-                        LauncherContractApplication.class, application(), new String[0]);
+                        application(), flowApplication(), new String[0]);
             } catch (RuntimeException error) {
                 previousOut.print(captured.toString(StandardCharsets.UTF_8));
                 throw error;
@@ -95,31 +88,6 @@ public final class LauncherContractSmokeMain {
             System.setIn(previousIn);
             System.setOut(previousOut);
             restoreProperty(previousTransport);
-        }
-    }
-
-    private static String launchCompatibilityUntilShutdown(byte[] input) {
-        InputStream previousIn = System.in;
-        PrintStream previousOut = System.out;
-        ByteArrayOutputStream captured = new ByteArrayOutputStream();
-        GenericApplicationContext context = new GenericApplicationContext();
-        context.registerBean(LauncherContractLifecycle.class);
-        context.refresh();
-        try {
-            System.setIn(new ByteArrayInputStream(input));
-            System.setOut(new PrintStream(captured, true, StandardCharsets.UTF_8));
-            DesktopLauncher.runCompatibilitySidecar(
-                    context,
-                    application(),
-                    new String[0],
-                    java.net.URI.create("http://127.0.0.1:45123/"));
-            return captured.toString(StandardCharsets.UTF_8);
-        } finally {
-            System.setIn(previousIn);
-            System.setOut(previousOut);
-            if (context.isActive()) {
-                context.close();
-            }
         }
     }
 
@@ -133,12 +101,16 @@ public final class LauncherContractSmokeMain {
                 .build();
     }
 
+    private static DesktopFlowApplication flowApplication() {
+        return DesktopFlowApplication.builder(LauncherContractView.class).build();
+    }
+
     private static void assertReady(
             String output,
             String transport,
             boolean expectsApplicationUrl) {
         for (String token : new String[]{
-                "VFIPC1 ",
+                "VFIPC ",
                 "\"type\":\"ready\"",
                 "\"transport\":\"" + transport + "\"",
                 "\"name\":\"Launcher Contract\"",

@@ -4,13 +4,6 @@
          xsi:schemaLocation="http://maven.apache.org/POM/4.0.0 https://maven.apache.org/xsd/maven-4.0.0.xsd">
     <modelVersion>4.0.0</modelVersion>
 
-    <parent>
-        <groupId>org.springframework.boot</groupId>
-        <artifactId>spring-boot-starter-parent</artifactId>
-        <version>4.0.6</version>
-        <relativePath/>
-    </parent>
-
     <groupId>dev.vatori</groupId>
     <artifactId>vaadin-desktop-parent</artifactId>
     <version>0.1.0-SNAPSHOT</version>
@@ -21,6 +14,7 @@
         <module>vaadin-desktop-core</module>
         <module>vaadin-desktop-ipc</module>
         <module>vaadin-desktop-flow</module>
+        <module>vaadin-desktop-spring-boot</module>
         <module>vaadin-desktop-cli</module>
         <module>examples/counter-app</module>
         <module>examples/grid-app</module>
@@ -33,7 +27,18 @@
 
     <properties>
         <java.version>21</java.version>
+        <maven.compiler.release>${java.version}</maven.compiler.release>
         <vaadin.version>25.1.5</vaadin.version>
+        <spring-boot.version>4.0.6</spring-boot.version>
+        <jackson2.version>2.21.2</jackson2.version>
+        <jackson.version>3.1.2</jackson.version>
+        <jakarta-servlet.version>6.1.0</jakarta-servlet.version>
+        <maven-compiler-plugin.version>3.14.1</maven-compiler-plugin.version>
+        <maven-resources-plugin.version>3.3.1</maven-resources-plugin.version>
+        <maven-surefire-plugin.version>3.5.5</maven-surefire-plugin.version>
+        <maven-jar-plugin.version>3.4.2</maven-jar-plugin.version>
+        <maven-install-plugin.version>3.1.4</maven-install-plugin.version>
+        <maven-shade-plugin.version>3.6.0</maven-shade-plugin.version>
         <project.build.sourceEncoding>UTF-8</project.build.sourceEncoding>
     </properties>
 
@@ -46,6 +51,83 @@
                 <type>pom</type>
                 <scope>import</scope>
             </dependency>
+            <dependency>
+                <groupId>tools.jackson.core</groupId>
+                <artifactId>jackson-databind</artifactId>
+                <version>${jackson.version}</version>
+            </dependency>
+            <dependency>
+                <groupId>jakarta.servlet</groupId>
+                <artifactId>jakarta.servlet-api</artifactId>
+                <version>${jakarta-servlet.version}</version>
+                <scope>compile</scope>
+            </dependency>
         </dependencies>
     </dependencyManagement>
+
+    <build>
+        <pluginManagement>
+            <plugins>
+                <plugin>
+                    <groupId>org.apache.maven.plugins</groupId>
+                    <artifactId>maven-compiler-plugin</artifactId>
+                    <version>${maven-compiler-plugin.version}</version>
+                </plugin>
+                <plugin>
+                    <groupId>org.apache.maven.plugins</groupId>
+                    <artifactId>maven-resources-plugin</artifactId>
+                    <version>${maven-resources-plugin.version}</version>
+                </plugin>
+                <plugin>
+                    <groupId>org.apache.maven.plugins</groupId>
+                    <artifactId>maven-surefire-plugin</artifactId>
+                    <version>${maven-surefire-plugin.version}</version>
+                </plugin>
+                <plugin>
+                    <groupId>org.apache.maven.plugins</groupId>
+                    <artifactId>maven-jar-plugin</artifactId>
+                    <version>${maven-jar-plugin.version}</version>
+                </plugin>
+                <plugin>
+                    <groupId>org.apache.maven.plugins</groupId>
+                    <artifactId>maven-install-plugin</artifactId>
+                    <version>${maven-install-plugin.version}</version>
+                </plugin>
+                <plugin>
+                    <groupId>org.apache.maven.plugins</groupId>
+                    <artifactId>maven-shade-plugin</artifactId>
+                    <version>${maven-shade-plugin.version}</version>
+                    <dependencies>
+                        <dependency>
+                            <groupId>org.apache.commons</groupId>
+                            <artifactId>commons-compress</artifactId>
+                            <version>1.27.1</version>
+                        </dependency>
+                        <dependency>
+                            <groupId>commons-codec</groupId>
+                            <artifactId>commons-codec</artifactId>
+                            <version>1.17.1</version>
+                        </dependency>
+                    </dependencies>
+                    <executions>
+                        <execution>
+                            <phase>package</phase>
+                            <goals>
+                                <goal>shade</goal>
+                            </goals>
+                        </execution>
+                    </executions>
+                    <configuration>
+                        <createDependencyReducedPom>false</createDependencyReducedPom>
+                        <transformers>
+                            <transformer implementation="org.apache.maven.plugins.shade.resource.ServicesResourceTransformer"/>
+                            <transformer implementation="org.apache.maven.plugins.shade.resource.ManifestResourceTransformer">
+                                <mainClass>${vaadin.desktop.main-class}</mainClass>
+                            </transformer>
+                        </transformers>
+                    </configuration>
+                </plugin>
+            </plugins>
+        </pluginManagement>
+    </build>
 </project>

@@ -282,7 +282,7 @@
   function postEnvelope(type, requestId, payload = {}) {
     const hostContext = window.VaadinDesktopHostContext || {};
     postToHost({
-      version: 'flow-ipc-v1',
+      version: 1,
       type,
       id: `${requestId}-${type}`,
       correlationId: requestId,
@@ -892,6 +892,11 @@
   }
 
   function receive(envelope) {
+    if (!envelope || envelope.version !== 1) {
+      diagnostics.standardBundleOpaqueResponseError =
+        `unsupported sidecar version ${String(envelope?.version)}`;
+      return;
+    }
     const payload = envelope && envelope.payload ? envelope.payload : {};
     const requestId = payload.requestId || envelope.correlationId;
     const request = pending.get(requestId);
@@ -988,13 +993,24 @@
       return;
     }
     diagnostics.standardBundleFirstMeaningfulPaintReported = true;
+    const id = `webview-first-meaningful-paint-${Date.now()}`;
+    const hostContext = window.VaadinDesktopHostContext || {};
     postToHost({
+      version: 1,
       type: 'webview.firstMeaningfulPaint',
+      id,
+      correlationId: id,
+      sessionId: hostContext.sessionId || 'flow-ipc-session',
+      uiId: hostContext.uiId || 'main',
+      windowId: hostContext.windowId || 'main',
+      route: '',
       payload: {
         source: 'standard-vaadin-production-bundle',
         transport: 'opaque-http-stream-ipc',
         bodyTextLength: text.length
-      }
+      },
+      error: null,
+      timestamp: Date.now()
     });
   }
 

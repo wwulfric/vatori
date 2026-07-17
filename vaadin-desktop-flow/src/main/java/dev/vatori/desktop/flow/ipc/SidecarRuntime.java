@@ -1,13 +1,13 @@
 package dev.vatori.desktop.flow.ipc;
 
 import com.vaadin.flow.component.Component;
+import com.vaadin.flow.di.InstantiatorFactory;
 import com.vaadin.flow.router.Route;
 import com.vaadin.flow.router.RouteAlias;
 import dev.vatori.desktop.DesktopApplication;
 import dev.vatori.desktop.DesktopContext;
 import dev.vatori.desktop.DesktopContextHolder;
 import dev.vatori.desktop.DesktopWindow;
-import org.springframework.context.ApplicationContext;
 
 import java.net.URI;
 import java.util.Collection;
@@ -29,7 +29,7 @@ public final class SidecarRuntime {
             Collection<Class<? extends Component>> routeClasses,
             DesktopApplication application,
             String[] args,
-            ApplicationContext applicationContext) {
+            InstantiatorFactory instantiatorFactory) {
         Objects.requireNonNull(rootRouteClass, "rootRouteClass");
         String route = route(rootRouteClass);
         FlowIpcScope scope = scope(application, FLOW_IPC_SESSION_ID);
@@ -44,7 +44,7 @@ public final class SidecarRuntime {
             new StandardFlowIpcRuntime(
                     route,
                     routeClasses,
-                    applicationContext,
+                    instantiatorFactory,
                     application,
                     output,
                     nativeBridge,
@@ -91,6 +91,7 @@ public final class SidecarRuntime {
         windowPayload.put("title", window.title());
         windowPayload.put("width", window.width());
         windowPayload.put("height", window.height());
+        windowPayload.put("route", window.route());
 
         Map<String, Object> applicationPayload = new LinkedHashMap<>();
         applicationPayload.put("name", application.name());

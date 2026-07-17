@@ -12,6 +12,7 @@ const bridgePath = resolve(
 );
 const bridgeSource = await readFile(bridgePath, 'utf8');
 const messages = [];
+let mutationCallback;
 
 class NativeXMLHttpRequestStub {
   addEventListener() {
@@ -19,6 +20,10 @@ class NativeXMLHttpRequestStub {
 }
 
 class MutationObserverStub {
+  constructor(callback) {
+    mutationCallback = callback;
+  }
+
   observe() {
   }
 }
@@ -78,6 +83,16 @@ const context = {
 context.window = context;
 vm.runInNewContext(bridgeSource, context, { filename: bridgePath });
 
+context.document.body.innerText = 'Flow ready';
+context.document.querySelectorAll = () => [{ localName: 'flow-container-root-1' }];
+mutationCallback();
+const meaningfulPaint = messages.shift();
+assert.equal(meaningfulPaint.version, 1);
+assert.equal(meaningfulPaint.type, 'webview.firstMeaningfulPaint');
+assert.equal(meaningfulPaint.windowId, 'secondary');
+assert.equal(meaningfulPaint.sessionId, 'flow-ipc-session-secondary');
+assert.equal(meaningfulPaint.uiId, 'secondary');
+
 const productionPushScript = new context.HTMLScriptElement();
 productionPushScript.src = 'https://app.vatori.invalid/VAADIN/static/push/vaadinPush-min.js';
 assert.equal(productionPushScript.src, 'vatori-app://app/__vatori/FlowIpcPushBridge.js');
@@ -99,6 +114,7 @@ async function nextMessage() {
     messages.length > 0,
     `opaque bridge did not post a request: ${JSON.stringify(context.VaadinDesktopIpcDiagnostics)}`);
   const message = messages.shift();
+  assert.equal(message.version, 1);
   assert.equal(message.windowId, 'secondary');
   assert.equal(message.sessionId, 'flow-ipc-session-secondary');
   assert.equal(message.uiId, 'secondary');
@@ -114,6 +130,7 @@ function header(headers, name) {
 
 function receive(type, requestId, payload = {}) {
   context.VaadinDesktopOpaqueHttp.receive({
+    version: 1,
     type,
     correlationId: requestId,
     payload: {

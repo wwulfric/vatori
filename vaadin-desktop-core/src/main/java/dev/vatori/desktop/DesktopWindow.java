@@ -5,12 +5,14 @@ public final class DesktopWindow {
     private final String title;
     private final int width;
     private final int height;
+    private final String route;
 
     private DesktopWindow(Builder builder) {
         this.id = builder.id;
         this.title = builder.title;
         this.width = builder.width;
         this.height = builder.height;
+        this.route = builder.route;
     }
 
     public String id() {
@@ -29,6 +31,10 @@ public final class DesktopWindow {
         return height;
     }
 
+    public String route() {
+        return route;
+    }
+
     public static Builder builder(String id) {
         return new Builder(id);
     }
@@ -38,9 +44,10 @@ public final class DesktopWindow {
         private String title = "Vaadin Desktop";
         private int width = 1100;
         private int height = 760;
+        private String route = "";
 
         private Builder(String id) {
-            this.id = requireText(id, "Window id");
+            this.id = requireWindowId(id);
         }
 
         public Builder title(String title) {
@@ -58,6 +65,11 @@ public final class DesktopWindow {
             return this;
         }
 
+        public Builder route(String route) {
+            this.route = requireRelativeRoute(route);
+            return this;
+        }
+
         public DesktopWindow build() {
             return new DesktopWindow(this);
         }
@@ -65,6 +77,35 @@ public final class DesktopWindow {
         private static String requireText(String value, String name) {
             if (value == null || value.isBlank()) {
                 throw new IllegalArgumentException(name + " must not be blank");
+            }
+            return value;
+        }
+
+        private static String requireWindowId(String value) {
+            String id = requireText(value, "Window id");
+            if (id.length() > 128 || !id.matches("[A-Za-z0-9._:-]+")) {
+                throw new IllegalArgumentException(
+                        "Window id must contain only letters, digits, '.', '_', ':' or '-'");
+            }
+            return id;
+        }
+
+        private static String requireRelativeRoute(String value) {
+            if (value == null) {
+                throw new IllegalArgumentException("Window route must not be null");
+            }
+            if (value.isEmpty()) {
+                return value;
+            }
+            if (value.startsWith("/") || value.startsWith("~")
+                    || value.contains("\\") || value.contains("://")) {
+                throw new IllegalArgumentException("Window route must be relative");
+            }
+            for (String segment : value.split("/", -1)) {
+                if (segment.isBlank() || segment.equals(".") || segment.equals("..")) {
+                    throw new IllegalArgumentException(
+                            "Window route must not contain empty or traversal segments");
+                }
             }
             return value;
         }

@@ -12,7 +12,7 @@ public final class DesktopContext {
     private final DesktopClipboard clipboard;
     private final DesktopFileDialog fileDialog;
     private final DesktopFileTransfer fileTransfer;
-    private final DesktopMenu menu;
+    private final DesktopWindows windows;
 
     public DesktopContext(DesktopApplication application, URI appUri, NativeBridge nativeBridge,
                           Map<String, String> launchArguments) {
@@ -24,7 +24,7 @@ public final class DesktopContext {
         this.clipboard = new DesktopClipboard(nativeBridge);
         this.fileDialog = new DesktopFileDialog(nativeBridge);
         this.fileTransfer = new DesktopFileTransfer(nativeBridge);
-        this.menu = new DesktopMenu(nativeBridge);
+        this.windows = new DesktopWindows(nativeBridge);
     }
 
     public DesktopApplication application() {
@@ -59,8 +59,8 @@ public final class DesktopContext {
         return fileTransfer;
     }
 
-    public DesktopMenu menu() {
-        return menu;
+    public DesktopWindows windows() {
+        return windows;
     }
 
     public DesktopCommandResult setWindowTitle(String title) {

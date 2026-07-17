@@ -8,6 +8,7 @@ final class WebViewHost: NSObject, NSApplicationDelegate, NSWindowDelegate, WKNa
     private let standardBundleSchemeHandler: FlowIpcStandardBundleSchemeHandler
     private var sidecarController: FlowIpcSidecarController?
     private var windowsById: [String: FlowIpcWindowContext] = [:]
+    private var closedWindowScopes: [String: FlowIpcWindowScope] = [:]
     private var windowIdByWebView: [ObjectIdentifier: String] = [:]
     private var didOpenCompatibilityWindow = false
     private var compatibilityWindow: NSWindow?
@@ -36,18 +37,17 @@ final class WebViewHost: NSObject, NSApplicationDelegate, NSWindowDelegate, WKNa
     }
 
     init(config: HostConfig) {
-        let capabilityManifest = CapabilityManifest.load(module: config.module)
+        let capabilityManifest = CapabilityManifest.load(from: config.capabilityManifestURL)
         self.config = config
         self.capabilityManifest = capabilityManifest
         self.commandExecutor = DesktopCommandExecutor(config: config,
                                                       capabilityManifest: capabilityManifest)
-        self.standardBundleSchemeHandler = FlowIpcStandardBundleSchemeHandler(module: config.module)
+        self.standardBundleSchemeHandler = FlowIpcStandardBundleSchemeHandler(rootURL: config.webAppURL)
     }
 
     func applicationDidFinishLaunching(_ notification: Notification) {
         trace("recv", "launch", [
             "host": "swift-appkit-wkwebview",
-            "module": config.module,
             "transport": config.transport.rawValue,
             "sidecarRestartPolicy": config.flowIpcSidecarRecoveryEnabled
                 ? "limited-restart"
@@ -58,7 +58,7 @@ final class WebViewHost: NSObject, NSApplicationDelegate, NSWindowDelegate, WKNa
         ])
         trace("send", "ready", [
             "host": "swift-appkit-wkwebview",
-            "protocol": "flow-ipc-v1",
+            "protocolVersion": 1,
             "transport": config.transport.rawValue
         ])
         if config.transport == .flowIpc {
@@ -74,8 +74,8 @@ final class WebViewHost: NSObject, NSApplicationDelegate, NSWindowDelegate, WKNa
                 }
                 return Array(self.windowsById.values)
             },
-            onFlowIpcEnvelope: { [weak self] raw, object in
-                self?.handleFlowIpcEnvelope(raw, object)
+            onSidecarEnvelope: { [weak self] raw, object in
+                self?.handleSidecarEnvelope(raw, object)
             },
             terminateApplication: {
                 NSApp.terminate(nil)
@@ -145,6 +145,7 @@ final class WebViewHost: NSObject, NSApplicationDelegate, NSWindowDelegate, WKNa
         guard windowsById[scope.windowId] == nil else {
             return
         }
+        closedWindowScopes.removeValue(forKey: scope.windowId)
         guard let mainDescriptor = sidecarReady?.application.mainWindow else {
             trace("send", "error", ["code": "sidecarReadyMissing"])
             return
@@ -195,7 +196,7 @@ final class WebViewHost: NSObject, NSApplicationDelegate, NSWindowDelegate, WKNa
             NSApp.terminate(nil)
             return
         }
-        guard let bridgeSource = FlowIpcOpaqueHttpBridge.load(repoRoot: config.repoRoot) else {
+        guard let bridgeSource = FlowIpcOpaqueHttpBridge.load(from: config.opaqueBridgeURL) else {
             trace("send", "error", ["code": "opaqueHttpBridgeMissing"])
             sidecarController?.terminate()
             NSApp.terminate(nil)
@@ -251,7 +252,7 @@ final class WebViewHost: NSObject, NSApplicationDelegate, NSWindowDelegate, WKNa
         windowsById[scope.windowId] = context
         windowIdByWebView[ObjectIdentifier(webView)] = scope.windowId
 
-        webView.load(URLRequest(url: standardBundleSchemeHandler.entryURL))
+        webView.load(URLRequest(url: standardBundleSchemeHandler.entryURL(for: descriptor.route)))
         trace("recv", "window.ready", [
             "label": scope.windowId,
             "windowId": scope.windowId,
@@ -283,7 +284,7 @@ final class WebViewHost: NSObject, NSApplicationDelegate, NSWindowDelegate, WKNa
         ])
     }
 
-    private func handleFlowIpcEnvelope(_ raw: String, _ object: [String: Any]) {
+    private func handleSidecarEnvelope(_ raw: String, _ object: [String: Any]) {
         let type = object["type"] as? String ?? "unknown"
         trace("recv", type, [
             "source": "java-sidecar",
@@ -345,6 +346,13 @@ final class WebViewHost: NSObject, NSApplicationDelegate, NSWindowDelegate, WKNa
             return
         }
         guard let context = flowIpcContext(for: object) else {
+            if isLateEnvelopeForClosedWindow(object, type: type) {
+                trace("recv", "flowIpcClosedWindowEnvelopeDropped", [
+                    "type": type,
+                    "windowId": object["windowId"] as? String ?? ""
+                ])
+                return
+            }
             trace("send", "error", [
                 "code": "flowIpcWindowScopeUnknown",
                 "type": type,
@@ -381,6 +389,32 @@ final class WebViewHost: NSObject, NSApplicationDelegate, NSWindowDelegate, WKNa
         return context
     }
 
+    private func isLateEnvelopeForClosedWindow(
+        _ object: [String: Any],
+        type: String
+    ) -> Bool {
+        let isTransportResponse = type == "opaqueHttpResponse"
+            || type.hasPrefix("opaqueHttpStream")
+            || type == "opaquePush"
+            || type == "opaquePushConnected"
+        guard isTransportResponse,
+              let windowId = object["windowId"] as? String,
+              let closedScope = closedWindowScopes[windowId] else {
+            return false
+        }
+        return closedScope.matches(object)
+    }
+
+    private func rememberClosedWindow(_ scope: FlowIpcWindowScope) {
+        closedWindowScopes[scope.windowId] = scope
+        DispatchQueue.main.asyncAfter(deadline: .now() + 30) { [weak self] in
+            guard self?.closedWindowScopes[scope.windowId] == scope else {
+                return
+            }
+            self?.closedWindowScopes.removeValue(forKey: scope.windowId)
+        }
+    }
+
     private func handleSidecarCommand(
         _ object: [String: Any],
         executor: DesktopCommandExecutor,
@@ -390,36 +424,143 @@ final class WebViewHost: NSObject, NSApplicationDelegate, NSWindowDelegate, WKNa
         let command = payload["command"] as? String ?? "unknown"
         let args = payload["args"] as? [String: Any] ?? [:]
         let correlationId = (object["correlationId"] as? String) ?? (object["id"] as? String) ?? ""
-        executor.execute(command, args: args) { result in
-            let resultEnvelope: [String: Any] = [
-                "version": "flow-ipc-v1",
-                "type": "capabilityResult",
-                "id": "capability-\(correlationId)",
-                "correlationId": correlationId,
-                "sessionId": scope.sessionId,
-                "uiId": scope.uiId,
-                "windowId": scope.windowId,
-                "route": object["route"] as? String ?? "",
-                "payload": result,
-                "error": NSNull(),
-                "timestamp": nowMillis()
-            ]
-            trace("send", "capabilityResult", [
-                "target": "java-sidecar",
-                "transport": self.config.transport.rawValue,
-                "command": command,
-                "envelope": resultEnvelope
-            ])
-            guard let data = try? JSONSerialization.data(withJSONObject: resultEnvelope),
-                  let json = String(data: data, encoding: .utf8) else {
-                trace("send", "error", [
-                    "code": "flowIpcSerializeFailed",
-                    "type": "capabilityResult"
-                ])
-                return
-            }
-            self.sidecarController?.sendFlowIpc(json)
+        if command == "window.open" {
+            let result = openWindowCommand(args)
+            sendCapabilityResult(
+                result, command: command, correlationId: correlationId,
+                object: object, scope: scope)
+            return
         }
+        if command == "window.close" {
+            let (result, target) = closeWindowCommand(args)
+            sendCapabilityResult(
+                result, command: command, correlationId: correlationId,
+                object: object, scope: scope)
+            if result["success"] as? Bool == true, let target {
+                DispatchQueue.main.async {
+                    target.window.close()
+                }
+            }
+            return
+        }
+        executor.execute(command, args: args) { result in
+            self.sendCapabilityResult(
+                result, command: command, correlationId: correlationId,
+                object: object, scope: scope)
+        }
+    }
+
+    private func openWindowCommand(_ args: [String: Any]) -> [String: Any] {
+        guard config.transport == .flowIpc else {
+            return windowCommandFailure(
+                "window.open", "Multiple windows require the flow-ipc transport")
+        }
+        let descriptor: SidecarWindowDescriptor
+        do {
+            descriptor = try SidecarWindowDescriptor.parse(args)
+        } catch {
+            return windowCommandFailure("window.open", error.localizedDescription)
+        }
+        guard descriptor.id != sidecarReady?.application.mainWindow.id,
+              windowsById[descriptor.id] == nil else {
+            return windowCommandFailure("window.open", "Window id is already open")
+        }
+        guard capabilityManifest.allows("window.open", windowId: descriptor.id) else {
+            return windowCommandFailure(
+                "window.open", "Command not allowed by desktop-capabilities.json",
+                reason: capabilityManifest.denialReason(
+                    "window.open", windowId: descriptor.id))
+        }
+        openFlowIpcWindow(scope: .window(descriptor.id), descriptor: descriptor)
+        return [
+            "success": true,
+            "command": "window.open",
+            "windowId": descriptor.id,
+            "route": descriptor.route,
+            "permissionDecision": "allowed",
+            "permissionReason": capabilityManifest.allowedReason(
+                "window.open", windowId: descriptor.id)
+        ]
+    }
+
+    private func closeWindowCommand(
+        _ args: [String: Any]
+    ) -> ([String: Any], FlowIpcWindowContext?) {
+        guard config.transport == .flowIpc else {
+            return (windowCommandFailure(
+                "window.close", "Multiple windows require the flow-ipc transport"), nil)
+        }
+        guard let windowId = args["id"] as? String,
+              !windowId.isBlank,
+              let target = windowsById[windowId] else {
+            return (windowCommandFailure(
+                "window.close", "Target window is not open"), nil)
+        }
+        guard capabilityManifest.allows("window.close", windowId: windowId) else {
+            return (windowCommandFailure(
+                "window.close", "Command not allowed by desktop-capabilities.json",
+                reason: capabilityManifest.denialReason(
+                    "window.close", windowId: windowId)), nil)
+        }
+        return ([
+            "success": true,
+            "command": "window.close",
+            "windowId": windowId,
+            "permissionDecision": "allowed",
+            "permissionReason": capabilityManifest.allowedReason(
+                "window.close", windowId: windowId)
+        ], target)
+    }
+
+    private func windowCommandFailure(
+        _ command: String,
+        _ message: String,
+        reason: String = "invalid-window-command"
+    ) -> [String: Any] {
+        [
+            "success": false,
+            "command": command,
+            "error": message,
+            "permissionDecision": "denied",
+            "permissionReason": reason
+        ]
+    }
+
+    private func sendCapabilityResult(
+        _ result: [String: Any],
+        command: String,
+        correlationId: String,
+        object: [String: Any],
+        scope: FlowIpcWindowScope
+    ) {
+        let resultEnvelope: [String: Any] = [
+            "version": 1,
+            "type": "capabilityResult",
+            "id": "capability-\(correlationId)",
+            "correlationId": correlationId,
+            "sessionId": scope.sessionId,
+            "uiId": scope.uiId,
+            "windowId": scope.windowId,
+            "route": object["route"] as? String ?? "",
+            "payload": result,
+            "error": NSNull(),
+            "timestamp": nowMillis()
+        ]
+        trace("send", "capabilityResult", [
+            "target": "java-sidecar",
+            "transport": config.transport.rawValue,
+            "command": command,
+            "envelope": resultEnvelope
+        ])
+        guard let data = try? JSONSerialization.data(withJSONObject: resultEnvelope),
+              let json = String(data: data, encoding: .utf8) else {
+            trace("send", "error", [
+                "code": "flowIpcSerializeFailed",
+                "type": "capabilityResult"
+            ])
+            return
+        }
+        sidecarController?.sendSidecarEnvelope(json)
     }
 
     func deliverFlowIpcEnvelope(
@@ -509,6 +650,13 @@ final class WebViewHost: NSObject, NSApplicationDelegate, NSWindowDelegate, WKNa
             ])
             return
         }
+        guard hasValidSidecarVersion(object) else {
+            trace("send", "error", [
+                "code": "unsupportedWebViewSidecarVersion",
+                "version": object["version"] ?? NSNull()
+            ])
+            return
+        }
         guard let sourceWebView = message.webView,
               let windowId = windowIdByWebView[ObjectIdentifier(sourceWebView)],
               let context = windowsById[windowId] else {
@@ -540,13 +688,13 @@ final class WebViewHost: NSObject, NSApplicationDelegate, NSWindowDelegate, WKNa
             ])
             return
         }
-        sidecarController?.sendFlowIpc(json)
+        sidecarController?.sendSidecarEnvelope(json)
     }
 
     private func sendWindowClosed(_ scope: FlowIpcWindowScope) {
         let id = "window-closed-\(scope.windowId)-\(nowMillis())"
         let object = scope.applying(to: [
-            "version": "flow-ipc-v1",
+            "version": 1,
             "type": "windowClosed",
             "id": id,
             "correlationId": id,
@@ -559,7 +707,7 @@ final class WebViewHost: NSObject, NSApplicationDelegate, NSWindowDelegate, WKNa
               let json = String(data: data, encoding: .utf8) else {
             return
         }
-        sidecarController?.sendFlowIpc(json)
+        sidecarController?.sendSidecarEnvelope(json)
     }
 
     func windowWillClose(_ notification: Notification) {
@@ -581,6 +729,7 @@ final class WebViewHost: NSObject, NSApplicationDelegate, NSWindowDelegate, WKNa
             "uiId": context.scope.uiId
         ])
         sendWindowClosed(context.scope)
+        rememberClosedWindow(context.scope)
         windowsById.removeValue(forKey: context.scope.windowId)
         windowIdByWebView.removeValue(forKey: ObjectIdentifier(context.webView))
         if windowsById.isEmpty {
@@ -667,14 +816,9 @@ final class WebViewHost: NSObject, NSApplicationDelegate, NSWindowDelegate, WKNa
 
 let config: HostConfig
 do {
-    config = try HostConfig.parse()
+    config = try HostConfig.load()
 } catch {
     FileHandle.standardError.write(Data("\(error.localizedDescription)\n".utf8))
-    exit(2)
-}
-if config.module.isEmpty {
-    FileHandle.standardError.write(Data(
-        "Vaadin Desktop Host requires --module <application-module>\n".utf8))
     exit(2)
 }
 let application = NSApplication.shared

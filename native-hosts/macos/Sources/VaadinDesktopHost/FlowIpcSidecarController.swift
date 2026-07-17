@@ -16,7 +16,7 @@ final class FlowIpcSidecarController {
         config: HostConfig,
         standardBundleEntryURL: URL,
         flowIpcWindows: @escaping () -> [FlowIpcWindowContext],
-        onFlowIpcEnvelope: @escaping (String, [String: Any]) -> Void,
+        onSidecarEnvelope: @escaping (String, [String: Any]) -> Void,
         terminateApplication: @escaping () -> Void
     ) {
         self.config = config
@@ -25,7 +25,7 @@ final class FlowIpcSidecarController {
         self.terminateApplication = terminateApplication
         self.sidecar = JavaSidecar(
             config: config,
-            onFlowIpcEnvelope: onFlowIpcEnvelope,
+            onSidecarEnvelope: onSidecarEnvelope,
             onTermination: { [weak self] termination in
                 self?.handleTermination(termination)
             })
@@ -41,8 +41,8 @@ final class FlowIpcSidecarController {
     }
 
     @discardableResult
-    func sendFlowIpc(_ envelope: String) -> Bool {
-        sidecar.sendFlowIpc(envelope)
+    func sendSidecarEnvelope(_ envelope: String) -> Bool {
+        sidecar.sendSidecarEnvelope(envelope)
     }
 
     var processIdentifier: Int32? {

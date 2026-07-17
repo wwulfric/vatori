@@ -12,8 +12,28 @@ HOST_APP="$ROOT/.build/native-hosts/macos/VaadinDesktopHost.app"
 HOST_EXE="$HOST_APP/Contents/MacOS/VaadinDesktopHost"
 MODULE_CACHE="$ROOT/.build/clang-module-cache"
 
+MODULE_ROOT="$ROOT/$MODULE"
+RUNNABLE_JARS=()
+while IFS= read -r jar; do
+  RUNNABLE_JARS+=("$jar")
+done < <(find "$MODULE_ROOT/target" -maxdepth 1 -type f -name '*.jar' \
+  ! -name '*-sources.jar' ! -name '*-javadoc.jar' ! -name 'original-*' \
+  ! -name '*.jar.original' -print | sort)
+if [[ "${#RUNNABLE_JARS[@]}" != "1" ]]; then
+  echo "Expected one runnable application JAR, found ${#RUNNABLE_JARS[@]}" >&2
+  exit 1
+fi
+WEBAPP_ROOT=""
+if [[ "$TRANSPORT" == "flow-ipc" ]]; then
+  WEBAPP_ROOT="$MODULE_ROOT/target/classes/META-INF/VAADIN/webapp"
+fi
+CAPABILITY_MANIFEST=""
+if [[ -f "$MODULE_ROOT/desktop-capabilities.json" ]]; then
+  CAPABILITY_MANIFEST="$MODULE_ROOT/desktop-capabilities.json"
+fi
+
 bash "$ROOT/bin/vaadin-desktop-build-macos-host" \
-  "$ROOT" "$MODULE" "$TRANSPORT"
+  "$ROOT" "$TRANSPORT" "${RUNNABLE_JARS[0]}" "$WEBAPP_ROOT" "$CAPABILITY_MANIFEST"
 
 if [[ ! -d "$ACCEPTANCE_ROOT/Sources/VaadinDesktopHostAcceptanceSupport" ]]; then
   echo "macOS host acceptance sources are missing: $ACCEPTANCE_ROOT" >&2
@@ -36,6 +56,7 @@ host_sources+=(
 
 CLANG_MODULE_CACHE_PATH="$MODULE_CACHE" /usr/bin/swiftc \
   "${host_sources[@]}" \
+  -framework UserNotifications \
   -o "$HOST_EXE"
 
 if command -v codesign >/dev/null 2>&1; then

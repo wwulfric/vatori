@@ -16,7 +16,7 @@ if ! command -v mvn >/dev/null 2>&1; then
   exit 1
 fi
 
-mvn -o -Dmaven.repo.local="$MAVEN_REPO" -pl vaadin-desktop-flow -am -DskipTests install
+mvn -o -Dmaven.repo.local="$MAVEN_REPO" -pl vaadin-desktop-spring-boot -am -DskipTests install
 mvn -q -o -Dmaven.repo.local="$MAVEN_REPO" \
   -pl vaadin-desktop-flow \
   -Dexec.mainClass=dev.vatori.desktop.flow.ipc.FlowIpcScopeSmokeMain \
@@ -24,6 +24,11 @@ mvn -q -o -Dmaven.repo.local="$MAVEN_REPO" \
   org.codehaus.mojo:exec-maven-plugin:3.6.2:java
 mvn -q -o -Dmaven.repo.local="$MAVEN_REPO" \
   -pl vaadin-desktop-flow \
-  -Dexec.mainClass=dev.vatori.desktop.flow.FlowIpcRouteResolverSmokeMain \
+  -Dexec.mainClass=dev.vatori.desktop.flow.DesktopFlowApplicationSmokeMain \
+  -Dexec.classpathScope=test \
+  org.codehaus.mojo:exec-maven-plugin:3.6.2:java
+mvn -q -o -Dmaven.repo.local="$MAVEN_REPO" \
+  -pl vaadin-desktop-spring-boot \
+  -Dexec.mainClass=dev.vatori.desktop.spring.SpringRouteIntegrationSmokeMain \
   -Dexec.classpathScope=test \
   org.codehaus.mojo:exec-maven-plugin:3.6.2:java

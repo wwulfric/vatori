@@ -4,7 +4,6 @@ set -euo pipefail
 ROOT="$(cd "$(dirname "${BASH_SOURCE[0]}")/../../.." && pwd)"
 COMMAND="${1:-}"
 MODULE="${2:-}"
-MAVEN_REPO="${MAVEN_REPO:-$ROOT/.m2/repository}"
 MODULE_POM="$ROOT/$MODULE/pom.xml"
 
 case "$COMMAND" in
@@ -24,30 +23,7 @@ if [[ -z "$MODULE" || ! -f "$MODULE_POM" ]]; then
   echo "Module not found: $MODULE" >&2
   exit 1
 fi
-if ! command -v mvn >/dev/null 2>&1 && [[ -f "$HOME/.sdkman/bin/sdkman-init.sh" ]]; then
-  # shellcheck source=/dev/null
-  set +u
-  source "$HOME/.sdkman/bin/sdkman-init.sh"
-  set -u
-fi
-if ! command -v mvn >/dev/null 2>&1; then
-  echo "mvn not found. Install Maven or initialize SDKMAN before running this command." >&2
-  exit 1
-fi
-
-maven_mode="-U"
-if [[ "${VAADIN_DESKTOP_MAVEN_OFFLINE:-}" == "1" ]]; then
-  maven_mode="-o"
-fi
-mvn "$maven_mode" -Dmaven.repo.local="$MAVEN_REPO" \
-  -f "$ROOT/pom.xml" -pl "$MODULE" -am \
-  -DskipTests -Dmaven.jar.forceCreation=true install
-
-if [[ "$TRANSPORT" == "flow-ipc" ]]; then
-  # shellcheck source=/dev/null
-  source "$ROOT/bin/vaadin-desktop-build-flow-bundle"
-  build_standard_flow_bundle
-fi
+bash "$ROOT/bin/vaadin-desktop" package "$MODULE"
 
 bash "$ROOT/test-support/native-host-macos-acceptance/bin/build-host" \
   "$ROOT" "$MODULE" "$TRANSPORT"
@@ -55,6 +31,9 @@ bash "$ROOT/test-support/native-host-macos-acceptance/bin/build-host" \
 # shellcheck source=/dev/null
 source "$ROOT/bin/vaadin-desktop-macos-host-launch"
 acceptance_environment_names=(
+  VAADIN_DESKTOP_ACCEPTANCE_REPO_ROOT
+  VAADIN_DESKTOP_MACOS_NO_ACTIVATE
+  VAADIN_DESKTOP_FLOW_IPC_TRACE_DETAIL
   VAADIN_DESKTOP_FLOW_IPC_AUTO_FRAMEWORK_UPDATE
   VAADIN_DESKTOP_FLOW_IPC_AUTO_SIDECAR_RESTART
   VAADIN_DESKTOP_FLOW_IPC_AUTO_SHUTDOWN
@@ -64,10 +43,12 @@ acceptance_environment_names=(
   VAADIN_DESKTOP_FLOW_IPC_AUTO_FILE_DIALOG_CANCEL
   VAADIN_DESKTOP_FLOW_IPC_AUTO_SHUTDOWN_TIMEOUT_SECONDS
 )
+export VAADIN_DESKTOP_ACCEPTANCE_REPO_ROOT="$ROOT"
 
 set +e
 launch_built_macos_host_runtime \
-  "$TRANSPORT" "${acceptance_environment_names[@]}"
+  "$ROOT/.build/native-hosts/macos/VaadinDesktopHost.app" \
+  "${acceptance_environment_names[@]}"
 status=$?
 set -e
 

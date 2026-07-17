@@ -9,6 +9,7 @@ import dev.vatori.desktop.DesktopCommandResult;
 import dev.vatori.desktop.flow.transport.DesktopFlowHttpResponseHead;
 import dev.vatori.desktop.flow.transport.DesktopFlowOpaqueHttpSession;
 import dev.vatori.desktop.flow.transport.DesktopFlowOpaqueHttpSessionRegistry;
+import dev.vatori.desktop.ipc.SidecarWire;
 
 import java.io.BufferedReader;
 import java.io.ByteArrayInputStream;
@@ -39,13 +40,46 @@ public final class FlowIpcScopeSmokeMain {
         verifyStandardBundleRejectsUnknownTransport();
         verifyNativeCapabilityCorrelation();
         verifyMessageLoopReadsCapabilityResultWhileHandlerWaits();
+        verifyProtocolVersionAndFraming();
         System.out.println("standard Flow IPC transport smoke passed");
     }
 
+    private static void verifyProtocolVersionAndFraming() {
+        SidecarInboundEnvelope.parse("""
+                {"version":1,"type":"shutdown","payload":{}}
+                """);
+        for (String invalid : List.of(
+                "{\"type\":\"shutdown\",\"payload\":{}}",
+                "{\"version\":2,\"type\":\"shutdown\",\"payload\":{}}",
+                "{\"version\":\"1\",\"type\":\"shutdown\",\"payload\":{}}")) {
+            try {
+                SidecarInboundEnvelope.parse(invalid);
+                throw new IllegalStateException("Sidecar accepted an invalid protocol version");
+            } catch (SidecarProtocolException expected) {
+                // Expected strict numeric version guard.
+            }
+        }
+        String invalidVersionOutput = captureRuntime(
+                SidecarWire.PREFIX
+                        + "{\"version\":2,\"type\":\"shutdown\",\"payload\":{}}\n");
+        if (!invalidVersionOutput.contains("\"code\":\"protocolVersion\"")) {
+            throw new IllegalStateException(
+                    "Unknown protocol version did not produce a protocol error: "
+                            + invalidVersionOutput);
+        }
+        String invalidFramingOutput = captureRuntime(
+                "VFIPC2 {\"version\":1,\"type\":\"shutdown\",\"payload\":{}}\n");
+        if (!invalidFramingOutput.contains("\"code\":\"protocolFraming\"")) {
+            throw new IllegalStateException(
+                    "Invalid protocol framing did not produce a protocol error: "
+                            + invalidFramingOutput);
+        }
+    }
+
     private static void verifyStandardBundleRejectsUnknownTransport() {
-        String input = FlowIpcWire.PREFIX
+        String input = SidecarWire.PREFIX
                 + envelope("unsupportedMessage", "unsupported", "flow-ipc-session", "main") + "\n"
-                + FlowIpcWire.PREFIX
+                + SidecarWire.PREFIX
                 + envelope("shutdown", "standard-shutdown", "flow-ipc-session", "main") + "\n";
         String output = captureRuntime(input);
         if (!output.contains("\"runtime\":\"standard-vaadin-bundle-opaque-ipc\"")
@@ -72,8 +106,8 @@ public final class FlowIpcScopeSmokeMain {
         if (!output.toString(StandardCharsets.UTF_8).contains("\"type\":\"command\"")) {
             throw new IllegalStateException("Native bridge did not emit a command envelope");
         }
-        bridge.complete(scope, FlowIpcInboundEnvelope.parse("""
-                {"type":"capabilityResult","id":"capability-desktop-command-1",
+        bridge.complete(scope, SidecarInboundEnvelope.parse("""
+                {"version":1,"type":"capabilityResult","id":"capability-desktop-command-1",
                  "correlationId":"desktop-command-1","sessionId":"flow-ipc-session",
                  "uiId":"main","windowId":"main",
                  "payload":{"success":true,"text":"from-native"}}
@@ -106,7 +140,7 @@ public final class FlowIpcScopeSmokeMain {
                 result.set(bridge.invoke(new DesktopCommand(
                         "clipboard.readText", Map.of()))));
         Thread loop = Thread.ofVirtual().start(messageLoop::run);
-        inputWriter.write(FlowIpcWire.PREFIX
+        inputWriter.write(SidecarWire.PREFIX
                 + envelope("invokeCapability", "invoke", "flow-ipc-session", "main")
                 + "\n");
         inputWriter.flush();
@@ -119,13 +153,13 @@ public final class FlowIpcScopeSmokeMain {
             throw new IllegalStateException(
                     "Sidecar handler did not emit a native capability command");
         }
-        inputWriter.write(FlowIpcWire.PREFIX + """
-                {"type":"capabilityResult","id":"capability-desktop-command-1",
+        inputWriter.write(SidecarWire.PREFIX + """
+                {"version":1,"type":"capabilityResult","id":"capability-desktop-command-1",
                  "correlationId":"desktop-command-1","sessionId":"flow-ipc-session",
                  "uiId":"main","windowId":"main",
                  "payload":{"success":true,"text":"from-message-loop"}}
                 """.replace("\n", "") + "\n");
-        inputWriter.write(FlowIpcWire.PREFIX
+        inputWriter.write(SidecarWire.PREFIX
                 + envelope("shutdown", "shutdown", "flow-ipc-session", "main")
                 + "\n");
         inputWriter.flush();
@@ -323,9 +357,9 @@ public final class FlowIpcScopeSmokeMain {
     }
 
     private static void verifyWindowCloseFollowsQueuedRequests() {
-        String input = FlowIpcWire.PREFIX
+        String input = SidecarWire.PREFIX
                 + envelope("queuedRequest", "queued", "flow-ipc-session", "main") + "\n"
-                + FlowIpcWire.PREFIX
+                + SidecarWire.PREFIX
                 + envelope("windowClosed", "closed", "flow-ipc-session", "main") + "\n";
         FlowIpcScope scope = new FlowIpcScope("main", "flow-ipc-session", "main");
         SidecarOutput output = new SidecarOutput(
@@ -377,7 +411,7 @@ public final class FlowIpcScopeSmokeMain {
 
     private static String envelope(String type, String id, String sessionId, String uiId) {
         return """
-                {"version":"flow-ipc-v1","type":"%s","id":"%s","correlationId":"%s","sessionId":"%s","uiId":"%s","route":"","payload":{},"error":null,"timestamp":0}
+                {"version":1,"type":"%s","id":"%s","correlationId":"%s","sessionId":"%s","uiId":"%s","route":"","payload":{},"error":null,"timestamp":0}
                 """.formatted(type, id, id, sessionId, uiId).trim();
     }
 

@@ -8,6 +8,7 @@ private enum FlowIpcMultiWindowPhase {
 }
 
 private var flowIpcMultiWindowScheduled = false
+private var flowIpcMultiWindowOpenRequested = false
 private var flowIpcMultiWindowPhase = FlowIpcMultiWindowPhase.waitingForReady
 private var flowIpcMultiWindowDeadline = Date.distantPast
 
@@ -16,8 +17,14 @@ extension WebViewHost {
         guard config.flowIpcAutoMultiWindow,
               config.transport == .flowIpc,
               let main = flowIpcWindowContext("main"),
-              let secondary = flowIpcWindowContext("secondary"),
-              main.navigationFinished,
+              main.navigationFinished else {
+            return
+        }
+        guard let secondary = flowIpcWindowContext("secondary") else {
+            requestSecondaryWindowFromApplication(main)
+            return
+        }
+        guard
               secondary.navigationFinished,
               !flowIpcMultiWindowScheduled else {
             return
@@ -29,6 +36,29 @@ extension WebViewHost {
             : 35
         flowIpcMultiWindowDeadline = Date().addingTimeInterval(timeout)
         pollMultiWindowAcceptance()
+    }
+
+    private func requestSecondaryWindowFromApplication(_ main: FlowIpcWindowContext) {
+        guard !flowIpcMultiWindowOpenRequested else {
+            return
+        }
+        flowIpcMultiWindowOpenRequested = true
+        let script = """
+        (() => {
+          const button = document.querySelector('#ipc-open-secondary-window-button');
+          if (!button) return false;
+          button.click();
+          return true;
+        })()
+        """
+        main.webView.evaluateJavaScript(script) { result, _ in
+            if result as? Bool != true {
+                flowIpcMultiWindowOpenRequested = false
+                DispatchQueue.main.asyncAfter(deadline: .now() + 0.5) {
+                    self.scheduleMultiWindowAcceptanceIfReady()
+                }
+            }
+        }
     }
 
     private func pollMultiWindowAcceptance() {
@@ -126,8 +156,23 @@ extension WebViewHost {
                     "mainWindowId": "main",
                     "secondaryWindowId": "secondary"
                 ])
-                secondary.window.close()
-                DispatchQueue.main.asyncAfter(deadline: .now() + 0.5) {
+                let closeScript = """
+                (() => {
+                  const button = document.querySelector('#ipc-close-secondary-window-button');
+                  if (!button) return false;
+                  button.click();
+                  return true;
+                })()
+                """
+                secondary.webView.evaluateJavaScript(closeScript) { result, _ in
+                    guard result as? Bool == true else {
+                        self.finishMultiWindowAcceptance(
+                            success: false,
+                            reason: "public-window-close-dispatch-failed")
+                        return
+                    }
+                }
+                DispatchQueue.main.asyncAfter(deadline: .now() + 0.8) {
                     let mainSurvivedSecondaryClose = self.flowIpcWindowContext("main") != nil
                         && self.flowIpcWindowContext("secondary") == nil
                     trace("recv", "multiWindow.closeIsolation", [

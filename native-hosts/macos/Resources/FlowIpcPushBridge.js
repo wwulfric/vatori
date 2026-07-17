@@ -18,7 +18,7 @@
     const id = `${type}-${Date.now()}-${Math.random().toString(16).slice(2)}`;
     const hostContext = window.VaadinDesktopHostContext || {};
     handler.postMessage({
-      version: 'flow-ipc-v1',
+      version: 1,
       type,
       id,
       correlationId: id,
@@ -172,6 +172,11 @@
   }
 
   function receive(envelope) {
+    if (!envelope || envelope.version !== 1) {
+      diagnostics.standardBundlePushProtocolError =
+        `unsupported sidecar version ${String(envelope?.version)}`;
+      return;
+    }
     const payload = envelope?.payload || {};
     if (envelope?.type === 'opaquePushConnected') {
       receiveConnected(payload);

@@ -2,11 +2,15 @@ package dev.vatori.ipcframework;
 
 import com.vaadin.flow.component.button.Button;
 import com.vaadin.flow.component.button.ButtonVariant;
+import com.vaadin.flow.component.ClientCallable;
+import com.vaadin.flow.component.Html;
 import com.vaadin.flow.component.avatar.Avatar;
 import com.vaadin.flow.component.avatar.AvatarGroup;
 import com.vaadin.flow.component.avatar.AvatarGroup.AvatarGroupItem;
 import com.vaadin.flow.component.avatar.AvatarGroupVariant;
 import com.vaadin.flow.component.avatar.AvatarVariant;
+import com.vaadin.flow.component.badge.Badge;
+import com.vaadin.flow.component.badge.BadgeVariant;
 import com.vaadin.flow.component.checkbox.Checkbox;
 import com.vaadin.flow.component.checkbox.CheckboxGroup;
 import com.vaadin.flow.component.checkbox.CheckboxGroupVariant;
@@ -25,17 +29,35 @@ import com.vaadin.flow.component.datetimepicker.DateTimePicker;
 import com.vaadin.flow.component.datetimepicker.DateTimePickerVariant;
 import com.vaadin.flow.component.accordion.Accordion;
 import com.vaadin.flow.component.accordion.AccordionPanel;
+import com.vaadin.flow.component.applayout.AppLayout;
+import com.vaadin.flow.component.applayout.DrawerToggle;
+import com.vaadin.flow.component.card.Card;
+import com.vaadin.flow.component.card.CardVariant;
 import com.vaadin.flow.component.details.Details;
 import com.vaadin.flow.component.details.DetailsVariant;
 import com.vaadin.flow.component.dialog.Dialog;
+import com.vaadin.flow.component.dnd.DragSource;
+import com.vaadin.flow.component.dnd.DropEffect;
+import com.vaadin.flow.component.dnd.DropTarget;
+import com.vaadin.flow.component.dnd.EffectAllowed;
 import com.vaadin.flow.component.formlayout.FormLayout;
 import com.vaadin.flow.component.html.Anchor;
 import com.vaadin.flow.component.grid.Grid;
 import com.vaadin.flow.component.grid.GridVariant;
+import com.vaadin.flow.component.grid.editor.Editor;
+import com.vaadin.flow.component.treegrid.TreeGrid;
 import com.vaadin.flow.component.html.H1;
 import com.vaadin.flow.component.html.Span;
+import com.vaadin.flow.component.icon.Icon;
+import com.vaadin.flow.component.icon.VaadinIcon;
 import com.vaadin.flow.component.listbox.ListBox;
 import com.vaadin.flow.component.listbox.MultiSelectListBox;
+import com.vaadin.flow.component.markdown.Markdown;
+import com.vaadin.flow.component.masterdetaillayout.MasterDetailLayout;
+import com.vaadin.flow.component.masterdetaillayout.MasterDetailLayout.Containment;
+import com.vaadin.flow.component.masterdetaillayout.MasterDetailLayout.Orientation;
+import com.vaadin.flow.component.masterdetaillayout.MasterDetailLayout.OverlayMode;
+import com.vaadin.flow.component.masterdetaillayout.MasterDetailLayoutVariant;
 import com.vaadin.flow.component.menubar.MenuBar;
 import com.vaadin.flow.component.menubar.MenuBarVariant;
 import com.vaadin.flow.component.notification.Notification;
@@ -47,6 +69,7 @@ import com.vaadin.flow.component.orderedlayout.HorizontalLayout;
 import com.vaadin.flow.component.orderedlayout.Scroller;
 import com.vaadin.flow.component.orderedlayout.ScrollerVariant;
 import com.vaadin.flow.component.orderedlayout.VerticalLayout;
+import com.vaadin.flow.component.page.PendingJavaScriptResult;
 import com.vaadin.flow.component.popover.Popover;
 import com.vaadin.flow.component.progressbar.ProgressBar;
 import com.vaadin.flow.component.radiobutton.RadioButtonGroup;
@@ -55,6 +78,7 @@ import com.vaadin.flow.component.richtexteditor.RichTextEditor;
 import com.vaadin.flow.component.richtexteditor.RichTextEditorVariant;
 import com.vaadin.flow.component.select.Select;
 import com.vaadin.flow.component.select.SelectVariant;
+import com.vaadin.flow.component.slider.Slider;
 import com.vaadin.flow.component.splitlayout.SplitLayout;
 import com.vaadin.flow.component.tabs.Tab;
 import com.vaadin.flow.component.tabs.Tabs;
@@ -73,8 +97,19 @@ import com.vaadin.flow.component.timepicker.TimePickerVariant;
 import com.vaadin.flow.component.upload.Upload;
 import com.vaadin.flow.component.upload.UploadFormat;
 import com.vaadin.flow.component.virtuallist.VirtualList;
+import com.vaadin.flow.component.internal.AllowInert;
 import com.vaadin.flow.data.binder.Binder;
+import com.vaadin.flow.data.provider.CallbackDataProvider;
+import com.vaadin.flow.data.provider.ConfigurableFilterDataProvider;
 import com.vaadin.flow.data.provider.DataProvider;
+import com.vaadin.flow.data.provider.QuerySortOrder;
+import com.vaadin.flow.data.provider.SortDirection;
+import com.vaadin.flow.data.provider.hierarchy.AbstractBackEndHierarchicalDataProvider;
+import com.vaadin.flow.data.provider.hierarchy.HierarchicalQuery;
+import com.vaadin.flow.data.renderer.ComponentRenderer;
+import com.vaadin.flow.data.renderer.LitRenderer;
+import com.vaadin.flow.data.value.ValueChangeMode;
+import com.vaadin.flow.dom.DisabledUpdateMode;
 import com.vaadin.flow.component.grid.contextmenu.GridContextMenu;
 import com.vaadin.flow.component.grid.contextmenu.GridMenuItem;
 import com.vaadin.flow.component.login.LoginI18n;
@@ -93,7 +128,9 @@ import com.vaadin.flow.server.streams.DownloadEvent;
 import com.vaadin.flow.server.streams.DownloadHandler;
 import com.vaadin.flow.server.streams.DownloadResponse;
 import com.vaadin.flow.server.streams.UploadHandler;
+import com.vaadin.flow.component.dependency.JsModule;
 import dev.vatori.desktop.Desktop;
+import tools.jackson.core.type.TypeReference;
 import tools.jackson.databind.JsonNode;
 
 import java.io.ByteArrayInputStream;
@@ -103,15 +140,27 @@ import java.math.BigDecimal;
 import java.time.Instant;
 import java.time.LocalDate;
 import java.time.LocalDateTime;
+import java.util.ArrayList;
+import java.util.Arrays;
+import java.util.Comparator;
+import java.util.IdentityHashMap;
+import java.util.LinkedHashMap;
+import java.util.LinkedHashSet;
 import java.util.List;
+import java.util.Locale;
+import java.util.Map;
 import java.util.Set;
+import java.util.concurrent.CompletableFuture;
+import java.util.concurrent.TimeUnit;
 import java.util.concurrent.atomic.AtomicBoolean;
 import java.util.concurrent.atomic.AtomicInteger;
 import java.util.concurrent.atomic.AtomicReference;
 import java.util.stream.Collectors;
 import java.util.stream.IntStream;
+import java.util.stream.Stream;
 
 @Route("")
+@JsModule("./vatori-vite-hmr-probe.js")
 public class FlowOverIpcFrameworkView extends VerticalLayout {
     private final VerticalLayout updateList = new VerticalLayout();
     private int revision;
@@ -129,6 +178,106 @@ public class FlowOverIpcFrameworkView extends VerticalLayout {
         Span standardPushStatus = StandardBundlePushProbe.attachTo(this);
         Span status = new Span("Ready for framework validation");
         status.setId("framework-status");
+        Html viteHmrProbe = new Html(
+                "<vatori-vite-hmr-probe id=\"framework-vite-hmr-probe\"></vatori-vite-hmr-probe>");
+        JavaReloadProbe javaReloadProbe = new JavaReloadProbe();
+        ReactorReloadProbe reactorReloadProbe = new ReactorReloadProbe();
+        EffectiveMavenProfileProbe effectiveMavenProfileProbe =
+                new EffectiveMavenProfileProbe();
+        FlowRpcProbe flowRpcProbe = new FlowRpcProbe();
+        Button openLazyFrontend = new Button("Open lazy frontend route", event ->
+                event.getSource().getUI()
+                        .ifPresent(ui -> ui.navigate(LazyFrontendRoute.class)));
+        openLazyFrontend.setId("framework-lazy-frontend-open");
+        Button openNestedLazyFrontend = new Button("Open nested lazy frontend route", event ->
+                event.getSource().getUI()
+                        .ifPresent(ui -> ui.navigate(NestedLazyFrontendRoute.class)));
+        openNestedLazyFrontend.setId("framework-nested-lazy-open");
+        Button openJarFrontend = new Button(
+                "Open dependency JAR frontend route", event ->
+                event.getSource().getUI()
+                        .ifPresent(ui ->
+                                ui.navigate(JarFrontendResourceRoute.class)));
+        openJarFrontend.setId("framework-jar-frontend-open");
+        Button openFlowDnd = new Button("Open Flow DnD route", event ->
+                event.getSource().getUI()
+                        .ifPresent(ui -> ui.navigate(FlowDndRoute.class)));
+        openFlowDnd.setId("framework-flow-dnd-open");
+        Button openFlowOverlayStack = new Button(
+                "Open Flow overlay stack route", event ->
+                event.getSource().getUI()
+                        .ifPresent(ui ->
+                                ui.navigate(FlowOverlayStackRoute.class)));
+        openFlowOverlayStack.setId("framework-flow-overlay-stack-open-route");
+        Button openFlowInputPopup = new Button(
+                "Open Flow input popup route", event ->
+                event.getSource().getUI()
+                        .ifPresent(ui ->
+                                ui.navigate(FlowInputPopupRoute.class)));
+        openFlowInputPopup.setId("framework-flow-input-popup-open-route");
+        Button openFlowMenuPopup = new Button(
+                "Open Flow menu popup route", event ->
+                event.getSource().getUI()
+                        .ifPresent(ui ->
+                                ui.navigate(FlowMenuPopupRoute.class)));
+        openFlowMenuPopup.setId("framework-flow-menu-popup-open-route");
+        Button openFlowLargeDownload = new Button(
+                "Open Flow large download route", event ->
+                event.getSource().getUI()
+                        .ifPresent(ui ->
+                                ui.navigate(FlowLargeDownloadRoute.class)));
+        openFlowLargeDownload.setId(
+                "framework-flow-large-download-open-route");
+        Button openFlowLargeUpload = new Button(
+                "Open Flow large upload route", event ->
+                event.getSource().getUI()
+                        .ifPresent(ui ->
+                                ui.navigate(FlowLargeUploadRoute.class)));
+        openFlowLargeUpload.setId(
+                "framework-flow-large-upload-open-route");
+        Button openFlowInFlightRequest = new Button(
+                "Open Flow in-flight request route", event ->
+                event.getSource().getUI()
+                        .ifPresent(ui ->
+                                ui.navigate(FlowInFlightRequestRoute.class)));
+        openFlowInFlightRequest.setId(
+                "framework-flow-in-flight-request-open-route");
+        Button openFlowLargeMultipartUpload = new Button(
+                "Open Flow large multipart upload route", event ->
+                event.getSource().getUI()
+                        .ifPresent(ui ->
+                                ui.navigate(
+                                        FlowLargeMultipartUploadRoute.class)));
+        openFlowLargeMultipartUpload.setId(
+                "framework-flow-large-multipart-upload-open-route");
+        Button openFlowConcurrentUpload = new Button(
+                "Open Flow concurrent upload route", event ->
+                event.getSource().getUI()
+                        .ifPresent(ui ->
+                                ui.navigate(FlowConcurrentUploadRoute.class)));
+        openFlowConcurrentUpload.setId(
+                "framework-flow-concurrent-upload-open-route");
+        Button openFlowRequestFanout = new Button(
+                "Open Flow request fan-out route", event ->
+                event.getSource().getUI()
+                        .ifPresent(ui ->
+                                ui.navigate(FlowRequestFanoutRoute.class)));
+        openFlowRequestFanout.setId(
+                "framework-flow-request-fanout-open-route");
+        Button openFlowConcurrentMultipartUpload = new Button(
+                "Open Flow concurrent multipart upload route", event ->
+                event.getSource().getUI()
+                        .ifPresent(ui -> ui.navigate(
+                                FlowConcurrentMultipartUploadRoute.class)));
+        openFlowConcurrentMultipartUpload.setId(
+                "framework-flow-concurrent-multipart-upload-open-route");
+        Button openFlowCrossSessionMultipartUpload = new Button(
+                "Open Flow cross-session multipart upload route", event ->
+                event.getSource().getUI()
+                        .ifPresent(ui -> ui.navigate(
+                                FlowCrossSessionMultipartUploadRoute.class)));
+        openFlowCrossSessionMultipartUpload.setId(
+                "framework-flow-cross-session-multipart-upload-open-route");
 
         BigDecimalField budget = new BigDecimalField("Budget");
         budget.setId("framework-budget");
@@ -245,6 +394,28 @@ public class FlowOverIpcFrameworkView extends VerticalLayout {
             numberFieldStatus.setText("NumberField server value: 8.25");
         });
         numberFieldServerUpdate.setId("framework-number-field-server-update");
+
+        Slider riskTolerance = new Slider("Risk tolerance", 0, 10);
+        riskTolerance.setId("framework-slider");
+        riskTolerance.setStep(0.5);
+        riskTolerance.setValue(3.0);
+        riskTolerance.setMinMaxVisible(true);
+        riskTolerance.setValueAlwaysVisible(true);
+        riskTolerance.setAriaLabel("Risk tolerance slider");
+        Span sliderStatus = new Span("Slider: value=3.0 range=0.0-10.0 step=0.5");
+        sliderStatus.setId("framework-slider-status");
+        riskTolerance.addValueChangeListener(event ->
+                sliderStatus.setText("Slider client value: " + event.getValue()));
+        Button sliderServerUpdate = new Button("Set Slider", event -> {
+            riskTolerance.setMin(2.0);
+            riskTolerance.setMax(12.0);
+            riskTolerance.setStep(1.0);
+            riskTolerance.setValue(9.0);
+            riskTolerance.setMinMaxVisible(false);
+            riskTolerance.setValueAlwaysVisible(false);
+            sliderStatus.setText("Slider server value: 9.0 range=2.0-12.0 step=1.0");
+        });
+        sliderServerUpdate.setId("framework-slider-server-update");
 
         PasswordField secret = new PasswordField("Secret");
         secret.setId("framework-secret");
@@ -451,15 +622,173 @@ public class FlowOverIpcFrameworkView extends VerticalLayout {
 
         Button popoverTarget = new Button("Popover Target");
         popoverTarget.setId("framework-popover-target");
-        Popover popover = new Popover(new Span("Popover audit content"));
+        TextField popoverFocusField = new TextField("Popover focus field");
+        popoverFocusField.setId("framework-popover-focus-field");
+        Button popoverLastAction = new Button("Popover last action");
+        popoverLastAction.setId("framework-popover-last-action");
+        Popover popover = new Popover(
+                new Span("Popover audit content"),
+                popoverFocusField,
+                popoverLastAction);
         popover.setId("framework-popover");
         popover.setTarget(popoverTarget);
         popover.setOpenOnClick(true);
+        popover.setModal(false);
+        popover.setAutofocus(false);
+        popover.setCloseOnEsc(true);
+        popover.setCloseOnOutsideClick(true);
+        popover.setRole("dialog");
+        popover.setAriaLabel("Flow IPC anchored modeless popover");
+        Span popoverLifecycleStatus = new Span("Popover lifecycle idle");
+        popoverLifecycleStatus.setId("framework-popover-lifecycle-status");
         popover.addOpenedChangeListener(event -> {
             if (event.isOpened()) {
                 overlayMatrixStatus.setText("Popover opened: true");
             }
+            popoverLifecycleStatus.setText("Popover lifecycle "
+                    + (event.isOpened() ? "opened" : "closed")
+                    + ": client=" + event.isFromClient());
         });
+        Button popoverOutsideTarget = new Button("Popover outside target");
+        popoverOutsideTarget.setId("framework-popover-outside-target");
+
+        Dialog mixedOverlayDialog = new Dialog();
+        mixedOverlayDialog.setId("framework-mixed-overlay-dialog");
+        mixedOverlayDialog.setHeaderTitle("Flow IPC mixed overlay stack");
+        mixedOverlayDialog.setCloseOnEsc(true);
+        mixedOverlayDialog.setFocusTrap(true);
+        Button mixedOverlayPopoverTarget = new Button("Mixed overlay popover target");
+        mixedOverlayPopoverTarget.setId("framework-mixed-overlay-popover-target");
+        TextField mixedOverlayPopoverFocusField =
+                new TextField("Mixed overlay popover focus field");
+        mixedOverlayPopoverFocusField.setId(
+                "framework-mixed-overlay-popover-focus-field");
+        Button mixedOverlayPopoverLastAction =
+                new Button("Mixed overlay popover last action");
+        mixedOverlayPopoverLastAction.setId(
+                "framework-mixed-overlay-popover-last-action");
+        Popover mixedOverlayPopover = new Popover(
+                new Span("Mixed overlay popover content"),
+                mixedOverlayPopoverFocusField,
+                mixedOverlayPopoverLastAction);
+        mixedOverlayPopover.setId("framework-mixed-overlay-popover");
+        mixedOverlayPopover.setTarget(mixedOverlayPopoverTarget);
+        mixedOverlayPopover.setOpenOnClick(true);
+        mixedOverlayPopover.setModal(false);
+        mixedOverlayPopover.setAutofocus(false);
+        mixedOverlayPopover.setCloseOnEsc(true);
+        mixedOverlayPopover.setCloseOnOutsideClick(true);
+        mixedOverlayPopover.setRole("dialog");
+        mixedOverlayPopover.setAriaLabel("Flow IPC mixed modeless popover");
+        Span mixedOverlayPopoverLifecycleStatus =
+                new Span("Mixed overlay Popover lifecycle idle");
+        mixedOverlayPopoverLifecycleStatus.setId(
+                "framework-mixed-overlay-popover-lifecycle-status");
+        mixedOverlayPopover.addOpenedChangeListener(event -> {
+            mixedOverlayPopoverLifecycleStatus.setText(
+                    "Mixed overlay Popover lifecycle "
+                            + (event.isOpened() ? "opened" : "closed")
+                            + ": client=" + event.isFromClient());
+            if (event.isOpened()) {
+                overlayMatrixStatus.setText("Mixed overlay Popover opened: true");
+            }
+        });
+        Button mixedOverlayOutsideTarget =
+                new Button("Mixed overlay dialog outside target");
+        mixedOverlayOutsideTarget.setId("framework-mixed-overlay-outside-target");
+        Span mixedOverlayDialogLifecycleStatus =
+                new Span("Mixed overlay Dialog lifecycle idle");
+        mixedOverlayDialogLifecycleStatus.setId(
+                "framework-mixed-overlay-dialog-lifecycle-status");
+        mixedOverlayDialog.addOpenedChangeListener(event ->
+                mixedOverlayDialogLifecycleStatus.setText(
+                        "Mixed overlay Dialog lifecycle "
+                                + (event.isOpened() ? "opened" : "closed")
+                                + ": client=" + event.isFromClient()));
+        mixedOverlayDialog.add(
+                mixedOverlayPopoverTarget,
+                mixedOverlayPopover,
+                mixedOverlayPopoverLifecycleStatus,
+                mixedOverlayOutsideTarget,
+                mixedOverlayDialogLifecycleStatus);
+        Button mixedOverlayDialogOpen = new Button("Open mixed overlay stack", event -> {
+            mixedOverlayDialog.open();
+            mixedOverlayPopoverTarget.focus();
+        });
+        mixedOverlayDialogOpen.setId("framework-mixed-overlay-dialog-open");
+
+        Button nestedPopoverOuterTarget =
+                new Button("Nested popover outer target");
+        nestedPopoverOuterTarget.setId("framework-nested-popover-outer-target");
+        Button nestedPopoverInnerTarget =
+                new Button("Nested popover inner target");
+        nestedPopoverInnerTarget.setId("framework-nested-popover-inner-target");
+        TextField nestedPopoverInnerFocusField =
+                new TextField("Nested popover inner focus field");
+        nestedPopoverInnerFocusField.setId(
+                "framework-nested-popover-inner-focus-field");
+        Button nestedPopoverInnerLastAction =
+                new Button("Nested popover inner last action");
+        nestedPopoverInnerLastAction.setId(
+                "framework-nested-popover-inner-last-action");
+        Popover nestedPopoverInner = new Popover(
+                new Span("Nested popover inner content"),
+                nestedPopoverInnerFocusField,
+                nestedPopoverInnerLastAction);
+        nestedPopoverInner.setId("framework-nested-popover-inner");
+        nestedPopoverInner.setTarget(nestedPopoverInnerTarget);
+        nestedPopoverInner.setOpenOnClick(true);
+        nestedPopoverInner.setModal(false);
+        nestedPopoverInner.setAutofocus(false);
+        nestedPopoverInner.setCloseOnEsc(true);
+        nestedPopoverInner.setCloseOnOutsideClick(true);
+        nestedPopoverInner.setRole("dialog");
+        nestedPopoverInner.setAriaLabel("Flow IPC nested inner popover");
+        Span nestedPopoverInnerLifecycleStatus =
+                new Span("Nested inner Popover lifecycle idle");
+        nestedPopoverInnerLifecycleStatus.setId(
+                "framework-nested-popover-inner-lifecycle-status");
+        nestedPopoverInner.addOpenedChangeListener(event ->
+                nestedPopoverInnerLifecycleStatus.setText(
+                        "Nested inner Popover lifecycle "
+                                + (event.isOpened() ? "opened" : "closed")
+                                + ": client=" + event.isFromClient()));
+        Button nestedPopoverOuterLastAction =
+                new Button("Nested popover outer last action");
+        nestedPopoverOuterLastAction.setId(
+                "framework-nested-popover-outer-last-action");
+        Popover nestedPopoverOuter = new Popover(
+                new Span("Nested popover outer content"),
+                nestedPopoverInnerTarget,
+                nestedPopoverInner,
+                nestedPopoverInnerLifecycleStatus,
+                nestedPopoverOuterLastAction);
+        nestedPopoverOuter.setId("framework-nested-popover-outer");
+        nestedPopoverOuter.setTarget(nestedPopoverOuterTarget);
+        nestedPopoverOuter.setOpenOnClick(true);
+        nestedPopoverOuter.setModal(false);
+        nestedPopoverOuter.setAutofocus(false);
+        nestedPopoverOuter.setCloseOnEsc(true);
+        nestedPopoverOuter.setCloseOnOutsideClick(true);
+        nestedPopoverOuter.setRole("dialog");
+        nestedPopoverOuter.setAriaLabel("Flow IPC nested outer popover");
+        Span nestedPopoverOuterLifecycleStatus =
+                new Span("Nested outer Popover lifecycle idle");
+        nestedPopoverOuterLifecycleStatus.setId(
+                "framework-nested-popover-outer-lifecycle-status");
+        nestedPopoverOuter.addOpenedChangeListener(event -> {
+            nestedPopoverOuterLifecycleStatus.setText(
+                    "Nested outer Popover lifecycle "
+                            + (event.isOpened() ? "opened" : "closed")
+                            + ": client=" + event.isFromClient());
+            if (event.isOpened()) {
+                overlayMatrixStatus.setText("Nested anchored Popover opened: true");
+            }
+        });
+        Button nestedPopoverOutsideTarget =
+                new Button("Nested popover outside target");
+        nestedPopoverOutsideTarget.setId(
+                "framework-nested-popover-outside-target");
 
         Span notificationStatus = new Span("Notification: pending");
         notificationStatus.setId("framework-notification-status");
@@ -1311,35 +1640,315 @@ public class FlowOverIpcFrameworkView extends VerticalLayout {
 
         Span lazyGridStatus = new Span("Lazy grid: pending");
         lazyGridStatus.setId("framework-lazy-grid-status");
+        Span lazyGridSelectionStatus = new Span("Lazy grid selection: pending");
+        lazyGridSelectionStatus.setId("framework-lazy-grid-selection-status");
+        Span lazyGridQueryStatus = new Span("Lazy grid query: pending");
+        lazyGridQueryStatus.setId("framework-lazy-grid-query-status");
+        Span lazyGridCountStatus = new Span("Lazy grid count: pending");
+        lazyGridCountStatus.setId("framework-lazy-grid-count-status");
         AtomicInteger lazyGridFetchCount = new AtomicInteger();
         AtomicInteger lazyGridCountCount = new AtomicInteger();
         AtomicReference<String> lazyGridLastRange = new AtomicReference<>("pending");
 
         Grid<WorkItem> lazyGrid = new Grid<>(WorkItem.class, false);
         lazyGrid.setId("framework-lazy-grid");
-        lazyGrid.addColumn(WorkItem::id).setHeader("Lazy ticket");
-        lazyGrid.addColumn(WorkItem::owner).setHeader("Lazy owner");
-        lazyGrid.addColumn(WorkItem::state).setHeader("Lazy state");
+        lazyGrid.addColumn(WorkItem::id).setHeader("Lazy ticket")
+                .setKey("id").setSortProperty("id").setSortable(true);
+        lazyGrid.addColumn(WorkItem::owner).setHeader("Lazy owner")
+                .setKey("owner").setSortProperty("owner").setSortable(true);
+        lazyGrid.addColumn(WorkItem::state).setHeader("Lazy state")
+                .setKey("state").setSortProperty("state").setSortable(true);
         lazyGrid.setPageSize(5);
         lazyGrid.setHeight("220px");
-        lazyGrid.setItems(query -> {
+
+        CallbackDataProvider<WorkItem, String> lazyGridDataProvider =
+                DataProvider.fromFilteringCallbacks(query -> {
+            String filter = normalizeLazyGridFilter(query.getFilter().orElse(""));
+            List<WorkItem> matchingItems = queryLazyWorkItems(
+                    lazyWorkItems, filter, query.getSortOrders());
             int offset = query.getOffset();
             int limit = query.getLimit();
-            int end = Math.min(offset + limit, lazyWorkItems.size());
+            int end = Math.min(offset + limit, matchingItems.size());
             int fetchCount = lazyGridFetchCount.incrementAndGet();
             lazyGridLastRange.set(offset + "-" + end);
             lazyGridStatus.setText("Lazy grid fetch " + fetchCount + ": " + offset + "-" + end);
-            return lazyWorkItems.stream().skip(offset).limit(limit);
+            lazyGridQueryStatus.setText("Lazy grid query: sort="
+                    + lazyGridSortSummary(query.getSortOrders())
+                    + ", filter=" + (filter.isEmpty() ? "all" : filter)
+                    + ", matches=" + matchingItems.size()
+                    + ", range=" + offset + "-" + end);
+            return matchingItems.stream().skip(offset).limit(limit);
         }, query -> {
-            lazyGridCountCount.incrementAndGet();
-            return lazyWorkItems.size();
+            int countCall = lazyGridCountCount.incrementAndGet();
+            String filter = normalizeLazyGridFilter(query.getFilter().orElse(""));
+            int matches = queryLazyWorkItems(
+                    lazyWorkItems, filter, query.getSortOrders()).size();
+            lazyGridCountStatus.setText("Lazy grid count " + countCall + ": filter="
+                    + (filter.isEmpty() ? "all" : filter)
+                    + ", matches=" + matches);
+            return matches;
         });
+        ConfigurableFilterDataProvider<WorkItem, Void, String>
+                configurableLazyGridDataProvider =
+                lazyGridDataProvider.withConfigurableFilter();
+        lazyGrid.setDataProvider(configurableLazyGridDataProvider);
+
+        TextField lazyGridFilter = new TextField("Lazy owner filter");
+        lazyGridFilter.setId("framework-lazy-grid-filter");
+        lazyGridFilter.setPlaceholder("Filter by owner");
+        lazyGridFilter.setClearButtonVisible(true);
+        lazyGridFilter.setValueChangeMode(ValueChangeMode.EAGER);
+        lazyGridFilter.addValueChangeListener(event ->
+                configurableLazyGridDataProvider.setFilter(
+                        normalizeLazyGridFilter(event.getValue())));
+        lazyGrid.addSelectionListener(event -> lazyGridSelectionStatus.setText(
+                event.getFirstSelectedItem()
+                        .map(item -> "Lazy grid selection: " + item.id())
+                        .orElse("Lazy grid selection: cleared")));
 
         Button lazyGridReport = new Button("Report Lazy Grid", event ->
                 lazyGridStatus.setText("Lazy grid fetches: " + lazyGridFetchCount.get()
                         + ", count calls: " + lazyGridCountCount.get()
                         + ", range: " + lazyGridLastRange.get()));
         lazyGridReport.setId("framework-lazy-grid-report");
+
+        TreeWorkItem platformDomain = new TreeWorkItem(
+                "domain-platform", "Platform", "active");
+        TreeWorkItem productDomain = new TreeWorkItem(
+                "domain-product", "Product", "active");
+        TreeWorkItem runtimeArea = new TreeWorkItem(
+                "area-runtime", "Runtime", "ready");
+        TreeWorkItem hostArea = new TreeWorkItem(
+                "area-native-host", "Native host", "ready");
+        TreeWorkItem transportCapability = new TreeWorkItem(
+                "capability-opaque-ipc", "Opaque IPC", "verified");
+        TreeWorkItem pushCapability = new TreeWorkItem(
+                "capability-push", "Push", "verified");
+        TreeWorkItem componentCapability = new TreeWorkItem(
+                "capability-components", "Components", "active");
+        List<TreeWorkItem> treeGridRoots = List.of(platformDomain, productDomain);
+        Map<String, List<TreeWorkItem>> treeGridChildren = new LinkedHashMap<>();
+        treeGridChildren.put(platformDomain.id(),
+                new ArrayList<>(List.of(runtimeArea, hostArea)));
+        treeGridChildren.put(productDomain.id(),
+                new ArrayList<>(List.of(componentCapability)));
+        treeGridChildren.put(runtimeArea.id(),
+                new ArrayList<>(List.of(transportCapability, pushCapability)));
+
+        Span treeGridQueryStatus = new Span("Tree grid query: pending");
+        treeGridQueryStatus.setId("framework-tree-grid-query-status");
+        Span treeGridCountStatus = new Span("Tree grid count: pending");
+        treeGridCountStatus.setId("framework-tree-grid-count-status");
+        Span treeGridLifecycleStatus = new Span("Tree grid lifecycle: pending");
+        treeGridLifecycleStatus.setId("framework-tree-grid-lifecycle-status");
+        Span treeGridSelectionStatus = new Span("Tree grid selection: pending");
+        treeGridSelectionStatus.setId("framework-tree-grid-selection-status");
+        Span treeGridRefreshStatus = new Span("Tree grid refresh: pending");
+        treeGridRefreshStatus.setId("framework-tree-grid-refresh-status");
+        AtomicInteger treeGridFetchCount = new AtomicInteger();
+        AtomicInteger treeGridCountCount = new AtomicInteger();
+
+        AbstractBackEndHierarchicalDataProvider<TreeWorkItem, Void>
+                treeGridDataProvider =
+                new AbstractBackEndHierarchicalDataProvider<>() {
+            @Override
+            public int getChildCount(HierarchicalQuery<TreeWorkItem, Void> query) {
+                List<TreeWorkItem> children = treeGridChildren(
+                        query.getParent(), treeGridRoots, treeGridChildren);
+                treeGridCountStatus.setText("Tree grid count "
+                        + treeGridCountCount.incrementAndGet()
+                        + ": parent=" + treeGridParentId(query.getParent())
+                        + ", count=" + children.size());
+                return children.size();
+            }
+
+            @Override
+            public boolean hasChildren(TreeWorkItem item) {
+                return !treeGridChildren.getOrDefault(item.id(), List.of()).isEmpty();
+            }
+
+            @Override
+            protected Stream<TreeWorkItem> fetchChildrenFromBackEnd(
+                    HierarchicalQuery<TreeWorkItem, Void> query) {
+                List<TreeWorkItem> children = treeGridChildren(
+                        query.getParent(), treeGridRoots, treeGridChildren);
+                int offset = query.getOffset();
+                int end = Math.min(offset + query.getLimit(), children.size());
+                treeGridQueryStatus.setText("Tree grid fetch "
+                        + treeGridFetchCount.incrementAndGet()
+                        + ": parent=" + treeGridParentId(query.getParent())
+                        + ", range=" + offset + "-" + end);
+                return children.stream().skip(offset).limit(query.getLimit());
+            }
+        };
+
+        TreeGrid<TreeWorkItem> treeGrid = new TreeGrid<>();
+        treeGrid.setId("framework-tree-grid");
+        treeGrid.addHierarchyColumn(TreeWorkItem::label)
+                .setHeader("Capability");
+        treeGrid.addColumn(TreeWorkItem::id).setHeader("Tree id");
+        treeGrid.addColumn(TreeWorkItem::state).setHeader("Tree state");
+        treeGrid.setPageSize(4);
+        treeGrid.setHeight("260px");
+        treeGrid.setDataProvider(treeGridDataProvider);
+        treeGrid.addExpandListener(event -> event.getItems().stream().findFirst()
+                .ifPresent(item -> treeGridLifecycleStatus.setText(
+                        "Tree grid expand: " + item.id()
+                                + " client=" + event.isFromClient())));
+        treeGrid.addCollapseListener(event -> event.getItems().stream().findFirst()
+                .ifPresent(item -> treeGridLifecycleStatus.setText(
+                        "Tree grid collapse: " + item.id()
+                                + " client=" + event.isFromClient())));
+        treeGrid.addSelectionListener(event ->
+                treeGridSelectionStatus.setText(event.getFirstSelectedItem()
+                        .map(item -> "Tree grid selection: " + item.id())
+                        .orElse("Tree grid selection: cleared")));
+
+        Button treeGridRefresh = new Button("Add runtime capability", event -> {
+            List<TreeWorkItem> runtimeChildren = treeGridChildren.get(runtimeArea.id());
+            boolean alreadyAdded = runtimeChildren.stream()
+                    .anyMatch(item -> item.id().equals("capability-trace"));
+            if (!alreadyAdded) {
+                runtimeChildren.add(new TreeWorkItem(
+                        "capability-trace", "Trace inspector", "new"));
+            }
+            treeGridDataProvider.refreshItem(runtimeArea, true);
+            treeGridRefreshStatus.setText(
+                    "Tree grid refresh: area-runtime children="
+                            + runtimeChildren.size());
+        });
+        treeGridRefresh.setId("framework-tree-grid-refresh");
+
+        List<EditableWorkItem> editableWorkItems = new ArrayList<>(List.of(
+                new EditableWorkItem("E-100", "platform", "queued"),
+                new EditableWorkItem("E-101", "desktop", "review"),
+                new EditableWorkItem("E-102", "audit", "ready")));
+        Grid<EditableWorkItem> editorGrid = new Grid<>(EditableWorkItem.class, false);
+        editorGrid.setId("framework-editor-grid");
+        editorGrid.addThemeVariants(GridVariant.LUMO_COMPACT);
+        editorGrid.setAllRowsVisible(true);
+
+        Editor<EditableWorkItem> editor = editorGrid.getEditor();
+        Binder<EditableWorkItem> editorBinder = new Binder<>(EditableWorkItem.class);
+        editor.setBinder(editorBinder);
+        editor.setBuffered(true);
+
+        Span editorRendererStatus = new Span("ComponentRenderer: pending");
+        editorRendererStatus.setId("framework-editor-renderer-status");
+        Span editorOpenStatus = new Span("Grid editor open: pending");
+        editorOpenStatus.setId("framework-editor-open-status");
+        Span editorSaveStatus = new Span("Grid editor save: pending");
+        editorSaveStatus.setId("framework-editor-save-status");
+        Span editorCancelStatus = new Span("Grid editor cancel: pending");
+        editorCancelStatus.setId("framework-editor-cancel-status");
+        Span editorValidationStatus = new Span("Grid editor validation: pending");
+        editorValidationStatus.setId("framework-editor-validation-status");
+        Span litRendererStatus = new Span("LitRenderer: pending");
+        litRendererStatus.setId("framework-lit-renderer-status");
+
+        Set<String> renderedEditorItems = new LinkedHashSet<>();
+        Set<String> openedEditorItems = new LinkedHashSet<>();
+        List<String> cancelledEditorItems = new ArrayList<>();
+        Map<Button, EditableWorkItem> editorItemsByButton = new IdentityHashMap<>();
+
+        editorGrid.addColumn(item -> item == null ? "" : item.getId())
+                .setHeader("Editor ticket");
+        Grid.Column<EditableWorkItem> editorOwnerColumn =
+                editorGrid.addColumn(item -> item == null ? "" : item.getOwner())
+                        .setHeader("Editor owner");
+        editorGrid.addColumn(item -> item == null ? "" : item.getState())
+                .setHeader("Editor state");
+        editorGrid.addColumn(LitRenderer.<EditableWorkItem>of("""
+                <button class="framework-lit-renderer-action"
+                        @click="${advanceState}">
+                  Lit ${item.id}: ${item.state}
+                </button>
+                """)
+                .withProperty("id", EditableWorkItem::getId)
+                .withProperty("state", EditableWorkItem::getState)
+                .withFunction("advanceState", item -> {
+                    item.setState("lit-updated");
+                    editorGrid.getDataProvider().refreshItem(item);
+                    litRendererStatus.setText("LitRenderer function: "
+                            + item.getId() + " state=" + item.getState());
+                }))
+                .setHeader("Lit renderer");
+
+        TextField editorOwner = new TextField();
+        editorOwner.setId("framework-editor-owner-field");
+        editorOwner.setAriaLabel("Editor owner");
+        editorOwner.addThemeVariants(TextFieldVariant.LUMO_SMALL);
+        editorBinder.forField(editorOwner)
+                .asRequired("Owner is required")
+                .bind(EditableWorkItem::getOwner, EditableWorkItem::setOwner);
+        editorOwnerColumn.setEditorComponent(editorOwner);
+
+        Button editorSave = new Button("Save", event -> {
+            if (!editor.save()) {
+                String itemId = editor.isOpen()
+                        ? editor.getItem().getId()
+                        : "none";
+                editorValidationStatus.setText(
+                        "Grid editor validation blocked: " + itemId);
+            }
+        });
+        editorSave.setId("framework-editor-save");
+        Button editorCancel = new Button("Cancel", event -> editor.cancel());
+        editorCancel.setId("framework-editor-cancel");
+        HorizontalLayout editorActions = new HorizontalLayout(editorSave, editorCancel);
+        editorActions.setPadding(false);
+        editorActions.setSpacing(true);
+
+        Grid.Column<EditableWorkItem> editorActionColumn = editorGrid.addColumn(
+                new ComponentRenderer<Button, EditableWorkItem>(() -> {
+                    Button edit = new Button("Edit");
+                    edit.addClickListener(event -> {
+                        EditableWorkItem item = editorItemsByButton.get(edit);
+                        if (item != null) {
+                            editor.editItem(item);
+                        }
+                    });
+                    edit.addDetachListener(event -> editorItemsByButton.remove(edit));
+                    return edit;
+                }, (edit, item) -> {
+                    if (item == null) {
+                        editorItemsByButton.remove(edit);
+                        edit.setVisible(false);
+                        edit.getElement().removeAttribute("id");
+                        return;
+                    }
+                    editorItemsByButton.put(edit, item);
+                    edit.setVisible(true);
+                    edit.setId("framework-editor-open-" + item.getId());
+                    edit.setText("Edit " + item.getId());
+                    renderedEditorItems.add(item.getId());
+                    editorRendererStatus.setText("ComponentRenderer items: "
+                            + String.join(",", renderedEditorItems));
+                }))
+                .setHeader("Editor actions");
+        editorActionColumn.setEditorComponent(editorActions);
+        editorGrid.setItems(editableWorkItems);
+
+        editor.addOpenListener(event -> {
+            openedEditorItems.add(event.getItem().getId());
+            editorOpenStatus.setText("Grid editor opens: "
+                    + String.join(",", openedEditorItems));
+        });
+        editor.addSaveListener(event -> {
+            EditableWorkItem item = event.getItem();
+            editorGrid.getDataProvider().refreshItem(item);
+            editorSaveStatus.setText("Grid editor save: " + item.getId()
+                    + " owner=" + item.getOwner());
+        });
+        editor.addCancelListener(event -> {
+            EditableWorkItem item = event.getItem();
+            if (item == null) {
+                return;
+            }
+            cancelledEditorItems.add(item.getId() + " owner=" + item.getOwner());
+            editorCancelStatus.setText("Grid editor cancels: "
+                    + String.join(",", cancelledEditorItems));
+        });
 
         byte[] streamResourceBytes = """
                 Flow IPC StreamResource
@@ -1434,6 +2043,69 @@ public class FlowOverIpcFrameworkView extends VerticalLayout {
         upload.setAcceptedFileTypes("text/plain", ".txt");
         upload.setUploadFormat(UploadFormat.MULTIPART);
         upload.setAutoUpload(false);
+
+        Span flowDndSource = new Span("Drag Flow payload");
+        flowDndSource.setId("framework-flow-dnd-source");
+        flowDndSource.getStyle()
+                .set("display", "inline-block")
+                .set("padding", "12px")
+                .set("border", "1px solid var(--lumo-primary-color)")
+                .set("cursor", "grab");
+        Span flowDndTarget = new Span("Drop Flow payload");
+        flowDndTarget.setId("framework-flow-dnd-target");
+        flowDndTarget.getStyle()
+                .set("display", "inline-block")
+                .set("min-width", "180px")
+                .set("padding", "12px")
+                .set("border", "1px dashed var(--lumo-contrast-50pct)");
+        Span flowDndStartStatus = new Span("Flow DnD drag start: pending");
+        flowDndStartStatus.setId("framework-flow-dnd-start-status");
+        Span flowDndDropStatus = new Span("Flow DnD drop: pending");
+        flowDndDropStatus.setId("framework-flow-dnd-drop-status");
+        Span flowDndEndStatus = new Span("Flow DnD drag end: pending");
+        flowDndEndStatus.setId("framework-flow-dnd-end-status");
+
+        DragSource<Span> flowDragSource = DragSource.create(flowDndSource);
+        flowDragSource.setEffectAllowed(EffectAllowed.MOVE);
+        flowDragSource.setDragData("flow-dnd-initial");
+        flowDragSource.addDragStartListener(event -> {
+            event.setDragData("flow-dnd-payload");
+            flowDndStartStatus.setText(
+                    "Flow DnD drag start: source=framework-flow-dnd-source"
+                            + " data=flow-dnd-payload effectAllowed=MOVE");
+        });
+        flowDragSource.addDragEndListener(event -> {
+            flowDndEndStatus.setText("Flow DnD drag end: dropEffect="
+                    + event.getDropEffect() + " successful="
+                    + event.isSuccessful());
+            event.clearDragData();
+        });
+
+        DropTarget<Span> flowDropTarget = DropTarget.create(flowDndTarget);
+        flowDropTarget.setDropEffect(DropEffect.MOVE);
+        flowDropTarget.addDropListener(event -> {
+            String sourceId = event.getDragSourceComponent()
+                    .flatMap(component -> component.getId())
+                    .orElse("none");
+            String dragData = event.getDragData()
+                    .map(String::valueOf)
+                    .orElse("none");
+            flowDndDropStatus.setText("Flow DnD drop: source=" + sourceId
+                    + " data=" + dragData
+                    + " effectAllowed=" + event.getEffectAllowed()
+                    + " dropEffect=" + event.getDropEffect());
+        });
+
+        HorizontalLayout flowDndSurface = new HorizontalLayout(
+                flowDndSource, flowDndTarget);
+        flowDndSurface.setId("framework-flow-dnd-surface");
+        flowDndSurface.setAlignItems(Alignment.CENTER);
+        VerticalLayout flowDndProbe = new VerticalLayout(
+                flowDndSurface, flowDndStartStatus, flowDndDropStatus,
+                flowDndEndStatus);
+        flowDndProbe.setId("framework-flow-dnd-probe");
+        flowDndProbe.setPadding(false);
+        flowDndProbe.setSpacing(false);
 
         List<String> virtualListItems = IntStream.rangeClosed(1, 80)
                 .mapToObj(index -> "Virtual queue item " + String.format("%03d", index))
@@ -1705,11 +2377,284 @@ public class FlowOverIpcFrameworkView extends VerticalLayout {
         });
         scrollerServerUpdate.setId("framework-scroller-server-update");
 
+        Icon icon = new Icon(VaadinIcon.CLIPBOARD_CHECK);
+        icon.setId("framework-icon");
+        icon.setColor("var(--lumo-primary-color)");
+        icon.setSize("24px");
+        icon.getElement().setAttribute("aria-label", "Framework icon");
+        Span iconStatus = new Span("Icon: vaadin:clipboard-check color=primary size=24");
+        iconStatus.setId("framework-icon-status");
+        AtomicInteger iconClickCount = new AtomicInteger();
+        icon.addClickListener(event -> iconStatus.setText("Icon clicked: icon="
+                + icon.getIcon() + " count=" + iconClickCount.incrementAndGet()));
+        Button iconServerUpdate = new Button("Update Icon", event -> {
+            icon.setIcon(VaadinIcon.COG);
+            icon.setColor("var(--lumo-success-color)");
+            icon.setSize("32px");
+            iconStatus.setText("Icon clicked: icon=vaadin:clipboard-check count="
+                    + iconClickCount.get()
+                    + " | Icon server state: vaadin:cog color=success size=32");
+        });
+        iconServerUpdate.setId("framework-icon-server-update");
+
+        AppLayout appLayout = new AppLayout();
+        appLayout.setId("framework-app-layout");
+        appLayout.setPrimarySection(AppLayout.Section.DRAWER);
+        appLayout.setDrawerOpened(true);
+        appLayout.getStyle()
+                .set("border", "1px solid var(--lumo-contrast-20pct)")
+                .set("display", "block")
+                .set("height", "220px")
+                .set("overflow", "hidden")
+                .set("position", "relative")
+                .set("width", "420px");
+        DrawerToggle appLayoutToggle = new DrawerToggle();
+        appLayoutToggle.setId("framework-app-layout-toggle");
+        Span appLayoutTitle = new Span("IPC Shell");
+        appLayoutTitle.setId("framework-app-layout-title");
+        Span appLayoutContent = new Span("AppLayout content: overview");
+        appLayoutContent.setId("framework-app-layout-content");
+        Span appLayoutStatus = new Span("AppLayout: drawer open primary=drawer");
+        appLayoutStatus.setId("framework-app-layout-status");
+        Button appLayoutDrawerAction = new Button("Drawer Audit", event ->
+                appLayoutStatus.setText("AppLayout drawer action: audit"));
+        appLayoutDrawerAction.setId("framework-app-layout-drawer-action");
+        AtomicInteger appLayoutToggleCount = new AtomicInteger();
+        appLayoutToggle.addClickListener(event ->
+                appLayoutStatus.setText("AppLayout toggle clicked: count="
+                        + appLayoutToggleCount.incrementAndGet()));
+        Button appLayoutServerUpdate = new Button("Update AppLayout", event -> {
+            appLayout.setPrimarySection(AppLayout.Section.NAVBAR);
+            appLayout.setDrawerOpened(false);
+            appLayoutContent.setText("AppLayout content: patched navbar closed");
+            appLayoutStatus.setText("AppLayout toggle clicked: count="
+                    + appLayoutToggleCount.get()
+                    + " | AppLayout server state: primary=navbar drawer=false");
+        });
+        appLayoutServerUpdate.setId("framework-app-layout-server-update");
+        appLayout.addToNavbar(appLayoutToggle, appLayoutTitle);
+        appLayout.addToDrawer(appLayoutDrawerAction);
+        appLayout.setContent(appLayoutContent);
+
+        MasterDetailLayout masterDetailLayout = new MasterDetailLayout();
+        masterDetailLayout.setId("framework-master-detail-layout");
+        masterDetailLayout.addThemeVariants(MasterDetailLayoutVariant.AURA_INSET_DRAWER);
+        masterDetailLayout.setWidth("420px");
+        masterDetailLayout.setHeight("220px");
+        masterDetailLayout.setMasterSize("150px");
+        masterDetailLayout.setMasterMinSize("120px");
+        masterDetailLayout.setDetailSize("270px");
+        masterDetailLayout.setDetailMinSize("180px");
+        masterDetailLayout.setOrientation(Orientation.HORIZONTAL);
+        masterDetailLayout.setContainment(Containment.LAYOUT);
+        masterDetailLayout.setOverlayMode(OverlayMode.DRAWER);
+        masterDetailLayout.setForceOverlay(false);
+        masterDetailLayout.setAnimationEnabled(false);
+        VerticalLayout masterDetailMaster = new VerticalLayout();
+        masterDetailMaster.setId("framework-master-detail-master");
+        masterDetailMaster.setPadding(false);
+        masterDetailMaster.setSpacing(false);
+        masterDetailMaster.add(
+                new Span("Master queue seeded"),
+                new Span("Queue item IPC-101"));
+        VerticalLayout masterDetailDetail = new VerticalLayout();
+        masterDetailDetail.setId("framework-master-detail-detail");
+        masterDetailDetail.setPadding(false);
+        masterDetailDetail.setSpacing(false);
+        masterDetailDetail.add(
+                new Span("Detail panel seeded"),
+                new Span("Detail virtual child ready"));
+        masterDetailLayout.setMaster(masterDetailMaster);
+        masterDetailLayout.setDetail(masterDetailDetail);
+        Span masterDetailStatus = new Span("MasterDetail: horizontal drawer layout");
+        masterDetailStatus.setId("framework-master-detail-status");
+        AtomicInteger masterDetailBackdropCount = new AtomicInteger();
+        masterDetailLayout.addBackdropClickListener(event ->
+                masterDetailStatus.setText("MasterDetail backdrop clicked: count="
+                        + masterDetailBackdropCount.incrementAndGet()));
+        Button masterDetailServerUpdate = new Button("Update MasterDetail", event -> {
+            masterDetailLayout.setMasterSize("180px");
+            masterDetailLayout.setMasterMinSize("140px");
+            masterDetailLayout.setDetailSize("260px");
+            masterDetailLayout.setDetailMinSize("200px");
+            masterDetailLayout.setOrientation(Orientation.VERTICAL);
+            masterDetailLayout.setContainment(Containment.VIEWPORT);
+            masterDetailLayout.setOverlayMode(OverlayMode.STACK);
+            masterDetailLayout.setForceOverlay(true);
+            VerticalLayout patchedMaster = new VerticalLayout();
+            patchedMaster.setId("framework-master-detail-master-patched");
+            patchedMaster.setPadding(false);
+            patchedMaster.setSpacing(false);
+            patchedMaster.add(
+                    new Span("Master queue patched"),
+                    new Span("Queue item IPC-202"));
+            VerticalLayout patchedDetail = new VerticalLayout();
+            patchedDetail.setId("framework-master-detail-detail-patched");
+            patchedDetail.setPadding(false);
+            patchedDetail.setSpacing(false);
+            patchedDetail.add(
+                    new Span("Detail panel patched"),
+                    new Span("Detail virtual child replaced"));
+            masterDetailLayout.setMaster(patchedMaster);
+            masterDetailLayout.setDetail(patchedDetail);
+            masterDetailStatus.setText("MasterDetail backdrop clicked: count="
+                    + masterDetailBackdropCount.get()
+                    + " | MasterDetail server state: vertical stack overlay viewport patched"
+                    + " animation=disabled");
+        });
+        masterDetailServerUpdate.setId("framework-master-detail-server-update");
+        Button masterDetailAnimationUpdate = new Button("Enable MasterDetail Animation", event -> {
+            masterDetailLayout.setAnimationEnabled(true);
+            masterDetailStatus.setText("MasterDetail backdrop clicked: count="
+                    + masterDetailBackdropCount.get()
+                    + " | MasterDetail server state: vertical stack overlay viewport patched"
+                    + " animation=enabled");
+        });
+        masterDetailAnimationUpdate.setId("framework-master-detail-animation-update");
+
+        Card auditCard = new Card();
+        auditCard.setId("framework-card");
+        auditCard.addThemeVariants(CardVariant.LUMO_OUTLINED);
+        auditCard.setAriaRole("region");
+        auditCard.setAriaLabel("Framework audit card");
+        Span cardMedia = new Span("Card media: IPC");
+        cardMedia.setId("framework-card-media");
+        auditCard.setMedia(cardMedia);
+        auditCard.setTitle("Flow IPC card", 3);
+        Span cardSubtitle = new Span("Card subtitle: seeded");
+        cardSubtitle.setId("framework-card-subtitle");
+        auditCard.setSubtitle(cardSubtitle);
+        Span cardHeaderPrefix = new Span("P1");
+        cardHeaderPrefix.setId("framework-card-header-prefix");
+        auditCard.setHeaderPrefix(cardHeaderPrefix);
+        Span cardHeaderSuffix = new Span("queued");
+        cardHeaderSuffix.setId("framework-card-header-suffix");
+        auditCard.setHeaderSuffix(cardHeaderSuffix);
+        Span cardBody = new Span("Card body: routed through Flow client");
+        cardBody.setId("framework-card-body");
+        Span cardFooter = new Span("Card footer: ready");
+        cardFooter.setId("framework-card-footer");
+        auditCard.add(cardBody);
+        auditCard.addToFooter(cardFooter);
+        Span cardStatus = new Span("Card: seeded outlined role=region");
+        cardStatus.setId("framework-card-status");
+        AtomicInteger cardClickCount = new AtomicInteger();
+        auditCard.getElement().addEventListener("click", event ->
+                cardStatus.setText("Card clicked: count=" + cardClickCount.incrementAndGet()));
+        Button cardServerUpdate = new Button("Update Card", event -> {
+            auditCard.addThemeVariants(CardVariant.LUMO_ELEVATED, CardVariant.LUMO_HORIZONTAL);
+            auditCard.setAriaRole("article");
+            auditCard.setAriaLabel("Framework audit card patched");
+            Span patchedMedia = new Span("Card media: server patched");
+            patchedMedia.setId("framework-card-media-patched");
+            auditCard.setMedia(patchedMedia);
+            auditCard.setTitle("Flow IPC patched card", 2);
+            Span patchedSubtitle = new Span("Card subtitle: server patched");
+            patchedSubtitle.setId("framework-card-subtitle-patched");
+            auditCard.setSubtitle(patchedSubtitle);
+            Span patchedPrefix = new Span("P2");
+            patchedPrefix.setId("framework-card-header-prefix-patched");
+            auditCard.setHeaderPrefix(patchedPrefix);
+            Span patchedSuffix = new Span("approved");
+            patchedSuffix.setId("framework-card-header-suffix-patched");
+            auditCard.setHeaderSuffix(patchedSuffix);
+            cardBody.setText("Card body: server patched");
+            cardFooter.setText("Card footer: closed");
+            cardStatus.setText("Card clicked: count=" + cardClickCount.get()
+                    + " | Card server state: elevated horizontal patched");
+        });
+        cardServerUpdate.setId("framework-card-server-update");
+
+        Markdown markdown = new Markdown("""
+                # Flow IPC Markdown
+
+                - **client** ready
+                - [audit link](https://example.test/audit)
+                """);
+        markdown.setId("framework-markdown");
+        markdown.setWidth("420px");
+        Span markdownStatus = new Span("Markdown: seeded content");
+        markdownStatus.setId("framework-markdown-status");
+        AtomicInteger markdownClickCount = new AtomicInteger();
+        markdown.getElement().addEventListener("click", event ->
+                markdownStatus.setText("Markdown clicked: count="
+                        + markdownClickCount.incrementAndGet()));
+        Button markdownServerUpdate = new Button("Update Markdown", event -> {
+            markdown.setContent("""
+                    ## Flow IPC Markdown patched
+
+                    1. server patch
+                    2. `inline-code`
+                    """);
+            markdown.appendContent("\n\n> appended quote through Flow IPC");
+            markdownStatus.setText("Markdown clicked: count=" + markdownClickCount.get()
+                    + " | Markdown server state: patched appended");
+        });
+        markdownServerUpdate.setId("framework-markdown-server-update");
+
+        Badge badge = new Badge("queued", 7, new Icon(VaadinIcon.CLIPBOARD_CHECK));
+        badge.setId("framework-badge");
+        badge.setRole("status");
+        badge.addThemeVariants(BadgeVariant.CONTRAST, BadgeVariant.SMALL);
+        Span badgeStatus = new Span("Badge: queued number=7 theme=contrast small");
+        badgeStatus.setId("framework-badge-status");
+        AtomicInteger badgeClickCount = new AtomicInteger();
+        badge.getElement().addEventListener("click", event ->
+                badgeStatus.setText("Badge clicked: count="
+                        + badgeClickCount.incrementAndGet()
+                        + " text=" + badge.getText()
+                        + " number=" + badge.getNumber()));
+        Button badgeServerUpdate = new Button("Update Badge", event -> {
+            badge.setText("approved");
+            badge.setNumber(12);
+            badge.setIcon(new Icon(VaadinIcon.COG));
+            badge.setRole("mark");
+            badge.addThemeVariants(BadgeVariant.SUCCESS, BadgeVariant.FILLED);
+            badgeStatus.setText("Badge clicked: count=" + badgeClickCount.get()
+                    + " | Badge server state: approved number=12 success filled icon=cog role=mark");
+        });
+        badgeServerUpdate.setId("framework-badge-server-update");
+
         Dialog detailsDialog = new Dialog();
         detailsDialog.setId("framework-dialog");
+        detailsDialog.setHeaderTitle("Flow IPC keyboard dialog");
+        detailsDialog.setCloseOnEsc(true);
+        detailsDialog.setFocusTrap(true);
         Span dialogContent = new Span("Dialog details pending");
         dialogContent.setId("framework-dialog-content");
-        detailsDialog.add(dialogContent);
+        TextField dialogFocusField = new TextField("Dialog focus field");
+        dialogFocusField.setId("framework-dialog-focus-field");
+        Button dialogLastAction = new Button("Dialog last action");
+        dialogLastAction.setId("framework-dialog-last-action");
+        Dialog nestedDialog = new Dialog();
+        nestedDialog.setId("framework-nested-dialog");
+        nestedDialog.setHeaderTitle("Flow IPC nested keyboard dialog");
+        nestedDialog.setCloseOnEsc(true);
+        nestedDialog.setFocusTrap(true);
+        TextField nestedDialogFocusField = new TextField("Nested dialog focus field");
+        nestedDialogFocusField.setId("framework-nested-dialog-focus-field");
+        Button nestedDialogLastAction = new Button("Nested dialog last action");
+        nestedDialogLastAction.setId("framework-nested-dialog-last-action");
+        Span nestedDialogLifecycleStatus = new Span("Nested dialog lifecycle: pending");
+        nestedDialogLifecycleStatus.setId("framework-nested-dialog-lifecycle-status");
+        nestedDialog.addOpenedChangeListener(event -> nestedDialogLifecycleStatus.setText(
+                event.isOpened()
+                        ? "Nested dialog lifecycle opened: client=" + event.isFromClient()
+                        : "Nested dialog lifecycle closed: client=" + event.isFromClient()));
+        nestedDialog.add(nestedDialogFocusField, nestedDialogLastAction);
+        Button openNestedDialog = new Button("Open nested dialog", event -> {
+            nestedDialog.open();
+            nestedDialogFocusField.focus();
+        });
+        openNestedDialog.setId("framework-nested-dialog-open");
+        Span dialogLifecycleStatus = new Span("Dialog lifecycle: pending");
+        dialogLifecycleStatus.setId("framework-dialog-lifecycle-status");
+        detailsDialog.addOpenedChangeListener(event -> dialogLifecycleStatus.setText(
+                event.isOpened()
+                        ? "Dialog lifecycle opened: client=" + event.isFromClient()
+                        : "Dialog lifecycle closed: client=" + event.isFromClient()));
+        detailsDialog.add(dialogContent, dialogFocusField, openNestedDialog,
+                dialogLastAction);
 
         Span componentStatus = new Span("Components: pending");
         componentStatus.setId("framework-component-status");
@@ -1751,6 +2696,7 @@ public class FlowOverIpcFrameworkView extends VerticalLayout {
             dialogContent.setText(text);
             matrixStatus.setText(text);
             detailsDialog.open();
+            dialogFocusField.focus();
         });
         openDialog.setId("framework-dialog-open");
 
@@ -1778,11 +2724,24 @@ public class FlowOverIpcFrameworkView extends VerticalLayout {
         appendUpdate("Renderer owned by Flow client engine");
         updateList.add(latestUpdate);
 
-        add(title, standardPushStatus, budget, expedited,
+        add(title, standardPushStatus, viteHmrProbe, javaReloadProbe,
+                reactorReloadProbe, effectiveMavenProfileProbe, flowRpcProbe,
+                openLazyFrontend, openNestedLazyFrontend, openJarFrontend,
+                openFlowDnd,
+                openFlowOverlayStack, openFlowInputPopup, openFlowMenuPopup,
+                openFlowLargeDownload, openFlowLargeUpload,
+                openFlowInFlightRequest,
+                openFlowLargeMultipartUpload,
+                openFlowConcurrentUpload,
+                openFlowRequestFanout,
+                openFlowConcurrentMultipartUpload,
+                openFlowCrossSessionMultipartUpload,
+                budget, expedited,
                 auditChannels, checkboxGroupServerUpdate, checkboxGroupStatus,
                 priority, reviewer, dueDate, decision, caseTitle,
                 textFieldServerUpdate, textFieldStatus, notes,
                 contactEmail, score, riskScore, numberFieldServerUpdate, numberFieldStatus,
+                riskTolerance, sliderServerUpdate, sliderStatus,
                 secret, reviewTime, reviewDateTime,
                 dateTimePickerServerUpdate, dateTimePickerStatus, inputMatrixStatus, assignees,
                 assigneesStatus, laneListBox, listBoxServerUpdate, listBoxStatus,
@@ -1790,10 +2749,15 @@ public class FlowOverIpcFrameworkView extends VerticalLayout {
                 customAssignment, customFieldServerUpdate, customFieldStatus,
                 splitLayout, splitLayoutServerUpdate, splitLayoutStatus,
                 navTabs, auditDetails, queueAccordion, menu, navigationMatrixStatus,
-                contextMenuTarget, popoverTarget, popover, notificationOpen, notificationStatus,
+                contextMenuTarget, popoverTarget, popover, popoverLifecycleStatus,
+                popoverOutsideTarget, mixedOverlayDialogOpen, mixedOverlayDialog,
+                nestedPopoverOuterTarget, nestedPopoverOuter,
+                nestedPopoverOuterLifecycleStatus, nestedPopoverOutsideTarget,
+                notificationOpen, notificationStatus,
                 confirmDialogOpen, confirmDialog, confirmDialogStatus,
                 progressBar, progressValueUpdate, progressIndeterminateUpdate, progressBarStatus,
-                overlayMatrixStatus, openDialog, detailsDialog,
+                overlayMatrixStatus, openDialog, detailsDialog, dialogLifecycleStatus,
+                nestedDialogLifecycleStatus,
                 avatar, avatarGroup, messageList, messageInput, sideNav, loginOverlay,
                 loginOverlayReopen, richContentStatus, loginForm, loginFormStatus,
                 loginFormActionPost, loginFormActionPostStatus,
@@ -1824,16 +2788,30 @@ public class FlowOverIpcFrameworkView extends VerticalLayout {
                 richTextEditor, richTextEditorStatus, richTextEditorBehaviorStatus,
                 richTextEditorEditingStatus,
                 lifecycleFocus, lifecycleToggle, lifecycleFocusStatus,
-                grid, lazyGrid, lazyGridStatus, lazyGridReport, streamResourceDownload,
+                grid, lazyGridFilter, lazyGrid, lazyGridStatus, lazyGridSelectionStatus,
+                lazyGridQueryStatus, lazyGridCountStatus, lazyGridReport,
+                treeGrid, treeGridRefresh, treeGridQueryStatus, treeGridCountStatus,
+                treeGridLifecycleStatus, treeGridSelectionStatus, treeGridRefreshStatus,
+                editorGrid, editorRendererStatus, editorOpenStatus, editorSaveStatus,
+                editorCancelStatus, editorValidationStatus, litRendererStatus,
+                streamResourceDownload,
                 streamResourceStatus, streamResourceRangeDownload, streamResourceRangeStatus,
                 streamResourceChunksStatus, downloadHandlerSaveOpen, downloadHandlerSaveOpenStatus,
                 standardStreamingDownload,
-                upload, uploadStatus, virtualList, virtualListScrollEnd, virtualListStatus,
+                upload, uploadStatus, flowDndProbe,
+                virtualList, virtualListScrollEnd, virtualListStatus,
                 formLayout, formLayoutServerUpdate, formLayoutStatus,
                 horizontalLayout, horizontalLayoutServerUpdate, horizontalLayoutStatus,
                 flexLayout, flexLayoutServerUpdate, flexLayoutStatus,
                 verticalLayout, verticalLayoutServerUpdate, verticalLayoutStatus,
                 scroller, scrollerServerUpdate, scrollerStatus,
+                icon, iconServerUpdate, iconStatus,
+                appLayout, appLayoutServerUpdate, appLayoutStatus,
+                masterDetailLayout, masterDetailServerUpdate,
+                masterDetailAnimationUpdate, masterDetailStatus,
+                auditCard, cardServerUpdate, cardStatus,
+                markdown, markdownServerUpdate, markdownStatus,
+                badge, badgeServerUpdate, badgeStatus,
                 apply, status, componentStatus, matrixStatus,
                 updateList);
     }
@@ -1883,7 +2861,1207 @@ public class FlowOverIpcFrameworkView extends VerticalLayout {
         return bytes;
     }
 
+    private static List<WorkItem> queryLazyWorkItems(List<WorkItem> items,
+            String filter, List<QuerySortOrder> sortOrders) {
+        Comparator<WorkItem> comparator = null;
+        for (QuerySortOrder sortOrder : sortOrders) {
+            Comparator<WorkItem> propertyComparator = switch (sortOrder.getSorted()) {
+                case "id" -> Comparator.comparing(WorkItem::id);
+                case "owner" -> Comparator.comparing(WorkItem::owner);
+                case "state" -> Comparator.comparing(WorkItem::state);
+                default -> null;
+            };
+            if (propertyComparator == null) {
+                continue;
+            }
+            if (sortOrder.getDirection() == SortDirection.DESCENDING) {
+                propertyComparator = propertyComparator.reversed();
+            }
+            comparator = comparator == null
+                    ? propertyComparator
+                    : comparator.thenComparing(propertyComparator);
+        }
+        if (comparator != null) {
+            comparator = comparator.thenComparing(WorkItem::id);
+        }
+        var stream = items.stream()
+                .filter(item -> filter.isEmpty()
+                        || item.owner().toLowerCase(Locale.ROOT).contains(filter));
+        if (comparator != null) {
+            stream = stream.sorted(comparator);
+        }
+        return stream.toList();
+    }
+
+    private static String lazyGridSortSummary(List<QuerySortOrder> sortOrders) {
+        if (sortOrders.isEmpty()) {
+            return "none";
+        }
+        return sortOrders.stream()
+                .map(sortOrder -> sortOrder.getSorted() + ":"
+                        + (sortOrder.getDirection() == SortDirection.ASCENDING
+                                ? "ascending"
+                                : "descending"))
+                .collect(Collectors.joining("+"));
+    }
+
+    private static String normalizeLazyGridFilter(String filter) {
+        return filter == null ? "" : filter.trim().toLowerCase(Locale.ROOT);
+    }
+
+    private static List<TreeWorkItem> treeGridChildren(
+            TreeWorkItem parent,
+            List<TreeWorkItem> roots,
+            Map<String, List<TreeWorkItem>> children) {
+        return parent == null
+                ? roots
+                : children.getOrDefault(parent.id(), List.of());
+    }
+
+    private static String treeGridParentId(TreeWorkItem parent) {
+        return parent == null ? "root" : parent.id();
+    }
+
     private record WorkItem(String id, String owner, String state) {
+    }
+
+    private record TreeWorkItem(String id, String label, String state) {
+    }
+
+    public static final class EditableWorkItem {
+        private final String id;
+        private String owner;
+        private String state;
+
+        private EditableWorkItem(String id, String owner, String state) {
+            this.id = id;
+            this.owner = owner;
+            this.state = state;
+        }
+
+        public String getId() {
+            return id;
+        }
+
+        public String getOwner() {
+            return owner;
+        }
+
+        public void setOwner(String owner) {
+            this.owner = owner;
+        }
+
+        public String getState() {
+            return state;
+        }
+
+        public void setState(String state) {
+            this.state = state;
+        }
+    }
+
+    public static final class FlowRpcProbe extends VerticalLayout {
+        private final Span clientCallableStatus =
+                new Span("ClientCallable: pending");
+        private final Span clientCallableStructuredStatus =
+                new Span("ClientCallable structured: pending");
+        private final Span clientCallableTypeShapesStatus =
+                new Span("ClientCallable type shapes: pending");
+        private final Span pendingJavaScriptSuccessStatus =
+                new Span("Pending JavaScript success: pending");
+        private final Span pendingJavaScriptFailureStatus =
+                new Span("Pending JavaScript failure: pending");
+        private final Span pendingJavaScriptStructuredStatus =
+                new Span("Pending JavaScript structured: pending");
+        private final Span pendingJavaScriptTypeShapesStatus =
+                new Span("Pending JavaScript type shapes: pending");
+        private final Span pendingJavaScriptCancellationStatus =
+                new Span("Pending JavaScript cancellation: pending");
+        private final Span pendingJavaScriptSentCancellationStatus =
+                new Span("Pending JavaScript sent cancellation: pending");
+        private final Span pendingJavaScriptInvisibleOwner =
+                new Span("Pending JavaScript invisible owner");
+        private final Span pendingJavaScriptInvisibleOwnerStatus =
+                new Span("Pending JavaScript invisible owner: pending");
+        private final Span pendingJavaScriptDetachedOwner =
+                new Span("Pending JavaScript detached owner");
+        private final Span pendingJavaScriptDetachedOwnerStatus =
+                new Span("Pending JavaScript detached owner: pending");
+        private final Span pendingJavaScriptFutureSuccessStatus =
+                new Span("Pending JavaScript future success: pending");
+        private final Span pendingJavaScriptFutureFailureStatus =
+                new Span("Pending JavaScript future failure: pending");
+        private final Span pendingJavaScriptSubscriptionStatus =
+                new Span("Pending JavaScript subscriptions: pending");
+        private final Span pendingJavaScriptLateSubscriptionStatus =
+                new Span("Pending JavaScript late subscription: pending");
+        private final Span pendingJavaScriptFutureCancellationStatus =
+                new Span("Pending JavaScript future cancellation: pending");
+        private PendingJavaScriptResult sentPendingJavaScript;
+        private PendingJavaScriptResult lateSubscriptionPendingJavaScript;
+        private boolean sentCancellationAttempted;
+        private boolean sentBeforeCancellation;
+        private boolean sentCancellationAccepted;
+        private String sentPendingResult = "pending";
+        private int subscriptionCallbackCount;
+        private String subscriptionFirstResult = "pending";
+        private String subscriptionSecondResult = "pending";
+        private String subscriptionFutureResult = "pending";
+        private String subscriptionError = "none";
+        private boolean lateSubscriptionAttempted;
+        private boolean lateSubscriptionSent;
+        private boolean lateSubscriptionRejected;
+        private int lateSubscriptionCallbackCount;
+        private String lateSubscriptionResult = "pending";
+        private String lateSubscriptionError = "none";
+        private int typeShapeCallbackCount;
+        private String typeShapeNumber = "pending";
+        private String typeShapeEnum = "pending";
+        private String typeShapeArray = "pending";
+        private String typeShapeNullable = "pending";
+        private String typeShapeNested = "pending";
+        private String typeShapeError = "none";
+
+        private FlowRpcProbe() {
+            setId("framework-flow-rpc-probe");
+            setPadding(false);
+            setSpacing(false);
+
+            clientCallableStatus.setId("framework-client-callable-status");
+            clientCallableStructuredStatus.setId(
+                    "framework-client-callable-structured-status");
+            clientCallableTypeShapesStatus.setId(
+                    "framework-client-callable-type-shapes-status");
+            pendingJavaScriptSuccessStatus.setId(
+                    "framework-pending-javascript-success-status");
+            pendingJavaScriptFailureStatus.setId(
+                    "framework-pending-javascript-failure-status");
+            pendingJavaScriptStructuredStatus.setId(
+                    "framework-pending-javascript-structured-status");
+            pendingJavaScriptTypeShapesStatus.setId(
+                    "framework-pending-javascript-type-shapes-status");
+            pendingJavaScriptCancellationStatus.setId(
+                    "framework-pending-javascript-cancellation-status");
+            pendingJavaScriptSentCancellationStatus.setId(
+                    "framework-pending-javascript-sent-cancellation-status");
+            pendingJavaScriptInvisibleOwner.setId(
+                    "framework-pending-javascript-invisible-owner");
+            pendingJavaScriptInvisibleOwner.setVisible(false);
+            pendingJavaScriptInvisibleOwnerStatus.setId(
+                    "framework-pending-javascript-invisible-owner-status");
+            pendingJavaScriptDetachedOwner.setId(
+                    "framework-pending-javascript-detached-owner");
+            pendingJavaScriptDetachedOwner.setVisible(false);
+            pendingJavaScriptDetachedOwnerStatus.setId(
+                    "framework-pending-javascript-detached-owner-status");
+            pendingJavaScriptFutureSuccessStatus.setId(
+                    "framework-pending-javascript-future-success-status");
+            pendingJavaScriptFutureFailureStatus.setId(
+                    "framework-pending-javascript-future-failure-status");
+            pendingJavaScriptSubscriptionStatus.setId(
+                    "framework-pending-javascript-subscription-status");
+            pendingJavaScriptLateSubscriptionStatus.setId(
+                    "framework-pending-javascript-late-subscription-status");
+            pendingJavaScriptFutureCancellationStatus.setId(
+                    "framework-pending-javascript-future-cancellation-status");
+
+            Button pendingJavaScriptSuccess =
+                    new Button("Run pending JavaScript success", event ->
+                            getElement().executeJs(
+                                            "return Promise.resolve('pending-js:' + $0)",
+                                            "desktop-rpc")
+                                    .then(String.class, value ->
+                                                    pendingJavaScriptSuccessStatus.setText(
+                                                            "Pending JavaScript resolved: "
+                                                                    + value),
+                                            error ->
+                                                    pendingJavaScriptSuccessStatus.setText(
+                                                            "Pending JavaScript unexpected error: "
+                                                                    + error)));
+            pendingJavaScriptSuccess.setId(
+                    "framework-pending-javascript-success");
+
+            Button pendingJavaScriptFailure =
+                    new Button("Run pending JavaScript failure", event ->
+                            getElement().executeJs(
+                                            "return Promise.reject(new Error($0))",
+                                            "pending-js-rejected")
+                                    .then(String.class, value ->
+                                                    pendingJavaScriptFailureStatus.setText(
+                                                            "Pending JavaScript unexpected value: "
+                                                                    + value),
+                                            error ->
+                                                    pendingJavaScriptFailureStatus.setText(
+                                                            "Pending JavaScript rejected: "
+                                                                    + error)));
+            pendingJavaScriptFailure.setId(
+                    "framework-pending-javascript-failure");
+
+            Button pendingJavaScriptStructured =
+                    new Button("Run pending JavaScript structured", event ->
+                            getElement().executeJs("""
+                                    return Promise.resolve($0.items.map(
+                                      (item, index) => ({
+                                        code: item.code + '-client',
+                                        quantity: item.quantity + index
+                                      })));
+                                    """,
+                                            new StructuredRpcRequest(
+                                                    "java-structured",
+                                                    true,
+                                                    List.of(
+                                                            new StructuredRpcItem(
+                                                                    "alpha", 2),
+                                                            new StructuredRpcItem(
+                                                                    "beta", 3))))
+                                    .then(
+                                            new TypeReference<
+                                                    List<StructuredRpcItem>>() {
+                                            },
+                                            items ->
+                                                    pendingJavaScriptStructuredStatus.setText(
+                                                            "Pending JavaScript structured: "
+                                                                    + summarizeItems(
+                                                                            items)
+                                                                    + " total="
+                                                                    + totalQuantity(
+                                                                            items)),
+                                            error ->
+                                                    pendingJavaScriptStructuredStatus.setText(
+                                                            "Pending JavaScript structured error: "
+                                                                    + error)));
+            pendingJavaScriptStructured.setId(
+                    "framework-pending-javascript-structured");
+
+            Button pendingJavaScriptTypeShapes =
+                    new Button("Run pending JavaScript type shapes", event -> {
+                        typeShapeCallbackCount = 0;
+                        typeShapeNumber = "pending";
+                        typeShapeEnum = "pending";
+                        typeShapeArray = "pending";
+                        typeShapeNullable = "pending";
+                        typeShapeNested = "pending";
+                        typeShapeError = "none";
+                        updateTypeShapeStatus();
+
+                        getElement().executeJs("return $0", 42L)
+                                .then(Long.class,
+                                        value -> completeTypeShape(
+                                                "number",
+                                                String.valueOf(value)),
+                                        error -> failTypeShape(
+                                                "number", error));
+                        getElement().executeJs(
+                                        "return $0", RpcTypeShapeKind.BETA)
+                                .then(RpcTypeShapeKind.class,
+                                        value -> completeTypeShape(
+                                                "enum",
+                                                String.valueOf(value)),
+                                        error -> failTypeShape(
+                                                "enum", error));
+                        getElement().executeJs(
+                                        "return $0", new int[]{3, 5, 8})
+                                .then(int[].class,
+                                        value -> completeTypeShape(
+                                                "array",
+                                                Arrays.toString(value)),
+                                        error -> failTypeShape(
+                                                "array", error));
+                        getElement().executeJs(
+                                        "return $0", (String) null)
+                                .then(String.class,
+                                        value -> completeTypeShape(
+                                                "nullable",
+                                                String.valueOf(value)),
+                                        error -> failTypeShape(
+                                                "nullable", error));
+                        Map<String, List<Integer>> nested =
+                                new LinkedHashMap<>();
+                        nested.put("scores", List.of(13, 21));
+                        getElement().executeJs("return $0", nested)
+                                .then(
+                                        new TypeReference<
+                                                Map<String, List<Integer>>>() {
+                                        },
+                                        value -> completeTypeShape(
+                                                "nested",
+                                                String.valueOf(
+                                                        value.get("scores"))),
+                                        error -> failTypeShape(
+                                                "nested", error));
+                    });
+            pendingJavaScriptTypeShapes.setId(
+                    "framework-pending-javascript-type-shapes");
+
+            Button pendingJavaScriptCancellation =
+                    new Button("Cancel pending JavaScript", event -> {
+                        AtomicReference<String> cancellationError =
+                                new AtomicReference<>("none");
+                        PendingJavaScriptResult pending =
+                                getElement().executeJs("""
+                                        window.VaadinDesktopCanceledRpcExecuted = true;
+                                        return 'unexpected';
+                                        """);
+                        pending.then(String.class,
+                                value ->
+                                        pendingJavaScriptCancellationStatus.setText(
+                                                "Pending JavaScript cancellation unexpected: "
+                                                        + value),
+                                cancellationError::set);
+                        boolean sentBefore = pending.isSentToBrowser();
+                        boolean canceled = pending.cancelExecution();
+                        pendingJavaScriptCancellationStatus.setText(
+                                "Pending JavaScript cancellation: canceled="
+                                        + canceled
+                                        + " sentBefore=" + sentBefore
+                                        + " error=" + cancellationError.get());
+                    });
+            pendingJavaScriptCancellation.setId(
+                    "framework-pending-javascript-cancellation");
+
+            Button pendingJavaScriptSentStart =
+                    new Button("Run sent pending JavaScript", event -> {
+                        sentCancellationAttempted = false;
+                        sentBeforeCancellation = false;
+                        sentCancellationAccepted = false;
+                        sentPendingResult = "pending";
+                        sentPendingJavaScript = getElement().executeJs("""
+                                window.VaadinDesktopSentRpcExecuted = true;
+                                return new Promise(resolve =>
+                                  window.setTimeout(
+                                    () => resolve('sent-result'), 1200));
+                                """);
+                        sentPendingJavaScript.then(String.class, value -> {
+                            sentPendingResult = value;
+                            updateSentCancellationStatus();
+                        }, error -> {
+                            sentPendingResult = "error:" + error;
+                            updateSentCancellationStatus();
+                        });
+                        pendingJavaScriptSentCancellationStatus.setText(
+                                "Pending JavaScript sent cancellation: started");
+                    });
+            pendingJavaScriptSentStart.setId(
+                    "framework-pending-javascript-sent-start");
+
+            Button pendingJavaScriptSentCancel =
+                    new Button("Cancel sent pending JavaScript", event -> {
+                        if (sentPendingJavaScript == null) {
+                            pendingJavaScriptSentCancellationStatus.setText(
+                                    "Pending JavaScript sent cancellation: missing");
+                            return;
+                        }
+                        sentBeforeCancellation =
+                                sentPendingJavaScript.isSentToBrowser();
+                        sentCancellationAccepted =
+                                sentPendingJavaScript.cancelExecution();
+                        sentCancellationAttempted = true;
+                        updateSentCancellationStatus();
+                    });
+            pendingJavaScriptSentCancel.setId(
+                    "framework-pending-javascript-sent-cancel");
+
+            Button pendingJavaScriptInvisibleOwnerQueue =
+                    new Button("Queue invisible owner JavaScript", event -> {
+                        pendingJavaScriptInvisibleOwner.setVisible(false);
+                        pendingJavaScriptInvisibleOwnerStatus.setText(
+                                "Pending JavaScript invisible owner: queued");
+                        pendingJavaScriptInvisibleOwner.getElement().executeJs("""
+                                window.VaadinDesktopInvisibleOwnerRpcExecuted = true;
+                                return Promise.resolve(
+                                  'invisible-owner-result');
+                                """).then(String.class,
+                                value ->
+                                        pendingJavaScriptInvisibleOwnerStatus
+                                                .setText(
+                                                        "Pending JavaScript invisible owner: resolved="
+                                                                + value),
+                                error ->
+                                        pendingJavaScriptInvisibleOwnerStatus
+                                                .setText(
+                                                        "Pending JavaScript invisible owner: error="
+                                                                + error));
+                    });
+            pendingJavaScriptInvisibleOwnerQueue.setId(
+                    "framework-pending-javascript-invisible-owner-queue");
+
+            Button pendingJavaScriptInvisibleOwnerReveal =
+                    new Button("Reveal invisible owner", event -> {
+                        pendingJavaScriptInvisibleOwner.setVisible(true);
+                        pendingJavaScriptInvisibleOwnerStatus.setText(
+                                "Pending JavaScript invisible owner: revealed");
+                    });
+            pendingJavaScriptInvisibleOwnerReveal.setId(
+                    "framework-pending-javascript-invisible-owner-reveal");
+
+            VerticalLayout detachedOwnerContainer = new VerticalLayout();
+            detachedOwnerContainer.setPadding(false);
+            detachedOwnerContainer.setSpacing(false);
+            detachedOwnerContainer.setId(
+                    "framework-pending-javascript-detached-owner-container");
+            detachedOwnerContainer.add(pendingJavaScriptDetachedOwner);
+
+            Button pendingJavaScriptDetachedOwnerQueue =
+                    new Button("Queue detached owner JavaScript", event -> {
+                        if (pendingJavaScriptDetachedOwner.getParent()
+                                .isEmpty()) {
+                            detachedOwnerContainer.add(
+                                    pendingJavaScriptDetachedOwner);
+                        }
+                        pendingJavaScriptDetachedOwner.setVisible(false);
+                        pendingJavaScriptDetachedOwnerStatus.setText(
+                                "Pending JavaScript detached owner: queued");
+                        pendingJavaScriptDetachedOwner.getElement().executeJs("""
+                                window.VaadinDesktopDetachedOwnerRpcExecuted = true;
+                                return Promise.resolve(
+                                  'detached-owner-result');
+                                """).then(String.class,
+                                value ->
+                                        pendingJavaScriptDetachedOwnerStatus
+                                                .setText(
+                                                        "Pending JavaScript detached owner: unexpected="
+                                                                + value),
+                                error ->
+                                        pendingJavaScriptDetachedOwnerStatus
+                                                .setText(
+                                                        "Pending JavaScript detached owner: error="
+                                                                + error));
+                    });
+            pendingJavaScriptDetachedOwnerQueue.setId(
+                    "framework-pending-javascript-detached-owner-queue");
+
+            Button pendingJavaScriptDetachedOwnerDetach =
+                    new Button("Detach JavaScript owner", event -> {
+                        pendingJavaScriptDetachedOwner.getElement()
+                                .removeFromParent();
+                        pendingJavaScriptDetachedOwnerStatus.setText(
+                                "Pending JavaScript detached owner: detached");
+                    });
+            pendingJavaScriptDetachedOwnerDetach.setId(
+                    "framework-pending-javascript-detached-owner-detach");
+
+            Button pendingJavaScriptDetachedOwnerReattach =
+                    new Button("Reattach JavaScript owner", event -> {
+                        if (pendingJavaScriptDetachedOwner.getParent()
+                                .isEmpty()) {
+                            detachedOwnerContainer.add(
+                                    pendingJavaScriptDetachedOwner);
+                        }
+                        pendingJavaScriptDetachedOwner.setVisible(true);
+                        pendingJavaScriptDetachedOwnerStatus.setText(
+                                "Pending JavaScript detached owner: reattached");
+                    });
+            pendingJavaScriptDetachedOwnerReattach.setId(
+                    "framework-pending-javascript-detached-owner-reattach");
+
+            Button pendingJavaScriptDetachedOwnerConfirm =
+                    new Button("Confirm detached owner cleanup", event ->
+                            pendingJavaScriptDetachedOwnerStatus.setText(
+                                    "Pending JavaScript detached owner: confirmed"));
+            pendingJavaScriptDetachedOwnerConfirm.setId(
+                    "framework-pending-javascript-detached-owner-confirm");
+
+            Button pendingJavaScriptFutureSuccess =
+                    new Button("Run pending JavaScript future success",
+                            event -> {
+                                PendingJavaScriptResult pending =
+                                        getElement().executeJs("""
+                                                window.VaadinDesktopFutureRpcExecuted = true;
+                                                return Promise.resolve([
+                                                  {
+                                                    code: 'future-alpha',
+                                                    quantity: 7
+                                                  },
+                                                  {
+                                                    code: 'future-beta',
+                                                    quantity: 9
+                                                  }
+                                                ]);
+                                                """);
+                                CompletableFuture<List<StructuredRpcItem>> future =
+                                        pending.toCompletableFuture(
+                                                new TypeReference<
+                                                        List<StructuredRpcItem>>() {
+                                                });
+                                boolean initialDone = future.isDone();
+                                AtomicBoolean deadlockGuard =
+                                        new AtomicBoolean();
+                                AtomicReference<String> guardError =
+                                        new AtomicReference<>("none");
+                                try {
+                                    future.get(0, TimeUnit.MILLISECONDS);
+                                    guardError.set("missing");
+                                } catch (IllegalStateException exception) {
+                                    deadlockGuard.set(exception.getMessage()
+                                            != null
+                                            && exception.getMessage().contains(
+                                                    "locked the session"));
+                                } catch (Exception exception) {
+                                    guardError.set(exception.getClass()
+                                            .getSimpleName());
+                                }
+                                pendingJavaScriptFutureSuccessStatus.setText(
+                                        "Pending JavaScript future success: started"
+                                                + " initialDone=" + initialDone
+                                                + " deadlockGuard="
+                                                + deadlockGuard.get()
+                                                + " guardError="
+                                                + guardError.get());
+                                future.whenComplete((items, error) -> {
+                                    if (error != null) {
+                                        pendingJavaScriptFutureSuccessStatus
+                                                .setText(
+                                                        "Pending JavaScript future success: error="
+                                                                + error);
+                                        return;
+                                    }
+                                    pendingJavaScriptFutureSuccessStatus
+                                            .setText(
+                                                    "Pending JavaScript future success:"
+                                                            + " initialDone="
+                                                            + initialDone
+                                                            + " deadlockGuard="
+                                                            + deadlockGuard.get()
+                                                            + " guardError="
+                                                            + guardError.get()
+                                                            + " items="
+                                                            + summarizeItems(
+                                                                    items)
+                                                            + " total="
+                                                            + totalQuantity(
+                                                                    items));
+                                });
+                            });
+            pendingJavaScriptFutureSuccess.setId(
+                    "framework-pending-javascript-future-success");
+
+            Button pendingJavaScriptFutureFailure =
+                    new Button("Run pending JavaScript future failure",
+                            event -> {
+                                CompletableFuture<String> future =
+                                        getElement().executeJs("""
+                                                return Promise.reject(
+                                                  new Error('future-rejected'));
+                                                """).toCompletableFuture(
+                                                        String.class);
+                                pendingJavaScriptFutureFailureStatus.setText(
+                                        "Pending JavaScript future failure: started");
+                                future.whenComplete((value, error) -> {
+                                    if (error == null) {
+                                        pendingJavaScriptFutureFailureStatus
+                                                .setText(
+                                                        "Pending JavaScript future failure: unexpected="
+                                                                + value);
+                                        return;
+                                    }
+                                    pendingJavaScriptFutureFailureStatus
+                                            .setText(
+                                                    "Pending JavaScript future failure: type="
+                                                            + error.getClass()
+                                                                    .getSimpleName()
+                                                            + " message="
+                                                            + error.getMessage());
+                                });
+                            });
+            pendingJavaScriptFutureFailure.setId(
+                    "framework-pending-javascript-future-failure");
+
+            Button pendingJavaScriptSubscriptions =
+                    new Button("Run pending JavaScript subscriptions",
+                            event -> {
+                                subscriptionCallbackCount = 0;
+                                subscriptionFirstResult = "pending";
+                                subscriptionSecondResult = "pending";
+                                subscriptionFutureResult = "pending";
+                                subscriptionError = "none";
+                                PendingJavaScriptResult pending =
+                                        getElement().executeJs(
+                                                "return Promise.resolve('subscription-result')");
+                                pending.then(String.class, value -> {
+                                    subscriptionCallbackCount++;
+                                    subscriptionFirstResult = value;
+                                    updateSubscriptionStatus();
+                                }, error -> {
+                                    subscriptionError = error;
+                                    updateSubscriptionStatus();
+                                });
+                                pending.then(String.class, value -> {
+                                    subscriptionCallbackCount++;
+                                    subscriptionSecondResult = value;
+                                    updateSubscriptionStatus();
+                                }, error -> {
+                                    subscriptionError = error;
+                                    updateSubscriptionStatus();
+                                });
+                                pending.toCompletableFuture(String.class)
+                                        .whenComplete((value, error) -> {
+                                            if (error != null) {
+                                                subscriptionError =
+                                                        error.getMessage();
+                                            } else {
+                                                subscriptionFutureResult =
+                                                        value;
+                                            }
+                                            updateSubscriptionStatus();
+                                        });
+                                updateSubscriptionStatus();
+                            });
+            pendingJavaScriptSubscriptions.setId(
+                    "framework-pending-javascript-subscriptions");
+
+            Button pendingJavaScriptLateSubscriptionStart =
+                    new Button("Run late subscription JavaScript", event -> {
+                        lateSubscriptionAttempted = false;
+                        lateSubscriptionSent = false;
+                        lateSubscriptionRejected = false;
+                        lateSubscriptionCallbackCount = 0;
+                        lateSubscriptionResult = "pending";
+                        lateSubscriptionError = "none";
+                        lateSubscriptionPendingJavaScript =
+                                getElement().executeJs("""
+                                        window.VaadinDesktopLateSubscriptionRpcExecuted = true;
+                                        return new Promise(resolve =>
+                                          window.setTimeout(
+                                            () => resolve('late-result'),
+                                            1400));
+                                        """);
+                        lateSubscriptionPendingJavaScript.then(
+                                String.class, value -> {
+                                    lateSubscriptionResult = value;
+                                    updateLateSubscriptionStatus();
+                                }, error -> {
+                                    lateSubscriptionError = error;
+                                    updateLateSubscriptionStatus();
+                                });
+                        pendingJavaScriptLateSubscriptionStatus.setText(
+                                "Pending JavaScript late subscription: started");
+                    });
+            pendingJavaScriptLateSubscriptionStart.setId(
+                    "framework-pending-javascript-late-subscription-start");
+
+            Button pendingJavaScriptLateSubscriptionAttempt =
+                    new Button("Attempt late subscription", event -> {
+                        if (lateSubscriptionPendingJavaScript == null) {
+                            pendingJavaScriptLateSubscriptionStatus.setText(
+                                    "Pending JavaScript late subscription: missing");
+                            return;
+                        }
+                        lateSubscriptionSent =
+                                lateSubscriptionPendingJavaScript
+                                        .isSentToBrowser();
+                        try {
+                            lateSubscriptionPendingJavaScript.then(
+                                    String.class, value -> {
+                                        lateSubscriptionCallbackCount++;
+                                        updateLateSubscriptionStatus();
+                                    }, error -> {
+                                        lateSubscriptionCallbackCount++;
+                                        lateSubscriptionError = error;
+                                        updateLateSubscriptionStatus();
+                                    });
+                        } catch (IllegalStateException exception) {
+                            lateSubscriptionRejected = true;
+                            lateSubscriptionError = exception.getMessage();
+                        }
+                        lateSubscriptionAttempted = true;
+                        updateLateSubscriptionStatus();
+                    });
+            pendingJavaScriptLateSubscriptionAttempt.setId(
+                    "framework-pending-javascript-late-subscription-attempt");
+
+            Button pendingJavaScriptFutureCancellation =
+                    new Button("Cancel pending JavaScript future", event -> {
+                        AtomicReference<String> errorType =
+                                new AtomicReference<>("none");
+                        AtomicReference<String> errorMessage =
+                                new AtomicReference<>("none");
+                        PendingJavaScriptResult pending =
+                                getElement().executeJs("""
+                                        window.VaadinDesktopFutureCanceledRpcExecuted = true;
+                                        return 'unexpected';
+                                        """);
+                        CompletableFuture<String> future =
+                                pending.toCompletableFuture(String.class);
+                        future.whenComplete((value, error) -> {
+                            if (error != null) {
+                                errorType.set(
+                                        error.getClass().getSimpleName());
+                                errorMessage.set(error.getMessage());
+                            }
+                        });
+                        boolean canceled = pending.cancelExecution();
+                        pendingJavaScriptFutureCancellationStatus.setText(
+                                "Pending JavaScript future cancellation:"
+                                        + " canceled=" + canceled
+                                        + " done=" + future.isDone()
+                                        + " exceptional="
+                                        + future.isCompletedExceptionally()
+                                        + " type=" + errorType.get()
+                                        + " message=" + errorMessage.get());
+                    });
+            pendingJavaScriptFutureCancellation.setId(
+                    "framework-pending-javascript-future-cancellation");
+
+            DisabledClientCallableProbe disabledClientCallableProbe =
+                    new DisabledClientCallableProbe();
+            InertClientCallableProbe inertClientCallableProbe =
+                    new InertClientCallableProbe();
+            VerticalLayout inertClientCallableModal =
+                    new VerticalLayout();
+            inertClientCallableModal.setId(
+                    "framework-inert-client-callable-modal");
+            inertClientCallableModal.setPadding(false);
+            inertClientCallableModal.setSpacing(false);
+            Button inertClientCallableModalClose =
+                    new Button("Close inert ClientCallable modal",
+                            event ->
+                                    inertClientCallableModal
+                                            .removeFromParent());
+            inertClientCallableModalClose.setId(
+                    "framework-inert-client-callable-modal-close");
+            inertClientCallableModal.add(
+                    new Span("Background RPC should remain inert."),
+                    inertClientCallableModalClose);
+            Button inertClientCallableModalOpen =
+                    new Button("Open inert ClientCallable modal",
+                            event -> getUI().orElseThrow()
+                                    .addModal(inertClientCallableModal));
+            inertClientCallableModalOpen.setId(
+                    "framework-inert-client-callable-modal-open");
+
+            add(clientCallableStatus, clientCallableStructuredStatus,
+                    clientCallableTypeShapesStatus,
+                    pendingJavaScriptSuccess,
+                    pendingJavaScriptSuccessStatus,
+                    pendingJavaScriptFailure,
+                    pendingJavaScriptFailureStatus,
+                    pendingJavaScriptStructured,
+                    pendingJavaScriptStructuredStatus,
+                    pendingJavaScriptTypeShapes,
+                    pendingJavaScriptTypeShapesStatus,
+                    pendingJavaScriptCancellation,
+                    pendingJavaScriptCancellationStatus,
+                    pendingJavaScriptSentStart,
+                    pendingJavaScriptSentCancel,
+                    pendingJavaScriptSentCancellationStatus,
+                    pendingJavaScriptInvisibleOwnerQueue,
+                    pendingJavaScriptInvisibleOwnerReveal,
+                    pendingJavaScriptInvisibleOwnerStatus,
+                    pendingJavaScriptInvisibleOwner,
+                    pendingJavaScriptDetachedOwnerQueue,
+                    pendingJavaScriptDetachedOwnerDetach,
+                    pendingJavaScriptDetachedOwnerReattach,
+                    pendingJavaScriptDetachedOwnerConfirm,
+                    pendingJavaScriptDetachedOwnerStatus,
+                    detachedOwnerContainer,
+                    pendingJavaScriptFutureSuccess,
+                    pendingJavaScriptFutureSuccessStatus,
+                    pendingJavaScriptFutureFailure,
+                    pendingJavaScriptFutureFailureStatus,
+                    pendingJavaScriptSubscriptions,
+                    pendingJavaScriptSubscriptionStatus,
+                    pendingJavaScriptLateSubscriptionStart,
+                    pendingJavaScriptLateSubscriptionAttempt,
+                    pendingJavaScriptLateSubscriptionStatus,
+                    pendingJavaScriptFutureCancellation,
+                    pendingJavaScriptFutureCancellationStatus,
+                    disabledClientCallableProbe,
+                    inertClientCallableModalOpen,
+                    inertClientCallableProbe);
+        }
+
+        private void updateSentCancellationStatus() {
+            if (!sentCancellationAttempted) {
+                return;
+            }
+            pendingJavaScriptSentCancellationStatus.setText(
+                    "Pending JavaScript sent cancellation: sent="
+                            + sentBeforeCancellation
+                            + " canceled=" + sentCancellationAccepted
+                            + " result=" + sentPendingResult);
+        }
+
+        private void updateSubscriptionStatus() {
+            pendingJavaScriptSubscriptionStatus.setText(
+                    "Pending JavaScript subscriptions: callbacks="
+                            + subscriptionCallbackCount
+                            + " first=" + subscriptionFirstResult
+                            + " second=" + subscriptionSecondResult
+                            + " future=" + subscriptionFutureResult
+                            + " error=" + subscriptionError);
+        }
+
+        private void updateLateSubscriptionStatus() {
+            if (!lateSubscriptionAttempted) {
+                return;
+            }
+            pendingJavaScriptLateSubscriptionStatus.setText(
+                    "Pending JavaScript late subscription: sent="
+                            + lateSubscriptionSent
+                            + " rejected=" + lateSubscriptionRejected
+                            + " lateCallbacks="
+                            + lateSubscriptionCallbackCount
+                            + " result=" + lateSubscriptionResult
+                            + " error=" + lateSubscriptionError);
+        }
+
+        private void completeTypeShape(String type, String value) {
+            switch (type) {
+                case "number" -> typeShapeNumber = value;
+                case "enum" -> typeShapeEnum = value;
+                case "array" -> typeShapeArray = value;
+                case "nullable" -> typeShapeNullable = value;
+                case "nested" -> typeShapeNested = value;
+                default -> throw new IllegalArgumentException(
+                        "Unknown RPC type shape: " + type);
+            }
+            typeShapeCallbackCount++;
+            updateTypeShapeStatus();
+        }
+
+        private void failTypeShape(String type, String error) {
+            typeShapeError = type + ":" + error;
+            typeShapeCallbackCount++;
+            updateTypeShapeStatus();
+        }
+
+        private void updateTypeShapeStatus() {
+            pendingJavaScriptTypeShapesStatus.setText(
+                    "Pending JavaScript type shapes: callbacks="
+                            + typeShapeCallbackCount
+                            + " number=" + typeShapeNumber
+                            + " enum=" + typeShapeEnum
+                            + " array=" + typeShapeArray
+                            + " nullable=" + typeShapeNullable
+                            + " nested=" + typeShapeNested
+                            + " error=" + typeShapeError);
+        }
+
+        @ClientCallable
+        public String resolveClientCall(String value) {
+            clientCallableStatus.setText("ClientCallable invoked: " + value);
+            return "ClientCallable response: " + value;
+        }
+
+        @ClientCallable
+        public String rejectClientCall(String value) {
+            throw new IllegalStateException(
+                    "ClientCallable rejected: " + value);
+        }
+
+        @ClientCallable
+        public StructuredRpcResponse roundTripStructured(
+                StructuredRpcRequest request) {
+            List<StructuredRpcItem> items =
+                    request.getItems() == null ? List.of() : request.getItems();
+            int total = totalQuantity(items);
+            clientCallableStructuredStatus.setText(
+                    "ClientCallable structured: request="
+                            + request.getRequestId()
+                            + " active=" + request.isActive()
+                            + " items=" + summarizeItems(items)
+                            + " total=" + total);
+
+            Map<String, Integer> quantities = new LinkedHashMap<>();
+            items.forEach(item ->
+                    quantities.put(item.getCode(), item.getQuantity()));
+            return new StructuredRpcResponse(
+                    "server-" + request.getRequestId(),
+                    request.isActive(),
+                    total,
+                    items,
+                    quantities);
+        }
+
+        @ClientCallable
+        public RpcTypeShapeResponse roundTripTypeShapes(
+                Long number,
+                RpcTypeShapeKind kind,
+                int[] samples,
+                List<StructuredRpcItem> items,
+                int primitiveDefault,
+                String nullableValue,
+                String... labels) {
+            clientCallableTypeShapesStatus.setText(
+                    "ClientCallable type shapes: number=" + number
+                            + " enum=" + kind
+                            + " samples=" + Arrays.toString(samples)
+                            + " items=" + summarizeItems(items)
+                            + " primitiveDefault=" + primitiveDefault
+                            + " nullable=" + nullableValue
+                            + " labels=" + Arrays.toString(labels));
+            int[] incremented = Arrays.stream(samples)
+                    .map(value -> value + 1)
+                    .toArray();
+            return new RpcTypeShapeResponse(
+                    number + 1,
+                    RpcTypeShapeKind.ALPHA,
+                    incremented,
+                    items,
+                    primitiveDefault,
+                    nullableValue,
+                    labels);
+        }
+
+        private static int totalQuantity(List<StructuredRpcItem> items) {
+            return items.stream()
+                    .mapToInt(StructuredRpcItem::getQuantity)
+                    .sum();
+        }
+
+        private static String summarizeItems(List<StructuredRpcItem> items) {
+            return items.stream()
+                    .map(item -> item.getCode() + ":" + item.getQuantity())
+                    .collect(Collectors.joining(","));
+        }
+
+        public static final class StructuredRpcRequest {
+            private String requestId;
+            private boolean active;
+            private List<StructuredRpcItem> items = List.of();
+
+            public StructuredRpcRequest() {
+            }
+
+            public StructuredRpcRequest(
+                    String requestId,
+                    boolean active,
+                    List<StructuredRpcItem> items) {
+                this.requestId = requestId;
+                this.active = active;
+                this.items = items;
+            }
+
+            public String getRequestId() {
+                return requestId;
+            }
+
+            public void setRequestId(String requestId) {
+                this.requestId = requestId;
+            }
+
+            public boolean isActive() {
+                return active;
+            }
+
+            public void setActive(boolean active) {
+                this.active = active;
+            }
+
+            public List<StructuredRpcItem> getItems() {
+                return items;
+            }
+
+            public void setItems(List<StructuredRpcItem> items) {
+                this.items = items;
+            }
+        }
+
+        public static final class StructuredRpcItem {
+            private String code;
+            private int quantity;
+
+            public StructuredRpcItem() {
+            }
+
+            public StructuredRpcItem(String code, int quantity) {
+                this.code = code;
+                this.quantity = quantity;
+            }
+
+            public String getCode() {
+                return code;
+            }
+
+            public void setCode(String code) {
+                this.code = code;
+            }
+
+            public int getQuantity() {
+                return quantity;
+            }
+
+            public void setQuantity(int quantity) {
+                this.quantity = quantity;
+            }
+        }
+
+        public static final class StructuredRpcResponse {
+            private final String requestId;
+            private final boolean accepted;
+            private final int totalQuantity;
+            private final List<StructuredRpcItem> items;
+            private final Map<String, Integer> quantities;
+
+            public StructuredRpcResponse(
+                    String requestId,
+                    boolean accepted,
+                    int totalQuantity,
+                    List<StructuredRpcItem> items,
+                    Map<String, Integer> quantities) {
+                this.requestId = requestId;
+                this.accepted = accepted;
+                this.totalQuantity = totalQuantity;
+                this.items = items;
+                this.quantities = quantities;
+            }
+
+            public String getRequestId() {
+                return requestId;
+            }
+
+            public boolean isAccepted() {
+                return accepted;
+            }
+
+            public int getTotalQuantity() {
+                return totalQuantity;
+            }
+
+            public List<StructuredRpcItem> getItems() {
+                return items;
+            }
+
+            public Map<String, Integer> getQuantities() {
+                return quantities;
+            }
+        }
+
+        public enum RpcTypeShapeKind {
+            ALPHA,
+            BETA
+        }
+
+        public static final class RpcTypeShapeResponse {
+            private final Long number;
+            private final RpcTypeShapeKind kind;
+            private final int[] samples;
+            private final List<StructuredRpcItem> items;
+            private final int primitiveDefault;
+            private final String nullableValue;
+            private final String[] labels;
+
+            public RpcTypeShapeResponse(
+                    Long number,
+                    RpcTypeShapeKind kind,
+                    int[] samples,
+                    List<StructuredRpcItem> items,
+                    int primitiveDefault,
+                    String nullableValue,
+                    String[] labels) {
+                this.number = number;
+                this.kind = kind;
+                this.samples = samples;
+                this.items = items;
+                this.primitiveDefault = primitiveDefault;
+                this.nullableValue = nullableValue;
+                this.labels = labels;
+            }
+
+            public Long getNumber() {
+                return number;
+            }
+
+            public RpcTypeShapeKind getKind() {
+                return kind;
+            }
+
+            public int[] getSamples() {
+                return samples;
+            }
+
+            public List<StructuredRpcItem> getItems() {
+                return items;
+            }
+
+            public int getPrimitiveDefault() {
+                return primitiveDefault;
+            }
+
+            public String getNullableValue() {
+                return nullableValue;
+            }
+
+            public String[] getLabels() {
+                return labels;
+            }
+        }
+
+        public static final class DisabledClientCallableProbe
+                extends VerticalLayout {
+            private final Span status =
+                    new Span("Disabled ClientCallable: default=0 always=0");
+            private int defaultInvocations;
+            private int alwaysInvocations;
+
+            private DisabledClientCallableProbe() {
+                setId("framework-disabled-client-callable-probe");
+                setPadding(false);
+                setSpacing(false);
+                status.setId("framework-disabled-client-callable-status");
+                add(status);
+                setEnabled(false);
+            }
+
+            @ClientCallable
+            public void invokeWhileDisabledDefault() {
+                defaultInvocations++;
+                updateStatus();
+            }
+
+            @ClientCallable(DisabledUpdateMode.ALWAYS)
+            public void invokeWhileDisabledAlways() {
+                alwaysInvocations++;
+                updateStatus();
+            }
+
+            private void updateStatus() {
+                status.setText("Disabled ClientCallable: default="
+                        + defaultInvocations + " always=" + alwaysInvocations);
+            }
+        }
+
+        public static final class InertClientCallableProbe
+                extends VerticalLayout {
+            private final Span status =
+                    new Span("Inert ClientCallable: default=0 allowed=0"
+                            + " last=none");
+            private int defaultInvocations;
+            private int allowedInvocations;
+
+            private InertClientCallableProbe() {
+                setId("framework-inert-client-callable-probe");
+                setPadding(false);
+                setSpacing(false);
+                status.setId("framework-inert-client-callable-status");
+                add(status);
+            }
+
+            @ClientCallable
+            public String invokeDefault(String value) {
+                defaultInvocations++;
+                String result = "inert-default:" + value + ":"
+                        + defaultInvocations;
+                updateStatus(result);
+                return result;
+            }
+
+            @ClientCallable
+            @AllowInert
+            public String invokeAllowed(String value) {
+                allowedInvocations++;
+                String result = "inert-allowed:" + value + ":"
+                        + allowedInvocations;
+                updateStatus(result);
+                return result;
+            }
+
+            private void updateStatus(String result) {
+                status.setText("Inert ClientCallable: default="
+                        + defaultInvocations + " allowed="
+                        + allowedInvocations + " last=" + result);
+            }
+        }
     }
 
     private static final class ReviewAssignmentField extends CustomField<String> {

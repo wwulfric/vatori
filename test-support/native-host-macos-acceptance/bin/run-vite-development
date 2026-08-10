@@ -1,0 +1,23 @@
+#!/usr/bin/env bash
+set -euo pipefail
+
+ROOT="$(cd "$(dirname "${BASH_SOURCE[0]}")/../../.." && pwd)"
+MODULE="test-apps/flow-over-ipc-framework-app"
+PROBE_FILE="$ROOT/$MODULE/src/main/frontend/vatori-vite-hmr-probe.js"
+HOST_LOG="$ROOT/.build/native-hosts/macos/host.out.log"
+
+export VAADIN_DESKTOP_MAVEN_OFFLINE="${VAADIN_DESKTOP_MAVEN_OFFLINE:-1}"
+export MAVEN_EXECUTABLE="${MAVEN_EXECUTABLE:-mvn}"
+export MAVEN_REPO="${MAVEN_REPO:-$ROOT/.m2/repository}"
+export VAADIN_DESKTOP_MACOS_HOST_BUILDER="$ROOT/test-support/native-host-macos-acceptance/bin/build-host-for-cli"
+export VAADIN_DESKTOP_ACCEPTANCE_REPO_ROOT="$ROOT"
+export VAADIN_DESKTOP_MACOS_NO_ACTIVATE="${VAADIN_DESKTOP_MACOS_NO_ACTIVATE:-1}"
+export VAADIN_DESKTOP_FLOW_IPC_AUTO_SHUTDOWN=1
+export VAADIN_DESKTOP_FLOW_IPC_AUTO_VITE_HMR=1
+export VAADIN_DESKTOP_FLOW_IPC_AUTO_SHUTDOWN_TIMEOUT_SECONDS="${VAADIN_DESKTOP_FLOW_IPC_AUTO_SHUTDOWN_TIMEOUT_SECONDS:-60}"
+export VAADIN_DESKTOP_VITE_HMR_PROBE_FILE="$PROBE_FILE"
+
+bash "$ROOT/bin/vaadin-desktop" dev-vite "$MODULE"
+bash "$ROOT/bin/flow-ipc-trace-inspect" \
+  --require-flow-ipc-vite-development-runtime \
+  "$HOST_LOG"

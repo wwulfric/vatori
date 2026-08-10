@@ -11,7 +11,9 @@ struct FlowIpcVerificationSchedule {
 
         if config.flowIpcAutoShutdownTimeoutSeconds > 0 {
             autoShutdownTimeoutSeconds = config.flowIpcAutoShutdownTimeoutSeconds
-        } else if config.flowIpcAutoSidecarRestart {
+        } else if config.flowIpcAutoInFlightRequestRecovery
+                || config.flowIpcAutoSidecarRestart
+                || config.flowIpcAutoSidecarRecoveryExhaustion {
             autoShutdownTimeoutSeconds = 60.0
         } else if config.flowIpcAutoFrameworkUpdate {
             autoShutdownTimeoutSeconds = 45.0

@@ -265,13 +265,26 @@ check_framework_test_boundaries() {
     'examples/|test-apps/|test-support/' \
     'VAADIN_DESKTOP_FLOW_IPC_AUTO_' \
     'VATORI_FLOW_IPC_ACCEPTANCE|Acceptance|acceptance|ForTest|testPath|controlled-test-path|FixtureSubstituted' \
-    '(broaderComponentResource|dataComponentResource|inputComponentParity|multiValueNavigationDisclosure|overlayContextMenu|contentAppShellLogin|richTextEditor[A-Za-z0-9]*)Matrix'
+    '(broaderComponentResource|dataComponentResource|inputComponentParity|multiValueNavigationDisclosure|overlayContextMenu|contentAppShellLogin|richTextEditor[A-Za-z0-9]*)Matrix' \
+    'uidlTraceSearchIndex|uidlSearchIndex|componentProductionOwner|uploadReceiver|uploadMultipart|downloadHandlerSaveOpen' \
+    'compactWebViewDomTracePayload|optional(ResourceLoad|Dom|Envelope)TracePrefixes'
   do
     match="$(rg -n -m 1 -e "$pattern" "${production_roots[@]}" || true)"
     if [[ -n "$match" ]]; then
       fail "acceptance fixture leaked into production source: $match"
     fi
   done
+
+  local trace_semantic_match
+  trace_semantic_match="$(rg -n -m 1 \
+    -e 'flowClientResources' \
+    -e 'componentFrontendResources' \
+    -e 'envelopePayload\["uidl"\]' \
+    -e 'case "opaque(Http|Push)' \
+    native-hosts/macos/Sources/VaadinDesktopHost/TraceCompaction.swift || true)"
+  if [[ -n "$trace_semantic_match" ]]; then
+    fail "native host trace compaction interprets Flow payload semantics: $trace_semantic_match"
+  fi
 
   local legacy_flow_runtime_source
   legacy_flow_runtime_source="$(find vaadin-desktop-flow/src/main/java/dev/vatori/desktop/flow \
@@ -451,6 +464,18 @@ check_runtime_boundary_contract() {
   if ! grep -Fq 'Sidecar/application.jar' bin/vaadin-desktop-build-macos-host \
       || ! grep -Fq 'VatoriHost.json' bin/vaadin-desktop-build-macos-host; then
     fail "macOS builder no longer stages the sidecar JAR and launch manifest"
+  fi
+  if ! grep -Fq 'vatori-icon.icns' bin/vaadin-desktop-build-macos-host \
+      || ! grep -Fq 'AppIcon.icns' bin/vaadin-desktop-build-macos-host \
+      || ! grep -Fq 'CFBundleIconFile' bin/vaadin-desktop-build-macos-host; then
+    fail "macOS builder no longer stages the application icon with a vatori fallback"
+  fi
+  if ! grep -Fq 'ApplicationBundleInputs.discover' \
+      vaadin-desktop-cli/src/main/java/dev/vatori/desktop/cli/VaadinDesktopCli.java \
+      || ! grep -Fq 'applicationResources' bin/vaadin-desktop-build-macos-host \
+      || ! grep -Fq 'VATORI_APPLICATION_RESOURCES' \
+      native-hosts/macos/Sources/VaadinDesktopHost/JavaSidecar.swift; then
+    fail "application-owned desktop bundle resources are no longer staged end to end"
   fi
   if grep -Eq -- '--(module|repo-root|maven-repo|maven-executable)' \
       bin/vaadin-desktop-macos-host-launch; then

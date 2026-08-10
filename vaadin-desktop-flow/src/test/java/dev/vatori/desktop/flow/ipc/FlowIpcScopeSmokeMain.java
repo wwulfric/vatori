@@ -9,6 +9,7 @@ import dev.vatori.desktop.DesktopCommandResult;
 import dev.vatori.desktop.flow.transport.DesktopFlowHttpResponseHead;
 import dev.vatori.desktop.flow.transport.DesktopFlowOpaqueHttpSession;
 import dev.vatori.desktop.flow.transport.DesktopFlowOpaqueHttpSessionRegistry;
+import dev.vatori.desktop.flow.transport.DesktopFlowPushMessage;
 import dev.vatori.desktop.ipc.SidecarWire;
 
 import java.io.BufferedReader;
@@ -33,8 +34,11 @@ public final class FlowIpcScopeSmokeMain {
 
     public static void main(String[] args) throws Exception {
         verifyOpaqueRequestBodyCredits();
+        verifyOpaqueRequestBodyCancelUnblocksReader();
         verifyOpaqueResponseBackpressureAndCancel();
+        verifyOpaqueExchangeRegistryLifecycle();
         verifyOpaqueSessionRegistry();
+        verifyPushDeliveryAcknowledgement();
         verifyWindowCloseScopeBeforeCancellation();
         verifyWindowCloseFollowsQueuedRequests();
         verifyStandardBundleRejectsUnknownTransport();
@@ -221,6 +225,30 @@ public final class FlowIpcScopeSmokeMain {
         }
     }
 
+    private static void verifyOpaqueRequestBodyCancelUnblocksReader()
+            throws Exception {
+        OpaqueHttpRequestBodyInputStream body =
+                new OpaqueHttpRequestBodyInputStream(-1, ignored -> {
+                });
+        AtomicReference<Throwable> failure = new AtomicReference<>();
+        Thread reader = Thread.ofVirtual().start(() -> {
+            try {
+                body.readAllBytes();
+            } catch (Throwable error) {
+                failure.set(error);
+            }
+        });
+        Thread.sleep(20);
+        body.cancel();
+        reader.join(1000);
+        if (reader.isAlive()
+                || !(failure.get() instanceof java.io.IOException)) {
+            throw new IllegalStateException(
+                    "Opaque request cancellation did not unblock its reader",
+                    failure.get());
+        }
+    }
+
     private static void verifyOpaqueResponseBackpressureAndCancel() throws Exception {
         List<byte[]> chunks = new ArrayList<>();
         AtomicInteger endedChunks = new AtomicInteger(-1);
@@ -292,6 +320,105 @@ public final class FlowIpcScopeSmokeMain {
         }
     }
 
+    private static void verifyOpaqueExchangeRegistryLifecycle()
+            throws Exception {
+        ByteArrayOutputStream captured = new ByteArrayOutputStream();
+        FlowIpcScope scope = new FlowIpcScope(
+                "main", "flow-ipc-registry-session", "main");
+        SidecarOutput output = new SidecarOutput(
+                new PrintStream(captured, true, StandardCharsets.UTF_8),
+                "", scope);
+        DesktopFlowOpaqueHttpSession session =
+                DesktopFlowOpaqueHttpSession.create(
+                        scope.sessionId(), "registry-smoke", "",
+                        ScopeSmokeView.class);
+        try (StandardFlowIpcExchanges exchanges =
+                     new StandardFlowIpcExchanges(output)) {
+            String requestId = "reusable-request";
+            exchanges.open(scope, session,
+                    streamEnvelope("opaqueHttpStreamOpen", "first-open", """
+                            {"requestId":"reusable-request","method":"GET",
+                             "url":"https://app.vatori.invalid/","headers":{},
+                             "contentLength":0}
+                            """), "first-open", "first-open");
+            exchanges.finishRequest(scope,
+                    streamEnvelope("opaqueHttpStreamEnd", "first-end", """
+                            {"requestId":"reusable-request","chunkCount":0,
+                             "bodyBytes":0}
+                            """));
+            exchanges.grantResponseCredits(scope,
+                    streamEnvelope("opaqueHttpStreamResponseCredit",
+                            "first-response-credit", """
+                                    {"requestId":"reusable-request",
+                                     "credit":16}
+                                    """));
+
+            boolean reopenedAfterCompletion = false;
+            for (int attempt = 0; attempt < 200; attempt++) {
+                if (!captured.toString(StandardCharsets.UTF_8).contains(
+                        "\"type\":\"opaqueHttpStreamResponseEnd\"")) {
+                    Thread.sleep(5);
+                    continue;
+                }
+                try {
+                    exchanges.open(scope, session,
+                            streamEnvelope("opaqueHttpStreamOpen",
+                                    "second-open", """
+                                            {"requestId":"reusable-request",
+                                             "method":"GET",
+                                             "url":"https://app.vatori.invalid/",
+                                             "headers":{},"contentLength":0}
+                                            """),
+                            "second-open", "second-open");
+                    reopenedAfterCompletion = true;
+                    break;
+                } catch (IllegalArgumentException error) {
+                    if (!error.getMessage().contains(
+                            "Duplicate opaque HTTP request id")) {
+                        throw error;
+                    }
+                    Thread.sleep(5);
+                }
+            }
+            if (!reopenedAfterCompletion) {
+                throw new IllegalStateException(
+                        "Completed opaque exchange was not reclaimed");
+            }
+
+            exchanges.cancel(scope,
+                    streamEnvelope("opaqueHttpStreamCancel", "second-cancel",
+                            "{\"requestId\":\"reusable-request\"}"));
+            try {
+                exchanges.acceptChunk(scope,
+                        streamEnvelope("opaqueHttpStreamChunk", "late-chunk",
+                                """
+                                        {"requestId":"reusable-request",
+                                         "chunkSequence":0,"bodyBase64":"YQ==",
+                                         "bodyBytes":1}
+                                        """));
+                throw new IllegalStateException(
+                        "Cancelled opaque exchange accepted a late request frame");
+            } catch (IllegalArgumentException expected) {
+                if (!expected.getMessage().contains(
+                        "Unknown opaque HTTP request id " + requestId)) {
+                    throw expected;
+                }
+            }
+
+            exchanges.open(scope, session,
+                    streamEnvelope("opaqueHttpStreamOpen", "third-open", """
+                            {"requestId":"reusable-request","method":"GET",
+                             "url":"https://app.vatori.invalid/","headers":{},
+                             "contentLength":0}
+                            """), "third-open", "third-open");
+            exchanges.cancel(scope,
+                    streamEnvelope("opaqueHttpStreamCancel", "third-cancel",
+                            "{\"requestId\":\"reusable-request\"}"));
+        } finally {
+            session.close();
+        }
+    }
+
     private static void verifyOpaqueSessionRegistry() {
         DesktopFlowOpaqueHttpSessionRegistry registry =
                 DesktopFlowOpaqueHttpSessionRegistry.create(
@@ -328,12 +455,103 @@ public final class FlowIpcScopeSmokeMain {
         }
     }
 
+    private static void verifyPushDeliveryAcknowledgement() {
+        FlowIpcScope scope = new FlowIpcScope(
+                "main", "flow-ipc-session", "main");
+        List<StandardFlowIpcPushDelivery.Delivery> deliveries =
+                new ArrayList<>();
+        StandardFlowIpcPushDelivery tracker =
+                new StandardFlowIpcPushDelivery(deliveries::add, false);
+        try {
+            tracker.registerScope(scope);
+            tracker.connect(scope, "opaque-push-1", 4);
+            tracker.send(scope, new DesktopFlowPushMessage(
+                    scope.sessionId(),
+                    "opaque-push-1",
+                    7,
+                    5,
+                    "{\"syncId\":5}",
+                    false));
+            tracker.retryUnacknowledged();
+            if (deliveries.size() != 2
+                    || deliveries.get(0).pushSequence() != 1
+                    || deliveries.get(1).pushSequence() != 1
+                    || deliveries.get(0).deliveryAttempt() != 1
+                    || deliveries.get(1).deliveryAttempt() != 2
+                    || deliveries.get(0).flowServerSyncId() != 5
+                    || !deliveries.get(0).uidl()
+                    .equals(deliveries.get(1).uidl())) {
+                throw new IllegalStateException(
+                        "Unacknowledged opaque push was not retried identically");
+            }
+            if (tracker.acknowledge(scope, "opaque-push-1", 1, 4)) {
+                throw new IllegalStateException(
+                        "Opaque push accepted an acknowledgement before Flow saw it");
+            }
+            tracker.retryUnacknowledged();
+            if (deliveries.size() != 3
+                    || deliveries.get(2).deliveryAttempt() != 3) {
+                throw new IllegalStateException(
+                        "Unconfirmed opaque push stopped retrying");
+            }
+            if (!tracker.acknowledge(scope, "opaque-push-1", 1, 5)) {
+                throw new IllegalStateException(
+                        "Opaque push acknowledgement did not clear delivery");
+            }
+            tracker.retryUnacknowledged();
+            if (deliveries.size() != 3) {
+                throw new IllegalStateException(
+                        "Acknowledged opaque push was delivered again");
+            }
+
+            tracker.send(scope, new DesktopFlowPushMessage(
+                    scope.sessionId(),
+                    "opaque-push-1",
+                    7,
+                    6,
+                    "{\"syncId\":6}",
+                    false));
+            tracker.send(scope, new DesktopFlowPushMessage(
+                    scope.sessionId(),
+                    "opaque-push-1",
+                    7,
+                    7,
+                    "{\"syncId\":7,\"resynchronize\":true}",
+                    true));
+            tracker.retryUnacknowledged();
+            StandardFlowIpcPushDelivery.Delivery retry =
+                    deliveries.get(deliveries.size() - 1);
+            if (!retry.resync()
+                    || retry.flowServerSyncId() != 7
+                    || retry.deliveryAttempt() != 2) {
+                throw new IllegalStateException(
+                        "Resync did not supersede older pending opaque pushes");
+            }
+            tracker.disconnect(scope, "opaque-push-1");
+            int disconnectedDeliveryCount = deliveries.size();
+            tracker.retryUnacknowledged();
+            if (deliveries.size() != disconnectedDeliveryCount) {
+                throw new IllegalStateException(
+                        "Disconnected opaque push continued retrying");
+            }
+            tracker.connect(scope, "opaque-push-1", 7);
+            tracker.retryUnacknowledged();
+            if (deliveries.size() != disconnectedDeliveryCount) {
+                throw new IllegalStateException(
+                        "Reconnect last-seen metadata did not confirm pending push");
+            }
+        } finally {
+            tracker.close();
+        }
+    }
+
     private static void verifyWindowCloseScopeBeforeCancellation() {
         FlowIpcScope owner = new FlowIpcScope("main", "flow-ipc-session", "main");
         SidecarOutput output = new SidecarOutput("", owner);
         SidecarNativeBridge nativeBridge = new SidecarNativeBridge(output, owner);
         StandardFlowIpcSessions sessions = new StandardFlowIpcSessions(
-                List.of(ScopeSmokeView.class), null, output, nativeBridge);
+                List.of(ScopeSmokeView.class), null, output, nativeBridge,
+                true, null);
         AtomicBoolean cancellationAttempted = new AtomicBoolean();
         try {
             sessions.session(owner);
@@ -413,6 +631,16 @@ public final class FlowIpcScopeSmokeMain {
         return """
                 {"version":1,"type":"%s","id":"%s","correlationId":"%s","sessionId":"%s","uiId":"%s","route":"","payload":{},"error":null,"timestamp":0}
                 """.formatted(type, id, id, sessionId, uiId).trim();
+    }
+
+    private static SidecarInboundEnvelope streamEnvelope(
+            String type, String id, String payload) {
+        return SidecarInboundEnvelope.parse("""
+                {"version":1,"type":"%s","id":"%s",
+                 "correlationId":"%s","sessionId":"flow-ipc-registry-session",
+                 "uiId":"main","windowId":"main","route":"",
+                 "payload":%s,"error":null,"timestamp":0}
+                """.formatted(type, id, id, payload).trim());
     }
 
     @Route("")

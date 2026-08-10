@@ -1,0 +1,56 @@
+#!/usr/bin/env bash
+set -euo pipefail
+
+ROOT="$(cd "$(dirname "${BASH_SOURCE[0]}")/../../.." && pwd)"
+ACCEPTANCE_ROOT="$ROOT/test-support/native-host-macos-acceptance"
+HOST_BUILD="$ROOT/.build/native-hosts/macos"
+HOST_APP="$HOST_BUILD/VaadinDesktopHost.app"
+HOST_EXE="$HOST_APP/Contents/MacOS/VaadinDesktopHost"
+SIDECAR_JAR="$HOST_APP/Contents/Resources/Sidecar/application.jar"
+TRACE="$HOST_BUILD/host-ready-timeout.out.log"
+ERROR_LOG="$HOST_BUILD/host-ready-timeout.err.log"
+BACKUP="$HOST_BUILD/host-ready-timeout-sidecar.jar"
+FIXTURE_BUILD="$HOST_BUILD/never-ready-sidecar"
+FIXTURE_CLASSES="$FIXTURE_BUILD/classes"
+FIXTURE_JAR="$FIXTURE_BUILD/never-ready-sidecar.jar"
+
+cleanup() {
+  if [[ -f "$BACKUP" ]]; then
+    mv "$BACKUP" "$SIDECAR_JAR"
+  fi
+}
+trap cleanup EXIT
+
+mkdir -p "$FIXTURE_CLASSES"
+javac --release 21 \
+  -d "$FIXTURE_CLASSES" \
+  "$ACCEPTANCE_ROOT/Fixtures/NeverReadySidecar.java"
+jar cfe "$FIXTURE_JAR" NeverReadySidecar \
+  -C "$FIXTURE_CLASSES" NeverReadySidecar.class
+
+VAADIN_DESKTOP_MAVEN_OFFLINE="${VAADIN_DESKTOP_MAVEN_OFFLINE:-1}" \
+VAADIN_DESKTOP_SIDECAR_INITIAL_READY_TIMEOUT_SECONDS=1 \
+  bash "$ROOT/bin/vaadin-desktop" package \
+  test-apps/flow-over-ipc-framework-app
+
+mv "$SIDECAR_JAR" "$BACKUP"
+cp "$FIXTURE_JAR" "$SIDECAR_JAR"
+: > "$TRACE"
+: > "$ERROR_LOG"
+
+set +e
+VAADIN_DESKTOP_MACOS_NO_ACTIVATE=1 \
+  "$HOST_EXE" > "$TRACE" 2> "$ERROR_LOG"
+status=$?
+set -e
+
+if [[ "$status" -ne 1 ]]; then
+  echo "Expected host ready-timeout exit code 1, got $status" >&2
+  exit 1
+fi
+
+bash "$ROOT/bin/flow-ipc-trace-inspect" \
+  --require-flow-ipc-host-ready-timeout \
+  "$TRACE"
+
+echo "Host initial-ready timeout passed."

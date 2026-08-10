@@ -142,7 +142,43 @@ extension FlowIpcAcceptanceRuntimeObserver {
         context: FlowIpcWindowContext,
         verificationSchedule: FlowIpcVerificationSchedule
     ) {
-        if host.config.flowIpcAutoSidecarRestart {
+        if host.config.flowIpcAutoReactorReload {
+            scheduleReactorReloadDevelopmentAcceptance(
+                host: host,
+                context: context,
+                timeoutSeconds: verificationSchedule.autoShutdownTimeoutSeconds)
+            return
+        }
+        if host.config.flowIpcAutoJavaRollback {
+            scheduleJavaRollbackDevelopmentAcceptance(
+                host: host,
+                context: context,
+                timeoutSeconds: verificationSchedule.autoShutdownTimeoutSeconds)
+            return
+        }
+        if host.config.flowIpcAutoJavaReload {
+            scheduleJavaReloadDevelopmentAcceptance(
+                host: host,
+                context: context,
+                timeoutSeconds: verificationSchedule.autoShutdownTimeoutSeconds)
+            return
+        }
+        if host.config.flowIpcAutoViteHmr {
+            scheduleViteDevelopmentAcceptance(
+                host: host,
+                context: context,
+                timeoutSeconds: verificationSchedule.autoShutdownTimeoutSeconds)
+            return
+        }
+        if host.config.flowIpcAutoInFlightRequestRecovery {
+            scheduleInFlightRequestRecoveryAcceptance(
+                host: host,
+                context: context,
+                timeoutSeconds: verificationSchedule.autoShutdownTimeoutSeconds)
+            return
+        }
+        if host.config.flowIpcAutoSidecarRestart
+                || host.config.flowIpcAutoSidecarRecoveryExhaustion {
             host.scheduleStandardBundleSidecarRestartAcceptance(
                 context,
                 timeoutSeconds: verificationSchedule.autoShutdownTimeoutSeconds)
@@ -150,6 +186,122 @@ extension FlowIpcAcceptanceRuntimeObserver {
         }
         if host.config.flowIpcAutoMultiWindow {
             host.scheduleMultiWindowAcceptanceIfReady()
+            return
+        }
+        if host.config.flowIpcAutoPushDelivery {
+            schedulePushDeliveryAcceptance(
+                host: host,
+                context: context,
+                timeoutSeconds: verificationSchedule.autoShutdownTimeoutSeconds)
+            return
+        }
+        if host.config.flowIpcAutoPushRecovery {
+            schedulePushRecoveryAcceptance(
+                host: host,
+                context: context,
+                timeoutSeconds: verificationSchedule.autoShutdownTimeoutSeconds)
+            return
+        }
+        if host.config.flowIpcAutoLargeDownloadResume {
+            scheduleLargeDownloadAcceptance(
+                host: host,
+                context: context,
+                timeoutSeconds: verificationSchedule.autoShutdownTimeoutSeconds)
+            return
+        }
+        if host.config.flowIpcAutoLargeUploadRetry {
+            scheduleLargeUploadAcceptance(
+                host: host,
+                context: context,
+                timeoutSeconds: verificationSchedule.autoShutdownTimeoutSeconds)
+            return
+        }
+        if host.config.flowIpcAutoLargeMultipartUploadRetry {
+            scheduleLargeMultipartUploadAcceptance(
+                host: host,
+                context: context,
+                timeoutSeconds: verificationSchedule.autoShutdownTimeoutSeconds)
+            return
+        }
+        if host.config.flowIpcAutoConcurrentUpload {
+            scheduleConcurrentUploadAcceptance(
+                host: host,
+                context: context,
+                timeoutSeconds: verificationSchedule.autoShutdownTimeoutSeconds)
+            return
+        }
+        if host.config.flowIpcAutoRequestFanout {
+            scheduleRequestFanoutAcceptance(
+                host: host,
+                context: context,
+                timeoutSeconds: verificationSchedule.autoShutdownTimeoutSeconds)
+            return
+        }
+        if host.config.flowIpcAutoConcurrentMultipartUpload {
+            scheduleConcurrentMultipartUploadAcceptance(
+                host: host,
+                context: context,
+                timeoutSeconds: verificationSchedule.autoShutdownTimeoutSeconds)
+            return
+        }
+        if host.config.flowIpcAutoCrossSessionMultipartUpload {
+            host.scheduleCrossSessionMultipartUploadAcceptanceIfReady()
+            return
+        }
+        if host.config.flowIpcAutoDnd {
+            scheduleFlowDndAcceptance(
+                host: host,
+                context: context,
+                timeoutSeconds: verificationSchedule.autoShutdownTimeoutSeconds)
+            return
+        }
+        if host.config.flowIpcAutoInputPopup {
+            scheduleFlowInputPopupAcceptance(
+                host: host,
+                context: context,
+                timeoutSeconds: verificationSchedule.autoShutdownTimeoutSeconds)
+            return
+        }
+        if host.config.flowIpcAutoLocalizedInputPopup {
+            scheduleLocalizedInputPopupAcceptance(
+                host: host,
+                context: context,
+                timeoutSeconds: verificationSchedule.autoShutdownTimeoutSeconds)
+            return
+        }
+        if host.config.flowIpcAutoPickerValidation {
+            schedulePickerValidationAcceptance(
+                host: host,
+                context: context,
+                timeoutSeconds: verificationSchedule.autoShutdownTimeoutSeconds)
+            return
+        }
+        if host.config.flowIpcAutoMenuPopup {
+            scheduleFlowMenuPopupAcceptance(
+                host: host,
+                context: context,
+                timeoutSeconds: verificationSchedule.autoShutdownTimeoutSeconds)
+            return
+        }
+        if host.config.flowIpcAutoOverlayStack {
+            scheduleFlowOverlayStackAcceptance(
+                host: host,
+                context: context,
+                timeoutSeconds: verificationSchedule.autoShutdownTimeoutSeconds)
+            return
+        }
+        if host.config.flowIpcAutoStructuredRpc {
+            scheduleStructuredRpcAcceptance(
+                host: host,
+                context: context,
+                timeoutSeconds: verificationSchedule.autoShutdownTimeoutSeconds)
+            return
+        }
+        if host.config.flowIpcAutoLazyGridQuery {
+            scheduleLazyGridQueryAcceptance(
+                host: host,
+                context: context,
+                timeoutSeconds: verificationSchedule.autoShutdownTimeoutSeconds)
             return
         }
         if host.config.flowIpcAutoFrameworkUpdate {
@@ -183,6 +335,7 @@ extension FlowIpcAcceptanceRuntimeObserver {
                   const connectionId = diagnostics.standardBundlePushActiveConnectionId;
                   if (connectionId) {
                     push?.receive?.({
+                      version: 1,
                       type: 'opaquePush',
                       payload: {
                         connectionId,

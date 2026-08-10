@@ -1,6 +1,8 @@
 package dev.vatori.desktop.flow;
 
 import dev.vatori.desktop.DesktopApplication;
+import dev.vatori.desktop.DesktopCommandResult;
+import dev.vatori.desktop.DesktopContext;
 import dev.vatori.desktop.DesktopWindow;
 import dev.vatori.desktop.flow.launcherfixture.LauncherContractView;
 
@@ -8,20 +10,27 @@ import java.io.ByteArrayInputStream;
 import java.io.ByteArrayOutputStream;
 import java.io.InputStream;
 import java.io.PrintStream;
+import java.net.URI;
 import java.nio.charset.StandardCharsets;
+import java.nio.file.Files;
+import java.nio.file.Path;
+import java.util.Map;
 
 public final class LauncherContractSmokeMain {
     private static final String TRANSPORT_PROPERTY = "vaadin.desktop.transport";
+    private static final String RESOURCE_DIRECTORY_PROPERTY =
+            "vatori.application.resources";
 
     private LauncherContractSmokeMain() {
     }
 
-    public static void main(String[] args) {
+    public static void main(String[] args) throws Exception {
         verifyApplicationDescriptorValidation();
+        verifyApplicationResources();
         verifyRejectedTransport(null, "transport is missing");
         verifyRejectedTransport("browser", "Unknown desktop sidecar transport");
         String flowOutput = launchUntilInput("flow-ipc", new byte[0]);
-        assertReady(flowOutput, "flow-ipc", false);
+        assertReady(flowOutput, "flow-ipc", false, true);
         verifyRejectedTransport("compatibility-http", "SpringDesktopLauncher");
         System.out.println("Desktop launcher contract smoke passed");
     }
@@ -33,6 +42,51 @@ public final class LauncherContractSmokeMain {
         expectInvalid(() -> DesktopWindow.builder("main").title(" "), "window title");
         expectInvalid(() -> DesktopWindow.builder("main").size(0, 640), "window size");
         expectInvalid(() -> DesktopWindow.builder("main").route("../admin"), "window route");
+    }
+
+    private static void verifyApplicationResources() throws Exception {
+        Path resourceRoot = Files.createTempDirectory(
+                "vatori-application-resources");
+        Path resource = resourceRoot.resolve("messages/welcome.txt");
+        Files.createDirectories(resource.getParent());
+        Files.writeString(resource, "hello desktop");
+        String previous = System.getProperty(RESOURCE_DIRECTORY_PROPERTY);
+        try {
+            System.setProperty(
+                    RESOURCE_DIRECTORY_PROPERTY,
+                    resourceRoot.toString());
+            DesktopContext context = new DesktopContext(
+                    application(),
+                    URI.create("vatori-app://app/"),
+                    command -> DesktopCommandResult.ok(Map.of()),
+                    Map.of());
+            String contents;
+            try (InputStream input = context.resources().open(
+                    "messages/welcome.txt")) {
+                contents = new String(
+                        input.readAllBytes(), StandardCharsets.UTF_8);
+            }
+            if (!context.resources().isAvailable()
+                    || !context.resources().directory().equals(
+                    resourceRoot.toAbsolutePath().normalize())
+                    || !context.resources().resolve("messages/welcome.txt")
+                    .equals(resource.toAbsolutePath().normalize())
+                    || !"hello desktop".equals(contents)) {
+                throw new IllegalStateException(
+                        "Desktop application resources are not accessible");
+            }
+            expectInvalid(
+                    () -> context.resources().resolve("../outside.txt"),
+                    "application resource traversal");
+        } finally {
+            restoreProperty(RESOURCE_DIRECTORY_PROPERTY, previous);
+            try (var paths = Files.walk(resourceRoot)) {
+                for (Path path : paths.sorted(
+                        (left, right) -> right.compareTo(left)).toList()) {
+                    Files.deleteIfExists(path);
+                }
+            }
+        }
     }
 
     private static void expectInvalid(Runnable action, String contract) {
@@ -108,7 +162,8 @@ public final class LauncherContractSmokeMain {
     private static void assertReady(
             String output,
             String transport,
-            boolean expectsApplicationUrl) {
+            boolean expectsApplicationUrl,
+            boolean expectsFeatureFlags) {
         for (String token : new String[]{
                 "VFIPC ",
                 "\"type\":\"ready\"",
@@ -128,13 +183,23 @@ public final class LauncherContractSmokeMain {
             throw new IllegalStateException(
                     "Sidecar ready applicationUrl contract is invalid:\n" + output);
         }
+        if (expectsFeatureFlags
+                && (!output.contains("\"enabledFeatureFlags\":[")
+                || !output.contains("\"masterDetailLayoutComponent\""))) {
+            throw new IllegalStateException(
+                    "Sidecar ready payload is missing enabled feature flags:\n" + output);
+        }
     }
 
     private static void restoreProperty(String value) {
+        restoreProperty(TRANSPORT_PROPERTY, value);
+    }
+
+    private static void restoreProperty(String name, String value) {
         if (value == null) {
-            System.clearProperty(TRANSPORT_PROPERTY);
+            System.clearProperty(name);
         } else {
-            System.setProperty(TRANSPORT_PROPERTY, value);
+            System.setProperty(name, value);
         }
     }
 }

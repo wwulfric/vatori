@@ -16,6 +16,7 @@ const receivedBodies = [];
 let opened = 0;
 let reopened = 0;
 let reconnecting = 0;
+let lastSeenServerSyncId = 4;
 
 const context = {
   URL,
@@ -41,11 +42,15 @@ vm.runInNewContext(bridgeSource, context, { filename: bridgePath });
 
 const socket = context.vaadinPush.atmosphere.subscribe({
   url: 'https://app.vatori.invalid/VAADIN/push?v-r=push&v-uiId=7&v-pushId=secret',
-  headers: { 'X-Vaadin-LastSeenServerSyncId': () => 4 },
+  headers: { 'X-Vaadin-LastSeenServerSyncId': () => lastSeenServerSyncId },
   onOpen: () => opened += 1,
   onReopen: () => reopened += 1,
   onReconnect: () => reconnecting += 1,
-  onMessage: (response) => receivedBodies.push(response.responseBody)
+  onMessage: (response) => {
+    receivedBodies.push(response.responseBody);
+    const parsed = JSON.parse(response.responseBody);
+    lastSeenServerSyncId = Number(parsed.syncId);
+  }
 });
 
 const connect = messages.shift();
@@ -69,24 +74,51 @@ assert.equal(opened, 1);
 context.VaadinDesktopPush.receive({
   version: 1,
   type: 'opaquePush',
-  payload: { connectionId, pushSequence: 1, uidl: '{"syncId":1}', resync: false }
+  payload: {
+    connectionId,
+    pushSequence: 1,
+    flowServerSyncId: 5,
+    deliveryAttempt: 1,
+    uidl: '{"syncId":5}',
+    resync: false
+  }
 });
-assert.deepEqual(receivedBodies, ['{"syncId":1}']);
+assert.deepEqual(receivedBodies, ['{"syncId":5}']);
 assert.equal(context.VaadinDesktopIpcDiagnostics.standardBundlePushFirstSequence, 1);
 assert.equal(context.VaadinDesktopIpcDiagnostics.standardBundlePushLastSequence, 1);
+const firstAck = messages.shift();
+assert.equal(firstAck.type, 'opaquePushAck');
+assert.equal(firstAck.payload.pushSequence, 1);
+assert.equal(firstAck.payload.flowServerSyncId, 5);
+assert.equal(firstAck.payload.lastSeenServerSyncId, 5);
 
 context.VaadinDesktopPush.receive({
   version: 1,
   type: 'opaquePush',
-  payload: { connectionId, pushSequence: 1, uidl: 'duplicate', resync: false }
+  payload: {
+    connectionId,
+    pushSequence: 1,
+    flowServerSyncId: 5,
+    deliveryAttempt: 2,
+    uidl: 'duplicate',
+    resync: false
+  }
 });
 assert.equal(receivedBodies.length, 1);
 assert.equal(context.VaadinDesktopIpcDiagnostics.standardBundlePushDuplicateCount, 1);
+assert.equal(messages.shift().type, 'opaquePushAck');
 
 context.VaadinDesktopPush.receive({
   version: 1,
   type: 'opaquePush',
-  payload: { connectionId, pushSequence: 3, uidl: 'gap', resync: false }
+  payload: {
+    connectionId,
+    pushSequence: 3,
+    flowServerSyncId: 7,
+    deliveryAttempt: 1,
+    uidl: 'gap',
+    resync: false
+  }
 });
 assert.equal(messages.shift().type, 'opaquePushResync');
 assert.equal(context.VaadinDesktopIpcDiagnostics.standardBundlePushGapCount, 1);
@@ -94,7 +126,14 @@ assert.equal(context.VaadinDesktopIpcDiagnostics.standardBundlePushGapCount, 1);
 context.VaadinDesktopPush.receive({
   version: 1,
   type: 'opaquePush',
-  payload: { connectionId, pushSequence: 4, uidl: 'still waiting', resync: false }
+  payload: {
+    connectionId,
+    pushSequence: 4,
+    flowServerSyncId: 8,
+    deliveryAttempt: 1,
+    uidl: 'still waiting',
+    resync: false
+  }
 });
 assert.equal(messages.length, 0);
 assert.equal(
@@ -105,9 +144,35 @@ assert.equal(
 context.VaadinDesktopPush.receive({
   version: 1,
   type: 'opaquePush',
-  payload: { connectionId, pushSequence: 5, uidl: '{"syncId":5}', resync: true }
+  payload: {
+    connectionId,
+    pushSequence: 5,
+    flowServerSyncId: 9,
+    deliveryAttempt: 1,
+    uidl: '{"syncId":9}',
+    resync: true
+  }
 });
-assert.deepEqual(receivedBodies, ['{"syncId":1}', '{"syncId":5}']);
+assert.deepEqual(receivedBodies, ['{"syncId":5}', '{"syncId":9}']);
+const resyncAck = messages.shift();
+assert.equal(resyncAck.type, 'opaquePushAck');
+assert.equal(resyncAck.payload.pushSequence, 5);
+assert.equal(resyncAck.payload.lastSeenServerSyncId, 9);
+
+context.VaadinDesktopPush.receive({
+  version: 1,
+  type: 'opaquePush',
+  payload: {
+    connectionId,
+    pushSequence: 6,
+    flowServerSyncId: 10,
+    deliveryAttempt: 2,
+    uidl: '{"syncId":10}',
+    resync: false
+  }
+});
+assert.equal(context.VaadinDesktopIpcDiagnostics.standardBundlePushRedeliveryCount, 1);
+assert.equal(messages.shift().type, 'opaquePushAck');
 
 context.VaadinDesktopPush.reconnect();
 assert.equal(reconnecting, 1);
@@ -116,10 +181,11 @@ assert.deepEqual(reconnectMessages.map((message) => message.type), [
   'opaquePushDisconnect',
   'opaquePushConnect'
 ]);
-assert.equal(reconnectMessages[1].payload.lastSeenServerSyncId, 4);
+assert.equal(reconnectMessages[1].payload.lastSeenServerSyncId, 10);
 assert.equal(messages.length, 0);
 assert.equal(context.VaadinDesktopIpcDiagnostics.standardBundlePushReconnectCount, 1);
 assert.equal(context.VaadinDesktopIpcDiagnostics.standardBundlePushResyncCount, 1);
+assert.equal(context.VaadinDesktopIpcDiagnostics.standardBundlePushAckCount, 4);
 context.VaadinDesktopPush.receive({
   version: 1,
   type: 'opaquePushConnected',
@@ -134,9 +200,29 @@ assert.equal(context.VaadinDesktopIpcDiagnostics.standardBundlePushConnected, fa
 assert.equal(context.VaadinDesktopIpcDiagnostics.standardBundleSidecarDisconnected, true);
 
 assert.throws(() => socket.push('{}'), /opaque XMLHttpRequest bridge/);
+context.VaadinDesktopPush.receive({
+  version: 1,
+  type: 'opaquePushConnected',
+  payload: { connectionId }
+});
+assert.equal(reopened, 1);
+context.VaadinDesktopPush.reconnect();
 context.vaadinPush.atmosphere.unsubscribeUrl(
   'https://app.vatori.invalid/VAADIN/push?v-r=push&v-uiId=7&v-pushId=secret'
 );
-assert.equal(messages.shift().type, 'opaquePushDisconnect');
+context.vaadinPush.atmosphere.subscribe({
+  url: 'https://app.vatori.invalid/VAADIN/push?v-r=push&v-uiId=8&v-pushId=late'
+});
+assert.equal(messages.length, messagesBeforeDisconnect);
+assert.equal(
+  context.VaadinDesktopIpcDiagnostics.standardBundlePushDisconnectedOutboundCount,
+  4
+);
+assert.equal(
+  context.VaadinDesktopIpcDiagnostics.standardBundlePushDisconnectedInboundCount,
+  1
+);
+context.VaadinDesktopPush.sidecarDisconnected();
+assert.equal(messages.length, messagesBeforeDisconnect);
 assert.equal(context.VaadinDesktopIpcDiagnostics.standardBundlePushBridgeInstalled, true);
 console.log('Opaque push bridge smoke passed');

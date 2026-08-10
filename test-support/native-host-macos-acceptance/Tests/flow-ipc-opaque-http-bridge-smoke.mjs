@@ -12,7 +12,45 @@ const bridgePath = resolve(
 );
 const bridgeSource = await readFile(bridgePath, 'utf8');
 const messages = [];
+const historyCalls = [];
+const tombstoneTimers = [];
 let mutationCallback;
+
+const nativeSetTimeout = globalThis.setTimeout;
+const nativeClearTimeout = globalThis.clearTimeout;
+
+function bridgeSetTimeout(callback, delay, ...args) {
+  if (delay === 60000) {
+    const timer = {
+      callback,
+      args,
+      cancelled: false,
+      fired: false,
+      unref() {
+        return this;
+      }
+    };
+    tombstoneTimers.push(timer);
+    return timer;
+  }
+  return nativeSetTimeout(callback, delay, ...args);
+}
+
+function bridgeClearTimeout(timer) {
+  if (tombstoneTimers.includes(timer)) {
+    timer.cancelled = true;
+    return;
+  }
+  nativeClearTimeout(timer);
+}
+
+function expireTombstone(timer) {
+  assert.ok(timer, 'expected a pending cancellation tombstone timer');
+  assert.equal(timer.cancelled, false);
+  assert.equal(timer.fired, false);
+  timer.fired = true;
+  timer.callback(...timer.args);
+}
 
 class NativeXMLHttpRequestStub {
   addEventListener() {
@@ -58,8 +96,8 @@ const context = {
   HTMLScriptElement: HTMLScriptElementStub,
   btoa,
   atob,
-  setTimeout,
-  clearTimeout,
+  setTimeout: bridgeSetTimeout,
+  clearTimeout: bridgeClearTimeout,
   console,
   VaadinDesktopHostContext: {
     windowId: 'secondary',
@@ -70,6 +108,15 @@ const context = {
     baseURI: 'https://app.vatori.invalid/',
     body: { innerText: '' },
     querySelectorAll: () => []
+  },
+  location: new URL('vatori-app://app/'),
+  history: {
+    pushState(state, unused, url) {
+      historyCalls.push({ method: 'pushState', state, unused, url });
+    },
+    replaceState(state, unused, url) {
+      historyCalls.push({ method: 'replaceState', state, unused, url });
+    }
   },
   addEventListener: () => {},
   webkit: {
@@ -105,6 +152,23 @@ assert.equal(developmentPushScript.src, 'vatori-app://app/__vatori/FlowIpcPushBr
 const unrelatedScript = new context.HTMLScriptElement();
 unrelatedScript.src = 'https://app.vatori.invalid/VAADIN/build/application.js';
 assert.equal(unrelatedScript.src, 'https://app.vatori.invalid/VAADIN/build/application.js');
+
+context.history.pushState({ route: 'lazy' }, '', 'lazy-frontend?tab=details#probe');
+context.history.replaceState({ route: 'root' }, '', '/');
+assert.deepEqual(
+  historyCalls.map(({ method, url }) => ({ method, url })),
+  [
+    {
+      method: 'pushState',
+      url: 'vatori-app://app/lazy-frontend?tab=details#probe'
+    },
+    { method: 'replaceState', url: 'vatori-app://app/' }
+  ]
+);
+assert.equal(
+  context.VaadinDesktopIpcDiagnostics.standardBundleHistoryMappedCount,
+  2
+);
 
 async function nextMessage() {
   for (let attempt = 0; attempt < 100 && messages.length === 0; attempt += 1) {
@@ -215,6 +279,7 @@ xhr.open('POST', '?upload');
 xhr.send(form);
 const formExchange = await collectRequest();
 assert.equal(formExchange.open.payload.method, 'POST');
+assert.equal(formExchange.open.payload.url, 'https://app.vatori.invalid/?upload');
 assert.match(header(formExchange.open.payload.headers, 'content-type'), /^multipart\/form-data; boundary=/);
 const multipartBody = formExchange.body.toString('utf8');
 assert.match(multipartBody, /name="title"/);
@@ -230,6 +295,7 @@ const fetchPromise = context.fetch('?blob', {
 });
 const fetchExchange = await collectRequest();
 assert.equal(fetchExchange.open.payload.method, 'PUT');
+assert.equal(fetchExchange.open.payload.url, 'https://app.vatori.invalid/?blob');
 assert.equal(header(fetchExchange.open.payload.headers, 'content-type'), 'text/custom');
 assert.equal(fetchExchange.body.toString(), 'fetch body');
 await respond(fetchExchange, 200, 'fetch response', {
@@ -293,6 +359,59 @@ const collectedLargeResponse = Buffer.from(await largeFetchResponse.arrayBuffer(
 await largeResponseSend;
 assert.deepEqual(collectedLargeResponse, largeResponseBytes);
 
+const rangeFetchPromise = context.fetch('?large-range-resume', {
+  headers: { Range: 'bytes=262144-' }
+});
+const rangeExchange = await collectRequest();
+assert.equal(header(rangeExchange.open.payload.headers, 'range'), 'bytes=262144-');
+receive('opaqueHttpStreamResponse', rangeExchange.requestId, {
+  status: 206,
+  statusText: 'Partial Content',
+  headers: {
+    'Accept-Ranges': 'bytes',
+    'Content-Range': 'bytes 262144-4194416/4194417'
+  }
+});
+const rangeResponse = await rangeFetchPromise;
+assert.equal(rangeResponse.status, 206);
+assert.equal(
+  rangeResponse.headers.get('content-range'),
+  'bytes 262144-4194416/4194417'
+);
+const rangeReader = rangeResponse.body.getReader();
+const rangeCredit = await nextMessage();
+assert.equal(rangeCredit.type, 'opaqueHttpStreamResponseCredit');
+assert.equal(rangeCredit.payload.requestId, rangeExchange.requestId);
+const rangeChunk = Buffer.alloc(32 * 1024, 0x72);
+receive('opaqueHttpStreamResponseChunk', rangeExchange.requestId, {
+  chunkSequence: 0,
+  bodyBase64: rangeChunk.toString('base64'),
+  bodyBytes: rangeChunk.length
+});
+const firstRangeRead = await rangeReader.read();
+assert.equal(firstRangeRead.done, false);
+assert.deepEqual(Buffer.from(firstRangeRead.value), rangeChunk);
+await rangeReader.cancel('resume from consumed offset');
+let rangeCancel;
+while (!rangeCancel) {
+  const message = await nextMessage();
+  if (message.type === 'opaqueHttpStreamCancel') {
+    rangeCancel = message;
+  } else {
+    assert.equal(message.type, 'opaqueHttpStreamResponseCredit');
+    assert.equal(message.payload.requestId, rangeExchange.requestId);
+  }
+}
+assert.equal(rangeCancel.payload.requestId, rangeExchange.requestId);
+receive('opaqueHttpStreamResponseEnd', rangeExchange.requestId, {
+  chunkCount: 1,
+  bodyBytes: rangeChunk.length
+});
+assert.equal(
+  context.VaadinDesktopIpcDiagnostics.standardBundleOpaqueResponseError,
+  undefined
+);
+
 const cookieFetch = context.fetch('/next');
 const cookieExchange = await collectRequest();
 assert.equal(header(cookieExchange.open.payload.headers, 'cookie'), 'desktop_session=abc123');
@@ -307,8 +426,15 @@ assert.equal(header(nestedExchange.open.payload.headers, 'cookie'), 'nested=valu
 await respond(nestedExchange, 200, 'nested accepted');
 await nestedFetch;
 
-const omittedCookieFetch = context.fetch('/nested/omitted', { credentials: 'omit' });
+const omittedCookieFetch = context.fetch(
+  'vatori-app://app/nested/omitted',
+  { credentials: 'omit' }
+);
 const omittedCookieExchange = await collectRequest();
+assert.equal(
+  omittedCookieExchange.open.payload.url,
+  'https://app.vatori.invalid/nested/omitted'
+);
 assert.equal(header(omittedCookieExchange.open.payload.headers, 'cookie'), null);
 await respond(omittedCookieExchange, 200, 'omitted', {
   'Set-Cookie': ['omitted=ignored; Path=/; Secure']
@@ -320,6 +446,7 @@ const noContentExchange = await collectRequest();
 await respond(noContentExchange, 204, '', {});
 assert.equal((await noContentPromise).status, 204);
 
+const tombstoneCountBeforeAbort = tombstoneTimers.length;
 const abortController = new AbortController();
 const abortedFetch = context.fetch('?abort', { signal: abortController.signal });
 const abortExchange = await collectRequest();
@@ -331,7 +458,31 @@ receive('opaqueHttpStreamResponse', abortExchange.requestId, {
   statusText: 'OK',
   headers: {}
 });
+receive('opaqueHttpStreamResponseChunk', abortExchange.requestId, {
+  chunkSequence: 0,
+  bodyBase64: '',
+  bodyBytes: 0
+});
+receive('opaqueHttpStreamResponseEnd', abortExchange.requestId, {
+  chunkCount: 0,
+  bodyBytes: 0
+});
+receive('opaqueHttpStreamError', abortExchange.requestId, {
+  message: 'late cancelled response'
+});
 assert.equal(context.VaadinDesktopIpcDiagnostics.standardBundleOpaqueResponseError, undefined);
+assert.equal(tombstoneTimers.length, tombstoneCountBeforeAbort + 1);
+expireTombstone(tombstoneTimers.at(-1));
+receive('opaqueHttpStreamResponse', abortExchange.requestId, {
+  status: 599,
+  statusText: 'Expired',
+  headers: {}
+});
+assert.equal(
+  context.VaadinDesktopIpcDiagnostics.standardBundleOpaqueResponseError,
+  `unknown request ${abortExchange.requestId}`
+);
+delete context.VaadinDesktopIpcDiagnostics.standardBundleOpaqueResponseError;
 
 let slowBodyCancelled = false;
 let slowBodyChunk = 0;
@@ -366,6 +517,363 @@ await new Promise((resolveDelay) => setTimeout(resolveDelay, 50));
 assert.equal(messages.length, 0, 'cancelled request emitted a late chunk or end frame');
 assert.equal(slowBodyCancelled, true);
 
+const uploadRetryBytes = Buffer.alloc(10 * 32 * 1024 + 29);
+for (let index = 0; index < uploadRetryBytes.length; index += 1) {
+  uploadRetryBytes[index] = ((index * 31 + 17) & 0xff);
+}
+const cancelledUploadXhr = new context.XMLHttpRequest();
+const cancelledUploadProgress = [];
+const cancelledUploadAborted = new Promise((resolveAbort) => {
+  cancelledUploadXhr.onabort = resolveAbort;
+});
+cancelledUploadXhr.upload.onprogress = (event) => {
+  cancelledUploadProgress.push(event.loaded);
+  if (event.loaded >= 4 * 32 * 1024 && event.loaded < event.total) {
+    cancelledUploadXhr.abort();
+  }
+};
+cancelledUploadXhr.open('POST', '?large-upload-cancel');
+cancelledUploadXhr.send(new Blob(
+  [uploadRetryBytes],
+  { type: 'application/octet-stream' }
+));
+const cancelledUploadOpen = await nextMessage();
+assert.equal(cancelledUploadOpen.type, 'opaqueHttpStreamOpen');
+assert.equal(cancelledUploadOpen.payload.contentLength, uploadRetryBytes.length);
+receive(
+  'opaqueHttpStreamRequestCredit',
+  cancelledUploadOpen.payload.requestId,
+  { credit: 8 }
+);
+const cancelledUploadChunks = [];
+let cancelledUploadMessage;
+while (!cancelledUploadMessage) {
+  const message = await nextMessage();
+  if (message.type === 'opaqueHttpStreamCancel') {
+    cancelledUploadMessage = message;
+  } else {
+    assert.equal(message.type, 'opaqueHttpStreamChunk');
+    cancelledUploadChunks.push(
+      Buffer.from(message.payload.bodyBase64, 'base64')
+    );
+  }
+}
+await cancelledUploadAborted;
+assert.equal(
+  cancelledUploadMessage.payload.requestId,
+  cancelledUploadOpen.payload.requestId
+);
+assert.equal(cancelledUploadProgress.at(-1), 4 * 32 * 1024);
+assert.equal(
+  Buffer.concat(cancelledUploadChunks).length,
+  4 * 32 * 1024
+);
+await new Promise((resolveDelay) => setTimeout(resolveDelay, 20));
+assert.equal(messages.length, 0, 'aborted XHR upload emitted a late chunk or end frame');
+
+const retriedUploadXhr = new context.XMLHttpRequest();
+const retriedUploadProgress = [];
+let retriedUploadBodyComplete = false;
+retriedUploadXhr.upload.onprogress = (event) => {
+  retriedUploadProgress.push(event.loaded);
+};
+retriedUploadXhr.upload.onload = () => {
+  retriedUploadBodyComplete = true;
+};
+const retriedUploadLoaded = new Promise((resolveLoaded, rejectLoaded) => {
+  retriedUploadXhr.onload = resolveLoaded;
+  retriedUploadXhr.onerror = () => rejectLoaded(new Error('retried upload failed'));
+});
+retriedUploadXhr.open('POST', '?large-upload-retry');
+retriedUploadXhr.send(new Blob(
+  [uploadRetryBytes],
+  { type: 'application/octet-stream' }
+));
+const retriedUploadExchange = await collectRequest();
+assert.equal(
+  retriedUploadExchange.open.payload.contentLength,
+  uploadRetryBytes.length
+);
+assert.deepEqual(retriedUploadExchange.body, uploadRetryBytes);
+assert.equal(retriedUploadProgress.at(-1), uploadRetryBytes.length);
+assert.equal(retriedUploadBodyComplete, true);
+await respond(retriedUploadExchange, 200, 'upload retried');
+await retriedUploadLoaded;
+assert.equal(retriedUploadXhr.status, 200);
+assert.equal(retriedUploadXhr.responseText, 'upload retried');
+receive('opaqueHttpStreamResponse', retriedUploadExchange.requestId, {
+  status: 599,
+  statusText: 'Late',
+  headers: {}
+});
+assert.equal(
+  context.VaadinDesktopIpcDiagnostics.standardBundleOpaqueResponseError,
+  `unknown request ${retriedUploadExchange.requestId}`,
+  'completed request remained in the browser registry'
+);
+delete context.VaadinDesktopIpcDiagnostics.standardBundleOpaqueResponseError;
+
+const multipartForm = () => {
+  const formData = new FormData();
+  formData.append(
+    'file',
+    new Blob([uploadRetryBytes], { type: 'application/octet-stream' }),
+    'multipart-retry.bin'
+  );
+  return formData;
+};
+const cancelledMultipartXhr = new context.XMLHttpRequest();
+const cancelledMultipartProgress = [];
+const cancelledMultipartAborted = new Promise((resolveAbort) => {
+  cancelledMultipartXhr.onabort = resolveAbort;
+});
+cancelledMultipartXhr.upload.onprogress = (event) => {
+  cancelledMultipartProgress.push(event.loaded);
+  if (event.loaded >= 4 * 32 * 1024) {
+    cancelledMultipartXhr.abort();
+  }
+};
+cancelledMultipartXhr.open('POST', '?large-multipart-upload-cancel');
+cancelledMultipartXhr.send(multipartForm());
+const cancelledMultipartOpen = await nextMessage();
+assert.equal(cancelledMultipartOpen.type, 'opaqueHttpStreamOpen');
+assert.equal(cancelledMultipartOpen.payload.contentLength, -1);
+assert.match(
+  header(cancelledMultipartOpen.payload.headers, 'content-type'),
+  /^multipart\/form-data; boundary=/
+);
+receive(
+  'opaqueHttpStreamRequestCredit',
+  cancelledMultipartOpen.payload.requestId,
+  { credit: 8 }
+);
+const cancelledMultipartChunks = [];
+let cancelledMultipartMessage;
+while (!cancelledMultipartMessage) {
+  const message = await nextMessage();
+  if (message.type === 'opaqueHttpStreamCancel') {
+    cancelledMultipartMessage = message;
+  } else {
+    assert.equal(message.type, 'opaqueHttpStreamChunk');
+    cancelledMultipartChunks.push(
+      Buffer.from(message.payload.bodyBase64, 'base64')
+    );
+  }
+}
+await cancelledMultipartAborted;
+assert.equal(
+  cancelledMultipartMessage.payload.requestId,
+  cancelledMultipartOpen.payload.requestId
+);
+const cancelledMultipartBytes = Buffer.concat(cancelledMultipartChunks).length;
+assert.ok(cancelledMultipartProgress.at(-1) >= 4 * 32 * 1024);
+assert.ok(cancelledMultipartProgress.at(-1) < 5 * 32 * 1024 + 1024);
+assert.equal(cancelledMultipartBytes, cancelledMultipartProgress.at(-1));
+await new Promise((resolveDelay) => setTimeout(resolveDelay, 20));
+assert.equal(
+  messages.length,
+  0,
+  'aborted multipart XHR emitted a late chunk or end frame'
+);
+
+const retriedMultipartXhr = new context.XMLHttpRequest();
+const retriedMultipartProgress = [];
+let retriedMultipartBodyComplete = false;
+retriedMultipartXhr.upload.onprogress = (event) => {
+  retriedMultipartProgress.push(event.loaded);
+};
+retriedMultipartXhr.upload.onload = () => {
+  retriedMultipartBodyComplete = true;
+};
+const retriedMultipartLoaded = new Promise((resolveLoaded, rejectLoaded) => {
+  retriedMultipartXhr.onload = resolveLoaded;
+  retriedMultipartXhr.onerror = () => rejectLoaded(
+    new Error('retried multipart upload failed')
+  );
+});
+retriedMultipartXhr.open('POST', '?large-multipart-upload-retry');
+retriedMultipartXhr.send(multipartForm());
+const retriedMultipartExchange = await collectRequest();
+assert.equal(retriedMultipartExchange.open.payload.contentLength, -1);
+assert.match(
+  header(retriedMultipartExchange.open.payload.headers, 'content-type'),
+  /^multipart\/form-data; boundary=/
+);
+const multipartFileOffset = retriedMultipartExchange.body.indexOf(
+  uploadRetryBytes
+);
+assert.ok(multipartFileOffset > 0, 'multipart body omitted the file payload');
+assert.deepEqual(
+  retriedMultipartExchange.body.subarray(
+    multipartFileOffset,
+    multipartFileOffset + uploadRetryBytes.length
+  ),
+  uploadRetryBytes
+);
+assert.ok(retriedMultipartExchange.body.length > uploadRetryBytes.length);
+assert.equal(
+  retriedMultipartProgress.at(-1),
+  retriedMultipartExchange.body.length
+);
+assert.equal(retriedMultipartBodyComplete, true);
+await respond(retriedMultipartExchange, 200, 'multipart upload retried');
+await retriedMultipartLoaded;
+assert.equal(retriedMultipartXhr.status, 200);
+assert.equal(
+  retriedMultipartXhr.responseText,
+  'multipart upload retried'
+);
+
+const concurrentCancelledBytes = Buffer.alloc(8 * 32 * 1024 + 31);
+const concurrentSurvivorBytes = Buffer.alloc(7 * 32 * 1024 + 47);
+for (let index = 0; index < concurrentCancelledBytes.length; index += 1) {
+  concurrentCancelledBytes[index] = ((index * 17 + 3) & 0xff);
+}
+for (let index = 0; index < concurrentSurvivorBytes.length; index += 1) {
+  concurrentSurvivorBytes[index] = ((index * 29 + 7) & 0xff);
+}
+const concurrentCancelledXhr = new context.XMLHttpRequest();
+const concurrentSurvivorXhr = new context.XMLHttpRequest();
+const concurrentCancelledProgress = [];
+const concurrentSurvivorProgress = [];
+const concurrentCancelled = new Promise((resolveAbort) => {
+  concurrentCancelledXhr.onabort = resolveAbort;
+});
+let concurrentSurvivorBodyComplete = false;
+concurrentCancelledXhr.upload.onprogress = (event) => {
+  concurrentCancelledProgress.push(event.loaded);
+};
+concurrentSurvivorXhr.upload.onprogress = (event) => {
+  concurrentSurvivorProgress.push(event.loaded);
+};
+concurrentSurvivorXhr.upload.onload = () => {
+  concurrentSurvivorBodyComplete = true;
+};
+const concurrentSurvivorLoaded = new Promise((resolveLoaded, rejectLoaded) => {
+  concurrentSurvivorXhr.onload = resolveLoaded;
+  concurrentSurvivorXhr.onerror = () => rejectLoaded(
+    new Error('concurrent survivor request failed')
+  );
+});
+concurrentCancelledXhr.open('POST', '?concurrent-cancel');
+concurrentSurvivorXhr.open('POST', '?concurrent-survivor');
+concurrentCancelledXhr.send(new Blob(
+  [concurrentCancelledBytes],
+  { type: 'application/octet-stream' }
+));
+concurrentSurvivorXhr.send(new Blob(
+  [concurrentSurvivorBytes],
+  { type: 'application/octet-stream' }
+));
+
+const concurrentOpens = [];
+while (concurrentOpens.length < 2) {
+  const message = await nextMessage();
+  assert.equal(message.type, 'opaqueHttpStreamOpen');
+  concurrentOpens.push(message);
+}
+const concurrentCancelledOpen = concurrentOpens.find(
+  (message) => message.payload.url.endsWith('?concurrent-cancel')
+);
+const concurrentSurvivorOpen = concurrentOpens.find(
+  (message) => message.payload.url.endsWith('?concurrent-survivor')
+);
+assert.ok(concurrentCancelledOpen);
+assert.ok(concurrentSurvivorOpen);
+assert.notEqual(
+  concurrentCancelledOpen.payload.requestId,
+  concurrentSurvivorOpen.payload.requestId
+);
+receive(
+  'opaqueHttpStreamRequestCredit',
+  concurrentCancelledOpen.payload.requestId,
+  { credit: 1 }
+);
+receive(
+  'opaqueHttpStreamRequestCredit',
+  concurrentSurvivorOpen.payload.requestId,
+  { credit: 1 }
+);
+
+const concurrentBodies = new Map([
+  [concurrentCancelledOpen.payload.requestId, []],
+  [concurrentSurvivorOpen.payload.requestId, []]
+]);
+while (Array.from(concurrentBodies.values()).some((chunks) => chunks.length === 0)) {
+  const message = await nextMessage();
+  assert.equal(message.type, 'opaqueHttpStreamChunk');
+  const chunks = concurrentBodies.get(message.payload.requestId);
+  assert.ok(chunks, 'concurrent chunk used an unknown request id');
+  assert.equal(message.payload.chunkSequence, chunks.length);
+  chunks.push(Buffer.from(message.payload.bodyBase64, 'base64'));
+}
+assert.equal(concurrentCancelledProgress.at(-1), 32 * 1024);
+assert.equal(concurrentSurvivorProgress.at(-1), 32 * 1024);
+
+concurrentCancelledXhr.abort();
+await concurrentCancelled;
+const concurrentCancelMessage = await nextMessage();
+assert.equal(concurrentCancelMessage.type, 'opaqueHttpStreamCancel');
+assert.equal(
+  concurrentCancelMessage.payload.requestId,
+  concurrentCancelledOpen.payload.requestId
+);
+
+receive(
+  'opaqueHttpStreamRequestCredit',
+  concurrentSurvivorOpen.payload.requestId,
+  { credit: 16 }
+);
+let concurrentSurvivorEnd;
+while (!concurrentSurvivorEnd) {
+  const message = await nextMessage();
+  assert.equal(message.payload.requestId, concurrentSurvivorOpen.payload.requestId);
+  if (message.type === 'opaqueHttpStreamEnd') {
+    concurrentSurvivorEnd = message;
+    break;
+  }
+  assert.equal(message.type, 'opaqueHttpStreamChunk');
+  const chunks = concurrentBodies.get(message.payload.requestId);
+  assert.equal(message.payload.chunkSequence, chunks.length);
+  chunks.push(Buffer.from(message.payload.bodyBase64, 'base64'));
+}
+const concurrentCancelledBody = Buffer.concat(
+  concurrentBodies.get(concurrentCancelledOpen.payload.requestId)
+);
+const concurrentSurvivorBody = Buffer.concat(
+  concurrentBodies.get(concurrentSurvivorOpen.payload.requestId)
+);
+assert.equal(concurrentCancelledBody.length, 32 * 1024);
+assert.deepEqual(concurrentCancelledBody, concurrentCancelledBytes.subarray(0, 32 * 1024));
+assert.equal(concurrentSurvivorEnd.payload.chunkCount, 8);
+assert.equal(concurrentSurvivorEnd.payload.bodyBytes, concurrentSurvivorBytes.length);
+assert.deepEqual(concurrentSurvivorBody, concurrentSurvivorBytes);
+assert.equal(concurrentSurvivorProgress.at(-1), concurrentSurvivorBytes.length);
+assert.equal(concurrentSurvivorBodyComplete, true);
+await new Promise((resolveDelay) => setTimeout(resolveDelay, 20));
+assert.equal(messages.length, 0, 'cancelled sibling emitted a late request frame');
+
+const concurrentSurvivorExchange = {
+  open: concurrentSurvivorOpen,
+  requestId: concurrentSurvivorOpen.payload.requestId,
+  body: concurrentSurvivorBody
+};
+await respond(concurrentSurvivorExchange, 200, 'concurrent survivor complete');
+await concurrentSurvivorLoaded;
+assert.equal(concurrentSurvivorXhr.status, 200);
+assert.equal(
+  concurrentSurvivorXhr.responseText,
+  'concurrent survivor complete'
+);
+assert.equal(
+  context.VaadinDesktopIpcDiagnostics.standardBundleOpaqueRequestError,
+  undefined
+);
+assert.equal(
+  context.VaadinDesktopIpcDiagnostics.standardBundleOpaqueResponseError,
+  undefined
+);
+
 const timeoutXhr = new context.XMLHttpRequest();
 timeoutXhr.timeout = 5;
 const timedOut = new Promise((resolveTimeout) => {
@@ -397,6 +905,30 @@ receive('opaqueHttpStreamResponse', disconnectedExchange.requestId, {
   headers: {}
 });
 assert.equal(context.VaadinDesktopIpcDiagnostics.standardBundleOpaqueResponseError, undefined);
+
+const messagesAfterDisconnect = messages.length;
+await assert.rejects(
+  context.fetch('?request-after-sidecar-disconnect'),
+  /sidecar disconnected/
+);
+assert.equal(messages.length, messagesAfterDisconnect);
+
+const disconnectedXhr = new context.XMLHttpRequest();
+const disconnectedXhrFailed = new Promise((resolveFailure) => {
+  disconnectedXhr.onerror = resolveFailure;
+});
+disconnectedXhr.open('POST', '?xhr-after-sidecar-disconnect');
+disconnectedXhr.send(new Blob(['must not reach a replacement sidecar']));
+await disconnectedXhrFailed;
+assert.equal(disconnectedXhr.status, 0);
+assert.equal(disconnectedXhr.readyState, 4);
+assert.equal(messages.length, messagesAfterDisconnect);
+assert.equal(
+  context.VaadinDesktopIpcDiagnostics.standardBundleOpaqueDisconnectedRequestCount,
+  2
+);
+context.VaadinDesktopOpaqueHttp.sidecarDisconnected();
+assert.equal(messages.length, messagesAfterDisconnect);
 
 assert.equal(context.VaadinDesktopIpcDiagnostics.standardBundleFetchBridgeInstalled, true);
 assert.equal(context.VaadinDesktopIpcDiagnostics.standardBundleCookieBridgeInstalled, true);

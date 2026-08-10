@@ -11,6 +11,13 @@
         "notification.show",
         "fileTransfer.download"
       ]
+    },
+    {
+      "label": "multipart-secondary",
+      "commands": [
+        "window.open",
+        "window.close"
+      ]
     }
   ]
 }

@@ -23,6 +23,9 @@ if [[ -z "$MODULE" || ! -f "$MODULE_POM" ]]; then
   echo "Module not found: $MODULE" >&2
   exit 1
 fi
+if [[ "${VAADIN_DESKTOP_FLOW_IPC_AUTO_SIDECAR_RESTART:-}" == "1" ]]; then
+  export VAADIN_DESKTOP_FLOW_IPC_SIDECAR_RECOVERY_STABLE_RUN_SECONDS="${VAADIN_DESKTOP_FLOW_IPC_SIDECAR_RECOVERY_STABLE_RUN_SECONDS:-5}"
+fi
 bash "$ROOT/bin/vaadin-desktop" package "$MODULE"
 
 bash "$ROOT/test-support/native-host-macos-acceptance/bin/build-host" \
@@ -35,20 +38,63 @@ acceptance_environment_names=(
   VAADIN_DESKTOP_MACOS_NO_ACTIVATE
   VAADIN_DESKTOP_FLOW_IPC_TRACE_DETAIL
   VAADIN_DESKTOP_FLOW_IPC_AUTO_FRAMEWORK_UPDATE
+  VAADIN_DESKTOP_FLOW_IPC_AUTO_PUSH_DELIVERY
+  VAADIN_DESKTOP_FLOW_IPC_AUTO_PUSH_RECOVERY
+  VAADIN_DESKTOP_FLOW_IPC_AUTO_LARGE_DOWNLOAD_RESUME
+  VAADIN_DESKTOP_FLOW_IPC_AUTO_LARGE_UPLOAD_RETRY
+  VAADIN_DESKTOP_FLOW_IPC_AUTO_LARGE_MULTIPART_UPLOAD_RETRY
+  VAADIN_DESKTOP_FLOW_IPC_AUTO_CONCURRENT_UPLOAD
+  VAADIN_DESKTOP_FLOW_IPC_AUTO_REQUEST_FANOUT
+  VAADIN_DESKTOP_FLOW_IPC_AUTO_CONCURRENT_MULTIPART_UPLOAD
+  VAADIN_DESKTOP_FLOW_IPC_AUTO_CROSS_SESSION_MULTIPART_UPLOAD
+  VAADIN_DESKTOP_FLOW_IPC_AUTO_LAZY_GRID_QUERY
+  VAADIN_DESKTOP_FLOW_IPC_AUTO_DND
+  VAADIN_DESKTOP_FLOW_IPC_DND_INPUT_MODE
+  VAADIN_DESKTOP_FLOW_IPC_AUTO_INPUT_POPUP
+  VAADIN_DESKTOP_FLOW_IPC_AUTO_LOCALIZED_INPUT_POPUP
+  VAADIN_DESKTOP_FLOW_IPC_AUTO_PICKER_VALIDATION
+  VAADIN_DESKTOP_FLOW_IPC_AUTO_MENU_POPUP
+  VAADIN_DESKTOP_FLOW_IPC_AUTO_OVERLAY_STACK
+  VAADIN_DESKTOP_FLOW_IPC_AUTO_STRUCTURED_RPC
+  VAADIN_DESKTOP_FLOW_IPC_AUTO_VITE_HMR
+  VAADIN_DESKTOP_FLOW_IPC_AUTO_REACTOR_RELOAD
+  VAADIN_DESKTOP_FLOW_IPC_AUTO_JAVA_RELOAD
+  VAADIN_DESKTOP_FLOW_IPC_AUTO_JAVA_ROLLBACK
   VAADIN_DESKTOP_FLOW_IPC_AUTO_SIDECAR_RESTART
+  VAADIN_DESKTOP_FLOW_IPC_AUTO_SIDECAR_RECOVERY_EXHAUSTION
   VAADIN_DESKTOP_FLOW_IPC_AUTO_SHUTDOWN
   VAADIN_DESKTOP_FLOW_IPC_AUTO_UPLOAD_RECEIVER
   VAADIN_DESKTOP_FLOW_IPC_AUTO_DOWNLOAD_SAVE_OPEN
   VAADIN_DESKTOP_FLOW_IPC_AUTO_MULTI_WINDOW
   VAADIN_DESKTOP_FLOW_IPC_AUTO_FILE_DIALOG_CANCEL
   VAADIN_DESKTOP_FLOW_IPC_AUTO_SHUTDOWN_TIMEOUT_SECONDS
+  VAADIN_DESKTOP_VITE_HMR_PROBE_FILE
+  VAADIN_DESKTOP_REACTOR_RELOAD_PROBE_FILE
+  VAADIN_DESKTOP_REACTOR_RELOAD_APPLICATION_DIRECTORY
+  VAADIN_DESKTOP_EFFECTIVE_MAVEN_SOURCE_FILE
+  VAADIN_DESKTOP_EFFECTIVE_MAVEN_RESOURCE_FILE
+  VAADIN_DESKTOP_JAVA_RELOAD_PROBE_FILE
+  VAADIN_DESKTOP_JAVA_ROLLBACK_PROBE_FILE
 )
 export VAADIN_DESKTOP_ACCEPTANCE_REPO_ROOT="$ROOT"
 
 set +e
-launch_built_macos_host_runtime \
-  "$ROOT/.build/native-hosts/macos/VaadinDesktopHost.app" \
-  "${acceptance_environment_names[@]}"
+if [[ "${VAADIN_DESKTOP_MACOS_ACCEPTANCE_DIRECT_EXECUTION:-}" == "1" ]]; then
+  host_app="$ROOT/.build/native-hosts/macos/VaadinDesktopHost.app"
+  host_exe="$host_app/Contents/MacOS/VaadinDesktopHost"
+  host_log="$ROOT/.build/native-hosts/macos/host.out.log"
+  host_err_log="$ROOT/.build/native-hosts/macos/host.err.log"
+  : > "$host_log"
+  : > "$host_err_log"
+  echo "Vaadin Desktop Host logs:"
+  echo "  stdout: $host_log"
+  echo "  stderr: $host_err_log"
+  "$host_exe" > "$host_log" 2> "$host_err_log"
+else
+  launch_built_macos_host_runtime \
+    "$ROOT/.build/native-hosts/macos/VaadinDesktopHost.app" \
+    "${acceptance_environment_names[@]}"
+fi
 status=$?
 set -e
 
@@ -68,6 +114,50 @@ if [[ "$status" == "0" && "${VAADIN_DESKTOP_FLOW_IPC_AUTO_SHUTDOWN:-}" == "1" ]]
     require_completed_trace "standardBundle.sidecarRestartAcceptance" || status=1
   elif [[ "${VAADIN_DESKTOP_FLOW_IPC_AUTO_MULTI_WINDOW:-}" == "1" ]]; then
     require_completed_trace "multiWindow.acceptance" || status=1
+  elif [[ "${VAADIN_DESKTOP_FLOW_IPC_AUTO_REACTOR_RELOAD:-}" == "1" ]]; then
+    require_completed_trace "reactorReload.frameworkAcceptance" || status=1
+  elif [[ "${VAADIN_DESKTOP_FLOW_IPC_AUTO_JAVA_ROLLBACK:-}" == "1" ]]; then
+    require_completed_trace "javaRollback.frameworkAcceptance" || status=1
+  elif [[ "${VAADIN_DESKTOP_FLOW_IPC_AUTO_JAVA_RELOAD:-}" == "1" ]]; then
+    require_completed_trace "javaReload.frameworkAcceptance" || status=1
+  elif [[ "${VAADIN_DESKTOP_FLOW_IPC_AUTO_VITE_HMR:-}" == "1" ]]; then
+    require_completed_trace "viteDevelopment.frameworkAcceptance" || status=1
+  elif [[ "${VAADIN_DESKTOP_FLOW_IPC_AUTO_PUSH_DELIVERY:-}" == "1" ]]; then
+    require_completed_trace "flowPushDelivery.frameworkAcceptance" || status=1
+  elif [[ "${VAADIN_DESKTOP_FLOW_IPC_AUTO_PUSH_RECOVERY:-}" == "1" ]]; then
+    require_completed_trace "flowPushRecovery.frameworkAcceptance" || status=1
+  elif [[ "${VAADIN_DESKTOP_FLOW_IPC_AUTO_IN_FLIGHT_REQUEST_RECOVERY:-}" == "1" ]]; then
+    require_completed_trace "flowInFlightRequestRecovery.frameworkAcceptance" || status=1
+  elif [[ "${VAADIN_DESKTOP_FLOW_IPC_AUTO_LARGE_DOWNLOAD_RESUME:-}" == "1" ]]; then
+    require_completed_trace "flowLargeDownload.frameworkAcceptance" || status=1
+  elif [[ "${VAADIN_DESKTOP_FLOW_IPC_AUTO_LARGE_UPLOAD_RETRY:-}" == "1" ]]; then
+    require_completed_trace "flowLargeUpload.frameworkAcceptance" || status=1
+  elif [[ "${VAADIN_DESKTOP_FLOW_IPC_AUTO_LARGE_MULTIPART_UPLOAD_RETRY:-}" == "1" ]]; then
+    require_completed_trace "flowLargeMultipartUpload.frameworkAcceptance" || status=1
+  elif [[ "${VAADIN_DESKTOP_FLOW_IPC_AUTO_CONCURRENT_UPLOAD:-}" == "1" ]]; then
+    require_completed_trace "flowConcurrentUpload.frameworkAcceptance" || status=1
+  elif [[ "${VAADIN_DESKTOP_FLOW_IPC_AUTO_REQUEST_FANOUT:-}" == "1" ]]; then
+    require_completed_trace "flowRequestFanout.frameworkAcceptance" || status=1
+  elif [[ "${VAADIN_DESKTOP_FLOW_IPC_AUTO_CONCURRENT_MULTIPART_UPLOAD:-}" == "1" ]]; then
+    require_completed_trace "flowConcurrentMultipartUpload.frameworkAcceptance" || status=1
+  elif [[ "${VAADIN_DESKTOP_FLOW_IPC_AUTO_CROSS_SESSION_MULTIPART_UPLOAD:-}" == "1" ]]; then
+    require_completed_trace "flowCrossSessionMultipartUpload.frameworkAcceptance" || status=1
+  elif [[ "${VAADIN_DESKTOP_FLOW_IPC_AUTO_LAZY_GRID_QUERY:-}" == "1" ]]; then
+    require_completed_trace "lazyGridQuery.frameworkAcceptance" || status=1
+  elif [[ "${VAADIN_DESKTOP_FLOW_IPC_AUTO_DND:-}" == "1" ]]; then
+    require_completed_trace "flowDnd.frameworkAcceptance" || status=1
+  elif [[ "${VAADIN_DESKTOP_FLOW_IPC_AUTO_INPUT_POPUP:-}" == "1" ]]; then
+    require_completed_trace "flowInputPopup.frameworkAcceptance" || status=1
+  elif [[ "${VAADIN_DESKTOP_FLOW_IPC_AUTO_LOCALIZED_INPUT_POPUP:-}" == "1" ]]; then
+    require_completed_trace "flowInputPopup.localizedTimeAcceptance" || status=1
+  elif [[ "${VAADIN_DESKTOP_FLOW_IPC_AUTO_PICKER_VALIDATION:-}" == "1" ]]; then
+    require_completed_trace "pickerValidation.frameworkAcceptance" || status=1
+  elif [[ "${VAADIN_DESKTOP_FLOW_IPC_AUTO_MENU_POPUP:-}" == "1" ]]; then
+    require_completed_trace "flowMenuPopup.frameworkAcceptance" || status=1
+  elif [[ "${VAADIN_DESKTOP_FLOW_IPC_AUTO_OVERLAY_STACK:-}" == "1" ]]; then
+    require_completed_trace "flowOverlayStack.frameworkAcceptance" || status=1
+  elif [[ "${VAADIN_DESKTOP_FLOW_IPC_AUTO_STRUCTURED_RPC:-}" == "1" ]]; then
+    require_completed_trace "structuredRpc.frameworkAcceptance" || status=1
   elif [[ "${VAADIN_DESKTOP_FLOW_IPC_AUTO_FRAMEWORK_UPDATE:-}" == "1" ]]; then
     require_completed_trace "standardBundle.frameworkAcceptance" || status=1
   elif ! grep -Fq '"reason":"flow-ipc-auto-shutdown-complete"' "$host_log"; then

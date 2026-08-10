@@ -23,8 +23,33 @@ for argument in "$@"; do
       trace_help="1"
       ;;
     --require-flow-ipc-standard-bundle-runtime|\
+    --require-flow-ipc-vite-development-runtime|\
+    --require-flow-ipc-java-reload-development|\
+    --require-flow-ipc-reactor-reload-development|\
+    --require-flow-ipc-java-reload-rollback-development|\
     --require-flow-ipc-standard-bundle-framework-app|\
-    --require-flow-ipc-standard-bundle-sidecar-recovery)
+    --require-flow-ipc-lazy-grid-query|\
+    --require-flow-ipc-push-delivery|\
+    --require-flow-ipc-push-recovery|\
+    --require-flow-ipc-large-download-resume|\
+    --require-flow-ipc-large-upload-retry|\
+    --require-flow-ipc-in-flight-request-recovery|\
+    --require-flow-ipc-large-multipart-upload-retry|\
+    --require-flow-ipc-concurrent-upload|\
+    --require-flow-ipc-request-fanout|\
+    --require-flow-ipc-concurrent-multipart-upload|\
+    --require-flow-ipc-cross-session-multipart-upload|\
+    --require-flow-ipc-flow-dnd|\
+    --require-flow-ipc-flow-input-popup|\
+    --require-flow-ipc-localized-input-popup|\
+    --require-flow-ipc-picker-validation|\
+    --require-flow-ipc-flow-menu-popup|\
+    --require-flow-ipc-flow-overlay-stack|\
+    --require-flow-ipc-structured-rpc|\
+    --require-flow-ipc-standard-bundle-sidecar-recovery|\
+    --require-flow-ipc-sidecar-recovery-exhaustion|\
+    --require-flow-ipc-host-startup-failure|\
+    --require-flow-ipc-host-ready-timeout)
       if [[ -n "$trace_gates" ]]; then
         trace_gates+=","
       fi

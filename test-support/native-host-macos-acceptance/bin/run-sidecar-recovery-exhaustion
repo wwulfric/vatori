@@ -1,0 +1,41 @@
+#!/usr/bin/env bash
+set -euo pipefail
+
+ROOT="$(cd "$(dirname "${BASH_SOURCE[0]}")/../../.." && pwd)"
+HOST_BUILD="$ROOT/.build/native-hosts/macos"
+HOST_APP="$HOST_BUILD/VaadinDesktopHost.app"
+HOST_EXE="$HOST_APP/Contents/MacOS/VaadinDesktopHost"
+TRACE="$HOST_BUILD/host-sidecar-recovery-exhaustion.out.log"
+ERROR_LOG="$HOST_BUILD/host-sidecar-recovery-exhaustion.err.log"
+MODULE="test-apps/flow-over-ipc-framework-app"
+
+export VAADIN_DESKTOP_FLOW_IPC_SIDECAR_RESTART_LIMIT=2
+export VAADIN_DESKTOP_FLOW_IPC_SIDECAR_RECOVERY_STABLE_RUN_SECONDS=30
+
+VAADIN_DESKTOP_MAVEN_OFFLINE="${VAADIN_DESKTOP_MAVEN_OFFLINE:-1}" \
+  bash "$ROOT/bin/vaadin-desktop" package "$MODULE"
+bash "$ROOT/test-support/native-host-macos-acceptance/bin/build-host" \
+  "$ROOT" "$MODULE" flow-ipc
+
+: > "$TRACE"
+: > "$ERROR_LOG"
+set +e
+VAADIN_DESKTOP_MACOS_NO_ACTIVATE=1 \
+VAADIN_DESKTOP_FLOW_IPC_TRACE_DETAIL=full \
+VAADIN_DESKTOP_FLOW_IPC_AUTO_SIDECAR_RECOVERY_EXHAUSTION=1 \
+VAADIN_DESKTOP_FLOW_IPC_AUTO_SHUTDOWN=1 \
+VAADIN_DESKTOP_FLOW_IPC_AUTO_SHUTDOWN_TIMEOUT_SECONDS=60 \
+  "$HOST_EXE" > "$TRACE" 2> "$ERROR_LOG"
+status=$?
+set -e
+
+if [[ "$status" -ne 1 ]]; then
+  echo "Expected sidecar recovery exhaustion exit code 1, got $status" >&2
+  exit 1
+fi
+
+bash "$ROOT/bin/flow-ipc-trace-inspect" \
+  --require-flow-ipc-sidecar-recovery-exhaustion \
+  "$TRACE"
+
+echo "Sidecar recovery exhaustion passed."

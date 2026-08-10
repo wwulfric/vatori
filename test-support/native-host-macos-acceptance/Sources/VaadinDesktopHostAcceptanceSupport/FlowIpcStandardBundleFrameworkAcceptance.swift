@@ -4,6 +4,25 @@ import WebKit
 
 private enum FlowIpcStandardBundleFrameworkPhase {
     case waitingForReady
+    case waitingForLazyFrontendRoute
+    case waitingForLazyFrontendClient
+    case waitingForLazyFrontendServer
+    case waitingForLazyFrontendReturn
+    case waitingForNestedLazyRoute
+    case waitingForNestedLazyClient
+    case waitingForNestedLazyServer
+    case waitingForNestedLazyReturn
+    case waitingForAppLayoutClient
+    case waitingForAppLayoutServer
+    case waitingForMasterDetailClient
+    case waitingForMasterDetailContent
+    case waitingForMasterDetailServer
+    case waitingForCardClient
+    case waitingForCardServer
+    case waitingForMarkdownClient
+    case waitingForMarkdownServer
+    case waitingForBadgeClient
+    case waitingForBadgeServer
     case waitingForBudget
     case waitingForExpedite
     case waitingForCheckboxGroupClient
@@ -19,6 +38,8 @@ private enum FlowIpcStandardBundleFrameworkPhase {
     case waitingForIntegerField
     case waitingForNumberFieldClient
     case waitingForNumberFieldServer
+    case waitingForSliderClient
+    case waitingForSliderServer
     case waitingForPasswordField
     case waitingForTimePicker
     case waitingForDateTimePickerClient
@@ -33,6 +54,9 @@ private enum FlowIpcStandardBundleFrameworkPhase {
     case waitingForCustomFieldClient
     case waitingForCustomFieldServer
     case waitingForDialog
+    case waitingForNestedDialog
+    case waitingForNestedDialogKeyboardClose
+    case waitingForDialogKeyboardClose
     case waitingForValidation
     case waitingForFormLayoutClick
     case waitingForFormLayoutServer
@@ -44,6 +68,8 @@ private enum FlowIpcStandardBundleFrameworkPhase {
     case waitingForVerticalLayoutServer
     case waitingForScrollerClient
     case waitingForScrollerServer
+    case waitingForIconClient
+    case waitingForIconServer
     case waitingForAvatar
     case waitingForMessageInput
     case waitingForRichTextEditor
@@ -89,10 +115,52 @@ private enum FlowIpcStandardBundleFrameworkPhase {
     case waitingForContextMenuAction
     case waitingForGridContextMenu
     case waitingForGridContextMenuAction
-    case waitingForLazyGrid
+    case waitingForLazyGridFarViewport
+    case waitingForLazyGridSelection
+    case waitingForLazyGridReturnViewport
+    case waitingForLazyGridSort
+    case waitingForLazyGridFilter
+    case waitingForLazyGridFilterReset
+    case waitingForTreeGridPlatformExpand
+    case waitingForTreeGridRuntimeExpand
+    case waitingForTreeGridSelection
+    case waitingForTreeGridRefresh
+    case waitingForTreeGridCollapse
+    case waitingForGridEditorOpen
+    case waitingForGridEditorSave
+    case waitingForGridEditorCancelOpen
+    case waitingForGridEditorCancel
+    case waitingForGridEditorValidationOpen
+    case waitingForGridEditorValidation
+    case waitingForGridEditorValidationCancel
+    case waitingForLitRendererFunction
+    case waitingForClientCallableResolve
+    case waitingForClientCallableReject
+    case waitingForPendingJavaScriptResolve
+    case waitingForPendingJavaScriptReject
+    case waitingForFlowDndDragStart
+    case waitingForFlowDndDrop
+    case waitingForFlowDndDragEnd
     case waitingForVirtualListClient
     case waitingForVirtualListServer
     case waitingForPopover
+    case waitingForPopoverKeyboardClose
+    case waitingForPopoverOutsideOpen
+    case waitingForPopoverOutsideClose
+    case waitingForMixedOverlayDialog
+    case waitingForMixedOverlayPopover
+    case waitingForMixedOverlayPopoverKeyboardClose
+    case waitingForMixedOverlayPopoverOutsideOpen
+    case waitingForMixedOverlayPopoverOutsideClose
+    case waitingForMixedOverlayDialogClose
+    case waitingForNestedPopoverOuter
+    case waitingForNestedPopoverInner
+    case waitingForNestedPopoverKeyboardClose
+    case waitingForNestedPopoverOuterKeyboardClose
+    case waitingForNestedPopoverOutsideOuterOpen
+    case waitingForNestedPopoverOutsideInnerOpen
+    case waitingForNestedPopoverOutsideTopClose
+    case waitingForNestedPopoverOutsideParentClose
     case waitingForNotification
     case waitingForConfirmDialog
     case waitingForConfirmDialogConfirm
@@ -111,6 +179,7 @@ private var flowIpcStandardBundleFrameworkScheduled = false
 private var flowIpcStandardBundleFrameworkPhase =
     FlowIpcStandardBundleFrameworkPhase.waitingForReady
 private var flowIpcStandardBundleFrameworkDeadline = Date.distantPast
+private var flowIpcStandardBundleFrameworkTracedPhase = ""
 
 extension WebViewHost {
     func scheduleStandardBundleFrameworkAcceptance(
@@ -124,6 +193,7 @@ extension WebViewHost {
         }
         flowIpcStandardBundleFrameworkScheduled = true
         flowIpcStandardBundleFrameworkPhase = .waitingForReady
+        flowIpcStandardBundleFrameworkTracedPhase = ""
         flowIpcStandardBundleFrameworkDeadline = Date().addingTimeInterval(
             timeoutSeconds > 0 ? timeoutSeconds : 45)
         pollStandardBundleFrameworkAcceptance(context)
@@ -145,6 +215,281 @@ extension WebViewHost {
                     state: state)
                 return
             }
+            let phaseName = String(describing: flowIpcStandardBundleFrameworkPhase)
+            if phaseName.contains("NestedDialog"),
+               phaseName != flowIpcStandardBundleFrameworkTracedPhase {
+                flowIpcStandardBundleFrameworkTracedPhase = phaseName
+                trace("recv", "standardBundle.frameworkAcceptance.phase", [
+                    "phase": phaseName,
+                    "openedObserved":
+                        state["modalOverlayStackOpenedObserved"] as? Bool == true,
+                    "initialFocusObserved":
+                        state["modalOverlayStackInitialFocusObserved"] as? Bool == true,
+                    "focusTrapObserved":
+                        state["modalOverlayStackFocusTrapObserved"] as? Bool == true,
+                    "topEscapeObserved":
+                        state["modalOverlayStackTopEscapeObserved"] as? Bool == true,
+                    "parentRemainsOpen":
+                        state["modalOverlayStackParentRemainsOpenObserved"] as? Bool == true,
+                    "focusRestoredObserved":
+                        state["modalOverlayStackFocusRestoredObserved"] as? Bool == true,
+                    "activeBeforeTab":
+                        self.standardFrameworkString(
+                            state, "modalOverlayStackActiveBeforeTab"),
+                    "activeAfterTab":
+                        self.standardFrameworkString(
+                            state, "modalOverlayStackActiveAfterTab"),
+                    "activeAfterShiftTab":
+                        self.standardFrameworkString(
+                            state, "modalOverlayStackActiveAfterShiftTab"),
+                    "tabDefaultPrevented":
+                        state["modalOverlayStackTabDefaultPrevented"] as? Bool == true,
+                    "keyboardError":
+                        self.standardFrameworkString(
+                            state, "modalOverlayStackKeyboardError")
+                ])
+            } else if phaseName.contains("GridEditor"),
+               phaseName != flowIpcStandardBundleFrameworkTracedPhase {
+                flowIpcStandardBundleFrameworkTracedPhase = phaseName
+                trace("recv", "standardBundle.frameworkAcceptance.phase", [
+                    "phase": phaseName,
+                    "componentRendererObserved":
+                        state["componentRendererObserved"] as? Bool == true,
+                    "openedObserved":
+                        state["gridEditorOpenedObserved"] as? Bool == true,
+                    "activeFieldVisible":
+                        state["gridEditorActiveFieldVisible"] as? Bool == true,
+                    "saveObserved":
+                        state["gridEditorSaveObserved"] as? Bool == true,
+                    "cancelOpenedObserved":
+                        state["gridEditorCancelOpenedObserved"] as? Bool == true,
+                    "cancelObserved":
+                        state["gridEditorCancelObserved"] as? Bool == true,
+                    "validationOpenedObserved":
+                        state["gridEditorValidationOpenedObserved"] as? Bool == true,
+                    "validationObserved":
+                        state["gridEditorValidationObserved"] as? Bool == true,
+                    "activeFieldInvalid":
+                        state["gridEditorActiveFieldInvalid"] as? Bool == true,
+                    "validationCancelObserved":
+                        state["gridEditorValidationCancelObserved"] as? Bool == true,
+                    "rendererStatus":
+                        self.standardFrameworkString(state, "editorRendererStatus"),
+                    "openStatus":
+                        self.standardFrameworkString(state, "editorOpenStatus"),
+                    "saveStatus":
+                        self.standardFrameworkString(state, "editorSaveStatus"),
+                    "cancelStatus":
+                        self.standardFrameworkString(state, "editorCancelStatus"),
+                    "validationStatus":
+                        self.standardFrameworkString(state, "editorValidationStatus")
+                ])
+            } else if phaseName.contains("LitRenderer"),
+               phaseName != flowIpcStandardBundleFrameworkTracedPhase {
+                flowIpcStandardBundleFrameworkTracedPhase = phaseName
+                trace("recv", "standardBundle.frameworkAcceptance.phase", [
+                    "phase": phaseName,
+                    "propertiesObserved":
+                        state["litRendererPropertiesObserved"] as? Bool == true,
+                    "functionObserved":
+                        state["litRendererFunctionObserved"] as? Bool == true,
+                    "refreshObserved":
+                        state["litRendererRefreshObserved"] as? Bool == true,
+                    "status":
+                        self.standardFrameworkString(state, "litRendererStatus")
+                ])
+            } else if (phaseName.contains("ClientCallable")
+                       || phaseName.contains("PendingJavaScript")),
+                      phaseName != flowIpcStandardBundleFrameworkTracedPhase {
+                flowIpcStandardBundleFrameworkTracedPhase = phaseName
+                trace("recv", "standardBundle.frameworkAcceptance.phase", [
+                    "phase": phaseName,
+                    "clientCallableResolveObserved":
+                        state["clientCallableResolveObserved"] as? Bool == true,
+                    "clientCallableRejectObserved":
+                        state["clientCallableRejectObserved"] as? Bool == true,
+                    "pendingJavaScriptResolveObserved":
+                        state["pendingJavaScriptResolveObserved"] as? Bool == true,
+                    "pendingJavaScriptRejectObserved":
+                        state["pendingJavaScriptRejectObserved"] as? Bool == true,
+                    "clientCallableStatus":
+                        self.standardFrameworkString(
+                            state, "clientCallableStatus"),
+                    "pendingJavaScriptSuccessStatus":
+                        self.standardFrameworkString(
+                            state, "pendingJavaScriptSuccessStatus"),
+                    "pendingJavaScriptFailureStatus":
+                        self.standardFrameworkString(
+                            state, "pendingJavaScriptFailureStatus")
+                ])
+            } else if phaseName.contains("FlowDnd"),
+                      phaseName != flowIpcStandardBundleFrameworkTracedPhase {
+                flowIpcStandardBundleFrameworkTracedPhase = phaseName
+                trace("recv", "standardBundle.frameworkAcceptance.phase", [
+                    "phase": phaseName,
+                    "configuredObserved":
+                        state["flowDndConfiguredObserved"] as? Bool == true,
+                    "dragStartObserved":
+                        state["flowDndDragStartObserved"] as? Bool == true,
+                    "dropObserved":
+                        state["flowDndDropObserved"] as? Bool == true,
+                    "dragEndObserved":
+                        state["flowDndDragEndObserved"] as? Bool == true,
+                    "dragStartStatus":
+                        self.standardFrameworkString(
+                            state, "flowDndDragStartStatus"),
+                    "dropStatus":
+                        self.standardFrameworkString(
+                            state, "flowDndDropStatus"),
+                    "dragEndStatus":
+                        self.standardFrameworkString(
+                            state, "flowDndDragEndStatus")
+                ])
+            } else if phaseName.contains("NestedPopover"),
+               phaseName != flowIpcStandardBundleFrameworkTracedPhase {
+                flowIpcStandardBundleFrameworkTracedPhase = phaseName
+                trace("recv", "standardBundle.frameworkAcceptance.phase", [
+                    "phase": phaseName,
+                    "outerOpened": state["nestedPopoverOuterOpened"] as? Bool == true,
+                    "innerOpened": state["nestedPopoverInnerOpened"] as? Bool == true,
+                    "stackOpened":
+                        state["nestedAnchoredOverlayStackOpenedObserved"] as? Bool == true,
+                    "a11yObserved":
+                        state["nestedAnchoredOverlayStackA11yObserved"] as? Bool == true,
+                    "tabOrderObserved":
+                        state["nestedAnchoredOverlayStackTabOrderObserved"] as? Bool == true,
+                    "topEscapeObserved":
+                        state["nestedAnchoredOverlayStackTopEscapeObserved"] as? Bool == true,
+                    "parentRemainsOpen":
+                        state[
+                            "nestedAnchoredOverlayStackParentRemainsOpenObserved"
+                        ] as? Bool == true,
+                    "innerFocusRestored":
+                        state[
+                            "nestedAnchoredOverlayStackInnerFocusRestoredObserved"
+                        ] as? Bool == true,
+                    "parentEscapeObserved":
+                        state[
+                            "nestedAnchoredOverlayStackParentEscapeObserved"
+                        ] as? Bool == true,
+                    "layeredFocusRestored":
+                        state[
+                            "nestedAnchoredOverlayStackLayeredFocusRestoredObserved"
+                        ] as? Bool == true,
+                    "outsideTopClose":
+                        state[
+                            "nestedAnchoredOverlayStackOutsideTopCloseObserved"
+                        ] as? Bool == true,
+                    "outsideParentRemainsOpen":
+                        state[
+                            "nestedAnchoredOverlayStackOutsideParentRemainsOpenObserved"
+                        ] as? Bool == true,
+                    "outsideFocusPreserved":
+                        state[
+                            "nestedAnchoredOverlayStackOutsideFocusPreservedObserved"
+                        ] as? Bool == true,
+                    "outsideParentClose":
+                        state[
+                            "nestedAnchoredOverlayStackOutsideParentCloseObserved"
+                        ] as? Bool == true,
+                    "outerLifecycle": self.standardFrameworkString(
+                        state, "nestedPopoverOuterLifecycleStatus"),
+                    "innerLifecycle": self.standardFrameworkString(
+                        state, "nestedPopoverInnerLifecycleStatus"),
+                    "activePath": self.standardFrameworkString(
+                        state, "nestedAnchoredOverlayStackActivePath"),
+                    "keyboardError": self.standardFrameworkString(
+                        state, "nestedAnchoredOverlayStackKeyboardError"),
+                    "outsideError": self.standardFrameworkString(
+                        state, "nestedAnchoredOverlayStackOutsideError")
+                ])
+            } else if phaseName.contains("MixedOverlay"),
+               phaseName != flowIpcStandardBundleFrameworkTracedPhase {
+                flowIpcStandardBundleFrameworkTracedPhase = phaseName
+                trace("recv", "standardBundle.frameworkAcceptance.phase", [
+                    "phase": phaseName,
+                    "dialogOpened":
+                        state["mixedOverlayStackDialogOpenedObserved"] as? Bool == true,
+                    "popoverOpened":
+                        state["mixedOverlayPopoverOpened"] as? Bool == true,
+                    "stackOpened":
+                        state["mixedOverlayStackOpenedObserved"] as? Bool == true,
+                    "a11yObserved":
+                        state["mixedOverlayStackA11yObserved"] as? Bool == true,
+                    "tabOrderObserved":
+                        state["mixedOverlayStackTabOrderObserved"] as? Bool == true,
+                    "topEscapeObserved":
+                        state["mixedOverlayStackTopEscapeObserved"] as? Bool == true,
+                    "parentRemainsOpen":
+                        state["mixedOverlayStackParentRemainsOpenObserved"] as? Bool == true,
+                    "popoverFocusRestored":
+                        state["mixedOverlayStackPopoverFocusRestoredObserved"] as? Bool == true,
+                    "outsideCloseObserved":
+                        state["mixedOverlayStackOutsideCloseObserved"] as? Bool == true,
+                    "outsideFocusPreserved":
+                        state["mixedOverlayStackOutsideFocusPreservedObserved"] as? Bool == true,
+                    "parentEscapeObserved":
+                        state["mixedOverlayStackParentEscapeObserved"] as? Bool == true,
+                    "layeredFocusRestored":
+                        state["mixedOverlayStackLayeredFocusRestoredObserved"] as? Bool == true,
+                    "dialogLifecycle": self.standardFrameworkString(
+                        state, "mixedOverlayDialogLifecycleStatus"),
+                    "popoverLifecycle": self.standardFrameworkString(
+                        state, "mixedOverlayPopoverLifecycleStatus"),
+                    "activePath": self.standardFrameworkString(
+                        state, "mixedOverlayStackActivePath"),
+                    "keyboardError": self.standardFrameworkString(
+                        state, "mixedOverlayStackKeyboardError"),
+                    "outsideError": self.standardFrameworkString(
+                        state, "mixedOverlayStackOutsideError"),
+                    "dialogError": self.standardFrameworkString(
+                        state, "mixedOverlayStackDialogError")
+                ])
+            } else if phaseName.contains("Popover"),
+               phaseName != flowIpcStandardBundleFrameworkTracedPhase {
+                flowIpcStandardBundleFrameworkTracedPhase = phaseName
+                trace("recv", "standardBundle.frameworkAcceptance.phase", [
+                    "phase": phaseName,
+                    "popoverOpened": state["popoverOpened"] as? Bool == true,
+                    "popoverLifecycleStatus":
+                        self.standardFrameworkString(state, "popoverLifecycleStatus"),
+                    "anchoredObserved":
+                        state["anchoredModelessOverlayObserved"] as? Bool == true,
+                    "a11yObserved":
+                        state["anchoredModelessOverlayA11yObserved"] as? Bool == true,
+                    "tabOrderObserved":
+                        state["anchoredModelessOverlayTabOrderObserved"] as? Bool == true,
+                    "escapeCloseObserved":
+                        state["anchoredModelessOverlayEscapeCloseObserved"] as? Bool == true,
+                    "escapeFocusRestoredObserved":
+                        state["anchoredModelessOverlayEscapeFocusRestoredObserved"] as? Bool == true,
+                    "outsideCloseObserved":
+                        state["anchoredModelessOverlayOutsideCloseObserved"] as? Bool == true,
+                    "outsideFocusPreservedObserved":
+                        state["anchoredModelessOverlayOutsideFocusPreservedObserved"] as? Bool == true,
+                    "role": self.standardFrameworkString(
+                        state, "anchoredModelessOverlayRole"),
+                    "ariaLabel": self.standardFrameworkString(
+                        state, "anchoredModelessOverlayAriaLabel"),
+                    "ariaExpanded": self.standardFrameworkString(
+                        state, "anchoredModelessOverlayTargetAriaExpanded"),
+                    "ariaControls": self.standardFrameworkString(
+                        state, "anchoredModelessOverlayTargetAriaControls"),
+                    "ariaHasPopup": self.standardFrameworkString(
+                        state, "anchoredModelessOverlayTargetAriaHasPopup"),
+                    "activePath": self.standardFrameworkString(
+                        state, "anchoredModelessOverlayActivePath"),
+                    "keyboardError": self.standardFrameworkString(
+                        state, "anchoredModelessOverlayKeyboardError"),
+                    "outsideError": self.standardFrameworkString(
+                        state, "anchoredModelessOverlayOutsideError")
+                ])
+            } else if phaseName != flowIpcStandardBundleFrameworkTracedPhase {
+                flowIpcStandardBundleFrameworkTracedPhase = phaseName
+                trace("recv", "standardBundle.frameworkAcceptance.phase", [
+                    "phase": phaseName
+                ])
+            }
 
             switch flowIpcStandardBundleFrameworkPhase {
             case .waitingForReady:
@@ -152,6 +497,331 @@ extension WebViewHost {
                     self.retryOrFailStandardBundleFrameworkAcceptance(
                         context,
                         reason: "standard-bundle-not-ready",
+                        state: state)
+                    return
+                }
+                self.dispatchStandardBundleFrameworkAction(
+                    context.webView,
+                    script: Self.standardFrameworkLazyFrontendOpenAction) { dispatched in
+                        self.advanceStandardBundleFrameworkAcceptance(
+                            context,
+                            dispatched: dispatched,
+                            next: .waitingForLazyFrontendRoute,
+                            failureReason: "lazy-frontend-navigation-dispatch-failed")
+                    }
+            case .waitingForLazyFrontendRoute:
+                guard state["lazyFrontendRouteObserved"] as? Bool == true else {
+                    self.retryOrFailStandardBundleFrameworkAcceptance(
+                        context,
+                        reason: "lazy-frontend-route-not-observed",
+                        state: state)
+                    return
+                }
+                self.dispatchStandardBundleFrameworkAction(
+                    context.webView,
+                    script: Self.standardFrameworkLazyFrontendClientAction) { dispatched in
+                        self.advanceStandardBundleFrameworkAcceptance(
+                            context,
+                            dispatched: dispatched,
+                            next: .waitingForLazyFrontendClient,
+                            failureReason: "lazy-frontend-client-dispatch-failed")
+                    }
+            case .waitingForLazyFrontendClient:
+                guard state["lazyFrontendClientObserved"] as? Bool == true else {
+                    self.retryOrFailStandardBundleFrameworkAcceptance(
+                        context,
+                        reason: "lazy-frontend-client-patch-not-observed",
+                        state: state)
+                    return
+                }
+                self.dispatchStandardBundleFrameworkAction(
+                    context.webView,
+                    script: Self.standardFrameworkLazyFrontendServerAction) { dispatched in
+                        self.advanceStandardBundleFrameworkAcceptance(
+                            context,
+                            dispatched: dispatched,
+                            next: .waitingForLazyFrontendServer,
+                            failureReason: "lazy-frontend-server-dispatch-failed")
+                    }
+            case .waitingForLazyFrontendServer:
+                guard state["lazyFrontendServerObserved"] as? Bool == true else {
+                    self.retryOrFailStandardBundleFrameworkAcceptance(
+                        context,
+                        reason: "lazy-frontend-server-patch-not-observed",
+                        state: state)
+                    return
+                }
+                self.dispatchStandardBundleFrameworkAction(
+                    context.webView,
+                    script: Self.standardFrameworkLazyFrontendReturnAction) { dispatched in
+                        self.advanceStandardBundleFrameworkAcceptance(
+                            context,
+                            dispatched: dispatched,
+                            next: .waitingForLazyFrontendReturn,
+                            failureReason: "lazy-frontend-return-dispatch-failed")
+                    }
+            case .waitingForLazyFrontendReturn:
+                guard state["ready"] as? Bool == true else {
+                    self.retryOrFailStandardBundleFrameworkAcceptance(
+                        context,
+                        reason: "lazy-frontend-return-not-observed",
+                        state: state)
+                    return
+                }
+                self.dispatchStandardBundleFrameworkAction(
+                    context.webView,
+                    script: Self.standardFrameworkNestedLazyOpenAction) { dispatched in
+                        self.advanceStandardBundleFrameworkAcceptance(
+                            context,
+                            dispatched: dispatched,
+                            next: .waitingForNestedLazyRoute,
+                            failureReason: "nested-lazy-navigation-dispatch-failed")
+                    }
+            case .waitingForNestedLazyRoute:
+                guard state["nestedLazyLayoutObserved"] as? Bool == true,
+                      state["nestedLazyRouteObserved"] as? Bool == true,
+                      state["nestedLazyTransitiveModuleObserved"] as? Bool == true else {
+                    self.retryOrFailStandardBundleFrameworkAcceptance(
+                        context,
+                        reason: "nested-lazy-dependency-graph-not-observed",
+                        state: state)
+                    return
+                }
+                self.dispatchStandardBundleFrameworkAction(
+                    context.webView,
+                    script: Self.standardFrameworkNestedLazyClientAction) { dispatched in
+                        self.advanceStandardBundleFrameworkAcceptance(
+                            context,
+                            dispatched: dispatched,
+                            next: .waitingForNestedLazyClient,
+                            failureReason: "nested-lazy-client-dispatch-failed")
+                    }
+            case .waitingForNestedLazyClient:
+                guard state["nestedLazyClientObserved"] as? Bool == true else {
+                    self.retryOrFailStandardBundleFrameworkAcceptance(
+                        context,
+                        reason: "nested-lazy-client-patch-not-observed",
+                        state: state)
+                    return
+                }
+                self.dispatchStandardBundleFrameworkAction(
+                    context.webView,
+                    script: Self.standardFrameworkNestedLazyServerAction) { dispatched in
+                        self.advanceStandardBundleFrameworkAcceptance(
+                            context,
+                            dispatched: dispatched,
+                            next: .waitingForNestedLazyServer,
+                            failureReason: "nested-lazy-server-dispatch-failed")
+                    }
+            case .waitingForNestedLazyServer:
+                guard state["nestedLazyServerObserved"] as? Bool == true else {
+                    self.retryOrFailStandardBundleFrameworkAcceptance(
+                        context,
+                        reason: "nested-lazy-server-patch-not-observed",
+                        state: state)
+                    return
+                }
+                self.dispatchStandardBundleFrameworkAction(
+                    context.webView,
+                    script: Self.standardFrameworkNestedLazyReturnAction) { dispatched in
+                        self.advanceStandardBundleFrameworkAcceptance(
+                            context,
+                            dispatched: dispatched,
+                            next: .waitingForNestedLazyReturn,
+                            failureReason: "nested-lazy-return-dispatch-failed")
+                    }
+            case .waitingForNestedLazyReturn:
+                guard state["ready"] as? Bool == true else {
+                    self.retryOrFailStandardBundleFrameworkAcceptance(
+                        context,
+                        reason: "nested-lazy-return-not-observed",
+                        state: state)
+                    return
+                }
+                self.dispatchStandardBundleFrameworkAction(
+                    context.webView,
+                    script: Self.standardFrameworkAppLayoutClientAction) { dispatched in
+                        self.advanceStandardBundleFrameworkAcceptance(
+                            context,
+                            dispatched: dispatched,
+                            next: .waitingForAppLayoutClient,
+                            failureReason: "app-layout-client-dispatch-failed")
+                    }
+            case .waitingForAppLayoutClient:
+                guard state["appLayoutClientObserved"] as? Bool == true else {
+                    self.retryOrFailStandardBundleFrameworkAcceptance(
+                        context,
+                        reason: "app-layout-client-patch-not-observed",
+                        state: state)
+                    return
+                }
+                self.dispatchStandardBundleFrameworkAction(
+                    context.webView,
+                    script: Self.standardFrameworkAppLayoutServerAction) { dispatched in
+                        self.advanceStandardBundleFrameworkAcceptance(
+                            context,
+                            dispatched: dispatched,
+                            next: .waitingForAppLayoutServer,
+                            failureReason: "app-layout-server-dispatch-failed")
+                    }
+            case .waitingForAppLayoutServer:
+                guard state["appLayoutServerObserved"] as? Bool == true else {
+                    self.retryOrFailStandardBundleFrameworkAcceptance(
+                        context,
+                        reason: "app-layout-server-patch-not-observed",
+                        state: state)
+                    return
+                }
+                self.dispatchStandardBundleFrameworkAction(
+                    context.webView,
+                    script: Self.standardFrameworkMasterDetailClientAction) { dispatched in
+                        self.advanceStandardBundleFrameworkAcceptance(
+                            context,
+                            dispatched: dispatched,
+                            next: .waitingForMasterDetailClient,
+                            failureReason: "master-detail-client-dispatch-failed")
+                    }
+            case .waitingForMasterDetailClient:
+                guard state["masterDetailClientObserved"] as? Bool == true else {
+                    self.retryOrFailStandardBundleFrameworkAcceptance(
+                        context,
+                        reason: "master-detail-client-patch-not-observed",
+                        state: state)
+                    return
+                }
+                self.dispatchStandardBundleFrameworkAction(
+                    context.webView,
+                    script: Self.standardFrameworkMasterDetailServerAction) { dispatched in
+                        self.advanceStandardBundleFrameworkAcceptance(
+                            context,
+                            dispatched: dispatched,
+                            next: .waitingForMasterDetailContent,
+                            failureReason: "master-detail-server-dispatch-failed")
+                    }
+            case .waitingForMasterDetailContent:
+                guard state["masterDetailContentObserved"] as? Bool == true else {
+                    self.retryOrFailStandardBundleFrameworkAcceptance(
+                        context,
+                        reason: "master-detail-content-patch-not-observed",
+                        state: state)
+                    return
+                }
+                self.dispatchStandardBundleFrameworkAction(
+                    context.webView,
+                    script: Self.standardFrameworkMasterDetailAnimationAction) { dispatched in
+                        self.advanceStandardBundleFrameworkAcceptance(
+                            context,
+                            dispatched: dispatched,
+                            next: .waitingForMasterDetailServer,
+                            failureReason: "master-detail-animation-dispatch-failed")
+                    }
+            case .waitingForMasterDetailServer:
+                guard state["masterDetailServerObserved"] as? Bool == true else {
+                    self.retryOrFailStandardBundleFrameworkAcceptance(
+                        context,
+                        reason: "master-detail-server-patch-not-observed",
+                        state: state)
+                    return
+                }
+                self.dispatchStandardBundleFrameworkAction(
+                    context.webView,
+                    script: Self.standardFrameworkCardClientAction) { dispatched in
+                        self.advanceStandardBundleFrameworkAcceptance(
+                            context,
+                            dispatched: dispatched,
+                            next: .waitingForCardClient,
+                            failureReason: "card-client-dispatch-failed")
+                    }
+            case .waitingForCardClient:
+                guard state["cardClientObserved"] as? Bool == true else {
+                    self.retryOrFailStandardBundleFrameworkAcceptance(
+                        context,
+                        reason: "card-client-patch-not-observed",
+                        state: state)
+                    return
+                }
+                self.dispatchStandardBundleFrameworkAction(
+                    context.webView,
+                    script: Self.standardFrameworkCardServerAction) { dispatched in
+                        self.advanceStandardBundleFrameworkAcceptance(
+                            context,
+                            dispatched: dispatched,
+                            next: .waitingForCardServer,
+                            failureReason: "card-server-dispatch-failed")
+                    }
+            case .waitingForCardServer:
+                guard state["cardServerObserved"] as? Bool == true else {
+                    self.retryOrFailStandardBundleFrameworkAcceptance(
+                        context,
+                        reason: "card-server-patch-not-observed",
+                        state: state)
+                    return
+                }
+                self.dispatchStandardBundleFrameworkAction(
+                    context.webView,
+                    script: Self.standardFrameworkMarkdownClientAction) { dispatched in
+                        self.advanceStandardBundleFrameworkAcceptance(
+                            context,
+                            dispatched: dispatched,
+                            next: .waitingForMarkdownClient,
+                            failureReason: "markdown-client-dispatch-failed")
+                    }
+            case .waitingForMarkdownClient:
+                guard state["markdownClientObserved"] as? Bool == true else {
+                    self.retryOrFailStandardBundleFrameworkAcceptance(
+                        context,
+                        reason: "markdown-client-patch-not-observed",
+                        state: state)
+                    return
+                }
+                self.dispatchStandardBundleFrameworkAction(
+                    context.webView,
+                    script: Self.standardFrameworkMarkdownServerAction) { dispatched in
+                        self.advanceStandardBundleFrameworkAcceptance(
+                            context,
+                            dispatched: dispatched,
+                            next: .waitingForMarkdownServer,
+                            failureReason: "markdown-server-dispatch-failed")
+                    }
+            case .waitingForMarkdownServer:
+                guard state["markdownServerObserved"] as? Bool == true else {
+                    self.retryOrFailStandardBundleFrameworkAcceptance(
+                        context,
+                        reason: "markdown-server-patch-not-observed",
+                        state: state)
+                    return
+                }
+                self.dispatchStandardBundleFrameworkAction(
+                    context.webView,
+                    script: Self.standardFrameworkBadgeClientAction) { dispatched in
+                        self.advanceStandardBundleFrameworkAcceptance(
+                            context,
+                            dispatched: dispatched,
+                            next: .waitingForBadgeClient,
+                            failureReason: "badge-client-dispatch-failed")
+                    }
+            case .waitingForBadgeClient:
+                guard state["badgeClientObserved"] as? Bool == true else {
+                    self.retryOrFailStandardBundleFrameworkAcceptance(
+                        context,
+                        reason: "badge-client-patch-not-observed",
+                        state: state)
+                    return
+                }
+                self.dispatchStandardBundleFrameworkAction(
+                    context.webView,
+                    script: Self.standardFrameworkBadgeServerAction) { dispatched in
+                        self.advanceStandardBundleFrameworkAcceptance(
+                            context,
+                            dispatched: dispatched,
+                            next: .waitingForBadgeServer,
+                            failureReason: "badge-server-dispatch-failed")
+                    }
+            case .waitingForBadgeServer:
+                guard state["badgeServerObserved"] as? Bool == true else {
+                    self.retryOrFailStandardBundleFrameworkAcceptance(
+                        context,
+                        reason: "badge-server-patch-not-observed",
                         state: state)
                     return
                 }
@@ -421,6 +1091,40 @@ extension WebViewHost {
                 }
                 self.dispatchStandardBundleFrameworkAction(
                     context.webView,
+                    script: Self.standardFrameworkSliderClientAction) { dispatched in
+                        self.advanceStandardBundleFrameworkAcceptance(
+                            context,
+                            dispatched: dispatched,
+                            next: .waitingForSliderClient,
+                            failureReason: "slider-event-dispatch-failed")
+                    }
+            case .waitingForSliderClient:
+                guard state["sliderClientObserved"] as? Bool == true else {
+                    self.retryOrFailStandardBundleFrameworkAcceptance(
+                        context,
+                        reason: "slider-client-patch-not-observed",
+                        state: state)
+                    return
+                }
+                self.dispatchStandardBundleFrameworkAction(
+                    context.webView,
+                    script: Self.standardFrameworkSliderServerAction) { dispatched in
+                        self.advanceStandardBundleFrameworkAcceptance(
+                            context,
+                            dispatched: dispatched,
+                            next: .waitingForSliderServer,
+                            failureReason: "slider-server-dispatch-failed")
+                    }
+            case .waitingForSliderServer:
+                guard state["sliderServerObserved"] as? Bool == true else {
+                    self.retryOrFailStandardBundleFrameworkAcceptance(
+                        context,
+                        reason: "slider-server-patch-not-observed",
+                        state: state)
+                    return
+                }
+                self.dispatchStandardBundleFrameworkAction(
+                    context.webView,
                     script: Self.standardFrameworkPasswordFieldAction) { dispatched in
                         self.advanceStandardBundleFrameworkAcceptance(
                             context,
@@ -658,10 +1362,71 @@ extension WebViewHost {
                     .contains(expectedDialog),
                       self.standardFrameworkString(state, "dialogContent")
                     .contains(expectedDialog),
-                      state["dialogOpened"] as? Bool == true else {
+                      state["dialogOpened"] as? Bool == true,
+                      state["dialogInitialFocusObserved"] as? Bool == true,
+                      state["dialogA11yObserved"] as? Bool == true else {
                     self.retryOrFailStandardBundleFrameworkAcceptance(
                         context,
                         reason: "dialog-patch-not-observed",
+                        state: state)
+                    return
+                }
+                self.dispatchStandardBundleFrameworkAction(
+                    context.webView,
+                    script: Self.standardFrameworkNestedDialogAction) { dispatched in
+                        self.advanceStandardBundleFrameworkAcceptance(
+                            context,
+                            dispatched: dispatched,
+                            next: .waitingForNestedDialog,
+                            failureReason: "nested-dialog-open-dispatch-failed")
+                    }
+            case .waitingForNestedDialog:
+                guard state["modalOverlayStackOpenedObserved"] as? Bool == true,
+                      state["modalOverlayStackInitialFocusObserved"] as? Bool == true,
+                      state["modalOverlayStackA11yObserved"] as? Bool == true else {
+                    self.retryOrFailStandardBundleFrameworkAcceptance(
+                        context,
+                        reason: "nested-dialog-open-not-observed",
+                        state: state)
+                    return
+                }
+                self.dispatchStandardBundleFrameworkAction(
+                    context.webView,
+                    script: Self.standardFrameworkNestedDialogKeyboardCloseAction) { dispatched in
+                        self.advanceStandardBundleFrameworkAcceptance(
+                            context,
+                            dispatched: dispatched,
+                            next: .waitingForNestedDialogKeyboardClose,
+                            failureReason: "nested-dialog-keyboard-close-dispatch-failed")
+                    }
+            case .waitingForNestedDialogKeyboardClose:
+                guard state["modalOverlayStackFocusTrapObserved"] as? Bool == true,
+                      state["modalOverlayStackTopEscapeObserved"] as? Bool == true,
+                      state["modalOverlayStackParentRemainsOpenObserved"] as? Bool == true,
+                      state["modalOverlayStackFocusRestoredObserved"] as? Bool == true else {
+                    self.retryOrFailStandardBundleFrameworkAcceptance(
+                        context,
+                        reason: "nested-dialog-keyboard-close-not-observed",
+                        state: state)
+                    return
+                }
+                self.dispatchStandardBundleFrameworkAction(
+                    context.webView,
+                    script: Self.standardFrameworkDialogKeyboardCloseAction) { dispatched in
+                        self.advanceStandardBundleFrameworkAcceptance(
+                            context,
+                            dispatched: dispatched,
+                            next: .waitingForDialogKeyboardClose,
+                            failureReason: "dialog-keyboard-close-dispatch-failed")
+                    }
+            case .waitingForDialogKeyboardClose:
+                guard state["dialogOpened"] as? Bool == false,
+                      state["dialogFocusTrapObserved"] as? Bool == true,
+                      state["dialogEscapeCloseObserved"] as? Bool == true,
+                      state["dialogFocusRestoredObserved"] as? Bool == true else {
+                    self.retryOrFailStandardBundleFrameworkAcceptance(
+                        context,
+                        reason: "dialog-keyboard-close-not-observed",
                         state: state)
                     return
                 }
@@ -850,6 +1615,40 @@ extension WebViewHost {
                     self.retryOrFailStandardBundleFrameworkAcceptance(
                         context,
                         reason: "scroller-server-patch-not-observed",
+                        state: state)
+                    return
+                }
+                self.dispatchStandardBundleFrameworkAction(
+                    context.webView,
+                    script: Self.standardFrameworkIconClientAction) { dispatched in
+                        self.advanceStandardBundleFrameworkAcceptance(
+                            context,
+                            dispatched: dispatched,
+                            next: .waitingForIconClient,
+                            failureReason: "icon-client-dispatch-failed")
+                    }
+            case .waitingForIconClient:
+                guard state["iconClientObserved"] as? Bool == true else {
+                    self.retryOrFailStandardBundleFrameworkAcceptance(
+                        context,
+                        reason: "icon-client-patch-not-observed",
+                        state: state)
+                    return
+                }
+                self.dispatchStandardBundleFrameworkAction(
+                    context.webView,
+                    script: Self.standardFrameworkIconServerAction) { dispatched in
+                        self.advanceStandardBundleFrameworkAcceptance(
+                            context,
+                            dispatched: dispatched,
+                            next: .waitingForIconServer,
+                            failureReason: "icon-server-dispatch-failed")
+                    }
+            case .waitingForIconServer:
+                guard state["iconServerObserved"] as? Bool == true else {
+                    self.retryOrFailStandardBundleFrameworkAcceptance(
+                        context,
+                        reason: "icon-server-patch-not-observed",
                         state: state)
                     return
                 }
@@ -1676,30 +2475,500 @@ extension WebViewHost {
                 }
                 self.dispatchStandardBundleFrameworkAction(
                     context.webView,
-                    script: Self.standardFrameworkLazyGridAction) { dispatched in
+                    script: Self.standardFrameworkLazyGridFarViewportAction) { dispatched in
                         self.advanceStandardBundleFrameworkAcceptance(
                             context,
                             dispatched: dispatched,
-                            next: .waitingForLazyGrid,
-                            failureReason: "lazy-grid-scroll-dispatch-failed")
+                            next: .waitingForLazyGridFarViewport,
+                            failureReason: "lazy-grid-far-viewport-dispatch-failed")
                     }
-            case .waitingForLazyGrid:
-                let lazyGridStatus = self.standardFrameworkString(state, "lazyGridStatus")
-                let directFetch = lazyGridStatus.contains("Lazy grid fetch ")
-                    && !lazyGridStatus.contains(": 0-")
-                let reportedFetch = lazyGridStatus.contains("Lazy grid fetches:")
-                    && !lazyGridStatus.contains("range: pending")
-                    && !lazyGridStatus.contains("range: 0-")
-                guard directFetch || reportedFetch else {
+            case .waitingForLazyGridFarViewport:
+                guard state["lazyGridFarViewportObserved"] as? Bool == true else {
                     self.retryOrFailStandardBundleFrameworkAcceptance(
                         context,
-                        reason: "lazy-grid-scroll-patch-not-observed",
+                        reason: "lazy-grid-far-viewport-not-observed",
                         state: state)
                     return
                 }
                 self.dispatchStandardBundleFrameworkAction(
                     context.webView,
-                    script: Self.standardFrameworkVirtualListClientAction) { dispatched in
+                    script: Self.standardFrameworkLazyGridSelectionAction) { dispatched in
+                        self.advanceStandardBundleFrameworkAcceptance(
+                            context,
+                            dispatched: dispatched,
+                            next: .waitingForLazyGridSelection,
+                            failureReason: "lazy-grid-selection-dispatch-failed")
+                    }
+            case .waitingForLazyGridSelection:
+                guard state["lazyGridSelectionObserved"] as? Bool == true else {
+                    self.retryOrFailStandardBundleFrameworkAcceptance(
+                        context,
+                        reason: "lazy-grid-selection-round-trip-not-observed",
+                        state: state)
+                    return
+                }
+                self.dispatchStandardBundleFrameworkAction(
+                    context.webView,
+                    script: Self.standardFrameworkLazyGridReturnViewportAction) { dispatched in
+                        self.advanceStandardBundleFrameworkAcceptance(
+                            context,
+                            dispatched: dispatched,
+                            next: .waitingForLazyGridReturnViewport,
+                            failureReason: "lazy-grid-return-viewport-dispatch-failed")
+                    }
+            case .waitingForLazyGridReturnViewport:
+                guard state["lazyGridReturnViewportObserved"] as? Bool == true else {
+                    self.retryOrFailStandardBundleFrameworkAcceptance(
+                        context,
+                        reason: "lazy-grid-return-viewport-not-observed",
+                        state: state)
+                    return
+                }
+                self.dispatchStandardBundleFrameworkAction(
+                    context.webView,
+                    script: Self.standardFrameworkLazyGridSortAction) { dispatched in
+                        self.advanceStandardBundleFrameworkAcceptance(
+                            context,
+                            dispatched: dispatched,
+                            next: .waitingForLazyGridSort,
+                            failureReason: "lazy-grid-sort-dispatch-failed")
+                    }
+            case .waitingForLazyGridSort:
+                guard state["lazyGridSortObserved"] as? Bool == true else {
+                    self.retryOrFailStandardBundleFrameworkAcceptance(
+                        context,
+                        reason: "lazy-grid-sort-query-not-observed",
+                        state: state)
+                    return
+                }
+                self.dispatchStandardBundleFrameworkAction(
+                    context.webView,
+                    script: Self.standardFrameworkLazyGridFilterAction) { dispatched in
+                        self.advanceStandardBundleFrameworkAcceptance(
+                            context,
+                            dispatched: dispatched,
+                            next: .waitingForLazyGridFilter,
+                            failureReason: "lazy-grid-filter-dispatch-failed")
+                    }
+            case .waitingForLazyGridFilter:
+                guard state["lazyGridFilterObserved"] as? Bool == true else {
+                    self.retryOrFailStandardBundleFrameworkAcceptance(
+                        context,
+                        reason: "lazy-grid-filter-query-not-observed",
+                        state: state)
+                    return
+                }
+                self.dispatchStandardBundleFrameworkAction(
+                    context.webView,
+                    script: Self.standardFrameworkLazyGridFilterResetAction) { dispatched in
+                        self.advanceStandardBundleFrameworkAcceptance(
+                            context,
+                            dispatched: dispatched,
+                            next: .waitingForLazyGridFilterReset,
+                            failureReason: "lazy-grid-filter-reset-dispatch-failed")
+                    }
+            case .waitingForLazyGridFilterReset:
+                guard state["lazyGridFilterResetObserved"] as? Bool == true else {
+                    self.retryOrFailStandardBundleFrameworkAcceptance(
+                        context,
+                        reason: "lazy-grid-filter-reset-query-not-observed",
+                        state: state)
+                    return
+                }
+                guard state["treeGridRootLoadedObserved"] as? Bool == true else {
+                    self.retryOrFailStandardBundleFrameworkAcceptance(
+                        context,
+                        reason: "tree-grid-root-query-not-observed",
+                        state: state)
+                    return
+                }
+                self.dispatchStandardBundleFrameworkAction(
+                    context.webView,
+                    script: Self.standardFrameworkTreeGridPlatformExpandAction) {
+                        dispatched in
+                        self.advanceStandardBundleFrameworkAcceptance(
+                            context,
+                            dispatched: dispatched,
+                            next: .waitingForTreeGridPlatformExpand,
+                            failureReason: "tree-grid-platform-expand-dispatch-failed")
+                    }
+            case .waitingForTreeGridPlatformExpand:
+                guard state["treeGridPlatformExpandedObserved"] as? Bool == true else {
+                    self.retryOrFailStandardBundleFrameworkAcceptance(
+                        context,
+                        reason: "tree-grid-platform-expand-not-observed",
+                        state: state)
+                    return
+                }
+                self.dispatchStandardBundleFrameworkAction(
+                    context.webView,
+                    script: Self.standardFrameworkTreeGridRuntimeExpandAction) {
+                        dispatched in
+                        self.advanceStandardBundleFrameworkAcceptance(
+                            context,
+                            dispatched: dispatched,
+                            next: .waitingForTreeGridRuntimeExpand,
+                            failureReason: "tree-grid-runtime-expand-dispatch-failed")
+                    }
+            case .waitingForTreeGridRuntimeExpand:
+                guard state["treeGridRuntimeExpandedObserved"] as? Bool == true else {
+                    self.retryOrFailStandardBundleFrameworkAcceptance(
+                        context,
+                        reason: "tree-grid-runtime-expand-not-observed",
+                        state: state)
+                    return
+                }
+                self.dispatchStandardBundleFrameworkAction(
+                    context.webView,
+                    script: Self.standardFrameworkTreeGridSelectionAction) {
+                        dispatched in
+                        self.advanceStandardBundleFrameworkAcceptance(
+                            context,
+                            dispatched: dispatched,
+                            next: .waitingForTreeGridSelection,
+                            failureReason: "tree-grid-selection-dispatch-failed")
+                    }
+            case .waitingForTreeGridSelection:
+                guard state["treeGridSelectionObserved"] as? Bool == true else {
+                    self.retryOrFailStandardBundleFrameworkAcceptance(
+                        context,
+                        reason: "tree-grid-selection-round-trip-not-observed",
+                        state: state)
+                    return
+                }
+                self.dispatchStandardBundleFrameworkAction(
+                    context.webView,
+                    script: Self.standardFrameworkTreeGridRefreshAction) {
+                        dispatched in
+                        self.advanceStandardBundleFrameworkAcceptance(
+                            context,
+                            dispatched: dispatched,
+                            next: .waitingForTreeGridRefresh,
+                            failureReason: "tree-grid-refresh-dispatch-failed")
+                    }
+            case .waitingForTreeGridRefresh:
+                guard state["treeGridRefreshObserved"] as? Bool == true else {
+                    self.retryOrFailStandardBundleFrameworkAcceptance(
+                        context,
+                        reason: "tree-grid-refresh-not-observed",
+                        state: state)
+                    return
+                }
+                self.dispatchStandardBundleFrameworkAction(
+                    context.webView,
+                    script: Self.standardFrameworkTreeGridCollapseAction) {
+                        dispatched in
+                        self.advanceStandardBundleFrameworkAcceptance(
+                            context,
+                            dispatched: dispatched,
+                            next: .waitingForTreeGridCollapse,
+                            failureReason: "tree-grid-collapse-dispatch-failed")
+                    }
+            case .waitingForTreeGridCollapse:
+                guard state["treeGridCollapseObserved"] as? Bool == true,
+                      state["componentRendererObserved"] as? Bool == true else {
+                    self.retryOrFailStandardBundleFrameworkAcceptance(
+                        context,
+                        reason: "tree-grid-collapse-or-component-renderer-not-observed",
+                        state: state)
+                    return
+                }
+                self.dispatchStandardBundleFrameworkAction(
+                    context.webView,
+                    script: Self.standardFrameworkGridEditorOpenAction) { dispatched in
+                        self.advanceStandardBundleFrameworkAcceptance(
+                            context,
+                            dispatched: dispatched,
+                            next: .waitingForGridEditorOpen,
+                            failureReason: "grid-editor-open-dispatch-failed")
+                    }
+            case .waitingForGridEditorOpen:
+                guard state["gridEditorOpenedObserved"] as? Bool == true,
+                      state["gridEditorActiveFieldVisible"] as? Bool == true else {
+                    self.retryOrFailStandardBundleFrameworkAcceptance(
+                        context,
+                        reason: "grid-editor-open-not-observed",
+                        state: state)
+                    return
+                }
+                self.dispatchStandardBundleFrameworkAction(
+                    context.webView,
+                    script: Self.standardFrameworkGridEditorSaveAction) { dispatched in
+                        self.advanceStandardBundleFrameworkAcceptance(
+                            context,
+                            dispatched: dispatched,
+                            next: .waitingForGridEditorSave,
+                            failureReason: "grid-editor-save-dispatch-failed")
+                    }
+            case .waitingForGridEditorSave:
+                guard state["gridEditorSaveObserved"] as? Bool == true,
+                      state["gridEditorActiveFieldVisible"] as? Bool != true else {
+                    self.retryOrFailStandardBundleFrameworkAcceptance(
+                        context,
+                        reason: "grid-editor-save-not-observed",
+                        state: state)
+                    return
+                }
+                self.dispatchStandardBundleFrameworkAction(
+                    context.webView,
+                    script: Self.standardFrameworkGridEditorCancelOpenAction) {
+                        dispatched in
+                        self.advanceStandardBundleFrameworkAcceptance(
+                            context,
+                            dispatched: dispatched,
+                            next: .waitingForGridEditorCancelOpen,
+                            failureReason: "grid-editor-cancel-open-dispatch-failed")
+                    }
+            case .waitingForGridEditorCancelOpen:
+                guard state["gridEditorCancelOpenedObserved"] as? Bool == true,
+                      state["gridEditorActiveFieldVisible"] as? Bool == true else {
+                    self.retryOrFailStandardBundleFrameworkAcceptance(
+                        context,
+                        reason: "grid-editor-cancel-open-not-observed",
+                        state: state)
+                    return
+                }
+                self.dispatchStandardBundleFrameworkAction(
+                    context.webView,
+                    script: Self.standardFrameworkGridEditorCancelAction) { dispatched in
+                        self.advanceStandardBundleFrameworkAcceptance(
+                            context,
+                            dispatched: dispatched,
+                            next: .waitingForGridEditorCancel,
+                            failureReason: "grid-editor-cancel-dispatch-failed")
+                    }
+            case .waitingForGridEditorCancel:
+                guard state["gridEditorCancelObserved"] as? Bool == true,
+                      state["gridEditorActiveFieldVisible"] as? Bool != true else {
+                    self.retryOrFailStandardBundleFrameworkAcceptance(
+                        context,
+                        reason: "grid-editor-cancel-not-observed",
+                        state: state)
+                    return
+                }
+                self.dispatchStandardBundleFrameworkAction(
+                    context.webView,
+                    script: Self.standardFrameworkGridEditorValidationOpenAction) {
+                        dispatched in
+                        self.advanceStandardBundleFrameworkAcceptance(
+                            context,
+                            dispatched: dispatched,
+                            next: .waitingForGridEditorValidationOpen,
+                            failureReason:
+                                "grid-editor-validation-open-dispatch-failed")
+                    }
+            case .waitingForGridEditorValidationOpen:
+                guard state["gridEditorValidationOpenedObserved"] as? Bool == true,
+                      state["gridEditorActiveFieldVisible"] as? Bool == true else {
+                    self.retryOrFailStandardBundleFrameworkAcceptance(
+                        context,
+                        reason: "grid-editor-validation-open-not-observed",
+                        state: state)
+                    return
+                }
+                self.dispatchStandardBundleFrameworkAction(
+                    context.webView,
+                    script: Self.standardFrameworkGridEditorValidationAction) {
+                        dispatched in
+                        self.advanceStandardBundleFrameworkAcceptance(
+                            context,
+                            dispatched: dispatched,
+                            next: .waitingForGridEditorValidation,
+                            failureReason: "grid-editor-validation-dispatch-failed")
+                    }
+            case .waitingForGridEditorValidation:
+                guard state["gridEditorValidationObserved"] as? Bool == true,
+                      state["gridEditorActiveFieldVisible"] as? Bool == true,
+                      state["gridEditorActiveFieldInvalid"] as? Bool == true else {
+                    self.retryOrFailStandardBundleFrameworkAcceptance(
+                        context,
+                        reason: "grid-editor-validation-not-observed",
+                        state: state)
+                    return
+                }
+                self.dispatchStandardBundleFrameworkAction(
+                    context.webView,
+                    script: Self.standardFrameworkGridEditorValidationCancelAction) {
+                        dispatched in
+                        self.advanceStandardBundleFrameworkAcceptance(
+                            context,
+                            dispatched: dispatched,
+                            next: .waitingForGridEditorValidationCancel,
+                            failureReason:
+                                "grid-editor-validation-cancel-dispatch-failed")
+                    }
+            case .waitingForGridEditorValidationCancel:
+                guard state["gridEditorValidationCancelObserved"] as? Bool == true,
+                      state["gridEditorActiveFieldVisible"] as? Bool != true else {
+                    self.retryOrFailStandardBundleFrameworkAcceptance(
+                        context,
+                        reason: "grid-editor-validation-cancel-not-observed",
+                        state: state)
+                    return
+                }
+                guard state["litRendererPropertiesObserved"] as? Bool == true else {
+                    self.retryOrFailStandardBundleFrameworkAcceptance(
+                        context,
+                        reason: "lit-renderer-properties-not-observed",
+                        state: state)
+                    return
+                }
+                self.dispatchStandardBundleFrameworkAction(
+                    context.webView,
+                    script: Self.standardFrameworkLitRendererFunctionAction) {
+                        dispatched in
+                        self.advanceStandardBundleFrameworkAcceptance(
+                            context,
+                            dispatched: dispatched,
+                            next: .waitingForLitRendererFunction,
+                            failureReason: "lit-renderer-function-dispatch-failed")
+                    }
+            case .waitingForLitRendererFunction:
+                guard state["litRendererFunctionObserved"] as? Bool == true,
+                      state["litRendererRefreshObserved"] as? Bool == true else {
+                    self.retryOrFailStandardBundleFrameworkAcceptance(
+                        context,
+                        reason: "lit-renderer-function-refresh-not-observed",
+                        state: state)
+                    return
+                }
+                self.dispatchStandardBundleFrameworkAction(
+                    context.webView,
+                    script: Self.standardFrameworkClientCallableResolveAction) {
+                        dispatched in
+                        self.advanceStandardBundleFrameworkAcceptance(
+                            context,
+                            dispatched: dispatched,
+                            next: .waitingForClientCallableResolve,
+                            failureReason:
+                                "client-callable-resolve-dispatch-failed")
+                    }
+            case .waitingForClientCallableResolve:
+                guard state["clientCallableResolveObserved"] as? Bool == true else {
+                    self.retryOrFailStandardBundleFrameworkAcceptance(
+                        context,
+                        reason: "client-callable-resolve-not-observed",
+                        state: state)
+                    return
+                }
+                self.dispatchStandardBundleFrameworkAction(
+                    context.webView,
+                    script: Self.standardFrameworkClientCallableRejectAction) {
+                        dispatched in
+                        self.advanceStandardBundleFrameworkAcceptance(
+                            context,
+                            dispatched: dispatched,
+                            next: .waitingForClientCallableReject,
+                            failureReason:
+                                "client-callable-reject-dispatch-failed")
+                    }
+            case .waitingForClientCallableReject:
+                guard state["clientCallableRejectObserved"] as? Bool == true else {
+                    self.retryOrFailStandardBundleFrameworkAcceptance(
+                        context,
+                        reason: "client-callable-reject-not-observed",
+                        state: state)
+                    return
+                }
+                self.dispatchStandardBundleFrameworkAction(
+                    context.webView,
+                    script: Self.standardFrameworkPendingJavaScriptResolveAction) {
+                        dispatched in
+                        self.advanceStandardBundleFrameworkAcceptance(
+                            context,
+                            dispatched: dispatched,
+                            next: .waitingForPendingJavaScriptResolve,
+                            failureReason:
+                                "pending-javascript-resolve-dispatch-failed")
+                    }
+            case .waitingForPendingJavaScriptResolve:
+                guard state["pendingJavaScriptResolveObserved"] as? Bool == true else {
+                    self.retryOrFailStandardBundleFrameworkAcceptance(
+                        context,
+                        reason: "pending-javascript-resolve-not-observed",
+                        state: state)
+                    return
+                }
+                self.dispatchStandardBundleFrameworkAction(
+                    context.webView,
+                    script: Self.standardFrameworkPendingJavaScriptRejectAction) {
+                        dispatched in
+                        self.advanceStandardBundleFrameworkAcceptance(
+                            context,
+                            dispatched: dispatched,
+                            next: .waitingForPendingJavaScriptReject,
+                            failureReason:
+                                "pending-javascript-reject-dispatch-failed")
+                    }
+            case .waitingForPendingJavaScriptReject:
+                guard state["pendingJavaScriptRejectObserved"] as? Bool == true else {
+                    self.retryOrFailStandardBundleFrameworkAcceptance(
+                        context,
+                        reason: "pending-javascript-reject-not-observed",
+                        state: state)
+                    return
+                }
+                self.dispatchStandardBundleFrameworkAction(
+                    context.webView,
+                    script: FlowIpcDndAcceptanceScripts.dragStartAction) {
+                        dispatched in
+                        self.advanceStandardBundleFrameworkAcceptance(
+                            context,
+                            dispatched: dispatched,
+                            next: .waitingForFlowDndDragStart,
+                            failureReason:
+                                "flow-dnd-drag-start-dispatch-failed")
+                    }
+            case .waitingForFlowDndDragStart:
+                guard state["flowDndConfiguredObserved"] as? Bool == true,
+                      state["flowDndDragStartObserved"] as? Bool == true else {
+                    self.retryOrFailStandardBundleFrameworkAcceptance(
+                        context,
+                        reason: "flow-dnd-drag-start-not-observed",
+                        state: state)
+                    return
+                }
+                self.dispatchStandardBundleFrameworkAction(
+                    context.webView,
+                    script: FlowIpcDndAcceptanceScripts.dropAction) {
+                        dispatched in
+                        self.advanceStandardBundleFrameworkAcceptance(
+                            context,
+                            dispatched: dispatched,
+                            next: .waitingForFlowDndDrop,
+                            failureReason: "flow-dnd-drop-dispatch-failed")
+                    }
+            case .waitingForFlowDndDrop:
+                guard state["flowDndDropObserved"] as? Bool == true else {
+                    self.retryOrFailStandardBundleFrameworkAcceptance(
+                        context,
+                        reason: "flow-dnd-drop-not-observed",
+                        state: state)
+                    return
+                }
+                self.dispatchStandardBundleFrameworkAction(
+                    context.webView,
+                    script: FlowIpcDndAcceptanceScripts.dragEndAction) {
+                        dispatched in
+                        self.advanceStandardBundleFrameworkAcceptance(
+                            context,
+                            dispatched: dispatched,
+                            next: .waitingForFlowDndDragEnd,
+                            failureReason:
+                                "flow-dnd-drag-end-dispatch-failed")
+                    }
+            case .waitingForFlowDndDragEnd:
+                guard state["flowDndDragEndObserved"] as? Bool == true else {
+                    self.retryOrFailStandardBundleFrameworkAcceptance(
+                        context,
+                        reason: "flow-dnd-drag-end-not-observed",
+                        state: state)
+                    return
+                }
+                self.dispatchStandardBundleFrameworkAction(
+                    context.webView,
+                    script: Self.standardFrameworkVirtualListClientAction) {
+                        dispatched in
                         self.advanceStandardBundleFrameworkAcceptance(
                             context,
                             dispatched: dispatched,
@@ -1743,10 +3012,361 @@ extension WebViewHost {
             case .waitingForPopover:
                 guard self.standardFrameworkString(state, "overlayMatrixStatus")
                     .contains("Popover opened: true"),
-                      state["popoverOpened"] as? Bool == true else {
+                      state["popoverOpened"] as? Bool == true,
+                      state["anchoredModelessOverlayObserved"] as? Bool == true,
+                      state["anchoredModelessOverlayA11yObserved"] as? Bool == true else {
                     self.retryOrFailStandardBundleFrameworkAcceptance(
                         context,
                         reason: "popover-open-patch-not-observed",
+                        state: state)
+                    return
+                }
+                self.dispatchStandardBundleFrameworkAction(
+                    context.webView,
+                    script: Self.standardFrameworkPopoverKeyboardCloseAction) { dispatched in
+                        self.advanceStandardBundleFrameworkAcceptance(
+                            context,
+                            dispatched: dispatched,
+                            next: .waitingForPopoverKeyboardClose,
+                            failureReason: "popover-keyboard-close-dispatch-failed")
+                    }
+            case .waitingForPopoverKeyboardClose:
+                guard state["anchoredModelessOverlayTabOrderObserved"] as? Bool == true,
+                      state["anchoredModelessOverlayEscapeCloseObserved"] as? Bool == true,
+                      state["anchoredModelessOverlayEscapeFocusRestoredObserved"] as? Bool == true else {
+                    self.retryOrFailStandardBundleFrameworkAcceptance(
+                        context,
+                        reason: "popover-keyboard-close-not-observed",
+                        state: state)
+                    return
+                }
+                self.dispatchStandardBundleFrameworkAction(
+                    context.webView,
+                    script: Self.standardFrameworkPopoverReopenAction) { dispatched in
+                        self.advanceStandardBundleFrameworkAcceptance(
+                            context,
+                            dispatched: dispatched,
+                            next: .waitingForPopoverOutsideOpen,
+                            failureReason: "popover-reopen-dispatch-failed")
+                    }
+            case .waitingForPopoverOutsideOpen:
+                guard state["popoverOpened"] as? Bool == true,
+                      self.standardFrameworkString(state, "popoverLifecycleStatus")
+                        .contains("Popover lifecycle opened: client=true") else {
+                    self.retryOrFailStandardBundleFrameworkAcceptance(
+                        context,
+                        reason: "popover-reopen-not-observed",
+                        state: state)
+                    return
+                }
+                self.dispatchStandardBundleFrameworkAction(
+                    context.webView,
+                    script: Self.standardFrameworkPopoverOutsideCloseAction) { dispatched in
+                        self.advanceStandardBundleFrameworkAcceptance(
+                            context,
+                            dispatched: dispatched,
+                            next: .waitingForPopoverOutsideClose,
+                            failureReason: "popover-outside-close-dispatch-failed")
+                    }
+            case .waitingForPopoverOutsideClose:
+                guard state["anchoredModelessOverlayOutsideCloseObserved"] as? Bool == true,
+                      state["anchoredModelessOverlayOutsideFocusPreservedObserved"] as? Bool == true else {
+                    self.retryOrFailStandardBundleFrameworkAcceptance(
+                        context,
+                        reason: "popover-outside-close-not-observed",
+                        state: state)
+                    return
+                }
+                self.dispatchStandardBundleFrameworkAction(
+                    context.webView,
+                    script: Self.standardFrameworkMixedOverlayDialogOpenAction) { dispatched in
+                        self.advanceStandardBundleFrameworkAcceptance(
+                            context,
+                            dispatched: dispatched,
+                            next: .waitingForMixedOverlayDialog,
+                            failureReason: "mixed-overlay-dialog-open-dispatch-failed")
+                    }
+            case .waitingForMixedOverlayDialog:
+                guard state["mixedOverlayStackDialogOpenedObserved"] as? Bool == true else {
+                    self.retryOrFailStandardBundleFrameworkAcceptance(
+                        context,
+                        reason: "mixed-overlay-dialog-open-not-observed",
+                        state: state)
+                    return
+                }
+                self.dispatchStandardBundleFrameworkAction(
+                    context.webView,
+                    script: Self.standardFrameworkMixedOverlayPopoverOpenAction) { dispatched in
+                        self.advanceStandardBundleFrameworkAcceptance(
+                            context,
+                            dispatched: dispatched,
+                            next: .waitingForMixedOverlayPopover,
+                            failureReason: "mixed-overlay-popover-open-dispatch-failed")
+                    }
+            case .waitingForMixedOverlayPopover:
+                guard state["mixedOverlayStackOpenedObserved"] as? Bool == true,
+                      state["mixedOverlayStackA11yObserved"] as? Bool == true else {
+                    self.retryOrFailStandardBundleFrameworkAcceptance(
+                        context,
+                        reason: "mixed-overlay-stack-open-not-observed",
+                        state: state)
+                    return
+                }
+                self.dispatchStandardBundleFrameworkAction(
+                    context.webView,
+                    script: Self.standardFrameworkMixedOverlayPopoverKeyboardCloseAction) {
+                        dispatched in
+                        self.advanceStandardBundleFrameworkAcceptance(
+                            context,
+                            dispatched: dispatched,
+                            next: .waitingForMixedOverlayPopoverKeyboardClose,
+                            failureReason:
+                                "mixed-overlay-popover-keyboard-close-dispatch-failed")
+                    }
+            case .waitingForMixedOverlayPopoverKeyboardClose:
+                guard state["mixedOverlayStackTabOrderObserved"] as? Bool == true,
+                      state["mixedOverlayStackTopEscapeObserved"] as? Bool == true,
+                      state["mixedOverlayStackParentRemainsOpenObserved"] as? Bool == true,
+                      state["mixedOverlayStackPopoverFocusRestoredObserved"] as? Bool == true else {
+                    self.retryOrFailStandardBundleFrameworkAcceptance(
+                        context,
+                        reason: "mixed-overlay-popover-keyboard-close-not-observed",
+                        state: state)
+                    return
+                }
+                self.dispatchStandardBundleFrameworkAction(
+                    context.webView,
+                    script: Self.standardFrameworkMixedOverlayPopoverReopenAction) {
+                        dispatched in
+                        self.advanceStandardBundleFrameworkAcceptance(
+                            context,
+                            dispatched: dispatched,
+                            next: .waitingForMixedOverlayPopoverOutsideOpen,
+                            failureReason: "mixed-overlay-popover-reopen-dispatch-failed")
+                    }
+            case .waitingForMixedOverlayPopoverOutsideOpen:
+                guard state["mixedOverlayPopoverOpened"] as? Bool == true,
+                      state["mixedOverlayStackOpenedObserved"] as? Bool == true,
+                      self.standardFrameworkString(
+                        state, "mixedOverlayPopoverLifecycleStatus")
+                        .contains("Mixed overlay Popover lifecycle opened: client=true") else {
+                    self.retryOrFailStandardBundleFrameworkAcceptance(
+                        context,
+                        reason: "mixed-overlay-popover-reopen-not-observed",
+                        state: state)
+                    return
+                }
+                self.dispatchStandardBundleFrameworkAction(
+                    context.webView,
+                    script: Self.standardFrameworkMixedOverlayPopoverOutsideCloseAction) {
+                        dispatched in
+                        self.advanceStandardBundleFrameworkAcceptance(
+                            context,
+                            dispatched: dispatched,
+                            next: .waitingForMixedOverlayPopoverOutsideClose,
+                            failureReason:
+                                "mixed-overlay-popover-outside-close-dispatch-failed")
+                    }
+            case .waitingForMixedOverlayPopoverOutsideClose:
+                guard state["mixedOverlayStackOutsideCloseObserved"] as? Bool == true,
+                      state["mixedOverlayStackOutsideFocusPreservedObserved"] as? Bool == true,
+                      state["mixedOverlayStackParentRemainsOpenObserved"] as? Bool == true else {
+                    self.retryOrFailStandardBundleFrameworkAcceptance(
+                        context,
+                        reason: "mixed-overlay-popover-outside-close-not-observed",
+                        state: state)
+                    return
+                }
+                self.dispatchStandardBundleFrameworkAction(
+                    context.webView,
+                    script: Self.standardFrameworkMixedOverlayDialogCloseAction) {
+                        dispatched in
+                        self.advanceStandardBundleFrameworkAcceptance(
+                            context,
+                            dispatched: dispatched,
+                            next: .waitingForMixedOverlayDialogClose,
+                            failureReason: "mixed-overlay-dialog-close-dispatch-failed")
+                    }
+            case .waitingForMixedOverlayDialogClose:
+                guard state["mixedOverlayStackParentEscapeObserved"] as? Bool == true,
+                      state["mixedOverlayStackLayeredFocusRestoredObserved"] as? Bool == true else {
+                    self.retryOrFailStandardBundleFrameworkAcceptance(
+                        context,
+                        reason: "mixed-overlay-dialog-close-not-observed",
+                        state: state)
+                    return
+                }
+                self.dispatchStandardBundleFrameworkAction(
+                    context.webView,
+                    script: Self.standardFrameworkNestedPopoverOuterOpenAction) {
+                        dispatched in
+                        self.advanceStandardBundleFrameworkAcceptance(
+                            context,
+                            dispatched: dispatched,
+                            next: .waitingForNestedPopoverOuter,
+                            failureReason: "nested-popover-outer-open-dispatch-failed")
+                    }
+            case .waitingForNestedPopoverOuter:
+                guard state["nestedAnchoredOverlayStackOuterOpenedObserved"] as? Bool == true else {
+                    self.retryOrFailStandardBundleFrameworkAcceptance(
+                        context,
+                        reason: "nested-popover-outer-open-not-observed",
+                        state: state)
+                    return
+                }
+                self.dispatchStandardBundleFrameworkAction(
+                    context.webView,
+                    script: Self.standardFrameworkNestedPopoverInnerOpenAction) {
+                        dispatched in
+                        self.advanceStandardBundleFrameworkAcceptance(
+                            context,
+                            dispatched: dispatched,
+                            next: .waitingForNestedPopoverInner,
+                            failureReason: "nested-popover-inner-open-dispatch-failed")
+                    }
+            case .waitingForNestedPopoverInner:
+                guard state["nestedAnchoredOverlayStackOpenedObserved"] as? Bool == true,
+                      state["nestedAnchoredOverlayStackA11yObserved"] as? Bool == true else {
+                    self.retryOrFailStandardBundleFrameworkAcceptance(
+                        context,
+                        reason: "nested-popover-stack-open-not-observed",
+                        state: state)
+                    return
+                }
+                self.dispatchStandardBundleFrameworkAction(
+                    context.webView,
+                    script: Self.standardFrameworkNestedPopoverKeyboardCloseAction) {
+                        dispatched in
+                        self.advanceStandardBundleFrameworkAcceptance(
+                            context,
+                            dispatched: dispatched,
+                            next: .waitingForNestedPopoverKeyboardClose,
+                            failureReason: "nested-popover-keyboard-close-dispatch-failed")
+                    }
+            case .waitingForNestedPopoverKeyboardClose:
+                guard state["nestedAnchoredOverlayStackTabOrderObserved"] as? Bool == true,
+                      state["nestedAnchoredOverlayStackTopEscapeObserved"] as? Bool == true,
+                      state["nestedAnchoredOverlayStackParentRemainsOpenObserved"] as? Bool == true,
+                      state["nestedAnchoredOverlayStackInnerFocusRestoredObserved"] as? Bool == true else {
+                    self.retryOrFailStandardBundleFrameworkAcceptance(
+                        context,
+                        reason: "nested-popover-keyboard-close-not-observed",
+                        state: state)
+                    return
+                }
+                self.dispatchStandardBundleFrameworkAction(
+                    context.webView,
+                    script: Self.standardFrameworkNestedPopoverOuterKeyboardCloseAction) {
+                        dispatched in
+                        self.advanceStandardBundleFrameworkAcceptance(
+                            context,
+                            dispatched: dispatched,
+                            next: .waitingForNestedPopoverOuterKeyboardClose,
+                            failureReason:
+                                "nested-popover-outer-keyboard-close-dispatch-failed")
+                    }
+            case .waitingForNestedPopoverOuterKeyboardClose:
+                guard state["nestedAnchoredOverlayStackParentEscapeObserved"] as? Bool == true,
+                      state["nestedAnchoredOverlayStackLayeredFocusRestoredObserved"] as? Bool
+                        == true else {
+                    self.retryOrFailStandardBundleFrameworkAcceptance(
+                        context,
+                        reason: "nested-popover-outer-keyboard-close-not-observed",
+                        state: state)
+                    return
+                }
+                self.dispatchStandardBundleFrameworkAction(
+                    context.webView,
+                    script: Self.standardFrameworkNestedPopoverOutsideOuterOpenAction) {
+                        dispatched in
+                        self.advanceStandardBundleFrameworkAcceptance(
+                            context,
+                            dispatched: dispatched,
+                            next: .waitingForNestedPopoverOutsideOuterOpen,
+                            failureReason:
+                                "nested-popover-outside-outer-open-dispatch-failed")
+                    }
+            case .waitingForNestedPopoverOutsideOuterOpen:
+                guard state["nestedPopoverOuterOpened"] as? Bool == true,
+                      self.standardFrameworkString(
+                        state, "nestedPopoverOuterLifecycleStatus")
+                        .contains("Nested outer Popover lifecycle opened: client=true") else {
+                    self.retryOrFailStandardBundleFrameworkAcceptance(
+                        context,
+                        reason: "nested-popover-outside-outer-open-not-observed",
+                        state: state)
+                    return
+                }
+                self.dispatchStandardBundleFrameworkAction(
+                    context.webView,
+                    script: Self.standardFrameworkNestedPopoverOutsideInnerOpenAction) {
+                        dispatched in
+                        self.advanceStandardBundleFrameworkAcceptance(
+                            context,
+                            dispatched: dispatched,
+                            next: .waitingForNestedPopoverOutsideInnerOpen,
+                            failureReason:
+                                "nested-popover-outside-inner-open-dispatch-failed")
+                    }
+            case .waitingForNestedPopoverOutsideInnerOpen:
+                guard state["nestedPopoverOuterOpened"] as? Bool == true,
+                      state["nestedPopoverInnerOpened"] as? Bool == true,
+                      state["nestedAnchoredOverlayStackOpenedObserved"] as? Bool == true,
+                      self.standardFrameworkString(
+                        state, "nestedPopoverInnerLifecycleStatus")
+                        .contains("Nested inner Popover lifecycle opened: client=true") else {
+                    self.retryOrFailStandardBundleFrameworkAcceptance(
+                        context,
+                        reason: "nested-popover-outside-inner-open-not-observed",
+                        state: state)
+                    return
+                }
+                self.dispatchStandardBundleFrameworkAction(
+                    context.webView,
+                    script: Self.standardFrameworkNestedPopoverOutsideTopCloseAction) {
+                        dispatched in
+                        self.advanceStandardBundleFrameworkAcceptance(
+                            context,
+                            dispatched: dispatched,
+                            next: .waitingForNestedPopoverOutsideTopClose,
+                            failureReason:
+                                "nested-popover-outside-top-close-dispatch-failed")
+                    }
+            case .waitingForNestedPopoverOutsideTopClose:
+                guard state["nestedAnchoredOverlayStackOutsideTopCloseObserved"] as? Bool == true,
+                      state[
+                        "nestedAnchoredOverlayStackOutsideParentRemainsOpenObserved"
+                      ] as? Bool == true,
+                      state[
+                        "nestedAnchoredOverlayStackOutsideFocusPreservedObserved"
+                      ] as? Bool == true else {
+                    self.retryOrFailStandardBundleFrameworkAcceptance(
+                        context,
+                        reason: "nested-popover-outside-top-close-not-observed",
+                        state: state)
+                    return
+                }
+                self.dispatchStandardBundleFrameworkAction(
+                    context.webView,
+                    script: Self.standardFrameworkNestedPopoverOutsideParentCloseAction) {
+                        dispatched in
+                        self.advanceStandardBundleFrameworkAcceptance(
+                            context,
+                            dispatched: dispatched,
+                            next: .waitingForNestedPopoverOutsideParentClose,
+                            failureReason:
+                                "nested-popover-outside-parent-close-dispatch-failed")
+                    }
+            case .waitingForNestedPopoverOutsideParentClose:
+                guard state[
+                        "nestedAnchoredOverlayStackOutsideParentCloseObserved"
+                      ] as? Bool == true,
+                      state[
+                        "nestedAnchoredOverlayStackOutsideFocusPreservedObserved"
+                      ] as? Bool == true else {
+                    self.retryOrFailStandardBundleFrameworkAcceptance(
+                        context,
+                        reason: "nested-popover-outside-parent-close-not-observed",
                         state: state)
                     return
                 }
@@ -1995,6 +3615,16 @@ extension WebViewHost {
             reason: "complete",
             state: state,
             additionalDetails: [
+                "lazyFrontendRouteObserved": true,
+                "lazyFrontendClientObserved": true,
+                "lazyFrontendServerObserved": true,
+                "lazyFrontendReturned": true,
+                "nestedLazyLayoutObserved": true,
+                "nestedLazyRouteObserved": true,
+                "nestedLazyTransitiveModuleObserved": true,
+                "nestedLazyClientObserved": true,
+                "nestedLazyServerObserved": true,
+                "nestedLazyReturned": true,
                 "budgetEventObserved": true,
                 "checkboxEventObserved": true,
                 "checkboxGroupClientObserved": true,
@@ -2021,10 +3651,38 @@ extension WebViewHost {
                 "numberFieldClientObserved": true,
                 "numberFieldServerObserved": true,
                 "numberFieldStatus": "NumberField server value: 8.25",
+                "sliderClientObserved": true,
+                "sliderServerObserved": true,
+                "sliderStatus": "Slider server value: 9.0 range=2.0-12.0 step=1.0",
                 "passwordFieldStatus": "Secret changed: length=10",
                 "timePickerStatus": "Review time changed: 14:45",
+                "cardClientObserved": true,
+                "cardServerObserved": true,
+                "cardStatus":
+                    "Card clicked: count=1 | Card server state: elevated horizontal patched",
+                "markdownClientObserved": true,
+                "markdownServerObserved": true,
+                "markdownStatus":
+                    "Markdown clicked: count=1 | Markdown server state: patched appended",
+                "badgeClientObserved": true,
+                "badgeServerObserved": true,
+                "badgeStatus":
+                    "Badge clicked: count=1 | Badge server state: approved number=12 success filled icon=cog role=mark",
                 "assigneesStatus": "Assignees changed: ava,sol",
                 "dialogEventObserved": true,
+                "dialogInitialFocusObserved": true,
+                "dialogFocusTrapObserved": true,
+                "dialogEscapeCloseObserved": true,
+                "dialogFocusRestoredObserved": true,
+                "dialogA11yObserved": true,
+                "dialogLifecycleStatus": "Dialog lifecycle closed: client=true",
+                "modalOverlayStackOpenedObserved": true,
+                "modalOverlayStackInitialFocusObserved": true,
+                "modalOverlayStackFocusTrapObserved": true,
+                "modalOverlayStackTopEscapeObserved": true,
+                "modalOverlayStackParentRemainsOpenObserved": true,
+                "modalOverlayStackFocusRestoredObserved": true,
+                "modalOverlayStackA11yObserved": true,
                 "formValidationObserved": true,
                 "formLayoutClickObserved": true,
                 "formLayoutServerObserved": true,
@@ -2046,6 +3704,11 @@ extension WebViewHost {
                 "scrollerServerObserved": true,
                 "scrollerStatus":
                     "Scroller server layout: horizontal patched width=340",
+                "masterDetailClientObserved": true,
+                "masterDetailContentObserved": true,
+                "masterDetailServerObserved": true,
+                "masterDetailStatus":
+                    "MasterDetail backdrop clicked: count=1 | MasterDetail server state: vertical stack overlay viewport patched animation=enabled",
                 "avatarClickObserved": true,
                 "messageInputSubmitObserved": true,
                 "richTextEditorEditObserved": true,
@@ -2111,10 +3774,110 @@ extension WebViewHost {
                 "gridContextMenuOpenObserved": true,
                 "gridContextMenuItemClickObserved": true,
                 "lazyGridScrollObserved": true,
+                "lazyGridFarViewportObserved": true,
+                "lazyGridSelectionObserved": true,
+                "lazyGridReturnViewportObserved": true,
+                "lazyGridSortObserved": true,
+                "lazyGridFilterObserved": true,
+                "lazyGridFilterResetObserved": true,
+                "lazyGridQueryStatus":
+                    standardFrameworkString(state, "lazyGridQueryStatus"),
+                "lazyGridSelectionStatus":
+                    standardFrameworkString(state, "lazyGridSelectionStatus"),
+                "treeGridRootLoadedObserved": true,
+                "treeGridPlatformExpandedObserved": true,
+                "treeGridRuntimeExpandedObserved": true,
+                "treeGridSelectionObserved": true,
+                "treeGridRefreshObserved": true,
+                "treeGridCollapseObserved": true,
+                "treeGridQueryStatus":
+                    standardFrameworkString(state, "treeGridQueryStatus"),
+                "treeGridCountStatus":
+                    standardFrameworkString(state, "treeGridCountStatus"),
+                "treeGridLifecycleStatus":
+                    standardFrameworkString(state, "treeGridLifecycleStatus"),
+                "treeGridSelectionStatus":
+                    standardFrameworkString(state, "treeGridSelectionStatus"),
+                "treeGridRefreshStatus":
+                    standardFrameworkString(state, "treeGridRefreshStatus"),
+                "componentRendererObserved": true,
+                "gridEditorOpenedObserved": true,
+                "gridEditorSaveObserved": true,
+                "gridEditorCancelObserved": true,
+                "gridEditorValidationObserved": true,
+                "gridEditorValidationCancelObserved": true,
+                "litRendererPropertiesObserved": true,
+                "litRendererFunctionObserved": true,
+                "litRendererRefreshObserved": true,
+                "clientCallableResolveObserved": true,
+                "clientCallableRejectObserved": true,
+                "pendingJavaScriptResolveObserved": true,
+                "pendingJavaScriptRejectObserved": true,
+                "flowDndConfiguredObserved": true,
+                "flowDndDragStartObserved": true,
+                "flowDndDropObserved": true,
+                "flowDndDragEndObserved": true,
+                "editorRendererStatus":
+                    standardFrameworkString(state, "editorRendererStatus"),
+                "editorOpenStatus":
+                    standardFrameworkString(state, "editorOpenStatus"),
+                "editorSaveStatus":
+                    standardFrameworkString(state, "editorSaveStatus"),
+                "editorCancelStatus":
+                    standardFrameworkString(state, "editorCancelStatus"),
+                "editorValidationStatus":
+                    standardFrameworkString(state, "editorValidationStatus"),
+                "litRendererStatus":
+                    standardFrameworkString(state, "litRendererStatus"),
+                "clientCallableStatus":
+                    standardFrameworkString(state, "clientCallableStatus"),
+                "pendingJavaScriptSuccessStatus":
+                    standardFrameworkString(
+                        state, "pendingJavaScriptSuccessStatus"),
+                "pendingJavaScriptFailureStatus":
+                    standardFrameworkString(
+                        state, "pendingJavaScriptFailureStatus"),
+                "flowDndDragStartStatus":
+                    standardFrameworkString(state, "flowDndDragStartStatus"),
+                "flowDndDropStatus":
+                    standardFrameworkString(state, "flowDndDropStatus"),
+                "flowDndDragEndStatus":
+                    standardFrameworkString(state, "flowDndDragEndStatus"),
                 "virtualListClientObserved": true,
                 "virtualListServerObserved": true,
                 "virtualListStatus": standardFrameworkString(state, "virtualListStatus"),
                 "popoverOpenObserved": true,
+                "anchoredModelessOverlayObserved": true,
+                "anchoredModelessOverlayA11yObserved": true,
+                "anchoredModelessOverlayTabOrderObserved": true,
+                "anchoredModelessOverlayEscapeCloseObserved": true,
+                "anchoredModelessOverlayEscapeFocusRestoredObserved": true,
+                "anchoredModelessOverlayOutsideCloseObserved": true,
+                "anchoredModelessOverlayOutsideFocusPreservedObserved": true,
+                "mixedOverlayStackDialogOpenedObserved": true,
+                "mixedOverlayStackOpenedObserved": true,
+                "mixedOverlayStackA11yObserved": true,
+                "mixedOverlayStackTabOrderObserved": true,
+                "mixedOverlayStackTopEscapeObserved": true,
+                "mixedOverlayStackParentRemainsOpenObserved": true,
+                "mixedOverlayStackPopoverFocusRestoredObserved": true,
+                "mixedOverlayStackOutsideCloseObserved": true,
+                "mixedOverlayStackOutsideFocusPreservedObserved": true,
+                "mixedOverlayStackParentEscapeObserved": true,
+                "mixedOverlayStackLayeredFocusRestoredObserved": true,
+                "nestedAnchoredOverlayStackOuterOpenedObserved": true,
+                "nestedAnchoredOverlayStackOpenedObserved": true,
+                "nestedAnchoredOverlayStackA11yObserved": true,
+                "nestedAnchoredOverlayStackTabOrderObserved": true,
+                "nestedAnchoredOverlayStackTopEscapeObserved": true,
+                "nestedAnchoredOverlayStackParentRemainsOpenObserved": true,
+                "nestedAnchoredOverlayStackInnerFocusRestoredObserved": true,
+                "nestedAnchoredOverlayStackParentEscapeObserved": true,
+                "nestedAnchoredOverlayStackLayeredFocusRestoredObserved": true,
+                "nestedAnchoredOverlayStackOutsideTopCloseObserved": true,
+                "nestedAnchoredOverlayStackOutsideParentRemainsOpenObserved": true,
+                "nestedAnchoredOverlayStackOutsideFocusPreservedObserved": true,
+                "nestedAnchoredOverlayStackOutsideParentCloseObserved": true,
                 "notificationOpenObserved": true,
                 "notificationStatus":
                     "Notification opened: Flow IPC notification opened: audit",
@@ -2177,6 +3940,7 @@ extension WebViewHost {
             const connectionId = diagnostics.standardBundlePushActiveConnectionId;
             if (connectionId) {
               push?.receive?.({
+                version: 1,
                 type: 'opaquePush',
                 payload: {
                   connectionId,
@@ -2188,7 +3952,13 @@ extension WebViewHost {
             }
           }
           const pushStatus = document.querySelector('#ipc-standard-push-status')?.textContent || '';
-          const error = diagnostics.standardBundleBrowserError
+          const browserError = diagnostics.standardBundleBrowserError || '';
+          const hiddenViewTransitionSkipped =
+            document.visibilityState === 'hidden'
+              && browserError.includes('View transition was skipped')
+              && browserError.includes('visibility state is hidden');
+          const error = diagnostics.standardBundleHistoryError
+            || (hiddenViewTransitionSkipped ? '' : browserError)
             || diagnostics.standardBundleOpaqueRequestError
             || diagnostics.standardBundleOpaqueResponseError
             || diagnostics.standardBundlePushError
@@ -2269,6 +4039,123 @@ extension WebViewHost {
             }
             return elements;
           };
+          const detailsDialog = document.querySelector('#framework-dialog');
+          const dialogOpenTrigger = document.querySelector('#framework-dialog-open');
+          const dialogFocusField = document.querySelector('#framework-dialog-focus-field');
+          const dialogLifecycleStatus =
+            document.querySelector('#framework-dialog-lifecycle-status')?.textContent || '';
+          const dialogOverlay = findDeep((element) =>
+            element.localName === 'vaadin-dialog-overlay');
+          const dialogOpened = detailsDialog?.opened === true
+            || detailsDialog?.hasAttribute('opened') === true
+            || dialogOverlay?.opened === true
+            || dialogOverlay?.hasAttribute?.('opened') === true;
+          const dialogActiveElements = activeDeepElements();
+          const dialogInitialFocusObserved = dialogOpened
+            && !!dialogFocusField
+            && dialogActiveElements.some((element) =>
+              element === dialogFocusField
+                || element === dialogFocusField.inputElement
+                || dialogFocusField.contains?.(element));
+          const dialogRoleElement =
+            (['dialog', 'alertdialog'].includes(
+              String(detailsDialog?.getAttribute?.('role') || '').toLowerCase())
+              ? detailsDialog : null)
+            || (dialogOverlay && (
+              (['dialog', 'alertdialog'].includes(
+                String(dialogOverlay.getAttribute?.('role') || '').toLowerCase())
+                ? dialogOverlay : null)
+              || findDeepFrom(dialogOverlay, (element) =>
+                ['dialog', 'alertdialog'].includes(
+                  String(element.getAttribute?.('role') || '').toLowerCase()))
+            ));
+          const dialogAccessibleText = [
+            detailsDialog?.getAttribute?.('aria-label') || '',
+            dialogRoleElement?.getAttribute?.('aria-label') || '',
+            dialogOverlay ? collectDeepText(dialogOverlay) : ''
+          ].join(' ');
+          const dialogAriaModal = String(
+            dialogRoleElement?.getAttribute?.('aria-modal')
+              || dialogOverlay?.getAttribute?.('aria-modal')
+              || '');
+          const dialogA11yObserved = dialogOpened
+            && !!dialogRoleElement
+            && dialogAriaModal === 'true'
+            && dialogAccessibleText.includes('Flow IPC keyboard dialog');
+          const dialogKeyboardMarker =
+            window.VaadinDesktopFrameworkDialogKeyboard || {};
+          const dialogFocusTrapObserved =
+            dialogKeyboardMarker.focusTrapObserved === true;
+          const dialogEscapeCloseObserved =
+            dialogKeyboardMarker.escapeDispatched === true
+              && !dialogOpened
+              && dialogLifecycleStatus.includes(
+                'Dialog lifecycle closed: client=true');
+          const dialogFocusRestoredObserved =
+            dialogKeyboardMarker.escapeDispatched === true
+              && !dialogOpened
+              && !!dialogOpenTrigger
+              && activeDeepElements().includes(dialogOpenTrigger);
+          const nestedDialog = document.querySelector('#framework-nested-dialog');
+          const nestedDialogOpenTrigger =
+            document.querySelector('#framework-nested-dialog-open');
+          const nestedDialogFocusField =
+            document.querySelector('#framework-nested-dialog-focus-field');
+          const nestedDialogLifecycleStatus =
+            document.querySelector('#framework-nested-dialog-lifecycle-status')
+              ?.textContent || '';
+          const nestedDialogOpened = nestedDialog?.opened === true
+            || nestedDialog?.hasAttribute?.('opened') === true;
+          const nestedDialogActiveElements = activeDeepElements();
+          const nestedDialogInitialFocusObserved = dialogOpened
+            && nestedDialogOpened
+            && !!nestedDialogFocusField
+            && nestedDialogActiveElements.some((element) =>
+              element === nestedDialogFocusField
+                || element === nestedDialogFocusField.inputElement
+                || nestedDialogFocusField.contains?.(element));
+          const nestedDialogRole =
+            String(nestedDialog?.getAttribute?.('role') || '').toLowerCase();
+          const nestedDialogAriaModal =
+            String(nestedDialog?.getAttribute?.('aria-modal') || '');
+          const nestedDialogAccessibleText = [
+            nestedDialog?.getAttribute?.('aria-label') || '',
+            collectDeepText(nestedDialog)
+          ].join(' ');
+          const nestedDialogA11yObserved = nestedDialogOpened
+            && ['dialog', 'alertdialog'].includes(nestedDialogRole)
+            && nestedDialogAriaModal === 'true'
+            && nestedDialogAccessibleText.includes(
+              'Flow IPC nested keyboard dialog');
+          const nestedDialogKeyboardMarker =
+            window.VaadinDesktopFrameworkNestedDialogKeyboard || {};
+          const modalOverlayStackOpenedObserved =
+            (dialogOpened && nestedDialogOpened)
+              || nestedDialogKeyboardMarker.openedObserved === true;
+          const modalOverlayStackInitialFocusObserved =
+            nestedDialogInitialFocusObserved
+              || nestedDialogKeyboardMarker.initialFocusObserved === true;
+          const modalOverlayStackA11yObserved =
+            nestedDialogA11yObserved
+              || nestedDialogKeyboardMarker.a11yObserved === true;
+          const modalOverlayStackFocusTrapObserved =
+            nestedDialogKeyboardMarker.focusTrapObserved === true;
+          const modalOverlayStackTopEscapeObserved =
+            nestedDialogKeyboardMarker.escapeDispatched === true
+              && !nestedDialogOpened
+              && dialogOpened
+              && nestedDialogLifecycleStatus.includes(
+                'Nested dialog lifecycle closed: client=true');
+          const modalOverlayStackParentRemainsOpenObserved =
+            nestedDialogKeyboardMarker.parentOpenedBeforeEscape === true
+              && !nestedDialogOpened
+              && dialogOpened;
+          const modalOverlayStackFocusRestoredObserved =
+            nestedDialogKeyboardMarker.escapeDispatched === true
+              && !nestedDialogOpened
+              && dialogOpened
+              && !!nestedDialogOpenTrigger
+              && activeDeepElements().includes(nestedDialogOpenTrigger);
           const contextMenu = document.querySelector('#framework-context-menu')
             || document.querySelector('vaadin-context-menu');
           const contextMenuOverlay = findDeep((element) =>
@@ -2901,6 +4788,377 @@ extension WebViewHost {
               'Check the validation account and retry.',
               'Desktop validation keeps authentication local to this session.'
             ].every((text) => loginOverlayFullI18nText.includes(text));
+          const popover = document.querySelector('#framework-popover');
+          const popoverTarget =
+            document.querySelector('#framework-popover-target');
+          const popoverFocusField =
+            document.querySelector('#framework-popover-focus-field');
+          const popoverOutsideTarget =
+            document.querySelector('#framework-popover-outside-target');
+          const popoverLifecycleStatus =
+            document.querySelector('#framework-popover-lifecycle-status')
+              ?.textContent || '';
+          const popoverOpened = popover?.opened === true
+            || popover?.hasAttribute?.('opened') === true;
+          const popoverOverlay =
+            popover?.shadowRoot?.querySelector('vaadin-popover-overlay');
+          const popoverAriaTarget =
+            popoverTarget?.ariaTarget || popoverTarget;
+          const anchoredPopoverMarker =
+            window.VaadinDesktopFrameworkAnchoredPopover || {};
+          const anchoredModelessOverlayCurrent =
+            popoverOpened
+              && !!popover
+              && !!popoverTarget
+              && !!popoverOverlay
+              && popover.target === popoverTarget
+              && popoverOverlay.positionTarget === popoverTarget
+              && popoverOverlay.modeless === true
+              && popoverOverlay.focusTrap !== true;
+          const anchoredModelessOverlayA11yCurrent =
+            anchoredModelessOverlayCurrent
+              && String(popover.getAttribute?.('role') || '').toLowerCase()
+                === 'dialog'
+              && String(popover.getAttribute?.('aria-label') || '')
+                .includes('Flow IPC anchored modeless popover')
+              && popoverAriaTarget?.getAttribute?.('aria-expanded') === 'true'
+              && popoverAriaTarget?.getAttribute?.('aria-controls') === popover.id
+              && popoverAriaTarget?.getAttribute?.('aria-haspopup') === 'dialog';
+          const anchoredModelessOverlayObserved =
+            anchoredModelessOverlayCurrent
+              || anchoredPopoverMarker.anchoredObserved === true;
+          const anchoredModelessOverlayA11yObserved =
+            anchoredModelessOverlayA11yCurrent
+              || anchoredPopoverMarker.a11yObserved === true;
+          const anchoredModelessOverlayTabOrderObserved =
+            anchoredPopoverMarker.tabForwardObserved === true
+              && anchoredPopoverMarker.tabBackwardObserved === true;
+          const anchoredModelessOverlayEscapeCloseObserved =
+            anchoredPopoverMarker.escapeDispatched === true
+              && !popoverOpened
+              && (anchoredPopoverMarker.escapeCloseObserved === true
+                || popoverLifecycleStatus.includes(
+                  'Popover lifecycle closed: client=true'));
+          const anchoredModelessOverlayEscapeFocusRestoredObserved =
+            anchoredPopoverMarker.escapeFocusRestoredObserved === true
+              || (anchoredPopoverMarker.escapeDispatched === true
+                && !popoverOpened
+                && !!popoverAriaTarget
+                && activeDeepElements().includes(popoverAriaTarget));
+          const anchoredModelessOverlayOutsideCloseObserved =
+            anchoredPopoverMarker.outsideDispatched === true
+              && !popoverOpened
+              && popoverAriaTarget?.getAttribute?.('aria-expanded') === 'false'
+              && !popoverAriaTarget?.hasAttribute?.('aria-controls')
+              && popoverLifecycleStatus.includes(
+                'Popover lifecycle closed: client=true');
+          const anchoredModelessOverlayOutsideFocusPreservedObserved =
+            anchoredPopoverMarker.outsideFocusPreservedObserved === true
+              || (!!popoverOutsideTarget
+                && activeDeepElements().includes(popoverOutsideTarget));
+          const mixedOverlayDialog =
+            document.querySelector('#framework-mixed-overlay-dialog');
+          const mixedOverlayDialogOpenTrigger =
+            document.querySelector('#framework-mixed-overlay-dialog-open');
+          const mixedOverlayDialogLifecycleStatus =
+            document.querySelector(
+              '#framework-mixed-overlay-dialog-lifecycle-status')
+              ?.textContent || '';
+          const mixedOverlayPopover =
+            document.querySelector('#framework-mixed-overlay-popover');
+          const mixedOverlayPopoverTarget =
+            document.querySelector('#framework-mixed-overlay-popover-target');
+          const mixedOverlayPopoverFocusField =
+            document.querySelector(
+              '#framework-mixed-overlay-popover-focus-field');
+          const mixedOverlayOutsideTarget =
+            document.querySelector('#framework-mixed-overlay-outside-target');
+          const mixedOverlayPopoverLifecycleStatus =
+            document.querySelector(
+              '#framework-mixed-overlay-popover-lifecycle-status')
+              ?.textContent || '';
+          const mixedOverlayDialogOverlay = findDeep((element) =>
+            element.localName === 'vaadin-dialog-overlay'
+              && collectDeepText(element).includes(
+                'Flow IPC mixed overlay stack'));
+          const mixedOverlayDialogOpened =
+            mixedOverlayDialog?.opened === true
+              || mixedOverlayDialog?.hasAttribute?.('opened') === true
+              || mixedOverlayDialogOverlay?.opened === true
+              || mixedOverlayDialogOverlay?.hasAttribute?.('opened') === true;
+          const mixedOverlayDialogRoleElement =
+            (['dialog', 'alertdialog'].includes(
+              String(
+                mixedOverlayDialog?.getAttribute?.('role') || '')
+                .toLowerCase())
+              ? mixedOverlayDialog : null)
+            || (mixedOverlayDialogOverlay && (
+              (['dialog', 'alertdialog'].includes(
+                String(
+                  mixedOverlayDialogOverlay.getAttribute?.('role') || '')
+                  .toLowerCase())
+                ? mixedOverlayDialogOverlay : null)
+              || findDeepFrom(mixedOverlayDialogOverlay, (element) =>
+                ['dialog', 'alertdialog'].includes(
+                  String(element.getAttribute?.('role') || '')
+                    .toLowerCase()))
+            ));
+          const mixedOverlayDialogA11yCurrent =
+            mixedOverlayDialogOpened
+              && !!mixedOverlayDialogRoleElement
+              && String(
+                mixedOverlayDialogRoleElement.getAttribute?.('aria-modal')
+                  || mixedOverlayDialogOverlay?.getAttribute?.('aria-modal')
+                  || '') === 'true'
+              && [
+                mixedOverlayDialog?.getAttribute?.('aria-label') || '',
+                mixedOverlayDialogRoleElement.getAttribute?.('aria-label') || '',
+                mixedOverlayDialogOverlay
+                  ? collectDeepText(mixedOverlayDialogOverlay) : ''
+              ].join(' ').includes('Flow IPC mixed overlay stack');
+          const mixedOverlayDialogInitialFocusCurrent =
+            mixedOverlayDialogOpened
+              && !!mixedOverlayPopoverTarget
+              && activeDeepElements().includes(mixedOverlayPopoverTarget);
+          const mixedOverlayStackDialogOpenedObserved =
+            mixedOverlayDialogOpened
+              && mixedOverlayDialogInitialFocusCurrent
+              && mixedOverlayDialogA11yCurrent
+              && mixedOverlayDialogLifecycleStatus.includes(
+                'Mixed overlay Dialog lifecycle opened: client=false');
+          const mixedOverlayPopoverOpened =
+            mixedOverlayPopover?.opened === true
+              || mixedOverlayPopover?.hasAttribute?.('opened') === true;
+          const mixedOverlayPopoverOverlay =
+            mixedOverlayPopover?.shadowRoot
+              ?.querySelector('vaadin-popover-overlay');
+          const mixedOverlayPopoverAriaTarget =
+            mixedOverlayPopoverTarget?.ariaTarget || mixedOverlayPopoverTarget;
+          const mixedOverlayMarker =
+            window.VaadinDesktopFrameworkMixedOverlay || {};
+          const mixedOverlayStackCurrent =
+            mixedOverlayDialogOpened
+              && mixedOverlayPopoverOpened
+              && !!mixedOverlayPopover
+              && !!mixedOverlayPopoverTarget
+              && !!mixedOverlayPopoverOverlay
+              && mixedOverlayPopover.target === mixedOverlayPopoverTarget
+              && mixedOverlayPopoverOverlay.positionTarget
+                === mixedOverlayPopoverTarget
+              && mixedOverlayPopoverOverlay.modeless === true
+              && mixedOverlayPopoverOverlay.focusTrap !== true;
+          const mixedOverlayStackA11yCurrent =
+            mixedOverlayStackCurrent
+              && mixedOverlayDialogA11yCurrent
+              && String(
+                mixedOverlayPopover.getAttribute?.('role') || '')
+                .toLowerCase() === 'dialog'
+              && String(
+                mixedOverlayPopover.getAttribute?.('aria-label') || '')
+                .includes('Flow IPC mixed modeless popover')
+              && mixedOverlayPopoverAriaTarget
+                ?.getAttribute?.('aria-expanded') === 'true'
+              && mixedOverlayPopoverAriaTarget
+                ?.getAttribute?.('aria-controls') === mixedOverlayPopover.id
+              && mixedOverlayPopoverAriaTarget
+                ?.getAttribute?.('aria-haspopup') === 'dialog';
+          const mixedOverlayStackOpenedObserved =
+            mixedOverlayStackCurrent
+              || mixedOverlayMarker.openedObserved === true;
+          const mixedOverlayStackA11yObserved =
+            mixedOverlayStackA11yCurrent
+              || mixedOverlayMarker.a11yObserved === true;
+          const mixedOverlayStackTabOrderObserved =
+            mixedOverlayMarker.tabForwardObserved === true
+              && mixedOverlayMarker.tabBackwardObserved === true;
+          const mixedOverlayStackTopEscapeObserved =
+            mixedOverlayMarker.topEscapeDispatched === true
+              && mixedOverlayPopoverOpened !== true
+              && mixedOverlayPopoverLifecycleStatus.includes(
+                'Mixed overlay Popover lifecycle closed: client=true');
+          const mixedOverlayStackParentRemainsOpenObserved =
+            mixedOverlayMarker.parentRemainsAfterTopEscape === true
+              && (mixedOverlayMarker.outsideDispatched !== true
+                || mixedOverlayMarker.parentRemainsAfterOutside === true);
+          const mixedOverlayStackPopoverFocusRestoredObserved =
+            mixedOverlayMarker.popoverFocusRestoredObserved === true
+              || (mixedOverlayMarker.topEscapeDispatched === true
+                && mixedOverlayPopoverOpened !== true
+                && !!mixedOverlayPopoverTarget
+                && activeDeepElements().includes(
+                  mixedOverlayPopoverTarget));
+          const mixedOverlayStackOutsideCloseObserved =
+            mixedOverlayMarker.outsideDispatched === true
+              && mixedOverlayPopoverOpened !== true
+              && mixedOverlayPopoverLifecycleStatus.includes(
+                'Mixed overlay Popover lifecycle closed: client=true');
+          const mixedOverlayStackOutsideFocusPreservedObserved =
+            mixedOverlayMarker.outsideFocusPreservedObserved === true
+              || (mixedOverlayMarker.outsideDispatched === true
+                && !!mixedOverlayOutsideTarget
+                && activeDeepElements().includes(mixedOverlayOutsideTarget));
+          const mixedOverlayStackParentEscapeObserved =
+            mixedOverlayMarker.parentEscapeDispatched === true
+              && mixedOverlayDialogOpened !== true
+              && mixedOverlayDialogLifecycleStatus.includes(
+                'Mixed overlay Dialog lifecycle closed: client=true');
+          const mixedOverlayStackLayeredFocusRestoredObserved =
+            mixedOverlayMarker.layeredFocusRestoredObserved === true
+              || (mixedOverlayMarker.parentEscapeDispatched === true
+                && mixedOverlayDialogOpened !== true
+                && !!mixedOverlayDialogOpenTrigger
+                && activeDeepElements().includes(
+                  mixedOverlayDialogOpenTrigger));
+          const nestedPopoverOuter =
+            document.querySelector('#framework-nested-popover-outer');
+          const nestedPopoverOuterTarget =
+            document.querySelector('#framework-nested-popover-outer-target');
+          const nestedPopoverOuterLifecycleStatus =
+            document.querySelector(
+              '#framework-nested-popover-outer-lifecycle-status')
+              ?.textContent || '';
+          const nestedPopoverInner =
+            document.querySelector('#framework-nested-popover-inner');
+          const nestedPopoverInnerTarget =
+            document.querySelector('#framework-nested-popover-inner-target');
+          const nestedPopoverInnerFocusField =
+            document.querySelector(
+              '#framework-nested-popover-inner-focus-field');
+          const nestedPopoverInnerLifecycleStatus =
+            document.querySelector(
+              '#framework-nested-popover-inner-lifecycle-status')
+              ?.textContent || '';
+          const nestedPopoverOutsideTarget =
+            document.querySelector('#framework-nested-popover-outside-target');
+          const nestedPopoverOuterOpened =
+            nestedPopoverOuter?.opened === true
+              || nestedPopoverOuter?.hasAttribute?.('opened') === true;
+          const nestedPopoverInnerOpened =
+            nestedPopoverInner?.opened === true
+              || nestedPopoverInner?.hasAttribute?.('opened') === true;
+          const nestedPopoverOuterOverlay =
+            nestedPopoverOuter?.shadowRoot
+              ?.querySelector('vaadin-popover-overlay');
+          const nestedPopoverInnerOverlay =
+            nestedPopoverInner?.shadowRoot
+              ?.querySelector('vaadin-popover-overlay');
+          const nestedPopoverOuterAriaTarget =
+            nestedPopoverOuterTarget?.ariaTarget || nestedPopoverOuterTarget;
+          const nestedPopoverInnerAriaTarget =
+            nestedPopoverInnerTarget?.ariaTarget || nestedPopoverInnerTarget;
+          const nestedPopoverMarker =
+            window.VaadinDesktopFrameworkNestedPopover || {};
+          const nestedPopoverOuterCurrent =
+            nestedPopoverOuterOpened
+              && !!nestedPopoverOuter
+              && !!nestedPopoverOuterTarget
+              && !!nestedPopoverOuterOverlay
+              && nestedPopoverOuter.target === nestedPopoverOuterTarget
+              && nestedPopoverOuterOverlay.positionTarget
+                === nestedPopoverOuterTarget
+              && nestedPopoverOuterOverlay.modeless === true
+              && nestedPopoverOuterOverlay.focusTrap !== true;
+          const nestedPopoverOuterA11yCurrent =
+            nestedPopoverOuterCurrent
+              && String(
+                nestedPopoverOuter.getAttribute?.('role') || '')
+                .toLowerCase() === 'dialog'
+              && String(
+                nestedPopoverOuter.getAttribute?.('aria-label') || '')
+                .includes('Flow IPC nested outer popover')
+              && nestedPopoverOuterAriaTarget
+                ?.getAttribute?.('aria-expanded') === 'true'
+              && nestedPopoverOuterAriaTarget
+                ?.getAttribute?.('aria-controls') === nestedPopoverOuter.id
+              && nestedPopoverOuterAriaTarget
+                ?.getAttribute?.('aria-haspopup') === 'dialog';
+          const nestedAnchoredOverlayStackOuterOpenedObserved =
+            nestedPopoverOuterCurrent
+              || nestedPopoverMarker.outerOpenedObserved === true;
+          const nestedAnchoredOverlayStackCurrent =
+            nestedPopoverOuterCurrent
+              && nestedPopoverInnerOpened
+              && !!nestedPopoverInner
+              && !!nestedPopoverInnerTarget
+              && !!nestedPopoverInnerOverlay
+              && nestedPopoverOuter.contains?.(nestedPopoverInner)
+              && nestedPopoverOuter.contains?.(nestedPopoverInnerTarget)
+              && nestedPopoverInner.target === nestedPopoverInnerTarget
+              && nestedPopoverInnerOverlay.positionTarget
+                === nestedPopoverInnerTarget
+              && nestedPopoverInnerOverlay.modeless === true
+              && nestedPopoverInnerOverlay.focusTrap !== true;
+          const nestedAnchoredOverlayStackA11yCurrent =
+            nestedAnchoredOverlayStackCurrent
+              && nestedPopoverOuterA11yCurrent
+              && String(
+                nestedPopoverInner.getAttribute?.('role') || '')
+                .toLowerCase() === 'dialog'
+              && String(
+                nestedPopoverInner.getAttribute?.('aria-label') || '')
+                .includes('Flow IPC nested inner popover')
+              && nestedPopoverInnerAriaTarget
+                ?.getAttribute?.('aria-expanded') === 'true'
+              && nestedPopoverInnerAriaTarget
+                ?.getAttribute?.('aria-controls') === nestedPopoverInner.id
+              && nestedPopoverInnerAriaTarget
+                ?.getAttribute?.('aria-haspopup') === 'dialog';
+          const nestedAnchoredOverlayStackOpenedObserved =
+            nestedAnchoredOverlayStackCurrent
+              || nestedPopoverMarker.stackOpenedObserved === true;
+          const nestedAnchoredOverlayStackA11yObserved =
+            nestedAnchoredOverlayStackA11yCurrent
+              || nestedPopoverMarker.a11yObserved === true;
+          const nestedAnchoredOverlayStackTabOrderObserved =
+            nestedPopoverMarker.tabForwardObserved === true
+              && nestedPopoverMarker.tabBackwardObserved === true;
+          const nestedAnchoredOverlayStackTopEscapeObserved =
+            nestedPopoverMarker.topEscapeDispatched === true
+              && nestedPopoverInnerOpened !== true
+              && nestedPopoverInnerAriaTarget
+                ?.getAttribute?.('aria-expanded') === 'false'
+              && !nestedPopoverInnerAriaTarget?.hasAttribute?.('aria-controls')
+              && nestedPopoverInnerLifecycleStatus.includes(
+                'Nested inner Popover lifecycle closed: client=true');
+          const nestedAnchoredOverlayStackParentRemainsOpenObserved =
+            nestedPopoverMarker.parentRemainsAfterTopEscape === true;
+          const nestedAnchoredOverlayStackInnerFocusRestoredObserved =
+            nestedPopoverMarker.innerFocusRestoredObserved === true
+              || (nestedPopoverMarker.topEscapeDispatched === true
+                && nestedPopoverInnerOpened !== true
+                && !!nestedPopoverInnerTarget
+                && activeDeepElements().includes(nestedPopoverInnerTarget));
+          const nestedAnchoredOverlayStackParentEscapeObserved =
+            nestedPopoverMarker.parentEscapeDispatched === true
+              && nestedPopoverOuterOpened !== true
+              && nestedPopoverOuterLifecycleStatus.includes(
+                'Nested outer Popover lifecycle closed: client=true');
+          const nestedAnchoredOverlayStackLayeredFocusRestoredObserved =
+            nestedPopoverMarker.layeredFocusRestoredObserved === true
+              || (nestedPopoverMarker.parentEscapeDispatched === true
+                && nestedPopoverOuterOpened !== true
+                && !!nestedPopoverOuterTarget
+                && activeDeepElements().includes(nestedPopoverOuterTarget));
+          const nestedAnchoredOverlayStackOutsideTopCloseObserved =
+            nestedPopoverMarker.outsideTopDispatched === true
+              && nestedPopoverInnerOpened !== true
+              && nestedPopoverInnerLifecycleStatus.includes(
+                'Nested inner Popover lifecycle closed: client=true');
+          const nestedAnchoredOverlayStackOutsideParentRemainsOpenObserved =
+            nestedPopoverMarker.parentRemainsAfterOutsideTop === true;
+          const nestedAnchoredOverlayStackOutsideFocusPreservedObserved =
+            nestedPopoverMarker.outsideFocusPreservedObserved === true
+              || (nestedPopoverMarker.outsideTopDispatched === true
+                && !!nestedPopoverOutsideTarget
+                && activeDeepElements().includes(nestedPopoverOutsideTarget));
+          const nestedAnchoredOverlayStackOutsideParentCloseObserved =
+            nestedPopoverMarker.outsideParentDispatched === true
+              && nestedPopoverOuterOpened !== true
+              && nestedPopoverOuterAriaTarget
+                ?.getAttribute?.('aria-expanded') === 'false'
+              && !nestedPopoverOuterAriaTarget?.hasAttribute?.('aria-controls')
+              && nestedPopoverOuterLifecycleStatus.includes(
+                'Nested outer Popover lifecycle closed: client=true');
           const notificationStatus =
             document.querySelector('#framework-notification-status')?.textContent || '';
           const notification = findDeep((element) =>
@@ -3017,6 +5275,36 @@ extension WebViewHost {
           const numberFieldServerObserved =
             numberFieldStatus.includes('NumberField server value: 8.25')
               && numberFieldValue === '8.25';
+          const slider = document.querySelector('#framework-slider');
+          const sliderStatus =
+            document.querySelector('#framework-slider-status')?.textContent || '';
+          const sliderValue = Number(
+            slider?.value ?? slider?.getAttribute?.('value') ?? Number.NaN);
+          const sliderMin = Number(
+            slider?.min ?? slider?.getAttribute?.('min') ?? Number.NaN);
+          const sliderMax = Number(
+            slider?.max ?? slider?.getAttribute?.('max') ?? Number.NaN);
+          const sliderStep = Number(
+            slider?.step ?? slider?.getAttribute?.('step') ?? Number.NaN);
+          const sliderMinMaxVisible =
+            slider?.minMaxVisible === true
+              || slider?.hasAttribute?.('min-max-visible') === true
+              || slider?.hasAttribute?.('minMaxVisible') === true;
+          const sliderValueAlwaysVisible =
+            slider?.valueAlwaysVisible === true
+              || slider?.hasAttribute?.('value-always-visible') === true
+              || slider?.hasAttribute?.('valueAlwaysVisible') === true;
+          const sliderClientObserved =
+            sliderStatus.includes('Slider client value: 6.5')
+              && sliderValue === 6.5;
+          const sliderServerObserved =
+            sliderStatus.includes('Slider server value: 9.0 range=2.0-12.0 step=1.0')
+              && sliderValue === 9
+              && sliderMin === 2
+              && sliderMax === 12
+              && sliderStep === 1
+              && sliderMinMaxVisible === false
+              && sliderValueAlwaysVisible === false;
           const checkboxGroup = document.querySelector('#framework-checkbox-group');
           const checkboxGroupStatus =
             document.querySelector('#framework-checkbox-group-status')?.textContent || '';
@@ -3318,6 +5606,487 @@ extension WebViewHost {
               && scrollerScrollWidth > scrollerClientWidth
               && scrollerText.includes('Horizontal patched 6')
               && scrollerTheme.includes('overflow-indicators');
+          const icon = document.querySelector('#framework-icon');
+          const iconStatus =
+            document.querySelector('#framework-icon-status')?.textContent || '';
+          const iconName = String(icon?.getAttribute?.('icon') || icon?.icon || '');
+          const iconFill = String(icon?.style?.fill || '');
+          const iconWidth = String(icon?.style?.width || '');
+          const iconHeight = String(icon?.style?.height || '');
+          const iconAriaLabel = String(icon?.getAttribute?.('aria-label') || '');
+          const iconClickMatch = iconStatus.match(
+            /Icon clicked: icon=vaadin:clipboard-check count=(\\d+)/);
+          const iconClickCount = iconClickMatch ? Number(iconClickMatch[1]) : 0;
+          const iconInitialShapeObserved =
+            iconName === 'vaadin:clipboard-check'
+              && iconFill === 'var(--lumo-primary-color)'
+              && iconWidth === '24px'
+              && iconHeight === '24px'
+              && iconAriaLabel === 'Framework icon';
+          const iconServerObserved =
+            iconStatus.includes('Icon server state: vaadin:cog color=success size=32')
+              && iconName === 'vaadin:cog'
+              && iconFill === 'var(--lumo-success-color)'
+              && iconWidth === '32px'
+              && iconHeight === '32px'
+              && iconAriaLabel === 'Framework icon';
+          const iconClientObserved =
+            iconClickCount > 0 && (iconInitialShapeObserved || iconServerObserved);
+          const appLayout = document.querySelector('#framework-app-layout');
+          const appLayoutStatus =
+            document.querySelector('#framework-app-layout-status')?.textContent || '';
+          const appLayoutContent =
+            document.querySelector('#framework-app-layout-content')?.textContent || '';
+          const appLayoutTitle =
+            document.querySelector('#framework-app-layout-title')?.textContent || '';
+          const appLayoutPrimarySection = String(
+            appLayout?.primarySection
+              || appLayout?.getAttribute?.('primary-section')
+              || appLayout?.getAttribute?.('primarySection')
+              || '');
+          const appLayoutDrawerOpened =
+            appLayout?.drawerOpened === true
+              || appLayout?.hasAttribute?.('drawer-opened') === true
+              || appLayout?.hasAttribute?.('drawerOpened') === true;
+          const appLayoutToggleMatch = appLayoutStatus.match(
+            /AppLayout toggle clicked: count=(\\d+)/);
+          const appLayoutToggleCount =
+            appLayoutToggleMatch ? Number(appLayoutToggleMatch[1]) : 0;
+          const appLayoutClientObserved =
+            appLayoutToggleCount > 0
+              && appLayoutTitle.includes('IPC Shell')
+              && !!document.querySelector('#framework-app-layout-drawer-action')
+              && (appLayoutContent.includes('AppLayout content: overview')
+                || appLayoutContent.includes('AppLayout content: patched navbar closed'));
+          const appLayoutServerObserved =
+            appLayoutStatus.includes('AppLayout server state: primary=navbar drawer=false')
+              && appLayoutContent.includes('AppLayout content: patched navbar closed')
+              && appLayoutPrimarySection.toLowerCase().includes('navbar')
+              && appLayoutDrawerOpened === false;
+          const masterDetailLayout =
+            document.querySelector('#framework-master-detail-layout');
+          const masterDetailBackdrop =
+            masterDetailLayout?.shadowRoot?.querySelector?.('[part="backdrop"]');
+          const masterDetailBackdropRendered = !!masterDetailBackdrop;
+          const masterDetailStatus =
+            document.querySelector('#framework-master-detail-status')?.textContent || '';
+          const masterDetailText = collectDeepText(masterDetailLayout);
+          const masterDetailTheme = String(
+            masterDetailLayout?.getAttribute?.('theme') || '').toLowerCase();
+          const masterDetailMasterSize = String(
+            masterDetailLayout?.masterSize
+              ?? masterDetailLayout?.getAttribute?.('master-size')
+              ?? masterDetailLayout?.getAttribute?.('masterSize')
+              ?? '');
+          const masterDetailMasterMinSize = String(
+            masterDetailLayout?.masterMinSize
+              ?? masterDetailLayout?.getAttribute?.('master-min-size')
+              ?? masterDetailLayout?.getAttribute?.('masterMinSize')
+              ?? '');
+          const masterDetailDetailSize = String(
+            masterDetailLayout?.detailSize
+              ?? masterDetailLayout?.getAttribute?.('detail-size')
+              ?? masterDetailLayout?.getAttribute?.('detailSize')
+              ?? '');
+          const masterDetailDetailMinSize = String(
+            masterDetailLayout?.detailMinSize
+              ?? masterDetailLayout?.getAttribute?.('detail-min-size')
+              ?? masterDetailLayout?.getAttribute?.('detailMinSize')
+              ?? '');
+          const masterDetailOrientation = String(
+            masterDetailLayout?.orientation
+              ?? masterDetailLayout?.getAttribute?.('orientation')
+              ?? '').toLowerCase();
+          const masterDetailContainment = String(
+            masterDetailLayout?.containment
+              ?? masterDetailLayout?.getAttribute?.('containment')
+              ?? '').toLowerCase();
+          const masterDetailForceOverlay =
+            masterDetailLayout?.forceOverlay === true
+              || masterDetailLayout?.hasAttribute?.('force-overlay') === true
+              || masterDetailLayout?.hasAttribute?.('forceOverlay') === true;
+          const masterDetailStackOverlay =
+            masterDetailLayout?.stackOverlay === true
+              || masterDetailLayout?.hasAttribute?.('stack-overlay') === true
+              || masterDetailLayout?.hasAttribute?.('stackOverlay') === true;
+          const masterDetailNoAnimation =
+            masterDetailLayout?.noAnimation === true
+              || masterDetailLayout?.hasAttribute?.('no-animation') === true
+              || masterDetailLayout?.hasAttribute?.('noAnimation') === true;
+          const masterDetailClientObserved =
+            masterDetailStatus.includes('MasterDetail backdrop clicked: count=1')
+              && masterDetailText.includes('Master queue seeded')
+              && masterDetailText.includes('Detail virtual child ready')
+              && masterDetailTheme.includes('inset-drawer')
+              && masterDetailMasterSize === '150px'
+              && masterDetailDetailSize === '270px'
+              && masterDetailOrientation === 'horizontal'
+              && masterDetailContainment === 'layout'
+              && masterDetailForceOverlay === false
+              && masterDetailStackOverlay === false
+              && masterDetailNoAnimation === true;
+          const masterDetailPatchedContentObserved =
+            masterDetailStatus.includes(
+              'MasterDetail server state: vertical stack overlay viewport patched')
+              && masterDetailText.includes('Master queue patched')
+              && masterDetailText.includes('Queue item IPC-202')
+              && masterDetailText.includes('Detail virtual child replaced')
+              && masterDetailMasterSize === '180px'
+              && masterDetailMasterMinSize === '140px'
+              && masterDetailDetailSize === '260px'
+              && masterDetailDetailMinSize === '200px'
+              && masterDetailOrientation === 'vertical'
+              && masterDetailContainment === 'viewport'
+              && masterDetailForceOverlay === true
+              && masterDetailStackOverlay === true;
+          const masterDetailContentObserved =
+            masterDetailPatchedContentObserved
+              && masterDetailStatus.includes('animation=disabled')
+              && masterDetailNoAnimation === true;
+          const masterDetailServerObserved =
+            masterDetailPatchedContentObserved
+              && masterDetailStatus.includes('animation=enabled')
+              && masterDetailNoAnimation === false;
+          const card = document.querySelector('#framework-card');
+          const cardStatus =
+            document.querySelector('#framework-card-status')?.textContent || '';
+          const cardTheme = String(card?.getAttribute?.('theme') || '').toLowerCase();
+          const cardAriaRole = String(
+            card?.getAttribute?.('role') || card?.getAttribute?.('aria-role') || '');
+          const cardAriaLabel = String(card?.getAttribute?.('aria-label') || '');
+          const cardSlotText = (slot) =>
+            collectDeepText(card?.querySelector?.(`[slot="${slot}"]`));
+          const cardText = collectDeepText(card);
+          const cardTitle = cardSlotText('title');
+          const cardSubtitle = cardSlotText('subtitle');
+          const cardMedia = cardSlotText('media');
+          const cardHeaderPrefix = cardSlotText('header-prefix');
+          const cardHeaderSuffix = cardSlotText('header-suffix');
+          const cardFooter = cardSlotText('footer');
+          const cardClientObserved =
+            cardStatus.includes('Card clicked: count=1')
+              && cardText.includes('Flow IPC card')
+              && cardTheme.includes('outlined')
+              && cardAriaRole === 'region'
+              && cardAriaLabel === 'Framework audit card';
+          const cardServerObserved =
+            cardStatus.includes('Card server state: elevated horizontal patched')
+              && cardTitle.includes('Flow IPC patched card')
+              && cardSubtitle.includes('Card subtitle: server patched')
+              && cardMedia.includes('Card media: server patched')
+              && cardHeaderPrefix.includes('P2')
+              && cardHeaderSuffix.includes('approved')
+              && cardText.includes('Card body: server patched')
+              && cardFooter.includes('Card footer: closed')
+              && cardTheme.includes('elevated')
+              && cardTheme.includes('horizontal')
+              && cardAriaRole === 'article'
+              && cardAriaLabel === 'Framework audit card patched';
+          const markdown = document.querySelector('#framework-markdown');
+          const markdownStatus =
+            document.querySelector('#framework-markdown-status')?.textContent || '';
+          const markdownContent = String(
+            markdown?.content ?? markdown?.getAttribute?.('content') ?? '');
+          const markdownText = collectDeepText(markdown);
+          const markdownClientObserved =
+            markdownStatus.includes('Markdown clicked: count=1')
+              && markdownContent.includes('# Flow IPC Markdown')
+              && markdownText.includes('Flow IPC Markdown')
+              && markdownText.includes('client ready')
+              && markdownText.includes('audit link');
+          const markdownServerObserved =
+            markdownStatus.includes('Markdown server state: patched appended')
+              && markdownContent.includes('## Flow IPC Markdown patched')
+              && markdownContent.includes('appended quote through Flow IPC')
+              && markdownText.includes('Flow IPC Markdown patched')
+              && markdownText.includes('server patch')
+              && markdownText.includes('inline-code')
+              && markdownText.includes('appended quote through Flow IPC');
+          const badge = document.querySelector('#framework-badge');
+          const badgeStatus =
+            document.querySelector('#framework-badge-status')?.textContent || '';
+          const badgeTheme = String(badge?.getAttribute?.('theme') || '').toLowerCase();
+          const badgeText = collectDeepText(badge);
+          const badgeNumber = String(
+            badge?.number ?? badge?.getAttribute?.('number') ?? '');
+          const badgeRole = String(badge?.getAttribute?.('role') || '');
+          const badgeIcon = badge?.querySelector?.('[slot="icon"]');
+          const badgeIconName = String(
+            badgeIcon?.getAttribute?.('icon') || badgeIcon?.icon || '');
+          const badgeClientObserved =
+            badgeStatus.includes('Badge clicked: count=1')
+              && badgeText.includes('queued')
+              && badgeNumber === '7'
+              && badgeTheme.includes('contrast')
+              && badgeTheme.includes('small')
+              && badgeRole === 'status'
+              && badgeIconName === 'vaadin:clipboard-check';
+          const badgeServerObserved =
+            badgeStatus.includes('Badge server state: approved number=12')
+              && badgeText.includes('approved')
+              && badgeNumber === '12'
+              && badgeTheme.includes('success')
+              && badgeTheme.includes('filled')
+              && badgeRole === 'mark'
+              && badgeIconName === 'vaadin:cog';
+          const lazyGrid = document.querySelector('#framework-lazy-grid');
+          const lazyGridStatus =
+            document.querySelector('#framework-lazy-grid-status')?.textContent || '';
+          const lazyGridSelectionStatus =
+            document.querySelector('#framework-lazy-grid-selection-status')?.textContent || '';
+          const lazyGridQueryStatus =
+            document.querySelector('#framework-lazy-grid-query-status')?.textContent || '';
+          const lazyGridFilterValue = String(
+            document.querySelector('#framework-lazy-grid-filter')?.value || '');
+          const lazyGridHasVisibleItem = (label) => {
+            if (!lazyGrid) return false;
+            const gridRect = lazyGrid.getBoundingClientRect();
+            return !!findDeepFrom(lazyGrid, (element) => {
+              if (element.localName !== 'vaadin-grid-cell-content'
+                  || collectDeepText(element).trim() !== label) {
+                return false;
+              }
+              const rect = element.getBoundingClientRect();
+              return rect.width > 0
+                && rect.height > 0
+                && rect.bottom > gridRect.top
+                && rect.top < gridRect.bottom;
+            });
+          };
+          const lazyGridFarViewportObserved =
+            lazyGridHasVisibleItem('L-061')
+              && ((lazyGridStatus.includes('Lazy grid fetch ')
+                    && !lazyGridStatus.includes(': 0-'))
+                || (lazyGridStatus.includes('Lazy grid fetches:')
+                    && !lazyGridStatus.includes('range: pending')
+                    && !lazyGridStatus.includes('range: 0-')));
+          const lazyGridSelectionObserved =
+            lazyGridSelectionStatus.includes('Lazy grid selection: L-061');
+          const lazyGridReturnViewportObserved =
+            lazyGridHasVisibleItem('L-001');
+          const lazyGridSortObserved =
+            lazyGridQueryStatus.includes('sort=owner:ascending')
+              && lazyGridQueryStatus.includes('filter=all')
+              && lazyGridQueryStatus.includes('matches=80')
+              && lazyGridHasVisibleItem('L-002');
+          const lazyGridFilterObserved =
+            lazyGridFilterValue === 'platform'
+              && lazyGridQueryStatus.includes('sort=owner:ascending')
+              && lazyGridQueryStatus.includes('filter=platform')
+              && lazyGridQueryStatus.includes('matches=26')
+              && lazyGridHasVisibleItem('L-003');
+          const lazyGridFilterResetObserved =
+            lazyGridFilterValue === ''
+              && lazyGridQueryStatus.includes('sort=owner:ascending')
+              && lazyGridQueryStatus.includes('filter=all')
+              && lazyGridQueryStatus.includes('matches=80')
+              && lazyGridHasVisibleItem('L-002');
+          const treeGrid = document.querySelector('#framework-tree-grid');
+          const treeGridQueryStatus =
+            document.querySelector('#framework-tree-grid-query-status')
+              ?.textContent || '';
+          const treeGridCountStatus =
+            document.querySelector('#framework-tree-grid-count-status')
+              ?.textContent || '';
+          const treeGridLifecycleStatus =
+            document.querySelector('#framework-tree-grid-lifecycle-status')
+              ?.textContent || '';
+          const treeGridSelectionStatus =
+            document.querySelector('#framework-tree-grid-selection-status')
+              ?.textContent || '';
+          const treeGridRefreshStatus =
+            document.querySelector('#framework-tree-grid-refresh-status')
+              ?.textContent || '';
+          const treeGridText = treeGrid ? collectDeepText(treeGrid) : '';
+          const treeGridToggle = (label) => treeGrid && findDeepFrom(
+            treeGrid,
+            (element) =>
+              element.localName === 'vaadin-grid-tree-toggle'
+                && collectDeepText(element).includes(label));
+          const treeGridPlatformToggle = treeGridToggle('Platform');
+          const treeGridRuntimeToggle = treeGridToggle('Runtime');
+          const treeGridRootLoadedObserved =
+            treeGridText.includes('Platform')
+              && treeGridText.includes('Product')
+              && treeGridQueryStatus.includes('parent=root')
+              && treeGridCountStatus.includes('parent=root, count=2');
+          const treeGridPlatformExpandedObserved =
+            treeGridPlatformToggle?.expanded === true
+              && treeGridText.includes('Runtime')
+              && treeGridText.includes('Native host')
+              && treeGridQueryStatus.includes('parent=domain-platform')
+              && treeGridLifecycleStatus.includes(
+                'Tree grid expand: domain-platform client=true');
+          const treeGridRuntimeExpandedObserved =
+            treeGridPlatformToggle?.expanded === true
+              && treeGridRuntimeToggle?.expanded === true
+              && treeGridText.includes('Opaque IPC')
+              && treeGridText.includes('Push')
+              && treeGridQueryStatus.includes('parent=area-runtime')
+              && treeGridLifecycleStatus.includes(
+                'Tree grid expand: area-runtime client=true');
+          const treeGridSelectionObserved =
+            treeGridSelectionStatus.includes(
+              'Tree grid selection: capability-opaque-ipc');
+          const treeGridRefreshObserved =
+            treeGridRefreshStatus.includes(
+              'Tree grid refresh: area-runtime children=3')
+              && treeGridQueryStatus.includes('parent=area-runtime')
+              && treeGridText.includes('Trace inspector');
+          const treeGridCollapseObserved =
+            treeGridLifecycleStatus.includes(
+              'Tree grid collapse: domain-platform client=true')
+              && treeGridPlatformToggle?.expanded !== true;
+          const editorGrid = document.querySelector('#framework-editor-grid');
+          const editorRendererStatus =
+            document.querySelector('#framework-editor-renderer-status')
+              ?.textContent || '';
+          const editorOpenStatus =
+            document.querySelector('#framework-editor-open-status')
+              ?.textContent || '';
+          const editorSaveStatus =
+            document.querySelector('#framework-editor-save-status')
+              ?.textContent || '';
+          const editorCancelStatus =
+            document.querySelector('#framework-editor-cancel-status')
+              ?.textContent || '';
+          const editorValidationStatus =
+            document.querySelector('#framework-editor-validation-status')
+              ?.textContent || '';
+          const litRendererStatus =
+            document.querySelector('#framework-lit-renderer-status')
+              ?.textContent || '';
+          const flowRpcProbe =
+            document.querySelector('#framework-flow-rpc-probe');
+          const clientCallableStatus =
+            document.querySelector('#framework-client-callable-status')
+              ?.textContent || '';
+          const pendingJavaScriptSuccessStatus =
+            document.querySelector(
+              '#framework-pending-javascript-success-status')
+              ?.textContent || '';
+          const pendingJavaScriptFailureStatus =
+            document.querySelector(
+              '#framework-pending-javascript-failure-status')
+              ?.textContent || '';
+          const editorGridText = editorGrid ? collectDeepText(editorGrid) : '';
+          const editorOpenButton = (id) => editorGrid && findDeepFrom(
+            editorGrid,
+            (element) => element.id === `framework-editor-open-${id}`);
+          const editorOwnerField = editorGrid && findDeepFrom(
+            editorGrid,
+            (element) => element.id === 'framework-editor-owner-field');
+          const editorOwnerRect = editorOwnerField?.getBoundingClientRect?.();
+          const gridEditorActiveFieldVisible =
+            !!editorOwnerRect
+              && editorOwnerRect.width > 0
+              && editorOwnerRect.height > 0;
+          const gridEditorActiveFieldInvalid =
+            editorOwnerField?.invalid === true
+              || editorOwnerField?.hasAttribute?.('invalid') === true;
+          const componentRendererObserved =
+            !!editorOpenButton('E-100')
+              && !!editorOpenButton('E-101')
+              && !!editorOpenButton('E-102')
+              && editorRendererStatus.includes('E-100')
+              && editorRendererStatus.includes('E-101')
+              && editorRendererStatus.includes('E-102');
+          const gridEditorOpenedObserved =
+            editorOpenStatus.includes('E-100');
+          const gridEditorSaveObserved =
+            editorSaveStatus.includes(
+              'Grid editor save: E-100 owner=desktop-updated')
+              && editorGridText.includes('desktop-updated');
+          const gridEditorCancelOpenedObserved =
+            editorOpenStatus.includes('E-101');
+          const gridEditorCancelObserved =
+            editorCancelStatus.includes('E-101 owner=desktop')
+              && editorGridText.includes('desktop')
+              && !editorGridText.includes('should-not-stick');
+          const gridEditorValidationOpenedObserved =
+            editorOpenStatus.includes('E-102');
+          const gridEditorValidationObserved =
+            editorValidationStatus.includes(
+              'Grid editor validation blocked: E-102');
+          const gridEditorValidationCancelObserved =
+            editorCancelStatus.includes('E-102 owner=audit')
+              && editorGridText.includes('audit');
+          const litRendererButton = (id, state) => editorGrid && findDeepFrom(
+            editorGrid,
+            (element) => element.localName === 'button'
+              && (element.textContent || '').replace(/\\s+/g, ' ')
+                .includes(`Lit ${id}: ${state}`));
+          const litRendererInitialE100 =
+            litRendererButton('E-100', 'queued');
+          const litRendererUpdatedE100 =
+            litRendererButton('E-100', 'lit-updated');
+          const litRendererPropertiesObserved =
+            !!(litRendererInitialE100 || litRendererUpdatedE100)
+              && !!litRendererButton('E-101', 'review')
+              && !!litRendererButton('E-102', 'ready');
+          const litRendererFunctionObserved =
+            litRendererStatus.includes(
+              'LitRenderer function: E-100 state=lit-updated');
+          const litRendererRefreshObserved =
+            litRendererFunctionObserved && !!litRendererUpdatedE100;
+          const clientCallableResolveObserved =
+            clientCallableStatus.includes(
+              'ClientCallable invoked: desktop-rpc')
+              && flowRpcProbe?.dataset?.clientCallableResolved
+                === 'ClientCallable response: desktop-rpc'
+              && !flowRpcProbe?.dataset?.clientCallableResolveError;
+          const clientCallableRejectObserved =
+            flowRpcProbe?.dataset?.clientCallableRejected === 'true'
+              && !!flowRpcProbe?.dataset?.clientCallableRejectError
+              && !flowRpcProbe?.dataset?.clientCallableUnexpectedValue;
+          const pendingJavaScriptResolveObserved =
+            pendingJavaScriptSuccessStatus.includes(
+              'Pending JavaScript resolved: pending-js:desktop-rpc');
+          const pendingJavaScriptRejectObserved =
+            pendingJavaScriptFailureStatus.includes(
+              'Pending JavaScript rejected:')
+              && pendingJavaScriptFailureStatus.includes(
+                'pending-js-rejected');
+          const flowDndSource =
+            document.querySelector('#framework-flow-dnd-source');
+          const flowDndTarget =
+            document.querySelector('#framework-flow-dnd-target');
+          const flowDndRecord = window.VaadinDesktopFlowDnd || {};
+          const flowDndDragStartStatus =
+            document.querySelector('#framework-flow-dnd-start-status')
+              ?.textContent || '';
+          const flowDndDropStatus =
+            document.querySelector('#framework-flow-dnd-drop-status')
+              ?.textContent || '';
+          const flowDndDragEndStatus =
+            document.querySelector('#framework-flow-dnd-end-status')
+              ?.textContent || '';
+          const flowDndConfiguredObserved =
+            flowDndSource?.draggable === true
+              && flowDndSource?.__effectAllowed === 'move'
+              && flowDndTarget?.__active === true
+              && flowDndTarget?.__dropEffect === 'move';
+          const flowDndDragStartObserved =
+            flowDndDragStartStatus.includes(
+              'Flow DnD drag start: source=framework-flow-dnd-source')
+              && flowDndDragStartStatus.includes('data=flow-dnd-payload')
+              && flowDndDragStartStatus.includes('effectAllowed=MOVE')
+              && flowDndRecord.dragStartClassObserved === true
+              && flowDndRecord.effectAllowedAfterStart === 'move';
+          const flowDndDropObserved =
+            flowDndDropStatus.includes(
+              'Flow DnD drop: source=framework-flow-dnd-source')
+              && flowDndDropStatus.includes('data=flow-dnd-payload')
+              && flowDndDropStatus.includes('effectAllowed=MOVE')
+              && flowDndDropStatus.includes('dropEffect=MOVE')
+              && flowDndRecord.dragOverClassObserved === true
+              && flowDndRecord.dropDefaultPrevented === true
+              && flowDndRecord.dropEffectAfterDrop === 'move'
+              && flowDndRecord.dragOverClassCleared === true;
+          const flowDndDragEndObserved =
+            flowDndDragEndStatus.includes(
+              'Flow DnD drag end: dropEffect=MOVE successful=true')
+              && flowDndRecord.draggedClassCleared === true;
           const virtualList = document.querySelector('#framework-virtual-list');
           const virtualListStatus =
             document.querySelector('#framework-virtual-list-status')?.textContent || '';
@@ -3333,6 +6102,78 @@ extension WebViewHost {
             element.localName === 'input'
               && (element.type || '').toLowerCase() === 'file');
           const richTextEditor = document.querySelector('#framework-rich-text-editor');
+          const lazyFrontendRoute =
+            document.querySelector('#framework-lazy-frontend-route');
+          const lazyFrontendProbe =
+            document.querySelector('#framework-lazy-frontend-probe');
+          const lazyFrontendStatus =
+            document.querySelector('#framework-lazy-frontend-status')?.textContent || '';
+          const lazyFrontendText =
+            lazyFrontendProbe ? collectDeepText(lazyFrontendProbe) : '';
+          const lazyFrontendRouteObserved =
+            window.location.pathname.endsWith('/lazy-frontend')
+              && !!lazyFrontendRoute
+              && !!lazyFrontendProbe
+              && !!customElements.get('vatori-lazy-probe')
+              && lazyFrontendStatus.includes('Lazy frontend route ready')
+              && lazyFrontendText.includes('Lazy frontend module: module ready');
+          const lazyFrontendClientObserved =
+            lazyFrontendStatus.includes('Lazy frontend client event: count=1')
+              && lazyFrontendText.includes(
+                'Lazy frontend module: client event acknowledged');
+          const lazyFrontendServerObserved =
+            lazyFrontendStatus.includes('Lazy frontend server state: patched')
+              && lazyFrontendText.includes('Lazy frontend module: server patched');
+          const nestedLazyLayout =
+            document.querySelector('#framework-nested-lazy-layout');
+          const nestedLazyLayoutProbe =
+            document.querySelector('#framework-nested-lazy-layout-probe');
+          const nestedLazyRoute =
+            document.querySelector('#framework-nested-lazy-route');
+          const nestedLazyProbe =
+            document.querySelector('#framework-nested-lazy-probe');
+          const nestedLazyStatus =
+            document.querySelector('#framework-nested-lazy-status')?.textContent || '';
+          const nestedLazyLayoutText =
+            nestedLazyLayoutProbe ? collectDeepText(nestedLazyLayoutProbe) : '';
+          const nestedLazyText =
+            nestedLazyProbe ? collectDeepText(nestedLazyProbe) : '';
+          const nestedLazyLayoutStyleToken = nestedLazyLayout
+            ? getComputedStyle(nestedLazyLayout)
+              .getPropertyValue('--vatori-lazy-layout-loaded').trim()
+            : '';
+          const nestedLazyRouteStyleToken = nestedLazyRoute
+            ? getComputedStyle(nestedLazyRoute)
+              .getPropertyValue('--vatori-lazy-route-loaded').trim()
+            : '';
+          const nestedLazyPathObserved =
+            window.location.pathname.endsWith('/lazy-nested');
+          const nestedLazyLayoutObserved =
+            nestedLazyPathObserved
+              && !!nestedLazyLayout
+              && !!nestedLazyLayoutProbe
+              && !!customElements.get('vatori-lazy-layout-probe')
+              && nestedLazyLayoutText.includes(
+                'Nested lazy layout module: layout ready')
+              && nestedLazyLayoutStyleToken === 'layout-ready';
+          const nestedLazyRouteObserved =
+            nestedLazyPathObserved
+              && !!nestedLazyRoute
+              && !!nestedLazyProbe
+              && !!customElements.get('vatori-lazy-nested-probe')
+              && nestedLazyStatus.includes('Nested lazy route ready')
+              && nestedLazyRouteStyleToken === 'route-ready';
+          const nestedLazyTransitiveModuleObserved =
+            nestedLazyText.includes(
+              'Nested lazy route module: transitive module ready');
+          const nestedLazyClientObserved =
+            nestedLazyStatus.includes('Nested lazy client event: count=1')
+              && nestedLazyText.includes(
+                'Nested lazy route module: transitive client event acknowledged');
+          const nestedLazyServerObserved =
+            nestedLazyStatus.includes('Nested lazy server state: patched')
+              && nestedLazyText.includes(
+                'Nested lazy route module: transitive server patched');
           const resourceFetch = window.VaadinDesktopFrameworkResourceFetch || {};
           return JSON.stringify({
             ready: diagnostics.standardBundleFirstMeaningfulPaintReported === true
@@ -3365,6 +6206,9 @@ extension WebViewHost {
               && !!numberField
               && !!document.querySelector('#framework-number-field-server-update')
               && !!document.querySelector('#framework-number-field-status')
+              && !!slider
+              && !!document.querySelector('#framework-slider-server-update')
+              && !!document.querySelector('#framework-slider-status')
               && !!document.querySelector('#framework-secret')
               && !!document.querySelector('#framework-review-time')
               && !!document.querySelector('#framework-review-date-time')
@@ -3392,6 +6236,10 @@ extension WebViewHost {
               && !!document.querySelector('#framework-custom-field-status')
               && !!document.querySelector('#framework-input-matrix-status')
               && !!document.querySelector('#framework-dialog-open')
+              && !!document.querySelector('#framework-dialog')
+              && !!document.querySelector('#framework-dialog-focus-field')
+              && !!document.querySelector('#framework-dialog-last-action')
+              && !!document.querySelector('#framework-dialog-lifecycle-status')
               && !!document.querySelector('#framework-validation-action')
               && !!formLayout
               && !!document.querySelector('#framework-form-layout-server-update')
@@ -3416,6 +6264,31 @@ extension WebViewHost {
               && !!scrollerContent
               && !!document.querySelector('#framework-scroller-server-update')
               && !!document.querySelector('#framework-scroller-status')
+              && !!icon
+              && !!document.querySelector('#framework-icon-server-update')
+              && !!document.querySelector('#framework-icon-status')
+              && !!appLayout
+              && !!document.querySelector('#framework-app-layout-toggle')
+              && !!document.querySelector('#framework-app-layout-title')
+              && !!document.querySelector('#framework-app-layout-content')
+              && !!document.querySelector('#framework-app-layout-drawer-action')
+              && !!document.querySelector('#framework-app-layout-server-update')
+              && !!document.querySelector('#framework-app-layout-status')
+              && !!masterDetailLayout
+              && !!document.querySelector('#framework-master-detail-master')
+              && !!document.querySelector('#framework-master-detail-detail')
+              && !!document.querySelector('#framework-master-detail-server-update')
+              && !!document.querySelector('#framework-master-detail-animation-update')
+              && !!document.querySelector('#framework-master-detail-status')
+              && !!card
+              && !!document.querySelector('#framework-card-server-update')
+              && !!document.querySelector('#framework-card-status')
+              && !!markdown
+              && !!document.querySelector('#framework-markdown-server-update')
+              && !!document.querySelector('#framework-markdown-status')
+              && !!badge
+              && !!document.querySelector('#framework-badge-server-update')
+              && !!document.querySelector('#framework-badge-status')
               && !!document.querySelector('#framework-avatar')
               && !!document.querySelector('#framework-message-input')
               && !!document.querySelector('#framework-message-list')
@@ -3477,6 +6350,43 @@ extension WebViewHost {
               && !!document.querySelector('#framework-virtual-list-scroll-end')
               && !!document.querySelector('#framework-popover-target')
               && !!document.querySelector('#framework-popover')
+              && !!document.querySelector('#framework-popover-focus-field')
+              && !!document.querySelector('#framework-popover-last-action')
+              && !!document.querySelector('#framework-popover-lifecycle-status')
+              && !!document.querySelector('#framework-popover-outside-target')
+              && !!document.querySelector('#framework-mixed-overlay-dialog-open')
+              && !!document.querySelector('#framework-mixed-overlay-dialog')
+              && !!document.querySelector(
+                '#framework-mixed-overlay-dialog-lifecycle-status')
+              && !!document.querySelector(
+                '#framework-mixed-overlay-popover-target')
+              && !!document.querySelector('#framework-mixed-overlay-popover')
+              && !!document.querySelector(
+                '#framework-mixed-overlay-popover-focus-field')
+              && !!document.querySelector(
+                '#framework-mixed-overlay-popover-last-action')
+              && !!document.querySelector(
+                '#framework-mixed-overlay-popover-lifecycle-status')
+              && !!document.querySelector(
+                '#framework-mixed-overlay-outside-target')
+              && !!document.querySelector(
+                '#framework-nested-popover-outer-target')
+              && !!document.querySelector('#framework-nested-popover-outer')
+              && !!document.querySelector(
+                '#framework-nested-popover-outer-last-action')
+              && !!document.querySelector(
+                '#framework-nested-popover-outer-lifecycle-status')
+              && !!document.querySelector(
+                '#framework-nested-popover-inner-target')
+              && !!document.querySelector('#framework-nested-popover-inner')
+              && !!document.querySelector(
+                '#framework-nested-popover-inner-focus-field')
+              && !!document.querySelector(
+                '#framework-nested-popover-inner-last-action')
+              && !!document.querySelector(
+                '#framework-nested-popover-inner-lifecycle-status')
+              && !!document.querySelector(
+                '#framework-nested-popover-outside-target')
               && !!document.querySelector('#framework-notification-open')
               && !!document.querySelector('#framework-notification-status')
               && !!document.querySelector('#framework-confirm-dialog-open')
@@ -3498,8 +6408,36 @@ extension WebViewHost {
               && !!document.querySelector('#framework-download-handler-save-open-status')
               && !!document.querySelector('#framework-standard-streaming-download')
               && !!document.querySelector('#framework-rich-content-status')
+              && !!document.querySelector('#framework-lazy-frontend-open')
+              && !!document.querySelector('#framework-nested-lazy-open')
               && !!document.querySelector('#framework-apply')
               && !error,
+            lazyFrontendRouteObserved,
+            lazyFrontendClientObserved,
+            lazyFrontendServerObserved,
+            lazyFrontendPath: window.location.pathname,
+            lazyFrontendRouteRendered: !!lazyFrontendRoute,
+            lazyFrontendProbeRendered: !!lazyFrontendProbe,
+            lazyFrontendModuleDefined: !!customElements.get('vatori-lazy-probe'),
+            lazyFrontendStatus,
+            lazyFrontendText,
+            nestedLazyLayoutObserved,
+            nestedLazyRouteObserved,
+            nestedLazyTransitiveModuleObserved,
+            nestedLazyClientObserved,
+            nestedLazyServerObserved,
+            nestedLazyPath: window.location.pathname,
+            nestedLazyLayoutRendered: !!nestedLazyLayout,
+            nestedLazyRouteRendered: !!nestedLazyRoute,
+            nestedLazyLayoutModuleDefined:
+              !!customElements.get('vatori-lazy-layout-probe'),
+            nestedLazyRouteModuleDefined:
+              !!customElements.get('vatori-lazy-nested-probe'),
+            nestedLazyLayoutStyleToken,
+            nestedLazyRouteStyleToken,
+            nestedLazyStatus,
+            nestedLazyLayoutText,
+            nestedLazyText,
             rootRendered: !!root,
             flowClientCount: clients.length,
             requestCount: Number(diagnostics.standardBundleOpaqueRequestCount || 0),
@@ -3507,6 +6445,7 @@ extension WebViewHost {
             pushMessageCount: Number(diagnostics.standardBundlePushMessageCount || 0),
             pushReconnectCount: Number(diagnostics.standardBundlePushReconnectCount || 0),
             pushResyncCount: Number(diagnostics.standardBundlePushResyncCount || 0),
+            hiddenViewTransitionSkipped,
             pushStatus,
             componentStatus: document.querySelector('#framework-component-status')?.textContent || '',
             checkboxGroupClientObserved,
@@ -3521,7 +6460,53 @@ extension WebViewHost {
             textFieldStatus,
             assigneesStatus: document.querySelector('#framework-assignees-status')?.textContent || '',
             dialogContent: document.querySelector('#framework-dialog-content')?.textContent || '',
-            dialogOpened: document.querySelector('#framework-dialog')?.opened === true,
+            dialogOpened,
+            dialogInitialFocusObserved,
+            dialogFocusTrapObserved,
+            dialogEscapeCloseObserved,
+            dialogFocusRestoredObserved,
+            dialogA11yObserved,
+            dialogLifecycleStatus,
+            dialogOverlayRendered: !!dialogOverlay,
+            dialogRole: String(dialogRoleElement?.getAttribute?.('role') || ''),
+            dialogAriaModal,
+            dialogAccessibleText,
+            dialogActiveElementPath: activeDeepElements()
+              .map((element) =>
+                `${element.localName || element.nodeName || 'unknown'}#${element.id || ''}`)
+              .join(' > '),
+            dialogActiveBeforeTab:
+              String(dialogKeyboardMarker.activeBeforeTab || ''),
+            dialogActiveAfterTab:
+              String(dialogKeyboardMarker.activeAfterTab || ''),
+            dialogActiveAfterShiftTab:
+              String(dialogKeyboardMarker.activeAfterShiftTab || ''),
+            dialogTabDefaultPrevented:
+              dialogKeyboardMarker.tabDefaultPrevented === true,
+            dialogKeyboardError: String(dialogKeyboardMarker.error || ''),
+            modalOverlayStackOpenedObserved,
+            modalOverlayStackInitialFocusObserved,
+            modalOverlayStackFocusTrapObserved,
+            modalOverlayStackTopEscapeObserved,
+            modalOverlayStackParentRemainsOpenObserved,
+            modalOverlayStackFocusRestoredObserved,
+            modalOverlayStackA11yObserved,
+            modalOverlayStackNestedLifecycleStatus:
+              nestedDialogLifecycleStatus,
+            modalOverlayStackNestedRole: nestedDialogRole,
+            modalOverlayStackNestedAriaModal: nestedDialogAriaModal,
+            modalOverlayStackNestedAccessibleText:
+              nestedDialogAccessibleText,
+            modalOverlayStackActiveBeforeTab:
+              String(nestedDialogKeyboardMarker.activeBeforeTab || ''),
+            modalOverlayStackActiveAfterTab:
+              String(nestedDialogKeyboardMarker.activeAfterTab || ''),
+            modalOverlayStackActiveAfterShiftTab:
+              String(nestedDialogKeyboardMarker.activeAfterShiftTab || ''),
+            modalOverlayStackTabDefaultPrevented:
+              nestedDialogKeyboardMarker.tabDefaultPrevented === true,
+            modalOverlayStackKeyboardError:
+              String(nestedDialogKeyboardMarker.error || ''),
             validationStatus: document.querySelector('#framework-validation-status')?.textContent || '',
             formLayoutClickObserved,
             formLayoutServerObserved,
@@ -3584,6 +6569,62 @@ extension WebViewHost {
             scrollerHeight,
             scrollerContentWidth,
             scrollerContentHeight,
+            iconClientObserved,
+            iconServerObserved,
+            iconStatus,
+            iconName,
+            iconFill,
+            iconWidth,
+            iconHeight,
+            iconAriaLabel,
+            appLayoutClientObserved,
+            appLayoutServerObserved,
+            appLayoutStatus,
+            appLayoutContent,
+            appLayoutPrimarySection,
+            appLayoutDrawerOpened,
+            masterDetailClientObserved,
+            masterDetailContentObserved,
+            masterDetailServerObserved,
+            masterDetailStatus,
+            masterDetailText,
+            masterDetailTheme,
+            masterDetailMasterSize,
+            masterDetailMasterMinSize,
+            masterDetailDetailSize,
+            masterDetailDetailMinSize,
+            masterDetailOrientation,
+            masterDetailContainment,
+            masterDetailForceOverlay,
+            masterDetailStackOverlay,
+            masterDetailNoAnimation,
+            masterDetailBackdropRendered,
+            cardClientObserved,
+            cardServerObserved,
+            cardStatus,
+            cardTheme,
+            cardAriaRole,
+            cardAriaLabel,
+            cardTitle,
+            cardSubtitle,
+            cardMedia,
+            cardHeaderPrefix,
+            cardHeaderSuffix,
+            cardFooter,
+            cardText,
+            markdownClientObserved,
+            markdownServerObserved,
+            markdownStatus,
+            markdownContent,
+            markdownText,
+            badgeClientObserved,
+            badgeServerObserved,
+            badgeStatus,
+            badgeTheme,
+            badgeText,
+            badgeNumber,
+            badgeRole,
+            badgeIconName,
             overlayMatrixStatus: document.querySelector('#framework-overlay-matrix-status')?.textContent || '',
             contextMenuOpened: contextMenu?.opened === true
               || contextMenu?.hasAttribute('opened') === true
@@ -3726,13 +6767,142 @@ extension WebViewHost {
             navigationMatrixStatus: document.querySelector('#framework-navigation-matrix-status')?.textContent || '',
             detailsOpened: document.querySelector('#framework-details')?.opened === true
               || document.querySelector('#framework-details')?.hasAttribute('opened') === true,
-            lazyGridStatus: document.querySelector('#framework-lazy-grid-status')?.textContent || '',
+            lazyGridFarViewportObserved,
+            lazyGridSelectionObserved,
+            lazyGridReturnViewportObserved,
+            lazyGridSortObserved,
+            lazyGridFilterObserved,
+            lazyGridFilterResetObserved,
+            lazyGridStatus,
+            lazyGridSelectionStatus,
+            lazyGridQueryStatus,
+            lazyGridFilterValue,
+            treeGridRootLoadedObserved,
+            treeGridPlatformExpandedObserved,
+            treeGridRuntimeExpandedObserved,
+            treeGridSelectionObserved,
+            treeGridRefreshObserved,
+            treeGridCollapseObserved,
+            treeGridQueryStatus,
+            treeGridCountStatus,
+            treeGridLifecycleStatus,
+            treeGridSelectionStatus,
+            treeGridRefreshStatus,
+            treeGridText,
+            componentRendererObserved,
+            gridEditorOpenedObserved,
+            gridEditorActiveFieldVisible,
+            gridEditorSaveObserved,
+            gridEditorCancelOpenedObserved,
+            gridEditorCancelObserved,
+            gridEditorValidationOpenedObserved,
+            gridEditorValidationObserved,
+            gridEditorActiveFieldInvalid,
+            gridEditorValidationCancelObserved,
+            editorRendererStatus,
+            editorOpenStatus,
+            editorSaveStatus,
+            editorCancelStatus,
+            editorValidationStatus,
+            editorGridText,
+            litRendererPropertiesObserved,
+            litRendererFunctionObserved,
+            litRendererRefreshObserved,
+            litRendererStatus,
+            clientCallableResolveObserved,
+            clientCallableRejectObserved,
+            pendingJavaScriptResolveObserved,
+            pendingJavaScriptRejectObserved,
+            clientCallableStatus,
+            pendingJavaScriptSuccessStatus,
+            pendingJavaScriptFailureStatus,
+            flowDndConfiguredObserved,
+            flowDndDragStartObserved,
+            flowDndDropObserved,
+            flowDndDragEndObserved,
+            flowDndDragStartStatus,
+            flowDndDropStatus,
+            flowDndDragEndStatus,
             virtualListClientObserved,
             virtualListServerObserved,
             virtualListStatus,
             virtualListText,
-            popoverOpened: document.querySelector('#framework-popover')?.opened === true
-              || document.querySelector('#framework-popover')?.hasAttribute('opened') === true,
+            popoverOpened,
+            popoverLifecycleStatus,
+            anchoredModelessOverlayObserved,
+            anchoredModelessOverlayA11yObserved,
+            anchoredModelessOverlayTabOrderObserved,
+            anchoredModelessOverlayEscapeCloseObserved,
+            anchoredModelessOverlayEscapeFocusRestoredObserved,
+            anchoredModelessOverlayOutsideCloseObserved,
+            anchoredModelessOverlayOutsideFocusPreservedObserved,
+            anchoredModelessOverlayRole:
+              String(popover?.getAttribute?.('role') || ''),
+            anchoredModelessOverlayAriaLabel:
+              String(popover?.getAttribute?.('aria-label') || ''),
+            anchoredModelessOverlayTargetAriaExpanded:
+              String(popoverAriaTarget?.getAttribute?.('aria-expanded') || ''),
+            anchoredModelessOverlayTargetAriaControls:
+              String(popoverAriaTarget?.getAttribute?.('aria-controls') || ''),
+            anchoredModelessOverlayTargetAriaHasPopup:
+              String(popoverAriaTarget?.getAttribute?.('aria-haspopup') || ''),
+            anchoredModelessOverlayActivePath: activeDeepElements()
+              .map((element) =>
+                `${element.localName || element.nodeName || 'unknown'}#${element.id || ''}`)
+              .join(' > '),
+            anchoredModelessOverlayKeyboardError:
+              String(anchoredPopoverMarker.keyboardError || ''),
+            anchoredModelessOverlayOutsideError:
+              String(anchoredPopoverMarker.outsideError || ''),
+            mixedOverlayStackDialogOpenedObserved,
+            mixedOverlayPopoverOpened,
+            mixedOverlayDialogLifecycleStatus,
+            mixedOverlayPopoverLifecycleStatus,
+            mixedOverlayStackOpenedObserved,
+            mixedOverlayStackA11yObserved,
+            mixedOverlayStackTabOrderObserved,
+            mixedOverlayStackTopEscapeObserved,
+            mixedOverlayStackParentRemainsOpenObserved,
+            mixedOverlayStackPopoverFocusRestoredObserved,
+            mixedOverlayStackOutsideCloseObserved,
+            mixedOverlayStackOutsideFocusPreservedObserved,
+            mixedOverlayStackParentEscapeObserved,
+            mixedOverlayStackLayeredFocusRestoredObserved,
+            mixedOverlayStackActivePath: activeDeepElements()
+              .map((element) =>
+                `${element.localName || element.nodeName || 'unknown'}#${element.id || ''}`)
+              .join(' > '),
+            mixedOverlayStackKeyboardError:
+              String(mixedOverlayMarker.keyboardError || ''),
+            mixedOverlayStackOutsideError:
+              String(mixedOverlayMarker.outsideError || ''),
+            mixedOverlayStackDialogError:
+              String(mixedOverlayMarker.dialogError || ''),
+            nestedPopoverOuterOpened,
+            nestedPopoverInnerOpened,
+            nestedPopoverOuterLifecycleStatus,
+            nestedPopoverInnerLifecycleStatus,
+            nestedAnchoredOverlayStackOuterOpenedObserved,
+            nestedAnchoredOverlayStackOpenedObserved,
+            nestedAnchoredOverlayStackA11yObserved,
+            nestedAnchoredOverlayStackTabOrderObserved,
+            nestedAnchoredOverlayStackTopEscapeObserved,
+            nestedAnchoredOverlayStackParentRemainsOpenObserved,
+            nestedAnchoredOverlayStackInnerFocusRestoredObserved,
+            nestedAnchoredOverlayStackParentEscapeObserved,
+            nestedAnchoredOverlayStackLayeredFocusRestoredObserved,
+            nestedAnchoredOverlayStackOutsideTopCloseObserved,
+            nestedAnchoredOverlayStackOutsideParentRemainsOpenObserved,
+            nestedAnchoredOverlayStackOutsideFocusPreservedObserved,
+            nestedAnchoredOverlayStackOutsideParentCloseObserved,
+            nestedAnchoredOverlayStackActivePath: activeDeepElements()
+              .map((element) =>
+                `${element.localName || element.nodeName || 'unknown'}#${element.id || ''}`)
+              .join(' > '),
+            nestedAnchoredOverlayStackKeyboardError:
+              String(nestedPopoverMarker.keyboardError || ''),
+            nestedAnchoredOverlayStackOutsideError:
+              String(nestedPopoverMarker.outsideError || ''),
             notificationOpenObserved,
             notificationOpened,
             notificationStatus,
@@ -3759,6 +6929,15 @@ extension WebViewHost {
             numberFieldServerObserved,
             numberFieldValue,
             numberFieldStatus,
+            sliderClientObserved,
+            sliderServerObserved,
+            sliderValue,
+            sliderMin,
+            sliderMax,
+            sliderStep,
+            sliderMinMaxVisible,
+            sliderValueAlwaysVisible,
+            sliderStatus,
             splitLayoutDragObserved,
             splitLayoutServerObserved,
             splitPrimaryFlex,
@@ -3885,6 +7064,54 @@ extension WebViewHost {
             "pushMessageCount": standardFrameworkInteger(state, "pushMessageCount"),
             "pushReconnectCount": standardFrameworkInteger(state, "pushReconnectCount"),
             "pushResyncCount": standardFrameworkInteger(state, "pushResyncCount"),
+            "hiddenViewTransitionSkipped":
+                state["hiddenViewTransitionSkipped"] as? Bool == true,
+            "lazyFrontendRouteObserved":
+                state["lazyFrontendRouteObserved"] as? Bool == true,
+            "lazyFrontendClientObserved":
+                state["lazyFrontendClientObserved"] as? Bool == true,
+            "lazyFrontendServerObserved":
+                state["lazyFrontendServerObserved"] as? Bool == true,
+            "lazyFrontendPath": standardFrameworkString(state, "lazyFrontendPath"),
+            "lazyFrontendRouteRendered":
+                state["lazyFrontendRouteRendered"] as? Bool == true,
+            "lazyFrontendProbeRendered":
+                state["lazyFrontendProbeRendered"] as? Bool == true,
+            "lazyFrontendModuleDefined":
+                state["lazyFrontendModuleDefined"] as? Bool == true,
+            "lazyFrontendStatus":
+                standardFrameworkString(state, "lazyFrontendStatus"),
+            "lazyFrontendText":
+                standardFrameworkString(state, "lazyFrontendText"),
+            "nestedLazyLayoutObserved":
+                state["nestedLazyLayoutObserved"] as? Bool == true,
+            "nestedLazyRouteObserved":
+                state["nestedLazyRouteObserved"] as? Bool == true,
+            "nestedLazyTransitiveModuleObserved":
+                state["nestedLazyTransitiveModuleObserved"] as? Bool == true,
+            "nestedLazyClientObserved":
+                state["nestedLazyClientObserved"] as? Bool == true,
+            "nestedLazyServerObserved":
+                state["nestedLazyServerObserved"] as? Bool == true,
+            "nestedLazyPath": standardFrameworkString(state, "nestedLazyPath"),
+            "nestedLazyLayoutRendered":
+                state["nestedLazyLayoutRendered"] as? Bool == true,
+            "nestedLazyRouteRendered":
+                state["nestedLazyRouteRendered"] as? Bool == true,
+            "nestedLazyLayoutModuleDefined":
+                state["nestedLazyLayoutModuleDefined"] as? Bool == true,
+            "nestedLazyRouteModuleDefined":
+                state["nestedLazyRouteModuleDefined"] as? Bool == true,
+            "nestedLazyLayoutStyleToken":
+                standardFrameworkString(state, "nestedLazyLayoutStyleToken"),
+            "nestedLazyRouteStyleToken":
+                standardFrameworkString(state, "nestedLazyRouteStyleToken"),
+            "nestedLazyStatus":
+                standardFrameworkString(state, "nestedLazyStatus"),
+            "nestedLazyLayoutText":
+                standardFrameworkString(state, "nestedLazyLayoutText"),
+            "nestedLazyText":
+                standardFrameworkString(state, "nestedLazyText"),
             "componentStatus": standardFrameworkString(state, "componentStatus"),
             "checkboxGroupClientObserved":
                 state["checkboxGroupClientObserved"] as? Bool == true,
@@ -3900,6 +7127,71 @@ extension WebViewHost {
             "textFieldValue": standardFrameworkString(state, "textFieldValue"),
             "textFieldStatus": standardFrameworkString(state, "textFieldStatus"),
             "assigneesStatus": standardFrameworkString(state, "assigneesStatus"),
+            "dialogOpened": state["dialogOpened"] as? Bool == true,
+            "dialogInitialFocusObserved":
+                state["dialogInitialFocusObserved"] as? Bool == true,
+            "dialogFocusTrapObserved":
+                state["dialogFocusTrapObserved"] as? Bool == true,
+            "dialogEscapeCloseObserved":
+                state["dialogEscapeCloseObserved"] as? Bool == true,
+            "dialogFocusRestoredObserved":
+                state["dialogFocusRestoredObserved"] as? Bool == true,
+            "dialogA11yObserved":
+                state["dialogA11yObserved"] as? Bool == true,
+            "dialogLifecycleStatus":
+                standardFrameworkString(state, "dialogLifecycleStatus"),
+            "dialogOverlayRendered":
+                state["dialogOverlayRendered"] as? Bool == true,
+            "dialogRole":
+                standardFrameworkString(state, "dialogRole"),
+            "dialogAriaModal":
+                standardFrameworkString(state, "dialogAriaModal"),
+            "dialogAccessibleText":
+                standardFrameworkString(state, "dialogAccessibleText"),
+            "dialogActiveElementPath":
+                standardFrameworkString(state, "dialogActiveElementPath"),
+            "dialogActiveBeforeTab":
+                standardFrameworkString(state, "dialogActiveBeforeTab"),
+            "dialogActiveAfterTab":
+                standardFrameworkString(state, "dialogActiveAfterTab"),
+            "dialogActiveAfterShiftTab":
+                standardFrameworkString(state, "dialogActiveAfterShiftTab"),
+            "dialogTabDefaultPrevented":
+                state["dialogTabDefaultPrevented"] as? Bool == true,
+            "dialogKeyboardError":
+                standardFrameworkString(state, "dialogKeyboardError"),
+            "modalOverlayStackOpenedObserved":
+                state["modalOverlayStackOpenedObserved"] as? Bool == true,
+            "modalOverlayStackInitialFocusObserved":
+                state["modalOverlayStackInitialFocusObserved"] as? Bool == true,
+            "modalOverlayStackFocusTrapObserved":
+                state["modalOverlayStackFocusTrapObserved"] as? Bool == true,
+            "modalOverlayStackTopEscapeObserved":
+                state["modalOverlayStackTopEscapeObserved"] as? Bool == true,
+            "modalOverlayStackParentRemainsOpenObserved":
+                state["modalOverlayStackParentRemainsOpenObserved"] as? Bool == true,
+            "modalOverlayStackFocusRestoredObserved":
+                state["modalOverlayStackFocusRestoredObserved"] as? Bool == true,
+            "modalOverlayStackA11yObserved":
+                state["modalOverlayStackA11yObserved"] as? Bool == true,
+            "modalOverlayStackNestedLifecycleStatus":
+                standardFrameworkString(state, "modalOverlayStackNestedLifecycleStatus"),
+            "modalOverlayStackNestedRole":
+                standardFrameworkString(state, "modalOverlayStackNestedRole"),
+            "modalOverlayStackNestedAriaModal":
+                standardFrameworkString(state, "modalOverlayStackNestedAriaModal"),
+            "modalOverlayStackNestedAccessibleText":
+                standardFrameworkString(state, "modalOverlayStackNestedAccessibleText"),
+            "modalOverlayStackActiveBeforeTab":
+                standardFrameworkString(state, "modalOverlayStackActiveBeforeTab"),
+            "modalOverlayStackActiveAfterTab":
+                standardFrameworkString(state, "modalOverlayStackActiveAfterTab"),
+            "modalOverlayStackActiveAfterShiftTab":
+                standardFrameworkString(state, "modalOverlayStackActiveAfterShiftTab"),
+            "modalOverlayStackTabDefaultPrevented":
+                state["modalOverlayStackTabDefaultPrevented"] as? Bool == true,
+            "modalOverlayStackKeyboardError":
+                standardFrameworkString(state, "modalOverlayStackKeyboardError"),
             "formLayoutClickObserved":
                 state["formLayoutClickObserved"] as? Bool == true,
             "formLayoutServerObserved":
@@ -3946,9 +7238,180 @@ extension WebViewHost {
             "scrollerWidth": standardFrameworkString(state, "scrollerWidth"),
             "scrollerContentWidth":
                 standardFrameworkString(state, "scrollerContentWidth"),
+            "iconClientObserved": state["iconClientObserved"] as? Bool == true,
+            "iconServerObserved": state["iconServerObserved"] as? Bool == true,
+            "iconStatus": standardFrameworkString(state, "iconStatus"),
+            "iconName": standardFrameworkString(state, "iconName"),
+            "iconFill": standardFrameworkString(state, "iconFill"),
+            "iconWidth": standardFrameworkString(state, "iconWidth"),
+            "iconHeight": standardFrameworkString(state, "iconHeight"),
+            "appLayoutClientObserved":
+                state["appLayoutClientObserved"] as? Bool == true,
+            "appLayoutServerObserved":
+                state["appLayoutServerObserved"] as? Bool == true,
+            "appLayoutStatus": standardFrameworkString(state, "appLayoutStatus"),
+            "appLayoutContent": standardFrameworkString(state, "appLayoutContent"),
+            "appLayoutPrimarySection":
+                standardFrameworkString(state, "appLayoutPrimarySection"),
+            "appLayoutDrawerOpened": state["appLayoutDrawerOpened"] as? Bool == true,
+            "masterDetailClientObserved":
+                state["masterDetailClientObserved"] as? Bool == true,
+            "masterDetailContentObserved":
+                state["masterDetailContentObserved"] as? Bool == true,
+            "masterDetailServerObserved":
+                state["masterDetailServerObserved"] as? Bool == true,
+            "masterDetailStatus": standardFrameworkString(state, "masterDetailStatus"),
+            "masterDetailText": standardFrameworkString(state, "masterDetailText"),
+            "masterDetailTheme": standardFrameworkString(state, "masterDetailTheme"),
+            "masterDetailMasterSize":
+                standardFrameworkString(state, "masterDetailMasterSize"),
+            "masterDetailMasterMinSize":
+                standardFrameworkString(state, "masterDetailMasterMinSize"),
+            "masterDetailDetailSize":
+                standardFrameworkString(state, "masterDetailDetailSize"),
+            "masterDetailDetailMinSize":
+                standardFrameworkString(state, "masterDetailDetailMinSize"),
+            "masterDetailOrientation":
+                standardFrameworkString(state, "masterDetailOrientation"),
+            "masterDetailContainment":
+                standardFrameworkString(state, "masterDetailContainment"),
+            "masterDetailForceOverlay":
+                state["masterDetailForceOverlay"] as? Bool == true,
+            "masterDetailStackOverlay":
+                state["masterDetailStackOverlay"] as? Bool == true,
+            "masterDetailNoAnimation":
+                state["masterDetailNoAnimation"] as? Bool == true,
+            "masterDetailBackdropRendered":
+                state["masterDetailBackdropRendered"] as? Bool == true,
+            "cardClientObserved": state["cardClientObserved"] as? Bool == true,
+            "cardServerObserved": state["cardServerObserved"] as? Bool == true,
+            "cardStatus": standardFrameworkString(state, "cardStatus"),
+            "cardTheme": standardFrameworkString(state, "cardTheme"),
+            "cardAriaRole": standardFrameworkString(state, "cardAriaRole"),
+            "cardAriaLabel": standardFrameworkString(state, "cardAriaLabel"),
+            "cardTitle": standardFrameworkString(state, "cardTitle"),
+            "cardSubtitle": standardFrameworkString(state, "cardSubtitle"),
+            "cardMedia": standardFrameworkString(state, "cardMedia"),
+            "cardHeaderPrefix": standardFrameworkString(state, "cardHeaderPrefix"),
+            "cardHeaderSuffix": standardFrameworkString(state, "cardHeaderSuffix"),
+            "cardFooter": standardFrameworkString(state, "cardFooter"),
+            "cardText": standardFrameworkString(state, "cardText"),
+            "markdownClientObserved": state["markdownClientObserved"] as? Bool == true,
+            "markdownServerObserved": state["markdownServerObserved"] as? Bool == true,
+            "markdownStatus": standardFrameworkString(state, "markdownStatus"),
+            "markdownContent": standardFrameworkString(state, "markdownContent"),
+            "markdownText": standardFrameworkString(state, "markdownText"),
+            "badgeClientObserved": state["badgeClientObserved"] as? Bool == true,
+            "badgeServerObserved": state["badgeServerObserved"] as? Bool == true,
+            "badgeStatus": standardFrameworkString(state, "badgeStatus"),
+            "badgeTheme": standardFrameworkString(state, "badgeTheme"),
+            "badgeText": standardFrameworkString(state, "badgeText"),
+            "badgeNumber": standardFrameworkString(state, "badgeNumber"),
+            "badgeRole": standardFrameworkString(state, "badgeRole"),
+            "badgeIconName": standardFrameworkString(state, "badgeIconName"),
             "navigationMatrixStatus": standardFrameworkString(state, "navigationMatrixStatus"),
             "overlayMatrixStatus": standardFrameworkString(state, "overlayMatrixStatus"),
+            "lazyGridFarViewportObserved":
+                state["lazyGridFarViewportObserved"] as? Bool == true,
+            "lazyGridSelectionObserved":
+                state["lazyGridSelectionObserved"] as? Bool == true,
+            "lazyGridReturnViewportObserved":
+                state["lazyGridReturnViewportObserved"] as? Bool == true,
+            "lazyGridSortObserved":
+                state["lazyGridSortObserved"] as? Bool == true,
+            "lazyGridFilterObserved":
+                state["lazyGridFilterObserved"] as? Bool == true,
+            "lazyGridFilterResetObserved":
+                state["lazyGridFilterResetObserved"] as? Bool == true,
             "lazyGridStatus": standardFrameworkString(state, "lazyGridStatus"),
+            "lazyGridSelectionStatus":
+                standardFrameworkString(state, "lazyGridSelectionStatus"),
+            "lazyGridQueryStatus":
+                standardFrameworkString(state, "lazyGridQueryStatus"),
+            "lazyGridFilterValue":
+                standardFrameworkString(state, "lazyGridFilterValue"),
+            "treeGridRootLoadedObserved":
+                state["treeGridRootLoadedObserved"] as? Bool == true,
+            "treeGridPlatformExpandedObserved":
+                state["treeGridPlatformExpandedObserved"] as? Bool == true,
+            "treeGridRuntimeExpandedObserved":
+                state["treeGridRuntimeExpandedObserved"] as? Bool == true,
+            "treeGridSelectionObserved":
+                state["treeGridSelectionObserved"] as? Bool == true,
+            "treeGridRefreshObserved":
+                state["treeGridRefreshObserved"] as? Bool == true,
+            "treeGridCollapseObserved":
+                state["treeGridCollapseObserved"] as? Bool == true,
+            "treeGridQueryStatus":
+                standardFrameworkString(state, "treeGridQueryStatus"),
+            "treeGridCountStatus":
+                standardFrameworkString(state, "treeGridCountStatus"),
+            "treeGridLifecycleStatus":
+                standardFrameworkString(state, "treeGridLifecycleStatus"),
+            "treeGridSelectionStatus":
+                standardFrameworkString(state, "treeGridSelectionStatus"),
+            "treeGridRefreshStatus":
+                standardFrameworkString(state, "treeGridRefreshStatus"),
+            "componentRendererObserved":
+                state["componentRendererObserved"] as? Bool == true,
+            "gridEditorOpenedObserved":
+                state["gridEditorOpenedObserved"] as? Bool == true,
+            "gridEditorSaveObserved":
+                state["gridEditorSaveObserved"] as? Bool == true,
+            "gridEditorCancelObserved":
+                state["gridEditorCancelObserved"] as? Bool == true,
+            "gridEditorValidationObserved":
+                state["gridEditorValidationObserved"] as? Bool == true,
+            "gridEditorValidationCancelObserved":
+                state["gridEditorValidationCancelObserved"] as? Bool == true,
+            "litRendererPropertiesObserved":
+                state["litRendererPropertiesObserved"] as? Bool == true,
+            "litRendererFunctionObserved":
+                state["litRendererFunctionObserved"] as? Bool == true,
+            "litRendererRefreshObserved":
+                state["litRendererRefreshObserved"] as? Bool == true,
+            "clientCallableResolveObserved":
+                state["clientCallableResolveObserved"] as? Bool == true,
+            "clientCallableRejectObserved":
+                state["clientCallableRejectObserved"] as? Bool == true,
+            "pendingJavaScriptResolveObserved":
+                state["pendingJavaScriptResolveObserved"] as? Bool == true,
+            "pendingJavaScriptRejectObserved":
+                state["pendingJavaScriptRejectObserved"] as? Bool == true,
+            "flowDndConfiguredObserved":
+                state["flowDndConfiguredObserved"] as? Bool == true,
+            "flowDndDragStartObserved":
+                state["flowDndDragStartObserved"] as? Bool == true,
+            "flowDndDropObserved":
+                state["flowDndDropObserved"] as? Bool == true,
+            "flowDndDragEndObserved":
+                state["flowDndDragEndObserved"] as? Bool == true,
+            "editorRendererStatus":
+                standardFrameworkString(state, "editorRendererStatus"),
+            "editorOpenStatus":
+                standardFrameworkString(state, "editorOpenStatus"),
+            "editorSaveStatus":
+                standardFrameworkString(state, "editorSaveStatus"),
+            "editorCancelStatus":
+                standardFrameworkString(state, "editorCancelStatus"),
+            "editorValidationStatus":
+                standardFrameworkString(state, "editorValidationStatus"),
+            "litRendererStatus":
+                standardFrameworkString(state, "litRendererStatus"),
+            "clientCallableStatus":
+                standardFrameworkString(state, "clientCallableStatus"),
+            "pendingJavaScriptSuccessStatus":
+                standardFrameworkString(
+                    state, "pendingJavaScriptSuccessStatus"),
+            "pendingJavaScriptFailureStatus":
+                standardFrameworkString(
+                    state, "pendingJavaScriptFailureStatus"),
+            "flowDndDragStartStatus":
+                standardFrameworkString(state, "flowDndDragStartStatus"),
+            "flowDndDropStatus":
+                standardFrameworkString(state, "flowDndDropStatus"),
+            "flowDndDragEndStatus":
+                standardFrameworkString(state, "flowDndDragEndStatus"),
             "virtualListClientObserved":
                 state["virtualListClientObserved"] as? Bool == true,
             "virtualListServerObserved":
@@ -4320,8 +7783,188 @@ extension WebViewHost {
                 standardFrameworkString(state, "scrollerContentWidth")
             payload["scrollerContentHeight"] =
                 standardFrameworkString(state, "scrollerContentHeight")
+            payload["iconClientObserved"] =
+                state["iconClientObserved"] as? Bool == true
+            payload["iconServerObserved"] =
+                state["iconServerObserved"] as? Bool == true
+            payload["iconStatus"] =
+                standardFrameworkString(state, "iconStatus")
+            payload["iconName"] =
+                standardFrameworkString(state, "iconName")
+            payload["iconFill"] =
+                standardFrameworkString(state, "iconFill")
+            payload["iconWidth"] =
+                standardFrameworkString(state, "iconWidth")
+            payload["iconHeight"] =
+                standardFrameworkString(state, "iconHeight")
+            payload["iconAriaLabel"] =
+                standardFrameworkString(state, "iconAriaLabel")
+            payload["appLayoutClientObserved"] =
+                state["appLayoutClientObserved"] as? Bool == true
+            payload["appLayoutServerObserved"] =
+                state["appLayoutServerObserved"] as? Bool == true
+            payload["appLayoutStatus"] =
+                standardFrameworkString(state, "appLayoutStatus")
+            payload["appLayoutContent"] =
+                standardFrameworkString(state, "appLayoutContent")
+            payload["appLayoutPrimarySection"] =
+                standardFrameworkString(state, "appLayoutPrimarySection")
+            payload["appLayoutDrawerOpened"] =
+                state["appLayoutDrawerOpened"] as? Bool == true
+            payload["cardClientObserved"] =
+                state["cardClientObserved"] as? Bool == true
+            payload["cardServerObserved"] =
+                state["cardServerObserved"] as? Bool == true
+            payload["cardStatus"] =
+                standardFrameworkString(state, "cardStatus")
+            payload["cardTheme"] =
+                standardFrameworkString(state, "cardTheme")
+            payload["cardAriaRole"] =
+                standardFrameworkString(state, "cardAriaRole")
+            payload["cardAriaLabel"] =
+                standardFrameworkString(state, "cardAriaLabel")
+            payload["cardTitle"] =
+                standardFrameworkString(state, "cardTitle")
+            payload["cardSubtitle"] =
+                standardFrameworkString(state, "cardSubtitle")
+            payload["cardMedia"] =
+                standardFrameworkString(state, "cardMedia")
+            payload["cardHeaderPrefix"] =
+                standardFrameworkString(state, "cardHeaderPrefix")
+            payload["cardHeaderSuffix"] =
+                standardFrameworkString(state, "cardHeaderSuffix")
+            payload["cardFooter"] =
+                standardFrameworkString(state, "cardFooter")
+            payload["cardText"] =
+                standardFrameworkString(state, "cardText")
+            payload["markdownClientObserved"] =
+                state["markdownClientObserved"] as? Bool == true
+            payload["markdownServerObserved"] =
+                state["markdownServerObserved"] as? Bool == true
+            payload["markdownStatus"] =
+                standardFrameworkString(state, "markdownStatus")
+            payload["markdownContent"] =
+                standardFrameworkString(state, "markdownContent")
+            payload["markdownText"] =
+                standardFrameworkString(state, "markdownText")
+            payload["badgeClientObserved"] =
+                state["badgeClientObserved"] as? Bool == true
+            payload["badgeServerObserved"] =
+                state["badgeServerObserved"] as? Bool == true
+            payload["badgeStatus"] =
+                standardFrameworkString(state, "badgeStatus")
+            payload["badgeTheme"] =
+                standardFrameworkString(state, "badgeTheme")
+            payload["badgeText"] =
+                standardFrameworkString(state, "badgeText")
+            payload["badgeNumber"] =
+                standardFrameworkString(state, "badgeNumber")
+            payload["badgeRole"] =
+                standardFrameworkString(state, "badgeRole")
+            payload["badgeIconName"] =
+                standardFrameworkString(state, "badgeIconName")
             payload["detailsOpened"] = state["detailsOpened"] as? Bool == true
+            payload["lazyGridFarViewportObserved"] =
+                state["lazyGridFarViewportObserved"] as? Bool == true
+            payload["lazyGridSelectionObserved"] =
+                state["lazyGridSelectionObserved"] as? Bool == true
+            payload["lazyGridReturnViewportObserved"] =
+                state["lazyGridReturnViewportObserved"] as? Bool == true
+            payload["lazyGridSortObserved"] =
+                state["lazyGridSortObserved"] as? Bool == true
+            payload["lazyGridFilterObserved"] =
+                state["lazyGridFilterObserved"] as? Bool == true
+            payload["lazyGridFilterResetObserved"] =
+                state["lazyGridFilterResetObserved"] as? Bool == true
             payload["lazyGridStatus"] = standardFrameworkString(state, "lazyGridStatus")
+            payload["lazyGridSelectionStatus"] =
+                standardFrameworkString(state, "lazyGridSelectionStatus")
+            payload["lazyGridQueryStatus"] =
+                standardFrameworkString(state, "lazyGridQueryStatus")
+            payload["lazyGridFilterValue"] =
+                standardFrameworkString(state, "lazyGridFilterValue")
+            payload["treeGridRootLoadedObserved"] =
+                state["treeGridRootLoadedObserved"] as? Bool == true
+            payload["treeGridPlatformExpandedObserved"] =
+                state["treeGridPlatformExpandedObserved"] as? Bool == true
+            payload["treeGridRuntimeExpandedObserved"] =
+                state["treeGridRuntimeExpandedObserved"] as? Bool == true
+            payload["treeGridSelectionObserved"] =
+                state["treeGridSelectionObserved"] as? Bool == true
+            payload["treeGridRefreshObserved"] =
+                state["treeGridRefreshObserved"] as? Bool == true
+            payload["treeGridCollapseObserved"] =
+                state["treeGridCollapseObserved"] as? Bool == true
+            payload["treeGridQueryStatus"] =
+                standardFrameworkString(state, "treeGridQueryStatus")
+            payload["treeGridCountStatus"] =
+                standardFrameworkString(state, "treeGridCountStatus")
+            payload["treeGridLifecycleStatus"] =
+                standardFrameworkString(state, "treeGridLifecycleStatus")
+            payload["treeGridSelectionStatus"] =
+                standardFrameworkString(state, "treeGridSelectionStatus")
+            payload["treeGridRefreshStatus"] =
+                standardFrameworkString(state, "treeGridRefreshStatus")
+            payload["componentRendererObserved"] =
+                state["componentRendererObserved"] as? Bool == true
+            payload["gridEditorOpenedObserved"] =
+                state["gridEditorOpenedObserved"] as? Bool == true
+            payload["gridEditorSaveObserved"] =
+                state["gridEditorSaveObserved"] as? Bool == true
+            payload["gridEditorCancelObserved"] =
+                state["gridEditorCancelObserved"] as? Bool == true
+            payload["gridEditorValidationObserved"] =
+                state["gridEditorValidationObserved"] as? Bool == true
+            payload["gridEditorValidationCancelObserved"] =
+                state["gridEditorValidationCancelObserved"] as? Bool == true
+            payload["litRendererPropertiesObserved"] =
+                state["litRendererPropertiesObserved"] as? Bool == true
+            payload["litRendererFunctionObserved"] =
+                state["litRendererFunctionObserved"] as? Bool == true
+            payload["litRendererRefreshObserved"] =
+                state["litRendererRefreshObserved"] as? Bool == true
+            payload["clientCallableResolveObserved"] =
+                state["clientCallableResolveObserved"] as? Bool == true
+            payload["clientCallableRejectObserved"] =
+                state["clientCallableRejectObserved"] as? Bool == true
+            payload["pendingJavaScriptResolveObserved"] =
+                state["pendingJavaScriptResolveObserved"] as? Bool == true
+            payload["pendingJavaScriptRejectObserved"] =
+                state["pendingJavaScriptRejectObserved"] as? Bool == true
+            payload["flowDndConfiguredObserved"] =
+                state["flowDndConfiguredObserved"] as? Bool == true
+            payload["flowDndDragStartObserved"] =
+                state["flowDndDragStartObserved"] as? Bool == true
+            payload["flowDndDropObserved"] =
+                state["flowDndDropObserved"] as? Bool == true
+            payload["flowDndDragEndObserved"] =
+                state["flowDndDragEndObserved"] as? Bool == true
+            payload["editorRendererStatus"] =
+                standardFrameworkString(state, "editorRendererStatus")
+            payload["editorOpenStatus"] =
+                standardFrameworkString(state, "editorOpenStatus")
+            payload["editorSaveStatus"] =
+                standardFrameworkString(state, "editorSaveStatus")
+            payload["editorCancelStatus"] =
+                standardFrameworkString(state, "editorCancelStatus")
+            payload["editorValidationStatus"] =
+                standardFrameworkString(state, "editorValidationStatus")
+            payload["litRendererStatus"] =
+                standardFrameworkString(state, "litRendererStatus")
+            payload["clientCallableStatus"] =
+                standardFrameworkString(state, "clientCallableStatus")
+            payload["pendingJavaScriptSuccessStatus"] =
+                standardFrameworkString(
+                    state, "pendingJavaScriptSuccessStatus")
+            payload["pendingJavaScriptFailureStatus"] =
+                standardFrameworkString(
+                    state, "pendingJavaScriptFailureStatus")
+            payload["flowDndDragStartStatus"] =
+                standardFrameworkString(state, "flowDndDragStartStatus")
+            payload["flowDndDropStatus"] =
+                standardFrameworkString(state, "flowDndDropStatus")
+            payload["flowDndDragEndStatus"] =
+                standardFrameworkString(state, "flowDndDragEndStatus")
             payload["virtualListClientObserved"] =
                 state["virtualListClientObserved"] as? Bool == true
             payload["virtualListServerObserved"] =
@@ -4329,6 +7972,130 @@ extension WebViewHost {
             payload["virtualListStatus"] = standardFrameworkString(state, "virtualListStatus")
             payload["virtualListText"] = standardFrameworkString(state, "virtualListText")
             payload["popoverOpened"] = state["popoverOpened"] as? Bool == true
+            payload["popoverLifecycleStatus"] =
+                standardFrameworkString(state, "popoverLifecycleStatus")
+            payload["anchoredModelessOverlayObserved"] =
+                state["anchoredModelessOverlayObserved"] as? Bool == true
+            payload["anchoredModelessOverlayA11yObserved"] =
+                state["anchoredModelessOverlayA11yObserved"] as? Bool == true
+            payload["anchoredModelessOverlayTabOrderObserved"] =
+                state["anchoredModelessOverlayTabOrderObserved"] as? Bool == true
+            payload["anchoredModelessOverlayEscapeCloseObserved"] =
+                state["anchoredModelessOverlayEscapeCloseObserved"] as? Bool == true
+            payload["anchoredModelessOverlayEscapeFocusRestoredObserved"] =
+                state["anchoredModelessOverlayEscapeFocusRestoredObserved"] as? Bool == true
+            payload["anchoredModelessOverlayOutsideCloseObserved"] =
+                state["anchoredModelessOverlayOutsideCloseObserved"] as? Bool == true
+            payload["anchoredModelessOverlayOutsideFocusPreservedObserved"] =
+                state["anchoredModelessOverlayOutsideFocusPreservedObserved"] as? Bool == true
+            payload["anchoredModelessOverlayRole"] =
+                standardFrameworkString(state, "anchoredModelessOverlayRole")
+            payload["anchoredModelessOverlayAriaLabel"] =
+                standardFrameworkString(state, "anchoredModelessOverlayAriaLabel")
+            payload["anchoredModelessOverlayTargetAriaExpanded"] =
+                standardFrameworkString(state, "anchoredModelessOverlayTargetAriaExpanded")
+            payload["anchoredModelessOverlayTargetAriaControls"] =
+                standardFrameworkString(state, "anchoredModelessOverlayTargetAriaControls")
+            payload["anchoredModelessOverlayTargetAriaHasPopup"] =
+                standardFrameworkString(state, "anchoredModelessOverlayTargetAriaHasPopup")
+            payload["anchoredModelessOverlayActivePath"] =
+                standardFrameworkString(state, "anchoredModelessOverlayActivePath")
+            payload["anchoredModelessOverlayKeyboardError"] =
+                standardFrameworkString(state, "anchoredModelessOverlayKeyboardError")
+            payload["anchoredModelessOverlayOutsideError"] =
+                standardFrameworkString(state, "anchoredModelessOverlayOutsideError")
+            payload["mixedOverlayStackDialogOpenedObserved"] =
+                state["mixedOverlayStackDialogOpenedObserved"] as? Bool == true
+            payload["mixedOverlayPopoverOpened"] =
+                state["mixedOverlayPopoverOpened"] as? Bool == true
+            payload["mixedOverlayDialogLifecycleStatus"] =
+                standardFrameworkString(state, "mixedOverlayDialogLifecycleStatus")
+            payload["mixedOverlayPopoverLifecycleStatus"] =
+                standardFrameworkString(state, "mixedOverlayPopoverLifecycleStatus")
+            payload["mixedOverlayStackOpenedObserved"] =
+                state["mixedOverlayStackOpenedObserved"] as? Bool == true
+            payload["mixedOverlayStackA11yObserved"] =
+                state["mixedOverlayStackA11yObserved"] as? Bool == true
+            payload["mixedOverlayStackTabOrderObserved"] =
+                state["mixedOverlayStackTabOrderObserved"] as? Bool == true
+            payload["mixedOverlayStackTopEscapeObserved"] =
+                state["mixedOverlayStackTopEscapeObserved"] as? Bool == true
+            payload["mixedOverlayStackParentRemainsOpenObserved"] =
+                state["mixedOverlayStackParentRemainsOpenObserved"] as? Bool == true
+            payload["mixedOverlayStackPopoverFocusRestoredObserved"] =
+                state["mixedOverlayStackPopoverFocusRestoredObserved"] as? Bool == true
+            payload["mixedOverlayStackOutsideCloseObserved"] =
+                state["mixedOverlayStackOutsideCloseObserved"] as? Bool == true
+            payload["mixedOverlayStackOutsideFocusPreservedObserved"] =
+                state["mixedOverlayStackOutsideFocusPreservedObserved"] as? Bool == true
+            payload["mixedOverlayStackParentEscapeObserved"] =
+                state["mixedOverlayStackParentEscapeObserved"] as? Bool == true
+            payload["mixedOverlayStackLayeredFocusRestoredObserved"] =
+                state["mixedOverlayStackLayeredFocusRestoredObserved"] as? Bool == true
+            payload["mixedOverlayStackActivePath"] =
+                standardFrameworkString(state, "mixedOverlayStackActivePath")
+            payload["mixedOverlayStackKeyboardError"] =
+                standardFrameworkString(state, "mixedOverlayStackKeyboardError")
+            payload["mixedOverlayStackOutsideError"] =
+                standardFrameworkString(state, "mixedOverlayStackOutsideError")
+            payload["mixedOverlayStackDialogError"] =
+                standardFrameworkString(state, "mixedOverlayStackDialogError")
+            payload["nestedPopoverOuterOpened"] =
+                state["nestedPopoverOuterOpened"] as? Bool == true
+            payload["nestedPopoverInnerOpened"] =
+                state["nestedPopoverInnerOpened"] as? Bool == true
+            payload["nestedPopoverOuterLifecycleStatus"] =
+                standardFrameworkString(state, "nestedPopoverOuterLifecycleStatus")
+            payload["nestedPopoverInnerLifecycleStatus"] =
+                standardFrameworkString(state, "nestedPopoverInnerLifecycleStatus")
+            payload["nestedAnchoredOverlayStackOuterOpenedObserved"] =
+                state["nestedAnchoredOverlayStackOuterOpenedObserved"] as? Bool == true
+            payload["nestedAnchoredOverlayStackOpenedObserved"] =
+                state["nestedAnchoredOverlayStackOpenedObserved"] as? Bool == true
+            payload["nestedAnchoredOverlayStackA11yObserved"] =
+                state["nestedAnchoredOverlayStackA11yObserved"] as? Bool == true
+            payload["nestedAnchoredOverlayStackTabOrderObserved"] =
+                state["nestedAnchoredOverlayStackTabOrderObserved"] as? Bool == true
+            payload["nestedAnchoredOverlayStackTopEscapeObserved"] =
+                state["nestedAnchoredOverlayStackTopEscapeObserved"] as? Bool == true
+            payload["nestedAnchoredOverlayStackParentRemainsOpenObserved"] =
+                state[
+                    "nestedAnchoredOverlayStackParentRemainsOpenObserved"
+                ] as? Bool == true
+            payload["nestedAnchoredOverlayStackInnerFocusRestoredObserved"] =
+                state[
+                    "nestedAnchoredOverlayStackInnerFocusRestoredObserved"
+                ] as? Bool == true
+            payload["nestedAnchoredOverlayStackParentEscapeObserved"] =
+                state["nestedAnchoredOverlayStackParentEscapeObserved"] as? Bool == true
+            payload["nestedAnchoredOverlayStackLayeredFocusRestoredObserved"] =
+                state[
+                    "nestedAnchoredOverlayStackLayeredFocusRestoredObserved"
+                ] as? Bool == true
+            payload["nestedAnchoredOverlayStackOutsideTopCloseObserved"] =
+                state[
+                    "nestedAnchoredOverlayStackOutsideTopCloseObserved"
+                ] as? Bool == true
+            payload["nestedAnchoredOverlayStackOutsideParentRemainsOpenObserved"] =
+                state[
+                    "nestedAnchoredOverlayStackOutsideParentRemainsOpenObserved"
+                ] as? Bool == true
+            payload["nestedAnchoredOverlayStackOutsideFocusPreservedObserved"] =
+                state[
+                    "nestedAnchoredOverlayStackOutsideFocusPreservedObserved"
+                ] as? Bool == true
+            payload["nestedAnchoredOverlayStackOutsideParentCloseObserved"] =
+                state[
+                    "nestedAnchoredOverlayStackOutsideParentCloseObserved"
+                ] as? Bool == true
+            payload["nestedAnchoredOverlayStackActivePath"] =
+                standardFrameworkString(state, "nestedAnchoredOverlayStackActivePath")
+            payload["nestedAnchoredOverlayStackKeyboardError"] =
+                standardFrameworkString(
+                    state, "nestedAnchoredOverlayStackKeyboardError")
+            payload["nestedAnchoredOverlayStackOutsideError"] =
+                standardFrameworkString(
+                    state, "nestedAnchoredOverlayStackOutsideError")
             payload["notificationOpenObserved"] =
                 state["notificationOpenObserved"] as? Bool == true
             payload["notificationOpened"] = state["notificationOpened"] as? Bool == true
@@ -4367,6 +8134,19 @@ extension WebViewHost {
                 state["numberFieldServerObserved"] as? Bool == true
             payload["numberFieldValue"] = standardFrameworkString(state, "numberFieldValue")
             payload["numberFieldStatus"] = standardFrameworkString(state, "numberFieldStatus")
+            payload["sliderClientObserved"] =
+                state["sliderClientObserved"] as? Bool == true
+            payload["sliderServerObserved"] =
+                state["sliderServerObserved"] as? Bool == true
+            payload["sliderValue"] = standardFrameworkDouble(state, "sliderValue")
+            payload["sliderMin"] = standardFrameworkDouble(state, "sliderMin")
+            payload["sliderMax"] = standardFrameworkDouble(state, "sliderMax")
+            payload["sliderStep"] = standardFrameworkDouble(state, "sliderStep")
+            payload["sliderMinMaxVisible"] =
+                state["sliderMinMaxVisible"] as? Bool == true
+            payload["sliderValueAlwaysVisible"] =
+                state["sliderValueAlwaysVisible"] as? Bool == true
+            payload["sliderStatus"] = standardFrameworkString(state, "sliderStatus")
             payload["splitLayoutDragObserved"] =
                 state["splitLayoutDragObserved"] as? Bool == true
             payload["splitLayoutServerObserved"] =
@@ -4452,6 +8232,10 @@ extension WebViewHost {
         (state[key] as? NSNumber)?.intValue ?? state[key] as? Int ?? 0
     }
 
+    private func standardFrameworkDouble(_ state: [String: Any], _ key: String) -> Double {
+        (state[key] as? NSNumber)?.doubleValue ?? state[key] as? Double ?? 0
+    }
+
     private func standardFrameworkJsonObject(_ value: Any?) -> [String: Any]? {
         guard let text = value as? String,
               let data = text.data(using: .utf8) else {
@@ -4459,6 +8243,106 @@ extension WebViewHost {
         }
         return try? JSONSerialization.jsonObject(with: data) as? [String: Any]
     }
+
+    private static let standardFrameworkLazyFrontendOpenAction = """
+    (() => {
+      const element = document.querySelector('#framework-lazy-frontend-open');
+      if (!element || typeof element.click !== 'function') return false;
+      element.scrollIntoView({ block: 'center', inline: 'center' });
+      element.click();
+      return true;
+    })()
+    """
+
+    private static let standardFrameworkLazyFrontendClientAction = """
+    (() => {
+      const element = document.querySelector('#framework-lazy-frontend-probe');
+      if (!element || typeof element.click !== 'function') return false;
+      element.scrollIntoView({ block: 'center', inline: 'center' });
+      element.click();
+      return true;
+    })()
+    """
+
+    private static let standardFrameworkLazyFrontendServerAction = """
+    (() => {
+      const element = document.querySelector('#framework-lazy-frontend-server-update');
+      if (!element || typeof element.click !== 'function') return false;
+      element.scrollIntoView({ block: 'center', inline: 'center' });
+      element.click();
+      return true;
+    })()
+    """
+
+    private static let standardFrameworkLazyFrontendReturnAction = """
+    (() => {
+      const element = document.querySelector('#framework-lazy-frontend-return');
+      if (!element || typeof element.click !== 'function') return false;
+      element.scrollIntoView({ block: 'center', inline: 'center' });
+      element.click();
+      return true;
+    })()
+    """
+
+    private static let standardFrameworkNestedLazyOpenAction = """
+    (() => {
+      const element = document.querySelector('#framework-nested-lazy-open');
+      if (!element || typeof element.click !== 'function') return false;
+      element.scrollIntoView({ block: 'center', inline: 'center' });
+      element.click();
+      return true;
+    })()
+    """
+
+    private static let standardFrameworkNestedLazyClientAction = """
+    (() => {
+      const element = document.querySelector('#framework-nested-lazy-probe');
+      if (!element || typeof element.click !== 'function') return false;
+      element.scrollIntoView({ block: 'center', inline: 'center' });
+      element.click();
+      return true;
+    })()
+    """
+
+    private static let standardFrameworkNestedLazyServerAction = """
+    (() => {
+      const element = document.querySelector('#framework-nested-lazy-server-update');
+      if (!element || typeof element.click !== 'function') return false;
+      element.scrollIntoView({ block: 'center', inline: 'center' });
+      element.click();
+      return true;
+    })()
+    """
+
+    private static let standardFrameworkNestedLazyReturnAction = """
+    (() => {
+      const element = document.querySelector('#framework-nested-lazy-return');
+      if (!element || typeof element.click !== 'function') return false;
+      element.scrollIntoView({ block: 'center', inline: 'center' });
+      element.click();
+      return true;
+    })()
+    """
+
+    private static let standardFrameworkAppLayoutClientAction = """
+    (() => {
+      const element = document.querySelector('#framework-app-layout-toggle');
+      if (!element || typeof element.click !== 'function') return false;
+      element.scrollIntoView({ block: 'center', inline: 'center' });
+      element.click();
+      return true;
+    })()
+    """
+
+    private static let standardFrameworkAppLayoutServerAction = """
+    (() => {
+      const element = document.querySelector('#framework-app-layout-server-update');
+      if (!element || typeof element.click !== 'function') return false;
+      element.scrollIntoView({ block: 'center', inline: 'center' });
+      element.click();
+      return true;
+    })()
+    """
 
     private static let standardFrameworkBudgetAction = """
     (() => {
@@ -4841,6 +8725,145 @@ extension WebViewHost {
     })()
     """
 
+    private static let standardFrameworkSliderClientAction = """
+    (() => {
+      const element = document.querySelector('#framework-slider');
+      if (!element) return false;
+      const value = 6.5;
+      element.scrollIntoView({ block: 'center', inline: 'center' });
+      element.value = value;
+      element.dispatchEvent(new CustomEvent('value-changed', {
+        bubbles: true,
+        composed: true,
+        detail: { value }
+      }));
+      element.dispatchEvent(new Event('change', { bubbles: true, composed: true }));
+      return true;
+    })()
+    """
+
+    private static let standardFrameworkSliderServerAction = """
+    (() => {
+      const button = document.querySelector('#framework-slider-server-update');
+      if (!button) return false;
+      button.scrollIntoView({ block: 'center', inline: 'center' });
+      button.click();
+      return true;
+    })()
+    """
+
+    private static let standardFrameworkCardClientAction = """
+    (() => {
+      const element = document.querySelector('#framework-card');
+      if (!element) return false;
+      element.scrollIntoView({ block: 'center', inline: 'center' });
+      element.dispatchEvent(new MouseEvent('click', {
+        bubbles: true,
+        composed: true,
+        view: window
+      }));
+      return true;
+    })()
+    """
+
+    private static let standardFrameworkMasterDetailClientAction = """
+    (() => {
+      const element = document.querySelector('#framework-master-detail-layout');
+      if (!element) return false;
+      element.scrollIntoView({ block: 'center', inline: 'center' });
+      if (typeof element.__onBackdropClick === 'function') {
+        element.__onBackdropClick();
+        return true;
+      }
+      const backdrop = element.shadowRoot?.querySelector?.('[part="backdrop"]');
+      if (!backdrop) return false;
+      backdrop.dispatchEvent(new MouseEvent('click', {
+        bubbles: true,
+        composed: true,
+        view: window
+      }));
+      return true;
+    })()
+    """
+
+    private static let standardFrameworkMasterDetailServerAction = """
+    (() => {
+      const button = document.querySelector('#framework-master-detail-server-update');
+      if (!button) return false;
+      button.scrollIntoView({ block: 'center', inline: 'center' });
+      button.click();
+      return true;
+    })()
+    """
+
+    private static let standardFrameworkMasterDetailAnimationAction = """
+    (() => {
+      const button = document.querySelector('#framework-master-detail-animation-update');
+      if (!button) return false;
+      button.scrollIntoView({ block: 'center', inline: 'center' });
+      button.click();
+      return true;
+    })()
+    """
+
+    private static let standardFrameworkCardServerAction = """
+    (() => {
+      const button = document.querySelector('#framework-card-server-update');
+      if (!button) return false;
+      button.scrollIntoView({ block: 'center', inline: 'center' });
+      button.click();
+      return true;
+    })()
+    """
+
+    private static let standardFrameworkMarkdownClientAction = """
+    (() => {
+      const element = document.querySelector('#framework-markdown');
+      if (!element) return false;
+      element.scrollIntoView({ block: 'center', inline: 'center' });
+      element.dispatchEvent(new MouseEvent('click', {
+        bubbles: true,
+        composed: true,
+        view: window
+      }));
+      return true;
+    })()
+    """
+
+    private static let standardFrameworkMarkdownServerAction = """
+    (() => {
+      const button = document.querySelector('#framework-markdown-server-update');
+      if (!button) return false;
+      button.scrollIntoView({ block: 'center', inline: 'center' });
+      button.click();
+      return true;
+    })()
+    """
+
+    private static let standardFrameworkBadgeClientAction = """
+    (() => {
+      const element = document.querySelector('#framework-badge');
+      if (!element) return false;
+      element.scrollIntoView({ block: 'center', inline: 'center' });
+      element.dispatchEvent(new MouseEvent('click', {
+        bubbles: true,
+        composed: true,
+        view: window
+      }));
+      return true;
+    })()
+    """
+
+    private static let standardFrameworkBadgeServerAction = """
+    (() => {
+      const button = document.querySelector('#framework-badge-server-update');
+      if (!button) return false;
+      button.scrollIntoView({ block: 'center', inline: 'center' });
+      button.click();
+      return true;
+    })()
+    """
+
     private static let standardFrameworkPasswordFieldAction = """
     (() => {
       const element = document.querySelector('#framework-secret');
@@ -5137,7 +9160,249 @@ extension WebViewHost {
     (() => {
       const element = document.querySelector('#framework-dialog-open');
       if (!element || typeof element.click !== 'function') return false;
+      element.scrollIntoView({ block: 'center', inline: 'center' });
+      if (typeof element.focus === 'function') {
+        element.focus({ preventScroll: true });
+      }
       element.click();
+      return true;
+    })()
+    """
+
+    private static let standardFrameworkNestedDialogAction = """
+    (() => {
+      const element = document.querySelector('#framework-nested-dialog-open');
+      if (!element || typeof element.click !== 'function') return false;
+      element.scrollIntoView({ block: 'center', inline: 'center' });
+      if (typeof element.focus === 'function') {
+        element.focus({ preventScroll: true });
+      }
+      element.click();
+      return true;
+    })()
+    """
+
+    private static let standardFrameworkNestedDialogKeyboardCloseAction = """
+    (() => {
+      const marker = {
+        openedObserved: false,
+        initialFocusObserved: false,
+        a11yObserved: false,
+        focusTrapObserved: false,
+        parentOpenedBeforeEscape: false,
+        escapeDispatched: false,
+        tabDefaultPrevented: false,
+        activeBeforeTab: '',
+        activeAfterTab: '',
+        activeAfterShiftTab: '',
+        error: ''
+      };
+      window.VaadinDesktopFrameworkNestedDialogKeyboard = marker;
+      const parentDialog = document.querySelector('#framework-dialog');
+      const nestedDialog = document.querySelector('#framework-nested-dialog');
+      const trigger = document.querySelector('#framework-nested-dialog-open');
+      const focusField =
+        document.querySelector('#framework-nested-dialog-focus-field');
+      const lastAction =
+        document.querySelector('#framework-nested-dialog-last-action');
+      if (!parentDialog || !nestedDialog || !trigger || !focusField || !lastAction) {
+        marker.error = 'nested-dialog-keyboard-elements-missing';
+        return true;
+      }
+      const activeDeepElements = () => {
+        const elements = [];
+        let active = document.activeElement;
+        while (active) {
+          elements.push(active);
+          active = active.shadowRoot?.activeElement || null;
+        }
+        return elements;
+      };
+      const activePath = () => activeDeepElements()
+        .map((element) =>
+          `${element.localName || element.nodeName || 'unknown'}#${element.id || ''}`)
+        .join(' > ');
+      const belongsToNestedDialog = (element) =>
+        element === nestedDialog
+          || element === focusField
+          || element === focusField.inputElement
+          || element === lastAction
+          || nestedDialog.contains?.(element);
+      const activeAtStart = activeDeepElements();
+      marker.openedObserved =
+        parentDialog.opened === true && nestedDialog.opened === true;
+      marker.initialFocusObserved = activeAtStart.some((element) =>
+        element === focusField
+          || element === focusField.inputElement
+          || focusField.contains?.(element));
+      marker.a11yObserved =
+        ['dialog', 'alertdialog'].includes(
+          String(nestedDialog.getAttribute?.('role') || '').toLowerCase())
+          && String(nestedDialog.getAttribute?.('aria-modal') || '') === 'true'
+          && String(nestedDialog.getAttribute?.('aria-label') || '')
+            .includes('Flow IPC nested keyboard dialog');
+      marker.activeBeforeTab = activePath();
+      try {
+        const dispatchWhenFocusTrapReady = (remainingAttempts) => {
+          try {
+            const tab = new KeyboardEvent('keydown', {
+              bubbles: true,
+              composed: true,
+              cancelable: true,
+              key: 'Tab',
+              code: 'Tab',
+              keyCode: 9,
+              which: 9
+            });
+            document.dispatchEvent(tab);
+            if (!tab.defaultPrevented && remainingAttempts > 0) {
+              setTimeout(
+                () => dispatchWhenFocusTrapReady(remainingAttempts - 1),
+                50);
+              return;
+            }
+            marker.activeAfterTab = activePath();
+            const shiftTab = new KeyboardEvent('keydown', {
+              bubbles: true,
+              composed: true,
+              cancelable: true,
+              key: 'Tab',
+              code: 'Tab',
+              keyCode: 9,
+              which: 9,
+              shiftKey: true
+            });
+            document.dispatchEvent(shiftTab);
+            marker.activeAfterShiftTab = activePath();
+            marker.tabDefaultPrevented =
+              tab.defaultPrevented === true && shiftTab.defaultPrevented === true;
+            const active = activeDeepElements();
+            marker.focusTrapObserved =
+              !active.includes(trigger)
+                && active.some(belongsToNestedDialog);
+            marker.parentOpenedBeforeEscape = parentDialog.opened === true;
+            (activeDeepElements().at(-1) || document).dispatchEvent(
+              new KeyboardEvent('keydown', {
+              bubbles: true,
+              composed: true,
+              cancelable: true,
+              key: 'Escape',
+              code: 'Escape',
+              keyCode: 27,
+              which: 27
+            }));
+            marker.escapeDispatched = true;
+          } catch (error) {
+            marker.error =
+              String(error?.message || error || 'nested-dialog-keyboard-timeout-error');
+          }
+        };
+        dispatchWhenFocusTrapReady(0);
+      } catch (error) {
+        marker.error =
+          String(error?.message || error || 'nested-dialog-keyboard-error');
+      }
+      return true;
+    })()
+    """
+
+    private static let standardFrameworkDialogKeyboardCloseAction = """
+    (() => {
+      const marker = {
+        focusTrapObserved: false,
+        escapeDispatched: false,
+        tabDefaultPrevented: false,
+        activeBeforeTab: '',
+        activeAfterTab: '',
+        activeAfterShiftTab: '',
+        error: ''
+      };
+      window.VaadinDesktopFrameworkDialogKeyboard = marker;
+      const dialog = document.querySelector('#framework-dialog');
+      const trigger = document.querySelector('#framework-dialog-open');
+      const focusField = document.querySelector('#framework-dialog-focus-field');
+      const lastAction = document.querySelector('#framework-dialog-last-action');
+      if (!dialog || !trigger || !focusField || !lastAction) {
+        marker.error = 'dialog-keyboard-elements-missing';
+        return true;
+      }
+      const activeDeepElements = () => {
+        const elements = [];
+        let active = document.activeElement;
+        while (active) {
+          elements.push(active);
+          active = active.shadowRoot?.activeElement || null;
+        }
+        return elements;
+      };
+      const activePath = () => activeDeepElements()
+        .map((element) =>
+          `${element.localName || element.nodeName || 'unknown'}#${element.id || ''}`)
+        .join(' > ');
+      const belongsToDialog = (element) =>
+        element === dialog
+          || element === focusField
+          || element === focusField.inputElement
+          || element === lastAction
+          || dialog.contains?.(element);
+      marker.activeBeforeTab = activePath();
+      try {
+        const dispatchWhenFocusTrapReady = (remainingAttempts) => {
+          try {
+            const tab = new KeyboardEvent('keydown', {
+              bubbles: true,
+              composed: true,
+              cancelable: true,
+              key: 'Tab',
+              code: 'Tab',
+              keyCode: 9,
+              which: 9
+            });
+            document.dispatchEvent(tab);
+            if (!tab.defaultPrevented && remainingAttempts > 0) {
+              setTimeout(
+                () => dispatchWhenFocusTrapReady(remainingAttempts - 1),
+                50);
+              return;
+            }
+            marker.activeAfterTab = activePath();
+            const shiftTab = new KeyboardEvent('keydown', {
+              bubbles: true,
+              composed: true,
+              cancelable: true,
+              key: 'Tab',
+              code: 'Tab',
+              keyCode: 9,
+              which: 9,
+              shiftKey: true
+            });
+            document.dispatchEvent(shiftTab);
+            marker.activeAfterShiftTab = activePath();
+            marker.tabDefaultPrevented =
+              tab.defaultPrevented === true && shiftTab.defaultPrevented === true;
+            const active = activeDeepElements();
+            marker.focusTrapObserved =
+              !active.includes(trigger)
+                && active.some(belongsToDialog);
+            (activeDeepElements().at(-1) || document).dispatchEvent(
+              new KeyboardEvent('keydown', {
+              bubbles: true,
+              composed: true,
+              cancelable: true,
+              key: 'Escape',
+              code: 'Escape',
+              keyCode: 27,
+              which: 27
+            }));
+            marker.escapeDispatched = true;
+          } catch (error) {
+            marker.error = String(error?.message || error || 'dialog-keyboard-timeout-error');
+          }
+        };
+        dispatchWhenFocusTrapReady(0);
+      } catch (error) {
+        marker.error = String(error?.message || error || 'dialog-keyboard-error');
+      }
       return true;
     })()
     """
@@ -5267,6 +9532,26 @@ extension WebViewHost {
     private static let standardFrameworkScrollerServerAction = """
     (() => {
       const button = document.querySelector('#framework-scroller-server-update');
+      if (!button || typeof button.click !== 'function') return false;
+      button.scrollIntoView({ block: 'center', inline: 'center' });
+      button.click();
+      return true;
+    })()
+    """
+
+    private static let standardFrameworkIconClientAction = """
+    (() => {
+      const icon = document.querySelector('#framework-icon');
+      if (!icon || typeof icon.click !== 'function') return false;
+      icon.scrollIntoView({ block: 'center', inline: 'center' });
+      icon.click();
+      return true;
+    })()
+    """
+
+    private static let standardFrameworkIconServerAction = """
+    (() => {
+      const button = document.querySelector('#framework-icon-server-update');
       if (!button || typeof button.click !== 'function') return false;
       button.scrollIntoView({ block: 'center', inline: 'center' });
       button.click();
@@ -6846,7 +11131,7 @@ extension WebViewHost {
     })()
     """
 
-    private static let standardFrameworkLazyGridAction = """
+    private static let standardFrameworkLazyGridFarViewportAction = """
     (() => {
       const grid = document.querySelector('#framework-lazy-grid');
       const report = document.querySelector('#framework-lazy-grid-report');
@@ -6856,6 +11141,622 @@ extension WebViewHost {
       if (report && typeof report.click === 'function') {
         setTimeout(() => report.click(), 500);
       }
+      return true;
+    })()
+    """
+
+    private static let standardFrameworkLazyGridSelectionAction = """
+    (() => {
+      const grid = document.querySelector('#framework-lazy-grid');
+      if (!grid) return false;
+      const visit = (node) => {
+        if (!node) return null;
+        if (node.nodeType === 1
+            && node.localName === 'vaadin-grid-cell-content'
+            && (node.textContent || '').trim() === 'L-061') {
+          return node;
+        }
+        if (node.shadowRoot) {
+          const shadowResult = visit(node.shadowRoot);
+          if (shadowResult) return shadowResult;
+        }
+        const children = node.children || node.childNodes || [];
+        for (const child of children) {
+          const result = visit(child);
+          if (result) return result;
+        }
+        return null;
+      };
+      const cell = visit(grid);
+      if (!cell || typeof cell.click !== 'function') return false;
+      cell.click();
+      return true;
+    })()
+    """
+
+    private static let standardFrameworkLazyGridReturnViewportAction = """
+    (() => {
+      const grid = document.querySelector('#framework-lazy-grid');
+      if (!grid || typeof grid.scrollToIndex !== 'function') return false;
+      grid.scrollToIndex(0);
+      return true;
+    })()
+    """
+
+    private static let standardFrameworkLazyGridSortAction = """
+    (() => {
+      const grid = document.querySelector('#framework-lazy-grid');
+      if (!grid) return false;
+      const visit = (node) => {
+        if (!node) return null;
+        if (node.nodeType === 1
+            && node.localName === 'vaadin-grid-sorter'
+            && (node.textContent || '').includes('Lazy owner')) {
+          return node;
+        }
+        if (node.shadowRoot) {
+          const shadowResult = visit(node.shadowRoot);
+          if (shadowResult) return shadowResult;
+        }
+        const children = node.children || node.childNodes || [];
+        for (const child of children) {
+          const result = visit(child);
+          if (result) return result;
+        }
+        return null;
+      };
+      const sorter = visit(grid);
+      if (!sorter || typeof sorter.click !== 'function') return false;
+      grid.scrollIntoView({ block: 'center', inline: 'center' });
+      sorter.click();
+      return true;
+    })()
+    """
+
+    private static let standardFrameworkLazyGridFilterAction = """
+    (() => {
+      const field = document.querySelector('#framework-lazy-grid-filter');
+      const grid = document.querySelector('#framework-lazy-grid');
+      if (!field || !grid) return false;
+      const value = 'platform';
+      const nativeInput = field.inputElement;
+      field.scrollIntoView({ block: 'center', inline: 'center' });
+      field.value = value;
+      if (nativeInput) {
+        const descriptor = Object.getOwnPropertyDescriptor(
+          HTMLInputElement.prototype, 'value');
+        if (descriptor?.set) {
+          descriptor.set.call(nativeInput, value);
+        } else {
+          nativeInput.value = value;
+        }
+        nativeInput.dispatchEvent(new Event('input', { bubbles: true, composed: true }));
+        nativeInput.dispatchEvent(new Event('change', { bubbles: true, composed: true }));
+      }
+      field.dispatchEvent(new Event('input', { bubbles: true, composed: true }));
+      field.dispatchEvent(new CustomEvent('value-changed', {
+        bubbles: true,
+        composed: true,
+        detail: { value }
+      }));
+      field.dispatchEvent(new Event('change', { bubbles: true, composed: true }));
+      setTimeout(() => grid.scrollToIndex?.(0), 500);
+      return true;
+    })()
+    """
+
+    private static let standardFrameworkLazyGridFilterResetAction = """
+    (() => {
+      const field = document.querySelector('#framework-lazy-grid-filter');
+      const grid = document.querySelector('#framework-lazy-grid');
+      if (!field || !grid) return false;
+      const value = '';
+      const nativeInput = field.inputElement;
+      field.scrollIntoView({ block: 'center', inline: 'center' });
+      field.value = value;
+      if (nativeInput) {
+        const descriptor = Object.getOwnPropertyDescriptor(
+          HTMLInputElement.prototype, 'value');
+        if (descriptor?.set) {
+          descriptor.set.call(nativeInput, value);
+        } else {
+          nativeInput.value = value;
+        }
+        nativeInput.dispatchEvent(new Event('input', { bubbles: true, composed: true }));
+        nativeInput.dispatchEvent(new Event('change', { bubbles: true, composed: true }));
+      }
+      field.dispatchEvent(new Event('input', { bubbles: true, composed: true }));
+      field.dispatchEvent(new CustomEvent('value-changed', {
+        bubbles: true,
+        composed: true,
+        detail: { value }
+      }));
+      field.dispatchEvent(new Event('change', { bubbles: true, composed: true }));
+      setTimeout(() => grid.scrollToIndex?.(0), 500);
+      return true;
+    })()
+    """
+
+    private static let standardFrameworkTreeGridPlatformExpandAction = """
+    (() => {
+      const grid = document.querySelector('#framework-tree-grid');
+      if (!grid) return false;
+      const visit = (node) => {
+        if (!node) return null;
+        if (node.nodeType === 1
+            && node.localName === 'vaadin-grid-tree-toggle'
+            && (node.textContent || '').includes('Platform')) {
+          return node;
+        }
+        if (node.shadowRoot) {
+          const shadowResult = visit(node.shadowRoot);
+          if (shadowResult) return shadowResult;
+        }
+        const children = node.children || node.childNodes || [];
+        for (const child of children) {
+          const result = visit(child);
+          if (result) return result;
+        }
+        return null;
+      };
+      const toggle = visit(grid);
+      if (!toggle) return false;
+      grid.scrollIntoView({ block: 'center', inline: 'center' });
+      if (toggle.expanded !== true) {
+        const target =
+          toggle.shadowRoot?.querySelector('[part="toggle"]') || toggle;
+        target.click();
+      }
+      return true;
+    })()
+    """
+
+    private static let standardFrameworkTreeGridRuntimeExpandAction = """
+    (() => {
+      const grid = document.querySelector('#framework-tree-grid');
+      if (!grid) return false;
+      const visit = (node) => {
+        if (!node) return null;
+        if (node.nodeType === 1
+            && node.localName === 'vaadin-grid-tree-toggle'
+            && (node.textContent || '').includes('Runtime')) {
+          return node;
+        }
+        if (node.shadowRoot) {
+          const shadowResult = visit(node.shadowRoot);
+          if (shadowResult) return shadowResult;
+        }
+        const children = node.children || node.childNodes || [];
+        for (const child of children) {
+          const result = visit(child);
+          if (result) return result;
+        }
+        return null;
+      };
+      const toggle = visit(grid);
+      if (!toggle) return false;
+      grid.scrollIntoView({ block: 'center', inline: 'center' });
+      if (toggle.expanded !== true) {
+        const target =
+          toggle.shadowRoot?.querySelector('[part="toggle"]') || toggle;
+        target.click();
+      }
+      return true;
+    })()
+    """
+
+    private static let standardFrameworkTreeGridSelectionAction = """
+    (() => {
+      const grid = document.querySelector('#framework-tree-grid');
+      if (!grid) return false;
+      const visit = (node) => {
+        if (!node) return null;
+        if (node.nodeType === 1
+            && node.localName === 'vaadin-grid-cell-content'
+            && (node.textContent || '').trim() === 'Opaque IPC') {
+          return node;
+        }
+        if (node.shadowRoot) {
+          const shadowResult = visit(node.shadowRoot);
+          if (shadowResult) return shadowResult;
+        }
+        const children = node.children || node.childNodes || [];
+        for (const child of children) {
+          const result = visit(child);
+          if (result) return result;
+        }
+        return null;
+      };
+      const cell = visit(grid);
+      if (!cell || typeof cell.click !== 'function') return false;
+      cell.click();
+      return true;
+    })()
+    """
+
+    private static let standardFrameworkTreeGridRefreshAction = """
+    (() => {
+      const action = document.querySelector('#framework-tree-grid-refresh');
+      if (!action || typeof action.click !== 'function') return false;
+      action.click();
+      return true;
+    })()
+    """
+
+    private static let standardFrameworkTreeGridCollapseAction = """
+    (() => {
+      const grid = document.querySelector('#framework-tree-grid');
+      if (!grid) return false;
+      const visit = (node) => {
+        if (!node) return null;
+        if (node.nodeType === 1
+            && node.localName === 'vaadin-grid-tree-toggle'
+            && (node.textContent || '').includes('Platform')) {
+          return node;
+        }
+        if (node.shadowRoot) {
+          const shadowResult = visit(node.shadowRoot);
+          if (shadowResult) return shadowResult;
+        }
+        const children = node.children || node.childNodes || [];
+        for (const child of children) {
+          const result = visit(child);
+          if (result) return result;
+        }
+        return null;
+      };
+      const toggle = visit(grid);
+      if (!toggle || toggle.expanded !== true) return false;
+      const target =
+        toggle.shadowRoot?.querySelector('[part="toggle"]') || toggle;
+      target.click();
+      return true;
+    })()
+    """
+
+    private static let standardFrameworkGridEditorOpenAction = """
+    (() => {
+      const grid = document.querySelector('#framework-editor-grid');
+      if (!grid) return false;
+      const visit = (node, id) => {
+        if (!node) return null;
+        if (node.nodeType === 1 && node.id === id) return node;
+        if (node.shadowRoot) {
+          const shadowResult = visit(node.shadowRoot, id);
+          if (shadowResult) return shadowResult;
+        }
+        const children = node.children || node.childNodes || [];
+        for (const child of children) {
+          const result = visit(child, id);
+          if (result) return result;
+        }
+        return null;
+      };
+      const action = visit(grid, 'framework-editor-open-E-100');
+      if (!action || typeof action.click !== 'function') return false;
+      grid.scrollIntoView({ block: 'center', inline: 'center' });
+      action.click();
+      return true;
+    })()
+    """
+
+    private static let standardFrameworkGridEditorSaveAction = """
+    (() => {
+      const grid = document.querySelector('#framework-editor-grid');
+      if (!grid) return false;
+      const visit = (node, id) => {
+        if (!node) return null;
+        if (node.nodeType === 1 && node.id === id) return node;
+        if (node.shadowRoot) {
+          const shadowResult = visit(node.shadowRoot, id);
+          if (shadowResult) return shadowResult;
+        }
+        const children = node.children || node.childNodes || [];
+        for (const child of children) {
+          const result = visit(child, id);
+          if (result) return result;
+        }
+        return null;
+      };
+      const field = visit(grid, 'framework-editor-owner-field');
+      const save = visit(grid, 'framework-editor-save');
+      if (!field || !save || typeof save.click !== 'function') return false;
+      const value = 'desktop-updated';
+      const nativeInput = field.inputElement;
+      field.value = value;
+      if (nativeInput) {
+        const descriptor = Object.getOwnPropertyDescriptor(
+          HTMLInputElement.prototype, 'value');
+        if (descriptor?.set) {
+          descriptor.set.call(nativeInput, value);
+        } else {
+          nativeInput.value = value;
+        }
+        nativeInput.dispatchEvent(
+          new Event('input', { bubbles: true, composed: true }));
+        nativeInput.dispatchEvent(
+          new Event('change', { bubbles: true, composed: true }));
+      }
+      field.dispatchEvent(
+        new Event('input', { bubbles: true, composed: true }));
+      field.dispatchEvent(new CustomEvent('value-changed', {
+        bubbles: true,
+        composed: true,
+        detail: { value }
+      }));
+      field.dispatchEvent(
+        new Event('change', { bubbles: true, composed: true }));
+      setTimeout(() => save.click(), 120);
+      return true;
+    })()
+    """
+
+    private static let standardFrameworkGridEditorCancelOpenAction = """
+    (() => {
+      const grid = document.querySelector('#framework-editor-grid');
+      if (!grid) return false;
+      const visit = (node, id) => {
+        if (!node) return null;
+        if (node.nodeType === 1 && node.id === id) return node;
+        if (node.shadowRoot) {
+          const shadowResult = visit(node.shadowRoot, id);
+          if (shadowResult) return shadowResult;
+        }
+        const children = node.children || node.childNodes || [];
+        for (const child of children) {
+          const result = visit(child, id);
+          if (result) return result;
+        }
+        return null;
+      };
+      const action = visit(grid, 'framework-editor-open-E-101');
+      if (!action || typeof action.click !== 'function') return false;
+      action.click();
+      return true;
+    })()
+    """
+
+    private static let standardFrameworkGridEditorCancelAction = """
+    (() => {
+      const grid = document.querySelector('#framework-editor-grid');
+      if (!grid) return false;
+      const visit = (node, id) => {
+        if (!node) return null;
+        if (node.nodeType === 1 && node.id === id) return node;
+        if (node.shadowRoot) {
+          const shadowResult = visit(node.shadowRoot, id);
+          if (shadowResult) return shadowResult;
+        }
+        const children = node.children || node.childNodes || [];
+        for (const child of children) {
+          const result = visit(child, id);
+          if (result) return result;
+        }
+        return null;
+      };
+      const field = visit(grid, 'framework-editor-owner-field');
+      const cancel = visit(grid, 'framework-editor-cancel');
+      if (!field || !cancel || typeof cancel.click !== 'function') return false;
+      const value = 'should-not-stick';
+      const nativeInput = field.inputElement;
+      field.value = value;
+      if (nativeInput) {
+        const descriptor = Object.getOwnPropertyDescriptor(
+          HTMLInputElement.prototype, 'value');
+        if (descriptor?.set) {
+          descriptor.set.call(nativeInput, value);
+        } else {
+          nativeInput.value = value;
+        }
+        nativeInput.dispatchEvent(
+          new Event('input', { bubbles: true, composed: true }));
+        nativeInput.dispatchEvent(
+          new Event('change', { bubbles: true, composed: true }));
+      }
+      field.dispatchEvent(
+        new Event('input', { bubbles: true, composed: true }));
+      field.dispatchEvent(new CustomEvent('value-changed', {
+        bubbles: true,
+        composed: true,
+        detail: { value }
+      }));
+      field.dispatchEvent(
+        new Event('change', { bubbles: true, composed: true }));
+      setTimeout(() => cancel.click(), 120);
+      return true;
+    })()
+    """
+
+    private static let standardFrameworkGridEditorValidationOpenAction = """
+    (() => {
+      const grid = document.querySelector('#framework-editor-grid');
+      if (!grid) return false;
+      const visit = (node, id) => {
+        if (!node) return null;
+        if (node.nodeType === 1 && node.id === id) return node;
+        if (node.shadowRoot) {
+          const shadowResult = visit(node.shadowRoot, id);
+          if (shadowResult) return shadowResult;
+        }
+        const children = node.children || node.childNodes || [];
+        for (const child of children) {
+          const result = visit(child, id);
+          if (result) return result;
+        }
+        return null;
+      };
+      const action = visit(grid, 'framework-editor-open-E-102');
+      if (!action || typeof action.click !== 'function') return false;
+      action.click();
+      return true;
+    })()
+    """
+
+    private static let standardFrameworkGridEditorValidationAction = """
+    (() => {
+      const grid = document.querySelector('#framework-editor-grid');
+      if (!grid) return false;
+      const visit = (node, id) => {
+        if (!node) return null;
+        if (node.nodeType === 1 && node.id === id) return node;
+        if (node.shadowRoot) {
+          const shadowResult = visit(node.shadowRoot, id);
+          if (shadowResult) return shadowResult;
+        }
+        const children = node.children || node.childNodes || [];
+        for (const child of children) {
+          const result = visit(child, id);
+          if (result) return result;
+        }
+        return null;
+      };
+      const field = visit(grid, 'framework-editor-owner-field');
+      const save = visit(grid, 'framework-editor-save');
+      if (!field || !save || typeof save.click !== 'function') return false;
+      const value = '';
+      const nativeInput = field.inputElement;
+      field.value = value;
+      if (nativeInput) {
+        const descriptor = Object.getOwnPropertyDescriptor(
+          HTMLInputElement.prototype, 'value');
+        if (descriptor?.set) {
+          descriptor.set.call(nativeInput, value);
+        } else {
+          nativeInput.value = value;
+        }
+        nativeInput.dispatchEvent(
+          new Event('input', { bubbles: true, composed: true }));
+        nativeInput.dispatchEvent(
+          new Event('change', { bubbles: true, composed: true }));
+      }
+      field.dispatchEvent(
+        new Event('input', { bubbles: true, composed: true }));
+      field.dispatchEvent(new CustomEvent('value-changed', {
+        bubbles: true,
+        composed: true,
+        detail: { value }
+      }));
+      field.dispatchEvent(
+        new Event('change', { bubbles: true, composed: true }));
+      setTimeout(() => save.click(), 120);
+      return true;
+    })()
+    """
+
+    private static let standardFrameworkGridEditorValidationCancelAction = """
+    (() => {
+      const grid = document.querySelector('#framework-editor-grid');
+      if (!grid) return false;
+      const visit = (node, id) => {
+        if (!node) return null;
+        if (node.nodeType === 1 && node.id === id) return node;
+        if (node.shadowRoot) {
+          const shadowResult = visit(node.shadowRoot, id);
+          if (shadowResult) return shadowResult;
+        }
+        const children = node.children || node.childNodes || [];
+        for (const child of children) {
+          const result = visit(child, id);
+          if (result) return result;
+        }
+        return null;
+      };
+      const cancel = visit(grid, 'framework-editor-cancel');
+      if (!cancel || typeof cancel.click !== 'function') return false;
+      cancel.click();
+      return true;
+    })()
+    """
+
+    private static let standardFrameworkLitRendererFunctionAction = """
+    (() => {
+      const grid = document.querySelector('#framework-editor-grid');
+      if (!grid) return false;
+      const visit = (node) => {
+        if (!node) return null;
+        if (node.nodeType === 1
+            && node.localName === 'button'
+            && (node.textContent || '').includes('Lit E-100: queued')) {
+          return node;
+        }
+        if (node.shadowRoot) {
+          const shadowResult = visit(node.shadowRoot);
+          if (shadowResult) return shadowResult;
+        }
+        const children = node.children || node.childNodes || [];
+        for (const child of children) {
+          const result = visit(child);
+          if (result) return result;
+        }
+        return null;
+      };
+      const action = visit(grid);
+      if (!action || typeof action.click !== 'function') return false;
+      action.click();
+      return true;
+    })()
+    """
+
+    private static let standardFrameworkClientCallableResolveAction = """
+    (() => {
+      const probe = document.querySelector('#framework-flow-rpc-probe');
+      if (!probe || typeof probe.$server?.resolveClientCall !== 'function') {
+        return false;
+      }
+      delete probe.dataset.clientCallableResolved;
+      delete probe.dataset.clientCallableResolveError;
+      const result = probe.$server.resolveClientCall('desktop-rpc');
+      if (!result || typeof result.then !== 'function') return false;
+      result.then(
+        (value) => {
+          probe.dataset.clientCallableResolved = String(value);
+        },
+        (error) => {
+          probe.dataset.clientCallableResolveError = String(error);
+        });
+      return true;
+    })()
+    """
+
+    private static let standardFrameworkClientCallableRejectAction = """
+    (() => {
+      const probe = document.querySelector('#framework-flow-rpc-probe');
+      if (!probe || typeof probe.$server?.rejectClientCall !== 'function') {
+        return false;
+      }
+      delete probe.dataset.clientCallableRejected;
+      delete probe.dataset.clientCallableRejectError;
+      delete probe.dataset.clientCallableUnexpectedValue;
+      const result = probe.$server.rejectClientCall('desktop-rpc-error');
+      if (!result || typeof result.then !== 'function') return false;
+      result.then(
+        (value) => {
+          probe.dataset.clientCallableUnexpectedValue = String(value);
+        },
+        (error) => {
+          probe.dataset.clientCallableRejected = 'true';
+          probe.dataset.clientCallableRejectError = String(error);
+        });
+      return true;
+    })()
+    """
+
+    private static let standardFrameworkPendingJavaScriptResolveAction = """
+    (() => {
+      const action = document.querySelector(
+        '#framework-pending-javascript-success');
+      if (!action || typeof action.click !== 'function') return false;
+      action.click();
+      return true;
+    })()
+    """
+
+    private static let standardFrameworkPendingJavaScriptRejectAction = """
+    (() => {
+      const action = document.querySelector(
+        '#framework-pending-javascript-failure');
+      if (!action || typeof action.click !== 'function') return false;
+      action.click();
       return true;
     })()
     """
@@ -6889,7 +11790,874 @@ extension WebViewHost {
     (() => {
       const element = document.querySelector('#framework-popover-target');
       if (!element || typeof element.click !== 'function') return false;
+      window.VaadinDesktopFrameworkAnchoredPopover = {};
+      element.scrollIntoView({ block: 'center', inline: 'center' });
+      if (typeof element.focus === 'function') {
+        element.focus({ preventScroll: true });
+      }
       element.click();
+      return true;
+    })()
+    """
+
+    private static let standardFrameworkPopoverKeyboardCloseAction = """
+    (() => {
+      const activeDeepElements = () => {
+        const elements = [];
+        let current = document.activeElement;
+        while (current) {
+          elements.push(current);
+          current = current.shadowRoot?.activeElement || null;
+        }
+        return elements;
+      };
+      const deepActiveElement = () => activeDeepElements().at(-1) || null;
+      const marker = window.VaadinDesktopFrameworkAnchoredPopover || {};
+      window.VaadinDesktopFrameworkAnchoredPopover = marker;
+      try {
+        const popover = document.querySelector('#framework-popover');
+        const target = document.querySelector('#framework-popover-target');
+        const focusField =
+          document.querySelector('#framework-popover-focus-field');
+        const overlay =
+          popover?.shadowRoot?.querySelector('vaadin-popover-overlay');
+        const ariaTarget = target?.ariaTarget || target;
+        if (!popover || !target || !focusField || !overlay || !ariaTarget) {
+          marker.keyboardError = 'required-popover-elements-missing';
+          return true;
+        }
+        marker.anchoredObserved =
+          popover.opened === true
+            && popover.target === target
+            && overlay.positionTarget === target
+            && overlay.modeless === true
+            && overlay.focusTrap !== true;
+        marker.a11yObserved =
+          String(popover.getAttribute('role') || '').toLowerCase() === 'dialog'
+            && String(popover.getAttribute('aria-label') || '')
+              .includes('Flow IPC anchored modeless popover')
+            && ariaTarget.getAttribute('aria-expanded') === 'true'
+            && ariaTarget.getAttribute('aria-controls') === popover.id
+            && ariaTarget.getAttribute('aria-haspopup') === 'dialog';
+
+        target.focus({ preventScroll: true });
+        const tabEvent = new KeyboardEvent('keydown', {
+          key: 'Tab',
+          code: 'Tab',
+          bubbles: true,
+          composed: true,
+          cancelable: true
+        });
+        target.dispatchEvent(tabEvent);
+        const tabActive = deepActiveElement();
+        marker.tabForwardObserved =
+          tabEvent.defaultPrevented
+            && (tabActive === popover || popover.contains(tabActive));
+
+        const shiftTabEvent = new KeyboardEvent('keydown', {
+          key: 'Tab',
+          code: 'Tab',
+          shiftKey: true,
+          bubbles: true,
+          composed: true,
+          cancelable: true
+        });
+        (deepActiveElement() || popover).dispatchEvent(shiftTabEvent);
+        marker.tabBackwardObserved =
+          shiftTabEvent.defaultPrevented
+            && activeDeepElements().includes(target);
+
+        focusField.focus({ preventScroll: true });
+        const escapeTarget = deepActiveElement() || focusField;
+        marker.focusInsideBeforeEscape =
+          escapeTarget === focusField
+            || escapeTarget === focusField.inputElement
+            || focusField.contains(escapeTarget);
+        const escapeEvent = new KeyboardEvent('keydown', {
+          key: 'Escape',
+          code: 'Escape',
+          bubbles: true,
+          composed: true,
+          cancelable: true
+        });
+        escapeTarget.dispatchEvent(escapeEvent);
+        marker.escapeDispatched = true;
+        marker.escapeClosedSynchronously = popover.opened !== true;
+      } catch (error) {
+        marker.keyboardError = String(error);
+      }
+      return true;
+    })()
+    """
+
+    private static let standardFrameworkPopoverReopenAction = """
+    (() => {
+      const activeDeepElements = () => {
+        const elements = [];
+        let current = document.activeElement;
+        while (current) {
+          elements.push(current);
+          current = current.shadowRoot?.activeElement || null;
+        }
+        return elements;
+      };
+      const popover = document.querySelector('#framework-popover');
+      const target = document.querySelector('#framework-popover-target');
+      const lifecycle =
+        document.querySelector('#framework-popover-lifecycle-status')
+          ?.textContent || '';
+      const marker = window.VaadinDesktopFrameworkAnchoredPopover || {};
+      window.VaadinDesktopFrameworkAnchoredPopover = marker;
+      if (!popover || !target || typeof target.click !== 'function') return false;
+      marker.escapeCloseObserved =
+        popover.opened !== true
+          && lifecycle.includes('Popover lifecycle closed: client=true');
+      marker.escapeFocusRestoredObserved =
+        activeDeepElements().includes(target);
+      target.focus({ preventScroll: true });
+      target.click();
+      marker.reopenDispatched = true;
+      return true;
+    })()
+    """
+
+    private static let standardFrameworkPopoverOutsideCloseAction = """
+    (() => {
+      const activeDeepElements = () => {
+        const elements = [];
+        let current = document.activeElement;
+        while (current) {
+          elements.push(current);
+          current = current.shadowRoot?.activeElement || null;
+        }
+        return elements;
+      };
+      const marker = window.VaadinDesktopFrameworkAnchoredPopover || {};
+      window.VaadinDesktopFrameworkAnchoredPopover = marker;
+      try {
+        const popover = document.querySelector('#framework-popover');
+        const outside =
+          document.querySelector('#framework-popover-outside-target');
+        if (!popover || !outside || popover.opened !== true) {
+          marker.outsideError = 'open-popover-or-outside-target-missing';
+          return true;
+        }
+        outside.focus({ preventScroll: true });
+        marker.outsideFocusBeforeClick =
+          activeDeepElements().includes(outside);
+        for (const type of ['mousedown', 'mouseup', 'click']) {
+          outside.dispatchEvent(new MouseEvent(type, {
+            bubbles: true,
+            composed: true,
+            cancelable: true,
+            button: 0
+          }));
+        }
+        marker.outsideDispatched = true;
+        marker.outsideClosedSynchronously = popover.opened !== true;
+        marker.outsideFocusPreservedObserved =
+          activeDeepElements().includes(outside);
+      } catch (error) {
+        marker.outsideError = String(error);
+      }
+      return true;
+    })()
+    """
+
+    private static let standardFrameworkMixedOverlayDialogOpenAction = """
+    (() => {
+      const trigger =
+        document.querySelector('#framework-mixed-overlay-dialog-open');
+      if (!trigger || typeof trigger.click !== 'function') return false;
+      window.VaadinDesktopFrameworkMixedOverlay = {
+        openedObserved: false,
+        a11yObserved: false,
+        tabForwardObserved: false,
+        tabBackwardObserved: false,
+        topEscapeDispatched: false,
+        parentRemainsAfterTopEscape: false,
+        popoverFocusRestoredObserved: false,
+        outsideDispatched: false,
+        parentRemainsAfterOutside: false,
+        outsideFocusPreservedObserved: false,
+        parentEscapeDispatched: false,
+        layeredFocusRestoredObserved: false,
+        keyboardError: '',
+        outsideError: '',
+        dialogError: ''
+      };
+      trigger.scrollIntoView({ block: 'center', inline: 'center' });
+      trigger.focus({ preventScroll: true });
+      trigger.click();
+      return true;
+    })()
+    """
+
+    private static let standardFrameworkMixedOverlayPopoverOpenAction = """
+    (() => {
+      const dialog =
+        document.querySelector('#framework-mixed-overlay-dialog');
+      const target =
+        document.querySelector('#framework-mixed-overlay-popover-target');
+      if (!dialog || dialog.opened !== true
+          || !target || typeof target.click !== 'function') return false;
+      target.focus({ preventScroll: true });
+      target.click();
+      return true;
+    })()
+    """
+
+    private static let standardFrameworkMixedOverlayPopoverKeyboardCloseAction = """
+    (() => {
+      const marker = window.VaadinDesktopFrameworkMixedOverlay || {};
+      window.VaadinDesktopFrameworkMixedOverlay = marker;
+      const activeDeepElements = () => {
+        const elements = [];
+        let current = document.activeElement;
+        while (current) {
+          elements.push(current);
+          current = current.shadowRoot?.activeElement || null;
+        }
+        return elements;
+      };
+      const deepestActiveElement = () =>
+        activeDeepElements().at(-1) || document;
+      try {
+        const dialog =
+          document.querySelector('#framework-mixed-overlay-dialog');
+        const popover =
+          document.querySelector('#framework-mixed-overlay-popover');
+        const target =
+          document.querySelector('#framework-mixed-overlay-popover-target');
+        const focusField =
+          document.querySelector(
+            '#framework-mixed-overlay-popover-focus-field');
+        const lastAction =
+          document.querySelector(
+            '#framework-mixed-overlay-popover-last-action');
+        const overlay =
+          popover?.shadowRoot?.querySelector('vaadin-popover-overlay');
+        const ariaTarget = target?.ariaTarget || target;
+        if (!dialog || !popover || !target || !focusField || !lastAction
+            || !overlay || !ariaTarget) {
+          marker.keyboardError = 'mixed-overlay-elements-missing';
+          return true;
+        }
+        marker.openedObserved =
+          dialog.opened === true
+            && popover.opened === true
+            && popover.target === target
+            && overlay.positionTarget === target
+            && overlay.modeless === true
+            && overlay.focusTrap !== true;
+        marker.a11yObserved =
+          marker.openedObserved === true
+            && String(popover.getAttribute('role') || '').toLowerCase()
+              === 'dialog'
+            && String(popover.getAttribute('aria-label') || '')
+              .includes('Flow IPC mixed modeless popover')
+            && ariaTarget.getAttribute('aria-expanded') === 'true'
+            && ariaTarget.getAttribute('aria-controls') === popover.id
+            && ariaTarget.getAttribute('aria-haspopup') === 'dialog';
+
+        const dispatchWhenFocusTrapReady = (remainingAttempts) => {
+          try {
+            target.focus({ preventScroll: true });
+            const tabEvent = new KeyboardEvent('keydown', {
+              key: 'Tab',
+              code: 'Tab',
+              keyCode: 9,
+              which: 9,
+              bubbles: true,
+              composed: true,
+              cancelable: true
+            });
+            target.dispatchEvent(tabEvent);
+            if (!tabEvent.defaultPrevented && remainingAttempts > 0) {
+              setTimeout(
+                () => dispatchWhenFocusTrapReady(remainingAttempts - 1),
+                50);
+              return;
+            }
+            const tabActive = activeDeepElements();
+            marker.tabForwardObserved =
+              tabEvent.defaultPrevented === true
+                && tabActive.some((element) =>
+                  element === popover
+                    || element === focusField
+                    || element === focusField.inputElement
+                    || element === lastAction
+                    || popover.contains?.(element));
+
+            const shiftTabEvent = new KeyboardEvent('keydown', {
+              key: 'Tab',
+              code: 'Tab',
+              keyCode: 9,
+              which: 9,
+              shiftKey: true,
+              bubbles: true,
+              composed: true,
+              cancelable: true
+            });
+            deepestActiveElement().dispatchEvent(shiftTabEvent);
+            marker.tabBackwardObserved =
+              shiftTabEvent.defaultPrevented === true
+                && activeDeepElements().includes(target);
+
+            focusField.focus({ preventScroll: true });
+            deepestActiveElement().dispatchEvent(new KeyboardEvent('keydown', {
+              key: 'Escape',
+              code: 'Escape',
+              keyCode: 27,
+              which: 27,
+              bubbles: true,
+              composed: true,
+              cancelable: true
+            }));
+            marker.topEscapeDispatched = true;
+            const captureCloseState = () => {
+              marker.parentRemainsAfterTopEscape =
+                dialog.opened === true && popover.opened !== true;
+              marker.popoverFocusRestoredObserved =
+                popover.opened !== true
+                  && activeDeepElements().includes(target);
+            };
+            captureCloseState();
+            setTimeout(captureCloseState, 50);
+          } catch (error) {
+            marker.keyboardError =
+              String(error?.message || error || 'mixed-overlay-keyboard-timeout-error');
+          }
+        };
+        dispatchWhenFocusTrapReady(20);
+      } catch (error) {
+        marker.keyboardError =
+          String(error?.message || error || 'mixed-overlay-keyboard-error');
+      }
+      return true;
+    })()
+    """
+
+    private static let standardFrameworkMixedOverlayPopoverReopenAction = """
+    (() => {
+      const marker = window.VaadinDesktopFrameworkMixedOverlay || {};
+      window.VaadinDesktopFrameworkMixedOverlay = marker;
+      const activeDeepElements = () => {
+        const elements = [];
+        let current = document.activeElement;
+        while (current) {
+          elements.push(current);
+          current = current.shadowRoot?.activeElement || null;
+        }
+        return elements;
+      };
+      const dialog =
+        document.querySelector('#framework-mixed-overlay-dialog');
+      const popover =
+        document.querySelector('#framework-mixed-overlay-popover');
+      const target =
+        document.querySelector('#framework-mixed-overlay-popover-target');
+      if (!dialog || dialog.opened !== true || !popover || popover.opened === true
+          || !target || typeof target.click !== 'function') return false;
+      marker.parentRemainsAfterTopEscape =
+        dialog.opened === true && popover.opened !== true;
+      marker.popoverFocusRestoredObserved =
+        activeDeepElements().includes(target);
+      target.focus({ preventScroll: true });
+      target.click();
+      return true;
+    })()
+    """
+
+    private static let standardFrameworkMixedOverlayPopoverOutsideCloseAction = """
+    (() => {
+      const marker = window.VaadinDesktopFrameworkMixedOverlay || {};
+      window.VaadinDesktopFrameworkMixedOverlay = marker;
+      const activeDeepElements = () => {
+        const elements = [];
+        let current = document.activeElement;
+        while (current) {
+          elements.push(current);
+          current = current.shadowRoot?.activeElement || null;
+        }
+        return elements;
+      };
+      try {
+        const dialog =
+          document.querySelector('#framework-mixed-overlay-dialog');
+        const popover =
+          document.querySelector('#framework-mixed-overlay-popover');
+        const outside =
+          document.querySelector('#framework-mixed-overlay-outside-target');
+        if (!dialog || dialog.opened !== true
+            || !popover || popover.opened !== true || !outside) {
+          marker.outsideError =
+            'mixed-overlay-open-popover-or-outside-target-missing';
+          return true;
+        }
+        outside.focus({ preventScroll: true });
+        for (const type of ['mousedown', 'mouseup', 'click']) {
+          outside.dispatchEvent(new MouseEvent(type, {
+            bubbles: true,
+            composed: true,
+            cancelable: true,
+            button: 0
+          }));
+        }
+        marker.outsideDispatched = true;
+        const captureCloseState = () => {
+          marker.parentRemainsAfterOutside =
+            dialog.opened === true && popover.opened !== true;
+          marker.outsideFocusPreservedObserved =
+            popover.opened !== true
+              && activeDeepElements().includes(outside);
+        };
+        captureCloseState();
+        setTimeout(captureCloseState, 50);
+      } catch (error) {
+        marker.outsideError =
+          String(error?.message || error || 'mixed-overlay-outside-error');
+      }
+      return true;
+    })()
+    """
+
+    private static let standardFrameworkMixedOverlayDialogCloseAction = """
+    (() => {
+      const marker = window.VaadinDesktopFrameworkMixedOverlay || {};
+      window.VaadinDesktopFrameworkMixedOverlay = marker;
+      const activeDeepElements = () => {
+        const elements = [];
+        let current = document.activeElement;
+        while (current) {
+          elements.push(current);
+          current = current.shadowRoot?.activeElement || null;
+        }
+        return elements;
+      };
+      try {
+        const dialog =
+          document.querySelector('#framework-mixed-overlay-dialog');
+        const popover =
+          document.querySelector('#framework-mixed-overlay-popover');
+        const trigger =
+          document.querySelector('#framework-mixed-overlay-dialog-open');
+        const outside =
+          document.querySelector('#framework-mixed-overlay-outside-target');
+        if (!dialog || dialog.opened !== true
+            || !popover || popover.opened === true || !trigger || !outside) {
+          marker.dialogError = 'mixed-overlay-dialog-close-elements-missing';
+          return true;
+        }
+        outside.focus({ preventScroll: true });
+        (activeDeepElements().at(-1) || outside).dispatchEvent(
+          new KeyboardEvent('keydown', {
+            key: 'Escape',
+            code: 'Escape',
+            keyCode: 27,
+            which: 27,
+            bubbles: true,
+            composed: true,
+            cancelable: true
+          }));
+        marker.parentEscapeDispatched = true;
+        const captureCloseState = () => {
+          marker.layeredFocusRestoredObserved =
+            dialog.opened !== true
+              && activeDeepElements().includes(trigger);
+        };
+        captureCloseState();
+        setTimeout(captureCloseState, 50);
+      } catch (error) {
+        marker.dialogError =
+          String(error?.message || error || 'mixed-overlay-dialog-close-error');
+      }
+      return true;
+    })()
+    """
+
+    private static let standardFrameworkNestedPopoverOuterOpenAction = """
+    (() => {
+      const target =
+        document.querySelector('#framework-nested-popover-outer-target');
+      if (!target || typeof target.click !== 'function') return false;
+      window.VaadinDesktopFrameworkNestedPopover = {
+        outerOpenedObserved: false,
+        stackOpenedObserved: false,
+        a11yObserved: false,
+        tabForwardObserved: false,
+        tabBackwardObserved: false,
+        topEscapeDispatched: false,
+        parentRemainsAfterTopEscape: false,
+        innerFocusRestoredObserved: false,
+        parentEscapeDispatched: false,
+        layeredFocusRestoredObserved: false,
+        outsideTopDispatched: false,
+        parentRemainsAfterOutsideTop: false,
+        outsideFocusPreservedObserved: false,
+        outsideParentDispatched: false,
+        keyboardError: '',
+        outsideError: ''
+      };
+      target.scrollIntoView({ block: 'center', inline: 'center' });
+      target.focus({ preventScroll: true });
+      target.click();
+      return true;
+    })()
+    """
+
+    private static let standardFrameworkNestedPopoverInnerOpenAction = """
+    (() => {
+      const outer =
+        document.querySelector('#framework-nested-popover-outer');
+      const target =
+        document.querySelector('#framework-nested-popover-inner-target');
+      if (!outer || outer.opened !== true
+          || !target || typeof target.click !== 'function') return false;
+      target.focus({ preventScroll: true });
+      target.click();
+      return true;
+    })()
+    """
+
+    private static let standardFrameworkNestedPopoverKeyboardCloseAction = """
+    (() => {
+      const marker = window.VaadinDesktopFrameworkNestedPopover || {};
+      window.VaadinDesktopFrameworkNestedPopover = marker;
+      const activeDeepElements = () => {
+        const elements = [];
+        let current = document.activeElement;
+        while (current) {
+          elements.push(current);
+          current = current.shadowRoot?.activeElement || null;
+        }
+        return elements;
+      };
+      const deepestActiveElement = () =>
+        activeDeepElements().at(-1) || document;
+      try {
+        const outer =
+          document.querySelector('#framework-nested-popover-outer');
+        const outerTarget =
+          document.querySelector('#framework-nested-popover-outer-target');
+        const inner =
+          document.querySelector('#framework-nested-popover-inner');
+        const innerTarget =
+          document.querySelector('#framework-nested-popover-inner-target');
+        const focusField =
+          document.querySelector(
+            '#framework-nested-popover-inner-focus-field');
+        const lastAction =
+          document.querySelector(
+            '#framework-nested-popover-inner-last-action');
+        const outerOverlay =
+          outer?.shadowRoot?.querySelector('vaadin-popover-overlay');
+        const innerOverlay =
+          inner?.shadowRoot?.querySelector('vaadin-popover-overlay');
+        const outerAriaTarget = outerTarget?.ariaTarget || outerTarget;
+        const innerAriaTarget = innerTarget?.ariaTarget || innerTarget;
+        if (!outer || !outerTarget || !inner || !innerTarget
+            || !focusField || !lastAction || !outerOverlay || !innerOverlay
+            || !outerAriaTarget || !innerAriaTarget) {
+          marker.keyboardError = 'nested-popover-elements-missing';
+          return true;
+        }
+        marker.outerOpenedObserved =
+          outer.opened === true
+            && outer.target === outerTarget
+            && outerOverlay.positionTarget === outerTarget
+            && outerOverlay.modeless === true
+            && outerOverlay.focusTrap !== true;
+        marker.stackOpenedObserved =
+          marker.outerOpenedObserved === true
+            && inner.opened === true
+            && outer.contains(inner)
+            && outer.contains(innerTarget)
+            && inner.target === innerTarget
+            && innerOverlay.positionTarget === innerTarget
+            && innerOverlay.modeless === true
+            && innerOverlay.focusTrap !== true;
+        marker.a11yObserved =
+          marker.stackOpenedObserved === true
+            && String(outer.getAttribute('role') || '').toLowerCase()
+              === 'dialog'
+            && String(outer.getAttribute('aria-label') || '')
+              .includes('Flow IPC nested outer popover')
+            && outerAriaTarget.getAttribute('aria-expanded') === 'true'
+            && outerAriaTarget.getAttribute('aria-controls') === outer.id
+            && outerAriaTarget.getAttribute('aria-haspopup') === 'dialog'
+            && String(inner.getAttribute('role') || '').toLowerCase()
+              === 'dialog'
+            && String(inner.getAttribute('aria-label') || '')
+              .includes('Flow IPC nested inner popover')
+            && innerAriaTarget.getAttribute('aria-expanded') === 'true'
+            && innerAriaTarget.getAttribute('aria-controls') === inner.id
+            && innerAriaTarget.getAttribute('aria-haspopup') === 'dialog';
+
+        const dispatchWhenReady = (remainingAttempts) => {
+          try {
+            innerTarget.focus({ preventScroll: true });
+            const tabEvent = new KeyboardEvent('keydown', {
+              key: 'Tab',
+              code: 'Tab',
+              keyCode: 9,
+              which: 9,
+              bubbles: true,
+              composed: true,
+              cancelable: true
+            });
+            innerTarget.dispatchEvent(tabEvent);
+            if (!tabEvent.defaultPrevented && remainingAttempts > 0) {
+              setTimeout(() => dispatchWhenReady(remainingAttempts - 1), 50);
+              return;
+            }
+            const tabActive = activeDeepElements();
+            marker.tabForwardObserved =
+              tabEvent.defaultPrevented === true
+                && tabActive.some((element) =>
+                  element === inner
+                    || element === focusField
+                    || element === focusField.inputElement
+                    || element === lastAction
+                    || inner.contains?.(element));
+
+            const shiftTabEvent = new KeyboardEvent('keydown', {
+              key: 'Tab',
+              code: 'Tab',
+              keyCode: 9,
+              which: 9,
+              shiftKey: true,
+              bubbles: true,
+              composed: true,
+              cancelable: true
+            });
+            deepestActiveElement().dispatchEvent(shiftTabEvent);
+            marker.tabBackwardObserved =
+              shiftTabEvent.defaultPrevented === true
+                && activeDeepElements().includes(innerTarget);
+
+            focusField.focus({ preventScroll: true });
+            deepestActiveElement().dispatchEvent(new KeyboardEvent('keydown', {
+              key: 'Escape',
+              code: 'Escape',
+              keyCode: 27,
+              which: 27,
+              bubbles: true,
+              composed: true,
+              cancelable: true
+            }));
+            marker.topEscapeDispatched = true;
+            const captureCloseState = () => {
+              marker.parentRemainsAfterTopEscape =
+                outer.opened === true && inner.opened !== true;
+              marker.innerFocusRestoredObserved =
+                inner.opened !== true
+                  && activeDeepElements().includes(innerTarget);
+            };
+            captureCloseState();
+            setTimeout(captureCloseState, 50);
+          } catch (error) {
+            marker.keyboardError =
+              String(error?.message || error || 'nested-popover-keyboard-timeout-error');
+          }
+        };
+        dispatchWhenReady(20);
+      } catch (error) {
+        marker.keyboardError =
+          String(error?.message || error || 'nested-popover-keyboard-error');
+      }
+      return true;
+    })()
+    """
+
+    private static let standardFrameworkNestedPopoverOuterKeyboardCloseAction = """
+    (() => {
+      const marker = window.VaadinDesktopFrameworkNestedPopover || {};
+      window.VaadinDesktopFrameworkNestedPopover = marker;
+      const activeDeepElements = () => {
+        const elements = [];
+        let current = document.activeElement;
+        while (current) {
+          elements.push(current);
+          current = current.shadowRoot?.activeElement || null;
+        }
+        return elements;
+      };
+      try {
+        const outer =
+          document.querySelector('#framework-nested-popover-outer');
+        const outerTarget =
+          document.querySelector('#framework-nested-popover-outer-target');
+        const inner =
+          document.querySelector('#framework-nested-popover-inner');
+        const innerTarget =
+          document.querySelector('#framework-nested-popover-inner-target');
+        if (!outer || outer.opened !== true || !outerTarget
+            || !inner || inner.opened === true || !innerTarget) {
+          marker.keyboardError =
+            'nested-popover-outer-keyboard-close-elements-missing';
+          return true;
+        }
+        marker.parentRemainsAfterTopEscape = true;
+        marker.innerFocusRestoredObserved =
+          activeDeepElements().includes(innerTarget);
+        innerTarget.focus({ preventScroll: true });
+        (activeDeepElements().at(-1) || innerTarget).dispatchEvent(
+          new KeyboardEvent('keydown', {
+            key: 'Escape',
+            code: 'Escape',
+            keyCode: 27,
+            which: 27,
+            bubbles: true,
+            composed: true,
+            cancelable: true
+          }));
+        marker.parentEscapeDispatched = true;
+        const captureCloseState = () => {
+          marker.layeredFocusRestoredObserved =
+            outer.opened !== true
+              && activeDeepElements().includes(outerTarget);
+        };
+        captureCloseState();
+        setTimeout(captureCloseState, 50);
+      } catch (error) {
+        marker.keyboardError =
+          String(error?.message || error || 'nested-popover-outer-keyboard-error');
+      }
+      return true;
+    })()
+    """
+
+    private static let standardFrameworkNestedPopoverOutsideOuterOpenAction = """
+    (() => {
+      const outer =
+        document.querySelector('#framework-nested-popover-outer');
+      const target =
+        document.querySelector('#framework-nested-popover-outer-target');
+      if (!outer || outer.opened === true
+          || !target || typeof target.click !== 'function') return false;
+      target.focus({ preventScroll: true });
+      target.click();
+      return true;
+    })()
+    """
+
+    private static let standardFrameworkNestedPopoverOutsideInnerOpenAction = """
+    (() => {
+      const outer =
+        document.querySelector('#framework-nested-popover-outer');
+      const inner =
+        document.querySelector('#framework-nested-popover-inner');
+      const target =
+        document.querySelector('#framework-nested-popover-inner-target');
+      if (!outer || outer.opened !== true || !inner || inner.opened === true
+          || !target || typeof target.click !== 'function') return false;
+      target.focus({ preventScroll: true });
+      target.click();
+      return true;
+    })()
+    """
+
+    private static let standardFrameworkNestedPopoverOutsideTopCloseAction = """
+    (() => {
+      const marker = window.VaadinDesktopFrameworkNestedPopover || {};
+      window.VaadinDesktopFrameworkNestedPopover = marker;
+      const activeDeepElements = () => {
+        const elements = [];
+        let current = document.activeElement;
+        while (current) {
+          elements.push(current);
+          current = current.shadowRoot?.activeElement || null;
+        }
+        return elements;
+      };
+      try {
+        const outer =
+          document.querySelector('#framework-nested-popover-outer');
+        const inner =
+          document.querySelector('#framework-nested-popover-inner');
+        const outside =
+          document.querySelector('#framework-nested-popover-outside-target');
+        if (!outer || outer.opened !== true || !inner || inner.opened !== true
+            || !outside) {
+          marker.outsideError =
+            'nested-popover-outside-top-close-elements-missing';
+          return true;
+        }
+        outside.focus({ preventScroll: true });
+        for (const type of ['mousedown', 'mouseup', 'click']) {
+          outside.dispatchEvent(new MouseEvent(type, {
+            bubbles: true,
+            composed: true,
+            cancelable: true,
+            button: 0
+          }));
+        }
+        marker.outsideTopDispatched = true;
+        const captureCloseState = () => {
+          marker.parentRemainsAfterOutsideTop =
+            outer.opened === true && inner.opened !== true;
+          marker.outsideFocusPreservedObserved =
+            inner.opened !== true
+              && activeDeepElements().includes(outside);
+        };
+        captureCloseState();
+        setTimeout(captureCloseState, 50);
+      } catch (error) {
+        marker.outsideError =
+          String(error?.message || error || 'nested-popover-outside-top-error');
+      }
+      return true;
+    })()
+    """
+
+    private static let standardFrameworkNestedPopoverOutsideParentCloseAction = """
+    (() => {
+      const marker = window.VaadinDesktopFrameworkNestedPopover || {};
+      window.VaadinDesktopFrameworkNestedPopover = marker;
+      const activeDeepElements = () => {
+        const elements = [];
+        let current = document.activeElement;
+        while (current) {
+          elements.push(current);
+          current = current.shadowRoot?.activeElement || null;
+        }
+        return elements;
+      };
+      try {
+        const outer =
+          document.querySelector('#framework-nested-popover-outer');
+        const inner =
+          document.querySelector('#framework-nested-popover-inner');
+        const outside =
+          document.querySelector('#framework-nested-popover-outside-target');
+        if (!outer || outer.opened !== true || !inner || inner.opened === true
+            || !outside) {
+          marker.outsideError =
+            'nested-popover-outside-parent-close-elements-missing';
+          return true;
+        }
+        outside.focus({ preventScroll: true });
+        for (const type of ['mousedown', 'mouseup', 'click']) {
+          outside.dispatchEvent(new MouseEvent(type, {
+            bubbles: true,
+            composed: true,
+            cancelable: true,
+            button: 0
+          }));
+        }
+        marker.outsideParentDispatched = true;
+        const captureCloseState = () => {
+          marker.outsideFocusPreservedObserved =
+            outer.opened !== true
+              && activeDeepElements().includes(outside);
+        };
+        captureCloseState();
+        setTimeout(captureCloseState, 50);
+      } catch (error) {
+        marker.outsideError =
+          String(error?.message || error || 'nested-popover-outside-parent-error');
+      }
       return true;
     })()
     """

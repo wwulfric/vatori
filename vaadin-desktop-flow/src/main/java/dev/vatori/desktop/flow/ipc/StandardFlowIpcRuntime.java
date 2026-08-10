@@ -3,6 +3,7 @@ package dev.vatori.desktop.flow.ipc;
 import com.vaadin.flow.component.Component;
 import com.vaadin.flow.di.InstantiatorFactory;
 import dev.vatori.desktop.DesktopApplication;
+import dev.vatori.desktop.flow.DesktopFlowMultipartConfig;
 import dev.vatori.desktop.flow.transport.DesktopFlowHttpResponse;
 import dev.vatori.desktop.flow.transport.DesktopFlowOpaqueHttpSession;
 
@@ -18,6 +19,7 @@ final class StandardFlowIpcRuntime {
     private final String route;
     private final DesktopApplication application;
     private final SidecarOutput output;
+    private final FlowFrontendMode frontendMode;
     private final StandardFlowIpcSessions sessions;
     private final StandardFlowIpcExchanges exchanges;
     private final SidecarMessageLoop messageLoop;
@@ -30,11 +32,28 @@ final class StandardFlowIpcRuntime {
             SidecarOutput output,
             SidecarNativeBridge nativeBridge,
             FlowIpcScope defaultScope) {
+        this(route, routeClasses, instantiatorFactory, application, output,
+                nativeBridge, defaultScope,
+                DesktopFlowMultipartConfig.defaults());
+    }
+
+    StandardFlowIpcRuntime(
+            String route,
+            Collection<Class<? extends Component>> routeClasses,
+            InstantiatorFactory instantiatorFactory,
+            DesktopApplication application,
+            SidecarOutput output,
+            SidecarNativeBridge nativeBridge,
+            FlowIpcScope defaultScope,
+            DesktopFlowMultipartConfig multipartConfig) {
         this.route = Objects.requireNonNullElse(route, "");
         this.application = Objects.requireNonNull(application, "application");
         this.output = Objects.requireNonNull(output, "output");
+        this.frontendMode = FlowFrontendMode.current();
         this.sessions = new StandardFlowIpcSessions(
-                List.copyOf(routeClasses), instantiatorFactory, output, nativeBridge);
+                List.copyOf(routeClasses), instantiatorFactory, output, nativeBridge,
+                frontendMode.productionMode(), frontendMode.projectDirectory(),
+                multipartConfig);
         this.exchanges = new StandardFlowIpcExchanges(output);
         this.messageLoop = new SidecarMessageLoop(output, nativeBridge, defaultScope);
         registerHandlers();
@@ -46,8 +65,9 @@ final class StandardFlowIpcRuntime {
         ready.put("runtime", "standard-vaadin-bundle-opaque-ipc");
         ready.put("uidlWriter", true);
         ready.put("uidlRpcDispatch", true);
-        ready.put("flowClientResourceLoading", "standard-production-bundle");
-        ready.put("componentFrontendResourceLoading", "standard-production-bundle");
+        ready.put("flowClientResourceLoading", frontendMode.resourceLoading());
+        ready.put("componentFrontendResourceLoading", frontendMode.resourceLoading());
+        ready.put("enabledFeatureFlags", sessions.enabledFeatureFlagIds());
         ready.put("uidlRpcProducer", "standard-flow-client");
         ready.put("uidlConsumer", "standard-flow-client");
         ready.put("uidlFallback", "none");
@@ -79,6 +99,8 @@ final class StandardFlowIpcRuntime {
                 sessions.disconnectPush(scope, envelope));
         messageLoop.register("opaquePushResync", (scope, envelope, id, correlationId) ->
                 sessions.resyncPush(scope, envelope));
+        messageLoop.register("opaquePushAck", (scope, envelope, id, correlationId) ->
+                sessions.acknowledgePush(scope, envelope));
         messageLoop.onWindowClosed(scope ->
                 sessions.closeWindow(scope, () -> exchanges.cancelWindow(scope)));
     }

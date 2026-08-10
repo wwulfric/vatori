@@ -22,6 +22,8 @@
         <module>examples/component-gallery-app</module>
         <module>test-apps/vaadin-desktop-smoke-app</module>
         <module>test-apps/flow-over-ipc-smoke-app</module>
+        <module>test-apps/flow-over-ipc-framework-shared</module>
+        <module>test-apps/flow-over-ipc-frontend-addon</module>
         <module>test-apps/flow-over-ipc-framework-app</module>
     </modules>
 
@@ -33,6 +35,7 @@
         <jackson2.version>2.21.2</jackson2.version>
         <jackson.version>3.1.2</jackson.version>
         <jakarta-servlet.version>6.1.0</jakarta-servlet.version>
+        <commons-fileupload.version>2.0.0-M5</commons-fileupload.version>
         <maven-compiler-plugin.version>3.14.1</maven-compiler-plugin.version>
         <maven-resources-plugin.version>3.3.1</maven-resources-plugin.version>
         <maven-surefire-plugin.version>3.5.5</maven-surefire-plugin.version>
@@ -61,6 +64,11 @@
                 <artifactId>jakarta.servlet-api</artifactId>
                 <version>${jakarta-servlet.version}</version>
                 <scope>compile</scope>
+            </dependency>
+            <dependency>
+                <groupId>org.apache.commons</groupId>
+                <artifactId>commons-fileupload2-jakarta-servlet6</artifactId>
+                <version>${commons-fileupload.version}</version>
             </dependency>
         </dependencies>
     </dependencyManagement>
@@ -130,4 +138,17 @@
             </plugins>
         </pluginManagement>
     </build>
+
+    <profiles>
+        <profile>
+            <id>flow-ipc-effective-maven-model-acceptance</id>
+            <properties>
+                <flow.ipc.effective.source-root>effective-sources</flow.ipc.effective.source-root>
+                <flow.ipc.effective.resource-root>effective-resources</flow.ipc.effective.resource-root>
+            </properties>
+            <modules>
+                <module>test-apps/flow-over-ipc-profile-shared</module>
+            </modules>
+        </profile>
+    </profiles>
 </project>

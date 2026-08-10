@@ -6,18 +6,58 @@ enum HostTransport: String, Decodable {
 }
 
 private struct HostLaunchManifest: Decodable {
+    struct SidecarStartup: Decodable {
+        let readyTimeoutSeconds: Double
+    }
+
     struct Recovery: Decodable {
         let restartLimit: Int
         let readyTimeoutSeconds: Double
+        let stableRunSeconds: Double?
+    }
+
+    struct WebAppDevelopmentServer: Decodable {
+        let origin: String
+        let entryPath: String
     }
 
     let version: Int
     let transport: HostTransport
     let sidecarJar: String
     let webApp: String?
+    let webAppDevelopmentServer: WebAppDevelopmentServer?
+    let applicationResources: String?
     let opaqueBridge: String
+    let pushBridge: String
     let capabilityManifest: String
+    let sidecarStartup: SidecarStartup?
     let recovery: Recovery
+}
+
+struct FlowWebAppDevelopmentServer {
+    let originURL: URL
+    let entryPath: String
+}
+
+enum FlowWebAppSource {
+    case packaged(URL)
+    case development(FlowWebAppDevelopmentServer)
+
+    var isDevelopment: Bool {
+        if case .development = self {
+            return true
+        }
+        return false
+    }
+
+    var mode: String {
+        switch self {
+        case .packaged:
+            return "production-bundle"
+        case .development:
+            return "development-server"
+        }
+    }
 }
 
 enum HostConfigError: LocalizedError {
@@ -26,8 +66,12 @@ enum HostConfigError: LocalizedError {
     case unsupportedManifestVersion(Int)
     case invalidResourcePath(String)
     case missingResource(String)
+    case resourceNotDirectory(String)
+    case invalidSidecarStartup
     case invalidRecovery
-    case flowBundleMissing
+    case flowWebAppMissing
+    case conflictingFlowWebAppSources
+    case invalidDevelopmentWebApp(String)
 
     var errorDescription: String? {
         switch self {
@@ -41,10 +85,18 @@ enum HostConfigError: LocalizedError {
             return "Host manifest resource paths must be bundle-relative and cannot contain '..': \(path)"
         case .missingResource(let path):
             return "Host manifest resource is missing: \(path)"
+        case .resourceNotDirectory(let path):
+            return "Host manifest resource must be a directory: \(path)"
+        case .invalidSidecarStartup:
+            return "Host manifest sidecar startup timeout must be at least one second"
         case .invalidRecovery:
-            return "Host manifest recovery values must be non-negative and the timeout must be at least one second"
-        case .flowBundleMissing:
-            return "flow-ipc requires a packaged FlowWebApp resource"
+            return "Host manifest recovery values must be non-negative and recovery timeouts must be at least one second"
+        case .flowWebAppMissing:
+            return "flow-ipc requires a packaged web app or a development web app server"
+        case .conflictingFlowWebAppSources:
+            return "flow-ipc accepts exactly one web app source"
+        case .invalidDevelopmentWebApp(let message):
+            return "Development web app server is invalid: \(message)"
         }
     }
 }
@@ -54,10 +106,15 @@ struct HostConfig {
     let transport: HostTransport
     let sidecarJarURL: URL
     let webAppURL: URL?
+    let flowWebAppSource: FlowWebAppSource?
     let opaqueBridgeURL: URL
+    let pushBridgeURL: URL
     let capabilityManifestURL: URL
+    let applicationResourcesURL: URL?
+    let sidecarInitialReadyTimeoutSeconds: Double
     let flowIpcSidecarRestartLimit: Int
     let flowIpcSidecarRecoveryReadyTimeoutSeconds: Double
+    let flowIpcSidecarRecoveryStableRunSeconds: Double
 
     var hostNoActivate: Bool {
         runtimeObserver.hostNoActivate
@@ -90,8 +147,16 @@ struct HostConfig {
         guard manifest.version == 1 else {
             throw HostConfigError.unsupportedManifestVersion(manifest.version)
         }
+        let sidecarInitialReadyTimeoutSeconds =
+            manifest.sidecarStartup?.readyTimeoutSeconds ?? 30
+        let recoveryStableRunSeconds =
+            manifest.recovery.stableRunSeconds ?? 30
+        guard sidecarInitialReadyTimeoutSeconds >= 1 else {
+            throw HostConfigError.invalidSidecarStartup
+        }
         guard manifest.recovery.restartLimit >= 0,
-              manifest.recovery.readyTimeoutSeconds >= 1 else {
+              manifest.recovery.readyTimeoutSeconds >= 1,
+              recoveryStableRunSeconds >= 1 else {
             throw HostConfigError.invalidRecovery
         }
 
@@ -99,13 +164,36 @@ struct HostConfig {
             manifest.sidecarJar, beneath: resourceURL, mustExist: true)
         let opaqueBridgeURL = try resource(
             manifest.opaqueBridge, beneath: resourceURL, mustExist: true)
+        let pushBridgeURL = try resource(
+            manifest.pushBridge, beneath: resourceURL, mustExist: true)
         let capabilityManifestURL = try resource(
             manifest.capabilityManifest, beneath: resourceURL, mustExist: true)
+        let applicationResourcesURL = try manifest.applicationResources.map {
+            try resourceDirectory($0, beneath: resourceURL)
+        }
         let webAppURL = try manifest.webApp.map {
             try resource($0, beneath: resourceURL, mustExist: true)
         }
-        if manifest.transport == .flowIpc && webAppURL == nil {
-            throw HostConfigError.flowBundleMissing
+        let developmentServer = try manifest.webAppDevelopmentServer.map {
+            try developmentWebApp($0)
+        }
+        let flowWebAppSource: FlowWebAppSource?
+        if manifest.transport == .flowIpc {
+            if webAppURL != nil && developmentServer != nil {
+                throw HostConfigError.conflictingFlowWebAppSources
+            }
+            if let webAppURL {
+                flowWebAppSource = .packaged(webAppURL)
+            } else if let developmentServer {
+                flowWebAppSource = .development(developmentServer)
+            } else {
+                throw HostConfigError.flowWebAppMissing
+            }
+        } else {
+            if webAppURL != nil || developmentServer != nil {
+                throw HostConfigError.conflictingFlowWebAppSources
+            }
+            flowWebAppSource = nil
         }
 
         let observer = makeHostRuntimeObserver()
@@ -115,10 +203,51 @@ struct HostConfig {
             transport: manifest.transport,
             sidecarJarURL: sidecarJarURL,
             webAppURL: webAppURL,
+            flowWebAppSource: flowWebAppSource,
             opaqueBridgeURL: opaqueBridgeURL,
+            pushBridgeURL: pushBridgeURL,
             capabilityManifestURL: capabilityManifestURL,
+            applicationResourcesURL: applicationResourcesURL,
+            sidecarInitialReadyTimeoutSeconds:
+                sidecarInitialReadyTimeoutSeconds,
             flowIpcSidecarRestartLimit: manifest.recovery.restartLimit,
-            flowIpcSidecarRecoveryReadyTimeoutSeconds: manifest.recovery.readyTimeoutSeconds)
+            flowIpcSidecarRecoveryReadyTimeoutSeconds:
+                manifest.recovery.readyTimeoutSeconds,
+            flowIpcSidecarRecoveryStableRunSeconds:
+                recoveryStableRunSeconds)
+    }
+
+    private static func developmentWebApp(
+        _ manifest: HostLaunchManifest.WebAppDevelopmentServer
+    ) throws -> FlowWebAppDevelopmentServer {
+        guard let origin = URL(string: manifest.origin),
+              origin.scheme == "http",
+              origin.host == "127.0.0.1",
+              origin.port != nil,
+              origin.user == nil,
+              origin.password == nil,
+              origin.query == nil,
+              origin.fragment == nil,
+              origin.path.isEmpty || origin.path == "/" else {
+            throw HostConfigError.invalidDevelopmentWebApp(
+                "origin must be an explicit 127.0.0.1 HTTP origin")
+        }
+        let path = manifest.entryPath
+        let decodedPath = path.removingPercentEncoding ?? path
+        let segments = decodedPath.split(
+            separator: "/", omittingEmptySubsequences: false)
+        guard path.hasPrefix("/"),
+              !path.hasPrefix("//"),
+              !path.contains("?"),
+              !path.contains("#"),
+              !path.contains("\\"),
+              !segments.contains(where: { $0 == "." || $0 == ".." }) else {
+            throw HostConfigError.invalidDevelopmentWebApp(
+                "entryPath must be an absolute path without traversal")
+        }
+        return FlowWebAppDevelopmentServer(
+            originURL: origin,
+            entryPath: path)
     }
 
     private static func resource(
@@ -145,6 +274,21 @@ struct HostConfig {
         }
         if mustExist && !FileManager.default.fileExists(atPath: candidate.path) {
             throw HostConfigError.missingResource(path)
+        }
+        return candidate
+    }
+
+    private static func resourceDirectory(
+        _ path: String,
+        beneath root: URL
+    ) throws -> URL {
+        let candidate = try resource(path, beneath: root, mustExist: true)
+        var isDirectory: ObjCBool = false
+        guard FileManager.default.fileExists(
+            atPath: candidate.path,
+            isDirectory: &isDirectory),
+              isDirectory.boolValue else {
+            throw HostConfigError.resourceNotDirectory(path)
         }
         return candidate
     }

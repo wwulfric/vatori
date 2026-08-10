@@ -17,6 +17,7 @@ public final class DesktopFlowApplication {
     private final Class<? extends Component> rootRoute;
     private final List<Class<? extends Component>> routes;
     private final InstantiatorFactory instantiatorFactory;
+    private final DesktopFlowMultipartConfig multipartConfig;
 
     private DesktopFlowApplication(Builder builder) {
         routes = List.copyOf(builder.routes);
@@ -30,6 +31,7 @@ public final class DesktopFlowApplication {
         }
         rootRoute = roots.getFirst();
         instantiatorFactory = builder.instantiatorFactory;
+        multipartConfig = builder.multipartConfig;
     }
 
     public static Builder builder(
@@ -54,6 +56,10 @@ public final class DesktopFlowApplication {
         return Optional.ofNullable(instantiatorFactory);
     }
 
+    public DesktopFlowMultipartConfig multipartConfig() {
+        return multipartConfig;
+    }
+
     private static boolean isRootRoute(Class<?> routeClass) {
         Route route = routeClass.getAnnotation(Route.class);
         if (route != null && route.value().isBlank()) {
@@ -70,6 +76,8 @@ public final class DesktopFlowApplication {
     public static final class Builder {
         private final LinkedHashSet<Class<? extends Component>> routes = new LinkedHashSet<>();
         private InstantiatorFactory instantiatorFactory;
+        private DesktopFlowMultipartConfig multipartConfig =
+                DesktopFlowMultipartConfig.defaults();
 
         private Builder() {
         }
@@ -87,6 +95,11 @@ public final class DesktopFlowApplication {
 
         public Builder instantiatorFactory(InstantiatorFactory factory) {
             instantiatorFactory = Objects.requireNonNull(factory, "factory");
+            return this;
+        }
+
+        public Builder multipartConfig(DesktopFlowMultipartConfig config) {
+            multipartConfig = Objects.requireNonNull(config, "config");
             return this;
         }
 

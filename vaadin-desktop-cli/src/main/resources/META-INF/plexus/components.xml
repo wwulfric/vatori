@@ -1,0 +1,10 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<component-set>
+    <components>
+        <component>
+            <role>org.apache.maven.AbstractMavenLifecycleParticipant</role>
+            <role-hint>vatori-development-model</role-hint>
+            <implementation>dev.vatori.desktop.cli.maven.DevelopmentModelLifecycleParticipant</implementation>
+        </component>
+    </components>
+</component-set>

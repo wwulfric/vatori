@@ -24,6 +24,7 @@ import com.vaadin.flow.server.startup.ApplicationConfigurationFactory;
 import com.vaadin.flow.server.startup.ApplicationRouteRegistry;
 import com.vaadin.flow.server.startup.DefaultApplicationConfigurationFactory;
 import com.vaadin.flow.shared.communication.PushMode;
+import dev.vatori.desktop.flow.DesktopFlowMultipartConfig;
 import jakarta.servlet.http.HttpServletRequest;
 
 import java.io.File;
@@ -31,6 +32,7 @@ import java.io.IOException;
 import java.io.InputStream;
 import java.lang.reflect.Proxy;
 import java.net.URL;
+import java.nio.file.Path;
 import java.util.Collection;
 import java.util.Collections;
 import java.util.Enumeration;
@@ -50,6 +52,7 @@ final class DesktopFlowVaadinService extends VaadinService {
     private final ApplicationRouteRegistry routeRegistry;
     private final InstantiatorFactory instantiatorFactory;
     private final PushConnectionFactory pushConnectionFactory;
+    private final DesktopFlowMultipartConfig multipartConfig;
 
     DesktopFlowVaadinService(String appId) {
         this(appId, false);
@@ -71,13 +74,40 @@ final class DesktopFlowVaadinService extends VaadinService {
             boolean productionMode,
             Consumer<DesktopFlowPushMessage> pushSender,
             InstantiatorFactory instantiatorFactory) {
-        super(deploymentConfiguration(productionMode, pushSender != null));
+        this(appId, productionMode, pushSender, instantiatorFactory, null);
+    }
+
+    DesktopFlowVaadinService(
+            String appId,
+            boolean productionMode,
+            Consumer<DesktopFlowPushMessage> pushSender,
+            InstantiatorFactory instantiatorFactory,
+            Path projectDirectory) {
+        this(appId, productionMode, pushSender, instantiatorFactory,
+                projectDirectory, DesktopFlowMultipartConfig.defaults());
+    }
+
+    DesktopFlowVaadinService(
+            String appId,
+            boolean productionMode,
+            Consumer<DesktopFlowPushMessage> pushSender,
+            InstantiatorFactory instantiatorFactory,
+            Path projectDirectory,
+            DesktopFlowMultipartConfig multipartConfig) {
+        super(deploymentConfiguration(
+                productionMode, pushSender != null, projectDirectory));
         this.appId = appId == null || appId.isBlank() ? "flow-ipc" : appId;
         this.routeRegistry = ApplicationRouteRegistry.getInstance(getContext());
         this.instantiatorFactory = instantiatorFactory;
+        this.multipartConfig = Objects.requireNonNull(
+                multipartConfig, "multipartConfig");
         this.pushConnectionFactory = pushSender == null
                 ? null
                 : ui -> new DesktopIpcPushConnection(ui, pushSender);
+    }
+
+    DesktopFlowMultipartConfig multipartConfig() {
+        return multipartConfig;
     }
 
     @Override
@@ -135,9 +165,16 @@ final class DesktopFlowVaadinService extends VaadinService {
     @Override
     protected List<RequestHandler> createRequestHandlers() throws ServiceException {
         List<RequestHandler> handlers = super.createRequestHandlers();
+        for (int index = 0; index < handlers.size(); index++) {
+            if (handlers.get(index) instanceof JavaScriptBootstrapHandler) {
+                handlers.set(index,
+                        new DesktopJavaScriptBootstrapHandler(
+                                pushConnectionFactory));
+                break;
+            }
+        }
         handlers.add(new DesktopClasspathResourceRequestHandler());
         handlers.add(new DesktopStreamResourceRequestHandler());
-        handlers.add(new DesktopJavaScriptBootstrapHandler(pushConnectionFactory));
         return handlers;
     }
 
@@ -218,7 +255,11 @@ final class DesktopFlowVaadinService extends VaadinService {
 
     private static DeploymentConfiguration deploymentConfiguration(
             boolean productionMode,
-            boolean pushEnabled) {
+            boolean pushEnabled,
+            Path projectDirectory) {
+        File projectFolder = projectDirectory == null
+                ? new File(".").getAbsoluteFile()
+                : projectDirectory.toAbsolutePath().normalize().toFile();
         return (DeploymentConfiguration) Proxy.newProxyInstance(
                 DesktopFlowVaadinService.class.getClassLoader(),
                 new Class<?>[]{DeploymentConfiguration.class},
@@ -234,11 +275,20 @@ final class DesktopFlowVaadinService extends VaadinService {
                             pushEnabled ? PushMode.AUTOMATIC : PushMode.DISABLED;
                     case "getSessionLockCheckStrategy" ->
                             SessionLockCheckStrategy.ASSERT;
-                    case "getProjectFolder" -> new File(".");
-                    case "getFrontendFolder" -> new File("frontend");
+                    case "getProjectFolder" ->
+                            productionMode ? null : projectFolder;
+                    case "getFrontendFolder" ->
+                            new File(projectFolder, "src/main/frontend");
+                    case "getJavaResourceFolder" ->
+                            new File(projectFolder, "src/main/resources");
+                    case "getJavaSourceFolder" ->
+                            new File(projectFolder, "src/main/java");
+                    case "getOutputResourceFolder" ->
+                            new File(projectFolder, "target/classes");
                     case "getClassLoaderName" -> null;
                     case "getInitParameters" -> new Properties();
-                    case "getStringProperty", "getApplicationOrSystemProperty" -> args[1];
+                    case "getStringProperty", "getApplicationOrSystemProperty",
+                         "getBooleanProperty" -> args[1];
                     default -> defaultValue(method.getReturnType());
                 });
     }

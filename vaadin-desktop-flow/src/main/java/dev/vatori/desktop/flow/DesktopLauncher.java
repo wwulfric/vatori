@@ -27,6 +27,7 @@ public final class DesktopLauncher {
                 flowApplication.routes(),
                 application,
                 args,
-                flowApplication.instantiatorFactory().orElse(null));
+                flowApplication.instantiatorFactory().orElse(null),
+                flowApplication.multipartConfig());
     }
 }

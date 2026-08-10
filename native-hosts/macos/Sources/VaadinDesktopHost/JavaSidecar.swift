@@ -12,6 +12,7 @@ final class JavaSidecar {
     private let config: HostConfig
     private let onSidecarEnvelope: (String, [String: Any]) -> Void
     private let onTermination: (JavaSidecarTermination) -> Void
+    private let onFatalError: (String) -> Void
     private var process: Process?
     private var stdinPipe: Pipe?
     private var stdoutPipe: Pipe?
@@ -23,10 +24,12 @@ final class JavaSidecar {
 
     init(config: HostConfig,
          onSidecarEnvelope: @escaping (String, [String: Any]) -> Void,
-         onTermination: @escaping (JavaSidecarTermination) -> Void) {
+         onTermination: @escaping (JavaSidecarTermination) -> Void,
+         onFatalError: @escaping (String) -> Void) {
         self.config = config
         self.onSidecarEnvelope = onSidecarEnvelope
         self.onTermination = onTermination
+        self.onFatalError = onFatalError
     }
 
     @discardableResult
@@ -45,6 +48,13 @@ final class JavaSidecar {
 
         var environment = ProcessInfo.processInfo.environment
         environment["VAADIN_DESKTOP_TRANSPORT"] = config.transport.rawValue
+        if let source = config.flowWebAppSource {
+            environment["VAADIN_DESKTOP_FLOW_FRONTEND_MODE"] = source.mode
+        }
+        if let applicationResourcesURL = config.applicationResourcesURL {
+            environment["VATORI_APPLICATION_RESOURCES"] =
+                applicationResourcesURL.path
+        }
         process.environment = environment
 
         let stdinPipe = Pipe()
@@ -102,8 +112,8 @@ final class JavaSidecar {
             return true
         } catch {
             clearProcess(generation: launchGeneration)
-            trace("send", "error", [
-                "code": "sidecarStartFailed",
+            trace("send", "sidecar.startFailed", [
+                "cause": "process-run-failed",
                 "message": error.localizedDescription,
                 "generation": launchGeneration
             ])
@@ -195,6 +205,22 @@ final class JavaSidecar {
         return true
     }
 
+    @discardableResult
+    func terminateForReplacement(reason: String) -> Bool {
+        guard !shutdownRequested,
+              let process,
+              process.isRunning else {
+            return false
+        }
+        trace("send", "sidecar.replacementTerminated", [
+            "generation": runningGeneration ?? 0,
+            "processIdentifier": process.processIdentifier,
+            "reason": reason
+        ])
+        process.terminate()
+        return true
+    }
+
     private func handleStdout(_ line: String, generation: Int) {
         guard runningGeneration == generation else {
             return
@@ -219,13 +245,16 @@ final class JavaSidecar {
             return
         }
         guard hasValidSidecarVersion(object) else {
-            trace("send", "error", [
-                "code": "unsupportedSidecarVersion",
+            trace("send", "sidecar.protocolRejected", [
+                "cause": "unsupported-sidecar-version",
                 "version": object["version"] ?? NSNull()
             ])
             DispatchQueue.main.async {
-                self.terminate()
-                NSApp.terminate(nil)
+                guard self.runningGeneration == generation else {
+                    return
+                }
+                self.onFatalError(
+                    "unsupported-sidecar-version")
             }
             return
         }

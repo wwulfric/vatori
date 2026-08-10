@@ -80,6 +80,7 @@ struct SidecarReady {
     let transport: HostTransport
     let application: SidecarApplicationDescriptor
     let applicationURL: URL?
+    let enabledFeatureFlags: [String]
 
     static func parse(_ envelope: [String: Any], expectedTransport: HostTransport) throws -> SidecarReady {
         guard envelope["type"] as? String == "ready",
@@ -121,7 +122,8 @@ struct SidecarReady {
                 name: name,
                 metadata: metadata,
                 mainWindow: mainWindowDescriptor),
-            applicationURL: applicationURL)
+            applicationURL: applicationURL,
+            enabledFeatureFlags: featureFlags(payload["enabledFeatureFlags"]))
     }
 
     private static func nonBlank(_ value: Any?) -> String? {
@@ -130,6 +132,23 @@ struct SidecarReady {
             return nil
         }
         return text
+    }
+
+    private static func featureFlags(_ value: Any?) -> [String] {
+        guard let values = value as? [Any] else {
+            return []
+        }
+        return values.compactMap { value -> String? in
+            guard let text = value as? String,
+                  !text.isEmpty,
+                  text.count <= 128,
+                  text.unicodeScalars.allSatisfy({ scalar in
+                      scalar.value >= 0x20 && scalar.value != 0x7F
+                  }) else {
+                return nil
+            }
+            return text
+        }
     }
 
     private static func parseError(_ message: String) -> NSError {

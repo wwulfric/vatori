@@ -133,6 +133,15 @@ final class DesktopCommandExecutor {
                     center: center, command: command, title: title, body: body,
                     completion: completion)
             case .notDetermined:
+                if self.config.hostNoActivate {
+                    completion([
+                        "success": false,
+                        "command": command,
+                        "mode": "native-user-notifications",
+                        "error": "Notification permission requires an active authorization prompt"
+                    ])
+                    return
+                }
                 center.requestAuthorization(options: [.alert, .sound]) { granted, error in
                     guard granted, error == nil else {
                         completion([

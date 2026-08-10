@@ -2,23 +2,28 @@ package dev.vatori.desktop.flow.ipc;
 
 import com.vaadin.flow.component.Component;
 import com.vaadin.flow.di.InstantiatorFactory;
+import dev.vatori.desktop.flow.DesktopFlowMultipartConfig;
 import dev.vatori.desktop.flow.transport.DesktopFlowOpaqueHttpSession;
 import dev.vatori.desktop.flow.transport.DesktopFlowOpaqueHttpSessionRegistry;
 import dev.vatori.desktop.flow.transport.DesktopFlowPushMessage;
 
+import java.nio.file.Path;
 import java.util.Collection;
 import java.util.List;
 import java.util.Map;
 import java.util.Objects;
 import java.util.concurrent.ConcurrentHashMap;
 import java.util.concurrent.ConcurrentMap;
-import java.util.concurrent.atomic.AtomicLong;
 
 final class StandardFlowIpcSessions implements AutoCloseable {
     private final List<Class<? extends Component>> routeClasses;
     private final InstantiatorFactory instantiatorFactory;
     private final SidecarOutput output;
     private final SidecarNativeBridge nativeBridge;
+    private final boolean productionMode;
+    private final Path projectDirectory;
+    private final DesktopFlowMultipartConfig multipartConfig;
+    private final StandardFlowIpcPushDelivery pushDelivery;
     private final ConcurrentMap<String, SessionContext> sessionsByWindow =
             new ConcurrentHashMap<>();
     private final ConcurrentMap<String, SessionContext> sessionsBySession =
@@ -29,15 +34,40 @@ final class StandardFlowIpcSessions implements AutoCloseable {
             Collection<Class<? extends Component>> routeClasses,
             InstantiatorFactory instantiatorFactory,
             SidecarOutput output,
-            SidecarNativeBridge nativeBridge) {
+            SidecarNativeBridge nativeBridge,
+            boolean productionMode,
+            Path projectDirectory) {
+        this(routeClasses, instantiatorFactory, output, nativeBridge,
+                productionMode, projectDirectory,
+                DesktopFlowMultipartConfig.defaults());
+    }
+
+    StandardFlowIpcSessions(
+            Collection<Class<? extends Component>> routeClasses,
+            InstantiatorFactory instantiatorFactory,
+            SidecarOutput output,
+            SidecarNativeBridge nativeBridge,
+            boolean productionMode,
+            Path projectDirectory,
+            DesktopFlowMultipartConfig multipartConfig) {
         this.routeClasses = List.copyOf(routeClasses);
         this.instantiatorFactory = instantiatorFactory;
         this.output = Objects.requireNonNull(output, "output");
         this.nativeBridge = Objects.requireNonNull(nativeBridge, "nativeBridge");
+        this.productionMode = productionMode;
+        this.projectDirectory = projectDirectory;
+        this.multipartConfig = Objects.requireNonNull(
+                multipartConfig, "multipartConfig");
+        this.pushDelivery = new StandardFlowIpcPushDelivery(
+                this::sendPushEnvelope);
     }
 
     DesktopFlowOpaqueHttpSession session(FlowIpcScope scope) {
         return context(scope).session;
+    }
+
+    List<String> enabledFeatureFlagIds() {
+        return registry().enabledFeatureFlagIds();
     }
 
     void connectPush(
@@ -53,24 +83,36 @@ final class StandardFlowIpcSessions implements AutoCloseable {
             throw new IllegalArgumentException("Opaque push flowUiId is missing");
         }
         context.session.validatePush(flowUiId, pushId);
+        int lastSeenServerSyncId =
+                envelope.integer("lastSeenServerSyncId", -1);
+        pushDelivery.connect(
+                scope, connectionId, lastSeenServerSyncId);
         output.send(scope, "opaquePushConnected", output.nextId("push-connect"),
                 SidecarOutput.correlationIdOr(id, correlationId),
                 Map.of(
                         "connectionId", connectionId,
                         "flowUiId", flowUiId,
                         "transport", "opaque-ipc-push"));
-        context.session.connectPush(flowUiId, connectionId,
-                envelope.integer("lastSeenServerSyncId", -1));
+        try {
+            context.session.connectPush(
+                    flowUiId, connectionId, lastSeenServerSyncId);
+        } catch (RuntimeException error) {
+            pushDelivery.disconnect(scope, connectionId);
+            throw error;
+        }
     }
 
     void disconnectPush(FlowIpcScope scope, SidecarInboundEnvelope envelope) {
         SessionContext context = sessionsByWindow.get(scope.windowId());
         if (context != null) {
             context.requireScope(scope);
+            String connectionId =
+                    requiredPushMetadata(envelope, "connectionId");
             context.session.disconnectPush(
                     envelope.integer("flowUiId", -1),
-                    requiredPushMetadata(envelope, "connectionId"),
+                    connectionId,
                     requiredPushMetadata(envelope, "pushId"));
+            pushDelivery.disconnect(scope, connectionId);
         }
     }
 
@@ -79,6 +121,31 @@ final class StandardFlowIpcSessions implements AutoCloseable {
                 envelope.integer("flowUiId", -1),
                 requiredPushMetadata(envelope, "connectionId"),
                 requiredPushMetadata(envelope, "pushId"));
+    }
+
+    void acknowledgePush(FlowIpcScope scope, SidecarInboundEnvelope envelope) {
+        SessionContext context = context(scope);
+        int flowUiId = envelope.integer("flowUiId", -1);
+        String pushId = requiredPushMetadata(envelope, "pushId");
+        String connectionId = requiredPushMetadata(envelope, "connectionId");
+        long pushSequence = envelope.longValue("pushSequence", -1);
+        int lastSeenServerSyncId =
+                envelope.integer("lastSeenServerSyncId", -1);
+        if (flowUiId < 0) {
+            throw new IllegalArgumentException(
+                    "Opaque push acknowledgement flowUiId is missing");
+        }
+        if (pushSequence <= 0) {
+            throw new IllegalArgumentException(
+                    "Opaque push acknowledgement sequence is missing");
+        }
+        context.session.validatePushAcknowledgement(
+                flowUiId, connectionId, pushId);
+        pushDelivery.acknowledge(
+                scope,
+                connectionId,
+                pushSequence,
+                lastSeenServerSyncId);
     }
 
     void closeWindow(FlowIpcScope scope, Runnable cancelExchanges) {
@@ -93,6 +160,7 @@ final class StandardFlowIpcSessions implements AutoCloseable {
         }
         sessionsBySession.remove(scope.sessionId(), context);
         nativeBridge.unregisterScope(scope);
+        pushDelivery.removeScope(scope);
         cancelExchanges.run();
         if (sessionRegistry != null) {
             sessionRegistry.closeSession(scope.sessionId());
@@ -101,6 +169,7 @@ final class StandardFlowIpcSessions implements AutoCloseable {
 
     @Override
     public void close() {
+        pushDelivery.close();
         sessionsByWindow.values().stream()
                 .map(context -> context.scope)
                 .distinct()
@@ -124,10 +193,6 @@ final class StandardFlowIpcSessions implements AutoCloseable {
                 existing.requireScope(scope);
                 return existing;
             }
-            if (sessionRegistry == null) {
-                sessionRegistry = DesktopFlowOpaqueHttpSessionRegistry.create(
-                        "flow-ipc", routeClasses, instantiatorFactory, this::sendPush);
-            }
             SessionContext sessionOwner = sessionsBySession.get(scope.sessionId());
             if (sessionOwner != null) {
                 if (!sessionOwner.scope.equals(scope)) {
@@ -139,7 +204,8 @@ final class StandardFlowIpcSessions implements AutoCloseable {
                 return sessionOwner;
             }
             SessionContext created = new SessionContext(
-                    scope, sessionRegistry.session(scope.sessionId()));
+                    scope, registry().session(scope.sessionId()));
+            pushDelivery.registerScope(scope);
             nativeBridge.registerScope(scope);
             sessionsBySession.put(scope.sessionId(), created);
             sessionsByWindow.put(scope.windowId(), created);
@@ -147,19 +213,35 @@ final class StandardFlowIpcSessions implements AutoCloseable {
         }
     }
 
+    private synchronized DesktopFlowOpaqueHttpSessionRegistry registry() {
+        if (sessionRegistry == null) {
+            sessionRegistry = DesktopFlowOpaqueHttpSessionRegistry.create(
+                    "flow-ipc", routeClasses, instantiatorFactory, this::sendPush,
+                    productionMode, projectDirectory, multipartConfig);
+        }
+        return sessionRegistry;
+    }
+
     private void sendPush(DesktopFlowPushMessage message) {
         SessionContext context = sessionsBySession.get(message.sessionId());
         if (context == null) {
             return;
         }
-        output.send(context.scope, "opaquePush", output.nextId("push"),
-                message.connectionId(),
+        pushDelivery.send(context.scope, message);
+    }
+
+    private void sendPushEnvelope(
+            StandardFlowIpcPushDelivery.Delivery delivery) {
+        output.send(delivery.scope(), "opaquePush", output.nextId("push"),
+                delivery.connectionId(),
                 Map.of(
-                        "connectionId", message.connectionId(),
-                        "flowUiId", message.uiId(),
-                        "pushSequence", context.pushSequence.incrementAndGet(),
-                        "uidl", message.uidl(),
-                        "resync", message.resync(),
+                        "connectionId", delivery.connectionId(),
+                        "flowUiId", delivery.flowUiId(),
+                        "pushSequence", delivery.pushSequence(),
+                        "flowServerSyncId", delivery.flowServerSyncId(),
+                        "uidl", delivery.uidl(),
+                        "resync", delivery.resync(),
+                        "deliveryAttempt", delivery.deliveryAttempt(),
                         "transport", "opaque-ipc-push"));
     }
 
@@ -176,7 +258,6 @@ final class StandardFlowIpcSessions implements AutoCloseable {
     private static final class SessionContext {
         private final FlowIpcScope scope;
         private final DesktopFlowOpaqueHttpSession session;
-        private final AtomicLong pushSequence = new AtomicLong();
 
         private SessionContext(
                 FlowIpcScope scope,

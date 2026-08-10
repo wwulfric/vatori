@@ -108,6 +108,15 @@ public final class DesktopFlowOpaqueHttpSession {
                 DesktopIpcPushConnection::sendResync);
     }
 
+    public void validatePushAcknowledgement(
+            int uiId,
+            String connectionId,
+            String pushId) {
+        runWithValidatedPushConnection(
+                uiId, connectionId, pushId, ignored -> {
+                });
+    }
+
     private void runWithValidatedPushConnection(
             int uiId,
             String connectionId,
@@ -172,10 +181,13 @@ public final class DesktopFlowOpaqueHttpSession {
                 contentType,
                 headers);
         DesktopVaadinResponse response = new DesktopVaadinResponse(service);
-        try {
+        try (request) {
             service.handleRequest(request, response);
         } catch (ServiceException error) {
             throw new IllegalStateException("Vaadin request handling failed", error);
+        } catch (IOException error) {
+            throw new IllegalStateException(
+                    "Unable to clean up desktop Vaadin request", error);
         }
 
         Map<String, List<String>> responseHeaders = new LinkedHashMap<>(response.multiValueHeaders());
@@ -233,7 +245,7 @@ public final class DesktopFlowOpaqueHttpSession {
                     responseStart.accept(new DesktopFlowHttpResponseHead(
                             statusCode, statusText(statusCode), responseHeaders));
                 });
-        try {
+        try (request) {
             service.handleRequest(request, response);
             response.finish();
         } catch (ServiceException error) {

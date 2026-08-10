@@ -11,6 +11,14 @@
     </parent>
     <artifactId>vaadin-desktop-cli</artifactId>
     <name>Vaadin Desktop CLI</name>
+    <dependencies>
+        <dependency>
+            <groupId>org.apache.maven</groupId>
+            <artifactId>maven-core</artifactId>
+            <version>3.9.0</version>
+            <scope>provided</scope>
+        </dependency>
+    </dependencies>
     <build>
         <plugins>
             <plugin>

@@ -13,6 +13,7 @@ public final class DesktopContext {
     private final DesktopFileDialog fileDialog;
     private final DesktopFileTransfer fileTransfer;
     private final DesktopWindows windows;
+    private final DesktopResources resources;
 
     public DesktopContext(DesktopApplication application, URI appUri, NativeBridge nativeBridge,
                           Map<String, String> launchArguments) {
@@ -25,6 +26,7 @@ public final class DesktopContext {
         this.fileDialog = new DesktopFileDialog(nativeBridge);
         this.fileTransfer = new DesktopFileTransfer(nativeBridge);
         this.windows = new DesktopWindows(nativeBridge);
+        this.resources = DesktopResources.fromLaunchEnvironment();
     }
 
     public DesktopApplication application() {
@@ -61,6 +63,10 @@ public final class DesktopContext {
 
     public DesktopWindows windows() {
         return windows;
+    }
+
+    public DesktopResources resources() {
+        return resources;
     }
 
     public DesktopCommandResult setWindowTitle(String title) {

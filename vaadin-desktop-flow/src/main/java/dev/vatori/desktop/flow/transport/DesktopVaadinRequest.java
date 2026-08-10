@@ -4,6 +4,7 @@ import com.vaadin.flow.server.VaadinRequest;
 import com.vaadin.flow.server.VaadinService;
 import com.vaadin.flow.server.VaadinSession;
 import com.vaadin.flow.server.WrappedSession;
+import dev.vatori.desktop.flow.DesktopFlowMultipartConfig;
 import jakarta.servlet.AsyncContext;
 import jakarta.servlet.DispatcherType;
 import jakarta.servlet.ReadListener;
@@ -20,6 +21,12 @@ import jakarta.servlet.http.HttpServletResponse;
 import jakarta.servlet.http.HttpSession;
 import jakarta.servlet.http.HttpUpgradeHandler;
 import jakarta.servlet.http.Part;
+import org.apache.commons.fileupload2.core.DiskFileItem;
+import org.apache.commons.fileupload2.core.DiskFileItemFactory;
+import org.apache.commons.fileupload2.core.FileItemHeaders;
+import org.apache.commons.fileupload2.core.FileUploadContentTypeException;
+import org.apache.commons.fileupload2.core.FileUploadSizeException;
+import org.apache.commons.fileupload2.jakarta.servlet6.JakartaServletDiskFileUpload;
 
 import java.io.BufferedReader;
 import java.io.ByteArrayInputStream;
@@ -27,11 +34,14 @@ import java.io.IOException;
 import java.io.InputStream;
 import java.io.InputStreamReader;
 import java.io.UnsupportedEncodingException;
+import java.nio.file.Files;
+import java.nio.file.Path;
+import java.nio.file.StandardCopyOption;
 import java.nio.charset.StandardCharsets;
 import java.security.Principal;
-import java.util.ArrayList;
 import java.util.Collection;
 import java.util.Collections;
+import java.util.Comparator;
 import java.util.Enumeration;
 import java.util.LinkedHashMap;
 import java.util.List;
@@ -39,9 +49,9 @@ import java.util.Locale;
 import java.util.Map;
 import java.util.Objects;
 import java.util.Optional;
-import java.util.regex.Pattern;
 
-final class DesktopVaadinRequest implements VaadinRequest, HttpServletRequest {
+final class DesktopVaadinRequest
+        implements VaadinRequest, HttpServletRequest, AutoCloseable {
     private final VaadinService service;
     private final WrappedSession wrappedSession;
     private final RequestBody body;
@@ -54,26 +64,35 @@ final class DesktopVaadinRequest implements VaadinRequest, HttpServletRequest {
     private final String requestUrl;
     private final String method;
     private final String contentType;
+    private final DesktopFlowMultipartConfig multipartConfig;
     private List<Part> parts;
+    private MultipartStorage multipartStorage;
+    private IOException multipartIoFailure;
+    private ServletException multipartServletFailure;
+    private RuntimeException multipartRuntimeFailure;
+    private boolean closed;
 
     private DesktopVaadinRequest(VaadinService service, WrappedSession wrappedSession,
                                  byte[] bodyBytes, Map<String, String[]> parameters, Locale locale,
                                  String pathInfo, String queryString, String requestUrl,
                                  String method, String contentType,
-                                 Map<String, String> headers) {
+                                 Map<String, String> headers,
+                                 DesktopFlowMultipartConfig multipartConfig) {
         this(service, wrappedSession, RequestBody.buffered(bodyBytes), parameters, locale,
-                pathInfo, queryString, requestUrl, method, contentType, headers);
+                pathInfo, queryString, requestUrl, method, contentType, headers,
+                multipartConfig);
     }
 
     private DesktopVaadinRequest(VaadinService service, WrappedSession wrappedSession,
                                  RequestBody body, Map<String, String[]> parameters, Locale locale,
                                  String pathInfo, String queryString, String requestUrl,
                                  String method, String contentType,
-                                 Map<String, String> headers) {
+                                 Map<String, String> headers,
+                                 DesktopFlowMultipartConfig multipartConfig) {
         this.service = service;
         this.wrappedSession = wrappedSession;
         this.body = Objects.requireNonNull(body, "body");
-        this.parameters = Map.copyOf(parameters);
+        this.parameters = copyParameters(parameters);
         this.locale = locale == null ? Locale.getDefault() : locale;
         this.pathInfo = pathInfo == null || pathInfo.isBlank() ? "/" : pathInfo;
         this.queryString = queryString;
@@ -82,10 +101,9 @@ final class DesktopVaadinRequest implements VaadinRequest, HttpServletRequest {
                 : requestUrl;
         this.method = method == null || method.isBlank() ? "POST" : method;
         this.contentType = contentType == null || contentType.isBlank() ? "application/json" : contentType;
+        this.multipartConfig = Objects.requireNonNull(
+                multipartConfig, "multipartConfig");
         this.headers.putAll(headers == null ? Map.of() : headers);
-        this.parts = body.bufferedBytes == null
-                ? null
-                : parseMultipartParts(body.bufferedBytes, this.contentType);
     }
 
     static DesktopVaadinRequest http(VaadinSession session, byte[] bodyBytes,
@@ -103,7 +121,8 @@ final class DesktopVaadinRequest implements VaadinRequest, HttpServletRequest {
                 requestUrl,
                 method,
                 contentType,
-                headers);
+                headers,
+                multipartConfig(session));
     }
 
     static DesktopVaadinRequest http(VaadinSession session, InputStream body, long contentLength,
@@ -121,18 +140,21 @@ final class DesktopVaadinRequest implements VaadinRequest, HttpServletRequest {
                 requestUrl,
                 method,
                 contentType,
-                headers);
+                headers,
+                multipartConfig(session));
     }
 
     @Override
     public String getParameter(String parameter) {
+        ensureMultipartParameters();
         String[] values = parameters.get(parameter);
         return values == null || values.length == 0 ? null : values[0];
     }
 
     @Override
     public Map<String, String[]> getParameterMap() {
-        return parameters;
+        ensureMultipartParameters();
+        return Collections.unmodifiableMap(copyParameters(parameters));
     }
 
     @Override
@@ -299,12 +321,15 @@ final class DesktopVaadinRequest implements VaadinRequest, HttpServletRequest {
 
     @Override
     public Enumeration<String> getParameterNames() {
+        ensureMultipartParameters();
         return Collections.enumeration(parameters.keySet());
     }
 
     @Override
     public String[] getParameterValues(String name) {
-        return parameters.get(name);
+        ensureMultipartParameters();
+        String[] values = parameters.get(name);
+        return values == null ? null : values.clone();
     }
 
     @Override
@@ -483,15 +508,38 @@ final class DesktopVaadinRequest implements VaadinRequest, HttpServletRequest {
     }
 
     @Override
-    public synchronized Collection<Part> getParts() throws IOException {
-        if (parts == null) {
-            parts = parseMultipartParts(body.stream.readAllBytes(), contentType);
+    public synchronized Collection<Part> getParts()
+            throws IOException, ServletException {
+        requireOpen();
+        if (parts != null) {
+            return parts;
         }
-        return parts;
+        if (multipartIoFailure != null) {
+            throw multipartIoFailure;
+        }
+        if (multipartServletFailure != null) {
+            throw multipartServletFailure;
+        }
+        if (multipartRuntimeFailure != null) {
+            throw multipartRuntimeFailure;
+        }
+        try {
+            parts = parseMultipartParts();
+            return parts;
+        } catch (IOException error) {
+            multipartIoFailure = error;
+            throw error;
+        } catch (ServletException error) {
+            multipartServletFailure = error;
+            throw error;
+        } catch (RuntimeException error) {
+            multipartRuntimeFailure = error;
+            throw error;
+        }
     }
 
     @Override
-    public Part getPart(String name) throws IOException {
+    public Part getPart(String name) throws IOException, ServletException {
         return getParts().stream()
                 .filter(part -> part.getName().equals(name))
                 .findFirst()
@@ -506,7 +554,7 @@ final class DesktopVaadinRequest implements VaadinRequest, HttpServletRequest {
     Optional<Part> firstPart() {
         try {
             return getParts().stream().findFirst();
-        } catch (IOException error) {
+        } catch (IOException | ServletException error) {
             throw new IllegalStateException("Unable to parse desktop multipart request", error);
         }
     }
@@ -514,116 +562,178 @@ final class DesktopVaadinRequest implements VaadinRequest, HttpServletRequest {
     int partCount() {
         try {
             return getParts().size();
-        } catch (IOException error) {
+        } catch (IOException | ServletException error) {
             throw new IllegalStateException("Unable to parse desktop multipart request", error);
         }
     }
 
-    private static List<Part> parseMultipartParts(byte[] bodyBytes, String contentType) {
-        String boundary = multipartBoundary(contentType);
-        if (boundary.isBlank() || bodyBytes.length == 0) {
-            return List.of();
+    @Override
+    public synchronized void close() throws IOException {
+        if (closed) {
+            return;
         }
-        String body = new String(bodyBytes, StandardCharsets.ISO_8859_1);
-        String delimiter = "--" + boundary;
-        String[] sections = body.split(Pattern.quote(delimiter));
-        List<Part> parsed = new ArrayList<>();
-        for (String rawSection : sections) {
-            String section = trimLeadingLineBreak(rawSection);
-            if (section.isBlank() || section.startsWith("--")) {
+        closed = true;
+        IOException failure = null;
+        try {
+            body.stream.close();
+        } catch (IOException error) {
+            failure = error;
+        }
+        if (parts != null) {
+            for (Part part : parts) {
+                if (part instanceof DesktopPart desktopPart) {
+                    try {
+                        desktopPart.delete();
+                    } catch (IOException error) {
+                        failure = append(failure, error);
+                    }
+                }
+            }
+        }
+        if (multipartStorage != null) {
+            try {
+                multipartStorage.close();
+            } catch (IOException error) {
+                failure = append(failure, error);
+            }
+            multipartStorage = null;
+        }
+        if (failure != null) {
+            throw failure;
+        }
+    }
+
+    private List<Part> parseMultipartParts()
+            throws IOException, ServletException {
+        if (!isMultipartFormData()) {
+            throw new ServletException(
+                    "Desktop Flow multipart parsing requires multipart/form-data");
+        }
+        Files.createDirectories(multipartConfig.location());
+        MultipartStorage storage = new MultipartStorage(
+                Files.createTempDirectory(
+                        multipartConfig.location(), "vatori-flow-multipart-"));
+        multipartStorage = storage;
+
+        DiskFileItemFactory factory = DiskFileItemFactory.builder()
+                .setPath(storage.requestDirectory())
+                .setThreshold(multipartConfig.memoryThresholdBytes())
+                .setCharset(StandardCharsets.UTF_8)
+                .get();
+        JakartaServletDiskFileUpload upload =
+                new JakartaServletDiskFileUpload(factory);
+        upload.setHeaderCharset(StandardCharsets.UTF_8);
+        upload.setMaxFileSize(multipartConfig.maxFileSizeBytes());
+        upload.setMaxSize(multipartConfig.maxRequestSizeBytes());
+        upload.setMaxFileCount(multipartConfig.maxPartCount());
+        upload.setMaxPartHeaderSize(
+                multipartConfig.maxPartHeaderSizeBytes());
+
+        try {
+            List<DiskFileItem> items = upload.parseRequest(this);
+            mergeFormParameters(items);
+            return items.stream()
+                    .map(item -> (Part) new DesktopPart(
+                            item, multipartConfig.location()))
+                    .toList();
+        } catch (FileUploadSizeException error) {
+            discardMultipartStorage(error);
+            throw new IllegalStateException(
+                    "Desktop Flow multipart request exceeds configured limits",
+                    error);
+        } catch (FileUploadContentTypeException error) {
+            discardMultipartStorage(error);
+            throw new ServletException(
+                    "Unable to process desktop Flow multipart content type",
+                    error);
+        } catch (IOException | RuntimeException error) {
+            discardMultipartStorage(error);
+            throw error;
+        }
+    }
+
+    private void mergeFormParameters(List<DiskFileItem> items)
+            throws IOException {
+        for (DiskFileItem item : items) {
+            if (!item.isFormField()) {
                 continue;
             }
-            int headerEnd = section.indexOf("\r\n\r\n");
-            int separatorLength = 4;
-            if (headerEnd < 0) {
-                headerEnd = section.indexOf("\n\n");
-                separatorLength = 2;
-            }
-            if (headerEnd < 0) {
+            String name = item.getFieldName();
+            if (name == null) {
                 continue;
             }
-            Map<String, List<String>> partHeaders = parsePartHeaders(section.substring(0, headerEnd));
-            String partBody = trimTrailingLineBreak(section.substring(headerEnd + separatorLength));
-            byte[] partBytes = partBody.getBytes(StandardCharsets.ISO_8859_1);
-            String disposition = partHeaderValue(partHeaders, "Content-Disposition");
-            String name = headerParameter(disposition, "name").orElse("file");
-            String fileName = headerParameter(disposition, "filename").orElse("unknown");
-            String partContentType = partHeaderValue(partHeaders, "Content-Type");
-            parsed.add(new DesktopPart(name, fileName, partContentType, partBytes, partHeaders));
-        }
-        return List.copyOf(parsed);
-    }
-
-    private static String multipartBoundary(String contentType) {
-        if (contentType == null || !contentType.toLowerCase(Locale.ROOT).startsWith("multipart/")) {
-            return "";
-        }
-        for (String token : contentType.split(";")) {
-            String trimmed = token.trim();
-            if (trimmed.toLowerCase(Locale.ROOT).startsWith("boundary=")) {
-                return unquote(trimmed.substring("boundary=".length()).trim());
+            String[] existing = parameters.get(name);
+            int existingLength = existing == null ? 0 : existing.length;
+            String[] merged = new String[existingLength + 1];
+            if (existingLength > 0) {
+                System.arraycopy(existing, 0, merged, 0, existingLength);
             }
+            merged[existingLength] = item.getString();
+            parameters.put(name, merged);
         }
-        return "";
     }
 
-    private static Map<String, List<String>> parsePartHeaders(String headerBlock) {
-        Map<String, List<String>> parsed = new LinkedHashMap<>();
-        for (String line : headerBlock.split("\\r?\\n")) {
-            int colon = line.indexOf(':');
-            if (colon <= 0) {
-                continue;
-            }
-            String name = line.substring(0, colon).trim();
-            String value = line.substring(colon + 1).trim();
-            parsed.computeIfAbsent(name, ignored -> new ArrayList<>()).add(value);
+    private void ensureMultipartParameters() {
+        if (!isMultipartFormData()) {
+            return;
         }
-        return parsed;
+        try {
+            getParts();
+        } catch (IOException | ServletException error) {
+            throw new IllegalStateException(
+                    "Unable to parse desktop multipart parameters", error);
+        }
     }
 
-    private static Optional<String> headerParameter(String header, String parameter) {
-        if (header == null || parameter == null) {
-            return Optional.empty();
-        }
-        for (String token : header.split(";")) {
-            String trimmed = token.trim();
-            int equals = trimmed.indexOf('=');
-            if (equals <= 0) {
-                continue;
-            }
-            if (trimmed.substring(0, equals).trim().equalsIgnoreCase(parameter)) {
-                return Optional.of(unquote(trimmed.substring(equals + 1).trim()));
-            }
-        }
-        return Optional.empty();
+    private boolean isMultipartFormData() {
+        return contentType.toLowerCase(Locale.ROOT)
+                .startsWith("multipart/form-data");
     }
 
-    private static String trimLeadingLineBreak(String value) {
-        String result = value;
-        while (result.startsWith("\r\n")) {
-            result = result.substring(2);
+    private void discardMultipartStorage(Throwable failure) {
+        if (multipartStorage == null) {
+            return;
         }
-        while (result.startsWith("\n")) {
-            result = result.substring(1);
+        try {
+            multipartStorage.close();
+        } catch (IOException cleanupError) {
+            failure.addSuppressed(cleanupError);
+        } finally {
+            multipartStorage = null;
         }
-        return result;
     }
 
-    private static String trimTrailingLineBreak(String value) {
-        String result = value;
-        if (result.endsWith("\r\n")) {
-            result = result.substring(0, result.length() - 2);
-        } else if (result.endsWith("\n")) {
-            result = result.substring(0, result.length() - 1);
+    private void requireOpen() {
+        if (closed) {
+            throw new IllegalStateException("Desktop Flow request is closed");
         }
-        return result;
     }
 
-    private static String unquote(String value) {
-        if (value.length() >= 2 && value.startsWith("\"") && value.endsWith("\"")) {
-            return value.substring(1, value.length() - 1);
+    private static DesktopFlowMultipartConfig multipartConfig(
+            VaadinSession session) {
+        if (session.getService() instanceof DesktopFlowVaadinService service) {
+            return service.multipartConfig();
         }
-        return value;
+        return DesktopFlowMultipartConfig.defaults();
+    }
+
+    private static Map<String, String[]> copyParameters(
+            Map<String, String[]> source) {
+        Map<String, String[]> copy = new LinkedHashMap<>();
+        if (source != null) {
+            source.forEach((name, values) -> copy.put(
+                    name, values == null ? new String[0] : values.clone()));
+        }
+        return copy;
+    }
+
+    private static IOException append(
+            IOException existing, IOException additional) {
+        if (existing == null) {
+            return additional;
+        }
+        existing.addSuppressed(additional);
+        return existing;
     }
 
     private static String headerValue(Map<String, String> headers, String name) {
@@ -637,18 +747,6 @@ final class DesktopVaadinRequest implements VaadinRequest, HttpServletRequest {
         for (Map.Entry<String, String> entry : headers.entrySet()) {
             if (entry.getKey().equalsIgnoreCase(name)) {
                 return entry.getValue();
-            }
-        }
-        return null;
-    }
-
-    private static String partHeaderValue(Map<String, List<String>> headers, String name) {
-        if (name == null) {
-            return null;
-        }
-        for (Map.Entry<String, List<String>> entry : headers.entrySet()) {
-            if (entry.getKey().equalsIgnoreCase(name)) {
-                return entry.getValue().isEmpty() ? null : entry.getValue().get(0);
             }
         }
         return null;
@@ -699,97 +797,168 @@ final class DesktopVaadinRequest implements VaadinRequest, HttpServletRequest {
     }
 
     private static final class RequestBody {
-        private final byte[] bufferedBytes;
         private final long contentLength;
         private final ServletInputStream stream;
 
-        private RequestBody(byte[] bufferedBytes, long contentLength, InputStream stream) {
-            this.bufferedBytes = bufferedBytes;
+        private RequestBody(long contentLength, InputStream stream) {
             this.contentLength = contentLength;
             this.stream = new DesktopServletInputStream(stream);
         }
 
         private static RequestBody buffered(byte[] bytes) {
             byte[] copy = bytes == null ? new byte[0] : bytes.clone();
-            return new RequestBody(copy, copy.length, new ByteArrayInputStream(copy));
+            return new RequestBody(copy.length, new ByteArrayInputStream(copy));
         }
 
         private static RequestBody streaming(InputStream stream, long contentLength) {
-            return new RequestBody(null, contentLength, stream);
+            return new RequestBody(contentLength, stream);
         }
     }
 
     private static final class DesktopPart implements Part {
-        private final String name;
-        private final String fileName;
-        private final String contentType;
-        private final byte[] bytes;
-        private final Map<String, List<String>> headers;
+        private final DiskFileItem item;
+        private final Path storageLocation;
+        private final long size;
+        private boolean written;
+        private boolean deleted;
 
-        private DesktopPart(String name, String fileName, String contentType, byte[] bytes,
-                            Map<String, List<String>> headers) {
-            this.name = name;
-            this.fileName = fileName;
-            this.contentType = contentType == null || contentType.isBlank()
-                    ? "application/octet-stream"
-                    : contentType;
-            this.bytes = bytes == null ? new byte[0] : bytes.clone();
-            this.headers = new LinkedHashMap<>(headers);
+        private DesktopPart(DiskFileItem item, Path storageLocation) {
+            this.item = Objects.requireNonNull(item, "item");
+            this.storageLocation = Objects.requireNonNull(
+                    storageLocation, "storageLocation");
+            this.size = item.getSize();
         }
 
         @Override
-        public InputStream getInputStream() {
-            return new ByteArrayInputStream(bytes);
+        public synchronized InputStream getInputStream() throws IOException {
+            requireAvailable();
+            return item.getInputStream();
         }
 
         @Override
         public String getContentType() {
-            return contentType;
+            return item.getContentType();
         }
 
         @Override
         public String getName() {
-            return name;
+            return item.getFieldName();
         }
 
         @Override
         public String getSubmittedFileName() {
-            return fileName;
+            return item.getName();
         }
 
         @Override
         public long getSize() {
-            return bytes.length;
+            return size;
         }
 
         @Override
-        public void write(String fileName) throws IOException {
-            throw new IOException("Desktop Flow IPC multipart parts are memory-only");
+        public synchronized void write(String fileName) throws IOException {
+            requireAvailable();
+            if (written) {
+                throw new IOException("Desktop multipart Part.write may only be called once");
+            }
+            Path target = Path.of(Objects.requireNonNull(fileName, "fileName"));
+            if (!target.isAbsolute()) {
+                target = storageLocation.resolve(target);
+            }
+            target = target.toAbsolutePath().normalize();
+            try (InputStream input = item.getInputStream()) {
+                Files.copy(input, target, StandardCopyOption.REPLACE_EXISTING);
+            }
+            written = true;
         }
 
         @Override
-        public void delete() {
-            // Memory-only part; nothing to delete.
+        public synchronized void delete() throws IOException {
+            if (deleted) {
+                return;
+            }
+            item.delete();
+            deleted = true;
         }
 
         @Override
         public String getHeader(String name) {
-            return partHeaderValue(headers, name);
+            FileItemHeaders headers = item.getHeaders();
+            return headers == null || name == null
+                    ? null
+                    : headers.getHeader(name);
         }
 
         @Override
         public Collection<String> getHeaders(String name) {
-            for (Map.Entry<String, List<String>> entry : headers.entrySet()) {
-                if (entry.getKey().equalsIgnoreCase(name)) {
-                    return List.copyOf(entry.getValue());
-                }
-            }
-            return List.of();
+            FileItemHeaders headers = item.getHeaders();
+            return headers == null || name == null
+                    ? List.of()
+                    : values(headers.getHeaders(name));
         }
 
         @Override
         public Collection<String> getHeaderNames() {
-            return List.copyOf(headers.keySet());
+            FileItemHeaders headers = item.getHeaders();
+            return headers == null
+                    ? List.of()
+                    : values(headers.getHeaderNames());
+        }
+
+        private void requireAvailable() throws IOException {
+            if (deleted) {
+                throw new IOException("Desktop multipart part is no longer available");
+            }
+        }
+
+        private static List<String> values(
+                java.util.Iterator<String> iterator) {
+            if (iterator == null) {
+                return List.of();
+            }
+            List<String> values = new java.util.ArrayList<>();
+            iterator.forEachRemaining(values::add);
+            return List.copyOf(values);
+        }
+    }
+
+    private static final class MultipartStorage implements AutoCloseable {
+        private final Path requestDirectory;
+        private boolean closed;
+
+        private MultipartStorage(Path requestDirectory) {
+            this.requestDirectory = Objects.requireNonNull(
+                    requestDirectory, "requestDirectory");
+        }
+
+        private Path requestDirectory() {
+            return requestDirectory;
+        }
+
+        @Override
+        public synchronized void close() throws IOException {
+            if (closed) {
+                return;
+            }
+            closed = true;
+            if (!Files.exists(requestDirectory)) {
+                return;
+            }
+            List<Path> paths;
+            try (var tree = Files.walk(requestDirectory)) {
+                paths = tree.sorted(Comparator.reverseOrder()).toList();
+            }
+            IOException failure = null;
+            for (Path path : paths) {
+                try {
+                    Files.deleteIfExists(path);
+                } catch (IOException error) {
+                    failure = append(failure, error);
+                }
+            }
+            if (failure != null) {
+                throw failure;
+            }
         }
     }
 }

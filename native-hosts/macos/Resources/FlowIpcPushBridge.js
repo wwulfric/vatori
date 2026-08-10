@@ -7,8 +7,14 @@
     window.VaadinDesktopIpcDiagnostics || {};
   const subscriptions = new Map();
   let nextConnectionId = 0;
+  let sidecarConnected = true;
 
   function postToHost(type, payload) {
+    if (!sidecarConnected) {
+      diagnostics.standardBundlePushDisconnectedOutboundCount =
+        Number(diagnostics.standardBundlePushDisconnectedOutboundCount || 0) + 1;
+      return false;
+    }
     const handler = window.webkit
       && window.webkit.messageHandlers
       && window.webkit.messageHandlers.flowIpc;
@@ -30,6 +36,7 @@
       error: null,
       timestamp: Date.now()
     });
+    return true;
   }
 
   function responseFor(subscription, state, body = '') {
@@ -61,9 +68,13 @@
   }
 
   function connect(subscription, lastSeenOverride = null) {
-    postToHost('opaquePushConnect', connectionMetadata(subscription, lastSeenOverride));
-    diagnostics.standardBundlePushConnectRequestCount =
-      Number(diagnostics.standardBundlePushConnectRequestCount || 0) + 1;
+    if (postToHost(
+      'opaquePushConnect',
+      connectionMetadata(subscription, lastSeenOverride)
+    )) {
+      diagnostics.standardBundlePushConnectRequestCount =
+        Number(diagnostics.standardBundlePushConnectRequestCount || 0) + 1;
+    }
   }
 
   function subscribe(config) {
@@ -113,6 +124,22 @@
     diagnostics.standardBundlePushLastSequence = sequence;
   }
 
+  function acknowledgeMessage(subscription, payload) {
+    const metadata = connectionMetadata(subscription);
+    postToHost('opaquePushAck', {
+      ...metadata,
+      pushSequence: Number(payload.pushSequence || 0),
+      flowServerSyncId: Number(payload.flowServerSyncId ?? -1),
+      lastSeenServerSyncId: metadata.lastSeenServerSyncId
+    });
+    diagnostics.standardBundlePushAckCount =
+      Number(diagnostics.standardBundlePushAckCount || 0) + 1;
+    diagnostics.standardBundlePushLastAckSequence =
+      Number(payload.pushSequence || 0);
+    diagnostics.standardBundlePushLastAckServerSyncId =
+      metadata.lastSeenServerSyncId;
+  }
+
   function receiveConnected(payload) {
     const subscription = subscriptions.get(payload.connectionId);
     if (!subscription) {
@@ -129,7 +156,7 @@
     diagnostics.standardBundlePushConnected = true;
     diagnostics.standardBundlePushConnectionCount = subscriptions.size;
     for (const queued of subscription.queuedMessages.splice(0)) {
-      deliverMessage(subscription, queued);
+      receivePush(queued);
     }
   }
 
@@ -148,6 +175,7 @@
     if (!payload.resync && sequence <= subscription.lastPushSequence) {
       diagnostics.standardBundlePushDuplicateCount =
         Number(diagnostics.standardBundlePushDuplicateCount || 0) + 1;
+      acknowledgeMessage(subscription, payload);
       return;
     }
     if (!payload.resync && subscription.lastPushSequence > 0
@@ -158,7 +186,6 @@
       postToHost('opaquePushResync', connectionMetadata(subscription));
       return;
     }
-    subscription.lastPushSequence = sequence;
     if (payload.resync) {
       subscription.awaitingResync = false;
       diagnostics.standardBundlePushResyncCount =
@@ -169,9 +196,22 @@
       return;
     }
     deliverMessage(subscription, payload);
+    subscription.lastPushSequence = sequence;
+    if (Number(payload.deliveryAttempt || 1) > 1) {
+      diagnostics.standardBundlePushRedeliveryCount =
+        Number(diagnostics.standardBundlePushRedeliveryCount || 0) + 1;
+    }
+    diagnostics.standardBundlePushLastDeliveryAttempt =
+      Number(payload.deliveryAttempt || 1);
+    acknowledgeMessage(subscription, payload);
   }
 
   function receive(envelope) {
+    if (!sidecarConnected) {
+      diagnostics.standardBundlePushDisconnectedInboundCount =
+        Number(diagnostics.standardBundlePushDisconnectedInboundCount || 0) + 1;
+      return;
+    }
     if (!envelope || envelope.version !== 1) {
       diagnostics.standardBundlePushProtocolError =
         `unsupported sidecar version ${String(envelope?.version)}`;
@@ -203,6 +243,10 @@
   function sidecarDisconnected() {
     diagnostics.standardBundleSidecarDisconnected = true;
     diagnostics.standardBundlePushConnected = false;
+    if (!sidecarConnected) {
+      return;
+    }
+    sidecarConnected = false;
     for (const subscription of subscriptions.values()) {
       subscription.connected = false;
       subscription.queuedMessages.length = 0;
@@ -222,4 +266,8 @@
   diagnostics.standardBundlePushFirstSequence = 0;
   diagnostics.standardBundlePushReconnectCount = 0;
   diagnostics.standardBundlePushResyncCount = 0;
+  diagnostics.standardBundlePushAckCount = 0;
+  diagnostics.standardBundlePushRedeliveryCount = 0;
+  diagnostics.standardBundlePushDisconnectedOutboundCount = 0;
+  diagnostics.standardBundlePushDisconnectedInboundCount = 0;
 })();

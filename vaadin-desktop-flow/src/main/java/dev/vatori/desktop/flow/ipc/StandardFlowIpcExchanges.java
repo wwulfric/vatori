@@ -12,8 +12,12 @@ import java.util.Map;
 import java.util.Objects;
 import java.util.concurrent.ConcurrentHashMap;
 import java.util.concurrent.ConcurrentMap;
+import java.util.concurrent.CountDownLatch;
+import java.util.concurrent.TimeUnit;
 
 final class StandardFlowIpcExchanges implements AutoCloseable {
+    private static final long CANCELLATION_GRACE_MILLIS = 250;
+
     private final SidecarOutput output;
     private final ConcurrentMap<ExchangeKey, OpaqueHttpExchange> exchanges =
             new ConcurrentHashMap<>();
@@ -185,6 +189,7 @@ final class StandardFlowIpcExchanges implements AutoCloseable {
         private final long contentLength;
         private final OpaqueHttpRequestBodyInputStream requestBody;
         private final OpaqueHttpResponseOutputStream responseBody;
+        private final CountDownLatch completed = new CountDownLatch(1);
         private volatile Thread worker;
         private volatile boolean cancelled;
 
@@ -248,9 +253,11 @@ final class StandardFlowIpcExchanges implements AutoCloseable {
         }
 
         private void start() {
-            worker = Thread.ofVirtual()
+            Thread exchangeWorker = Thread.ofVirtual()
                     .name("vatori-opaque-http-" + requestId)
-                    .start(this::run);
+                    .unstarted(this::run);
+            worker = exchangeWorker;
+            exchangeWorker.start();
         }
 
         private void run() {
@@ -273,6 +280,7 @@ final class StandardFlowIpcExchanges implements AutoCloseable {
                 } catch (RuntimeException ignored) {
                     // The exchange is already terminal.
                 }
+                completed.countDown();
             }
         }
 
@@ -306,8 +314,22 @@ final class StandardFlowIpcExchanges implements AutoCloseable {
             requestBody.cancel();
             responseBody.cancel();
             Thread activeWorker = worker;
-            if (activeWorker != null) {
-                activeWorker.interrupt();
+            if (activeWorker != null && activeWorker.isAlive()) {
+                Thread.ofVirtual()
+                        .name("vatori-opaque-http-cancel-" + requestId)
+                        .start(() -> interruptAfterCancellationGrace(activeWorker));
+            }
+        }
+
+        private void interruptAfterCancellationGrace(Thread activeWorker) {
+            try {
+                if (!completed.await(
+                        CANCELLATION_GRACE_MILLIS,
+                        TimeUnit.MILLISECONDS)) {
+                    activeWorker.interrupt();
+                }
+            } catch (InterruptedException error) {
+                Thread.currentThread().interrupt();
             }
         }
 

@@ -5,8 +5,9 @@ final class WebViewHost: NSObject, NSApplicationDelegate, NSWindowDelegate, WKNa
     let config: HostConfig
     private let capabilityManifest: CapabilityManifest
     let commandExecutor: DesktopCommandExecutor
-    private let standardBundleSchemeHandler: FlowIpcStandardBundleSchemeHandler
+    private let flowWebAppSchemeHandler: FlowIpcWebAppSchemeHandler
     private var sidecarController: FlowIpcSidecarController?
+    private var hostControlChannel: HostControlChannel?
     private var windowsById: [String: FlowIpcWindowContext] = [:]
     private var closedWindowScopes: [String: FlowIpcWindowScope] = [:]
     private var windowIdByWebView: [ObjectIdentifier: String] = [:]
@@ -31,18 +32,15 @@ final class WebViewHost: NSObject, NSApplicationDelegate, NSWindowDelegate, WKNa
         sidecarController?.processIdentifier
     }
 
-    @discardableResult
-    func requestSidecarRecovery(reason: String) -> Bool {
-        sidecarController?.requestRecovery(reason: reason) == true
-    }
-
     init(config: HostConfig) {
         let capabilityManifest = CapabilityManifest.load(from: config.capabilityManifestURL)
         self.config = config
         self.capabilityManifest = capabilityManifest
         self.commandExecutor = DesktopCommandExecutor(config: config,
                                                       capabilityManifest: capabilityManifest)
-        self.standardBundleSchemeHandler = FlowIpcStandardBundleSchemeHandler(rootURL: config.webAppURL)
+        self.flowWebAppSchemeHandler = FlowIpcWebAppSchemeHandler(
+            source: config.flowWebAppSource,
+            pushBridgeURL: config.pushBridgeURL)
     }
 
     func applicationDidFinishLaunching(_ notification: Notification) {
@@ -50,11 +48,13 @@ final class WebViewHost: NSObject, NSApplicationDelegate, NSWindowDelegate, WKNa
             "host": "swift-appkit-wkwebview",
             "transport": config.transport.rawValue,
             "sidecarRestartPolicy": config.flowIpcSidecarRecoveryEnabled
-                ? "limited-restart"
+                ? "consecutive-failure-budget"
                 : "fail-stop",
             "sidecarRestartLimit": config.flowIpcSidecarRecoveryEnabled
                 ? config.flowIpcSidecarRestartLimit
-                : 0
+                : 0,
+            "sidecarRecoveryStableRunSeconds":
+                config.flowIpcSidecarRecoveryStableRunSeconds
         ])
         trace("send", "ready", [
             "host": "swift-appkit-wkwebview",
@@ -67,7 +67,7 @@ final class WebViewHost: NSObject, NSApplicationDelegate, NSWindowDelegate, WKNa
 
         let sidecarController = FlowIpcSidecarController(
             config: config,
-            standardBundleEntryURL: standardBundleSchemeHandler.entryURL,
+            standardBundleEntryURL: flowWebAppSchemeHandler.entryURL,
             flowIpcWindows: { [weak self] in
                 guard let self else {
                     return []
@@ -77,17 +77,56 @@ final class WebViewHost: NSObject, NSApplicationDelegate, NSWindowDelegate, WKNa
             onSidecarEnvelope: { [weak self] raw, object in
                 self?.handleSidecarEnvelope(raw, object)
             },
-            terminateApplication: {
-                NSApp.terminate(nil)
+            onReplacementResult: {
+                [weak self] requestId, status, cause in
+                self?.hostControlChannel?.sendReplacementResult(
+                    requestId: requestId,
+                    status: status,
+                    cause: cause)
+            },
+            terminateApplication: { [weak self] in
+                self?.terminateAfterFailure()
             })
         self.sidecarController = sidecarController
         if !sidecarController.start() {
-            NSApp.terminate(nil)
+            terminateAfterFailure()
+            return
+        }
+        if config.flowWebAppSource?.isDevelopment == true {
+            let channel = HostControlChannel { [weak self] command in
+                self?.handleHostControl(command)
+            }
+            hostControlChannel = channel
+            channel.start()
         }
     }
 
     func applicationWillTerminate(_ notification: Notification) {
+        hostControlChannel?.stop()
         sidecarController?.terminate()
+    }
+
+    private func handleHostControl(_ command: HostControlCommand) {
+        switch command {
+        case .replaceSidecar(let requestId, let reason):
+            trace("recv", "hostControl.received", [
+                "type": "replaceSidecar",
+                "requestId": requestId,
+                "reason": reason
+            ])
+            _ = sidecarController?.requestReplacement(
+                requestId: requestId,
+                reason: reason)
+        case .rollbackSidecar(let requestId, let reason):
+            trace("recv", "hostControl.received", [
+                "type": "rollbackSidecar",
+                "requestId": requestId,
+                "reason": reason
+            ])
+            _ = sidecarController?.requestRollback(
+                requestId: requestId,
+                reason: reason)
+        }
     }
 
     private func openCompatibilityWindow(ready: SidecarReady) {
@@ -187,33 +226,45 @@ final class WebViewHost: NSObject, NSApplicationDelegate, NSWindowDelegate, WKNa
         let configuration = WKWebViewConfiguration()
         configuration.userContentController = userContentController
         configuration.websiteDataStore = .nonPersistent()
-        guard standardBundleSchemeHandler.isAvailable else {
+        guard flowWebAppSchemeHandler.isAvailable else {
             trace("send", "error", [
-                "code": "standardBundleMissing",
-                "root": standardBundleSchemeHandler.redactedRoot
+                "code": "flowWebAppMissing",
+                "root": flowWebAppSchemeHandler.redactedRoot
             ])
             sidecarController?.terminate()
-            NSApp.terminate(nil)
+            terminateAfterFailure()
             return
         }
         guard let bridgeSource = FlowIpcOpaqueHttpBridge.load(from: config.opaqueBridgeURL) else {
             trace("send", "error", ["code": "opaqueHttpBridgeMissing"])
             sidecarController?.terminate()
-            NSApp.terminate(nil)
+            terminateAfterFailure()
             return
         }
+        userContentController.addUserScript(WKUserScript(
+            source: "window.__vatoriFlowWebAppMode = '\(flowWebAppSchemeHandler.sourceMode)';",
+            injectionTime: .atDocumentStart,
+            forMainFrameOnly: true))
         userContentController.addUserScript(WKUserScript(
             source: bridgeSource,
             injectionTime: .atDocumentStart,
             forMainFrameOnly: true))
         configuration.setURLSchemeHandler(
-            standardBundleSchemeHandler,
-            forURLScheme: FlowIpcStandardBundleSchemeHandler.schemeName)
-        trace("recv", "standardBundleReady", [
-            "root": standardBundleSchemeHandler.redactedRoot,
-            "entry": standardBundleSchemeHandler.entryURL.absoluteString,
+            flowWebAppSchemeHandler,
+            forURLScheme: FlowIpcWebAppSchemeHandler.schemeName)
+        trace("recv", "flowWebAppReady", [
+            "mode": flowWebAppSchemeHandler.sourceMode,
+            "root": flowWebAppSchemeHandler.redactedRoot,
+            "entry": flowWebAppSchemeHandler.entryURL.absoluteString,
             "requestTransport": "opaque-http-stream-ipc"
         ])
+        if flowWebAppSchemeHandler.sourceMode == "production-bundle" {
+            trace("recv", "standardBundleReady", [
+                "root": flowWebAppSchemeHandler.redactedRoot,
+                "entry": flowWebAppSchemeHandler.entryURL.absoluteString,
+                "requestTransport": "opaque-http-stream-ipc"
+            ])
+        }
         configuration.preferences.javaScriptCanOpenWindowsAutomatically = true
         let webView = WKWebView(frame: contentRect, configuration: configuration)
         webView.navigationDelegate = self
@@ -252,7 +303,7 @@ final class WebViewHost: NSObject, NSApplicationDelegate, NSWindowDelegate, WKNa
         windowsById[scope.windowId] = context
         windowIdByWebView[ObjectIdentifier(webView)] = scope.windowId
 
-        webView.load(URLRequest(url: standardBundleSchemeHandler.entryURL(for: descriptor.route)))
+        webView.load(URLRequest(url: flowWebAppSchemeHandler.entryURL(for: descriptor.route)))
         trace("recv", "window.ready", [
             "label": scope.windowId,
             "windowId": scope.windowId,
@@ -296,24 +347,33 @@ final class WebViewHost: NSObject, NSApplicationDelegate, NSWindowDelegate, WKNa
             do {
                 ready = try SidecarReady.parse(object, expectedTransport: config.transport)
             } catch {
+                if sidecarController?.handleReadyFailure(
+                    cause: "invalid-candidate-ready") == true {
+                    return
+                }
                 trace("send", "error", [
                     "code": "invalidSidecarReady",
                     "message": error.localizedDescription
                 ])
                 sidecarController?.terminate()
-                NSApp.terminate(nil)
+                terminateAfterFailure()
                 return
             }
             guard let scope = FlowIpcWindowScope.sidecarScope(
                 object,
                 fallbackWindowId: ready.application.mainWindow.id) else {
+                if sidecarController?.handleReadyFailure(
+                    cause: "invalid-candidate-ready-scope") == true {
+                    return
+                }
                 trace("send", "error", ["code": "invalidSidecarReadyScope"])
                 sidecarController?.terminate()
-                NSApp.terminate(nil)
+                terminateAfterFailure()
                 return
             }
             sidecarReady = ready
             mainScope = scope
+            flowWebAppSchemeHandler.setEnabledFeatureFlags(ready.enabledFeatureFlags)
             if sidecarController?.handleReady() == true {
                 return
             }
@@ -710,6 +770,13 @@ final class WebViewHost: NSObject, NSApplicationDelegate, NSWindowDelegate, WKNa
         sidecarController?.sendSidecarEnvelope(json)
     }
 
+    private func terminateAfterFailure() {
+        sidecarController?.terminate()
+        fflush(stdout)
+        fflush(stderr)
+        exit(1)
+    }
+
     func windowWillClose(_ notification: Notification) {
         guard let closingWindow = notification.object as? NSWindow,
               let context = windowsById.values.first(where: { $0.window === closingWindow }) else {
@@ -792,7 +859,7 @@ final class WebViewHost: NSObject, NSApplicationDelegate, NSWindowDelegate, WKNa
     }
 
     private func isStandardBundleVirtualRequestURL(_ url: URL) -> Bool {
-        guard let virtualBaseURL = URL(string: FlowIpcStandardBundleSchemeHandler.virtualRequestBaseURL) else {
+        guard let virtualBaseURL = URL(string: FlowIpcWebAppSchemeHandler.virtualRequestBaseURL) else {
             return false
         }
         return url.scheme == virtualBaseURL.scheme && url.host == virtualBaseURL.host

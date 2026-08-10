@@ -8,6 +8,7 @@ import dev.vatori.desktop.DesktopApplication;
 import dev.vatori.desktop.DesktopContext;
 import dev.vatori.desktop.DesktopContextHolder;
 import dev.vatori.desktop.DesktopWindow;
+import dev.vatori.desktop.flow.DesktopFlowMultipartConfig;
 
 import java.net.URI;
 import java.util.Collection;
@@ -29,7 +30,8 @@ public final class SidecarRuntime {
             Collection<Class<? extends Component>> routeClasses,
             DesktopApplication application,
             String[] args,
-            InstantiatorFactory instantiatorFactory) {
+            InstantiatorFactory instantiatorFactory,
+            DesktopFlowMultipartConfig multipartConfig) {
         Objects.requireNonNull(rootRouteClass, "rootRouteClass");
         String route = route(rootRouteClass);
         FlowIpcScope scope = scope(application, FLOW_IPC_SESSION_ID);
@@ -48,7 +50,8 @@ public final class SidecarRuntime {
                     application,
                     output,
                     nativeBridge,
-                    scope).run();
+                    scope,
+                    multipartConfig).run();
         } finally {
             nativeBridge.close();
             DesktopContextHolder.clear();

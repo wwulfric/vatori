@@ -1,0 +1,10 @@
+vatori-jar-frontend-probe {
+  --vatori-jar-frontend-css: compatibility-css-ready;
+  display: flex;
+  align-items: center;
+  gap: 12px;
+}
+
+vatori-jar-frontend-probe [data-role="activate"] {
+  min-height: 36px;
+}

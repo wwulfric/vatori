@@ -70,6 +70,7 @@ final class DesktopIpcPushConnection implements PushConnection {
                 ui.getSession().getSession().getId(),
                 connectionId,
                 ui.getUIId(),
+                lastSentFlowSyncId,
                 uidl,
                 resync));
     }

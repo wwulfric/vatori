@@ -14,6 +14,7 @@
   const pending = new Map();
   const ignoredResponses = new Set();
   const cookieJar = new Map();
+  let sidecarConnected = true;
   let nextRequestId = 0;
   const diagnostics = window.VaadinDesktopIpcDiagnostics =
     window.VaadinDesktopIpcDiagnostics || {};
@@ -40,6 +41,13 @@
     return url.protocol === 'vatori-app:' || url.origin === virtualRequestOrigin;
   }
 
+  function virtualRequestUrl(url) {
+    if (url.protocol !== 'vatori-app:') {
+      return url.href;
+    }
+    return new URL(`${url.pathname}${url.search}`, `${virtualRequestOrigin}/`).href;
+  }
+
   function installPushScriptMapping() {
     if (!window.HTMLScriptElement) {
       return;
@@ -57,7 +65,7 @@
       get: descriptor.get,
       set(value) {
         const resolved = new URL(String(value), document.baseURI);
-        if (resolved.origin === virtualRequestOrigin
+        if (isBridgedUrl(resolved)
             && (resolved.pathname === '/VAADIN/static/push/vaadinPush.js'
               || resolved.pathname === '/VAADIN/static/push/vaadinPush-min.js')) {
           descriptor.set.call(this, 'vatori-app://app/__vatori/FlowIpcPushBridge.js');
@@ -68,6 +76,39 @@
       }
     });
     diagnostics.standardBundlePushScriptMappingInstalled = true;
+  }
+
+  function installHistoryBridge() {
+    for (const methodName of ['pushState', 'replaceState']) {
+      const nativeMethod = window.history?.[methodName];
+      if (typeof nativeMethod !== 'function') {
+        continue;
+      }
+      window.history[methodName] = function (...args) {
+        const mappedArgs = [...args];
+        if (mappedArgs.length >= 3
+            && mappedArgs[2] != null
+            && window.location?.protocol === 'vatori-app:') {
+          const resolved = new URL(String(mappedArgs[2]), document.baseURI);
+          if (resolved.origin === virtualRequestOrigin) {
+            mappedArgs[2] =
+              `${window.location.protocol}//${window.location.host}`
+                + `${resolved.pathname}${resolved.search}${resolved.hash}`;
+            diagnostics.standardBundleHistoryMappedCount =
+              Number(diagnostics.standardBundleHistoryMappedCount || 0) + 1;
+          }
+        }
+        try {
+          return nativeMethod.apply(this, mappedArgs);
+        } catch (error) {
+          diagnostics.standardBundleHistoryError =
+            `${methodName} ${String(args[2] ?? '')}: `
+              + `${error?.name || 'Error'}: ${error?.message || String(error)}`;
+          throw error;
+        }
+      };
+    }
+    diagnostics.standardBundleHistoryBridgeInstalled = true;
   }
 
   function headerName(headers, name) {
@@ -309,13 +350,19 @@
       new DOMException('The operation was aborted', 'AbortError'));
     pending.delete(requestId);
     ignoredResponses.add(requestId);
-    postEnvelope('opaqueHttpStreamCancel', requestId, { reason: 'client-cancelled' });
+    if (sidecarConnected) {
+      postEnvelope('opaqueHttpStreamCancel', requestId, { reason: 'client-cancelled' });
+    }
     const cleanupTimer = setTimeout(() => ignoredResponses.delete(requestId), 60000);
     cleanupTimer?.unref?.();
   }
 
   function sidecarDisconnected() {
     diagnostics.standardBundleSidecarDisconnected = true;
+    if (!sidecarConnected) {
+      return;
+    }
+    sidecarConnected = false;
     const error = new TypeError('Flow IPC sidecar disconnected');
     for (const [requestId, request] of pending.entries()) {
       request.requestCancelled = true;
@@ -340,6 +387,13 @@
     uploadProgress = null,
     uploadComplete = null
   }) {
+    if (!sidecarConnected) {
+      diagnostics.standardBundleOpaqueDisconnectedRequestCount =
+        Number(diagnostics.standardBundleOpaqueDisconnectedRequestCount || 0) + 1;
+      body.reader?.cancel?.().catch?.(() => {});
+      fail(new TypeError('Flow IPC sidecar disconnected'));
+      return '';
+    }
     const requestId = `opaque-http-${++nextRequestId}`;
     const storedCookie = includeCookies ? cookieHeader(url) : '';
     if (storedCookie && !headerName(headers, 'cookie')) {
@@ -558,8 +612,8 @@
     open(method, url, async = true, username, password) {
       const resolved = new URL(String(url), document.baseURI);
       this._method = String(method || 'GET').toUpperCase();
-      this._url = resolved.href;
       this._bridged = isBridgedUrl(resolved);
+      this._url = this._bridged ? virtualRequestUrl(resolved) : resolved.href;
       if (!this._bridged) {
         this._delegate = new NativeXMLHttpRequest();
         this._wireDelegate();
@@ -811,6 +865,7 @@
     if (!isBridgedUrl(resolved)) {
       return NativeFetch(input, init);
     }
+    const requestUrl = virtualRequestUrl(resolved);
 
     const method = String(init.method || inputRequest?.method || 'GET').toUpperCase();
     const headers = headersObject(inputRequest?.headers, init.headers);
@@ -838,7 +893,7 @@
       signal?.addEventListener('abort', abort, { once: true });
       requestId = dispatchOpaqueRequest({
         method,
-        url: resolved.href,
+        url: requestUrl,
         headers,
         body: requestBodyStream,
         responseStart: (payload, request) => {
@@ -864,7 +919,7 @@
             headers: responseHeadersInit(payload.headers)
           });
           try {
-            Object.defineProperty(response, 'url', { value: resolved.href });
+            Object.defineProperty(response, 'url', { value: requestUrl });
           } catch {
           }
           settled = true;
@@ -1005,7 +1060,10 @@
       windowId: hostContext.windowId || 'main',
       route: '',
       payload: {
-        source: 'standard-vaadin-production-bundle',
+        source:
+          diagnostics.flowWebAppMode === 'development-server'
+            ? 'vite-development-server'
+            : 'standard-vaadin-production-bundle',
         transport: 'opaque-http-stream-ipc',
         bodyTextLength: text.length
       },
@@ -1018,21 +1076,34 @@
   window.XMLHttpRequest = OpaqueIpcXMLHttpRequest;
   window.fetch = opaqueFetch;
   diagnostics.standardBundleBridgeInstalled = true;
-  diagnostics.standardBundleStaticAssetOwner = 'vaadin-production-build';
+  diagnostics.flowWebAppMode =
+    window.__vatoriFlowWebAppMode || 'production-bundle';
+  diagnostics.standardBundleStaticAssetOwner =
+    diagnostics.flowWebAppMode === 'development-server'
+      ? 'development-web-app-server'
+      : 'vaadin-production-build';
   diagnostics.standardBundleRequestSemantics = 'opaque';
   diagnostics.standardBundleOpaqueBodyTransport = 'chunk-credit-cancel';
   diagnostics.standardBundleVirtualRequestOrigin = virtualRequestOrigin;
   diagnostics.standardBundleFetchBridgeInstalled = true;
   diagnostics.standardBundleCookieBridgeInstalled = true;
   diagnostics.standardBundleCookieCount = 0;
+  diagnostics.standardBundleOpaqueDisconnectedRequestCount = 0;
   diagnostics.standardBundleBodyInitSupport =
     'string,array-buffer,typed-array,url-search-params,blob,form-data,readable-stream';
   installPushScriptMapping();
+  installHistoryBridge();
   window.addEventListener('error', (event) => {
-    diagnostics.standardBundleBrowserError = event.message || 'browser error';
+    const source = event.filename
+      ? ` at ${event.filename}:${event.lineno || 0}:${event.colno || 0}`
+      : '';
+    diagnostics.standardBundleBrowserError = event.error?.stack
+      || event.error?.message
+      || `${event.message || 'browser error'}${source}`;
   });
   window.addEventListener('unhandledrejection', (event) => {
-    diagnostics.standardBundleBrowserError = event.reason?.message
+    diagnostics.standardBundleBrowserError = event.reason?.stack
+      || event.reason?.message
       || String(event.reason || 'unhandled rejection');
   });
   new MutationObserver(reportMeaningfulPaint).observe(document, {

@@ -2,8 +2,13 @@ package dev.vatori.desktop.flow.transport;
 
 import com.vaadin.flow.component.Component;
 import com.vaadin.flow.di.InstantiatorFactory;
+import com.vaadin.experimental.Feature;
+import com.vaadin.experimental.FeatureFlags;
+import dev.vatori.desktop.flow.DesktopFlowMultipartConfig;
 
+import java.nio.file.Path;
 import java.util.Collection;
+import java.util.List;
 import java.util.Objects;
 import java.util.concurrent.ConcurrentHashMap;
 import java.util.concurrent.ConcurrentMap;
@@ -20,10 +25,13 @@ public final class DesktopFlowOpaqueHttpSessionRegistry implements AutoCloseable
             String appId,
             Collection<Class<? extends Component>> routeClasses,
             InstantiatorFactory instantiatorFactory,
-            Consumer<DesktopFlowPushMessage> pushSender) {
+            Consumer<DesktopFlowPushMessage> pushSender,
+            boolean productionMode,
+            Path projectDirectory,
+            DesktopFlowMultipartConfig multipartConfig) {
         this.service = new DesktopFlowVaadinService(
-                appId, true, Objects.requireNonNull(pushSender, "pushSender"),
-                instantiatorFactory);
+                appId, productionMode, Objects.requireNonNull(pushSender, "pushSender"),
+                instantiatorFactory, projectDirectory, multipartConfig);
         service.registerRoutes(routeClasses);
         service.initialize();
     }
@@ -45,7 +53,46 @@ public final class DesktopFlowOpaqueHttpSessionRegistry implements AutoCloseable
             InstantiatorFactory instantiatorFactory,
             Consumer<DesktopFlowPushMessage> pushSender) {
         return new DesktopFlowOpaqueHttpSessionRegistry(
-                appId, routeClasses, instantiatorFactory, pushSender);
+                appId, routeClasses, instantiatorFactory, pushSender,
+                true, null, DesktopFlowMultipartConfig.defaults());
+    }
+
+    public static DesktopFlowOpaqueHttpSessionRegistry create(
+            String appId,
+            Collection<Class<? extends Component>> routeClasses,
+            InstantiatorFactory instantiatorFactory,
+            Consumer<DesktopFlowPushMessage> pushSender,
+            boolean productionMode) {
+        return new DesktopFlowOpaqueHttpSessionRegistry(
+                appId, routeClasses, instantiatorFactory, pushSender,
+                productionMode, null, DesktopFlowMultipartConfig.defaults());
+    }
+
+    public static DesktopFlowOpaqueHttpSessionRegistry create(
+            String appId,
+            Collection<Class<? extends Component>> routeClasses,
+            InstantiatorFactory instantiatorFactory,
+            Consumer<DesktopFlowPushMessage> pushSender,
+            boolean productionMode,
+            Path projectDirectory) {
+        return new DesktopFlowOpaqueHttpSessionRegistry(
+                appId, routeClasses, instantiatorFactory, pushSender,
+                productionMode, projectDirectory,
+                DesktopFlowMultipartConfig.defaults());
+    }
+
+    public static DesktopFlowOpaqueHttpSessionRegistry create(
+            String appId,
+            Collection<Class<? extends Component>> routeClasses,
+            InstantiatorFactory instantiatorFactory,
+            Consumer<DesktopFlowPushMessage> pushSender,
+            boolean productionMode,
+            Path projectDirectory,
+            DesktopFlowMultipartConfig multipartConfig) {
+        return new DesktopFlowOpaqueHttpSessionRegistry(
+                appId, routeClasses, instantiatorFactory, pushSender,
+                productionMode, projectDirectory,
+                Objects.requireNonNull(multipartConfig, "multipartConfig"));
     }
 
     public static DesktopFlowOpaqueHttpSessionRegistry create(
@@ -80,6 +127,14 @@ public final class DesktopFlowOpaqueHttpSessionRegistry implements AutoCloseable
 
     public synchronized int size() {
         return sessions.size();
+    }
+
+    public List<String> enabledFeatureFlagIds() {
+        return FeatureFlags.get(service.getContext()).getFeatures()
+                .stream()
+                .filter(Feature::isEnabled)
+                .map(Feature::getId)
+                .toList();
     }
 
     @Override

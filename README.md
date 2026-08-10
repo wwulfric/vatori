@@ -1,3 +1,11 @@
+<p align="center">
+  <picture>
+    <source media="(prefers-color-scheme: dark)" srcset="assets/brand/vatori-wordmark-on-dark-1600x520.png">
+    <source media="(prefers-color-scheme: light)" srcset="assets/brand/vatori-wordmark-1600x520.png">
+    <img alt="vatori" src="assets/brand/vatori-wordmark-1600x520.png" width="360">
+  </picture>
+</p>
+
 # vatori
 
 vatori is a Vaadin desktop framework. It preserves the Java Vaadin Flow
@@ -20,6 +28,13 @@ Requirements:
 bash bin/vaadin-desktop dev examples/counter-app
 ```
 
+Use Vaadin's standard Vite frontend with HMR while keeping Flow requests on
+opaque IPC:
+
+```bash
+bash bin/vaadin-desktop dev-vite examples/counter-app
+```
+
 Use the optional Spring Boot adapter when a Servlet web application context is
 required:
 
@@ -33,11 +48,16 @@ Build the application and current platform host:
 bash bin/vaadin-desktop package examples/counter-app
 ```
 
-Both modes build the standard production bundle. `dev` stages it for local
-WKWebView loading; `dev-compat` lets Spring serve the same application from a
-random `127.0.0.1` URL. Both use the same bidirectional sidecar channel for window
-lifecycle and real native capability results. Running an application JAR directly
-without a native-host transport fails fast.
+Applications can provide a macOS icon at
+`src/main/desktop/macos/AppIcon.icns` and bundle application-owned files from
+`src/main/desktop/resources`; see [Getting Started](docs/getting-started.md#application-branding-and-resources).
+
+`dev` and `package` build the standard production bundle. `dev-vite` uses a
+CLI-managed Vite process for frontend modules and HMR while Flow UI requests
+remain on opaque IPC. `dev-compat` lets Spring serve the UI from a random
+`127.0.0.1` URL. All modes use the same bidirectional sidecar channel for window
+lifecycle and real native capability results. Running an application JAR
+directly without a native-host transport fails fast.
 
 ## Application Entry
 

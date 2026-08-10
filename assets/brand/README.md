@@ -37,3 +37,12 @@ dark-background variants instead of forcing one compromised universal color.
 - `vatori-background-check.png`: quick black/white background contrast check.
 - `render_assets.py`: local renderer for PNG, ICO and ICNS exports from
   `vatori-icon-source.png`.
+
+## Integration
+
+- `README.md` and `README.zh-CN.md` use the light and dark wordmark exports.
+- The macOS host builder uses `vatori-icon.icns` as the fallback app icon for
+  Finder, the Dock and the application switcher. An application-owned
+  `src/main/desktop/macos/AppIcon.icns` takes precedence.
+- Applications keep ownership of their own in-app branding; the framework mark
+  is not injected into Vaadin views or application frontend resources.

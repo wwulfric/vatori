@@ -12,6 +12,28 @@ The default application model is:
 route and optionally accepts a Vaadin `InstantiatorFactory`. The default is
 Vaadin `DefaultInstantiator`; the framework does not add a classpath scanner.
 
+Pure Flow applications can tune the generic Servlet multipart adapter without
+depending on an Upload component or compatibility HTTP transport:
+
+```java
+DesktopFlowApplication application = DesktopFlowApplication
+        .builder(MainView.class)
+        .multipartConfig(DesktopFlowMultipartConfig.builder()
+                .location(Path.of("/application-owned/temp"))
+                .memoryThresholdBytes(64 * 1024)
+                .maxFileSizeBytes(256L * 1024 * 1024)
+                .maxRequestSizeBytes(512L * 1024 * 1024)
+                .maxPartCount(1_000)
+                .maxPartHeaderSizeBytes(8 * 1024)
+                .build())
+        .build();
+```
+
+The default location is `java.io.tmpdir`, the memory threshold is 64 KiB and
+adapter-level file/request limits are disabled. The part-count and part-header
+limits retain bounded defaults. Each request gets an isolated temporary
+directory, and the adapter removes it after request completion or failure.
+
 The standard production client sends bootstrap, UIDL, event and resource
 requests through an opaque bridge. Java converts only the HTTP-shaped boundary
 and delegates every request to `VaadinService.handleRequest()`. Desktop handlers
@@ -52,14 +74,17 @@ single-window.
 
 ```bash
 bash bin/vaadin-desktop dev test-apps/flow-over-ipc-framework-app
+bash bin/vaadin-desktop dev-vite test-apps/flow-over-ipc-framework-app
 ```
 
 This app uses the same public pure Flow entry as external applications while
-exposing deterministic state for broader validation.
+exposing deterministic state for broader validation. `dev-vite` changes only
+frontend resource delivery and HMR; Flow requests continue through the same
+opaque adapter.
 
 ## Open Boundaries
 
 - desktop-native alternatives for servlet-backed authentication and security;
-- dev-mode/Vite frontend workflow over IPC;
+- Java class hot replacement and complete Vaadin DevTools server integration;
 - complete component, focus, overlay, accessibility and resource parity;
 - embedded JREs, production installers and non-macOS hosts.

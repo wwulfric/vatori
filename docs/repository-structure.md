@@ -65,6 +65,10 @@ core <- ipc <- flow <- spring-boot adapter
 并使用 `DesktopLauncher`；Spring 应用使用 `SpringDesktopLauncher`。框架源码不得
 引用应用类或应用资源。
 
+应用自有的 desktop 打包输入放在模块内 `src/main/desktop`：公共 bundle 资源放
+`resources`，平台资源放 `<platform>/resources`，平台图标放对应平台目录。CLI 只发现
+和校验这些输入，具体格式选择与 bundle staging 由平台 builder 负责。
+
 ## 测试支持
 
 | 目录 | 用途 |

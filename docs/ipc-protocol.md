@@ -93,12 +93,23 @@ and declared lengths are validated.
 ## Push
 
 - `opaquePushConnect` and `opaquePushConnected` establish a scoped connection.
-- `opaquePush` carries opaque UIDL text, sequence and resync state.
+- `opaquePush` carries opaque UIDL text, transport sequence, Flow server sync id,
+  delivery attempt and resync state.
+- `opaquePushAck` confirms the exact scoped transport sequence after the official
+  Flow client callback, together with Flow's latest last-seen server sync id.
 - `opaquePushDisconnect` closes the exact scoped connection.
 - `opaquePushResync` requests Flow resynchronization.
 
 The browser bridge implements only the Atmosphere surface expected by the
-standard Flow client. It does not parse UIDL or maintain component state.
+standard Flow client. It does not parse UIDL or maintain component state. Java
+retains unacknowledged deliveries in process memory and retries the oldest one
+with the same transport sequence and Flow sync id. A duplicate delivery is
+acknowledged without invoking the Flow client twice. Resync supersedes older
+pending deliveries. The queue belongs to the current sidecar generation and
+Flow session/UI. Sidecar replacement reloads the document and creates a fresh
+session/UI, so any old unacknowledged UIDL is discarded rather than replayed
+against the new Flow state tree. Durable application effects must be stored
+outside process-local UI and delivery state.
 
 ## Capabilities And Windows
 

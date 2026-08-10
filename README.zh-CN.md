@@ -1,3 +1,11 @@
+<p align="center">
+  <picture>
+    <source media="(prefers-color-scheme: dark)" srcset="assets/brand/vatori-wordmark-on-dark-1600x520.png">
+    <source media="(prefers-color-scheme: light)" srcset="assets/brand/vatori-wordmark-1600x520.png">
+    <img alt="vatori" src="assets/brand/vatori-wordmark-1600x520.png" width="360">
+  </picture>
+</p>
+
 # vatori
 
 vatori 是一个 Vaadin 桌面端开发框架。应用开发者继续使用 Java Vaadin Flow
@@ -19,6 +27,12 @@ vatori 是一个 Vaadin 桌面端开发框架。应用开发者继续使用 Java
 bash bin/vaadin-desktop dev examples/counter-app
 ```
 
+使用标准 Vaadin Vite 前端和 HMR，同时保持 Flow 请求走 opaque IPC：
+
+```bash
+bash bin/vaadin-desktop dev-vite examples/counter-app
+```
+
 当应用需要 Servlet WebApplicationContext 时，使用可选 Spring Boot adapter：
 
 ```bash
@@ -31,10 +45,15 @@ bash bin/vaadin-desktop dev-compat test-apps/vaadin-desktop-smoke-app
 bash bin/vaadin-desktop package examples/counter-app
 ```
 
-两种模式都会构建标准 production bundle。`dev` 将其暂存给 WKWebView 本地加载；
-`dev-compat` 由 Spring 从随机 `127.0.0.1` URL 提供同一应用。两种模式都通过同一条
-双向 sidecar channel 处理窗口生命周期和真实 native capability result。直接运行应用
-JAR 而没有 native-host transport 会立即失败。
+应用可以通过 `src/main/desktop/macos/AppIcon.icns` 提供自己的 macOS 图标，
+并从 `src/main/desktop/resources` 打包应用资源；详见
+[Getting Started](docs/getting-started.md#application-branding-and-resources)。
+
+`dev` 和 `package` 构建标准 production bundle。`dev-vite` 由 CLI 管理 Vite，
+仅用于前端模块和 HMR，Flow UI 请求仍走 opaque IPC。`dev-compat` 由 Spring 从随机
+`127.0.0.1` URL 提供 UI。所有模式都通过同一条双向 sidecar channel 处理窗口生命周期
+和真实 native capability result。直接运行应用 JAR 而没有 native-host transport
+会立即失败。
 
 ## 应用入口
 

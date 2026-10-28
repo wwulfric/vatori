@@ -103,6 +103,8 @@ public final class VaadinDesktopCli {
             Path module = resolveModule(root, args[1]);
             ApplicationBundleInputs bundleInputs =
                     ApplicationBundleInputs.discover(module);
+            String capabilityManifestFallbackMode =
+                    capabilityManifestFallbackMode(command);
             String transport = command.equals("dev-compat")
                     ? "compatibility-http"
                     : "flow-ipc";
@@ -120,8 +122,8 @@ public final class VaadinDesktopCli {
             }
             if (command.equals("dev-vite")) {
                 return runViteDevelopment(root, module, args[1], runnableJar,
-                        capabilityManifest, bundleInputs, developmentInputs,
-                        environment, out, err);
+                        capabilityManifest, capabilityManifestFallbackMode,
+                        bundleInputs, developmentInputs, environment, out, err);
             }
 
             Path webApp = transport.equals("flow-ipc")
@@ -129,7 +131,8 @@ public final class VaadinDesktopCli {
                             root, module, args[1], environment, out)
                     : null;
             Path app = buildMacosHost(root, transport, runnableJar, webApp,
-                    capabilityManifest, null, bundleInputs, environment);
+                    capabilityManifest, capabilityManifestFallbackMode, null,
+                    bundleInputs, environment);
             if (command.equals("package")) {
                 out.println("macOS app: " + app);
                 return 0;
@@ -250,6 +253,7 @@ public final class VaadinDesktopCli {
             String moduleSelector,
             Path runnableJar,
             Path capabilityManifest,
+            String capabilityManifestFallbackMode,
             ApplicationBundleInputs bundleInputs,
             DevelopmentInputs developmentInputs,
             Map<String, String> environment,
@@ -272,8 +276,8 @@ public final class VaadinDesktopCli {
                 DevelopmentWebApp developmentWebApp = new DevelopmentWebApp(
                         vite.origin(), "/index.html");
                 Path app = buildMacosHost(root, "flow-ipc", runnableJar, null,
-                        capabilityManifest, developmentWebApp, bundleInputs,
-                        developmentEnvironment);
+                        capabilityManifest, capabilityManifestFallbackMode,
+                        developmentWebApp, bundleInputs, developmentEnvironment);
                 return launchWithDevelopmentReload(
                         root, module, moduleSelector, app,
                         root.resolve(".build/native-hosts/macos"),
@@ -543,6 +547,7 @@ public final class VaadinDesktopCli {
 
     private static Path buildMacosHost(Path root, String transport, Path runnableJar,
             Path webApp, Path capabilityManifest,
+            String capabilityManifestFallbackMode,
             DevelopmentWebApp developmentWebApp,
             ApplicationBundleInputs bundleInputs,
             Map<String, String> environment)
@@ -558,12 +563,22 @@ public final class VaadinDesktopCli {
                 developmentWebApp == null ? "" : developmentWebApp.origin(),
                 developmentWebApp == null ? "" : developmentWebApp.entryPath()));
         command.addAll(bundleInputs.macosBuilderArguments());
+        command.add(capabilityManifestFallbackMode);
         runProcess(root, command, environment, true);
         Path app = root.resolve(".build/native-hosts/macos/VaadinDesktopHost.app");
         if (!Files.isExecutable(app.resolve("Contents/MacOS/VaadinDesktopHost"))) {
             throw new CliException(1, "macOS host build did not produce an executable app: " + app);
         }
         return app;
+    }
+
+    static String capabilityManifestFallbackMode(String command) {
+        return switch (command) {
+            case "dev", "dev-vite", "dev-compat" -> "allow-all-dev";
+            case "package" -> "manifest-enforced";
+            default -> throw new IllegalArgumentException(
+                    "Unsupported CLI command: " + command);
+        };
     }
 
     static int launch(Path app, Path logDirectory,

@@ -12,6 +12,7 @@ if ! command -v mvn >/dev/null 2>&1 && [[ -f "$HOME/.sdkman/bin/sdkman-init.sh" 
 fi
 
 mvn -q -o -Dmaven.repo.local="$MAVEN_REPO" \
+  -Dvatori.repo.root="$ROOT" \
   -pl vaadin-desktop-cli -DskipTests test-compile \
   org.codehaus.mojo:exec-maven-plugin:3.6.2:java \
   -Dexec.mainClass=dev.vatori.desktop.cli.VaadinDesktopCliSmokeMain \

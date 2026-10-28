@@ -67,6 +67,7 @@ enum HostConfigError: LocalizedError {
     case invalidResourcePath(String)
     case missingResource(String)
     case resourceNotDirectory(String)
+    case invalidCapabilityManifest(CapabilityManifest)
     case invalidSidecarStartup
     case invalidRecovery
     case flowWebAppMissing
@@ -87,6 +88,8 @@ enum HostConfigError: LocalizedError {
             return "Host manifest resource is missing: \(path)"
         case .resourceNotDirectory(let path):
             return "Host manifest resource must be a directory: \(path)"
+        case .invalidCapabilityManifest(let manifest):
+            return "desktop-capabilities.json is invalid: \(manifest.parseError)"
         case .invalidSidecarStartup:
             return "Host manifest sidecar startup timeout must be at least one second"
         case .invalidRecovery:
@@ -109,7 +112,7 @@ struct HostConfig {
     let flowWebAppSource: FlowWebAppSource?
     let opaqueBridgeURL: URL
     let pushBridgeURL: URL
-    let capabilityManifestURL: URL
+    let capabilityManifest: CapabilityManifest
     let applicationResourcesURL: URL?
     let sidecarInitialReadyTimeoutSeconds: Double
     let flowIpcSidecarRestartLimit: Int
@@ -167,7 +170,13 @@ struct HostConfig {
         let pushBridgeURL = try resource(
             manifest.pushBridge, beneath: resourceURL, mustExist: true)
         let capabilityManifestURL = try resource(
-            manifest.capabilityManifest, beneath: resourceURL, mustExist: true)
+            manifest.capabilityManifest, beneath: resourceURL, mustExist: false)
+        let capabilityManifest = CapabilityManifest.load(
+            from: capabilityManifestURL)
+        guard capabilityManifest.parseError.isEmpty else {
+            throw HostConfigError.invalidCapabilityManifest(
+                capabilityManifest)
+        }
         let applicationResourcesURL = try manifest.applicationResources.map {
             try resourceDirectory($0, beneath: resourceURL)
         }
@@ -206,7 +215,7 @@ struct HostConfig {
             flowWebAppSource: flowWebAppSource,
             opaqueBridgeURL: opaqueBridgeURL,
             pushBridgeURL: pushBridgeURL,
-            capabilityManifestURL: capabilityManifestURL,
+            capabilityManifest: capabilityManifest,
             applicationResourcesURL: applicationResourcesURL,
             sidecarInitialReadyTimeoutSeconds:
                 sidecarInitialReadyTimeoutSeconds,

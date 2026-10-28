@@ -5,6 +5,7 @@ import com.vaadin.flow.component.UI;
 import com.vaadin.flow.internal.CurrentInstance;
 import com.vaadin.flow.server.ServiceException;
 import com.vaadin.flow.server.VaadinSession;
+import com.vaadin.flow.server.VaadinSessionState;
 import com.vaadin.flow.server.WrappedSession;
 
 import java.io.IOException;
@@ -70,7 +71,13 @@ public final class DesktopFlowOpaqueHttpSession {
     public void close() {
         session.lock();
         try {
-            session.close();
+            if (session.getState() == VaadinSessionState.CLOSED) {
+                return;
+            }
+            if (session.getState() == VaadinSessionState.OPEN) {
+                session.close();
+            }
+            service.fireSessionDestroy(session);
         } finally {
             session.unlock();
         }

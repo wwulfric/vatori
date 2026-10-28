@@ -25,16 +25,17 @@ private enum SidecarReplacementPhase {
 
 final class FlowIpcSidecarController {
     private let config: HostConfig
-    private let standardBundleEntryURL: URL
     private let flowIpcWindows: () -> [FlowIpcWindowContext]
     private let terminateApplication: () -> Void
     private var sidecar: JavaSidecar!
     private var initialReadyPending = false
+    private var hostShutdownRequested = false
     private var recoveryInProgress = false
     private var replacementPhase: SidecarReplacementPhase?
     private var pendingReplacement: SidecarReplacementRequest?
     private var restartAttempts = 0
     private var exitedProcessIdentifier: Int32?
+    private let onLifecycleReady: () -> Void
     private let onReplacementResult: (
         String,
         HostControlReplacementStatus,
@@ -43,9 +44,9 @@ final class FlowIpcSidecarController {
 
     init(
         config: HostConfig,
-        standardBundleEntryURL: URL,
         flowIpcWindows: @escaping () -> [FlowIpcWindowContext],
-        onSidecarEnvelope: @escaping (String, [String: Any]) -> Void,
+        onSidecarEnvelope: @escaping (String, [String: Any], Int) -> Void,
+        onLifecycleReady: @escaping () -> Void,
         onReplacementResult: @escaping (
             String,
             HostControlReplacementStatus,
@@ -54,9 +55,9 @@ final class FlowIpcSidecarController {
         terminateApplication: @escaping () -> Void
     ) {
         self.config = config
-        self.standardBundleEntryURL = standardBundleEntryURL
         self.flowIpcWindows = flowIpcWindows
         self.terminateApplication = terminateApplication
+        self.onLifecycleReady = onLifecycleReady
         self.onReplacementResult = onReplacementResult
         self.sidecar = JavaSidecar(
             config: config,
@@ -71,6 +72,9 @@ final class FlowIpcSidecarController {
 
     @discardableResult
     func start() -> Bool {
+        guard !hostShutdownRequested else {
+            return false
+        }
         guard sidecar.start() else {
             trace("send", "error", [
                 "code": "sidecarStartFailed",
@@ -83,19 +87,37 @@ final class FlowIpcSidecarController {
         return true
     }
 
-    func terminate() {
+    func prepareForHostShutdown() {
+        guard !hostShutdownRequested else {
+            return
+        }
+        hostShutdownRequested = true
         initialReadyPending = false
-        sidecar.terminate()
+        recoveryInProgress = false
+        replacementPhase = nil
+        pendingReplacement = nil
+        invalidateNativeOperations(
+            flowIpcWindows(),
+            reason: "host-shutdown")
+    }
+
+    func stopForHostShutdown(
+        completion: @escaping (Result<Void, JavaSidecarShutdownFailure>) -> Void
+    ) {
+        prepareForHostShutdown()
+        sidecar.stopForHostShutdown(completion: completion)
     }
 
     @discardableResult
     func sendSidecarEnvelope(_ envelope: String) -> Bool {
-        guard !initialReadyPending,
+        guard !hostShutdownRequested,
+              !initialReadyPending,
               !recoveryInProgress,
               replacementPhase == nil else {
             trace("send", "flow-ipc.sidecarWrite", [
                 "target": "java-sidecar",
                 "status": "lifecycle-unavailable",
+                "hostShutdownRequested": hostShutdownRequested,
                 "initialReadyPending": initialReadyPending,
                 "recoveryInProgress": recoveryInProgress,
                 "replacementInProgress": replacementPhase != nil
@@ -103,6 +125,31 @@ final class FlowIpcSidecarController {
             return false
         }
         return sidecar.sendSidecarEnvelope(envelope)
+    }
+
+    @discardableResult
+    func sendSidecarEnvelope(
+        _ envelope: String,
+        expectedGeneration: Int
+    ) -> Bool {
+        guard !hostShutdownRequested,
+              !initialReadyPending,
+              !recoveryInProgress,
+              replacementPhase == nil else {
+            trace("send", "flow-ipc.sidecarWrite", [
+                "target": "java-sidecar",
+                "status": "lifecycle-unavailable",
+                "hostShutdownRequested": hostShutdownRequested,
+                "expectedGeneration": expectedGeneration,
+                "initialReadyPending": initialReadyPending,
+                "recoveryInProgress": recoveryInProgress,
+                "replacementInProgress": replacementPhase != nil
+            ])
+            return false
+        }
+        return sidecar.sendSidecarEnvelope(
+            envelope,
+            expectedGeneration: expectedGeneration)
     }
 
     var processIdentifier: Int32? {
@@ -114,6 +161,15 @@ final class FlowIpcSidecarController {
         requestId: String,
         reason: String
     ) -> Bool {
+        guard !hostShutdownRequested else {
+            trace("recv", "sidecar.replacementRejected", [
+                "requestId": requestId,
+                "reason": reason,
+                "cause": "host-shutdown"
+            ])
+            onReplacementResult(requestId, .failed, "host-shutdown")
+            return false
+        }
         let windows = flowIpcWindows()
         guard config.transport == .flowIpc,
               config.flowWebAppSource?.isDevelopment == true else {
@@ -195,7 +251,20 @@ final class FlowIpcSidecarController {
                 requestId, .failed, "termination-failed")
             return false
         }
+        invalidateNativeOperations(
+            windows,
+            reason: "sidecar-replacement")
         return true
+    }
+
+    func canExecuteSidecarCommand(
+        expectedGeneration: Int
+    ) -> Bool {
+        !hostShutdownRequested
+            && !initialReadyPending
+            && !recoveryInProgress
+            && replacementPhase == nil
+            && sidecar.isActive(generation: expectedGeneration)
     }
 
     @discardableResult
@@ -203,6 +272,15 @@ final class FlowIpcSidecarController {
         requestId: String,
         reason: String
     ) -> Bool {
+        guard !hostShutdownRequested else {
+            trace("recv", "sidecar.rollbackRejected", [
+                "requestId": requestId,
+                "reason": reason,
+                "cause": "host-shutdown"
+            ])
+            onReplacementResult(requestId, .rollbackFailed, "host-shutdown")
+            return false
+        }
         switch replacementPhase {
         case .awaitingRollback(let request, let cause)
                 where request.requestId == requestId:
@@ -243,6 +321,9 @@ final class FlowIpcSidecarController {
     }
 
     func handleReady() -> Bool {
+        guard !hostShutdownRequested else {
+            return true
+        }
         initialReadyPending = false
         if case .candidateRunning(let request) = replacementPhase {
             completeReplacement(request: request)
@@ -261,6 +342,9 @@ final class FlowIpcSidecarController {
 
     @discardableResult
     func handleReadyFailure(cause: String) -> Bool {
+        guard !hostShutdownRequested else {
+            return true
+        }
         guard case .candidateRunning(let request) = replacementPhase else {
             return false
         }
@@ -273,6 +357,9 @@ final class FlowIpcSidecarController {
     private func handleSidecarFatalError(
         cause: String
     ) {
+        guard !hostShutdownRequested else {
+            return
+        }
         if case .candidateRunning(let request) =
                 replacementPhase {
             failRunningCandidate(
@@ -293,23 +380,31 @@ final class FlowIpcSidecarController {
                 request.requestId,
                 .rollbackFailed,
                 cause)
-            sidecar.terminate()
             terminateApplication()
             return
         }
         trace("send", "error", [
-            "code": "unsupportedSidecarVersion",
+            "code": cause == "unsupported-sidecar-version"
+                ? "unsupportedSidecarVersion" : "sidecarTransportFailure",
             "cause": cause
         ])
-        sidecar.terminate()
         terminateApplication()
     }
 
     private func handleTermination(_ termination: JavaSidecarTermination) {
+        guard !hostShutdownRequested else {
+            return
+        }
         initialReadyPending = false
         guard !termination.expected else {
             return
         }
+        let windows = flowIpcWindows()
+        invalidateNativeOperations(
+            windows,
+            reason: replacementPhase == nil
+                ? "sidecar-exit"
+                : "sidecar-replacement")
         switch replacementPhase {
         case .terminatingCurrent(let request):
             exitedProcessIdentifier = termination.processIdentifier
@@ -353,7 +448,6 @@ final class FlowIpcSidecarController {
         case nil:
             break
         }
-        let windows = flowIpcWindows()
         guard config.flowIpcSidecarRecoveryEnabled, !windows.isEmpty else {
             trace("send", "error", [
                 "code": "sidecarUnexpectedExit",
@@ -383,6 +477,7 @@ final class FlowIpcSidecarController {
         ])
         DispatchQueue.main.asyncAfter(deadline: .now() + timeout) { [weak self] in
             guard let self,
+                  !self.hostShutdownRequested,
                   self.initialReadyPending,
                   !self.recoveryInProgress,
                   self.replacementPhase == nil,
@@ -395,7 +490,6 @@ final class FlowIpcSidecarController {
                 "processIdentifier": processIdentifier ?? 0,
                 "timeoutSeconds": timeout
             ])
-            self.sidecar.terminate()
             self.terminateApplication()
         }
     }
@@ -404,7 +498,8 @@ final class FlowIpcSidecarController {
         request: SidecarReplacementRequest
     ) {
         let windows = flowIpcWindows()
-        guard case .terminatingCurrent(let activeRequest) = replacementPhase,
+        guard !hostShutdownRequested,
+              case .terminatingCurrent(let activeRequest) = replacementPhase,
               activeRequest.requestId == request.requestId,
               !windows.isEmpty else {
             return
@@ -440,6 +535,7 @@ final class FlowIpcSidecarController {
         let timeout = config.flowIpcSidecarRecoveryReadyTimeoutSeconds
         DispatchQueue.main.asyncAfter(deadline: .now() + timeout) { [weak self] in
             guard let self,
+                  !self.hostShutdownRequested,
                   case .candidateRunning(let activeRequest) =
                     self.replacementPhase,
                   activeRequest.requestId == request.requestId,
@@ -459,7 +555,8 @@ final class FlowIpcSidecarController {
 
     private func scheduleRecovery() {
         let windows = flowIpcWindows()
-        guard recoveryInProgress, !windows.isEmpty else {
+        guard !hostShutdownRequested,
+              recoveryInProgress, !windows.isEmpty else {
             return
         }
         guard restartAttempts < config.flowIpcSidecarRestartLimit else {
@@ -486,6 +583,7 @@ final class FlowIpcSidecarController {
         ])
         DispatchQueue.main.asyncAfter(deadline: .now() + delay) { [weak self] in
             guard let self,
+                  !self.hostShutdownRequested,
                   self.recoveryInProgress,
                   !self.flowIpcWindows().isEmpty else {
                 return
@@ -508,6 +606,7 @@ final class FlowIpcSidecarController {
             deadline: .now() + config.flowIpcSidecarRecoveryReadyTimeoutSeconds
         ) { [weak self] in
             guard let self,
+                  !self.hostShutdownRequested,
                   self.recoveryInProgress,
                   self.sidecar.processIdentifier == processIdentifier else {
                 return
@@ -537,6 +636,7 @@ final class FlowIpcSidecarController {
         ])
         recoveryInProgress = false
         exitedProcessIdentifier = nil
+        onLifecycleReady()
         scheduleRecoveryBudgetResetIfNeeded()
         startPendingReplacementIfNeeded()
     }
@@ -562,6 +662,7 @@ final class FlowIpcSidecarController {
         ])
         replacementPhase = nil
         exitedProcessIdentifier = nil
+        onLifecycleReady()
         scheduleRecoveryBudgetResetIfNeeded()
         onReplacementResult(
             request.requestId, .ready, "candidate-ready")
@@ -569,7 +670,8 @@ final class FlowIpcSidecarController {
     }
 
     private func startPendingReplacementIfNeeded() {
-        guard let request = pendingReplacement else {
+        guard !hostShutdownRequested,
+              let request = pendingReplacement else {
             return
         }
         pendingReplacement = nil
@@ -625,6 +727,9 @@ final class FlowIpcSidecarController {
         request: SidecarReplacementRequest,
         cause: String
     ) {
+        guard !hostShutdownRequested else {
+            return
+        }
         replacementPhase = .rollbackRunning(
             request, cause: cause)
         trace("send", "sidecar.rollbackStarted", [
@@ -660,6 +765,7 @@ final class FlowIpcSidecarController {
         let timeout = config.flowIpcSidecarRecoveryReadyTimeoutSeconds
         DispatchQueue.main.asyncAfter(deadline: .now() + timeout) { [weak self] in
             guard let self,
+                  !self.hostShutdownRequested,
                   case .rollbackRunning(let activeRequest, _) =
                     self.replacementPhase,
                   activeRequest.requestId == request.requestId,
@@ -679,7 +785,6 @@ final class FlowIpcSidecarController {
                 request.requestId,
                 .rollbackFailed,
                 "rollback-ready-timeout")
-            self.sidecar.terminate()
             self.terminateApplication()
         }
     }
@@ -708,6 +813,7 @@ final class FlowIpcSidecarController {
         ])
         replacementPhase = nil
         exitedProcessIdentifier = nil
+        onLifecycleReady()
         scheduleRecoveryBudgetResetIfNeeded()
         onReplacementResult(
             request.requestId,
@@ -717,7 +823,8 @@ final class FlowIpcSidecarController {
     }
 
     private func scheduleRecoveryBudgetResetIfNeeded() {
-        guard restartAttempts > 0,
+        guard !hostShutdownRequested,
+              restartAttempts > 0,
               let processIdentifier = sidecar.processIdentifier else {
             return
         }
@@ -733,6 +840,7 @@ final class FlowIpcSidecarController {
             deadline: .now() + stableRunSeconds
         ) { [weak self] in
             guard let self,
+                  !self.hostShutdownRequested,
                   !self.recoveryInProgress,
                   self.replacementPhase == nil,
                   self.restartAttempts == attempts,
@@ -762,6 +870,15 @@ final class FlowIpcSidecarController {
         }
     }
 
+    private func invalidateNativeOperations(
+        _ windows: [FlowIpcWindowContext],
+        reason: String
+    ) {
+        for context in windows {
+            context.commandExecutor.invalidateNativeOperations(reason: reason)
+        }
+    }
+
     private func reloadWindows() -> (
         windowCount: Int,
         highestGeneration: Int
@@ -778,7 +895,7 @@ final class FlowIpcSidecarController {
                     source: "window.VaadinDesktopHostRecoveryGeneration = \(context.recoveryGeneration);",
                     injectionTime: .atDocumentStart,
                     forMainFrameOnly: true))
-            var request = URLRequest(url: standardBundleEntryURL)
+            var request = URLRequest(url: context.reloadURL)
             request.cachePolicy = .reloadIgnoringLocalCacheData
             context.webView.load(request)
         }

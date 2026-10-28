@@ -18,6 +18,7 @@ func isSensitiveTraceKey(_ key: String) -> Bool {
     return normalized == "securitykey"
         || normalized == "csrftoken"
         || normalized == "pushid"
+        || normalized == "grantid"
         || normalized == "vaadin-security-key"
 }
 
@@ -100,6 +101,15 @@ private func compactProtocolEnvelopeTracePayload(
         ],
         into: &compact,
         maxStringLength: 384)
+    if envelope["type"] as? String == "capabilityResult",
+       envelopePayload["command"] as? String == "notification.show" {
+        for (key, value) in envelopePayload {
+            let normalizedKey = key.lowercased()
+            if normalizedKey == "nativeerrordomain" || normalizedKey == "nativeerrorcode" {
+                compact[key] = redactedNotificationDiagnosticValue(value, key: key)
+            }
+        }
+    }
     if let headers = envelopePayload["headers"] as? [String: Any] {
         compact["headerCount"] = headers.count
         compact["headerNames"] = headers.keys.sorted().joined(separator: ",")

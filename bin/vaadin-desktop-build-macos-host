@@ -11,11 +11,30 @@ DEVELOPMENT_WEBAPP_ENTRY_PATH="${7:-}"
 APPLICATION_ICON="${8:-}"
 COMMON_APPLICATION_RESOURCES="${9:-}"
 MACOS_APPLICATION_RESOURCES="${10:-}"
+CAPABILITY_MANIFEST_FALLBACK_MODE="${11:-manifest-enforced}"
+CAPABILITY_MANIFEST_STAGE_SOURCE="$CAPABILITY_MANIFEST"
+CAPABILITY_MANIFEST_WORK_DIRECTORY=""
+
+cleanup_capability_manifest_work() {
+  if [[ -n "$CAPABILITY_MANIFEST_WORK_DIRECTORY" \
+      && -d "$CAPABILITY_MANIFEST_WORK_DIRECTORY" ]]; then
+    rm -rf -- "$CAPABILITY_MANIFEST_WORK_DIRECTORY"
+  fi
+}
+trap cleanup_capability_manifest_work EXIT
 
 case "$TRANSPORT" in
   flow-ipc|compatibility-http) ;;
   *)
     echo "Unsupported macOS host transport: $TRANSPORT" >&2
+    exit 2
+    ;;
+esac
+
+case "$CAPABILITY_MANIFEST_FALLBACK_MODE" in
+  allow-all-dev|manifest-enforced) ;;
+  *)
+    echo "Unsupported capability manifest fallback mode: $CAPABILITY_MANIFEST_FALLBACK_MODE" >&2
     exit 2
     ;;
 esac
@@ -84,6 +103,45 @@ do
     exit 1
   fi
 done
+
+if [[ -n "$CAPABILITY_MANIFEST" ]]; then
+  if [[ ! -f "$CAPABILITY_MANIFEST" ]]; then
+    echo "Capability manifest not found: $CAPABILITY_MANIFEST" >&2
+    exit 1
+  fi
+  if [[ "$CAPABILITY_MANIFEST_FALLBACK_MODE" == "manifest-enforced" ]]; then
+    CAPABILITY_MANIFEST_TEMP_ROOT="${TMPDIR:-/tmp}"
+    CAPABILITY_MANIFEST_WORK_DIRECTORY="$(mktemp -d \
+      "${CAPABILITY_MANIFEST_TEMP_ROOT%/}/vatori-capability-manifest.XXXXXX")"
+    CAPABILITY_MANIFEST_STAGE_SOURCE="$CAPABILITY_MANIFEST_WORK_DIRECTORY/desktop-capabilities.json"
+    CAPABILITY_MANIFEST_POLICY_CLASSIFICATION=""
+    if ! CAPABILITY_MANIFEST_POLICY_CLASSIFICATION="$(
+      /usr/bin/osascript -l JavaScript \
+        -e 'ObjC.import("Foundation")' \
+        -e 'function run(argv) { const sourceValue = $.NSString.stringWithContentsOfFileEncodingError(argv[0], $.NSUTF8StringEncoding, null); if (!sourceValue) throw new Error("read"); const document = JSON.parse(ObjC.unwrap(sourceValue)); const canonical = $(JSON.stringify(document)); if (!canonical.writeToFileAtomicallyEncodingError(argv[1], true, $.NSUTF8StringEncoding, null)) throw new Error("write"); if (document !== null && typeof document === "object" && !Array.isArray(document)) { if (document.permissionMode === "manifest-enforced") return "manifest-enforced"; if (document.permissionMode === "allow-all-dev") return "allow-all-dev"; if (document.permissionMode === "trace-only-dry-run") return "trace-only-dry-run"; if (!Object.prototype.hasOwnProperty.call(document, "permissionMode")) return "missing"; } return "unsupported"; }' \
+        "$CAPABILITY_MANIFEST" "$CAPABILITY_MANIFEST_STAGE_SOURCE" \
+        2>/dev/null
+    )"; then
+      echo "Product capability manifest is not valid JSON" >&2
+      exit 2
+    fi
+    case "$CAPABILITY_MANIFEST_POLICY_CLASSIFICATION" in
+      manifest-enforced) ;;
+      allow-all-dev|trace-only-dry-run)
+        echo "Product capability manifest must use permissionMode=manifest-enforced; found: $CAPABILITY_MANIFEST_POLICY_CLASSIFICATION" >&2
+        exit 2
+        ;;
+      missing)
+        echo "Product capability manifest must define permissionMode=manifest-enforced" >&2
+        exit 2
+        ;;
+      *)
+        echo "Product capability manifest must use permissionMode=manifest-enforced" >&2
+        exit 2
+        ;;
+    esac
+  fi
+fi
 
 HOST_BUILD="$ROOT/.build/native-hosts/macos"
 HOST_APP="$HOST_BUILD/VaadinDesktopHost.app"
@@ -169,14 +227,11 @@ if [[ "$TRANSPORT" == "flow-ipc" && -n "$DEVELOPMENT_WEBAPP_ORIGIN" ]]; then
 fi
 
 if [[ -n "$CAPABILITY_MANIFEST" ]]; then
-  if [[ ! -f "$CAPABILITY_MANIFEST" ]]; then
-    echo "Capability manifest not found: $CAPABILITY_MANIFEST" >&2
-    exit 1
-  fi
-  cp "$CAPABILITY_MANIFEST" "$HOST_RESOURCES/desktop-capabilities.json"
+  cp "$CAPABILITY_MANIFEST_STAGE_SOURCE" \
+    "$HOST_RESOURCES/desktop-capabilities.json"
 else
-  cat > "$HOST_RESOURCES/desktop-capabilities.json" <<'JSON'
-{"schemaVersion":1,"permissionMode":"allow-all-dev","windows":[]}
+  cat > "$HOST_RESOURCES/desktop-capabilities.json" <<JSON
+{"schemaVersion":1,"permissionMode":"$CAPABILITY_MANIFEST_FALLBACK_MODE","windows":[]}
 JSON
 fi
 

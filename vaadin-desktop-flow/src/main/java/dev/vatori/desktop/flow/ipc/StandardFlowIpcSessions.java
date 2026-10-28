@@ -152,6 +152,7 @@ final class StandardFlowIpcSessions implements AutoCloseable {
         Objects.requireNonNull(cancelExchanges, "cancelExchanges");
         SessionContext context = sessionsByWindow.get(scope.windowId());
         if (context == null) {
+            nativeBridge.unregisterScope(scope);
             return;
         }
         context.requireScope(scope);
@@ -159,11 +160,14 @@ final class StandardFlowIpcSessions implements AutoCloseable {
             return;
         }
         sessionsBySession.remove(scope.sessionId(), context);
-        nativeBridge.unregisterScope(scope);
-        pushDelivery.removeScope(scope);
-        cancelExchanges.run();
-        if (sessionRegistry != null) {
-            sessionRegistry.closeSession(scope.sessionId());
+        try {
+            pushDelivery.removeScope(scope);
+            cancelExchanges.run();
+            if (sessionRegistry != null) {
+                sessionRegistry.closeSession(scope.sessionId());
+            }
+        } finally {
+            nativeBridge.unregisterScope(scope);
         }
     }
 
@@ -203,13 +207,68 @@ final class StandardFlowIpcSessions implements AutoCloseable {
                 sessionsByWindow.put(scope.windowId(), sessionOwner);
                 return sessionOwner;
             }
-            SessionContext created = new SessionContext(
-                    scope, registry().session(scope.sessionId()));
-            pushDelivery.registerScope(scope);
-            nativeBridge.registerScope(scope);
-            sessionsBySession.put(scope.sessionId(), created);
-            sessionsByWindow.put(scope.windowId(), created);
-            return created;
+            DesktopFlowOpaqueHttpSession createdSession = null;
+            SessionContext created = null;
+            boolean pushRegistered = false;
+            boolean nativeRegistered = false;
+            boolean sessionPublished = false;
+            boolean windowPublished = false;
+            try {
+                createdSession = registry().session(scope.sessionId());
+                pushDelivery.registerScope(scope);
+                pushRegistered = true;
+                nativeBridge.registerScope(scope);
+                nativeRegistered = true;
+                created = new SessionContext(scope, createdSession);
+                if (sessionsBySession.putIfAbsent(
+                        scope.sessionId(), created) != null) {
+                    throw new IllegalStateException(
+                            "Flow IPC session owner changed during creation");
+                }
+                sessionPublished = true;
+                if (sessionsByWindow.putIfAbsent(
+                        scope.windowId(), created) != null) {
+                    throw new IllegalStateException(
+                            "Flow IPC window owner changed during creation");
+                }
+                windowPublished = true;
+                return created;
+            } catch (RuntimeException | Error failure) {
+                SessionContext rollbackContext = created;
+                DesktopFlowOpaqueHttpSession rollbackSession = createdSession;
+                if (windowPublished) {
+                    suppressCleanupFailure(failure, () -> sessionsByWindow.remove(
+                            scope.windowId(), rollbackContext));
+                }
+                if (sessionPublished) {
+                    suppressCleanupFailure(failure, () -> sessionsBySession.remove(
+                            scope.sessionId(), rollbackContext));
+                }
+                if (pushRegistered) {
+                    suppressCleanupFailure(
+                            failure, () -> pushDelivery.removeScope(scope));
+                }
+                if (rollbackSession != null && sessionRegistry != null) {
+                    suppressCleanupFailure(failure, () -> sessionRegistry.closeSession(
+                            scope.sessionId(), rollbackSession));
+                }
+                if (nativeRegistered) {
+                    suppressCleanupFailure(
+                            failure,
+                            () -> nativeBridge.rollbackScopeRegistration(scope));
+                }
+                throw failure;
+            }
+        }
+    }
+
+    private static void suppressCleanupFailure(
+            Throwable failure,
+            Runnable cleanup) {
+        try {
+            cleanup.run();
+        } catch (RuntimeException | Error cleanupFailure) {
+            failure.addSuppressed(cleanupFailure);
         }
     }
 

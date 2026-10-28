@@ -1,0 +1,13 @@
+{
+  "schemaVersion": 1,
+  "permissionMode": "manifest-enforced",
+  "windows": [
+    {
+      "label": "main",
+      "commands": [
+        "notification.show",
+        "window.setTitle"
+      ]
+    }
+  ]
+}

@@ -11,6 +11,7 @@ protocol HostRuntimeObserver: AnyObject {
     func didOpenInitialFlowIpcWindow(host: WebViewHost)
     func didFinishCompatibilityNavigation(host: WebViewHost, webView: WKWebView)
     func didFinishFlowIpcNavigation(host: WebViewHost, context: FlowIpcWindowContext)
+    func applicationWillTerminate(host: WebViewHost)
 }
 
 extension HostRuntimeObserver {
@@ -28,6 +29,8 @@ extension HostRuntimeObserver {
     func didFinishCompatibilityNavigation(host: WebViewHost, webView: WKWebView) {}
 
     func didFinishFlowIpcNavigation(host: WebViewHost, context: FlowIpcWindowContext) {}
+
+    func applicationWillTerminate(host: WebViewHost) {}
 }
 
 final class ProductionHostRuntimeObserver: HostRuntimeObserver {}

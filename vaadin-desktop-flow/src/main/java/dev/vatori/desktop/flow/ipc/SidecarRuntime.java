@@ -65,7 +65,8 @@ public final class SidecarRuntime {
         Objects.requireNonNull(applicationUri, "applicationUri");
         FlowIpcScope scope = scope(application, COMPATIBILITY_SESSION_ID);
         SidecarOutput output = new SidecarOutput("", scope);
-        SidecarNativeBridge nativeBridge = new SidecarNativeBridge(output, scope);
+        SidecarNativeBridge nativeBridge =
+                SidecarNativeBridge.singleWindow(output, scope);
         SidecarMessageLoop messageLoop = new SidecarMessageLoop(output, nativeBridge, scope);
         messageLoop.onWindowClosed(ignored -> messageLoop.requestShutdown());
         DesktopContextHolder.set(new DesktopContext(

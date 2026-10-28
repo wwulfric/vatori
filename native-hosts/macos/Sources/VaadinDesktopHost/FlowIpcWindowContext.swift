@@ -30,13 +30,17 @@ struct FlowIpcWindowScope: Equatable {
     }
 
     static func window(_ windowId: String) -> FlowIpcWindowScope {
-        precondition(!windowId.isBlank, "Flow IPC window id must not be blank")
+        precondition(isValidSidecarIdentifier(windowId),
+                     "Flow IPC window id must be a valid sidecar identifier")
         if windowId == "main" {
             return .main
         }
+        let sessionId = "flow-ipc-window:\(UUID().uuidString)"
+        precondition(isValidSidecarIdentifier(sessionId),
+                     "Flow IPC session id must be a valid sidecar identifier")
         return FlowIpcWindowScope(
             windowId: windowId,
-            sessionId: "flow-ipc-session-\(windowId)",
+            sessionId: sessionId,
             uiId: windowId)
     }
 
@@ -52,6 +56,13 @@ struct FlowIpcWindowScope: Equatable {
         (object["windowId"] as? String ?? object["uiId"] as? String) == windowId
             && object["sessionId"] as? String == sessionId
             && object["uiId"] as? String == uiId
+    }
+
+    var identity: FlowIpcScopeIdentity {
+        FlowIpcScopeIdentity(
+            windowId: windowId,
+            sessionId: sessionId,
+            uiId: uiId)
     }
 
     var tracePayload: [String: Any] {
@@ -77,16 +88,19 @@ final class FlowIpcWindowContext {
     let window: NSWindow
     let webView: WKWebView
     let commandExecutor: DesktopCommandExecutor
+    let reloadURL: URL
     var navigationFinished = false
     var recoveryGeneration = 0
 
     init(scope: FlowIpcWindowScope,
          window: NSWindow,
          webView: WKWebView,
-         commandExecutor: DesktopCommandExecutor) {
+         commandExecutor: DesktopCommandExecutor,
+         reloadURL: URL) {
         self.scope = scope
         self.window = window
         self.webView = webView
         self.commandExecutor = commandExecutor
+        self.reloadURL = reloadURL
     }
 }

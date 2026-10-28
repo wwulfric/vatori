@@ -43,8 +43,19 @@ launch_built_macos_host_runtime() {
       fi
     }
     request_shutdown() {
-      osascript -e "tell application id \"$host_bundle_id\" to quit" >/dev/null 2>&1 || true
-      pkill -f "$host_exe" >/dev/null 2>&1 || true
+      osascript \
+        -e 'with timeout of 1 seconds' \
+        -e "tell application id \"$host_bundle_id\" to quit" \
+        -e 'end timeout' >/dev/null 2>&1 || true
+      local grace_poll=0
+      while (( grace_poll < 30 )) \
+          && pgrep -f "$host_exe" >/dev/null 2>&1; do
+        sleep 0.1
+        ((grace_poll += 1))
+      done
+      if pgrep -f "$host_exe" >/dev/null 2>&1; then
+        pkill -f "$host_exe" >/dev/null 2>&1 || true
+      fi
     }
     handle_interrupt() {
       trap - INT TERM

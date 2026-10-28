@@ -18,6 +18,31 @@ fi
 
 mvn -o -Dmaven.repo.local="$MAVEN_REPO" -pl vaadin-desktop-spring-boot -am -DskipTests install
 mvn -q -o -Dmaven.repo.local="$MAVEN_REPO" \
+  -pl vaadin-desktop-core \
+  -Dexec.mainClass=dev.vatori.desktop.DesktopFileDialogContractSmokeMain \
+  -Dexec.classpathScope=test \
+  org.codehaus.mojo:exec-maven-plugin:3.6.2:java
+mvn -q -o -Dmaven.repo.local="$MAVEN_REPO" \
+  -pl vaadin-desktop-core \
+  -Dexec.mainClass=dev.vatori.desktop.DesktopFileGrantContractSmokeMain \
+  -Dexec.classpathScope=test \
+  org.codehaus.mojo:exec-maven-plugin:3.6.2:java
+mvn -q -o -Dmaven.repo.local="$MAVEN_REPO" \
+  -pl vaadin-desktop-core \
+  -Dexec.mainClass=dev.vatori.desktop.DesktopFileWriteGrantContractSmokeMain \
+  -Dexec.classpathScope=test \
+  org.codehaus.mojo:exec-maven-plugin:3.6.2:java
+mvn -q -o -Dmaven.repo.local="$MAVEN_REPO" \
+  -pl vaadin-desktop-core \
+  -Dexec.mainClass=dev.vatori.desktop.DesktopClipboardContractSmokeMain \
+  -Dexec.classpathScope=test \
+  org.codehaus.mojo:exec-maven-plugin:3.6.2:java
+mvn -q -o -Dmaven.repo.local="$MAVEN_REPO" \
+  -pl vaadin-desktop-core \
+  -Dexec.mainClass=dev.vatori.desktop.DesktopNotificationContractSmokeMain \
+  -Dexec.classpathScope=test \
+  org.codehaus.mojo:exec-maven-plugin:3.6.2:java
+mvn -q -o -Dmaven.repo.local="$MAVEN_REPO" \
   -pl vaadin-desktop-flow \
   -Dexec.mainClass=dev.vatori.desktop.flow.ipc.FlowIpcScopeSmokeMain \
   -Dexec.classpathScope=test \

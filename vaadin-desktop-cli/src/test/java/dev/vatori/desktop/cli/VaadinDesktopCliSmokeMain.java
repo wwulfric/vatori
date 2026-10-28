@@ -35,6 +35,8 @@ public final class VaadinDesktopCliSmokeMain {
             writeJar(target.resolve("second.jar"), "example.SecondMain");
             expectJarSelectionFailure(target, "multiple runnable JARs");
             verifyVitePomWithoutConfiguredPlugin(target);
+            verifyCapabilityManifestFallbackModes();
+            verifyCapabilityManifestBuilder(target);
             verifyApplicationBundleInputs(target);
             verifyReactorDevelopmentInputs(target);
             verifySidecarStaging(target);
@@ -86,6 +88,292 @@ public final class VaadinDesktopCliSmokeMain {
             throw new IllegalStateException(
                     "CLI did not atomically replace the staged sidecar JAR");
         }
+    }
+
+    private static void verifyCapabilityManifestFallbackModes() {
+        for (String command : List.of("dev", "dev-vite", "dev-compat")) {
+            if (!"allow-all-dev".equals(
+                    VaadinDesktopCli.capabilityManifestFallbackMode(command))) {
+                throw new IllegalStateException(
+                        "CLI development command is not explicitly permissive: "
+                                + command);
+            }
+        }
+        if (!"manifest-enforced".equals(
+                VaadinDesktopCli.capabilityManifestFallbackMode("package"))) {
+            throw new IllegalStateException(
+                    "CLI package command is not fail-closed");
+        }
+        try {
+            VaadinDesktopCli.capabilityManifestFallbackMode("unknown");
+            throw new IllegalStateException(
+                    "CLI accepted an unknown capability manifest policy command");
+        } catch (IllegalArgumentException expected) {
+            // Only supported CLI commands may select a fallback policy.
+        }
+    }
+
+    private static void verifyCapabilityManifestBuilder(Path directory)
+            throws Exception {
+        Path repository = Path.of(System.getProperty(
+                "vatori.repo.root", "")).toAbsolutePath().normalize();
+        Path builder = repository.resolve(
+                "bin/vaadin-desktop-build-macos-host");
+        if (!Files.isRegularFile(builder)) {
+            throw new IllegalStateException(
+                    "macOS host builder is unavailable: " + builder);
+        }
+
+        Path root = directory.resolve("builder-root");
+        Path source = root.resolve(
+                "native-hosts/macos/Sources/VaadinDesktopHost/main.swift");
+        Path resources = root.resolve("native-hosts/macos/Resources");
+        Path icon = root.resolve("assets/brand/vatori-icon.icns");
+        Path applicationJar = root.resolve("application.jar");
+        Path webApp = root.resolve("webapp");
+        Files.createDirectories(source.getParent());
+        Files.createDirectories(resources);
+        Files.createDirectories(icon.getParent());
+        Files.createDirectories(webApp);
+        Files.writeString(source, "print(\"builder smoke\")\n");
+        Files.writeString(resources.resolve("FlowIpcOpaqueHttpBridge.js"), "");
+        Files.writeString(resources.resolve("FlowIpcPushBridge.js"), "");
+        Files.write(icon, new byte[]{'i', 'c', 'n', 's'});
+        Files.writeString(applicationJar, "sidecar");
+        Files.writeString(webApp.resolve("index.html"), "<!doctype html>\n");
+
+        runBuilder(builder, root, applicationJar, webApp, "", null, true);
+        Path stagedManifest = root.resolve(
+                ".build/native-hosts/macos/VaadinDesktopHost.app/Contents/Resources/desktop-capabilities.json");
+        assertManifest(stagedManifest,
+                "{\"schemaVersion\":1,\"permissionMode\":\"manifest-enforced\",\"windows\":[]}\n",
+                "secure builder default");
+
+        runBuilder(builder, root, applicationJar, webApp, "",
+                "allow-all-dev", true);
+        assertManifest(stagedManifest,
+                "{\"schemaVersion\":1,\"permissionMode\":\"allow-all-dev\",\"windows\":[]}\n",
+                "explicit development fallback");
+
+        Path explicitManifest = root.resolve("explicit-capabilities.json");
+        String enforced = """
+                {
+                  "schemaVersion": 1,
+                  "permissionMode": "manifest-enforced",
+                  "windows": [{"label":"main","commands":["window.setTitle"]}]
+                }
+                """;
+        Files.writeString(explicitManifest, enforced);
+        runBuilder(builder, root, applicationJar, webApp,
+                explicitManifest.toString(), "manifest-enforced", true);
+        assertCanonicalProductManifest(stagedManifest,
+                "explicit enforced manifest", true);
+
+        String allowAllDevelopment = """
+                {
+                  "schemaVersion": 1,
+                  "permissionMode": "allow-all-dev",
+                  "windows": []
+                }
+                """;
+        Files.writeString(explicitManifest, allowAllDevelopment);
+        runBuilder(builder, root, applicationJar, webApp,
+                explicitManifest.toString(), "allow-all-dev", true);
+        assertManifest(stagedManifest, allowAllDevelopment,
+                "explicit allow-all development manifest copy");
+
+        String traceOnlyDevelopment = """
+                {
+                  "schemaVersion": 1,
+                  "permissionMode": "trace-only-dry-run",
+                  "windows": []
+                }
+                """;
+        Files.writeString(explicitManifest, traceOnlyDevelopment);
+        runBuilder(builder, root, applicationJar, webApp,
+                explicitManifest.toString(), "allow-all-dev", true);
+        assertManifest(stagedManifest, traceOnlyDevelopment,
+                "explicit trace-only development manifest copy");
+
+        String duplicatePermissionMode = """
+                {
+                  "schemaVersion": 1,
+                  "permissionMode": "allow-all-dev",
+                  "permissionMode": "manifest-enforced",
+                  "windows": []
+                }
+                """;
+        Files.writeString(explicitManifest, duplicatePermissionMode);
+        runBuilder(builder, root, applicationJar, webApp,
+                explicitManifest.toString(), "manifest-enforced", true);
+        assertCanonicalProductManifest(stagedManifest,
+                "duplicate-key product manifest", false);
+        String productBaseline = Files.readString(stagedManifest);
+        Path preservationMarker = stagedManifest.resolveSibling(
+                "policy-preservation.marker");
+        Files.writeString(preservationMarker, "preserve");
+
+        assertProductManifestRejected(builder, root,
+                applicationJar, webApp, explicitManifest, stagedManifest,
+                preservationMarker, allowAllDevelopment,
+                "Product capability manifest must use "
+                        + "permissionMode=manifest-enforced; found: "
+                        + "allow-all-dev",
+                productBaseline);
+        assertProductManifestRejected(builder, root,
+                applicationJar, webApp, explicitManifest, stagedManifest,
+                preservationMarker, traceOnlyDevelopment,
+                "Product capability manifest must use "
+                        + "permissionMode=manifest-enforced; found: "
+                        + "trace-only-dry-run",
+                productBaseline);
+        assertProductManifestRejected(builder, root,
+                applicationJar, webApp, explicitManifest, stagedManifest,
+                preservationMarker, "{\"schemaVersion\":1,",
+                "Product capability manifest is not valid JSON",
+                productBaseline);
+        assertProductManifestRejected(builder, root,
+                applicationJar, webApp, explicitManifest, stagedManifest,
+                preservationMarker,
+                "<?xml version=\"1.0\"?><plist version=\"1.0\">"
+                        + "<dict><key>schemaVersion</key><integer>1</integer>"
+                        + "<key>permissionMode</key><string>manifest-enforced"
+                        + "</string><key>windows</key><array/></dict></plist>",
+                "Product capability manifest is not valid JSON",
+                productBaseline);
+        assertProductManifestRejected(builder, root,
+                applicationJar, webApp, explicitManifest, stagedManifest,
+                preservationMarker,
+                "{\"schemaVersion\":1,\"windows\":[]}",
+                "Product capability manifest must define "
+                        + "permissionMode=manifest-enforced",
+                productBaseline);
+        assertProductManifestRejected(builder, root,
+                applicationJar, webApp, explicitManifest, stagedManifest,
+                preservationMarker,
+                "{\"schemaVersion\":1,\"permissionMode\":"
+                        + "\"unknown\",\"windows\":[]}",
+                "Product capability manifest must use "
+                        + "permissionMode=manifest-enforced",
+                productBaseline);
+        assertProductManifestRejected(builder, root,
+                applicationJar, webApp, explicitManifest, stagedManifest,
+                preservationMarker,
+                "{\"schemaVersion\":1,\"permissionMode\":"
+                        + "\"manifest-enforced\\n\",\"windows\":[]}",
+                "Product capability manifest must use "
+                        + "permissionMode=manifest-enforced",
+                productBaseline);
+
+        ProcessResult invalid = runBuilder(builder, root, applicationJar,
+                webApp, "", "invalid-mode", false);
+        if (invalid.status() != 2
+                || !invalid.output().contains(
+                "Unsupported capability manifest fallback mode: invalid-mode")) {
+            throw new IllegalStateException(
+                    "Builder accepted an invalid capability fallback mode: "
+                            + invalid);
+        }
+    }
+
+    private static void assertProductManifestRejected(
+            Path builder, Path root, Path applicationJar, Path webApp,
+            Path explicitManifest, Path stagedManifest,
+            Path preservationMarker, String manifest,
+            String expectedDiagnostic, String expectedStagedManifest)
+            throws Exception {
+        Files.writeString(explicitManifest, manifest);
+        ProcessResult rejected = runBuilder(builder, root, applicationJar,
+                webApp, explicitManifest.toString(), "manifest-enforced",
+                false);
+        String expectedOutput = expectedDiagnostic + System.lineSeparator();
+        if (rejected.status() != 2
+                || !expectedOutput.equals(rejected.output())) {
+            throw new IllegalStateException("Builder accepted an invalid "
+                    + "product manifest: " + rejected);
+        }
+        assertManifest(stagedManifest, expectedStagedManifest,
+                "product manifest after rejection");
+        if (!Files.isRegularFile(preservationMarker)
+                || !"preserve".equals(Files.readString(preservationMarker))) {
+            throw new IllegalStateException(
+                    "Builder replaced the staged app before rejecting a "
+                            + "product manifest");
+        }
+    }
+
+    private static void assertCanonicalProductManifest(
+            Path stagedManifest, String scenario,
+            boolean expectWindowSetTitle) throws Exception {
+        String actual = Files.readString(stagedManifest);
+        if (occurrences(actual, "\"permissionMode\"") != 1
+                || !actual.contains("\"permissionMode\":\"manifest-enforced\"")
+                || !actual.contains("\"schemaVersion\":1")
+                || !actual.contains("\"windows\":[")
+                || actual.contains("allow-all-dev")
+                || actual.contains("trace-only-dry-run")
+                || expectWindowSetTitle != actual.contains("window.setTitle")) {
+            throw new IllegalStateException(
+                    "Builder did not canonicalize " + scenario + ": "
+                            + actual);
+        }
+    }
+
+    private static int occurrences(String value, String needle) {
+        int count = 0;
+        int offset = 0;
+        while ((offset = value.indexOf(needle, offset)) >= 0) {
+            count++;
+            offset += needle.length();
+        }
+        return count;
+    }
+
+    private static ProcessResult runBuilder(Path builder, Path root,
+            Path applicationJar, Path webApp, String capabilityManifest,
+            String fallbackMode, boolean expectSuccess) throws Exception {
+        List<String> command = new java.util.ArrayList<>(List.of(
+                "bash", builder.toString(), root.toString(), "flow-ipc",
+                applicationJar.toString(), webApp.toString()));
+        if (!capabilityManifest.isEmpty() || fallbackMode != null) {
+            command.add(capabilityManifest);
+        }
+        if (fallbackMode != null) {
+            command.addAll(List.of("", "", "", "", "", fallbackMode));
+        }
+        Path temporaryRoot = root.resolve("builder-temp");
+        Files.createDirectories(temporaryRoot);
+        ProcessBuilder processBuilder = new ProcessBuilder(command)
+                .redirectErrorStream(true);
+        processBuilder.environment().put("TMPDIR", temporaryRoot.toString());
+        Process process = processBuilder.start();
+        String output = new String(
+                process.getInputStream().readAllBytes(), StandardCharsets.UTF_8);
+        int status = process.waitFor();
+        if (expectSuccess && status != 0) {
+            throw new IllegalStateException(
+                    "macOS host builder failed: " + output);
+        }
+        try (var paths = Files.list(temporaryRoot)) {
+            if (paths.anyMatch(path -> path.getFileName().toString()
+                    .startsWith("vatori-capability-manifest."))) {
+                throw new IllegalStateException(
+                        "Builder leaked capability manifest snapshot state");
+            }
+        }
+        return new ProcessResult(status, output);
+    }
+
+    private static void assertManifest(Path manifest, String expected,
+            String scenario) throws Exception {
+        String actual = Files.readString(manifest);
+        if (!expected.equals(actual)) {
+            throw new IllegalStateException(
+                    "Builder did not preserve " + scenario + ": " + actual);
+        }
+    }
+
+    private record ProcessResult(int status, String output) {
     }
 
     private static void verifyApplicationBundleInputs(Path directory)

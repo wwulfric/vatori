@@ -23,43 +23,59 @@ struct CapabilityManifest {
         guard FileManager.default.fileExists(atPath: url.path) else {
             return invalid(path: path, loaded: false, error: "manifest-missing")
         }
+
+        let data: Data
         do {
-            let document = try JSONDecoder().decode(
-                CapabilityManifestDocument.self,
-                from: Data(contentsOf: url))
-            guard document.schemaVersion == 1 else {
-                return invalid(
-                    path: path, loaded: true,
-                    error: "unsupported-schema-version-\(document.schemaVersion)")
-            }
-            let modes = Set(["allow-all-dev", "manifest-enforced", "trace-only-dry-run"])
-            guard modes.contains(document.permissionMode) else {
-                return invalid(
-                    path: path, loaded: true,
-                    error: "unsupported-permission-mode")
-            }
-            var commandsByWindow: [String: Set<String>] = [:]
-            for window in document.windows {
-                guard isValidSidecarIdentifier(window.label),
-                      commandsByWindow[window.label] == nil,
-                      window.commands.allSatisfy(isValidSidecarIdentifier) else {
-                    return invalid(
-                        path: path, loaded: true,
-                        error: "invalid-window-capability-entry")
-                }
-                commandsByWindow[window.label] = Set(window.commands)
-            }
-            return CapabilityManifest(
-                path: path,
-                loaded: true,
-                permissionMode: document.permissionMode,
-                commandsByWindow: commandsByWindow,
-                parseError: "")
+            data = try Data(contentsOf: url)
         } catch {
             return invalid(
                 path: path, loaded: true,
-                error: error.localizedDescription)
+                error: "manifest-unreadable")
         }
+
+        let document: CapabilityManifestDocument
+        do {
+            document = try JSONDecoder().decode(
+                CapabilityManifestDocument.self,
+                from: data)
+        } catch {
+            return invalid(
+                path: path, loaded: true,
+                error: "invalid-json-document")
+        }
+
+        guard document.schemaVersion == 1 else {
+            return invalid(
+                path: path, loaded: true,
+                error: "unsupported-schema-version-\(document.schemaVersion)")
+        }
+        let modes = Set([
+            "allow-all-dev",
+            "manifest-enforced",
+            "trace-only-dry-run"
+        ])
+        guard modes.contains(document.permissionMode) else {
+            return invalid(
+                path: path, loaded: true,
+                error: "unsupported-permission-mode")
+        }
+        var commandsByWindow: [String: Set<String>] = [:]
+        for window in document.windows {
+            guard isValidSidecarIdentifier(window.label),
+                  commandsByWindow[window.label] == nil,
+                  window.commands.allSatisfy(isValidSidecarIdentifier) else {
+                return invalid(
+                    path: path, loaded: true,
+                    error: "invalid-window-capability-entry")
+            }
+            commandsByWindow[window.label] = Set(window.commands)
+        }
+        return CapabilityManifest(
+            path: path,
+            loaded: true,
+            permissionMode: document.permissionMode,
+            commandsByWindow: commandsByWindow,
+            parseError: "")
     }
 
     private static func invalid(

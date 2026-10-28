@@ -5,12 +5,18 @@ import java.io.BufferedReader;
 import java.io.IOException;
 import java.io.InputStreamReader;
 import java.nio.charset.StandardCharsets;
+import java.util.ArrayList;
+import java.util.HashMap;
+import java.util.HashSet;
 import java.util.LinkedHashMap;
+import java.util.List;
 import java.util.Map;
 import java.util.Objects;
+import java.util.Set;
 import java.util.concurrent.ExecutorService;
 import java.util.concurrent.Executors;
 import java.util.concurrent.TimeUnit;
+import java.util.concurrent.atomic.AtomicLong;
 import java.util.function.Consumer;
 
 /** Owns the only stdin reader for a Java sidecar process. */
@@ -19,10 +25,15 @@ final class SidecarMessageLoop {
     private final SidecarOutput output;
     private final SidecarNativeBridge nativeBridge;
     private final FlowIpcScope defaultScope;
-    private final ExecutorService handlerExecutor;
     private final Map<String, Handler> handlers = new LinkedHashMap<>();
+    private final Object handlerLaneLock = new Object();
+    private final Map<String, WindowHandlerLane> handlerLanes = new HashMap<>();
+    // The stdin reader is the sole owner. Exact tombstones live until loop exit.
+    private final Set<FlowIpcScope> retiredScopes = new HashSet<>();
+    private final AtomicLong handlerLaneSequence = new AtomicLong();
     private Consumer<FlowIpcScope> windowClosedHandler = ignored -> {
     };
+    private boolean handlerLanesClosed;
     private volatile boolean shutdownRequested;
 
     SidecarMessageLoop(
@@ -42,11 +53,6 @@ final class SidecarMessageLoop {
         this.output = Objects.requireNonNull(output, "output");
         this.nativeBridge = Objects.requireNonNull(nativeBridge, "nativeBridge");
         this.defaultScope = Objects.requireNonNull(defaultScope, "defaultScope");
-        this.handlerExecutor = Executors.newSingleThreadExecutor(runnable -> {
-            Thread thread = new Thread(runnable, "vaadin-desktop-sidecar-handler");
-            thread.setDaemon(true);
-            return thread;
-        });
     }
 
     void register(String type, Handler handler) {
@@ -88,15 +94,7 @@ final class SidecarMessageLoop {
             }
         } finally {
             nativeBridge.close();
-            handlerExecutor.shutdown();
-            try {
-                if (!handlerExecutor.awaitTermination(5, TimeUnit.SECONDS)) {
-                    handlerExecutor.shutdownNow();
-                }
-            } catch (InterruptedException error) {
-                handlerExecutor.shutdownNow();
-                Thread.currentThread().interrupt();
-            }
+            shutdownHandlerLanes();
         }
     }
 
@@ -111,22 +109,30 @@ final class SidecarMessageLoop {
             correlationId = envelope.correlationId();
             scope = FlowIpcScope.from(
                     envelope, defaultScope.sessionId(), defaultScope.uiId());
+            if ("shutdown".equals(type)) {
+                requestShutdown();
+                return;
+            }
+            if (retiredScopes.contains(scope)) {
+                return;
+            }
             switch (type) {
                 case "capabilityResult" -> nativeBridge.complete(scope, envelope);
                 case "windowClosed" -> {
+                    retiredScopes.add(scope);
+                    nativeBridge.closeScope(scope);
                     FlowIpcScope handlerScope = scope;
                     String handlerId = id;
                     String handlerCorrelationId = correlationId;
-                    handlerExecutor.execute(() -> invokeHandler(
-                            (ignoredScope, ignoredEnvelope, ignoredId,
-                                    ignoredCorrelationId) ->
-                                    windowClosedHandler.accept(handlerScope),
-                            handlerScope,
-                            envelope,
-                            handlerId,
-                            handlerCorrelationId));
+                    dispatchHandler(handlerScope, true, () -> invokeHandler(
+                                    (ignoredScope, ignoredEnvelope, ignoredId,
+                                            ignoredCorrelationId) ->
+                                            windowClosedHandler.accept(handlerScope),
+                                    handlerScope,
+                                    envelope,
+                                    handlerId,
+                                    handlerCorrelationId));
                 }
-                case "shutdown" -> requestShutdown();
                 default -> {
                     Handler handler = handlers.get(type);
                     if (handler == null) {
@@ -137,12 +143,12 @@ final class SidecarMessageLoop {
                         FlowIpcScope handlerScope = scope;
                         String handlerId = id;
                         String handlerCorrelationId = correlationId;
-                        handlerExecutor.execute(() -> invokeHandler(
-                                handler,
-                                handlerScope,
-                                envelope,
-                                handlerId,
-                                handlerCorrelationId));
+                        dispatchHandler(handlerScope, false, () -> invokeHandler(
+                                        handler,
+                                        handlerScope,
+                                        envelope,
+                                        handlerId,
+                                        handlerCorrelationId));
                     }
                 }
             }
@@ -158,6 +164,95 @@ final class SidecarMessageLoop {
             output.sendError(scope, "runtime",
                     Objects.requireNonNullElse(error.getMessage(), error.toString()),
                     id, correlationId);
+        }
+    }
+
+    private void dispatchHandler(
+            FlowIpcScope scope,
+            boolean retireLaneWhenIdle,
+            Runnable task) {
+        WindowHandlerLane lane;
+        synchronized (handlerLaneLock) {
+            if (handlerLanesClosed) {
+                throw new IllegalStateException(
+                        "Sidecar handler lanes are closed");
+            }
+            lane = handlerLanes.computeIfAbsent(
+                    scope.windowId(), ignored -> newHandlerLane());
+            lane.pendingTasks++;
+            lane.executor.execute(() -> {
+                try {
+                    task.run();
+                } finally {
+                    finishHandlerTask(
+                            scope.windowId(), lane, retireLaneWhenIdle);
+                }
+            });
+        }
+    }
+
+    private WindowHandlerLane newHandlerLane() {
+        long sequence = handlerLaneSequence.incrementAndGet();
+        ExecutorService executor = Executors.newSingleThreadExecutor(runnable -> {
+            Thread thread = new Thread(
+                    runnable,
+                    "vaadin-desktop-sidecar-window-handler-" + sequence);
+            thread.setDaemon(true);
+            return thread;
+        });
+        return new WindowHandlerLane(executor);
+    }
+
+    private void finishHandlerTask(
+            String windowId,
+            WindowHandlerLane lane,
+            boolean retireLaneWhenIdle) {
+        boolean shutdown = false;
+        synchronized (handlerLaneLock) {
+            lane.pendingTasks--;
+            if (retireLaneWhenIdle) {
+                lane.retireWhenIdle = true;
+            }
+            if (lane.pendingTasks == 0 && lane.retireWhenIdle
+                    && handlerLanes.remove(windowId, lane)) {
+                shutdown = true;
+            }
+        }
+        if (shutdown) {
+            lane.executor.shutdown();
+        }
+    }
+
+    private void shutdownHandlerLanes() {
+        List<WindowHandlerLane> lanes;
+        synchronized (handlerLaneLock) {
+            handlerLanesClosed = true;
+            lanes = new ArrayList<>(handlerLanes.values());
+        }
+        lanes.forEach(lane -> lane.executor.shutdown());
+        long deadline = System.nanoTime() + TimeUnit.SECONDS.toNanos(5);
+        boolean interrupted = false;
+        for (WindowHandlerLane lane : lanes) {
+            long remaining = deadline - System.nanoTime();
+            if (remaining <= 0) {
+                lane.executor.shutdownNow();
+                continue;
+            }
+            try {
+                if (!lane.executor.awaitTermination(
+                        remaining, TimeUnit.NANOSECONDS)) {
+                    lane.executor.shutdownNow();
+                }
+            } catch (InterruptedException error) {
+                interrupted = true;
+                lane.executor.shutdownNow();
+            }
+        }
+        synchronized (handlerLaneLock) {
+            handlerLanes.clear();
+        }
+        if (interrupted) {
+            Thread.currentThread().interrupt();
         }
     }
 
@@ -188,5 +283,15 @@ final class SidecarMessageLoop {
                 SidecarInboundEnvelope envelope,
                 String id,
                 String correlationId);
+    }
+
+    private static final class WindowHandlerLane {
+        private final ExecutorService executor;
+        private int pendingTasks;
+        private boolean retireWhenIdle;
+
+        private WindowHandlerLane(ExecutorService executor) {
+            this.executor = executor;
+        }
     }
 }

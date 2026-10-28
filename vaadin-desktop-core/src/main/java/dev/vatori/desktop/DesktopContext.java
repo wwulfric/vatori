@@ -69,6 +69,19 @@ public final class DesktopContext {
         return resources;
     }
 
+    /**
+     * Captures the current native capability context for use after execution
+     * leaves the current framework callback. Flow applications should call this
+     * from a Flow listener or {@code UI.access} callback, then pass the returned
+     * object explicitly to work running on any executor.
+     *
+     * @return an immutable capability facade bound to the current context
+     */
+    public DesktopCapabilityContext captureCapabilityContext() {
+        return new DesktopCapabilityContext(
+                nativeBridge.captureCapabilityContext());
+    }
+
     public DesktopCommandResult setWindowTitle(String title) {
         return nativeBridge.invoke(new DesktopCommand("window.setTitle", Map.of("title", title)));
     }

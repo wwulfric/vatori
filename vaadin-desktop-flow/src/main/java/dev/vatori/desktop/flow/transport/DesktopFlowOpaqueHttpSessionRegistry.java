@@ -125,6 +125,17 @@ public final class DesktopFlowOpaqueHttpSessionRegistry implements AutoCloseable
         return true;
     }
 
+    public synchronized boolean closeSession(
+            String sessionId,
+            DesktopFlowOpaqueHttpSession expectedSession) {
+        Objects.requireNonNull(expectedSession, "expectedSession");
+        if (!sessions.remove(sessionId, expectedSession)) {
+            return false;
+        }
+        expectedSession.close();
+        return true;
+    }
+
     public synchronized int size() {
         return sessions.size();
     }

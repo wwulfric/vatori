@@ -1,3 +1,4 @@
+import AppKit
 import Foundation
 
 extension FlowIpcAcceptanceRuntimeObserver {
@@ -70,7 +71,7 @@ private final class FlowIpcOverlayStackAcceptance {
                         details: snapshot.tracePayload)
                     return
                 }
-                self.perform(
+                self.performWithNativeWindowActive(
                     Self.openDialogScript,
                     next: .dialog,
                     failureCode: "flowOverlayStackDialogOpenFailed")
@@ -105,8 +106,9 @@ private final class FlowIpcOverlayStackAcceptance {
                         details: snapshot.tracePayload)
                     return
                 }
-                self.perform(
-                    Self.closeConfirmScript,
+                self.performNativeKey(
+                    .escape,
+                    Self.prepareConfirmEscapeScript,
                     next: .confirmClosed,
                     failureCode: "flowOverlayStackConfirmEscapeFailed")
             case .confirmClosed:
@@ -118,8 +120,8 @@ private final class FlowIpcOverlayStackAcceptance {
                         details: snapshot.tracePayload)
                     return
                 }
-                self.perform(
-                    Self.closePopoverOutsideScript,
+                self.performNativePrimaryClick(
+                    Self.preparePopoverOutsideScript,
                     next: .popoverClosed,
                     failureCode: "flowOverlayStackPopoverOutsideCloseFailed")
             case .popoverClosed:
@@ -131,8 +133,9 @@ private final class FlowIpcOverlayStackAcceptance {
                         details: snapshot.tracePayload)
                     return
                 }
-                self.perform(
-                    Self.closeDialogScript,
+                self.performNativeKey(
+                    .escape,
+                    Self.prepareDialogEscapeScript,
                     next: .dialogClosed,
                     failureCode: "flowOverlayStackDialogEscapeFailed")
             case .dialogClosed:
@@ -168,6 +171,320 @@ private final class FlowIpcOverlayStackAcceptance {
                 self.poll()
             }
         }
+    }
+
+    private func performWithNativeWindowActive(
+        _ script: String,
+        next: Phase,
+        failureCode: String
+    ) {
+        prepareWindowForNativeInput(failureCode: failureCode) {
+            self.perform(
+                script,
+                next: next,
+                failureCode: failureCode)
+        }
+    }
+
+    private func performNativeKey(
+        _ key: NativeKey,
+        _ preparationScript: String,
+        next: Phase,
+        failureCode: String
+    ) {
+        let instrumentedScript = """
+        (() => {
+          const prepared = \(preparationScript);
+          if (prepared !== true) return false;
+          const marker = window.VaadinDesktopFlowOverlayStack || {};
+          window.VaadinDesktopFlowOverlayStack = marker;
+          const nativeKeyboardStage =
+            String(marker.nativeKeyboardStage || '');
+          marker.nativeKeyboardCurrentObserved = false;
+          const nativeKeyboardHandler = (event) => {
+            if (String(event.key || '') !== '\(key.name)') return;
+            document.removeEventListener(
+              'keydown', nativeKeyboardHandler, true);
+            marker.nativeKeyboardObserved = true;
+            marker.nativeKeyboardCurrentObserved = true;
+            marker.nativeKeyboardEventCount =
+              Number(marker.nativeKeyboardEventCount || 0) + 1;
+            if (event.isTrusted === true) {
+              marker.nativeKeyboardTrustedEventCount =
+                Number(marker.nativeKeyboardTrustedEventCount || 0) + 1;
+            }
+            marker.nativeKeyboardTrustedObserved =
+              Number(marker.nativeKeyboardTrustedEventCount || 0)
+                === Number(marker.nativeKeyboardEventCount || 0);
+            marker.nativeKeyboardStages = [
+              String(marker.nativeKeyboardStages || ''),
+              nativeKeyboardStage
+            ].filter(Boolean).join(',');
+            marker.nativeKeyboardLastKey = String(event.key || '');
+            marker.nativeKeyboardLastTarget =
+              String(event.target?.id || event.target?.localName || '');
+          };
+          document.addEventListener(
+            'keydown', nativeKeyboardHandler, true);
+          return true;
+        })()
+        """
+        context.webView.evaluateJavaScript(instrumentedScript) {
+            result, error in
+            guard error == nil, result as? Bool == true else {
+                self.retryOrFail(
+                    code: failureCode,
+                    details: [
+                        "message": error?.localizedDescription ?? "",
+                        "result": String(describing: result)
+                    ])
+                return
+            }
+            self.prepareWindowForNativeInput(
+                failureCode: failureCode
+            ) {
+                let timestamp = ProcessInfo.processInfo.systemUptime
+                guard let keyDown = key.event(
+                          type: .keyDown,
+                          windowNumber:
+                              self.context.window.windowNumber,
+                          timestamp: timestamp),
+                      let keyUp = key.event(
+                          type: .keyUp,
+                          windowNumber:
+                              self.context.window.windowNumber,
+                          timestamp: timestamp + 0.01) else {
+                    self.retryOrFail(code: failureCode, details: [
+                        "message":
+                            "Unable to create AppKit keyboard event",
+                        "key": key.name
+                    ])
+                    return
+                }
+                trace("recv", "flowOverlayStack.nativeKeyboardDispatch", [
+                    "inputMode": "appkit-window-key-event",
+                    "key": key.name,
+                    "activeApplication":
+                        NSApplication.shared.isActive,
+                    "keyWindow": self.context.window.isKeyWindow,
+                    "firstResponder":
+                        String(describing:
+                            self.context.window.firstResponder),
+                    "windowNumber":
+                        self.context.window.windowNumber
+                ])
+                self.context.window.sendEvent(keyDown)
+                self.context.window.sendEvent(keyUp)
+                self.phase = next
+                DispatchQueue.main.asyncAfter(deadline: .now() + 0.5) {
+                    self.poll()
+                }
+            }
+        }
+    }
+
+    private func performNativePrimaryClick(
+        _ preparationScript: String,
+        next: Phase,
+        failureCode: String
+    ) {
+        let instrumentedScript = """
+        (() => {
+          const prepared = \(preparationScript);
+          if (!prepared || typeof prepared !== 'object') return '';
+          const marker = window.VaadinDesktopFlowOverlayStack || {};
+          window.VaadinDesktopFlowOverlayStack = marker;
+          const expectedTargetId = String(prepared.targetId || '');
+          const nativePointerStage =
+            String(marker.nativePointerStage || '');
+          marker.nativePointerCurrentObserved = false;
+          const nativePointerHandler = (event) => {
+            const path = typeof event.composedPath === 'function'
+              ? event.composedPath()
+              : [];
+            if (Number(event.button) !== 0
+                || !path.some((element) =>
+                  element?.id === expectedTargetId)) return;
+            document.removeEventListener(
+              'click', nativePointerHandler, true);
+            marker.nativePointerObserved = true;
+            marker.nativePointerCurrentObserved = true;
+            marker.nativePointerEventCount =
+              Number(marker.nativePointerEventCount || 0) + 1;
+            if (event.isTrusted === true) {
+              marker.nativePointerTrustedEventCount =
+                Number(marker.nativePointerTrustedEventCount || 0) + 1;
+            }
+            marker.nativePointerTrustedObserved =
+              Number(marker.nativePointerTrustedEventCount || 0)
+                === Number(marker.nativePointerEventCount || 0);
+            marker.nativePointerStages = [
+              String(marker.nativePointerStages || ''),
+              nativePointerStage
+            ].filter(Boolean).join(',');
+            marker.nativePointerLastTarget =
+              String(event.target?.id || event.target?.localName || '');
+          };
+          document.addEventListener(
+            'click', nativePointerHandler, true);
+          return JSON.stringify({
+            centerX: Number(prepared.centerX),
+            centerY: Number(prepared.centerY),
+            targetId: expectedTargetId,
+            targetVisible: prepared.targetVisible === true
+          });
+        })()
+        """
+        context.webView.evaluateJavaScript(instrumentedScript) {
+            result, error in
+            guard error == nil,
+                  let json = result as? String,
+                  let data = json.data(using: .utf8),
+                  let geometry = try? JSONDecoder().decode(
+                    PointerGeometry.self,
+                    from: data) else {
+                self.retryOrFail(
+                    code: failureCode,
+                    details: [
+                        "message": error?.localizedDescription ?? "",
+                        "result": String(describing: result)
+                    ])
+                return
+            }
+            guard geometry.targetVisible else {
+                self.retryOrFail(code: failureCode, details: [
+                    "message": "Popover outside target is not visible",
+                    "targetId": geometry.targetId,
+                    "webViewX": geometry.centerX,
+                    "webViewY": geometry.centerY
+                ])
+                return
+            }
+            self.prepareWindowForNativeInput(
+                failureCode: failureCode
+            ) {
+                let webViewPoint = NSPoint(
+                    x: geometry.centerX,
+                    y: self.context.webView.isFlipped
+                        ? geometry.centerY
+                        : self.context.webView.bounds.height
+                            - geometry.centerY)
+                let windowPoint = self.context.webView.convert(
+                    webViewPoint,
+                    to: nil)
+                guard self.context.window.contentLayoutRect.contains(
+                        windowPoint) else {
+                    self.retryOrFail(code: failureCode, details: [
+                        "message":
+                            "Popover outside target is outside the host window",
+                        "windowX": windowPoint.x,
+                        "windowY": windowPoint.y
+                    ])
+                    return
+                }
+                let timestamp = ProcessInfo.processInfo.systemUptime
+                guard let mouseDown = NSEvent.mouseEvent(
+                          with: .leftMouseDown,
+                          location: windowPoint,
+                          modifierFlags: [],
+                          timestamp: timestamp,
+                          windowNumber:
+                              self.context.window.windowNumber,
+                          context: nil,
+                          eventNumber: 0,
+                          clickCount: 1,
+                          pressure: 1),
+                      let mouseUp = NSEvent.mouseEvent(
+                          with: .leftMouseUp,
+                          location: windowPoint,
+                          modifierFlags: [],
+                          timestamp: timestamp + 0.02,
+                          windowNumber:
+                              self.context.window.windowNumber,
+                          context: nil,
+                          eventNumber: 1,
+                          clickCount: 1,
+                          pressure: 0) else {
+                    self.retryOrFail(code: failureCode, details: [
+                        "message": "Unable to create AppKit pointer event"
+                    ])
+                    return
+                }
+                trace("recv", "flowOverlayStack.nativePointerDispatch", [
+                    "inputMode": "appkit-window-pointer-event",
+                    "button": "primary",
+                    "targetId": geometry.targetId,
+                    "webViewX": geometry.centerX,
+                    "webViewY": geometry.centerY,
+                    "windowX": windowPoint.x,
+                    "windowY": windowPoint.y,
+                    "windowNumber":
+                        self.context.window.windowNumber
+                ])
+                self.context.window.sendEvent(mouseDown)
+                self.context.window.sendEvent(mouseUp)
+                self.phase = next
+                DispatchQueue.main.asyncAfter(deadline: .now() + 0.75) {
+                    self.poll()
+                }
+            }
+        }
+    }
+
+    private func prepareWindowForNativeInput(
+        failureCode: String,
+        completion: @escaping () -> Void
+    ) {
+        requestWindowActivation()
+        waitForWindowActivation(
+            failureCode: failureCode,
+            completion: completion)
+    }
+
+    private func requestWindowActivation() {
+        NSApplication.shared.unhide(nil)
+        context.window.makeKeyAndOrderFront(nil)
+        NSRunningApplication.current.activate(options: [.activateAllWindows])
+        NSApplication.shared.activate(ignoringOtherApps: true)
+    }
+
+    private func waitForWindowActivation(
+        failureCode: String,
+        completion: @escaping () -> Void
+    ) {
+        guard Date() < deadline else {
+            fail(code: failureCode, details: [
+                "message":
+                    "Timed out waiting for native input activation",
+                "activeApplication": NSApplication.shared.isActive,
+                "keyWindow": context.window.isKeyWindow
+            ])
+            return
+        }
+        guard NSApplication.shared.isActive,
+              context.window.isKeyWindow else {
+            requestWindowActivation()
+            DispatchQueue.main.asyncAfter(deadline: .now() + 0.1) {
+                self.waitForWindowActivation(
+                    failureCode: failureCode,
+                    completion: completion)
+            }
+            return
+        }
+        let responder = context.window.firstResponder
+        let responderView = responder as? NSView
+        let webViewOwnsResponder =
+            responderView === context.webView
+                || responderView?.isDescendant(of: context.webView) == true
+        if !webViewOwnsResponder,
+           !context.window.makeFirstResponder(context.webView) {
+            fail(code: failureCode, details: [
+                "message": "Unable to route native input to WKWebView",
+                "previousResponder": String(describing: responder)
+            ])
+            return
+        }
+        completion()
     }
 
     private func inspect(_ completion: @escaping (Snapshot?) -> Void) {
@@ -209,7 +526,7 @@ private final class FlowIpcOverlayStackAcceptance {
             "opaqueResponseBridgeObserved": snapshot.responseCount >= 5,
             "pushObserved": snapshot.pushMessageCount >= 1,
             "errorFree": snapshot.errorFree,
-            "flowOverlayStackBrowserProgrammaticInputObserved": true
+            "flowOverlayStackBrowserProgrammaticSetupObserved": true
         ]) { _, replacement in replacement }
         trace("recv", "flowOverlayStack.frameworkAcceptance", payload)
         context.window.close()
@@ -221,6 +538,39 @@ private final class FlowIpcOverlayStackAcceptance {
         payload["phase"] = String(describing: phase)
         trace("send", "error", payload)
         context.window.close()
+    }
+
+    private struct PointerGeometry: Decodable {
+        let centerX: Double
+        let centerY: Double
+        let targetId: String
+        let targetVisible: Bool
+    }
+
+    private enum NativeKey {
+        case escape
+
+        var name: String {
+            "Escape"
+        }
+
+        func event(
+            type: NSEvent.EventType,
+            windowNumber: Int,
+            timestamp: TimeInterval
+        ) -> NSEvent? {
+            NSEvent.keyEvent(
+                with: type,
+                location: .zero,
+                modifierFlags: [],
+                timestamp: timestamp,
+                windowNumber: windowNumber,
+                context: nil,
+                characters: "\u{1b}",
+                charactersIgnoringModifiers: "\u{1b}",
+                isARepeat: false,
+                keyCode: 53)
+        }
     }
 
     private struct Snapshot: Decodable {
@@ -238,6 +588,16 @@ private final class FlowIpcOverlayStackAcceptance {
         let threeLevelStackOpenedObserved: Bool
         let a11yObserved: Bool
         let confirmInitialFocusObserved: Bool
+        let nativeKeyboardObserved: Bool
+        let nativeKeyboardTrustedObserved: Bool
+        let nativeKeyboardEventCount: Int
+        let nativeKeyboardTrustedEventCount: Int
+        let nativeKeyboardStages: String
+        let nativePointerObserved: Bool
+        let nativePointerTrustedObserved: Bool
+        let nativePointerEventCount: Int
+        let nativePointerTrustedEventCount: Int
+        let nativePointerStages: String
         let topEscapeObserved: Bool
         let parentLayersRemainObserved: Bool
         let confirmFocusRestoredObserved: Bool
@@ -300,6 +660,16 @@ private final class FlowIpcOverlayStackAcceptance {
                 && threeLevelStackOpenedObserved
                 && a11yObserved
                 && confirmInitialFocusObserved
+                && nativeKeyboardObserved
+                && nativeKeyboardTrustedObserved
+                && nativeKeyboardEventCount == 2
+                && nativeKeyboardTrustedEventCount == 2
+                && nativeKeyboardStages == "confirm-close,dialog-close"
+                && nativePointerObserved
+                && nativePointerTrustedObserved
+                && nativePointerEventCount == 1
+                && nativePointerTrustedEventCount == 1
+                && nativePointerStages == "popover-outside"
                 && topEscapeObserved
                 && parentLayersRemainObserved
                 && confirmFocusRestoredObserved
@@ -325,6 +695,26 @@ private final class FlowIpcOverlayStackAcceptance {
                 "flowOverlayStackA11yObserved": a11yObserved,
                 "flowOverlayStackConfirmInitialFocusObserved":
                     confirmInitialFocusObserved,
+                "flowOverlayStackNativeKeyboardObserved":
+                    nativeKeyboardObserved,
+                "flowOverlayStackNativeKeyboardTrustedObserved":
+                    nativeKeyboardTrustedObserved,
+                "flowOverlayStackNativeKeyboardEventCount":
+                    nativeKeyboardEventCount,
+                "flowOverlayStackNativeKeyboardTrustedEventCount":
+                    nativeKeyboardTrustedEventCount,
+                "flowOverlayStackNativeKeyboardStages":
+                    nativeKeyboardStages,
+                "flowOverlayStackNativePointerObserved":
+                    nativePointerObserved,
+                "flowOverlayStackNativePointerTrustedObserved":
+                    nativePointerTrustedObserved,
+                "flowOverlayStackNativePointerEventCount":
+                    nativePointerEventCount,
+                "flowOverlayStackNativePointerTrustedEventCount":
+                    nativePointerTrustedEventCount,
+                "flowOverlayStackNativePointerStages":
+                    nativePointerStages,
                 "flowOverlayStackTopEscapeObserved": topEscapeObserved,
                 "flowOverlayStackParentLayersRemainObserved":
                     parentLayersRemainObserved,
@@ -403,6 +793,18 @@ private final class FlowIpcOverlayStackAcceptance {
         threeLevelStackOpenedObserved: false,
         a11yObserved: false,
         confirmInitialFocusObserved: false,
+        nativeKeyboardObserved: false,
+        nativeKeyboardTrustedObserved: false,
+        nativeKeyboardEventCount: 0,
+        nativeKeyboardTrustedEventCount: 0,
+        nativeKeyboardStages: '',
+        nativeKeyboardStage: '',
+        nativePointerObserved: false,
+        nativePointerTrustedObserved: false,
+        nativePointerEventCount: 0,
+        nativePointerTrustedEventCount: 0,
+        nativePointerStages: '',
+        nativePointerStage: '',
         topEscapeDispatched: false,
         parentLayersRemainObserved: false,
         confirmFocusRestoredObserved: false,
@@ -448,19 +850,10 @@ private final class FlowIpcOverlayStackAcceptance {
     })()
     """
 
-    private static let closeConfirmScript = """
+    private static let prepareConfirmEscapeScript = """
     (() => {
       const marker = window.VaadinDesktopFlowOverlayStack || {};
       window.VaadinDesktopFlowOverlayStack = marker;
-      const activeDeepElements = () => {
-        const elements = [];
-        let current = document.activeElement;
-        while (current) {
-          elements.push(current);
-          current = current.shadowRoot?.activeElement || null;
-        }
-        return elements;
-      };
       try {
         const dialog =
           document.querySelector('#framework-flow-overlay-stack-dialog');
@@ -474,16 +867,7 @@ private final class FlowIpcOverlayStackAcceptance {
           marker.error = 'three-level-overlay-stack-not-open';
           return true;
         }
-        const active = activeDeepElements();
-        (active.at(-1) || document).dispatchEvent(new KeyboardEvent('keydown', {
-          key: 'Escape',
-          code: 'Escape',
-          keyCode: 27,
-          which: 27,
-          bubbles: true,
-          composed: true,
-          cancelable: true
-        }));
+        marker.nativeKeyboardStage = 'confirm-close';
         marker.topEscapeDispatched = true;
         return true;
       } catch (error) {
@@ -494,7 +878,7 @@ private final class FlowIpcOverlayStackAcceptance {
     })()
     """
 
-    private static let closePopoverOutsideScript = """
+    private static let preparePopoverOutsideScript = """
     (() => {
       const marker = window.VaadinDesktopFlowOverlayStack || {};
       window.VaadinDesktopFlowOverlayStack = marker;
@@ -522,44 +906,49 @@ private final class FlowIpcOverlayStackAcceptance {
         if (!dialog || dialog.opened !== true
             || !popover || popover.opened !== true
             || (confirm && confirm.opened === true)
-            || !confirmTrigger || !outside) {
+          || !confirmTrigger || !outside) {
           marker.error = 'popover-outside-close-precondition-failed';
-          return true;
+          return {
+            centerX: 0,
+            centerY: 0,
+            targetId: '',
+            targetVisible: false
+          };
         }
         marker.confirmFocusRestoredObserved =
           activeDeepElements().includes(confirmTrigger);
-        outside.focus({ preventScroll: true });
-        for (const type of ['mousedown', 'mouseup', 'click']) {
-          outside.dispatchEvent(new MouseEvent(type, {
-            bubbles: true,
-            composed: true,
-            cancelable: true,
-            button: 0
-          }));
-        }
+        outside.scrollIntoView({ block: 'center', inline: 'center' });
+        const rect = outside.getBoundingClientRect();
+        const centerX = rect.left + rect.width / 2;
+        const centerY = rect.top + rect.height / 2;
+        const targetVisible = rect.width > 0 && rect.height > 0
+          && centerX >= 0 && centerX <= window.innerWidth
+          && centerY >= 0 && centerY <= window.innerHeight;
+        marker.nativePointerStage = 'popover-outside';
         marker.popoverOutsideDispatched = true;
-        return true;
+        return {
+          centerX,
+          centerY,
+          targetId: outside.id,
+          targetVisible
+        };
       } catch (error) {
         marker.error =
           String(error?.message || error || 'popover-outside-close-error');
-        return true;
+        return {
+          centerX: 0,
+          centerY: 0,
+          targetId: '',
+          targetVisible: false
+        };
       }
     })()
     """
 
-    private static let closeDialogScript = """
+    private static let prepareDialogEscapeScript = """
     (() => {
       const marker = window.VaadinDesktopFlowOverlayStack || {};
       window.VaadinDesktopFlowOverlayStack = marker;
-      const activeDeepElements = () => {
-        const elements = [];
-        let current = document.activeElement;
-        while (current) {
-          elements.push(current);
-          current = current.shadowRoot?.activeElement || null;
-        }
-        return elements;
-      };
       try {
         const dialog =
           document.querySelector('#framework-flow-overlay-stack-dialog');
@@ -573,17 +962,7 @@ private final class FlowIpcOverlayStackAcceptance {
           marker.error = 'dialog-escape-precondition-failed';
           return true;
         }
-        outside.focus({ preventScroll: true });
-        (activeDeepElements().at(-1) || outside).dispatchEvent(
-          new KeyboardEvent('keydown', {
-            key: 'Escape',
-            code: 'Escape',
-            keyCode: 27,
-            which: 27,
-            bubbles: true,
-            composed: true,
-            cancelable: true
-          }));
+        marker.nativeKeyboardStage = 'dialog-close';
         marker.dialogEscapeDispatched = true;
         return true;
       } catch (error) {
@@ -948,6 +1327,26 @@ private final class FlowIpcOverlayStackAcceptance {
         a11yObserved: marker.a11yObserved === true,
         confirmInitialFocusObserved:
           marker.confirmInitialFocusObserved === true,
+        nativeKeyboardObserved:
+          marker.nativeKeyboardObserved === true,
+        nativeKeyboardTrustedObserved:
+          marker.nativeKeyboardTrustedObserved === true,
+        nativeKeyboardEventCount:
+          Number(marker.nativeKeyboardEventCount || 0),
+        nativeKeyboardTrustedEventCount:
+          Number(marker.nativeKeyboardTrustedEventCount || 0),
+        nativeKeyboardStages:
+          String(marker.nativeKeyboardStages || ''),
+        nativePointerObserved:
+          marker.nativePointerObserved === true,
+        nativePointerTrustedObserved:
+          marker.nativePointerTrustedObserved === true,
+        nativePointerEventCount:
+          Number(marker.nativePointerEventCount || 0),
+        nativePointerTrustedEventCount:
+          Number(marker.nativePointerTrustedEventCount || 0),
+        nativePointerStages:
+          String(marker.nativePointerStages || ''),
         topEscapeObserved,
         parentLayersRemainObserved:
           marker.parentLayersRemainObserved === true,

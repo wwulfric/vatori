@@ -1,0 +1,14 @@
+#!/usr/bin/env bash
+set -euo pipefail
+
+ROOT="$(cd "$(dirname "${BASH_SOURCE[0]}")/.." && pwd)"
+BUILD_DIR="$ROOT/.build/test-support/native-host-application-menu-smoke"
+MODULE_CACHE="$ROOT/.build/clang-module-cache"
+EXECUTABLE="$BUILD_DIR/native-host-application-menu-smoke"
+
+mkdir -p "$BUILD_DIR" "$MODULE_CACHE"
+CLANG_MODULE_CACHE_PATH="$MODULE_CACHE" /usr/bin/swiftc \
+  "$ROOT/native-hosts/macos/Sources/VaadinDesktopHost/NativeApplicationMenu.swift" \
+  "$ROOT/test-support/native-host-macos-acceptance/Tests/native-application-menu-smoke.swift" \
+  -o "$EXECUTABLE"
+"$EXECUTABLE"

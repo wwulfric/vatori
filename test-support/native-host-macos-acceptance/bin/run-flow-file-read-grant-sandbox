@@ -1,0 +1,164 @@
+#!/usr/bin/env bash
+set -euo pipefail
+
+ROOT="$(cd "$(dirname "${BASH_SOURCE[0]}")/../../.." && pwd)"
+ACCEPTANCE_ROOT="$ROOT/test-support/native-host-macos-acceptance"
+BUILD_ROOT="$ROOT/.build/native-hosts/macos"
+HOST_LOG="$BUILD_ROOT/host-sandbox-file-read-grant.out.log"
+HOST_ERR_LOG="$BUILD_ROOT/host-sandbox-file-read-grant.err.log"
+
+if [[ "${VATORI_NATIVE_HOST_MACOS_ACCEPTANCE_PACKAGE_LOCK_HELD:-}" != "1" ]]; then
+  exec env VATORI_NATIVE_HOST_MACOS_ACCEPTANCE_PACKAGE_LOCK_HELD=1 \
+    bash "$ACCEPTANCE_ROOT/bin/with-package-lock" -- bash "$0" "$@"
+fi
+
+mkdir -p "$BUILD_ROOT"
+: > "$HOST_LOG"
+: > "$HOST_ERR_LOG"
+
+if [[ "$(uname -s)" != "Darwin" ]]; then
+  echo "App Sandbox file-grant acceptance requires macOS." >&2
+  exit 1
+fi
+JVM_SOURCE="${VAADIN_DESKTOP_ACCEPTANCE_JAVA_HOME:-${JAVA_HOME:-}}"
+if [[ -z "$JVM_SOURCE" || ! -x "$JVM_SOURCE/bin/java" \
+    || ! -f "$JVM_SOURCE/lib/server/libjvm.dylib" ]]; then
+  echo "Set JAVA_HOME or VAADIN_DESKTOP_ACCEPTANCE_JAVA_HOME to a complete local JDK." >&2
+  exit 2
+fi
+JVM_SOURCE="$(cd "$JVM_SOURCE" && pwd -P)"
+TIMEOUT="${VAADIN_DESKTOP_FLOW_IPC_AUTO_SHUTDOWN_TIMEOUT_SECONDS:-300}"
+if [[ ! "$TIMEOUT" =~ ^[1-9][0-9]*$ || ${#TIMEOUT} -gt 4 \
+    || "$TIMEOUT" -gt 3600 ]]; then
+  echo "Sandbox acceptance timeout must be an integer from 1 to 3600 seconds." >&2
+  exit 2
+fi
+
+export VAADIN_DESKTOP_ACCEPTANCE_CAPABILITY_MANIFEST="$ACCEPTANCE_ROOT/Fixtures/sandbox-file-read-grant-capabilities.json"
+unset VAADIN_DESKTOP_ACCEPTANCE_OMIT_CAPABILITY_MANIFEST
+bash "$ROOT/bin/vaadin-desktop" package test-apps/flow-over-ipc-framework-app
+bash "$ACCEPTANCE_ROOT/bin/build-host" \
+  "$ROOT" test-apps/flow-over-ipc-framework-app flow-ipc
+
+umask 077
+WORK="$(mktemp -d /private/tmp/vatori-sandbox-file-grant.XXXXXX)"
+FIXTURE_ROOT=""
+HOST_APP="$WORK/VaadinDesktopHost.app"
+HOST_EXE="$HOST_APP/Contents/MacOS/VaadinDesktopHost"
+JAVA_EXE="$HOST_APP/Contents/JavaRuntime/bin/java"
+OPEN_WAIT_PID=""
+
+# Only identify processes whose executable belongs to this exact owned clone.
+# LaunchServices is not a child process group of the runner.
+owned_pids() {
+  ps -axo pid=,command= | awk -v host="$HOST_EXE" -v java="$JAVA_EXE" '
+    { pid=$1; $1=""; sub(/^ +/, "");
+      if ($0 == host || index($0, java " -jar ") == 1) print pid; }
+  '
+}
+cleanup() {
+  local status=$?
+  trap - EXIT HUP INT TERM
+  local pid
+  local remaining
+  remaining="$(owned_pids)"
+  if [[ -n "$remaining" ]]; then
+    status=1
+    for pid in $remaining; do kill -TERM "$pid" 2>/dev/null || true; done
+    local attempt=0
+    while [[ -n "$(owned_pids)" && "$attempt" -lt 30 ]]; do
+      sleep 0.1
+      attempt=$((attempt + 1))
+    done
+    remaining="$(owned_pids)"
+    if [[ -n "$remaining" ]]; then
+      for pid in $remaining; do kill -KILL "$pid" 2>/dev/null || true; done
+      sleep 0.1
+    fi
+  fi
+  if [[ -n "$OPEN_WAIT_PID" ]]; then
+    kill -TERM "$OPEN_WAIT_PID" 2>/dev/null || true
+    wait "$OPEN_WAIT_PID" 2>/dev/null || true
+  fi
+  if [[ -n "$(owned_pids)" ]]; then
+    echo "Owned sandbox processes remain; retaining test material: $WORK $FIXTURE_ROOT" >&2
+    exit 1
+  fi
+  rm -rf -- "$WORK"
+  if [[ -n "$FIXTURE_ROOT" ]]; then rm -rf -- "$FIXTURE_ROOT"; fi
+  exit "$status"
+}
+trap cleanup EXIT
+trap 'exit 130' INT
+trap 'exit 143' TERM
+trap 'exit 129' HUP
+
+# These files are created by the unsandboxed runner, never by the host. They are
+# outside both the copied app and its container, and no open FD is inherited.
+FIXTURE_ROOT="$(mktemp -d "$BUILD_ROOT/sandbox-file-fixtures.XXXXXX")"
+SELECTED_PATH="$FIXTURE_ROOT/vatori-file-read-grant-fixture.txt"
+SIBLING_PATH="$FIXTURE_ROOT/unselected-sibling.txt"
+printf '%s' 'vatori-file-read-grant-fixture::0123456789::tail' > "$SELECTED_PATH"
+printf '%s' 'unselected-sandbox-sibling-must-stay-unreadable' > "$SIBLING_PATH"
+for fixture in "$SELECTED_PATH" "$SIBLING_PATH"; do
+  if [[ ! -f "$fixture" || -L "$fixture" || ! -r "$fixture" \
+      || "$(stat -f '%l' "$fixture")" != "1" \
+      || "$(stat -f '%u' "$fixture")" != "$(id -u)" ]]; then
+    echo "External fixture is not an owned readable regular file with one link." >&2
+    exit 1
+  fi
+done
+[[ "$(stat -f '%z' "$SELECTED_PATH")" == "48" ]]
+[[ "$(stat -f '%i' "$SELECTED_PATH")" != "$(stat -f '%i' "$SIBLING_PATH")" ]]
+
+# This byte-preserving JVM copy is acceptance material, not a distribution API.
+# Do not recursively re-sign or change the vendor JVM's entitlements.
+ditto "$BUILD_ROOT/VaadinDesktopHost.app" "$HOST_APP"
+ditto "$JVM_SOURCE" "$HOST_APP/Contents/JavaRuntime"
+cmp "$JVM_SOURCE/bin/java" "$JAVA_EXE"
+cmp "$JVM_SOURCE/lib/server/libjvm.dylib" \
+  "$HOST_APP/Contents/JavaRuntime/lib/server/libjvm.dylib"
+plutil -replace CFBundleIdentifier -string \
+  dev.vatori.desktop.host.macos.sandbox-probe "$HOST_APP/Contents/Info.plist"
+codesign --force --sign - \
+  --entitlements "$ACCEPTANCE_ROOT/Fixtures/sandbox-file-read-grant.entitlements.plist" \
+  "$HOST_APP"
+codesign --verify --strict --verbose=2 "$HOST_APP"
+
+echo "Select this file in the native open panel (never its parent directory):"
+echo "  $SELECTED_PATH"
+echo "Wait for flowFileReadGrantSandbox.panelObserved before clicking Open."
+echo "Trace: $HOST_LOG"
+
+# A focused run must not inherit competing drivers or navigation injection.
+for acceptance_flag in $(compgen -v VAADIN_DESKTOP_FLOW_IPC_AUTO_); do
+  unset "$acceptance_flag"
+done
+unset VAADIN_DESKTOP_FLOW_IPC_STOP_INITIAL_NAVIGATION
+
+open -n -W -o "$HOST_LOG" --stderr "$HOST_ERR_LOG" \
+  --env "JAVA_HOME=$HOST_APP/Contents/JavaRuntime" \
+  --env VAADIN_DESKTOP_MACOS_NO_ACTIVATE=0 \
+  --env VAADIN_DESKTOP_FLOW_IPC_AUTO_FILE_READ_GRANT_SANDBOX=1 \
+  --env "VAADIN_DESKTOP_FLOW_IPC_SANDBOX_SELECTED_PATH=$SELECTED_PATH" \
+  --env "VAADIN_DESKTOP_FLOW_IPC_SANDBOX_SIBLING_PATH=$SIBLING_PATH" \
+  --env VAADIN_DESKTOP_FLOW_IPC_AUTO_SHUTDOWN=1 \
+  --env "VAADIN_DESKTOP_FLOW_IPC_AUTO_SHUTDOWN_TIMEOUT_SECONDS=$TIMEOUT" \
+  --env VAADIN_DESKTOP_FLOW_IPC_TRACE_DETAIL=full \
+  "$HOST_APP" &
+OPEN_WAIT_PID=$!
+# The observer's deadline cannot run if AppKit's main thread stalls. Bound the
+# LaunchServices waiter independently, then let exact-clone cleanup stop it.
+run_started=$SECONDS
+while kill -0 "$OPEN_WAIT_PID" 2>/dev/null; do
+  if (( SECONDS - run_started > TIMEOUT + 30 )); then
+    echo "Sandbox acceptance exceeded its external launch/runtime deadline." >&2
+    exit 124
+  fi
+  sleep 1
+done
+wait "$OPEN_WAIT_PID"
+OPEN_WAIT_PID=""
+
+bash "$ROOT/bin/flow-ipc-trace-inspect" \
+  --require-flow-ipc-sandbox-file-read-grant "$HOST_LOG"

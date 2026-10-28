@@ -1,0 +1,17 @@
+#!/usr/bin/env bash
+set -euo pipefail
+
+ROOT="$(cd "$(dirname "${BASH_SOURCE[0]}")/../../.." && pwd)"
+HOST_LOG="$ROOT/.build/native-hosts/macos/host.out.log"
+
+export VAADIN_DESKTOP_FLOW_IPC_AUTO_CAPABILITY_PERMISSION=1
+export VAADIN_DESKTOP_FLOW_IPC_AUTO_SHUTDOWN=1
+export VAADIN_DESKTOP_FLOW_IPC_AUTO_SHUTDOWN_TIMEOUT_SECONDS=90
+export VAADIN_DESKTOP_FLOW_IPC_TRACE_DETAIL=full
+
+bash "$ROOT/test-support/native-host-macos-acceptance/bin/run" \
+  dev test-apps/flow-over-ipc-framework-app
+
+bash "$ROOT/bin/flow-ipc-trace-inspect" \
+  --require-flow-ipc-capability-permission \
+  "$HOST_LOG"

@@ -2,6 +2,27 @@
 set -euo pipefail
 
 ROOT="$(cd "$(dirname "${BASH_SOURCE[0]}")/../../.." && pwd)"
+if [[ "${VAADIN_DESKTOP_FLOW_IPC_AUTO_SIDECAR_WRITE_BACKPRESSURE:-}" == "1" ]]; then
+  echo "Sidecar write-backpressure requires the isolated run-sidecar-write-backpressure runner." >&2
+  exit 2
+fi
+if [[ "${VAADIN_DESKTOP_FLOW_IPC_AUTO_HOST_SHUTDOWN_TERMINATION:-}" == "1" ]]; then
+  echo "Host shutdown termination requires the isolated run-host-shutdown-termination runner." >&2
+  exit 2
+fi
+if [[ "${VAADIN_DESKTOP_FLOW_IPC_AUTO_RECOVERY_TERMINATION:-}" == "1" ]]; then
+  echo "Recovery termination requires the isolated run-recovery-termination runner." >&2
+  exit 2
+fi
+if [[ "${VAADIN_DESKTOP_FLOW_IPC_AUTO_NOTIFICATION_DELIVERY:-}" == "1" ]]; then
+  echo "Foreground delivery requires the fresh-identity run-flow-notification-delivery runner." >&2
+  exit 2
+fi
+if [[ "${VATORI_NATIVE_HOST_MACOS_ACCEPTANCE_PACKAGE_LOCK_HELD:-}" != "1" ]]; then
+  exec env VATORI_NATIVE_HOST_MACOS_ACCEPTANCE_PACKAGE_LOCK_HELD=1 \
+    bash "$ROOT/test-support/native-host-macos-acceptance/bin/with-package-lock" -- \
+    bash "$0" "$@"
+fi
 COMMAND="${1:-}"
 MODULE="${2:-}"
 MODULE_POM="$ROOT/$MODULE/pom.xml"
@@ -37,21 +58,68 @@ acceptance_environment_names=(
   VAADIN_DESKTOP_ACCEPTANCE_REPO_ROOT
   VAADIN_DESKTOP_MACOS_NO_ACTIVATE
   VAADIN_DESKTOP_FLOW_IPC_TRACE_DETAIL
+  VAADIN_DESKTOP_FLOW_IPC_STOP_INITIAL_NAVIGATION
   VAADIN_DESKTOP_FLOW_IPC_AUTO_FRAMEWORK_UPDATE
   VAADIN_DESKTOP_FLOW_IPC_AUTO_PUSH_DELIVERY
   VAADIN_DESKTOP_FLOW_IPC_AUTO_PUSH_RECOVERY
   VAADIN_DESKTOP_FLOW_IPC_AUTO_LARGE_DOWNLOAD_RESUME
   VAADIN_DESKTOP_FLOW_IPC_AUTO_LARGE_UPLOAD_RETRY
+  VAADIN_DESKTOP_FLOW_IPC_AUTO_IN_FLIGHT_REQUEST_RECOVERY
+  VAADIN_DESKTOP_FLOW_IPC_AUTO_CAPABILITY_GENERATION_RECOVERY
+  VAADIN_DESKTOP_FLOW_IPC_AUTO_CAPABILITY_OWNER_WINDOW_CLOSE
+  VAADIN_DESKTOP_FLOW_IPC_AUTO_CAPABILITY_CONTEXT_REOPEN
+  VAADIN_DESKTOP_FLOW_IPC_AUTO_MAIN_WINDOW_CLOSE_RECOVERY
+  VAADIN_DESKTOP_FLOW_IPC_AUTO_LAST_WINDOW_CLOSE
+  VAADIN_DESKTOP_FLOW_IPC_AUTO_CLIPBOARD_OUTCOMES
+  VAADIN_DESKTOP_FLOW_IPC_AUTO_FILE_DIALOG_OUTCOMES
+  VAADIN_DESKTOP_FLOW_IPC_AUTO_NOTIFICATION_OUTCOMES
+  VAADIN_DESKTOP_FLOW_IPC_NOTIFICATION_EXPECTED_OUTCOME
+  VAADIN_DESKTOP_FLOW_IPC_AUTO_FILE_READ_GRANT
+  VAADIN_DESKTOP_FLOW_IPC_AUTO_FILE_READ_GRANT_SIDECAR_EXIT
+  VAADIN_DESKTOP_FLOW_IPC_AUTO_FILE_READ_GRANT_HOST_SHUTDOWN
+  VAADIN_DESKTOP_FLOW_IPC_AUTO_FILE_READ_GRANT_ISOLATION
+  VAADIN_DESKTOP_FLOW_IPC_AUTO_FILE_READ_GRANT_REPLAY
+  VAADIN_DESKTOP_FLOW_IPC_AUTO_FILE_READ_GRANT_RANGE
+  VAADIN_DESKTOP_FLOW_IPC_AUTO_FILE_READ_GRANT_SANDBOX
+  VAADIN_DESKTOP_FLOW_IPC_AUTO_FILE_WRITE_GRANT_SANDBOX
+  VAADIN_DESKTOP_FLOW_IPC_AUTO_FILE_WRITE_GRANT_CANCEL_SANDBOX
+  VAADIN_DESKTOP_FLOW_IPC_AUTO_FILE_WRITE_GRANT_OWNER_CLOSE_SANDBOX
+  VAADIN_DESKTOP_FLOW_IPC_AUTO_FILE_WRITE_GRANT_ISOLATION_SANDBOX
+  VAADIN_DESKTOP_FLOW_IPC_AUTO_FILE_WRITE_GRANT_SIDECAR_EXIT_SANDBOX
+  VAADIN_DESKTOP_FLOW_IPC_AUTO_FILE_WRITE_GRANT_REPLAY_SANDBOX
+  VATORI_FILE_WRITE_GRANT_REPLAY_HANDOFF
+  VAADIN_DESKTOP_FLOW_IPC_AUTO_FILE_WRITE_GRANT_HOST_SHUTDOWN_SANDBOX
+  VAADIN_DESKTOP_FLOW_IPC_SANDBOX_SELECTED_PATH
+  VAADIN_DESKTOP_FLOW_IPC_SANDBOX_SIBLING_PATH
+  VAADIN_DESKTOP_FLOW_IPC_SANDBOX_RECOVERED_SELECTED_PATH
+  VAADIN_DESKTOP_FLOW_IPC_SANDBOX_RECOVERED_SIBLING_PATH
+  VATORI_FILE_READ_GRANT_REPLAY_HANDOFF
+  VAADIN_DESKTOP_FLOW_IPC_FILE_READ_GRANT_FIXTURE_ROOT
   VAADIN_DESKTOP_FLOW_IPC_AUTO_LARGE_MULTIPART_UPLOAD_RETRY
   VAADIN_DESKTOP_FLOW_IPC_AUTO_CONCURRENT_UPLOAD
   VAADIN_DESKTOP_FLOW_IPC_AUTO_REQUEST_FANOUT
   VAADIN_DESKTOP_FLOW_IPC_AUTO_CONCURRENT_MULTIPART_UPLOAD
   VAADIN_DESKTOP_FLOW_IPC_AUTO_CROSS_SESSION_MULTIPART_UPLOAD
   VAADIN_DESKTOP_FLOW_IPC_AUTO_LAZY_GRID_QUERY
+  VAADIN_DESKTOP_FLOW_IPC_AUTO_LAZY_GRID_SELECTED_REMOVAL
+  VAADIN_DESKTOP_FLOW_IPC_AUTO_LAZY_MULTI_SELECT_COMBO_BOX
+  VAADIN_DESKTOP_FLOW_IPC_AUTO_MULTI_SELECT_COMBO_BOX
   VAADIN_DESKTOP_FLOW_IPC_AUTO_DND
   VAADIN_DESKTOP_FLOW_IPC_DND_INPUT_MODE
   VAADIN_DESKTOP_FLOW_IPC_AUTO_INPUT_POPUP
   VAADIN_DESKTOP_FLOW_IPC_AUTO_LOCALIZED_INPUT_POPUP
+  VAADIN_DESKTOP_FLOW_IPC_AUTO_LOCALIZED_NUMBER
+  VAADIN_DESKTOP_FLOW_IPC_AUTO_LOCALIZED_NUMBER_VALIDATION
+  VAADIN_DESKTOP_FLOW_IPC_AUTO_NATIVE_EDIT
+  VAADIN_DESKTOP_FLOW_IPC_AUTO_NATIVE_CLIPBOARD_EDIT
+  VAADIN_DESKTOP_FLOW_IPC_AUTO_NATIVE_EDIT_ISOLATION
+  VAADIN_DESKTOP_FLOW_IPC_AUTO_NATIVE_EDIT_REOPEN
+  VAADIN_DESKTOP_FLOW_IPC_AUTO_NATIVE_EDIT_RECOVERY
+  VAADIN_DESKTOP_FLOW_IPC_AUTO_EXTERNAL_FILE_DROP
+  VAADIN_DESKTOP_FLOW_IPC_EXTERNAL_DROP_RUN_ID
+  VAADIN_DESKTOP_FLOW_IPC_EXTERNAL_DROP_FILE_NAME
+  VAADIN_DESKTOP_FLOW_IPC_EXTERNAL_DROP_FILE_BYTES
+  VAADIN_DESKTOP_FLOW_IPC_EXTERNAL_DROP_FILE_SHA256
   VAADIN_DESKTOP_FLOW_IPC_AUTO_PICKER_VALIDATION
   VAADIN_DESKTOP_FLOW_IPC_AUTO_MENU_POPUP
   VAADIN_DESKTOP_FLOW_IPC_AUTO_OVERLAY_STACK
@@ -66,6 +134,8 @@ acceptance_environment_names=(
   VAADIN_DESKTOP_FLOW_IPC_AUTO_UPLOAD_RECEIVER
   VAADIN_DESKTOP_FLOW_IPC_AUTO_DOWNLOAD_SAVE_OPEN
   VAADIN_DESKTOP_FLOW_IPC_AUTO_MULTI_WINDOW
+  VAADIN_DESKTOP_FLOW_IPC_AUTO_CAPABILITY_PERMISSION
+  VAADIN_DESKTOP_FLOW_IPC_AUTO_CAPABILITY_DEFAULT_DENY
   VAADIN_DESKTOP_FLOW_IPC_AUTO_FILE_DIALOG_CANCEL
   VAADIN_DESKTOP_FLOW_IPC_AUTO_SHUTDOWN_TIMEOUT_SECONDS
   VAADIN_DESKTOP_VITE_HMR_PROBE_FILE
@@ -99,6 +169,11 @@ status=$?
 set -e
 
 host_log="$ROOT/.build/native-hosts/macos/host.out.log"
+if [[ "$status" == "0" ]] \
+    && rg -q '"code":"flowIpcInitialNavigationTimeout"' "$host_log"; then
+  echo "macOS acceptance failed before initial navigation completed" >&2
+  status=1
+fi
 require_completed_trace() {
   local event_name="$1"
   if ! grep -F "$event_name" "$host_log" | grep -Fq '"complete":true'; then
@@ -110,10 +185,60 @@ require_completed_trace() {
 if [[ "$status" == "0" && "${VAADIN_DESKTOP_FLOW_IPC_AUTO_SHUTDOWN:-}" == "1" ]]; then
   if [[ "$TRANSPORT" == "compatibility-http" ]]; then
     require_completed_trace "compatibility.capabilityAcceptance" || status=1
+  elif [[ "${VAADIN_DESKTOP_FLOW_IPC_AUTO_FILE_READ_GRANT_SANDBOX:-}" == "1" ]]; then
+    require_completed_trace "flowFileReadGrantSandbox.frameworkAcceptance" || status=1
+  elif [[ "${VAADIN_DESKTOP_FLOW_IPC_AUTO_FILE_WRITE_GRANT_CANCEL_SANDBOX:-}" == "1" ]]; then
+    require_completed_trace "flowFileWriteGrantCancelSandbox.frameworkAcceptance" || status=1
+  elif [[ "${VAADIN_DESKTOP_FLOW_IPC_AUTO_FILE_WRITE_GRANT_SANDBOX:-}" == "1" ]]; then
+    require_completed_trace "flowFileWriteGrantSandbox.frameworkAcceptance" || status=1
+  elif [[ "${VAADIN_DESKTOP_FLOW_IPC_AUTO_FILE_WRITE_GRANT_OWNER_CLOSE_SANDBOX:-}" == "1" ]]; then
+    require_completed_trace "flowFileWriteGrantOwnerCloseSandbox.applicationWillTerminate" || status=1
+  elif [[ "${VAADIN_DESKTOP_FLOW_IPC_AUTO_FILE_WRITE_GRANT_ISOLATION_SANDBOX:-}" == "1" ]]; then
+    require_completed_trace "flowFileWriteGrantIsolationSandbox.frameworkAcceptance" || status=1
+  elif [[ "${VAADIN_DESKTOP_FLOW_IPC_AUTO_FILE_WRITE_GRANT_SIDECAR_EXIT_SANDBOX:-}" == "1" ]]; then
+    require_completed_trace "flowFileWriteGrantSidecarExitSandbox.frameworkAcceptance" || status=1
+  elif [[ "${VAADIN_DESKTOP_FLOW_IPC_AUTO_FILE_WRITE_GRANT_REPLAY_SANDBOX:-}" == "1" ]]; then
+    require_completed_trace "flowFileWriteGrantReplaySandbox.frameworkAcceptance" || status=1
+  elif [[ "${VAADIN_DESKTOP_FLOW_IPC_AUTO_FILE_WRITE_GRANT_HOST_SHUTDOWN_SANDBOX:-}" == "1" ]]; then
+    require_completed_trace "flowFileWriteGrantHostShutdownSandbox.hostShutdownPrepared" || status=1
+    require_completed_trace "flowFileWriteGrantHostShutdownSandbox.hostShutdownObserved" || status=1
+  elif [[ "${VAADIN_DESKTOP_FLOW_IPC_AUTO_LAST_WINDOW_CLOSE:-}" == "1" ]]; then
+    require_completed_trace "flowLastWindowClose.applicationWillTerminate" || status=1
+  elif [[ "${VAADIN_DESKTOP_FLOW_IPC_AUTO_FILE_READ_GRANT_RANGE:-}" == "1" ]]; then
+    require_completed_trace "flowFileReadGrantRange.frameworkAcceptance" || status=1
+  elif [[ "${VAADIN_DESKTOP_FLOW_IPC_AUTO_FILE_READ_GRANT_REPLAY:-}" == "1" ]]; then
+    require_completed_trace "flowFileReadGrantReplay.frameworkAcceptance" || status=1
+  elif [[ "${VAADIN_DESKTOP_FLOW_IPC_AUTO_FILE_READ_GRANT_ISOLATION:-}" == "1" ]]; then
+    require_completed_trace "flowFileReadGrantIsolation.frameworkAcceptance" || status=1
+  elif [[ "${VAADIN_DESKTOP_FLOW_IPC_AUTO_FILE_READ_GRANT_HOST_SHUTDOWN:-}" == "1" ]]; then
+    require_completed_trace "flowFileReadGrant.hostShutdownPrepared" || status=1
+    require_completed_trace "flowFileReadGrant.hostShutdownObserved" || status=1
+  elif [[ "${VAADIN_DESKTOP_FLOW_IPC_AUTO_FILE_READ_GRANT_SIDECAR_EXIT:-}" == "1" ]]; then
+    require_completed_trace "flowFileReadGrant.sidecarExitAcceptance" || status=1
+  elif [[ "${VAADIN_DESKTOP_FLOW_IPC_AUTO_FILE_READ_GRANT:-}" == "1" ]]; then
+    require_completed_trace "flowFileReadGrant.frameworkAcceptance" || status=1
+  elif [[ "${VAADIN_DESKTOP_FLOW_IPC_AUTO_CAPABILITY_OWNER_WINDOW_CLOSE:-}" == "1" ]]; then
+    require_completed_trace "flowCapabilityOwnerWindowClose.frameworkAcceptance" || status=1
+  elif [[ "${VAADIN_DESKTOP_FLOW_IPC_AUTO_CAPABILITY_CONTEXT_REOPEN:-}" == "1" ]]; then
+    require_completed_trace "flowCapabilityContextReopen.frameworkAcceptance" || status=1
+  elif [[ "${VAADIN_DESKTOP_FLOW_IPC_AUTO_MAIN_WINDOW_CLOSE_RECOVERY:-}" == "1" ]]; then
+    require_completed_trace "flowMainWindowCloseRecovery.frameworkAcceptance" || status=1
+  elif [[ "${VAADIN_DESKTOP_FLOW_IPC_AUTO_CLIPBOARD_OUTCOMES:-}" == "1" ]]; then
+    require_completed_trace "clipboardOutcomes.frameworkAcceptance" || status=1
+  elif [[ "${VAADIN_DESKTOP_FLOW_IPC_AUTO_FILE_DIALOG_OUTCOMES:-}" == "1" ]]; then
+    require_completed_trace "flowFileDialogOutcomes.frameworkAcceptance" || status=1
+  elif [[ "${VAADIN_DESKTOP_FLOW_IPC_AUTO_NOTIFICATION_OUTCOMES:-}" == "1" ]]; then
+    require_completed_trace "flowNotificationOutcomes.frameworkAcceptance" || status=1
+  elif [[ "${VAADIN_DESKTOP_FLOW_IPC_AUTO_CAPABILITY_GENERATION_RECOVERY:-}" == "1" ]]; then
+    require_completed_trace "flowCapabilityGenerationRecovery.frameworkAcceptance" || status=1
   elif [[ "${VAADIN_DESKTOP_FLOW_IPC_AUTO_SIDECAR_RESTART:-}" == "1" ]]; then
     require_completed_trace "standardBundle.sidecarRestartAcceptance" || status=1
   elif [[ "${VAADIN_DESKTOP_FLOW_IPC_AUTO_MULTI_WINDOW:-}" == "1" ]]; then
     require_completed_trace "multiWindow.acceptance" || status=1
+  elif [[ "${VAADIN_DESKTOP_FLOW_IPC_AUTO_CAPABILITY_PERMISSION:-}" == "1" ]]; then
+    require_completed_trace "flowCapabilityPermission.frameworkAcceptance" || status=1
+  elif [[ "${VAADIN_DESKTOP_FLOW_IPC_AUTO_CAPABILITY_DEFAULT_DENY:-}" == "1" ]]; then
+    require_completed_trace "flowCapabilityDefaultDeny.frameworkAcceptance" || status=1
   elif [[ "${VAADIN_DESKTOP_FLOW_IPC_AUTO_REACTOR_RELOAD:-}" == "1" ]]; then
     require_completed_trace "reactorReload.frameworkAcceptance" || status=1
   elif [[ "${VAADIN_DESKTOP_FLOW_IPC_AUTO_JAVA_ROLLBACK:-}" == "1" ]]; then
@@ -142,14 +267,36 @@ if [[ "$status" == "0" && "${VAADIN_DESKTOP_FLOW_IPC_AUTO_SHUTDOWN:-}" == "1" ]]
     require_completed_trace "flowConcurrentMultipartUpload.frameworkAcceptance" || status=1
   elif [[ "${VAADIN_DESKTOP_FLOW_IPC_AUTO_CROSS_SESSION_MULTIPART_UPLOAD:-}" == "1" ]]; then
     require_completed_trace "flowCrossSessionMultipartUpload.frameworkAcceptance" || status=1
+  elif [[ "${VAADIN_DESKTOP_FLOW_IPC_AUTO_LAZY_GRID_SELECTED_REMOVAL:-}" == "1" ]]; then
+    require_completed_trace "lazyGridSelectedRemoval.frameworkAcceptance" || status=1
   elif [[ "${VAADIN_DESKTOP_FLOW_IPC_AUTO_LAZY_GRID_QUERY:-}" == "1" ]]; then
     require_completed_trace "lazyGridQuery.frameworkAcceptance" || status=1
+  elif [[ "${VAADIN_DESKTOP_FLOW_IPC_AUTO_LAZY_MULTI_SELECT_COMBO_BOX:-}" == "1" ]]; then
+    require_completed_trace "lazyMultiSelectComboBox.frameworkAcceptance" || status=1
+  elif [[ "${VAADIN_DESKTOP_FLOW_IPC_AUTO_MULTI_SELECT_COMBO_BOX:-}" == "1" ]]; then
+    require_completed_trace "multiSelectComboBox.frameworkAcceptance" || status=1
   elif [[ "${VAADIN_DESKTOP_FLOW_IPC_AUTO_DND:-}" == "1" ]]; then
     require_completed_trace "flowDnd.frameworkAcceptance" || status=1
   elif [[ "${VAADIN_DESKTOP_FLOW_IPC_AUTO_INPUT_POPUP:-}" == "1" ]]; then
     require_completed_trace "flowInputPopup.frameworkAcceptance" || status=1
   elif [[ "${VAADIN_DESKTOP_FLOW_IPC_AUTO_LOCALIZED_INPUT_POPUP:-}" == "1" ]]; then
     require_completed_trace "flowInputPopup.localizedTimeAcceptance" || status=1
+  elif [[ "${VAADIN_DESKTOP_FLOW_IPC_AUTO_LOCALIZED_NUMBER_VALIDATION:-}" == "1" ]]; then
+    require_completed_trace "localizedNumberValidation.frameworkAcceptance" || status=1
+  elif [[ "${VAADIN_DESKTOP_FLOW_IPC_AUTO_LOCALIZED_NUMBER:-}" == "1" ]]; then
+    require_completed_trace "localizedNumber.frameworkAcceptance" || status=1
+  elif [[ "${VAADIN_DESKTOP_FLOW_IPC_AUTO_NATIVE_CLIPBOARD_EDIT:-}" == "1" ]]; then
+    require_completed_trace "nativeClipboardEdit.frameworkAcceptance" || status=1
+  elif [[ "${VAADIN_DESKTOP_FLOW_IPC_AUTO_NATIVE_EDIT_RECOVERY:-}" == "1" ]]; then
+    require_completed_trace "nativeEditRecovery.frameworkAcceptance" || status=1
+  elif [[ "${VAADIN_DESKTOP_FLOW_IPC_AUTO_NATIVE_EDIT_REOPEN:-}" == "1" ]]; then
+    require_completed_trace "nativeEditReopen.frameworkAcceptance" || status=1
+  elif [[ "${VAADIN_DESKTOP_FLOW_IPC_AUTO_NATIVE_EDIT_ISOLATION:-}" == "1" ]]; then
+    require_completed_trace "nativeEditIsolation.frameworkAcceptance" || status=1
+  elif [[ "${VAADIN_DESKTOP_FLOW_IPC_AUTO_NATIVE_EDIT:-}" == "1" ]]; then
+    require_completed_trace "nativeEdit.frameworkAcceptance" || status=1
+  elif [[ "${VAADIN_DESKTOP_FLOW_IPC_AUTO_EXTERNAL_FILE_DROP:-}" == "1" ]]; then
+    require_completed_trace "externalFileDrop.frameworkAcceptance" || status=1
   elif [[ "${VAADIN_DESKTOP_FLOW_IPC_AUTO_PICKER_VALIDATION:-}" == "1" ]]; then
     require_completed_trace "pickerValidation.frameworkAcceptance" || status=1
   elif [[ "${VAADIN_DESKTOP_FLOW_IPC_AUTO_MENU_POPUP:-}" == "1" ]]; then

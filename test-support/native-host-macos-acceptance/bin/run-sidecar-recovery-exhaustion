@@ -2,6 +2,11 @@
 set -euo pipefail
 
 ROOT="$(cd "$(dirname "${BASH_SOURCE[0]}")/../../.." && pwd)"
+if [[ "${VATORI_NATIVE_HOST_MACOS_ACCEPTANCE_PACKAGE_LOCK_HELD:-}" != "1" ]]; then
+  exec env VATORI_NATIVE_HOST_MACOS_ACCEPTANCE_PACKAGE_LOCK_HELD=1 \
+    bash "$ROOT/test-support/native-host-macos-acceptance/bin/with-package-lock" -- \
+    bash "$0" "$@"
+fi
 HOST_BUILD="$ROOT/.build/native-hosts/macos"
 HOST_APP="$HOST_BUILD/VaadinDesktopHost.app"
 HOST_EXE="$HOST_APP/Contents/MacOS/VaadinDesktopHost"

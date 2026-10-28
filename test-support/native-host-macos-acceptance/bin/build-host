@@ -28,12 +28,26 @@ if [[ "$TRANSPORT" == "flow-ipc" ]]; then
   WEBAPP_ROOT="$MODULE_ROOT/target/classes/META-INF/VAADIN/webapp"
 fi
 CAPABILITY_MANIFEST=""
-if [[ -f "$MODULE_ROOT/desktop-capabilities.json" ]]; then
+if [[ -n "${VAADIN_DESKTOP_ACCEPTANCE_CAPABILITY_MANIFEST:-}" ]]; then
+  if [[ "${VAADIN_DESKTOP_ACCEPTANCE_OMIT_CAPABILITY_MANIFEST:-}" == "1" ]]; then
+    echo "Cannot both override and omit the acceptance capability manifest." >&2
+    exit 1
+  fi
+  if [[ ! -f "$VAADIN_DESKTOP_ACCEPTANCE_CAPABILITY_MANIFEST" ]]; then
+    echo "Acceptance capability manifest override must be an existing regular file." >&2
+    exit 1
+  fi
+  CAPABILITY_MANIFEST="$VAADIN_DESKTOP_ACCEPTANCE_CAPABILITY_MANIFEST"
+elif [[ "${VAADIN_DESKTOP_ACCEPTANCE_OMIT_CAPABILITY_MANIFEST:-}" != "1" \
+    && -f "$MODULE_ROOT/desktop-capabilities.json" ]]; then
   CAPABILITY_MANIFEST="$MODULE_ROOT/desktop-capabilities.json"
 fi
+CAPABILITY_MANIFEST_FALLBACK_MODE="${VAADIN_DESKTOP_ACCEPTANCE_CAPABILITY_MANIFEST_FALLBACK_MODE:-allow-all-dev}"
 
 bash "$ROOT/bin/vaadin-desktop-build-macos-host" \
-  "$ROOT" "$TRANSPORT" "${RUNNABLE_JARS[0]}" "$WEBAPP_ROOT" "$CAPABILITY_MANIFEST"
+  "$ROOT" "$TRANSPORT" "${RUNNABLE_JARS[0]}" "$WEBAPP_ROOT" \
+  "$CAPABILITY_MANIFEST" "" "" "" "" "" \
+  "$CAPABILITY_MANIFEST_FALLBACK_MODE"
 
 if [[ ! -d "$ACCEPTANCE_ROOT/Sources/VaadinDesktopHostAcceptanceSupport" ]]; then
   echo "macOS host acceptance sources are missing: $ACCEPTANCE_ROOT" >&2

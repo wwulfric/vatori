@@ -1,0 +1,58 @@
+#!/usr/bin/env bash
+set -euo pipefail
+
+ROOT="$(cd "$(dirname "${BASH_SOURCE[0]}")/../../.." && pwd)"
+if [[ "$#" != 1 || "$1" != /* ]]; then
+  echo "Usage: $0 <new-absolute-run-directory>" >&2
+  exit 2
+fi
+if [[ "${VATORI_NATIVE_HOST_MACOS_ACCEPTANCE_PACKAGE_LOCK_HELD:-}" != "1" ]]; then
+  exec env VATORI_NATIVE_HOST_MACOS_ACCEPTANCE_PACKAGE_LOCK_HELD=1 \
+    bash "$ROOT/test-support/native-host-macos-acceptance/bin/with-package-lock" -- \
+    bash "$0" "$@"
+fi
+RUN_DIRECTORY="$1"
+EVIDENCE_TOOL="$ROOT/test-support/native-host-macos-acceptance/Tests/external-file-drop-evidence.mjs"
+node "$EVIDENCE_TOOL" prepare "$RUN_DIRECTORY"
+MANIFEST="$RUN_DIRECTORY/manifest.json"
+
+# Only the independent oracle metadata enters the test driver. The source path
+# and bytes remain outside the app and can enter only through the external drag.
+export VAADIN_DESKTOP_FLOW_IPC_EXTERNAL_DROP_RUN_ID="$(node -p 'require(process.argv[1]).runId' "$MANIFEST")"
+export VAADIN_DESKTOP_FLOW_IPC_EXTERNAL_DROP_FILE_NAME="$(node -p 'require(process.argv[1]).fileName' "$MANIFEST")"
+export VAADIN_DESKTOP_FLOW_IPC_EXTERNAL_DROP_FILE_BYTES="$(node -p 'require(process.argv[1]).fileBytes' "$MANIFEST")"
+export VAADIN_DESKTOP_FLOW_IPC_EXTERNAL_DROP_FILE_SHA256="$(node -p 'require(process.argv[1]).fileSha256' "$MANIFEST")"
+export VAADIN_DESKTOP_FLOW_IPC_AUTO_EXTERNAL_FILE_DROP=1
+export VAADIN_DESKTOP_FLOW_IPC_AUTO_SHUTDOWN=1
+export VAADIN_DESKTOP_FLOW_IPC_AUTO_SHUTDOWN_TIMEOUT_SECONDS=300
+export VAADIN_DESKTOP_FLOW_IPC_TRACE_DETAIL=full
+
+log_fingerprint() {
+  node -e 'try { const s=require("node:fs").statSync(process.argv[1],{bigint:true}); console.log([s.dev,s.ino,s.size,s.mtimeNs,s.ctimeNs].join(":")); } catch(e) { if(e.code!=="ENOENT") throw e; console.log("missing"); }' "$1"
+}
+HOST_LOG="$ROOT/.build/native-hosts/macos/host.out.log"
+HOST_ERROR_LOG="$ROOT/.build/native-hosts/macos/host.err.log"
+previous_host_log="$(log_fingerprint "$HOST_LOG")"
+previous_error_log="$(log_fingerprint "$HOST_ERROR_LOG")"
+
+echo "Open $RUN_DIRECTORY/source in Finder. After readyForExternalDrop, drag its one .bin file into the Upload drop zone."
+status=0
+bash "$ROOT/test-support/native-host-macos-acceptance/bin/run" \
+  dev test-apps/flow-over-ipc-framework-app || status=$?
+
+# Preserve this run before another acceptance invocation rotates the shared logs.
+if [[ -f "$HOST_LOG" && "$(log_fingerprint "$HOST_LOG")" != "$previous_host_log" ]]; then
+  cp "$HOST_LOG" "$RUN_DIRECTORY/host.out.log"
+fi
+if [[ -f "$HOST_ERROR_LOG" && "$(log_fingerprint "$HOST_ERROR_LOG")" != "$previous_error_log" ]]; then
+  cp "$HOST_ERROR_LOG" "$RUN_DIRECTORY/host.err.log"
+fi
+if [[ "$status" != 0 ]]; then exit "$status"; fi
+if [[ ! -f "$RUN_DIRECTORY/host.out.log" ]]; then
+  echo "Acceptance returned without a fresh runtime trace." >&2
+  exit 1
+fi
+bash "$ROOT/bin/flow-ipc-trace-inspect" \
+  --require-flow-ipc-external-file-drop "$RUN_DIRECTORY/host.out.log"
+echo "Runtime gate passed. Finder provenance still requires an independently observed external-operator receipt."
+echo "Verify that receipt with: node $EVIDENCE_TOOL verify $MANIFEST $RUN_DIRECTORY/host.out.log <operator-receipt.json>"

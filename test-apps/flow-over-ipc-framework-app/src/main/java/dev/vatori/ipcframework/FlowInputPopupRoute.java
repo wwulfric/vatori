@@ -9,6 +9,7 @@ import com.vaadin.flow.component.html.Span;
 import com.vaadin.flow.component.orderedlayout.VerticalLayout;
 import com.vaadin.flow.component.select.Select;
 import com.vaadin.flow.component.timepicker.TimePicker;
+import com.vaadin.flow.data.binder.Binder;
 import com.vaadin.flow.router.Route;
 
 import java.time.Duration;
@@ -129,8 +130,15 @@ public final class FlowInputPopupRoute extends VerticalLayout {
                         + " error=none change=0");
         pickerValidationEventStatus.setId(
                 "framework-flow-picker-validation-event-status");
+        Span pickerValidationBinderStatus = new Span(
+                "Picker validation binder: errors=false"
+                        + " bean=2026-08-12T13:00 invalid=false"
+                        + " error=none change=0");
+        pickerValidationBinderStatus.setId(
+                "framework-flow-picker-validation-binder-status");
         AtomicInteger pickerValidationChanges = new AtomicInteger();
         AtomicInteger pickerValidationEvents = new AtomicInteger();
+        AtomicInteger pickerValidationBinderEvents = new AtomicInteger();
         DateTimePicker pickerValidation = new DateTimePicker(
                 "Flow IPC constrained review date and time");
         pickerValidation.setId("framework-flow-picker-validation");
@@ -158,6 +166,33 @@ public final class FlowInputPopupRoute extends VerticalLayout {
                                 "Picker validation value is too late"));
         pickerValidation.setValue(
                 LocalDateTime.of(2026, 8, 12, 13, 0));
+        PickerValidationForm pickerValidationForm =
+                new PickerValidationForm();
+        pickerValidationForm.setReviewDateTime(
+                LocalDateTime.of(2026, 8, 12, 13, 0));
+        Binder<PickerValidationForm> pickerValidationBinder =
+                new Binder<>();
+        pickerValidationBinder.forField(pickerValidation)
+                .asRequired("Picker validation value is required")
+                .withValidator(value -> value == null
+                                || value.getMinute() % 30 == 0,
+                        "Picker validation value must align to 30 minutes")
+                .bind(PickerValidationForm::getReviewDateTime,
+                        PickerValidationForm::setReviewDateTime);
+        pickerValidationBinder.setBean(pickerValidationForm);
+        pickerValidationBinder.addStatusChangeListener(event ->
+                pickerValidationBinderStatus.setText(
+                        "Picker validation binder: errors="
+                                + event.hasValidationErrors()
+                                + " bean="
+                                + pickerValidationForm.getReviewDateTime()
+                                + " invalid="
+                                + pickerValidation.isInvalid()
+                                + " error="
+                                + validationError(pickerValidation)
+                                + " change="
+                                + pickerValidationBinderEvents
+                                .incrementAndGet()));
         pickerValidation.addValueChangeListener(event -> {
             pickerValidationStatus.setText(
                     "Picker validation: value=" + event.getValue()
@@ -213,6 +248,7 @@ public final class FlowInputPopupRoute extends VerticalLayout {
                 pickerValidation,
                 pickerValidationStatus,
                 pickerValidationEventStatus,
+                pickerValidationBinderStatus,
                 outsideFocusTarget,
                 outsideActionStatus,
                 returnToFramework);
@@ -223,6 +259,18 @@ public final class FlowInputPopupRoute extends VerticalLayout {
         return errorMessage == null || errorMessage.isBlank()
                 ? "none"
                 : errorMessage;
+    }
+
+    private static final class PickerValidationForm {
+        private LocalDateTime reviewDateTime;
+
+        private LocalDateTime getReviewDateTime() {
+            return reviewDateTime;
+        }
+
+        private void setReviewDateTime(LocalDateTime reviewDateTime) {
+            this.reviewDateTime = reviewDateTime;
+        }
     }
 
     private static final class LifecycleSelect<T> extends Select<T> {

@@ -1,0 +1,25 @@
+#!/usr/bin/env bash
+set -euo pipefail
+
+ROOT="$(cd "$(dirname "${BASH_SOURCE[0]}")/../../.." && pwd)"
+ACCEPTANCE_ROOT="$ROOT/test-support/native-host-macos-acceptance"
+HOST_LOG="$ROOT/.build/native-hosts/macos/host.out.log"
+TRACE="$ROOT/.build/native-hosts/macos/host-last-window-close.out.log"
+
+if [[ "${VATORI_NATIVE_HOST_MACOS_ACCEPTANCE_PACKAGE_LOCK_HELD:-}" != "1" ]]; then
+  exec env VATORI_NATIVE_HOST_MACOS_ACCEPTANCE_PACKAGE_LOCK_HELD=1 \
+    bash "$ACCEPTANCE_ROOT/bin/with-package-lock" -- bash "$0" "$@"
+fi
+
+export VAADIN_DESKTOP_MACOS_NO_ACTIVATE=0
+export VAADIN_DESKTOP_FLOW_IPC_AUTO_LAST_WINDOW_CLOSE=1
+export VAADIN_DESKTOP_FLOW_IPC_AUTO_SHUTDOWN=1
+export VAADIN_DESKTOP_FLOW_IPC_AUTO_SHUTDOWN_TIMEOUT_SECONDS=45
+export VAADIN_DESKTOP_FLOW_IPC_TRACE_DETAIL=full
+mkdir -p "$(dirname "$HOST_LOG")"
+: > "$HOST_LOG"
+: > "$TRACE"
+bash "$ACCEPTANCE_ROOT/bin/run" dev test-apps/flow-over-ipc-framework-app
+cp "$HOST_LOG" "$TRACE"
+bash "$ROOT/bin/flow-ipc-trace-inspect" \
+  --require-flow-ipc-last-window-close "$TRACE"

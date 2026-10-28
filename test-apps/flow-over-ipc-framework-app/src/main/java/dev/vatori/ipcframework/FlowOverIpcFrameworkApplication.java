@@ -9,6 +9,9 @@ public class FlowOverIpcFrameworkApplication {
     private static final String STARTUP_MODE = "normal";
 
     public static void main(String[] args) {
+        FlowFatalProtocolStartup.initialize();
+        FlowHostShutdownTerminationStartup.initialize();
+        FlowRecoveryTerminationStartup.initialize();
         if ("exit-before-ready".equals(STARTUP_MODE)) {
             System.exit(42);
         }
@@ -17,6 +20,10 @@ public class FlowOverIpcFrameworkApplication {
                         .mainWindow(DesktopWindow.builder("main")
                                 .title("Flow IPC Framework App")
                                 .size(1040, 760)
+                                .route(FlowHostShutdownTerminationStartup.enabled()
+                                        ? "flow-host-shutdown-termination"
+                                        : FlowRecoveryTerminationStartup.enabled()
+                                                ? "flow-recovery-termination" : "")
                                 .build())
                         .build(),
                 DesktopFlowApplication.builder(
@@ -26,8 +33,36 @@ public class FlowOverIpcFrameworkApplication {
                                 FlowCrossSessionMultipartUploadRoute.class,
                                 FlowInFlightRequestRoute.class,
                                 FlowRequestFanoutRoute.class,
+                                FlowRecoveryTerminationRoute.class,
+                                FlowHostShutdownTerminationRoute.class,
+                                FlowCapabilityContextReopenRoute.class,
+                                FlowCapabilityPermissionRoute.class,
+                                FlowClipboardOutcomesRoute.class,
+                                FlowNotificationOutcomesRoute.class,
+                                FlowNotificationDeliveryRoute.class,
                                 FlowDndRoute.class,
+                                FlowFileDialogDeniedRoute.class,
+                                FlowFileDialogGenerationRoute.class,
+                                FlowFileDialogOutcomesRoute.class,
+                                FlowFileDialogOwnerWindowCloseRoute.class,
+                                FlowFileReadGrantRoute.class,
+                                FlowFileReadGrantIsolationRoute.class,
+                                FlowFileReadGrantReplayRoute.class,
+                                FlowFileReadGrantRangeRoute.class,
+                                FlowFileWriteGrantRoute.class,
+                                FlowFileWriteGrantIsolationRoute.class,
+                                FlowFileWriteGrantRecoveryRoute.class,
+                                FlowFileWriteGrantReplayRoute.class,
+                                FlowMainWindowCloseRecoveryRoute.class,
+                                FlowLastWindowCloseRoute.class,
                                 FlowInputPopupRoute.class,
+                                FlowLocalizedNumberRoute.class,
+                                FlowLocalizedNumberValidationRoute.class,
+                                FlowNativeEditRoute.class,
+                                FlowExternalFileDropRoute.class,
+                                FlowLazyGridSelectionRoute.class,
+                                FlowLazyMultiSelectComboBoxRoute.class,
+                                FlowMultiSelectComboBoxRoute.class,
                                 FlowLargeDownloadRoute.class,
                                 FlowLargeMultipartUploadRoute.class,
                                 FlowLargeUploadRoute.class,
@@ -40,5 +75,6 @@ public class FlowOverIpcFrameworkApplication {
                                 FlowMultipartAcceptanceStorage.config())
                         .build(),
                 args);
+        FlowHostShutdownTerminationStartup.launcherReturned();
     }
 }

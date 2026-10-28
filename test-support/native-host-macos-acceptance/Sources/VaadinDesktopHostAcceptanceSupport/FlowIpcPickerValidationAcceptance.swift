@@ -26,6 +26,8 @@ private final class FlowIpcPickerValidationAcceptance {
         case requiredDispatched
         case malformedDispatched
         case finalRecoveryDispatched
+        case customInvalidDispatched
+        case customRecoveryDispatched
     }
 
     private let context: FlowIpcWindowContext
@@ -173,9 +175,31 @@ private final class FlowIpcPickerValidationAcceptance {
                     next: .finalRecoveryDispatched,
                     failureCode: "pickerValidationFinalRecoveryDispatchFailed")
             case .finalRecoveryDispatched:
-                guard snapshot.complete else {
+                guard snapshot.defaultValidationComplete else {
                     self.retryOrFail(
                         code: "pickerValidationFinalRecoveryPatchTimeout",
+                        details: snapshot.tracePayload)
+                    return
+                }
+                self.perform(
+                    Self.customInvalidValueScript,
+                    next: .customInvalidDispatched,
+                    failureCode: "pickerValidationCustomInvalidDispatchFailed")
+            case .customInvalidDispatched:
+                guard snapshot.customInvalidComplete else {
+                    self.retryOrFail(
+                        code: "pickerValidationCustomInvalidPatchTimeout",
+                        details: snapshot.tracePayload)
+                    return
+                }
+                self.perform(
+                    Self.customRecoveryValueScript,
+                    next: .customRecoveryDispatched,
+                    failureCode: "pickerValidationCustomRecoveryDispatchFailed")
+            case .customRecoveryDispatched:
+                guard snapshot.complete else {
+                    self.retryOrFail(
+                        code: "pickerValidationCustomRecoveryPatchTimeout",
                         details: snapshot.tracePayload)
                     return
                 }
@@ -270,6 +294,7 @@ private final class FlowIpcPickerValidationAcceptance {
         let path: String
         let initialStateObserved: Bool
         let constraintPropertiesObserved: Bool
+        let defaultValidatorPrecedenceObserved: Bool
         let invalidActionDispatched: Bool
         let minimumBrowserChangeObserved: Bool
         let javaInvalidObserved: Bool
@@ -323,6 +348,23 @@ private final class FlowIpcPickerValidationAcceptance {
         let finalErrorClearedObserved: Bool
         let finalChildValidPatchObserved: Bool
         let overlaysClosedObserved: Bool
+        let customInvalidActionDispatched: Bool
+        let customInvalidBrowserChangeObserved: Bool
+        let customJavaInvalidObserved: Bool
+        let customBinderRejectedObserved: Bool
+        let customBeanRetainedObserved: Bool
+        let customInvalidPatchObserved: Bool
+        let customErrorMessagePatchObserved: Bool
+        let customChildInvalidPatchObserved: Bool
+        let customRecoveryActionDispatched: Bool
+        let customRecoveryBrowserChangeObserved: Bool
+        let customJavaRecoveryObserved: Bool
+        let customBinderAcceptedObserved: Bool
+        let customBeanUpdatedObserved: Bool
+        let customValidPatchObserved: Bool
+        let customErrorPresentationClearedObserved: Bool
+        let customChildValidPatchObserved: Bool
+        let customOverlaysClosedObserved: Bool
         let pickerValue: String
         let pickerMin: String
         let pickerMax: String
@@ -332,6 +374,7 @@ private final class FlowIpcPickerValidationAcceptance {
         let timePickerInvalid: Bool
         let validationStatus: String
         let validationEventStatus: String
+        let binderStatus: String
         let markerError: String
         let browserError: String
         let requestError: String
@@ -404,11 +447,12 @@ private final class FlowIpcPickerValidationAcceptance {
                 && malformedChildInvalidPatchObserved
         }
 
-        var complete: Bool {
+        var defaultValidationComplete: Bool {
             errorFree
                 && dedicatedRouteReady
                 && initialStateObserved
                 && constraintPropertiesObserved
+                && defaultValidatorPrecedenceObserved
                 && invalidActionDispatched
                 && minimumBrowserChangeObserved
                 && javaInvalidObserved
@@ -439,6 +483,31 @@ private final class FlowIpcPickerValidationAcceptance {
                 && pushMessageCount >= 1
         }
 
+        var customInvalidComplete: Bool {
+            customInvalidActionDispatched
+                && customInvalidBrowserChangeObserved
+                && customJavaInvalidObserved
+                && customBinderRejectedObserved
+                && customBeanRetainedObserved
+                && customInvalidPatchObserved
+                && customErrorMessagePatchObserved
+                && customChildInvalidPatchObserved
+        }
+
+        var complete: Bool {
+            defaultValidationComplete
+                && customInvalidComplete
+                && customRecoveryActionDispatched
+                && customRecoveryBrowserChangeObserved
+                && customJavaRecoveryObserved
+                && customBinderAcceptedObserved
+                && customBeanUpdatedObserved
+                && customValidPatchObserved
+                && customErrorPresentationClearedObserved
+                && customChildValidPatchObserved
+                && customOverlaysClosedObserved
+        }
+
         var tracePayload: [String: Any] {
             [
                 "pickerValidationDedicatedRouteObserved": dedicatedRouteReady,
@@ -446,6 +515,8 @@ private final class FlowIpcPickerValidationAcceptance {
                 "pickerValidationInitialStateObserved": initialStateObserved,
                 "pickerValidationConstraintPropertiesObserved":
                     constraintPropertiesObserved,
+                "pickerValidationDefaultValidatorPrecedenceObserved":
+                    defaultValidatorPrecedenceObserved,
                 "pickerValidationInvalidActionDispatched":
                     invalidActionDispatched,
                 "pickerValidationMinimumBrowserChangeObserved":
@@ -545,6 +616,40 @@ private final class FlowIpcPickerValidationAcceptance {
                     finalChildValidPatchObserved,
                 "pickerValidationOverlaysClosedObserved":
                     overlaysClosedObserved,
+                "pickerValidationCustomInvalidActionDispatched":
+                    customInvalidActionDispatched,
+                "pickerValidationCustomInvalidBrowserChangeObserved":
+                    customInvalidBrowserChangeObserved,
+                "pickerValidationCustomJavaInvalidObserved":
+                    customJavaInvalidObserved,
+                "pickerValidationCustomBinderRejectedObserved":
+                    customBinderRejectedObserved,
+                "pickerValidationCustomBeanRetainedObserved":
+                    customBeanRetainedObserved,
+                "pickerValidationCustomInvalidPatchObserved":
+                    customInvalidPatchObserved,
+                "pickerValidationCustomErrorMessagePatchObserved":
+                    customErrorMessagePatchObserved,
+                "pickerValidationCustomChildInvalidPatchObserved":
+                    customChildInvalidPatchObserved,
+                "pickerValidationCustomRecoveryActionDispatched":
+                    customRecoveryActionDispatched,
+                "pickerValidationCustomRecoveryBrowserChangeObserved":
+                    customRecoveryBrowserChangeObserved,
+                "pickerValidationCustomJavaRecoveryObserved":
+                    customJavaRecoveryObserved,
+                "pickerValidationCustomBinderAcceptedObserved":
+                    customBinderAcceptedObserved,
+                "pickerValidationCustomBeanUpdatedObserved":
+                    customBeanUpdatedObserved,
+                "pickerValidationCustomValidPatchObserved":
+                    customValidPatchObserved,
+                "pickerValidationCustomErrorPresentationClearedObserved":
+                    customErrorPresentationClearedObserved,
+                "pickerValidationCustomChildValidPatchObserved":
+                    customChildValidPatchObserved,
+                "pickerValidationCustomOverlaysClosedObserved":
+                    customOverlaysClosedObserved,
                 "pickerValidationValue": pickerValue,
                 "pickerValidationMin": pickerMin,
                 "pickerValidationMax": pickerMax,
@@ -555,6 +660,7 @@ private final class FlowIpcPickerValidationAcceptance {
                 "pickerValidationJavaStatus": validationStatus,
                 "pickerValidationJavaValidationStatus":
                     validationEventStatus,
+                "pickerValidationJavaBinderStatus": binderStatus,
                 "pickerValidationMarkerError": markerError,
                 "requestCount": requestCount,
                 "responseCount": responseCount,
@@ -580,10 +686,10 @@ private final class FlowIpcPickerValidationAcceptance {
 
     private static let minimumValueScript = valueScript(
         dateValue: "2026-08-12",
-        timeValue: "11:30",
+        timeValue: "11:15",
         dateInputValue: "8/12/2026",
-        timeInputValue: "11:30 AM",
-        value: "2026-08-12T11:30",
+        timeInputValue: "11:15 AM",
+        value: "2026-08-12T11:15",
         markerProperty: "invalidActionDispatched",
         browserMarkerProperty: "minimumBrowserChangeObserved")
 
@@ -649,6 +755,24 @@ private final class FlowIpcPickerValidationAcceptance {
         value: "2026-08-12T13:30",
         markerProperty: "finalRecoveryActionDispatched",
         browserMarkerProperty: "finalRecoveryBrowserChangeObserved")
+
+    private static let customInvalidValueScript = valueScript(
+        dateValue: "2026-08-12",
+        timeValue: "13:15",
+        dateInputValue: "8/12/2026",
+        timeInputValue: "1:15 PM",
+        value: "2026-08-12T13:15",
+        markerProperty: "customInvalidActionDispatched",
+        browserMarkerProperty: "customInvalidBrowserChangeObserved")
+
+    private static let customRecoveryValueScript = valueScript(
+        dateValue: "2026-08-12",
+        timeValue: "12:30",
+        dateInputValue: "8/12/2026",
+        timeInputValue: "12:30 PM",
+        value: "2026-08-12T12:30",
+        markerProperty: "customRecoveryActionDispatched",
+        browserMarkerProperty: "customRecoveryBrowserChangeObserved")
 
     private static func valueScript(
         dateValue: String,
@@ -826,6 +950,8 @@ private final class FlowIpcPickerValidationAcceptance {
         '#framework-flow-picker-validation-status')?.textContent || '';
       const validationEventStatus = document.querySelector(
         '#framework-flow-picker-validation-event-status')?.textContent || '';
+      const binderStatus = document.querySelector(
+        '#framework-flow-picker-validation-binder-status')?.textContent || '';
       const pickerValue = String(picker?.value || '');
       const pickerMin = String(picker?.min || '');
       const pickerMax = String(picker?.max || '');
@@ -844,13 +970,20 @@ private final class FlowIpcPickerValidationAcceptance {
         && pickerMin.startsWith('2026-08-12T12:00')
         && pickerMax.startsWith('2026-08-12T14:00');
       const javaInvalidCurrent = validationStatus.includes(
-          'value=2026-08-12T11:30')
+          'value=2026-08-12T11:15')
         && validationStatus.includes('invalid=true')
         && validationStatus.includes(
           'error=Picker validation value is too early')
         && validationStatus.includes('client=true');
+      const defaultValidatorPrecedenceCurrent = binderStatus.includes(
+          'errors=true')
+        && binderStatus.includes('bean=2026-08-12T13:00')
+        && binderStatus.includes('invalid=true')
+        && binderStatus.includes(
+          'error=Picker validation value is too early')
+        && !binderStatus.includes('must align to 30 minutes');
       const invalidPatchCurrent = pickerInvalid
-        && pickerValue.startsWith('2026-08-12T11:30');
+        && pickerValue.startsWith('2026-08-12T11:15');
       const errorMessagePatchCurrent =
         pickerErrorMessage === 'Picker validation value is too early'
           && deepText.includes('Picker validation value is too early');
@@ -869,7 +1002,9 @@ private final class FlowIpcPickerValidationAcceptance {
         && !deepText.includes('Picker validation value is too late')
         && !deepText.includes('Picker validation value is incomplete')
         && !deepText.includes('Picker validation value is required')
-        && !deepText.includes('Picker validation value is malformed');
+        && !deepText.includes('Picker validation value is malformed')
+        && !deepText.includes(
+          'Picker validation value must align to 30 minutes');
       const childValidPatchCurrent = !!datePicker && !!timePicker
         && datePickerInvalid === false
         && timePickerInvalid === false;
@@ -919,6 +1054,44 @@ private final class FlowIpcPickerValidationAcceptance {
       const malformedErrorMessagePatchCurrent =
         pickerErrorMessage === 'Picker validation value is malformed'
           && deepText.includes('Picker validation value is malformed');
+      const customError =
+        'Picker validation value must align to 30 minutes';
+      const customJavaInvalidCurrent = validationStatus.includes(
+          'value=2026-08-12T13:15')
+        && validationStatus.includes('invalid=true')
+        && validationStatus.includes(`error=${customError}`)
+        && validationStatus.includes('client=true');
+      const customBinderRejectedCurrent = binderStatus.includes(
+          'errors=true')
+        && binderStatus.includes('invalid=true')
+        && binderStatus.includes(`error=${customError}`);
+      const customBeanRetainedCurrent = binderStatus.includes(
+        'bean=2026-08-12T13:30');
+      const customInvalidPatchCurrent = pickerInvalid
+        && pickerValue.startsWith('2026-08-12T13:15');
+      const customErrorMessagePatchCurrent =
+        pickerErrorMessage === customError
+          && deepText.includes(customError);
+      const customChildInvalidPatchCurrent =
+        datePickerInvalid && timePickerInvalid;
+      const customJavaRecoveryCurrent = validationStatus.includes(
+          'value=2026-08-12T12:30')
+        && validationStatus.includes('invalid=false')
+        && validationStatus.includes('client=true');
+      const customBinderAcceptedCurrent = binderStatus.includes(
+          'errors=false')
+        && binderStatus.includes('invalid=false')
+        && binderStatus.includes('bean=2026-08-12T12:30');
+      const customBeanUpdatedCurrent = binderStatus.includes(
+        'bean=2026-08-12T12:30');
+      const customValidPatchCurrent = pickerValue.startsWith(
+          '2026-08-12T12:30')
+        && validPatchCurrent
+        && childValidPatchCurrent;
+      const customErrorPresentationClearedCurrent = pickerInvalid === false
+        && datePickerInvalid === false
+        && timePickerInvalid === false;
+      const customChildValidPatchCurrent = childValidPatchCurrent;
       const overlaysClosedCurrent = !!datePicker && !!timePicker
         && datePicker.opened !== true
         && timePicker.opened !== true;
@@ -928,6 +1101,10 @@ private final class FlowIpcPickerValidationAcceptance {
       marker.constraintPropertiesObserved =
         marker.constraintPropertiesObserved === true
           || constraintPropertiesCurrent;
+      marker.defaultValidatorPrecedenceObserved =
+        marker.defaultValidatorPrecedenceObserved === true
+          || (marker.invalidActionDispatched === true
+            && defaultValidatorPrecedenceCurrent);
       marker.javaInvalidObserved = marker.javaInvalidObserved === true
         || (marker.invalidActionDispatched === true && javaInvalidCurrent);
       marker.invalidPatchObserved = marker.invalidPatchObserved === true
@@ -1052,6 +1229,58 @@ private final class FlowIpcPickerValidationAcceptance {
         marker.overlaysClosedObserved === true
           || (marker.finalRecoveryActionDispatched === true
             && overlaysClosedCurrent);
+      marker.customJavaInvalidObserved =
+        marker.customJavaInvalidObserved === true
+          || (marker.customInvalidActionDispatched === true
+            && customJavaInvalidCurrent);
+      marker.customBinderRejectedObserved =
+        marker.customBinderRejectedObserved === true
+          || (marker.customInvalidActionDispatched === true
+            && customBinderRejectedCurrent);
+      marker.customBeanRetainedObserved =
+        marker.customBeanRetainedObserved === true
+          || (marker.customInvalidActionDispatched === true
+            && customBeanRetainedCurrent);
+      marker.customInvalidPatchObserved =
+        marker.customInvalidPatchObserved === true
+          || (marker.customInvalidActionDispatched === true
+            && customInvalidPatchCurrent);
+      marker.customErrorMessagePatchObserved =
+        marker.customErrorMessagePatchObserved === true
+          || (marker.customInvalidActionDispatched === true
+            && customErrorMessagePatchCurrent);
+      marker.customChildInvalidPatchObserved =
+        marker.customChildInvalidPatchObserved === true
+          || (marker.customInvalidActionDispatched === true
+            && customChildInvalidPatchCurrent);
+      marker.customJavaRecoveryObserved =
+        marker.customJavaRecoveryObserved === true
+          || (marker.customRecoveryActionDispatched === true
+            && customJavaRecoveryCurrent);
+      marker.customBinderAcceptedObserved =
+        marker.customBinderAcceptedObserved === true
+          || (marker.customRecoveryActionDispatched === true
+            && customBinderAcceptedCurrent);
+      marker.customBeanUpdatedObserved =
+        marker.customBeanUpdatedObserved === true
+          || (marker.customRecoveryActionDispatched === true
+            && customBeanUpdatedCurrent);
+      marker.customValidPatchObserved =
+        marker.customValidPatchObserved === true
+          || (marker.customRecoveryActionDispatched === true
+            && customValidPatchCurrent);
+      marker.customErrorPresentationClearedObserved =
+        marker.customErrorPresentationClearedObserved === true
+          || (marker.customRecoveryActionDispatched === true
+            && customErrorPresentationClearedCurrent);
+      marker.customChildValidPatchObserved =
+        marker.customChildValidPatchObserved === true
+          || (marker.customRecoveryActionDispatched === true
+            && customChildValidPatchCurrent);
+      marker.customOverlaysClosedObserved =
+        marker.customOverlaysClosedObserved === true
+          || (marker.customRecoveryActionDispatched === true
+            && overlaysClosedCurrent);
 
       const clients = window.Vaadin?.Flow?.clients
         ? Object.keys(window.Vaadin.Flow.clients)
@@ -1078,6 +1307,8 @@ private final class FlowIpcPickerValidationAcceptance {
         initialStateObserved: marker.initialStateObserved === true,
         constraintPropertiesObserved:
           marker.constraintPropertiesObserved === true,
+        defaultValidatorPrecedenceObserved:
+          marker.defaultValidatorPrecedenceObserved === true,
         invalidActionDispatched:
           marker.invalidActionDispatched === true,
         minimumBrowserChangeObserved:
@@ -1178,6 +1409,40 @@ private final class FlowIpcPickerValidationAcceptance {
           marker.finalChildValidPatchObserved === true,
         overlaysClosedObserved:
           marker.overlaysClosedObserved === true,
+        customInvalidActionDispatched:
+          marker.customInvalidActionDispatched === true,
+        customInvalidBrowserChangeObserved:
+          marker.customInvalidBrowserChangeObserved === true,
+        customJavaInvalidObserved:
+          marker.customJavaInvalidObserved === true,
+        customBinderRejectedObserved:
+          marker.customBinderRejectedObserved === true,
+        customBeanRetainedObserved:
+          marker.customBeanRetainedObserved === true,
+        customInvalidPatchObserved:
+          marker.customInvalidPatchObserved === true,
+        customErrorMessagePatchObserved:
+          marker.customErrorMessagePatchObserved === true,
+        customChildInvalidPatchObserved:
+          marker.customChildInvalidPatchObserved === true,
+        customRecoveryActionDispatched:
+          marker.customRecoveryActionDispatched === true,
+        customRecoveryBrowserChangeObserved:
+          marker.customRecoveryBrowserChangeObserved === true,
+        customJavaRecoveryObserved:
+          marker.customJavaRecoveryObserved === true,
+        customBinderAcceptedObserved:
+          marker.customBinderAcceptedObserved === true,
+        customBeanUpdatedObserved:
+          marker.customBeanUpdatedObserved === true,
+        customValidPatchObserved:
+          marker.customValidPatchObserved === true,
+        customErrorPresentationClearedObserved:
+          marker.customErrorPresentationClearedObserved === true,
+        customChildValidPatchObserved:
+          marker.customChildValidPatchObserved === true,
+        customOverlaysClosedObserved:
+          marker.customOverlaysClosedObserved === true,
         pickerValue,
         pickerMin,
         pickerMax,
@@ -1187,6 +1452,7 @@ private final class FlowIpcPickerValidationAcceptance {
         timePickerInvalid,
         validationStatus,
         validationEventStatus,
+        binderStatus,
         markerError: String(marker.error || ''),
         browserError: diagnostics.standardBundleBrowserError || '',
         requestError:

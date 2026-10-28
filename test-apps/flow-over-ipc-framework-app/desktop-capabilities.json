@@ -9,11 +9,98 @@
         "clipboard.writeText",
         "clipboard.readText",
         "notification.show",
-        "fileTransfer.download"
+        "fileDialog.openFile",
+        "fileDialog.saveNewWriteGrant",
+        "fileGrant.write",
+        "fileGrant.releaseWrite",
+        "fileGrant.cancelWrite",
+        "fileTransfer.download",
+        "window.close"
       ]
     },
     {
       "label": "multipart-secondary",
+      "commands": [
+        "window.open",
+        "window.close"
+      ]
+    },
+    {
+      "label": "native-edit-secondary",
+      "commands": [
+        "window.open",
+        "window.close"
+      ]
+    },
+    {
+      "label": "permission-secondary",
+      "commands": [
+        "window.open",
+        "window.close"
+      ]
+    },
+    {
+      "label": "capability-reopen-secondary",
+      "commands": [
+        "window.open",
+        "window.close",
+        "window.setTitle"
+      ]
+    },
+    {
+      "label": "file-dialog-outcomes-secondary",
+      "commands": [
+        "window.open",
+        "window.close"
+      ]
+    },
+    {
+      "label": "file-read-grant-secondary",
+      "commands": [
+        "window.open",
+        "window.close",
+        "fileDialog.openReadGrant",
+        "fileGrant.read",
+        "fileGrant.release"
+      ]
+    },
+    {
+      "label": "file-read-grant-isolation-secondary",
+      "commands": [
+        "window.open",
+        "window.close",
+        "fileDialog.openReadGrant",
+        "fileGrant.read",
+        "fileGrant.release"
+      ]
+    },
+    {
+      "label": "file-read-grant-replay-secondary",
+      "commands": [
+        "window.open",
+        "window.close",
+        "fileDialog.openReadGrant",
+        "fileGrant.read",
+        "fileGrant.release"
+      ]
+    },
+    {
+      "label": "owner-close-secondary",
+      "commands": [
+        "window.open",
+        "window.close",
+        "fileDialog.openFile"
+      ]
+    },
+    {
+      "label": "main-close-recovery-secondary",
+      "commands": [
+        "window.open",
+        "window.setTitle"
+      ]
+    },
+    {
+      "label": "clipboard-outcomes-secondary",
       "commands": [
         "window.open",
         "window.close"

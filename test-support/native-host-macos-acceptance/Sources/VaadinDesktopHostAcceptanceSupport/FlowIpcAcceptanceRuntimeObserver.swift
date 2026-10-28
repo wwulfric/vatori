@@ -11,6 +11,59 @@ extension FlowIpcAcceptanceRuntimeObserver {
     }
 
     func didOpenInitialFlowIpcWindow(host: WebViewHost) {
+        guard let context = host.mainWindowContext else { return }
+        let identity = initialNavigationIdentity(host: host, context: context)
+        let schedule = FlowIpcVerificationSchedule(config: host.config)
+        guard initialNavigationWatchdog.arm(
+            enabled: host.config.flowIpcAutoShutdown,
+            identity: identity,
+            navigationFinished: context.navigationFinished,
+            timeoutSeconds: schedule.autoShutdownTimeoutSeconds,
+            now: initialNavigationMonotonicTime()) else {
+            return
+        }
+        let timeout = initialNavigationWatchdog.timeoutSeconds
+        var payload = context.scope.tracePayload
+        payload["processIdentifier"] = identity.processIdentifier
+        payload["hostProcessIdentifier"] = ProcessInfo.processInfo.processIdentifier
+        payload["recoveryGeneration"] = identity.recoveryGeneration
+        payload["timeoutSeconds"] = timeout
+        payload["navigationFinished"] = context.navigationFinished
+        trace("recv", "acceptance.initialNavigationWatchdogArmed", payload)
+        let armedPayload = payload
+
+        let workItem = DispatchWorkItem { [weak self, weak host, weak context] in
+            guard let self, let host else { return }
+            let now = self.initialNavigationMonotonicTime()
+            guard self.initialNavigationWatchdog.expire(now: now) else { return }
+            self.initialNavigationTimeoutWorkItem = nil
+            let current = host.mainWindowContext
+            var failure = armedPayload
+            failure["code"] = "flowIpcInitialNavigationTimeout"
+            failure["elapsedSeconds"] =
+                self.initialNavigationWatchdog.elapsedSeconds(at: now)
+            failure["currentProcessIdentifier"] = host.sidecarProcessIdentifier ?? 0
+            failure["currentRecoveryGeneration"] = current?.recoveryGeneration ?? -1
+            failure["initialContextRetained"] = context != nil && current === context
+            failure["initialWindowRetained"] = context != nil
+                && current.map { ObjectIdentifier($0.window) == identity.window } == true
+            failure["initialWebViewRetained"] = context != nil
+                && current.map { ObjectIdentifier($0.webView) == identity.webView } == true
+            failure["navigationFinished"] = context?.navigationFinished ?? false
+            failure["terminationRequested"] = true
+            trace("send", "error", failure)
+            // Return this main-queue work item before AppKit enters its nested
+            // termination loop, so the normal asynchronous resource drain can run.
+            NSApp.perform(#selector(NSApplication.terminate(_:)), with: nil, afterDelay: 0)
+        }
+        initialNavigationTimeoutWorkItem = workItem
+        DispatchQueue.main.asyncAfter(deadline: .now() + timeout, execute: workItem)
+
+        if flag("stopInitialNavigation") {
+            context.webView.stopLoading()
+            payload["stopLoadingInvoked"] = true
+            trace("recv", "acceptance.initialNavigationCancelled", payload)
+        }
     }
 
     func didFinishCompatibilityNavigation(host: WebViewHost, webView: WKWebView) {
@@ -33,17 +86,41 @@ extension FlowIpcAcceptanceRuntimeObserver {
     }
 
     func didFinishFlowIpcNavigation(host: WebViewHost, context: FlowIpcWindowContext) {
+        guard initialNavigationWatchdog.state != .expired else { return }
+        if context.navigationFinished, host.mainWindowContext === context,
+           initialNavigationWatchdog.finish(
+            identity: initialNavigationIdentity(host: host, context: context)) {
+            initialNavigationTimeoutWorkItem?.cancel()
+            initialNavigationTimeoutWorkItem = nil
+        }
         let diagnostics = diagnostics(for: host)
         let verificationSchedule = FlowIpcVerificationSchedule(config: host.config)
         if !host.config.flowIpcAutoShutdown {
             for delay in verificationSchedule.inspectionDelaysSeconds {
-                DispatchQueue.main.asyncAfter(deadline: .now() + delay) {
+                DispatchQueue.main.asyncAfter(deadline: .now() + delay) { [weak host, weak context] in
+                    guard let host,
+                          let context,
+                          host.flowIpcWindowContext(context.scope.windowId) === context else {
+                        return
+                    }
                     diagnostics.inspect(context.webView)
                 }
             }
         }
-        DispatchQueue.main.asyncAfter(deadline: .now() + verificationSchedule.snapshotDelaySeconds) {
-            diagnostics.writeSnapshot(context.webView)
+        // A contended native paste can contain another application's private
+        // text. This acceptance uses only its sanitized observer, never a
+        // generic screenshot of possibly unexpected clipboard content.
+        if !host.config.flowIpcAutoNativeClipboardEdit {
+            DispatchQueue.main.asyncAfter(
+                deadline: .now() + verificationSchedule.snapshotDelaySeconds
+            ) { [weak host, weak context] in
+                guard let host,
+                      let context,
+                      host.flowIpcWindowContext(context.scope.windowId) === context else {
+                    return
+                }
+                diagnostics.writeSnapshot(context.webView)
+            }
         }
         if host.config.flowIpcAutoShutdown {
             scheduleAutoShutdown(
@@ -51,6 +128,25 @@ extension FlowIpcAcceptanceRuntimeObserver {
                 context: context,
                 verificationSchedule: verificationSchedule)
         }
+    }
+
+    private func initialNavigationIdentity(
+        host: WebViewHost,
+        context: FlowIpcWindowContext
+    ) -> FlowIpcInitialNavigationWatchdog.Identity {
+        FlowIpcInitialNavigationWatchdog.Identity(
+            windowId: context.scope.windowId,
+            sessionId: context.scope.sessionId,
+            uiId: context.scope.uiId,
+            context: ObjectIdentifier(context),
+            window: ObjectIdentifier(context.window),
+            webView: ObjectIdentifier(context.webView),
+            processIdentifier: host.sidecarProcessIdentifier ?? 0,
+            recoveryGeneration: context.recoveryGeneration)
+    }
+
+    private func initialNavigationMonotonicTime() -> TimeInterval {
+        TimeInterval(DispatchTime.now().uptimeNanoseconds) / 1_000_000_000
     }
 
     private func diagnostics(for host: WebViewHost) -> WebViewDiagnostics {
@@ -142,6 +238,54 @@ extension FlowIpcAcceptanceRuntimeObserver {
         context: FlowIpcWindowContext,
         verificationSchedule: FlowIpcVerificationSchedule
     ) {
+        if flag("lastWindowClose") {
+            host.scheduleLastWindowCloseAcceptanceIfReady()
+            return
+        }
+        if host.config.flowIpcAutoFileReadGrantRange {
+            host.scheduleFileReadGrantRangeAcceptanceIfReady()
+            return
+        }
+        if host.config.flowIpcAutoFileReadGrantSandbox {
+            host.scheduleFileReadGrantSandboxAcceptanceIfReady()
+            return
+        }
+        if host.config.flowIpcAutoFileWriteGrantSidecarExitSandbox {
+            host.scheduleFileWriteGrantSidecarExitSandboxAcceptanceIfReady()
+            return
+        }
+        if host.config.flowIpcAutoFileWriteGrantReplaySandbox {
+            host.scheduleFileWriteGrantReplaySandboxAcceptanceIfReady()
+            return
+        }
+        if host.config.flowIpcAutoFileWriteGrantHostShutdownSandbox {
+            host.scheduleFileWriteGrantHostShutdownSandboxAcceptanceIfReady()
+            return
+        }
+        if host.config.flowIpcAutoFileWriteGrantIsolationSandbox {
+            host.scheduleFileWriteGrantIsolationSandboxAcceptanceIfReady()
+            return
+        }
+        if host.config.flowIpcAutoFileWriteGrantSandbox
+            || host.config.flowIpcAutoFileWriteGrantCancelSandbox
+            || host.config.flowIpcAutoFileWriteGrantOwnerCloseSandbox {
+            host.scheduleFileWriteGrantSandboxAcceptanceIfReady()
+            return
+        }
+        if host.config.flowIpcAutoFileReadGrantReplay {
+            host.scheduleFileReadGrantReplayAcceptanceIfReady()
+            return
+        }
+        if host.config.flowIpcAutoFileReadGrantIsolation {
+            host.scheduleFileReadGrantIsolationAcceptanceIfReady()
+            return
+        }
+        if host.config.flowIpcAutoFileReadGrant
+            || host.config.flowIpcAutoFileReadGrantSidecarExit
+            || host.config.flowIpcAutoFileReadGrantHostShutdown {
+            host.scheduleFileReadGrantAcceptanceIfReady()
+            return
+        }
         if host.config.flowIpcAutoReactorReload {
             scheduleReactorReloadDevelopmentAcceptance(
                 host: host,
@@ -170,6 +314,38 @@ extension FlowIpcAcceptanceRuntimeObserver {
                 timeoutSeconds: verificationSchedule.autoShutdownTimeoutSeconds)
             return
         }
+        if host.config.flowIpcAutoCapabilityOwnerWindowClose {
+            host.scheduleCapabilityOwnerWindowCloseAcceptanceIfReady()
+            return
+        }
+        if host.config.flowIpcAutoCapabilityContextReopen {
+            host.scheduleCapabilityContextReopenAcceptanceIfReady()
+            return
+        }
+        if host.config.flowIpcAutoMainWindowCloseRecovery {
+            host.scheduleMainWindowCloseRecoveryAcceptanceIfReady()
+            return
+        }
+        if host.config.flowIpcAutoCapabilityGenerationRecovery {
+            host.scheduleCapabilityGenerationRecoveryAcceptanceIfReady()
+            return
+        }
+        if host.config.flowIpcAutoClipboardOutcomes {
+            host.scheduleClipboardOutcomesAcceptanceIfReady()
+            return
+        }
+        if host.config.flowIpcAutoFileDialogOutcomes {
+            host.scheduleFileDialogOutcomesAcceptanceIfReady()
+            return
+        }
+        if host.config.flowIpcAutoNotificationOutcomes {
+            host.scheduleNotificationOutcomesAcceptanceIfReady()
+            return
+        }
+        if host.config.flowIpcAutoNotificationDelivery {
+            host.scheduleNotificationDeliveryAcceptanceIfReady()
+            return
+        }
         if host.config.flowIpcAutoInFlightRequestRecovery {
             scheduleInFlightRequestRecoveryAcceptance(
                 host: host,
@@ -186,6 +362,14 @@ extension FlowIpcAcceptanceRuntimeObserver {
         }
         if host.config.flowIpcAutoMultiWindow {
             host.scheduleMultiWindowAcceptanceIfReady()
+            return
+        }
+        if host.config.flowIpcAutoCapabilityPermission {
+            host.scheduleCapabilityPermissionAcceptanceIfReady()
+            return
+        }
+        if host.config.flowIpcAutoCapabilityDefaultDeny {
+            host.scheduleCapabilityDefaultDenyAcceptanceIfReady()
             return
         }
         if host.config.flowIpcAutoPushDelivery {
@@ -262,8 +446,99 @@ extension FlowIpcAcceptanceRuntimeObserver {
                 timeoutSeconds: verificationSchedule.autoShutdownTimeoutSeconds)
             return
         }
+        if host.config.flowIpcAutoMultiSelectComboBox {
+            scheduleMultiSelectComboBoxAcceptance(
+                host: host,
+                context: context,
+                timeoutSeconds: verificationSchedule.autoShutdownTimeoutSeconds)
+            return
+        }
+        if host.config.flowIpcAutoLazyMultiSelectComboBox {
+            scheduleLazyMultiSelectComboBoxAcceptance(
+                host: host,
+                context: context,
+                timeoutSeconds: verificationSchedule.autoShutdownTimeoutSeconds)
+            return
+        }
         if host.config.flowIpcAutoLocalizedInputPopup {
             scheduleLocalizedInputPopupAcceptance(
+                host: host,
+                context: context,
+                timeoutSeconds: verificationSchedule.autoShutdownTimeoutSeconds)
+            return
+        }
+        if host.config.flowIpcAutoLocalizedNumberValidation {
+            scheduleLocalizedNumberValidationAcceptance(
+                host: host,
+                context: context,
+                timeoutSeconds: verificationSchedule.autoShutdownTimeoutSeconds)
+            return
+        }
+        if host.config.flowIpcAutoLocalizedNumber {
+            scheduleLocalizedNumberAcceptance(
+                host: host,
+                context: context,
+                timeoutSeconds: verificationSchedule.autoShutdownTimeoutSeconds)
+            return
+        }
+        if host.config.flowIpcAutoNativeClipboardEdit {
+            scheduleNativeClipboardEditAcceptance(
+                host: host,
+                context: context,
+                timeoutSeconds: verificationSchedule.autoShutdownTimeoutSeconds)
+            return
+        }
+        if host.config.flowIpcAutoNativeEditRecovery {
+            scheduleNativeEditRecoveryAcceptance(
+                host: host,
+                context: context,
+                timeoutSeconds: verificationSchedule.autoShutdownTimeoutSeconds)
+            return
+        }
+        if host.config.flowIpcAutoRecoveryTermination {
+            scheduleRecoveryTerminationAcceptance(
+                host: host,
+                context: context,
+                timeoutSeconds: verificationSchedule.autoShutdownTimeoutSeconds)
+            return
+        }
+        if host.config.flowIpcAutoSidecarWriteBackpressure {
+            scheduleSidecarWriteBackpressureAcceptance(
+                host: host,
+                context: context,
+                timeoutSeconds: verificationSchedule.autoShutdownTimeoutSeconds)
+            return
+        }
+        if host.config.flowIpcAutoHostShutdownTermination {
+            scheduleHostShutdownTerminationAcceptance(
+                host: host,
+                context: context,
+                timeoutSeconds: verificationSchedule.autoShutdownTimeoutSeconds)
+            return
+        }
+        if host.config.flowIpcAutoNativeEditReopen {
+            scheduleNativeEditReopenAcceptance(
+                host: host,
+                context: context,
+                timeoutSeconds: verificationSchedule.autoShutdownTimeoutSeconds)
+            return
+        }
+        if host.config.flowIpcAutoNativeEditIsolation {
+            scheduleNativeEditIsolationAcceptance(
+                host: host,
+                context: context,
+                timeoutSeconds: verificationSchedule.autoShutdownTimeoutSeconds)
+            return
+        }
+        if host.config.flowIpcAutoNativeEdit {
+            scheduleNativeEditAcceptance(
+                host: host,
+                context: context,
+                timeoutSeconds: verificationSchedule.autoShutdownTimeoutSeconds)
+            return
+        }
+        if host.config.flowIpcAutoExternalFileDrop {
+            scheduleExternalFileDropAcceptance(
                 host: host,
                 context: context,
                 timeoutSeconds: verificationSchedule.autoShutdownTimeoutSeconds)
@@ -292,6 +567,13 @@ extension FlowIpcAcceptanceRuntimeObserver {
         }
         if host.config.flowIpcAutoStructuredRpc {
             scheduleStructuredRpcAcceptance(
+                host: host,
+                context: context,
+                timeoutSeconds: verificationSchedule.autoShutdownTimeoutSeconds)
+            return
+        }
+        if host.config.flowIpcAutoLazyGridSelectedRemoval {
+            scheduleLazyGridSelectedRemovalAcceptance(
                 host: host,
                 context: context,
                 timeoutSeconds: verificationSchedule.autoShutdownTimeoutSeconds)

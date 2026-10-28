@@ -1,0 +1,224 @@
+#!/usr/bin/env bash
+set -euo pipefail
+
+ROOT="$(cd "$(dirname "${BASH_SOURCE[0]}")/../../.." && pwd)"
+ACCEPTANCE_ROOT="$ROOT/test-support/native-host-macos-acceptance"
+BUILDER="$ROOT/bin/vaadin-desktop-build-macos-host"
+DEFAULT_DENY_RUNNER="$ACCEPTANCE_ROOT/bin/run-flow-capability-default-deny"
+TRACE_INSPECTOR="$ROOT/bin/flow-ipc-trace-inspect"
+PACKAGED_APP="$ROOT/.build/native-hosts/macos/VaadinDesktopHost.app"
+PACKAGED_HOST_EXE="$PACKAGED_APP/Contents/MacOS/VaadinDesktopHost"
+PACKAGED_RESOURCES="$PACKAGED_APP/Contents/Resources"
+PACKAGED_MANIFEST="$PACKAGED_RESOURCES/desktop-capabilities.json"
+
+if [[ "$(uname -s)" != "Darwin" ]]; then
+  echo "Capability package-policy acceptance requires macOS." >&2
+  exit 1
+fi
+if [[ "${VATORI_NATIVE_HOST_MACOS_ACCEPTANCE_PACKAGE_LOCK_HELD:-}" != "1" ]]; then
+  exec env VATORI_NATIVE_HOST_MACOS_ACCEPTANCE_PACKAGE_LOCK_HELD=1 \
+    bash "$ACCEPTANCE_ROOT/bin/with-package-lock" -- bash "$0" "$@"
+fi
+if [[ ! -f "$BUILDER" ]]; then
+  echo "Product macOS host builder is missing: $BUILDER" >&2
+  exit 1
+fi
+if [[ ! -f "$DEFAULT_DENY_RUNNER" ]]; then
+  echo "Capability default-deny runner is missing: $DEFAULT_DENY_RUNNER" >&2
+  exit 1
+fi
+if [[ ! -f "$TRACE_INSPECTOR" ]]; then
+  echo "Flow IPC trace inspector is missing: $TRACE_INSPECTOR" >&2
+  exit 1
+fi
+
+WORK="$(mktemp -d "${TMPDIR:-/tmp}/vatori-capability-package-policy.XXXXXX")"
+PROBE_ROOT="$WORK/product-root"
+APPLICATION_JAR="$WORK/application.jar"
+WEBAPP_ROOT="$WORK/webapp"
+APPLICATION_ICON="$PROBE_ROOT/assets/brand/vatori-icon.icns"
+EXPLICIT_MANIFEST="$WORK/desktop-capabilities.json"
+STAGED_RESOURCES="$PROBE_ROOT/.build/native-hosts/macos/VaadinDesktopHost.app/Contents/Resources"
+STAGED_MANIFEST="$STAGED_RESOURCES/desktop-capabilities.json"
+PRESERVATION_MARKER="$STAGED_RESOURCES/policy-preservation.marker"
+EXPECTED_STAGED_MANIFEST="$WORK/expected-staged-manifest.json"
+PACKAGED_MANIFEST_BACKUP="$WORK/packaged-desktop-capabilities.json"
+
+restore_packaged_manifest() {
+  if [[ ! -f "$PACKAGED_MANIFEST_BACKUP" ]]; then
+    return
+  fi
+  if ! cp "$PACKAGED_MANIFEST_BACKUP" "$PACKAGED_MANIFEST" \
+      || ! cmp -s "$PACKAGED_MANIFEST_BACKUP" "$PACKAGED_MANIFEST"; then
+    echo "Could not restore the packaged desktop capability manifest." >&2
+    return 1
+  fi
+}
+
+cleanup() {
+  local status=$?
+  trap - EXIT
+  restore_packaged_manifest || status=1
+  rm -rf "$WORK" || status=1
+  exit "$status"
+}
+trap cleanup EXIT
+
+mkdir -p "$WEBAPP_ROOT" "$(dirname "$APPLICATION_ICON")" "$STAGED_RESOURCES"
+printf 'sidecar sentinel\n' > "$APPLICATION_JAR"
+printf '<!doctype html>\n' > "$WEBAPP_ROOT/index.html"
+printf 'icns' > "$APPLICATION_ICON"
+printf '%s\n' \
+  '{"schemaVersion":1,"permissionMode":"manifest-enforced","windows":[]}' \
+  > "$EXPECTED_STAGED_MANIFEST"
+cp "$EXPECTED_STAGED_MANIFEST" "$STAGED_MANIFEST"
+printf 'preserve-existing-staged-app\n' > "$PRESERVATION_MARKER"
+
+assert_staging_preserved() {
+  local permission_mode="$1"
+  if [[ ! -f "$STAGED_MANIFEST" ]] \
+      || ! cmp -s "$EXPECTED_STAGED_MANIFEST" "$STAGED_MANIFEST"; then
+    echo "Product builder changed the staged manifest while rejecting $permission_mode." >&2
+    exit 1
+  fi
+  if [[ ! -f "$PRESERVATION_MARKER" ]] \
+      || [[ "$(< "$PRESERVATION_MARKER")" != "preserve-existing-staged-app" ]]; then
+    echo "Product builder replaced the staged app while rejecting $permission_mode." >&2
+    exit 1
+  fi
+}
+
+probe_rejected_permission_mode() {
+  local permission_mode="$1"
+  local probe_stdout="$WORK/$permission_mode.stdout"
+  local probe_stderr="$WORK/$permission_mode.stderr"
+  local expected_stderr="$WORK/$permission_mode.expected-stderr"
+  local status
+
+  printf \
+    '{"schemaVersion":1,"permissionMode":"%s","windows":[]}\n' \
+    "$permission_mode" > "$EXPLICIT_MANIFEST"
+  printf \
+    'Product capability manifest must use permissionMode=manifest-enforced; found: %s\n' \
+    "$permission_mode" > "$expected_stderr"
+
+  set +e
+  bash "$BUILDER" \
+    "$PROBE_ROOT" flow-ipc "$APPLICATION_JAR" "$WEBAPP_ROOT" \
+    "$EXPLICIT_MANIFEST" "" "" "$APPLICATION_ICON" "" "" \
+    manifest-enforced > "$probe_stdout" 2> "$probe_stderr"
+  status=$?
+  set -e
+
+  if [[ "$status" -ne 2 ]]; then
+    echo "Product builder did not reject $permission_mode with exit code 2; got $status." >&2
+    cat "$probe_stdout" >&2
+    cat "$probe_stderr" >&2
+    exit 1
+  fi
+  if [[ -s "$probe_stdout" ]] || ! cmp -s "$expected_stderr" "$probe_stderr"; then
+    echo "Product builder returned a non-deterministic rejection for $permission_mode." >&2
+    cat "$probe_stdout" >&2
+    cat "$probe_stderr" >&2
+    exit 1
+  fi
+  assert_staging_preserved "$permission_mode"
+}
+
+probe_rejected_permission_mode allow-all-dev
+probe_rejected_permission_mode trace-only-dry-run
+
+echo "Capability package-policy build-time rejection probes passed."
+
+VAADIN_DESKTOP_MAVEN_OFFLINE="${VAADIN_DESKTOP_MAVEN_OFFLINE:-1}" \
+  bash "$ROOT/bin/vaadin-desktop" package \
+  test-apps/flow-over-ipc-framework-app
+
+if [[ ! -x "$PACKAGED_HOST_EXE" ]]; then
+  echo "Packaged production host executable is missing: $PACKAGED_HOST_EXE" >&2
+  exit 1
+fi
+if [[ ! -f "$PACKAGED_MANIFEST" ]]; then
+  echo "Packaged desktop capability manifest is missing: $PACKAGED_MANIFEST" >&2
+  exit 1
+fi
+cp "$PACKAGED_MANIFEST" "$PACKAGED_MANIFEST_BACKUP"
+
+probe_invalid_packaged_manifest() {
+  local probe_name="$1"
+  local expected_reason="$2"
+  local manifest_document="$3"
+  local probe_trace="$WORK/$probe_name.out.log"
+  local probe_stderr="$WORK/$probe_name.err.log"
+  local expected_stderr="$WORK/$probe_name.expected-stderr.log"
+  local status
+
+  printf '%s\n' "$manifest_document" > "$PACKAGED_MANIFEST"
+  printf 'desktop-capabilities.json is invalid: %s\n' \
+    "$expected_reason" > "$expected_stderr"
+
+  set +e
+  VAADIN_DESKTOP_MACOS_NO_ACTIVATE=1 \
+  VAADIN_DESKTOP_FLOW_IPC_TRACE_DETAIL=full \
+    "$PACKAGED_HOST_EXE" > "$probe_trace" 2> "$probe_stderr"
+  status=$?
+  set -e
+
+  if [[ "$status" -ne 2 ]]; then
+    echo "Packaged production host did not reject $probe_name with exit code 2; got $status." >&2
+    cat "$probe_trace" >&2
+    cat "$probe_stderr" >&2
+    exit 1
+  fi
+  if ! cmp -s "$expected_stderr" "$probe_stderr"; then
+    echo "Packaged production host returned a non-deterministic rejection for $probe_name." >&2
+    cat "$probe_stderr" >&2
+    exit 1
+  fi
+  if [[ ! -s "$probe_trace" ]]; then
+    echo "Packaged production host emitted no startup-integrity trace for $probe_name." >&2
+    exit 1
+  fi
+
+  # This raw guard makes the pre-NSApplication boundary explicit. The inspector
+  # below also rejects any host launch/ready, sidecar, or window creation event.
+  if grep -Eq '"type":"(launch|ready|launch\.sidecar|sidecar\.started|window\.create)"' \
+      "$probe_trace"; then
+    echo "Packaged production host crossed the startup boundary for $probe_name." >&2
+    cat "$probe_trace" >&2
+    exit 1
+  fi
+
+  bash "$TRACE_INSPECTOR" \
+    --require-flow-ipc-capability-manifest-startup-failure \
+    "$probe_trace"
+
+  restore_packaged_manifest
+}
+
+probe_invalid_packaged_manifest \
+  malformed-json \
+  invalid-json-document \
+  '{"schemaVersion":1'
+probe_invalid_packaged_manifest \
+  unsupported-schema \
+  unsupported-schema-version-2 \
+  '{"schemaVersion":2,"permissionMode":"manifest-enforced","windows":[]}'
+probe_invalid_packaged_manifest \
+  unsupported-mode \
+  unsupported-permission-mode \
+  '{"schemaVersion":1,"permissionMode":"unexpected","windows":[]}'
+probe_invalid_packaged_manifest \
+  duplicate-window-entry \
+  invalid-window-capability-entry \
+  '{"schemaVersion":1,"permissionMode":"manifest-enforced","windows":[{"label":"main","commands":[]},{"label":"main","commands":[]}]}'
+
+restore_packaged_manifest
+echo "Capability manifest pre-NSApplication rejection probes passed."
+
+rm -rf "$WORK"
+trap - EXIT
+# The positive gate inspects the completed log itself. Avoid a competing live
+# log follower while LaunchServices gives its trusted AppKit input window focus.
+export VAADIN_DESKTOP_MACOS_LOG_FOLLOW=0
+exec bash "$DEFAULT_DENY_RUNNER" "$@"

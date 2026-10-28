@@ -4,7 +4,6 @@ set -euo pipefail
 ROOT="$(cd "$(dirname "${BASH_SOURCE[0]}")/../../.." && pwd)"
 HOST_LOG="$ROOT/.build/native-hosts/macos/host.out.log"
 
-export VAADIN_DESKTOP_MACOS_NO_ACTIVATE=1
 export VAADIN_DESKTOP_FLOW_IPC_AUTO_OVERLAY_STACK=1
 export VAADIN_DESKTOP_FLOW_IPC_AUTO_SHUTDOWN=1
 export VAADIN_DESKTOP_FLOW_IPC_AUTO_SHUTDOWN_TIMEOUT_SECONDS=45

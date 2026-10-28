@@ -1,0 +1,20 @@
+{
+  "schemaVersion": 1,
+  "permissionMode": "manifest-enforced",
+  "windows": [
+    {
+      "label": "main",
+      "commands": ["window.close"]
+    },
+    {
+      "label": "file-write-grant-recovery-secondary",
+      "commands": [
+        "fileDialog.saveNewWriteGrant",
+        "fileGrant.releaseWrite",
+        "fileGrant.write",
+        "window.close",
+        "window.open"
+      ]
+    }
+  ]
+}

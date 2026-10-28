@@ -1,0 +1,28 @@
+#!/usr/bin/env bash
+set -euo pipefail
+
+ROOT="$(cd "$(dirname "${BASH_SOURCE[0]}")/.." && pwd)"
+BUILD_DIR="$ROOT/.build/test-support/native-host-sidecar-recovery-termination-smoke"
+MODULE_CACHE="$ROOT/.build/clang-module-cache"
+EXECUTABLE="$BUILD_DIR/native-host-sidecar-recovery-termination-smoke"
+
+mkdir -p "$BUILD_DIR" "$MODULE_CACHE"
+CLANG_MODULE_CACHE_PATH="$MODULE_CACHE" /usr/bin/swiftc \
+  "$ROOT/native-hosts/macos/Sources/VaadinDesktopHost/SidecarProtocol.swift" \
+  "$ROOT/native-hosts/macos/Sources/VaadinDesktopHost/LineReader.swift" \
+  "$ROOT/native-hosts/macos/Sources/VaadinDesktopHost/NativeMainRunLoop.swift" \
+  "$ROOT/native-hosts/macos/Sources/VaadinDesktopHost/NativeSidecarInputWriter.swift" \
+  "$ROOT/native-hosts/macos/Sources/VaadinDesktopHost/JavaSidecar.swift" \
+  "$ROOT/test-support/native-host-macos-acceptance/Tests/native-sidecar-recovery-termination-smoke.swift" \
+  -o "$EXECUTABLE"
+"$EXECUTABLE"
+
+CLANG_MODULE_CACHE_PATH="$MODULE_CACHE" /usr/bin/swiftc \
+  -D RETIREMENT_CALLBACK_FAULTS \
+  "$ROOT/native-hosts/macos/Sources/VaadinDesktopHost/SidecarProtocol.swift" \
+  "$ROOT/native-hosts/macos/Sources/VaadinDesktopHost/LineReader.swift" \
+  "$ROOT/native-hosts/macos/Sources/VaadinDesktopHost/NativeSidecarInputWriter.swift" \
+  "$ROOT/native-hosts/macos/Sources/VaadinDesktopHost/JavaSidecar.swift" \
+  "$ROOT/test-support/native-host-macos-acceptance/Tests/native-sidecar-recovery-termination-smoke.swift" \
+  -o "$EXECUTABLE-callback-faults"
+"$EXECUTABLE-callback-faults"

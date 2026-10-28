@@ -1,0 +1,27 @@
+#!/usr/bin/env bash
+set -euo pipefail
+
+ROOT="$(cd "$(dirname "${BASH_SOURCE[0]}")/../../.." && pwd)"
+APP="$ROOT/test-apps/flow-over-ipc-framework-app"
+
+if [[ -f "$HOME/.sdkman/bin/sdkman-init.sh" ]]; then
+  set +u
+  # shellcheck source=/dev/null
+  source "$HOME/.sdkman/bin/sdkman-init.sh"
+  set -u
+fi
+if ! command -v javac >/dev/null 2>&1 || ! command -v java >/dev/null 2>&1; then
+  echo "File grant replay handoff smoke requires a JDK." >&2
+  exit 1
+fi
+
+WORK="$(mktemp -d "${TMPDIR:-/tmp}/vatori-file-read-grant-replay-handoff.XXXXXX")"
+cleanup() {
+  rm -rf -- "$WORK"
+}
+trap cleanup EXIT
+
+javac -d "$WORK/classes" \
+  "$APP/src/main/java/dev/vatori/ipcframework/FileReadGrantReplayHandoff.java" \
+  "$APP/src/test/java/dev/vatori/ipcframework/FileReadGrantReplayHandoffSmokeMain.java"
+java -cp "$WORK/classes" dev.vatori.ipcframework.FileReadGrantReplayHandoffSmokeMain

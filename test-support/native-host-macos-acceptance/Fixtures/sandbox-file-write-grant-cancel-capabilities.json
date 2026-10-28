@@ -1,0 +1,14 @@
+{
+  "schemaVersion": 1,
+  "permissionMode": "manifest-enforced",
+  "windows": [
+    {
+      "label": "main",
+      "commands": [
+        "fileDialog.saveNewWriteGrant",
+        "fileGrant.write",
+        "fileGrant.cancelWrite"
+      ]
+    }
+  ]
+}

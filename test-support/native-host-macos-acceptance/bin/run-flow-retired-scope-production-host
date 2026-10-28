@@ -1,0 +1,272 @@
+#!/usr/bin/env bash
+set -euo pipefail
+
+ROOT="$(cd "$(dirname "${BASH_SOURCE[0]}")/../../.." && pwd)"
+ACCEPTANCE_ROOT="$ROOT/test-support/native-host-macos-acceptance"
+if [[ "$(uname -s)" != "Darwin" ]]; then
+  echo "Production-host retired-scope acceptance requires macOS." >&2
+  exit 1
+fi
+if [[ "${VATORI_NATIVE_HOST_MACOS_ACCEPTANCE_PACKAGE_LOCK_HELD:-}" != "1" ]]; then
+  exec env VATORI_NATIVE_HOST_MACOS_ACCEPTANCE_PACKAGE_LOCK_HELD=1 \
+    bash "$ACCEPTANCE_ROOT/bin/with-package-lock" -- bash "$0" "$@"
+fi
+
+FIXTURE_SOURCE="$ACCEPTANCE_ROOT/Fixtures/RetiredScopeProductionHostSidecar.java"
+PACKAGED_APP="$ROOT/.build/native-hosts/macos/VaadinDesktopHost.app"
+PACKAGED_RESOURCES="$PACKAGED_APP/Contents/Resources"
+ARTIFACT_ROOT="$ROOT/.build/native-hosts/macos"
+TRACE="$ARTIFACT_ROOT/flow-retired-scope-production-host.out.log"
+ERROR_LOG="$ARTIFACT_ROOT/flow-retired-scope-production-host.err.log"
+WORK="$(mktemp -d "${TMPDIR:-/tmp}/vatori-retired-scope-production-host.XXXXXX")"
+RUN_TRACE="$WORK/flow-retired-scope-production-host.out.log"
+RUN_ERROR_LOG="$WORK/flow-retired-scope-production-host.err.log"
+SHADOW_ROOT="$WORK/production-root"
+FIXTURE_CLASSES="$WORK/fixture-classes"
+FIXTURE_JAR="$WORK/retired-scope-production-host-sidecar.jar"
+WEBAPP_ROOT="$WORK/FlowWebApp"
+CAPABILITY_MANIFEST="$WORK/desktop-capabilities.json"
+PID_FILE="$WORK/sidecar.pid"
+HOST_PID=""
+ARTIFACTS_PUBLISHED=0
+: > "$RUN_TRACE"
+: > "$RUN_ERROR_LOG"
+
+stop_pid() {
+  local pid="$1"
+  if [[ ! "$pid" =~ ^[0-9]+$ ]] || ! kill -0 "$pid" 2>/dev/null; then
+    return
+  fi
+  kill "$pid" 2>/dev/null || true
+  local attempt
+  for attempt in {1..50}; do
+    if ! kill -0 "$pid" 2>/dev/null; then
+      return
+    fi
+    sleep 0.1
+  done
+  kill -KILL "$pid" 2>/dev/null || true
+}
+
+sidecar_pid_matches_fixture() {
+  local pid="$1"
+  local command=""
+  if [[ ! "$pid" =~ ^[0-9]+$ ]] || ! kill -0 "$pid" 2>/dev/null; then
+    return 3
+  fi
+  if ! command="$(/bin/ps -ww -p "$pid" -o command= 2>/dev/null)" \
+      || [[ -z "${command//[[:space:]]/}" ]]; then
+    return 2
+  fi
+  if [[ "$command" == *"$HOST_APP/Contents/Resources/Sidecar/application.jar"* ]]; then
+    return 0
+  fi
+  return 1
+}
+
+stop_sidecar_pid() {
+  local pid="$1"
+  local identity=0
+  if [[ ! "$pid" =~ ^[0-9]+$ ]] || ! kill -0 "$pid" 2>/dev/null; then
+    return
+  fi
+  sidecar_pid_matches_fixture "$pid" || identity=$?
+  case "$identity" in
+    0) stop_pid "$pid" ;;
+    1)
+      echo "Refusing to stop reused or unexpected sidecar PID: $pid" >&2
+      return 1
+      ;;
+    2)
+      echo "Refusing to stop sidecar PID with unreadable process identity: $pid" >&2
+      return 1
+      ;;
+    3) return ;;
+  esac
+}
+
+publish_file() {
+  local source="$1"
+  local destination="$2"
+  local staging=""
+  if [[ ! -f "$source" ]]; then
+    return 1
+  fi
+  staging="$(mktemp "$ARTIFACT_ROOT/.$(basename "$destination").XXXXXX")" \
+    || return
+  if cp "$source" "$staging" && mv -f "$staging" "$destination"; then
+    return 0
+  fi
+  rm -f "$staging"
+  return 1
+}
+
+publish_artifacts() {
+  local status=0
+  if (( ARTIFACTS_PUBLISHED == 1 )); then
+    return
+  fi
+  publish_file "$RUN_TRACE" "$TRACE" || status=1
+  publish_file "$RUN_ERROR_LOG" "$ERROR_LOG" || status=1
+  if (( status == 0 )); then
+    ARTIFACTS_PUBLISHED=1
+  fi
+  return "$status"
+}
+
+cleanup() {
+  local status=$?
+  trap - EXIT
+  if [[ -n "$HOST_PID" ]]; then
+    stop_pid "$HOST_PID"
+    wait "$HOST_PID" 2>/dev/null || true
+  fi
+  if [[ -f "$PID_FILE" ]]; then
+    local sidecar_pid=""
+    IFS= read -r sidecar_pid < "$PID_FILE" || true
+    stop_sidecar_pid "$sidecar_pid" || true
+  fi
+  if (( status != 0 )); then
+    printf 'RETIRED_SCOPE_PRODUCTION_HOST_RUNNER_FAIL exit=%s\n' \
+      "$status" >> "$RUN_ERROR_LOG" || true
+  fi
+  publish_artifacts || true
+  rm -rf "$WORK"
+  exit "$status"
+}
+trap cleanup EXIT
+
+if [[ ! -f "$FIXTURE_SOURCE" ]]; then
+  echo "Retired-scope fake sidecar source is missing: $FIXTURE_SOURCE" >&2
+  exit 1
+fi
+
+mkdir -p "$ARTIFACT_ROOT" "$FIXTURE_CLASSES"
+
+VAADIN_DESKTOP_MAVEN_OFFLINE="${VAADIN_DESKTOP_MAVEN_OFFLINE:-1}" \
+  bash "$ROOT/bin/vaadin-desktop" package \
+  test-apps/flow-over-ipc-framework-app
+
+if [[ ! -f "$PACKAGED_RESOURCES/FlowWebApp/index.html" ]]; then
+  echo "Packaged standard Vaadin production bundle is missing." >&2
+  exit 1
+fi
+if [[ ! -f "$PACKAGED_RESOURCES/desktop-capabilities.json" ]]; then
+  echo "Packaged desktop capability manifest is missing." >&2
+  exit 1
+fi
+
+mkdir -p "$WEBAPP_ROOT" "$SHADOW_ROOT/native-hosts/macos" \
+  "$SHADOW_ROOT/assets/brand"
+cp -R "$PACKAGED_RESOURCES/FlowWebApp/." "$WEBAPP_ROOT/"
+cp "$PACKAGED_RESOURCES/desktop-capabilities.json" "$CAPABILITY_MANIFEST"
+cp -R "$ROOT/native-hosts/macos/Sources" "$SHADOW_ROOT/native-hosts/macos/"
+cp -R "$ROOT/native-hosts/macos/Resources" "$SHADOW_ROOT/native-hosts/macos/"
+cp "$ROOT/assets/brand/vatori-icon.icns" \
+  "$SHADOW_ROOT/assets/brand/vatori-icon.icns"
+
+javac --release 21 \
+  -d "$FIXTURE_CLASSES" \
+  "$FIXTURE_SOURCE"
+jar cfe "$FIXTURE_JAR" RetiredScopeProductionHostSidecar \
+  -C "$FIXTURE_CLASSES" .
+
+VAADIN_DESKTOP_FLOW_IPC_SIDECAR_RESTART_LIMIT=0 \
+VAADIN_DESKTOP_SIDECAR_INITIAL_READY_TIMEOUT_SECONDS=15 \
+VAADIN_DESKTOP_FLOW_IPC_SIDECAR_RECOVERY_READY_TIMEOUT_SECONDS=5 \
+VAADIN_DESKTOP_FLOW_IPC_SIDECAR_RECOVERY_STABLE_RUN_SECONDS=5 \
+  bash "$ROOT/bin/vaadin-desktop-build-macos-host" \
+  "$SHADOW_ROOT" flow-ipc "$FIXTURE_JAR" "$WEBAPP_ROOT" \
+  "$CAPABILITY_MANIFEST" "" "" \
+  "$SHADOW_ROOT/assets/brand/vatori-icon.icns" "" "" manifest-enforced
+
+HOST_APP="$SHADOW_ROOT/.build/native-hosts/macos/VaadinDesktopHost.app"
+HOST_EXE="$HOST_APP/Contents/MacOS/VaadinDesktopHost"
+HOST_CONFIG="$HOST_APP/Contents/Resources/VatoriHost.json"
+if [[ ! -x "$HOST_EXE" ]]; then
+  echo "Temporary production host executable is missing: $HOST_EXE" >&2
+  exit 1
+fi
+if ! grep -Fq '"restartLimit": 0' "$HOST_CONFIG"; then
+  echo "Temporary production host did not disable sidecar recovery." >&2
+  exit 1
+fi
+
+VAADIN_DESKTOP_MACOS_NO_ACTIVATE=1 \
+VAADIN_DESKTOP_FLOW_IPC_TRACE_DETAIL=full \
+VATORI_RETIRED_SCOPE_PRODUCTION_HOST_PID_FILE="$PID_FILE" \
+  "$HOST_EXE" > "$RUN_TRACE" 2> "$RUN_ERROR_LOG" &
+HOST_PID=$!
+
+timed_out=0
+deadline=$((SECONDS + 60))
+while kill -0 "$HOST_PID" 2>/dev/null; do
+  if (( SECONDS >= deadline )); then
+    timed_out=1
+    stop_pid "$HOST_PID"
+    break
+  fi
+  sleep 0.2
+done
+
+set +e
+wait "$HOST_PID"
+status=$?
+set -e
+HOST_PID=""
+
+if (( timed_out == 1 )); then
+  echo "Production-host retired-scope acceptance timed out." >&2
+  tail -80 "$RUN_TRACE" >&2 || true
+  tail -80 "$RUN_ERROR_LOG" >&2 || true
+  exit 124
+fi
+if [[ "$status" -ne 0 ]]; then
+  echo "Production host exited with status $status." >&2
+  tail -80 "$RUN_TRACE" >&2 || true
+  tail -80 "$RUN_ERROR_LOG" >&2 || true
+  exit "$status"
+fi
+if ! grep -Fq 'RETIRED_SCOPE_PRODUCTION_HOST_PASS' "$RUN_ERROR_LOG"; then
+  echo "Fake sidecar PASS marker is missing." >&2
+  tail -80 "$RUN_ERROR_LOG" >&2 || true
+  exit 1
+fi
+if grep -Fq 'RETIRED_SCOPE_PRODUCTION_HOST_FAIL' "$RUN_ERROR_LOG"; then
+  echo "Fake sidecar reported a failure despite the host exit status." >&2
+  tail -80 "$RUN_ERROR_LOG" >&2 || true
+  exit 1
+fi
+
+bash "$ROOT/bin/flow-ipc-trace-inspect" \
+  --require-flow-ipc-retired-scope-production-host \
+  "$RUN_TRACE"
+
+if [[ -f "$PID_FILE" ]]; then
+  sidecar_pid=""
+  IFS= read -r sidecar_pid < "$PID_FILE" || true
+  if [[ "$sidecar_pid" =~ ^[0-9]+$ ]] \
+      && kill -0 "$sidecar_pid" 2>/dev/null; then
+    sidecar_identity=0
+    sidecar_pid_matches_fixture "$sidecar_pid" || sidecar_identity=$?
+    case "$sidecar_identity" in
+      0)
+        echo "Fake sidecar survived the production host shutdown: $sidecar_pid" >&2
+        exit 1
+        ;;
+      1)
+        echo "Sidecar PID was reused after shutdown and will not be touched: $sidecar_pid" >&2
+        ;;
+      2)
+        echo "Cannot verify the surviving sidecar PID identity: $sidecar_pid" >&2
+        exit 1
+        ;;
+      3) ;;
+    esac
+  fi
+fi
+
+publish_artifacts
+echo "Production-host retired-scope acceptance passed."
+echo "Trace: $TRACE"
+echo "Sidecar stderr: $ERROR_LOG"

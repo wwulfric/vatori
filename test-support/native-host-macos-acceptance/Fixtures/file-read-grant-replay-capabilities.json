@@ -1,0 +1,20 @@
+{
+  "schemaVersion": 1,
+  "permissionMode": "manifest-enforced",
+  "windows": [
+    {
+      "label": "main",
+      "commands": ["window.close"]
+    },
+    {
+      "label": "file-read-grant-replay-secondary",
+      "commands": [
+        "fileDialog.openReadGrant",
+        "fileGrant.read",
+        "fileGrant.release",
+        "window.close",
+        "window.open"
+      ]
+    }
+  ]
+}

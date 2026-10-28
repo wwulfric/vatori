@@ -1,0 +1,27 @@
+#!/usr/bin/env bash
+set -euo pipefail
+
+ROOT="$(cd "$(dirname "${BASH_SOURCE[0]}")/../../.." && pwd)"
+HOST_LOG="$ROOT/.build/native-hosts/macos/host.out.log"
+
+export VAADIN_DESKTOP_ACCEPTANCE_OMIT_CAPABILITY_MANIFEST=1
+export VAADIN_DESKTOP_ACCEPTANCE_CAPABILITY_MANIFEST_FALLBACK_MODE=manifest-enforced
+export VAADIN_DESKTOP_FLOW_IPC_AUTO_CAPABILITY_DEFAULT_DENY=1
+export VAADIN_DESKTOP_FLOW_IPC_AUTO_SHUTDOWN=1
+export VAADIN_DESKTOP_FLOW_IPC_AUTO_SHUTDOWN_TIMEOUT_SECONDS=60
+export VAADIN_DESKTOP_FLOW_IPC_TRACE_DETAIL=full
+
+bash "$ROOT/test-support/native-host-macos-acceptance/bin/run" \
+  dev test-apps/flow-over-ipc-framework-app
+
+EXPECTED_MANIFEST='{"schemaVersion":1,"permissionMode":"manifest-enforced","windows":[]}'
+STAGED_MANIFEST="$ROOT/.build/native-hosts/macos/VaadinDesktopHost.app/Contents/Resources/desktop-capabilities.json"
+if [[ ! -f "$STAGED_MANIFEST" \
+      || "$(tr -d '\r\n' < "$STAGED_MANIFEST")" != "$EXPECTED_MANIFEST" ]]; then
+  echo "macOS capability default-deny acceptance staged the wrong fallback manifest" >&2
+  exit 1
+fi
+
+bash "$ROOT/bin/flow-ipc-trace-inspect" \
+  --require-flow-ipc-capability-default-deny \
+  "$HOST_LOG"

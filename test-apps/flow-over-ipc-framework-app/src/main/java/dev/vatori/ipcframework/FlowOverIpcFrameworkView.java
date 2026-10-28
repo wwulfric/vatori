@@ -130,6 +130,8 @@ import com.vaadin.flow.server.streams.DownloadResponse;
 import com.vaadin.flow.server.streams.UploadHandler;
 import com.vaadin.flow.component.dependency.JsModule;
 import dev.vatori.desktop.Desktop;
+import dev.vatori.desktop.DesktopCommandResult;
+import dev.vatori.desktop.DesktopWindow;
 import tools.jackson.core.type.TypeReference;
 import tools.jackson.databind.JsonNode;
 
@@ -278,6 +280,186 @@ public class FlowOverIpcFrameworkView extends VerticalLayout {
                                 FlowCrossSessionMultipartUploadRoute.class)));
         openFlowCrossSessionMultipartUpload.setId(
                 "framework-flow-cross-session-multipart-upload-open-route");
+        Button openFlowCapabilityContextReopen = new Button(
+                "Open Flow capability context reopen route", event ->
+                event.getSource().getUI()
+                        .ifPresent(ui -> ui.navigate(
+                                FlowCapabilityContextReopenRoute.class)));
+        openFlowCapabilityContextReopen.setId(
+                "framework-flow-capability-context-reopen-open-route");
+        Button openFlowCapabilityPermission = new Button(
+                "Open Flow capability permission route", event ->
+                event.getSource().getUI()
+                        .ifPresent(ui -> ui.navigate(
+                                FlowCapabilityPermissionRoute.class)));
+        openFlowCapabilityPermission.setId(
+                "framework-flow-capability-permission-open-route");
+        Button openFlowClipboardOutcomes = new Button(
+                "Open Flow clipboard outcomes route", event ->
+                event.getSource().getUI()
+                        .ifPresent(ui -> ui.navigate(
+                                FlowClipboardOutcomesRoute.class)));
+        openFlowClipboardOutcomes.setId(
+                "framework-flow-clipboard-outcomes-open-route");
+        Button openFlowNotificationOutcomes = new Button(
+                "Open Flow notification outcomes route", event ->
+                event.getSource().getUI()
+                        .ifPresent(ui -> ui.navigate(
+                                FlowNotificationOutcomesRoute.class)));
+        openFlowNotificationOutcomes.setId(
+                "framework-flow-notification-outcomes-open-route");
+        Button openFlowNotificationDelivery = new Button(
+                "Open Flow notification delivery route", event ->
+                event.getSource().getUI()
+                        .ifPresent(ui -> ui.navigate(
+                                FlowNotificationDeliveryRoute.class)));
+        openFlowNotificationDelivery.setId(
+                "framework-flow-notification-delivery-open-route");
+        Button openFlowFileDialogGeneration = new Button(
+                "Open Flow file dialog generation route", event ->
+                event.getSource().getUI()
+                        .ifPresent(ui -> ui.navigate(
+                                FlowFileDialogGenerationRoute.class)));
+        openFlowFileDialogGeneration.setId(
+                "framework-flow-file-dialog-generation-open-route");
+        Button openFlowFileDialogOutcomes = new Button(
+                "Open Flow file dialog outcomes route", event ->
+                event.getSource().getUI()
+                        .ifPresent(ui -> ui.navigate(
+                                FlowFileDialogOutcomesRoute.class)));
+        openFlowFileDialogOutcomes.setId(
+                "framework-flow-file-dialog-outcomes-open-route");
+        Button openFlowFileReadGrant = new Button(
+                "Open Flow file read grant route", event ->
+                event.getSource().getUI()
+                        .ifPresent(ui -> ui.navigate(
+                                FlowFileReadGrantRoute.class)));
+        openFlowFileReadGrant.setId(
+                "framework-flow-file-read-grant-open-route");
+        Button openFlowFileReadGrantIsolation = new Button(
+                "Open Flow file read grant isolation route", event ->
+                event.getSource().getUI()
+                        .ifPresent(ui -> ui.navigate(
+                                FlowFileReadGrantIsolationRoute.class)));
+        openFlowFileReadGrantIsolation.setId(
+                "framework-flow-file-read-grant-isolation-open-route");
+        Button openFlowFileReadGrantReplay = new Button(
+                "Open Flow file read grant replay route", event ->
+                event.getSource().getUI().ifPresent(ui -> ui.navigate(
+                        FlowFileReadGrantReplayRoute.class)));
+        openFlowFileReadGrantReplay.setId(
+                "framework-flow-file-read-grant-replay-open-route");
+        Button openFlowFileReadGrantRange = new Button(
+                "Open Flow file read grant range route", event ->
+                event.getSource().getUI().ifPresent(ui -> ui.navigate(
+                        FlowFileReadGrantRangeRoute.class)));
+        openFlowFileReadGrantRange.setId(
+                "framework-flow-file-read-grant-range-open-route");
+        Button openFlowFileWriteGrant = new Button(
+                "Open Flow file write grant route", event ->
+                event.getSource().getUI().ifPresent(ui -> ui.navigate(
+                        FlowFileWriteGrantRoute.class)));
+        openFlowFileWriteGrant.setId(
+                "framework-flow-file-write-grant-open-route");
+        Button openFlowFileWriteGrantIsolation = new Button(
+                "Open Flow file write grant isolation route", event ->
+                event.getSource().getUI().ifPresent(ui -> ui.navigate(
+                        FlowFileWriteGrantIsolationRoute.class)));
+        openFlowFileWriteGrantIsolation.setId(
+                "framework-flow-file-write-grant-isolation-open");
+        Button openFlowFileWriteGrantRecovery = new Button(
+                "Open Flow file write grant recovery route", event ->
+                event.getSource().getUI().ifPresent(ui -> ui.navigate(
+                        FlowFileWriteGrantRecoveryRoute.class)));
+        openFlowFileWriteGrantRecovery.setId(
+                "framework-flow-file-write-grant-recovery-open-route");
+        Button openFlowFileWriteGrantReplay = new Button(
+                "Open Flow file write grant recovery replay",
+                event -> event.getSource().getUI().ifPresent(ui -> ui.navigate(
+                        FlowFileWriteGrantReplayRoute.class)));
+        openFlowFileWriteGrantReplay.setId(
+                "framework-flow-file-write-grant-replay-open-route");
+        Button openFlowFileWriteGrantOwnerClose = new Button(
+                "Open Flow write grant owner-close window", event -> {
+                    event.getSource().setEnabled(false);
+                    DesktopCommandResult opened = Desktop.current().windows().open(
+                            DesktopWindow.builder("file-write-owner")
+                                    .title("Flow write grant owner close")
+                                    .size(1000, 900)
+                                    .route("flow-file-write-grant")
+                                    .build());
+                    if (opened.success()) {
+                        Desktop.current().windows().close("main");
+                    }
+                });
+        openFlowFileWriteGrantOwnerClose.setId(
+                "framework-flow-file-write-grant-owner-close-open");
+        Button openFlowFileDialogOwnerClose = new Button(
+                "Open Flow file dialog owner-close route", event ->
+                event.getSource().getUI()
+                        .ifPresent(ui -> ui.navigate(
+                                FlowFileDialogOwnerWindowCloseRoute.class)));
+        openFlowFileDialogOwnerClose.setId(
+                "framework-flow-file-dialog-owner-close-open-route");
+        Button openFlowMainWindowCloseRecovery = new Button(
+                "Open Flow main-window close recovery route", event ->
+                event.getSource().getUI()
+                        .ifPresent(ui -> ui.navigate(
+                                FlowMainWindowCloseRecoveryRoute.class)));
+        openFlowMainWindowCloseRecovery.setId(
+                "framework-flow-main-window-close-recovery-open-route");
+        Button openFlowLastWindowClose = new Button(
+                "Open Flow final-window close route", event ->
+                event.getSource().getUI().ifPresent(ui -> ui.navigate(
+                        FlowLastWindowCloseRoute.class)));
+        openFlowLastWindowClose.setId("framework-flow-last-window-close-open-route");
+        Button openFlowLazyGridSelection = new Button(
+                "Open Flow lazy Grid selection route", event ->
+                event.getSource().getUI()
+                        .ifPresent(ui -> ui.navigate(
+                                FlowLazyGridSelectionRoute.class)));
+        openFlowLazyGridSelection.setId(
+                "framework-flow-lazy-grid-selection-open-route");
+        Button openFlowMultiSelectComboBox = new Button(
+                "Open Flow MultiSelectComboBox route", event ->
+                event.getSource().getUI()
+                        .ifPresent(ui -> ui.navigate(
+                                FlowMultiSelectComboBoxRoute.class)));
+        openFlowMultiSelectComboBox.setId(
+                "framework-flow-multi-select-combo-box-open-route");
+        Button openFlowLazyMultiSelectComboBox = new Button(
+                "Open Flow lazy MultiSelectComboBox route", event ->
+                event.getSource().getUI()
+                        .ifPresent(ui -> ui.navigate(
+                                FlowLazyMultiSelectComboBoxRoute.class)));
+        openFlowLazyMultiSelectComboBox.setId(
+                "framework-flow-lazy-multi-select-combo-box-open-route");
+        Button openFlowLocalizedNumber = new Button(
+                "Open Flow localized number route", event ->
+                event.getSource().getUI()
+                        .ifPresent(ui -> ui.navigate(
+                                FlowLocalizedNumberRoute.class)));
+        openFlowLocalizedNumber.setId(
+                "framework-flow-localized-number-open-route");
+        Button openFlowLocalizedNumberValidation = new Button(
+                "Open Flow localized number validation route", event ->
+                event.getSource().getUI()
+                        .ifPresent(ui -> ui.navigate(
+                                FlowLocalizedNumberValidationRoute.class)));
+        openFlowLocalizedNumberValidation.setId(
+                "framework-flow-localized-number-validation-open-route");
+        Button openFlowNativeEdit = new Button(
+                "Open Flow native edit route", event ->
+                event.getSource().getUI()
+                        .ifPresent(ui -> ui.navigate(FlowNativeEditRoute.class)));
+        openFlowNativeEdit.setId("framework-flow-native-edit-open-route");
+        Button openFlowExternalFileDrop = new Button(
+                "Open Flow external file drop route", event ->
+                event.getSource().getUI()
+                        .ifPresent(ui -> ui.navigate(
+                                FlowExternalFileDropRoute.class)));
+        openFlowExternalFileDrop.setId(
+                "framework-flow-external-file-drop-open-route");
 
         BigDecimalField budget = new BigDecimalField("Budget");
         budget.setId("framework-budget");
@@ -2736,6 +2918,32 @@ public class FlowOverIpcFrameworkView extends VerticalLayout {
                 openFlowRequestFanout,
                 openFlowConcurrentMultipartUpload,
                 openFlowCrossSessionMultipartUpload,
+                openFlowCapabilityContextReopen,
+                openFlowCapabilityPermission,
+                openFlowClipboardOutcomes,
+                openFlowNotificationOutcomes,
+                openFlowNotificationDelivery,
+                openFlowFileDialogGeneration,
+                openFlowFileDialogOutcomes,
+                openFlowFileReadGrant,
+                openFlowFileReadGrantIsolation,
+                openFlowFileReadGrantReplay,
+                openFlowFileReadGrantRange,
+                openFlowFileWriteGrant,
+                openFlowFileWriteGrantIsolation,
+                openFlowFileWriteGrantRecovery,
+                openFlowFileWriteGrantReplay,
+                openFlowFileWriteGrantOwnerClose,
+                openFlowFileDialogOwnerClose,
+                openFlowMainWindowCloseRecovery,
+                openFlowLastWindowClose,
+                openFlowLazyGridSelection,
+                openFlowMultiSelectComboBox,
+                openFlowLazyMultiSelectComboBox,
+                openFlowLocalizedNumber,
+                openFlowLocalizedNumberValidation,
+                openFlowNativeEdit,
+                openFlowExternalFileDrop,
                 budget, expedited,
                 auditChannels, checkboxGroupServerUpdate, checkboxGroupStatus,
                 priority, reviewer, dueDate, decision, caseTitle,

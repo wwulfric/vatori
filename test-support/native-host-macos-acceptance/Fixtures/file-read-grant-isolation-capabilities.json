@@ -1,0 +1,24 @@
+{
+  "schemaVersion": 1,
+  "permissionMode": "manifest-enforced",
+  "windows": [
+    {
+      "label": "main",
+      "commands": [
+        "fileGrant.read",
+        "fileGrant.release",
+        "window.close"
+      ]
+    },
+    {
+      "label": "file-read-grant-isolation-secondary",
+      "commands": [
+        "fileDialog.openReadGrant",
+        "fileGrant.read",
+        "fileGrant.release",
+        "window.close",
+        "window.open"
+      ]
+    }
+  ]
+}

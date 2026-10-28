@@ -147,11 +147,27 @@ check_trace_inspector_contract() {
   fi
 
   local unexpected_source
-  unexpected_source="$(find "$main_source" -type f ! -name 'StandardBundleTraceInspector.java' -print -quit)"
+  # One standard-bundle CLI owns every gate. Focused evidence helpers
+  # and their smokes are explicit members, not another inspector or typed shell.
+  unexpected_source="$(find "$main_source" -type f \
+    ! -name 'StandardBundleTraceInspector.java' \
+    ! -name 'NotificationOutcomesTraceGate.java' \
+    ! -name 'RecoveryTerminationTraceGate.java' \
+    ! -name 'HostShutdownTerminationTraceGate.java' \
+    ! -name 'HostReadyTimeoutTraceGate.java' \
+    ! -name 'SidecarWriteBackpressureTraceGate.java' \
+    ! -name 'NotificationDeliveryTraceGate.java' -print -quit)"
   if [[ -n "$unexpected_source" ]]; then
     fail "historical trace inspector source returned: $unexpected_source"
   fi
-  unexpected_source="$(find "$test_source" -type f ! -name 'StandardBundleTraceInspectorSmokeMain.java' -print -quit)"
+  unexpected_source="$(find "$test_source" -type f \
+    ! -name 'StandardBundleTraceInspectorSmokeMain.java' \
+    ! -name 'NotificationOutcomesTraceGateSmokeMain.java' \
+    ! -name 'RecoveryTerminationTraceGateSmokeMain.java' \
+    ! -name 'HostShutdownTerminationTraceGateSmokeMain.java' \
+    ! -name 'HostReadyTimeoutTraceGateSmokeMain.java' \
+    ! -name 'SidecarWriteBackpressureTraceGateSmokeMain.java' \
+    ! -name 'NotificationDeliveryTraceGateSmokeMain.java' -print -quit)"
   if [[ -n "$unexpected_source" ]]; then
     fail "historical trace inspector test returned: $unexpected_source"
   fi

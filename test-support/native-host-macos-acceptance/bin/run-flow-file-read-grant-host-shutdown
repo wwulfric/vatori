@@ -1,0 +1,37 @@
+#!/usr/bin/env bash
+set -euo pipefail
+
+ROOT="$(cd "$(dirname "${BASH_SOURCE[0]}")/../../.." && pwd)"
+ACCEPTANCE_ROOT="$ROOT/test-support/native-host-macos-acceptance"
+HOST_LOG="$ROOT/.build/native-hosts/macos/host.out.log"
+
+if [[ "${VATORI_NATIVE_HOST_MACOS_ACCEPTANCE_PACKAGE_LOCK_HELD:-}" != "1" ]]; then
+  exec env VATORI_NATIVE_HOST_MACOS_ACCEPTANCE_PACKAGE_LOCK_HELD=1 \
+    bash "$ACCEPTANCE_ROOT/bin/with-package-lock" -- bash "$0" "$@"
+fi
+
+WORK="$(mktemp -d "${TMPDIR:-/tmp}/vatori-file-read-grant-quit.XXXXXX")"
+cleanup() {
+  rm -rf -- "$WORK"
+}
+trap cleanup EXIT
+
+unset VAADIN_DESKTOP_FLOW_IPC_AUTO_FILE_DIALOG_CANCEL
+unset VAADIN_DESKTOP_FLOW_IPC_AUTO_FILE_READ_GRANT
+unset VAADIN_DESKTOP_FLOW_IPC_AUTO_FILE_READ_GRANT_SIDECAR_EXIT
+unset VAADIN_DESKTOP_FLOW_IPC_AUTO_FILE_READ_GRANT_ISOLATION
+unset VAADIN_DESKTOP_FLOW_IPC_AUTO_FILE_READ_GRANT_REPLAY
+unset VAADIN_DESKTOP_FLOW_IPC_AUTO_FILE_READ_GRANT_RANGE
+export VAADIN_DESKTOP_MACOS_NO_ACTIVATE=0
+export VAADIN_DESKTOP_FLOW_IPC_AUTO_FILE_READ_GRANT_HOST_SHUTDOWN=1
+export VAADIN_DESKTOP_FLOW_IPC_FILE_READ_GRANT_FIXTURE_ROOT="$WORK"
+export VAADIN_DESKTOP_FLOW_IPC_AUTO_SHUTDOWN=1
+export VAADIN_DESKTOP_FLOW_IPC_AUTO_SHUTDOWN_TIMEOUT_SECONDS="${VAADIN_DESKTOP_FLOW_IPC_AUTO_SHUTDOWN_TIMEOUT_SECONDS:-600}"
+export VAADIN_DESKTOP_FLOW_IPC_TRACE_DETAIL=full
+
+bash "$ACCEPTANCE_ROOT/bin/run" \
+  dev test-apps/flow-over-ipc-framework-app
+
+bash "$ROOT/bin/flow-ipc-trace-inspect" \
+  --require-flow-ipc-file-read-grant-host-shutdown \
+  "$HOST_LOG"

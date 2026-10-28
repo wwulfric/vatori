@@ -10,10 +10,42 @@ final class FlowIpcAcceptanceRuntimeObserver: HostRuntimeObserver {
     var reactorReloadAcceptanceScheduled = false
     var javaReloadAcceptanceScheduled = false
     var javaRollbackAcceptanceScheduled = false
+    var initialNavigationWatchdog = FlowIpcInitialNavigationWatchdog()
+    var initialNavigationTimeoutWorkItem: DispatchWorkItem?
     private var openPanelObservers: [NSObjectProtocol] = []
 
     func flag(_ name: String) -> Bool {
         flags.contains(name)
+    }
+
+    func applicationWillTerminate(host: WebViewHost) {
+        if flag("sidecarWriteBackpressure") {
+            observeSidecarWriteBackpressure()
+        }
+        if flag("hostShutdownTermination") {
+            observeHostShutdownTermination()
+        }
+        if flag("lastWindowClose") {
+            host.observeLastWindowCloseTermination()
+        }
+        if flag("fileWriteGrantOwnerCloseSandbox") {
+            host.observeFileWriteGrantOwnerCloseSandboxTermination()
+        }
+        if flag("clipboardOutcomes") {
+            restoreClipboardOutcomesPasteboardOnTermination()
+        }
+        if flag("notificationDelivery") {
+            cleanupNotificationDeliveryOnTermination()
+        }
+        if flag("nativeClipboardEdit") {
+            restoreNativeClipboardEditPasteboardOnTermination()
+        }
+        if flag("fileReadGrantHostShutdown") {
+            host.observeFileReadGrantHostShutdown()
+        }
+        if flag("fileWriteGrantHostShutdownSandbox") {
+            host.observeFileWriteGrantHostShutdownSandboxTermination()
+        }
     }
 
     func configure(environment: [String: String]) {
@@ -48,6 +80,30 @@ final class FlowIpcAcceptanceRuntimeObserver: HostRuntimeObserver {
                 "VAADIN_DESKTOP_FLOW_IPC_AUTO_IN_FLIGHT_REQUEST_RECOVERY",
             environment: environment)
         setFlag(
+            "capabilityGenerationRecovery",
+            from:
+                "VAADIN_DESKTOP_FLOW_IPC_AUTO_CAPABILITY_GENERATION_RECOVERY",
+            environment: environment)
+        setFlag(
+            "capabilityOwnerWindowClose",
+            from:
+                "VAADIN_DESKTOP_FLOW_IPC_AUTO_CAPABILITY_OWNER_WINDOW_CLOSE",
+            environment: environment)
+        setFlag(
+            "capabilityContextReopen",
+            from:
+                "VAADIN_DESKTOP_FLOW_IPC_AUTO_CAPABILITY_CONTEXT_REOPEN",
+            environment: environment)
+        setFlag(
+            "mainWindowCloseRecovery",
+            from:
+                "VAADIN_DESKTOP_FLOW_IPC_AUTO_MAIN_WINDOW_CLOSE_RECOVERY",
+            environment: environment)
+        setFlag(
+            "lastWindowClose",
+            from: "VAADIN_DESKTOP_FLOW_IPC_AUTO_LAST_WINDOW_CLOSE",
+            environment: environment)
+        setFlag(
             "largeMultipartUploadRetry",
             from:
                 "VAADIN_DESKTOP_FLOW_IPC_AUTO_LARGE_MULTIPART_UPLOAD_RETRY",
@@ -75,6 +131,15 @@ final class FlowIpcAcceptanceRuntimeObserver: HostRuntimeObserver {
             from: "VAADIN_DESKTOP_FLOW_IPC_AUTO_LAZY_GRID_QUERY",
             environment: environment)
         setFlag(
+            "lazyGridSelectedRemoval",
+            from: "VAADIN_DESKTOP_FLOW_IPC_AUTO_LAZY_GRID_SELECTED_REMOVAL",
+            environment: environment)
+        setFlag(
+            "lazyMultiSelectComboBox",
+            from:
+                "VAADIN_DESKTOP_FLOW_IPC_AUTO_LAZY_MULTI_SELECT_COMBO_BOX",
+            environment: environment)
+        setFlag(
             "flowDnd",
             from: "VAADIN_DESKTOP_FLOW_IPC_AUTO_DND",
             environment: environment)
@@ -83,8 +148,63 @@ final class FlowIpcAcceptanceRuntimeObserver: HostRuntimeObserver {
             from: "VAADIN_DESKTOP_FLOW_IPC_AUTO_INPUT_POPUP",
             environment: environment)
         setFlag(
+            "multiSelectComboBox",
+            from:
+                "VAADIN_DESKTOP_FLOW_IPC_AUTO_MULTI_SELECT_COMBO_BOX",
+            environment: environment)
+        setFlag(
             "localizedInputPopup",
             from: "VAADIN_DESKTOP_FLOW_IPC_AUTO_LOCALIZED_INPUT_POPUP",
+            environment: environment)
+        setFlag(
+            "localizedNumberValidation",
+            from: "VAADIN_DESKTOP_FLOW_IPC_AUTO_LOCALIZED_NUMBER_VALIDATION",
+            environment: environment)
+        setFlag(
+            "localizedNumber",
+            from: "VAADIN_DESKTOP_FLOW_IPC_AUTO_LOCALIZED_NUMBER",
+            environment: environment)
+        setFlag(
+            "nativeClipboardEdit",
+            from: "VAADIN_DESKTOP_FLOW_IPC_AUTO_NATIVE_CLIPBOARD_EDIT",
+            environment: environment)
+        setFlag(
+            "nativeEdit",
+            from: "VAADIN_DESKTOP_FLOW_IPC_AUTO_NATIVE_EDIT",
+            environment: environment)
+        setFlag(
+            "nativeEditIsolation",
+            from: "VAADIN_DESKTOP_FLOW_IPC_AUTO_NATIVE_EDIT_ISOLATION",
+            environment: environment)
+        setFlag(
+            "nativeEditReopen",
+            from: "VAADIN_DESKTOP_FLOW_IPC_AUTO_NATIVE_EDIT_REOPEN",
+            environment: environment)
+        setFlag(
+            "nativeEditRecovery",
+            from: "VAADIN_DESKTOP_FLOW_IPC_AUTO_NATIVE_EDIT_RECOVERY",
+            environment: environment)
+        setFlag(
+            "recoveryTermination",
+            from: "VAADIN_DESKTOP_FLOW_IPC_AUTO_RECOVERY_TERMINATION",
+            environment: environment)
+        values["recoveryTerminationDirectory"] =
+            environment["VAADIN_DESKTOP_TEST_RECOVERY_TERMINATION_DIR"]
+        setFlag(
+            "hostShutdownTermination",
+            from: "VAADIN_DESKTOP_FLOW_IPC_AUTO_HOST_SHUTDOWN_TERMINATION",
+            environment: environment)
+        setFlag(
+            "sidecarWriteBackpressure",
+            from: "VAADIN_DESKTOP_FLOW_IPC_AUTO_SIDECAR_WRITE_BACKPRESSURE",
+            environment: environment)
+        values["hostShutdownTerminationDirectory"] =
+            environment["VAADIN_DESKTOP_TEST_HOST_SHUTDOWN_DIR"]
+        values["hostShutdownTerminationMode"] =
+            environment["VAADIN_DESKTOP_TEST_HOST_SHUTDOWN_MODE"]
+        setFlag(
+            "externalFileDrop",
+            from: "VAADIN_DESKTOP_FLOW_IPC_AUTO_EXTERNAL_FILE_DROP",
             environment: environment)
         setFlag(
             "pickerValidation",
@@ -143,8 +263,94 @@ final class FlowIpcAcceptanceRuntimeObserver: HostRuntimeObserver {
             from: "VAADIN_DESKTOP_FLOW_IPC_AUTO_MULTI_WINDOW",
             environment: environment)
         setFlag(
+            "capabilityPermission",
+            from: "VAADIN_DESKTOP_FLOW_IPC_AUTO_CAPABILITY_PERMISSION",
+            environment: environment)
+        setFlag(
+            "capabilityDefaultDeny",
+            from: "VAADIN_DESKTOP_FLOW_IPC_AUTO_CAPABILITY_DEFAULT_DENY",
+            environment: environment)
+        setFlag(
+            "clipboardOutcomes",
+            from: "VAADIN_DESKTOP_FLOW_IPC_AUTO_CLIPBOARD_OUTCOMES",
+            environment: environment)
+        setFlag(
+            "fileDialogOutcomes",
+            from: "VAADIN_DESKTOP_FLOW_IPC_AUTO_FILE_DIALOG_OUTCOMES",
+            environment: environment)
+        setFlag(
+            "notificationOutcomes",
+            from: "VAADIN_DESKTOP_FLOW_IPC_AUTO_NOTIFICATION_OUTCOMES",
+            environment: environment)
+        values["notificationExpectedOutcome"] =
+            environment["VAADIN_DESKTOP_FLOW_IPC_NOTIFICATION_EXPECTED_OUTCOME"]
+        setFlag(
+            "notificationDelivery",
+            from: "VAADIN_DESKTOP_FLOW_IPC_AUTO_NOTIFICATION_DELIVERY",
+            environment: environment)
+        setFlag(
+            "fileReadGrant",
+            from: "VAADIN_DESKTOP_FLOW_IPC_AUTO_FILE_READ_GRANT",
+            environment: environment)
+        setFlag(
+            "fileReadGrantSidecarExit",
+            from: "VAADIN_DESKTOP_FLOW_IPC_AUTO_FILE_READ_GRANT_SIDECAR_EXIT",
+            environment: environment)
+        setFlag(
+            "fileReadGrantHostShutdown",
+            from: "VAADIN_DESKTOP_FLOW_IPC_AUTO_FILE_READ_GRANT_HOST_SHUTDOWN",
+            environment: environment)
+        setFlag(
+            "fileReadGrantIsolation",
+            from: "VAADIN_DESKTOP_FLOW_IPC_AUTO_FILE_READ_GRANT_ISOLATION",
+            environment: environment)
+        setFlag(
+            "fileReadGrantReplay",
+            from: "VAADIN_DESKTOP_FLOW_IPC_AUTO_FILE_READ_GRANT_REPLAY",
+            environment: environment)
+        setFlag(
+            "fileReadGrantRange",
+            from: "VAADIN_DESKTOP_FLOW_IPC_AUTO_FILE_READ_GRANT_RANGE",
+            environment: environment)
+        setFlag(
+            "fileReadGrantSandbox",
+            from: "VAADIN_DESKTOP_FLOW_IPC_AUTO_FILE_READ_GRANT_SANDBOX",
+            environment: environment)
+        setFlag(
+            "fileWriteGrantSandbox",
+            from: "VAADIN_DESKTOP_FLOW_IPC_AUTO_FILE_WRITE_GRANT_SANDBOX",
+            environment: environment)
+        setFlag(
+            "fileWriteGrantCancelSandbox",
+            from: "VAADIN_DESKTOP_FLOW_IPC_AUTO_FILE_WRITE_GRANT_CANCEL_SANDBOX",
+            environment: environment)
+        setFlag(
+            "fileWriteGrantOwnerCloseSandbox",
+            from: "VAADIN_DESKTOP_FLOW_IPC_AUTO_FILE_WRITE_GRANT_OWNER_CLOSE_SANDBOX",
+            environment: environment)
+        setFlag(
+            "fileWriteGrantIsolationSandbox",
+            from: "VAADIN_DESKTOP_FLOW_IPC_AUTO_FILE_WRITE_GRANT_ISOLATION_SANDBOX",
+            environment: environment)
+        setFlag(
+            "fileWriteGrantSidecarExitSandbox",
+            from: "VAADIN_DESKTOP_FLOW_IPC_AUTO_FILE_WRITE_GRANT_SIDECAR_EXIT_SANDBOX",
+            environment: environment)
+        setFlag(
+            "fileWriteGrantReplaySandbox",
+            from: "VAADIN_DESKTOP_FLOW_IPC_AUTO_FILE_WRITE_GRANT_REPLAY_SANDBOX",
+            environment: environment)
+        setFlag(
+            "fileWriteGrantHostShutdownSandbox",
+            from: "VAADIN_DESKTOP_FLOW_IPC_AUTO_FILE_WRITE_GRANT_HOST_SHUTDOWN_SANDBOX",
+            environment: environment)
+        setFlag(
             "fileDialogCancel",
             from: "VAADIN_DESKTOP_FLOW_IPC_AUTO_FILE_DIALOG_CANCEL",
+            environment: environment)
+        setFlag(
+            "stopInitialNavigation",
+            from: "VAADIN_DESKTOP_FLOW_IPC_STOP_INITIAL_NAVIGATION",
             environment: environment)
         if let timeout = Double(
             environment["VAADIN_DESKTOP_FLOW_IPC_AUTO_SHUTDOWN_TIMEOUT_SECONDS"] ?? ""),
@@ -265,6 +471,22 @@ extension HostConfig {
         flowIpcAcceptanceObserver.flag("inFlightRequestRecovery")
     }
 
+    var flowIpcAutoCapabilityGenerationRecovery: Bool {
+        flowIpcAcceptanceObserver.flag("capabilityGenerationRecovery")
+    }
+
+    var flowIpcAutoCapabilityOwnerWindowClose: Bool {
+        flowIpcAcceptanceObserver.flag("capabilityOwnerWindowClose")
+    }
+
+    var flowIpcAutoCapabilityContextReopen: Bool {
+        flowIpcAcceptanceObserver.flag("capabilityContextReopen")
+    }
+
+    var flowIpcAutoMainWindowCloseRecovery: Bool {
+        flowIpcAcceptanceObserver.flag("mainWindowCloseRecovery")
+    }
+
     var flowIpcAutoLargeMultipartUploadRetry: Bool {
         flowIpcAcceptanceObserver.flag("largeMultipartUploadRetry")
     }
@@ -289,6 +511,14 @@ extension HostConfig {
         flowIpcAcceptanceObserver.flag("lazyGridQuery")
     }
 
+    var flowIpcAutoLazyGridSelectedRemoval: Bool {
+        flowIpcAcceptanceObserver.flag("lazyGridSelectedRemoval")
+    }
+
+    var flowIpcAutoLazyMultiSelectComboBox: Bool {
+        flowIpcAcceptanceObserver.flag("lazyMultiSelectComboBox")
+    }
+
     var flowIpcAutoDnd: Bool {
         flowIpcAcceptanceObserver.flag("flowDnd")
     }
@@ -297,8 +527,68 @@ extension HostConfig {
         flowIpcAcceptanceObserver.flag("flowInputPopup")
     }
 
+    var flowIpcAutoMultiSelectComboBox: Bool {
+        flowIpcAcceptanceObserver.flag("multiSelectComboBox")
+    }
+
     var flowIpcAutoLocalizedInputPopup: Bool {
         flowIpcAcceptanceObserver.flag("localizedInputPopup")
+    }
+
+    var flowIpcAutoLocalizedNumberValidation: Bool {
+        flowIpcAcceptanceObserver.flag("localizedNumberValidation")
+    }
+
+    var flowIpcAutoLocalizedNumber: Bool {
+        flowIpcAcceptanceObserver.flag("localizedNumber")
+    }
+
+    var flowIpcAutoNativeClipboardEdit: Bool {
+        flowIpcAcceptanceObserver.flag("nativeClipboardEdit")
+    }
+
+    var flowIpcAutoNativeEdit: Bool {
+        flowIpcAcceptanceObserver.flag("nativeEdit")
+    }
+
+    var flowIpcAutoNativeEditIsolation: Bool {
+        flowIpcAcceptanceObserver.flag("nativeEditIsolation")
+    }
+
+    var flowIpcAutoNativeEditReopen: Bool {
+        flowIpcAcceptanceObserver.flag("nativeEditReopen")
+    }
+
+    var flowIpcAutoNativeEditRecovery: Bool {
+        flowIpcAcceptanceObserver.flag("nativeEditRecovery")
+    }
+
+    var flowIpcAutoRecoveryTermination: Bool {
+        flowIpcAcceptanceObserver.flag("recoveryTermination")
+    }
+
+    var flowIpcRecoveryTerminationDirectory: String {
+        flowIpcAcceptanceObserver.values["recoveryTerminationDirectory"] ?? ""
+    }
+
+    var flowIpcAutoHostShutdownTermination: Bool {
+        flowIpcAcceptanceObserver.flag("hostShutdownTermination")
+    }
+
+    var flowIpcAutoSidecarWriteBackpressure: Bool {
+        flowIpcAcceptanceObserver.flag("sidecarWriteBackpressure")
+    }
+
+    var flowIpcHostShutdownTerminationDirectory: String {
+        flowIpcAcceptanceObserver.values["hostShutdownTerminationDirectory"] ?? ""
+    }
+
+    var flowIpcHostShutdownTerminationMode: String {
+        flowIpcAcceptanceObserver.values["hostShutdownTerminationMode"] ?? ""
+    }
+
+    var flowIpcAutoExternalFileDrop: Bool {
+        flowIpcAcceptanceObserver.flag("externalFileDrop")
     }
 
     var flowIpcAutoPickerValidation: Bool {
@@ -355,6 +645,90 @@ extension HostConfig {
 
     var flowIpcAutoMultiWindow: Bool {
         flowIpcAcceptanceObserver.flag("multiWindow")
+    }
+
+    var flowIpcAutoCapabilityPermission: Bool {
+        flowIpcAcceptanceObserver.flag("capabilityPermission")
+    }
+
+    var flowIpcAutoCapabilityDefaultDeny: Bool {
+        flowIpcAcceptanceObserver.flag("capabilityDefaultDeny")
+    }
+
+    var flowIpcAutoClipboardOutcomes: Bool {
+        flowIpcAcceptanceObserver.flag("clipboardOutcomes")
+    }
+
+    var flowIpcAutoFileDialogOutcomes: Bool {
+        flowIpcAcceptanceObserver.flag("fileDialogOutcomes")
+    }
+
+    var flowIpcAutoNotificationOutcomes: Bool {
+        flowIpcAcceptanceObserver.flag("notificationOutcomes")
+    }
+
+    var flowIpcAutoNotificationDelivery: Bool {
+        flowIpcAcceptanceObserver.flag("notificationDelivery")
+    }
+
+    var flowIpcNotificationExpectedOutcome: String {
+        flowIpcAcceptanceObserver.values["notificationExpectedOutcome"] ?? ""
+    }
+
+    var flowIpcAutoFileReadGrant: Bool {
+        flowIpcAcceptanceObserver.flag("fileReadGrant")
+    }
+
+    var flowIpcAutoFileReadGrantSidecarExit: Bool {
+        flowIpcAcceptanceObserver.flag("fileReadGrantSidecarExit")
+    }
+
+    var flowIpcAutoFileReadGrantHostShutdown: Bool {
+        flowIpcAcceptanceObserver.flag("fileReadGrantHostShutdown")
+    }
+
+    var flowIpcAutoFileReadGrantIsolation: Bool {
+        flowIpcAcceptanceObserver.flag("fileReadGrantIsolation")
+    }
+
+    var flowIpcAutoFileReadGrantReplay: Bool {
+        flowIpcAcceptanceObserver.flag("fileReadGrantReplay")
+    }
+
+    var flowIpcAutoFileReadGrantRange: Bool {
+        flowIpcAcceptanceObserver.flag("fileReadGrantRange")
+    }
+
+    var flowIpcAutoFileReadGrantSandbox: Bool {
+        flowIpcAcceptanceObserver.flag("fileReadGrantSandbox")
+    }
+
+    var flowIpcAutoFileWriteGrantSandbox: Bool {
+        flowIpcAcceptanceObserver.flag("fileWriteGrantSandbox")
+    }
+
+    var flowIpcAutoFileWriteGrantCancelSandbox: Bool {
+        flowIpcAcceptanceObserver.flag("fileWriteGrantCancelSandbox")
+    }
+
+    var flowIpcAutoFileWriteGrantOwnerCloseSandbox: Bool {
+        flowIpcAcceptanceObserver.flag("fileWriteGrantOwnerCloseSandbox")
+    }
+
+    var flowIpcAutoFileWriteGrantIsolationSandbox: Bool {
+        flowIpcAcceptanceObserver.flag("fileWriteGrantIsolationSandbox")
+    }
+
+    var flowIpcAutoFileWriteGrantSidecarExitSandbox: Bool {
+        flowIpcAcceptanceObserver.flag("fileWriteGrantSidecarExitSandbox")
+    }
+
+    var flowIpcAutoFileWriteGrantReplaySandbox: Bool {
+        flowIpcAcceptanceObserver.flag("fileWriteGrantReplaySandbox")
+    }
+
+    var flowIpcAutoFileWriteGrantHostShutdownSandbox: Bool {
+        flowIpcAcceptanceObserver.flag("fileWriteGrantHostShutdownSandbox")
     }
 
     var flowIpcAutoFileDialogCancel: Bool {

@@ -1,0 +1,300 @@
+#!/usr/bin/env bash
+set -euo pipefail
+
+ROOT="$(cd "$(dirname "${BASH_SOURCE[0]}")/../../.." && pwd)"
+ACCEPTANCE_ROOT="$ROOT/test-support/native-host-macos-acceptance"
+BUILD_ROOT="$ROOT/.build/native-hosts/macos"
+ACCEPTANCE_NAME="sandbox-file-write-grant"
+DRIVER_FLAG="VAADIN_DESKTOP_FLOW_IPC_AUTO_FILE_WRITE_GRANT_SANDBOX"
+if [[ $# -eq 1 && "$1" == "--cancel" ]]; then
+  ACCEPTANCE_NAME="sandbox-file-write-grant-cancel"
+  DRIVER_FLAG="VAADIN_DESKTOP_FLOW_IPC_AUTO_FILE_WRITE_GRANT_CANCEL_SANDBOX"
+elif [[ $# -eq 1 && "$1" == "--owner-close" ]]; then
+  ACCEPTANCE_NAME="sandbox-file-write-grant-owner-close"
+  DRIVER_FLAG="VAADIN_DESKTOP_FLOW_IPC_AUTO_FILE_WRITE_GRANT_OWNER_CLOSE_SANDBOX"
+elif [[ $# -eq 1 && "$1" == "--isolation" ]]; then
+  ACCEPTANCE_NAME="sandbox-file-write-grant-isolation"
+  DRIVER_FLAG="VAADIN_DESKTOP_FLOW_IPC_AUTO_FILE_WRITE_GRANT_ISOLATION_SANDBOX"
+elif [[ $# -eq 1 && "$1" == "--sidecar-exit" ]]; then
+  ACCEPTANCE_NAME="sandbox-file-write-grant-sidecar-exit"
+  DRIVER_FLAG="VAADIN_DESKTOP_FLOW_IPC_AUTO_FILE_WRITE_GRANT_SIDECAR_EXIT_SANDBOX"
+elif [[ $# -eq 1 && "$1" == "--host-shutdown" ]]; then
+  ACCEPTANCE_NAME="sandbox-file-write-grant-host-shutdown"
+  DRIVER_FLAG="VAADIN_DESKTOP_FLOW_IPC_AUTO_FILE_WRITE_GRANT_HOST_SHUTDOWN_SANDBOX"
+elif [[ $# -eq 1 && "$1" == "--replay" ]]; then
+  ACCEPTANCE_NAME="sandbox-file-write-grant-replay"
+  DRIVER_FLAG="VAADIN_DESKTOP_FLOW_IPC_AUTO_FILE_WRITE_GRANT_REPLAY_SANDBOX"
+elif [[ $# -ne 0 ]]; then
+  echo "Usage: $0 [--cancel | --owner-close | --isolation | --sidecar-exit | --host-shutdown | --replay]" >&2
+  exit 2
+fi
+HOST_LOG="$BUILD_ROOT/host-$ACCEPTANCE_NAME.out.log"
+HOST_ERR_LOG="$BUILD_ROOT/host-$ACCEPTANCE_NAME.err.log"
+
+if [[ "${VATORI_NATIVE_HOST_MACOS_ACCEPTANCE_PACKAGE_LOCK_HELD:-}" != "1" ]]; then
+  exec env VATORI_NATIVE_HOST_MACOS_ACCEPTANCE_PACKAGE_LOCK_HELD=1 \
+    bash "$ACCEPTANCE_ROOT/bin/with-package-lock" -- bash "$0" "$@"
+fi
+
+mkdir -p "$BUILD_ROOT"
+: > "$HOST_LOG"
+: > "$HOST_ERR_LOG"
+
+if [[ "$(uname -s)" != "Darwin" ]]; then
+  echo "App Sandbox file-grant acceptance requires macOS." >&2
+  exit 1
+fi
+JVM_SOURCE="${VAADIN_DESKTOP_ACCEPTANCE_JAVA_HOME:-${JAVA_HOME:-}}"
+if [[ -z "$JVM_SOURCE" || ! -x "$JVM_SOURCE/bin/java" \
+    || ! -f "$JVM_SOURCE/lib/server/libjvm.dylib" ]]; then
+  echo "Set JAVA_HOME or VAADIN_DESKTOP_ACCEPTANCE_JAVA_HOME to a complete local JDK." >&2
+  exit 2
+fi
+JVM_SOURCE="$(cd "$JVM_SOURCE" && pwd -P)"
+TIMEOUT="${VAADIN_DESKTOP_FLOW_IPC_AUTO_SHUTDOWN_TIMEOUT_SECONDS:-300}"
+if [[ ! "$TIMEOUT" =~ ^[1-9][0-9]*$ || ${#TIMEOUT} -gt 4 \
+    || "$TIMEOUT" -gt 3600 ]]; then
+  echo "Sandbox acceptance timeout must be an integer from 1 to 3600 seconds." >&2
+  exit 2
+fi
+
+export VAADIN_DESKTOP_ACCEPTANCE_CAPABILITY_MANIFEST="$ACCEPTANCE_ROOT/Fixtures/$ACCEPTANCE_NAME-capabilities.json"
+unset VAADIN_DESKTOP_ACCEPTANCE_OMIT_CAPABILITY_MANIFEST
+if [[ "$ACCEPTANCE_NAME" == "sandbox-file-write-grant-replay" ]]; then
+  bash "$ACCEPTANCE_ROOT/bin/check-file-write-grant-replay-handoff"
+fi
+bash "$ROOT/bin/vaadin-desktop" package test-apps/flow-over-ipc-framework-app
+bash "$ACCEPTANCE_ROOT/bin/build-host" \
+  "$ROOT" test-apps/flow-over-ipc-framework-app flow-ipc
+
+umask 077
+WORK="$(mktemp -d /private/tmp/vatori-sandbox-file-write-grant.XXXXXX)"
+FIXTURE_ROOT=""
+HANDOFF_CONTAINER_TMP=""
+HANDOFF_ROOT=""
+REPLAY_HANDOFF=""
+HOST_APP="$WORK/VaadinDesktopHost.app"
+HOST_EXE="$HOST_APP/Contents/MacOS/VaadinDesktopHost"
+JAVA_EXE="$HOST_APP/Contents/JavaRuntime/bin/java"
+OPEN_WAIT_PID=""
+
+# Only identify processes whose executable belongs to this exact owned clone.
+# LaunchServices is not a child process group of the runner.
+owned_pids() {
+  local host_alias="$HOST_EXE"
+  local java_alias="$JAVA_EXE"
+  # LaunchServices/JAVA_HOME may canonicalize /private/tmp through /tmp.
+  # Match only the equivalent executable inside this exact owned clone.
+  if [[ "$HOST_EXE" == /private/tmp/* ]]; then host_alias="${HOST_EXE#/private}"; fi
+  if [[ "$JAVA_EXE" == /private/tmp/* ]]; then java_alias="${JAVA_EXE#/private}"; fi
+  ps -axo pid=,command= | awk -v host="$HOST_EXE" -v java="$JAVA_EXE" \
+    -v host_alias="$host_alias" -v java_alias="$java_alias" '
+    { pid=$1; $1=""; sub(/^ +/, "");
+      if ($0 == host || $0 == host_alias ||
+          index($0, java " -jar ") == 1 ||
+          index($0, java_alias " -jar ") == 1) print pid; }
+  '
+}
+# Only a single known record and its empty, unique parent belong to this run.
+# Never recursively remove the shared app container or an unexpected child.
+cleanup_handoff() {
+  [[ -n "$HANDOFF_ROOT" ]] || return 0
+  local leaf="${HANDOFF_ROOT##*/}"
+  [[ "$leaf" =~ ^vatori-file-write-grant-replay\.[[:alnum:]]{6}$ \
+    && "$HANDOFF_ROOT" == "$HANDOFF_CONTAINER_TMP/$leaf" \
+    && "$REPLAY_HANDOFF" == "$HANDOFF_ROOT/old-grant-token.bin" ]] || return 1
+  [[ -e "$HANDOFF_ROOT" || -L "$HANDOFF_ROOT" ]] || return 0
+  [[ -d "$HANDOFF_ROOT" && ! -L "$HANDOFF_ROOT" \
+    && "$(stat -f '%u' "$HANDOFF_ROOT")" == "$(id -u)" \
+    && "$(stat -f '%Lp' "$HANDOFF_ROOT")" == "700" ]] || return 1
+  if [[ -e "$REPLAY_HANDOFF" || -L "$REPLAY_HANDOFF" ]]; then
+    [[ -f "$REPLAY_HANDOFF" && ! -L "$REPLAY_HANDOFF" \
+      && "$(stat -f '%u' "$REPLAY_HANDOFF")" == "$(id -u)" \
+      && "$(stat -f '%l' "$REPLAY_HANDOFF")" == "1" \
+      && "$(stat -f '%Lp' "$REPLAY_HANDOFF")" == "600" ]] || return 1
+    rm -f -- "$REPLAY_HANDOFF"
+  fi
+  rmdir -- "$HANDOFF_ROOT"
+}
+cleanup() {
+  local status=$?
+  trap - EXIT HUP INT TERM
+  local pid
+  local remaining
+  remaining="$(owned_pids)"
+  if [[ -n "$remaining" ]]; then
+    status=1
+    for pid in $remaining; do kill -TERM "$pid" 2>/dev/null || true; done
+    local attempt=0
+    while [[ -n "$(owned_pids)" && "$attempt" -lt 30 ]]; do
+      sleep 0.1
+      attempt=$((attempt + 1))
+    done
+    remaining="$(owned_pids)"
+    if [[ -n "$remaining" ]]; then
+      for pid in $remaining; do kill -KILL "$pid" 2>/dev/null || true; done
+      sleep 0.1
+    fi
+  fi
+  if [[ -n "$OPEN_WAIT_PID" ]]; then
+    kill -TERM "$OPEN_WAIT_PID" 2>/dev/null || true
+    wait "$OPEN_WAIT_PID" 2>/dev/null || true
+  fi
+  if [[ -n "$(owned_pids)" ]]; then
+    echo "Owned sandbox processes remain; retaining test material: $WORK $FIXTURE_ROOT" >&2
+    exit 1
+  fi
+  if ! cleanup_handoff; then
+    echo "Private replay handoff cleanup refused; retaining exact material: $HANDOFF_ROOT" >&2
+    status=1
+  fi
+  rm -rf -- "$WORK"
+  if [[ -n "$FIXTURE_ROOT" ]]; then rm -rf -- "$FIXTURE_ROOT"; fi
+  exit "$status"
+}
+trap cleanup EXIT
+trap 'exit 130' INT
+trap 'exit 143' TERM
+trap 'exit 129' HUP
+
+# These files are created by the unsandboxed runner, never by the host. They are
+# outside both the copied app and its container, and no open FD is inherited.
+FIXTURE_ROOT="$(mktemp -d "$BUILD_ROOT/sandbox-write-fixtures.XXXXXX")"
+SELECTED_ROOT="$FIXTURE_ROOT"
+RECOVERED_SELECTED_PATH=""
+RECOVERED_SIBLING_PATH=""
+if [[ "$ACCEPTANCE_NAME" == "sandbox-file-write-grant-sidecar-exit" \
+   || "$ACCEPTANCE_NAME" == "sandbox-file-write-grant-replay" ]]; then
+  SELECTED_ROOT="$FIXTURE_ROOT/original"
+  mkdir "$SELECTED_ROOT" "$FIXTURE_ROOT/recovered"
+  RECOVERED_SELECTED_PATH="$FIXTURE_ROOT/recovered/vatori-file-write-grant-fixture.bin"
+  RECOVERED_SIBLING_PATH="$FIXTURE_ROOT/recovered/unselected-sibling.txt"
+fi
+if [[ "$ACCEPTANCE_NAME" == "sandbox-file-write-grant-replay" ]]; then
+  # LaunchServices creates the Sandbox container before Java runs, including
+  # on the first launch. Only the Java fixture creates this run's 0700 leaf.
+  HANDOFF_CONTAINER_TMP="$HOME/Library/Containers/dev.vatori.desktop.host.macos.sandbox-probe/Data/tmp"
+  handoff_candidate="$HANDOFF_CONTAINER_TMP/vatori-file-write-grant-replay.${WORK##*.}"
+  if [[ -e "$handoff_candidate" || -L "$handoff_candidate" ]]; then
+    echo "Private replay handoff root already exists; refusing to reuse it." >&2
+    exit 1
+  fi
+  HANDOFF_ROOT="$handoff_candidate"
+  REPLAY_HANDOFF="$HANDOFF_ROOT/old-grant-token.bin"
+fi
+SELECTED_PATH="$SELECTED_ROOT/vatori-file-write-grant-fixture.bin"
+SIBLING_PATH="$SELECTED_ROOT/unselected-sibling.txt"
+# The selected target MUST NOT exist before the real Save panel.
+[[ ! -e "$SELECTED_PATH" && ! -L "$SELECTED_PATH" ]]
+printf '%s' 'unselected-sandbox-sibling-must-stay-unchanged' > "$SIBLING_PATH"
+if [[ ! -f "$SIBLING_PATH" || -L "$SIBLING_PATH" \
+    || "$(stat -f '%l' "$SIBLING_PATH")" != "1" \
+    || "$(stat -f '%u' "$SIBLING_PATH")" != "$(id -u)" ]]; then
+  echo "External sibling is not an owned regular file with one link." >&2
+  exit 1
+fi
+if [[ -n "$RECOVERED_SELECTED_PATH" ]]; then
+  [[ ! -e "$RECOVERED_SELECTED_PATH" && ! -L "$RECOVERED_SELECTED_PATH" ]]
+  printf '%s' 'unselected-sandbox-sibling-must-stay-unchanged' > "$RECOVERED_SIBLING_PATH"
+  if [[ ! -f "$RECOVERED_SIBLING_PATH" || -L "$RECOVERED_SIBLING_PATH" \
+      || "$(stat -f '%l' "$RECOVERED_SIBLING_PATH")" != "1" \
+      || "$(stat -f '%u' "$RECOVERED_SIBLING_PATH")" != "$(id -u)" ]]; then
+    echo "Recovered external sibling is not an owned regular file with one link." >&2
+    exit 1
+  fi
+fi
+
+# This byte-preserving JVM copy is acceptance material, not a distribution API.
+# Do not recursively re-sign or change the vendor JVM's entitlements.
+ditto "$BUILD_ROOT/VaadinDesktopHost.app" "$HOST_APP"
+ditto "$JVM_SOURCE" "$HOST_APP/Contents/JavaRuntime"
+cmp "$JVM_SOURCE/bin/java" "$JAVA_EXE"
+cmp "$JVM_SOURCE/lib/server/libjvm.dylib" \
+  "$HOST_APP/Contents/JavaRuntime/lib/server/libjvm.dylib"
+plutil -replace CFBundleIdentifier -string \
+  dev.vatori.desktop.host.macos.sandbox-probe "$HOST_APP/Contents/Info.plist"
+codesign --force --sign - \
+  --entitlements "$ACCEPTANCE_ROOT/Fixtures/sandbox-file-write-grant.entitlements.plist" \
+  "$HOST_APP"
+codesign --verify --strict --verbose=2 "$HOST_APP"
+
+echo "Save the new file at this exact path in the native Save panel:"
+echo "  $SELECTED_PATH"
+if [[ "$ACCEPTANCE_NAME" == "sandbox-file-write-grant-cancel" ]]; then
+  echo "Wait for flowFileWriteGrantCancelSandbox.panelObserved before clicking Save."
+  echo "The grant is canceled after its settled 65542-byte prefix; there is no second panel."
+  echo "This real run does not claim blocked or in-flight I/O cancellation."
+elif [[ "$ACCEPTANCE_NAME" == "sandbox-file-write-grant-owner-close" ]]; then
+  echo "Wait for flowFileWriteGrantOwnerCloseSandbox.panelObserved before clicking Save."
+  echo "The secondary owner then closes itself last without releasing the write grant."
+elif [[ "$ACCEPTANCE_NAME" == "sandbox-file-write-grant-isolation" ]]; then
+  echo "Wait for flowFileWriteGrantIsolationSandbox.panelObserved before clicking Save."
+  echo "The owner writes before and after denied cross-window write/release attempts, then releases."
+elif [[ "$ACCEPTANCE_NAME" == "sandbox-file-write-grant-sidecar-exit" \
+     || "$ACCEPTANCE_NAME" == "sandbox-file-write-grant-replay" ]]; then
+  if [[ "$ACCEPTANCE_NAME" == "sandbox-file-write-grant-replay" ]]; then
+    echo "Wait for flowFileWriteGrantReplaySandbox.panelObserved before each Save."
+    echo "After JVM recovery, old-token write/release must be denied before the fresh Save."
+  else
+    echo "Wait for flowFileWriteGrantSidecarExitSandbox.panelObserved before each Save."
+  fi
+  echo "After the controlled JVM exit and UI recovery, save the second new file at:"
+  echo "  $RECOVERED_SELECTED_PATH"
+  echo "Both writes are settled; this run does not test in-flight writes or grant restoration."
+elif [[ "$ACCEPTANCE_NAME" == "sandbox-file-write-grant-host-shutdown" ]]; then
+  echo "Wait for flowFileWriteGrantHostShutdownSandbox.panelObserved before clicking Save."
+  echo "After flowFileWriteGrantHostShutdownSandbox.hostShutdownPrepared, invoke Acceptance > Quit Vaadin Desktop Host."
+  echo "Do not close either window or release the grant; the test requires normal AppKit Quit."
+else
+  echo "Wait for flowFileWriteGrantSandbox.panelObserved before clicking Save."
+  echo "Then cancel the final panel titled Flow file write grant canceled."
+fi
+echo "Trace: $HOST_LOG"
+
+# A focused run must not inherit competing drivers or navigation injection.
+for acceptance_flag in $(compgen -v VAADIN_DESKTOP_FLOW_IPC_AUTO_); do
+  unset "$acceptance_flag"
+done
+unset VAADIN_DESKTOP_FLOW_IPC_STOP_INITIAL_NAVIGATION
+
+open -n -W -o "$HOST_LOG" --stderr "$HOST_ERR_LOG" \
+  --env "JAVA_HOME=$HOST_APP/Contents/JavaRuntime" \
+  --env VAADIN_DESKTOP_MACOS_NO_ACTIVATE=0 \
+  --env "$DRIVER_FLAG=1" \
+  --env "VAADIN_DESKTOP_FLOW_IPC_SANDBOX_SELECTED_PATH=$SELECTED_PATH" \
+  --env "VAADIN_DESKTOP_FLOW_IPC_SANDBOX_SIBLING_PATH=$SIBLING_PATH" \
+  --env "VAADIN_DESKTOP_FLOW_IPC_SANDBOX_RECOVERED_SELECTED_PATH=$RECOVERED_SELECTED_PATH" \
+  --env "VAADIN_DESKTOP_FLOW_IPC_SANDBOX_RECOVERED_SIBLING_PATH=$RECOVERED_SIBLING_PATH" \
+  --env "VATORI_FILE_WRITE_GRANT_REPLAY_HANDOFF=$REPLAY_HANDOFF" \
+  --env VAADIN_DESKTOP_FLOW_IPC_AUTO_SHUTDOWN=1 \
+  --env "VAADIN_DESKTOP_FLOW_IPC_AUTO_SHUTDOWN_TIMEOUT_SECONDS=$TIMEOUT" \
+  --env VAADIN_DESKTOP_FLOW_IPC_TRACE_DETAIL=full \
+  "$HOST_APP" &
+OPEN_WAIT_PID=$!
+# The observer's deadline cannot run if AppKit's main thread stalls. Bound the
+# LaunchServices waiter independently, then let exact-clone cleanup stop it.
+run_started=$SECONDS
+while kill -0 "$OPEN_WAIT_PID" 2>/dev/null; do
+  if (( SECONDS - run_started > TIMEOUT + 30 )); then
+    echo "Sandbox acceptance exceeded its external launch/runtime deadline." >&2
+    exit 124
+  fi
+  sleep 1
+done
+wait "$OPEN_WAIT_PID"
+OPEN_WAIT_PID=""
+
+bash "$ROOT/bin/flow-ipc-trace-inspect" \
+  "--require-flow-ipc-$ACCEPTANCE_NAME" "$HOST_LOG"
+
+# Verify bytes independently, outside the sandbox, after the host has exited.
+node "$ACCEPTANCE_ROOT/Tests/verify-file-write-grant-output.mjs" \
+  "$SELECTED_PATH" "$SIBLING_PATH"
+if [[ -n "$RECOVERED_SELECTED_PATH" ]]; then
+  node "$ACCEPTANCE_ROOT/Tests/verify-file-write-grant-output.mjs" \
+    "$RECOVERED_SELECTED_PATH" "$RECOVERED_SIBLING_PATH"
+fi
+if [[ -n "$REPLAY_HANDOFF" && ( -e "$REPLAY_HANDOFF" || -L "$REPLAY_HANDOFF" ) ]]; then
+  echo "Successful replay acceptance did not consume its private handoff record." >&2
+  exit 1
+fi

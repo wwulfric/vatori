@@ -1,0 +1,20 @@
+{
+  "schemaVersion": 1,
+  "permissionMode": "manifest-enforced",
+  "windows": [
+    {
+      "label": "main",
+      "commands": ["window.close"]
+    },
+    {
+      "label": "file-write-owner",
+      "commands": [
+        "fileDialog.saveNewWriteGrant",
+        "fileGrant.write",
+        "window.close",
+        "window.open",
+        "window.setTitle"
+      ]
+    }
+  ]
+}

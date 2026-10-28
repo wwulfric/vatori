@@ -1,0 +1,15 @@
+{
+  "schemaVersion": 1,
+  "permissionMode": "manifest-enforced",
+  "windows": [
+    {
+      "label": "main",
+      "commands": [
+        "fileDialog.openReadGrant",
+        "fileGrant.read",
+        "fileGrant.release",
+        "window.close"
+      ]
+    }
+  ]
+}

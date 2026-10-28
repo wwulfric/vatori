@@ -1,0 +1,186 @@
+#!/usr/bin/env bash
+set -euo pipefail
+
+ROOT="$(cd "$(dirname "${BASH_SOURCE[0]}")/../../.." && pwd)"
+ACCEPTANCE_ROOT="$ROOT/test-support/native-host-macos-acceptance"
+BUILD_ROOT="$ROOT/.build/native-hosts/macos"
+if [[ $# -ne 0 ]]; then
+  echo "Usage: $0" >&2
+  exit 2
+fi
+if [[ "$(uname -s)" != Darwin ]]; then
+  echo "File read-grant fatal shutdown termination acceptance requires macOS." >&2
+  exit 1
+fi
+if [[ -z "${JAVA_HOME:-}" || ! -x "$JAVA_HOME/bin/java" ]]; then
+  echo "Set JAVA_HOME to a complete local JDK." >&2
+  exit 2
+fi
+command -v node >/dev/null
+if [[ "${VATORI_NATIVE_HOST_MACOS_ACCEPTANCE_PACKAGE_LOCK_HELD:-}" != 1 ]]; then
+  exec env VATORI_NATIVE_HOST_MACOS_ACCEPTANCE_PACKAGE_LOCK_HELD=1 \
+    bash "$ACCEPTANCE_ROOT/bin/with-package-lock" -- bash "$0" "$@"
+fi
+export VAADIN_DESKTOP_ACCEPTANCE_CAPABILITY_MANIFEST="$ACCEPTANCE_ROOT/Fixtures/file-read-grant-fatal-capabilities.json"
+unset VAADIN_DESKTOP_ACCEPTANCE_OMIT_CAPABILITY_MANIFEST
+unset VAADIN_DESKTOP_TEST_FATAL_PROTOCOL_DIR
+unset VAADIN_DESKTOP_TEST_RECOVERY_TERMINATION_DIR
+unset VAADIN_DESKTOP_TEST_READY_TIMEOUT_DIR VAADIN_DESKTOP_TEST_READY_TIMEOUT_MODE
+unset VAADIN_DESKTOP_TEST_HOST_SHUTDOWN_DIR VAADIN_DESKTOP_TEST_HOST_SHUTDOWN_MODE
+export VAADIN_DESKTOP_FLOW_IPC_SIDECAR_RESTART_LIMIT=0
+HOST_LOG="$BUILD_ROOT/host-file-read-grant-fatal-shutdown.out.log"
+HOST_ERR_LOG="$BUILD_ROOT/host-file-read-grant-fatal-shutdown.err.log"
+umask 077
+mkdir -p "$BUILD_ROOT"
+: > "$HOST_LOG"
+: > "$HOST_ERR_LOG"
+bash "$ROOT/bin/vaadin-desktop" package test-apps/flow-over-ipc-framework-app
+bash "$ACCEPTANCE_ROOT/bin/build-host" "$ROOT" test-apps/flow-over-ipc-framework-app flow-ipc
+
+WORK="$(mktemp -d "$BUILD_ROOT/file-read-grant-fatal-shutdown.XXXXXX")"
+HOST_APP="$WORK/VaadinDesktopHost.app"
+HOST_EXE="$HOST_APP/Contents/MacOS/VaadinDesktopHost"
+SIDECAR_JAR="$HOST_APP/Contents/Resources/Sidecar/application.jar"
+OPEN_WAIT_PID=""
+owned_pids() {
+  ps -axo pid=,command= | awk -v host="$HOST_EXE" -v host_alias="${HOST_EXE#/private}" \
+    -v jar="$SIDECAR_JAR" -v jar_alias="${SIDECAR_JAR#/private}" \
+    -v java="$JAVA_HOME/bin/java" -v java_alias="${JAVA_HOME#/private}/bin/java" '
+    function owns_jar(command, path) {
+      return command == java " -jar " path || command == java_alias " -jar " path;
+    }
+    { pid=$1; $1=""; sub(/^ +/, "");
+      if ($0 == host || $0 == host_alias || owns_jar($0, jar) || owns_jar($0, jar_alias)) print pid; }
+  '
+}
+captured_pid_absent() {
+  node -e '
+    const value = process.argv[1], pid = Number(value);
+    if (!/^[1-9][0-9]*$/.test(value) || !Number.isSafeInteger(pid)) process.exit(1);
+    try { process.kill(pid, 0); process.exit(1); }
+    catch (error) { process.exit(error.code === "ESRCH" ? 0 : 1); }
+  ' "$1"
+}
+cleanup() {
+  trap '' HUP INT TERM
+  local status="$1"
+  trap - EXIT
+  local remaining pid attempt=0
+  if ! remaining="$(owned_pids)"; then
+    echo "Cannot inspect owned fatal-grant processes; retaining clone: $WORK" >&2
+    exit 1
+  fi
+  if [[ -n "$remaining" ]]; then
+    # Exact-owned KILL is failure-only cleanup. It never supplies
+    # actual-exit evidence for a successful run.
+    status=1
+    for pid in $remaining; do kill -KILL "$pid" 2>/dev/null || true; done
+    while [[ -n "$remaining" && "$attempt" -lt 20 ]]; do
+      sleep 0.1
+      attempt=$((attempt + 1))
+      if ! remaining="$(owned_pids)"; then
+        echo "Cannot inspect owned fatal-grant processes; retaining clone: $WORK" >&2
+        exit 1
+      fi
+    done
+  fi
+  if ! remaining="$(owned_pids)" || [[ -n "$remaining" ]]; then
+    echo "Owned fatal-grant processes could not be confirmed stopped; retaining clone: $WORK" >&2
+    exit 1
+  fi
+  if [[ -n "$OPEN_WAIT_PID" ]]; then
+    if ! captured_pid_absent "$OPEN_WAIT_PID"; then
+      status=1
+      kill -TERM "$OPEN_WAIT_PID" 2>/dev/null || true
+      attempt=0
+      while ! captured_pid_absent "$OPEN_WAIT_PID" && [[ "$attempt" -lt 10 ]]; do
+        sleep 0.1
+        attempt=$((attempt + 1))
+      done
+      if ! captured_pid_absent "$OPEN_WAIT_PID"; then
+        kill -KILL "$OPEN_WAIT_PID" 2>/dev/null || true
+        sleep 0.1
+      fi
+    fi
+    if ! captured_pid_absent "$OPEN_WAIT_PID"; then
+      echo "Captured LaunchServices waiter could not be confirmed absent; retaining clone: $WORK" >&2
+      exit 1
+    fi
+    # Never perform an unbounded wait after a failed signal or ambiguous lookup.
+    wait "$OPEN_WAIT_PID" 2>/dev/null || true
+  fi
+  if [[ "${WORK%/*}" == "$BUILD_ROOT" \
+      && "${WORK##*/}" =~ ^file-read-grant-fatal-shutdown\.[[:alnum:]]{6}$ \
+      && -d "$WORK" && ! -L "$WORK" ]]; then
+    rm -rf -- "$WORK"
+  else
+    echo "Refusing cleanup of unexpected clone path: $WORK" >&2
+    status=1
+  fi
+  exit "$status"
+}
+trap 'cleanup "$?"' EXIT
+trap 'cleanup 130' INT
+trap 'cleanup 143' TERM
+trap 'cleanup 129' HUP
+
+STATE="$(mktemp -d "$WORK/vatori-fatal-protocol.XXXXXX")"
+FIXTURES="$WORK/files"
+mkdir "$FIXTURES"
+ditto "$BUILD_ROOT/VaadinDesktopHost.app" "$HOST_APP"
+plutil -replace CFBundleIdentifier -string \
+  "dev.vatori.desktop.acceptance.fatal-grant.$(uuidgen | tr '[:upper:]' '[:lower:]')" \
+  "$HOST_APP/Contents/Info.plist"
+plutil -replace CFBundleName -string "Vatori file grant fatal shutdown" "$HOST_APP/Contents/Info.plist"
+codesign --force --sign - "$HOST_APP"
+codesign --verify --strict --verbose=2 "$HOST_APP"
+echo "File read-grant fatal shutdown acceptance clone: $HOST_APP"
+echo "Private startup marker: $STATE"
+echo "Trace: $HOST_LOG"
+echo "Select only the generated fixture in the real Open panel; do not invoke Quit."
+echo "Fixture root: $FIXTURES"
+echo "After preparation, one invalid protocol frame triggers fatal cleanup; no notifications are sent."
+for acceptance_flag in $(compgen -v VAADIN_DESKTOP_FLOW_IPC_AUTO_); do
+  unset "$acceptance_flag"
+done
+unset VAADIN_DESKTOP_FLOW_IPC_STOP_INITIAL_NAVIGATION
+open -n -W -o "$HOST_LOG" --stderr "$HOST_ERR_LOG" \
+  --env "JAVA_HOME=$JAVA_HOME" \
+  --env "VAADIN_DESKTOP_TEST_FATAL_PROTOCOL_DIR=$STATE" \
+  --env "VAADIN_DESKTOP_FLOW_IPC_FILE_READ_GRANT_FIXTURE_ROOT=$FIXTURES" \
+  --env VAADIN_DESKTOP_MACOS_NO_ACTIVATE=0 \
+  --env VAADIN_DESKTOP_FLOW_IPC_AUTO_FILE_READ_GRANT_HOST_SHUTDOWN=1 \
+  --env VAADIN_DESKTOP_FLOW_IPC_AUTO_SHUTDOWN=1 \
+  --env VAADIN_DESKTOP_FLOW_IPC_AUTO_SHUTDOWN_TIMEOUT_SECONDS=210 \
+  --env VAADIN_DESKTOP_FLOW_IPC_TRACE_DETAIL=full "$HOST_APP" &
+OPEN_WAIT_PID=$!
+node "$ACCEPTANCE_ROOT/Tests/file-read-grant-fatal-evidence.mjs" watch "$STATE" "$HOST_LOG"
+run_started=$SECONDS
+while kill -0 "$OPEN_WAIT_PID" 2>/dev/null; do
+  if (( SECONDS - run_started > 30 )); then
+    echo "File read-grant fatal shutdown acceptance exceeded its external runtime deadline." >&2
+    exit 124
+  fi
+  sleep 1
+done
+if ! captured_pid_absent "$OPEN_WAIT_PID"; then
+  echo "LaunchServices waiter absence could not be confirmed before reap." >&2
+  exit 1
+fi
+open_status=0
+wait "$OPEN_WAIT_PID" || open_status=$?
+OPEN_WAIT_PID=""
+if [[ "$open_status" -ne 0 && "$open_status" -ne 1 ]]; then
+  echo "Unexpected LaunchServices waiter status: $open_status" >&2
+  exit 1
+fi
+# LaunchServices status is not proof of the host exit code; inspect the fatal trace.
+# Both independent checks precede all cleanup; no driver/runner signal creates PASS.
+remaining="$(owned_pids)"
+if [[ -n "$remaining" ]]; then
+  echo "Owned host or JVM remains after AppKit exit; acceptance failed before cleanup." >&2
+  exit 1
+fi
+node "$ACCEPTANCE_ROOT/Tests/file-read-grant-fatal-evidence.mjs" verify "$STATE" "$HOST_LOG"
+bash "$ROOT/bin/flow-ipc-trace-inspect" \
+  --require-flow-ipc-file-read-grant-fatal-shutdown "$HOST_LOG"

@@ -1,0 +1,23 @@
+#!/usr/bin/env bash
+set -euo pipefail
+
+ROOT="$(cd "$(dirname "${BASH_SOURCE[0]}")/../../.." && pwd)"
+if [[ "$#" != 0 ]]; then
+  echo "Usage: $0" >&2
+  exit 2
+fi
+if [[ "${VATORI_NATIVE_HOST_MACOS_ACCEPTANCE_PACKAGE_LOCK_HELD:-}" != "1" ]]; then
+  exec env VATORI_NATIVE_HOST_MACOS_ACCEPTANCE_PACKAGE_LOCK_HELD=1 \
+    bash "$ROOT/test-support/native-host-macos-acceptance/bin/with-package-lock" -- \
+    bash "$0" "$@"
+fi
+HOST_LOG="$ROOT/.build/native-hosts/macos/host.out.log"
+export VAADIN_DESKTOP_FLOW_IPC_AUTO_NATIVE_EDIT=1
+export VAADIN_DESKTOP_FLOW_IPC_AUTO_SHUTDOWN=1
+export VAADIN_DESKTOP_FLOW_IPC_AUTO_SHUTDOWN_TIMEOUT_SECONDS=60
+export VAADIN_DESKTOP_FLOW_IPC_TRACE_DETAIL=full
+
+bash "$ROOT/test-support/native-host-macos-acceptance/bin/run" \
+  dev test-apps/flow-over-ipc-framework-app
+bash "$ROOT/bin/flow-ipc-trace-inspect" \
+  --require-flow-ipc-native-edit "$HOST_LOG"

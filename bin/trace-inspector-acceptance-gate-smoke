@@ -25,3 +25,28 @@ mvn -q -o -Dmaven.repo.local="$MAVEN_REPO" \
   -Dexec.mainClass=dev.vatori.desktop.testsupport.trace.StandardBundleTraceInspectorSmokeMain \
   -Dexec.classpathScope=test \
   org.codehaus.mojo:exec-maven-plugin:3.6.2:java
+mvn -q -o -Dmaven.repo.local="$MAVEN_REPO" \
+  -f "$TRACE_INSPECTOR_POM" \
+  -Dexec.mainClass=dev.vatori.desktop.testsupport.trace.NotificationOutcomesTraceGateSmokeMain \
+  -Dexec.classpathScope=test \
+  org.codehaus.mojo:exec-maven-plugin:3.6.2:java
+mvn -q -o -Dmaven.repo.local="$MAVEN_REPO" \
+  -f "$TRACE_INSPECTOR_POM" \
+  -Dexec.mainClass=dev.vatori.desktop.testsupport.trace.NotificationDeliveryTraceGateSmokeMain \
+  -Dexec.classpathScope=test \
+  org.codehaus.mojo:exec-maven-plugin:3.6.2:java
+mvn -q -o -Dmaven.repo.local="$MAVEN_REPO" \
+  -f "$TRACE_INSPECTOR_POM" \
+  -Dexec.mainClass=dev.vatori.desktop.testsupport.trace.RecoveryTerminationTraceGateSmokeMain \
+  -Dexec.classpathScope=test \
+  org.codehaus.mojo:exec-maven-plugin:3.6.2:java
+mvn -q -o -Dmaven.repo.local="$MAVEN_REPO" \
+  -f "$TRACE_INSPECTOR_POM" \
+  -Dexec.mainClass=dev.vatori.desktop.testsupport.trace.HostShutdownTerminationTraceGateSmokeMain \
+  -Dexec.classpathScope=test \
+  org.codehaus.mojo:exec-maven-plugin:3.6.2:java
+mvn -q -o -Dmaven.repo.local="$MAVEN_REPO" \
+  -f "$TRACE_INSPECTOR_POM" \
+  -Dexec.mainClass=dev.vatori.desktop.testsupport.trace.SidecarWriteBackpressureTraceGateSmokeMain \
+  -Dexec.classpathScope=test \
+  org.codehaus.mojo:exec-maven-plugin:3.6.2:java

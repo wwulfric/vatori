@@ -1,0 +1,320 @@
+#!/usr/bin/env bash
+set -euo pipefail
+
+ROOT="$(cd "$(dirname "${BASH_SOURCE[0]}")/../../.." && pwd)"
+LOCK_PARENT="$ROOT/.build/native-hosts/macos"
+LOCK_DIRECTORY="$LOCK_PARENT/.acceptance-package.lock"
+OWNER_FILE="$LOCK_DIRECTORY/owner"
+TIMEOUT_VALUE="${VAADIN_DESKTOP_ACCEPTANCE_PACKAGE_LOCK_TIMEOUT_SECONDS:-300}"
+OWNER_METADATA_GRACE_SECONDS=5
+CHILD_PROCESS_GROUP_TERM_GRACE_SECONDS=5
+
+usage() {
+  echo "Usage: with-package-lock [--copy-after SOURCE DESTINATION] -- command [args...]" >&2
+}
+
+case "$TIMEOUT_VALUE" in
+  ''|*[!0-9]*)
+    echo "Package lock timeout must be a non-negative integer: $TIMEOUT_VALUE" >&2
+    exit 2
+    ;;
+esac
+
+TIMEOUT_SECONDS="$TIMEOUT_VALUE"
+while [[ ${#TIMEOUT_SECONDS} -gt 1 && "${TIMEOUT_SECONDS:0:1}" == "0" ]]; do
+  TIMEOUT_SECONDS="${TIMEOUT_SECONDS#0}"
+done
+
+COPY_SOURCE=""
+COPY_DESTINATION=""
+if [[ "${1:-}" == "--copy-after" ]]; then
+  if [[ "$#" -lt 4 || -z "${2:-}" || -z "${3:-}" ]]; then
+    usage
+    exit 2
+  fi
+  COPY_SOURCE="$2"
+  COPY_DESTINATION="$3"
+  shift 3
+fi
+
+if [[ "${1:-}" != "--" ]]; then
+  usage
+  exit 2
+fi
+shift
+if [[ "$#" -eq 0 ]]; then
+  usage
+  exit 2
+fi
+
+LOCK_HELD=0
+CHILD_PID=""
+CHILD_PROCESS_GROUP=""
+CHILD_STARTING=0
+PENDING_SIGNAL_NAME=""
+PENDING_SIGNAL_STATUS=""
+
+read_owner_pid() {
+  OWNER_PID=""
+  if [[ -f "$OWNER_FILE" ]]; then
+    IFS= read -r OWNER_PID < "$OWNER_FILE" || true
+  fi
+}
+
+owner_pid_is_valid() {
+  [[ "$1" =~ ^[1-9][0-9]*$ ]]
+}
+
+owner_pid_is_alive() {
+  owner_pid_is_valid "$1" && kill -0 "$1" 2>/dev/null
+}
+
+release_lock() {
+  if [[ "$LOCK_HELD" != "1" ]]; then
+    return
+  fi
+
+  read_owner_pid
+  if [[ "$OWNER_PID" == "$$" ]]; then
+    rm -f "$OWNER_FILE"
+    if ! rmdir "$LOCK_DIRECTORY" 2>/dev/null; then
+      echo "Package lock could not be fully released: $LOCK_DIRECTORY" >&2
+    fi
+  elif [[ ! -e "$OWNER_FILE" ]] || ! owner_pid_is_valid "$OWNER_PID"; then
+    rm -f "$OWNER_FILE"
+    if ! rmdir "$LOCK_DIRECTORY" 2>/dev/null; then
+      echo "Package lock could not be fully released: $LOCK_DIRECTORY" >&2
+    fi
+  else
+    echo "Package lock ownership changed before release: $LOCK_DIRECTORY" >&2
+  fi
+  LOCK_HELD=0
+}
+
+handle_exit() {
+  local status=$?
+  trap - EXIT
+  release_lock
+  exit "$status"
+}
+
+handle_signal() {
+  local signal_name="$1"
+  local exit_status="$2"
+  local escalation_pid=""
+  if [[ "$CHILD_STARTING" == "1" && -z "$CHILD_PROCESS_GROUP" ]]; then
+    if [[ -z "$PENDING_SIGNAL_NAME" ]]; then
+      PENDING_SIGNAL_NAME="$signal_name"
+      PENDING_SIGNAL_STATUS="$exit_status"
+    fi
+    return
+  fi
+
+  trap '' HUP INT TERM
+  if [[ -n "$CHILD_PROCESS_GROUP" ]]; then
+    kill -s "$signal_name" -- "-$CHILD_PROCESS_GROUP" 2>/dev/null || true
+    set -m
+    (
+      trap - EXIT HUP INT TERM
+      sleep "$CHILD_PROCESS_GROUP_TERM_GRACE_SECONDS" || exit 0
+      kill -KILL -- "-$CHILD_PROCESS_GROUP" 2>/dev/null || true
+    ) &
+    escalation_pid=$!
+    set +m
+  fi
+  if [[ -n "$CHILD_PID" ]]; then
+    wait "$CHILD_PID" 2>/dev/null || true
+  fi
+  while [[ -n "$CHILD_PROCESS_GROUP" ]] \
+      && kill -0 -- "-$CHILD_PROCESS_GROUP" 2>/dev/null; do
+    sleep 0.1
+  done
+  if [[ -n "$escalation_pid" ]]; then
+    kill -TERM -- "-$escalation_pid" 2>/dev/null || true
+    wait "$escalation_pid" 2>/dev/null || true
+  fi
+  CHILD_PID=""
+  CHILD_PROCESS_GROUP=""
+  exit "$exit_status"
+}
+
+run_child() {
+  CHILD_STARTING=1
+  set -m
+  "$@" &
+  CHILD_PID=$!
+  CHILD_PROCESS_GROUP="$CHILD_PID"
+  set +m
+  CHILD_STARTING=0
+  if [[ -n "$PENDING_SIGNAL_NAME" ]]; then
+    handle_signal "$PENDING_SIGNAL_NAME" "$PENDING_SIGNAL_STATUS"
+  fi
+  local status
+  set +e
+  wait "$CHILD_PID"
+  status=$?
+  set -e
+  CHILD_PID=""
+  CHILD_PROCESS_GROUP=""
+  return "$status"
+}
+
+path_modified_epoch() {
+  PATH_MODIFIED_EPOCH=""
+  if PATH_MODIFIED_EPOCH="$(stat -f '%m' "$1" 2>/dev/null)"; then
+    return 0
+  fi
+  if PATH_MODIFIED_EPOCH="$(stat -c '%Y' "$1" 2>/dev/null)"; then
+    return 0
+  fi
+  return 1
+}
+
+path_is_older_than_owner_grace() {
+  local path="$1"
+  local now_epoch
+  if ! path_modified_epoch "$path"; then
+    return 1
+  fi
+  case "$PATH_MODIFIED_EPOCH" in
+    ''|*[!0-9]*) return 1 ;;
+  esac
+  now_epoch="$(date +%s)"
+  (( now_epoch - PATH_MODIFIED_EPOCH >= OWNER_METADATA_GRACE_SECONDS ))
+}
+
+try_reclaim_ownerless_lock() {
+  if [[ -e "$OWNER_FILE" ]] || ! path_is_older_than_owner_grace "$LOCK_DIRECTORY"; then
+    return 1
+  fi
+
+  local reclaim_directory="$LOCK_DIRECTORY/.ownerless-reclaim"
+  if ! mkdir "$reclaim_directory" 2>/dev/null; then
+    if [[ -d "$reclaim_directory" ]] \
+        && path_is_older_than_owner_grace "$reclaim_directory"; then
+      rmdir "$reclaim_directory" 2>/dev/null || true
+    fi
+    return 1
+  fi
+
+  if [[ -e "$OWNER_FILE" ]]; then
+    rmdir "$reclaim_directory" 2>/dev/null || true
+    return 1
+  fi
+  rmdir "$reclaim_directory" 2>/dev/null || return 1
+  if rmdir "$LOCK_DIRECTORY" 2>/dev/null; then
+    echo "Recovered stale ownerless acceptance package lock." >&2
+    return 0
+  fi
+  return 1
+}
+
+try_reclaim_stale_lock() {
+  read_owner_pid
+  if [[ ! -e "$OWNER_FILE" ]]; then
+    try_reclaim_ownerless_lock
+    return
+  fi
+  if owner_pid_is_alive "$OWNER_PID"; then
+    return 1
+  fi
+  if ! owner_pid_is_valid "$OWNER_PID" \
+      && ! path_is_older_than_owner_grace "$LOCK_DIRECTORY"; then
+    return 1
+  fi
+
+  local observed_owner_pid="$OWNER_PID"
+  local reclaim_file="$LOCK_DIRECTORY.owner-reclaim.$$"
+  if ! mv "$OWNER_FILE" "$reclaim_file" 2>/dev/null; then
+    return 1
+  fi
+
+  local claimed_owner_pid=""
+  IFS= read -r claimed_owner_pid < "$reclaim_file" || true
+  if [[ "$claimed_owner_pid" != "$observed_owner_pid" ]] \
+      || owner_pid_is_alive "$claimed_owner_pid"; then
+    if [[ ! -e "$OWNER_FILE" ]]; then
+      mv "$reclaim_file" "$OWNER_FILE"
+    else
+      rm -f "$reclaim_file"
+    fi
+    return 1
+  fi
+
+  if rmdir "$LOCK_DIRECTORY" 2>/dev/null; then
+    rm -f "$reclaim_file"
+    if owner_pid_is_valid "$claimed_owner_pid"; then
+      echo "Recovered stale acceptance package lock owned by PID $claimed_owner_pid." >&2
+    else
+      echo "Recovered acceptance package lock with stale owner metadata." >&2
+    fi
+    return 0
+  fi
+
+  if [[ ! -e "$OWNER_FILE" ]]; then
+    mv "$reclaim_file" "$OWNER_FILE"
+  else
+    rm -f "$reclaim_file"
+  fi
+  return 1
+}
+
+trap handle_exit EXIT
+trap 'handle_signal HUP 129' HUP
+trap 'handle_signal INT 130' INT
+trap 'handle_signal TERM 143' TERM
+
+mkdir -p "$LOCK_PARENT"
+WAIT_STARTED=$SECONDS
+while ! mkdir "$LOCK_DIRECTORY" 2>/dev/null; do
+  try_reclaim_stale_lock || true
+  if [[ ! -d "$LOCK_DIRECTORY" ]]; then
+    continue
+  fi
+  if (( SECONDS - WAIT_STARTED >= TIMEOUT_SECONDS )); then
+    read_owner_pid
+    if [[ -n "$OWNER_PID" ]]; then
+      echo "Timed out after ${TIMEOUT_SECONDS}s waiting for acceptance package lock owned by PID $OWNER_PID." >&2
+    else
+      echo "Timed out after ${TIMEOUT_SECONDS}s waiting for acceptance package lock with no owner metadata." >&2
+    fi
+    exit 75
+  fi
+  sleep 1
+done
+
+LOCK_HELD=1
+printf '%s\n' "$$" > "$OWNER_FILE"
+
+if run_child "$@"; then
+  COMMAND_STATUS=0
+else
+  COMMAND_STATUS=$?
+fi
+if [[ "$COMMAND_STATUS" -ne 0 ]]; then
+  exit "$COMMAND_STATUS"
+fi
+
+if [[ -n "$COPY_SOURCE" ]]; then
+  if [[ ! -e "$COPY_SOURCE" && ! -L "$COPY_SOURCE" ]]; then
+    echo "Package lock snapshot source does not exist: $COPY_SOURCE" >&2
+    exit 1
+  fi
+  if [[ -e "$COPY_DESTINATION" || -L "$COPY_DESTINATION" ]]; then
+    echo "Package lock snapshot destination already exists: $COPY_DESTINATION" >&2
+    exit 1
+  fi
+
+  COPY_SOURCE_OPERAND="$COPY_SOURCE"
+  COPY_DESTINATION_OPERAND="$COPY_DESTINATION"
+  if [[ "$COPY_SOURCE_OPERAND" == -* ]]; then
+    COPY_SOURCE_OPERAND="./$COPY_SOURCE_OPERAND"
+  fi
+  if [[ "$COPY_DESTINATION_OPERAND" == -* ]]; then
+    COPY_DESTINATION_OPERAND="./$COPY_DESTINATION_OPERAND"
+  fi
+  if ! run_child /bin/cp -R "$COPY_SOURCE_OPERAND" "$COPY_DESTINATION_OPERAND"; then
+    echo "Failed to copy package snapshot from $COPY_SOURCE to $COPY_DESTINATION." >&2
+    exit 1
+  fi
+fi

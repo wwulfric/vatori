@@ -28,7 +28,38 @@ for argument in "$@"; do
     --require-flow-ipc-reactor-reload-development|\
     --require-flow-ipc-java-reload-rollback-development|\
     --require-flow-ipc-standard-bundle-framework-app|\
+    --require-flow-ipc-capability-permission|\
+    --require-flow-ipc-capability-default-deny|\
+    --require-flow-ipc-capability-manifest-startup-failure|\
+    --require-flow-ipc-capability-generation-recovery|\
+    --require-flow-ipc-capability-owner-window-close|\
+    --require-flow-ipc-capability-context-reopen|\
+    --require-flow-ipc-retired-scope-production-host|\
+    --require-flow-ipc-file-dialog-outcomes|\
+    --require-flow-ipc-file-read-grant|\
+    --require-flow-ipc-file-read-grant-sidecar-exit|\
+    --require-flow-ipc-file-read-grant-host-shutdown|\
+    --require-flow-ipc-file-read-grant-fatal-shutdown|\
+    --require-flow-ipc-file-read-grant-isolation|\
+    --require-flow-ipc-file-read-grant-replay|\
+    --require-flow-ipc-file-read-grant-range|\
+    --require-flow-ipc-sandbox-file-read-grant|\
+    --require-flow-ipc-sandbox-file-write-grant|\
+    --require-flow-ipc-sandbox-file-write-grant-cancel|\
+    --require-flow-ipc-sandbox-file-write-grant-owner-close|\
+    --require-flow-ipc-sandbox-file-write-grant-isolation|\
+    --require-flow-ipc-sandbox-file-write-grant-sidecar-exit|\
+    --require-flow-ipc-sandbox-file-write-grant-host-shutdown|\
+    --require-flow-ipc-sandbox-file-write-grant-replay|\
+    --require-flow-ipc-clipboard-outcomes|\
+    --require-flow-ipc-notification-outcomes|\
+    --require-flow-ipc-notification-delivery|\
+    --require-flow-ipc-main-window-close-recovery|\
+    --require-flow-ipc-last-window-close|\
     --require-flow-ipc-lazy-grid-query|\
+    --require-flow-ipc-lazy-grid-selected-removal|\
+    --require-flow-ipc-lazy-multi-select-combo-box|\
+    --require-flow-ipc-multi-select-combo-box|\
     --require-flow-ipc-push-delivery|\
     --require-flow-ipc-push-recovery|\
     --require-flow-ipc-large-download-resume|\
@@ -42,14 +73,26 @@ for argument in "$@"; do
     --require-flow-ipc-flow-dnd|\
     --require-flow-ipc-flow-input-popup|\
     --require-flow-ipc-localized-input-popup|\
+    --require-flow-ipc-localized-number|\
+    --require-flow-ipc-localized-number-validation|\
+    --require-flow-ipc-native-edit|\
+    --require-flow-ipc-native-clipboard-edit|\
+    --require-flow-ipc-native-edit-isolation|\
+    --require-flow-ipc-native-edit-reopen|\
+    --require-flow-ipc-native-edit-recovery|\
+    --require-flow-ipc-external-file-drop|\
     --require-flow-ipc-picker-validation|\
     --require-flow-ipc-flow-menu-popup|\
     --require-flow-ipc-flow-overlay-stack|\
     --require-flow-ipc-structured-rpc|\
     --require-flow-ipc-standard-bundle-sidecar-recovery|\
     --require-flow-ipc-sidecar-recovery-exhaustion|\
+    --require-flow-ipc-recovery-termination|\
+    --require-flow-ipc-host-shutdown-termination|\
+    --require-flow-ipc-sidecar-write-backpressure|\
     --require-flow-ipc-host-startup-failure|\
-    --require-flow-ipc-host-ready-timeout)
+    --require-flow-ipc-host-ready-timeout|\
+    --require-flow-ipc-host-navigation-timeout)
       if [[ -n "$trace_gates" ]]; then
         trace_gates+=","
       fi

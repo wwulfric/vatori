@@ -1016,7 +1016,147 @@ in-flight file I/O, forced child termination or other fatal causes.
 Exhausted recovery after startup
 is fatal. CLI development commands preserve that status and the host logs.
 
+## Product Capability Matrix
+
+This is the canonical capability inventory, not a declaration of full parity.
+The audit reference is `ef1a26e` (Vaadin version selected by the root POM:
+25.1.5). Later implementation changes require affected evidence to be refreshed.
+Detailed historical coverage below remains useful, but does not override the
+status and boundaries here. The matrix groups shared contracts, not individual
+components or every permutation of their behavior.
+
+Implementation: **I** = implemented for the stated bounded contract; **P** =
+partial; **M** = missing product entry/contract. Verification: **H** = historical
+focused coverage documented, with driver/gate located but no fresh end-to-end
+certification; **L** = retained local trace inspected for a focused path, not a
+fresh run of the audit revision; **S** = non-window contract/synthetic evidence;
+**U** = missing required evidence; **R** = unresolved real-run regression.
+Multiple codes describe different parts of a row, not interchangeable levels of
+confidence. No row is certified for the proposed full baseline by this audit.
+The latest completed recovery run was reported as failing before the first
+click at active/key activation. Its shared log was subsequently truncated by an
+interrupted rerun, so the failure remains unresolved and the present empty log
+cannot independently reproduce or supersede it. Other unretained historical
+runs stay H rather than being promoted from documentation alone.
+
+Priority: **B** = proposed baseline requirement, **B/E** = bounded baseline with
+explicit extensions proposed for later, **E?** = proposed deferral requiring user
+approval. Gap classes **1/2/3/4** mean framework/upstream-or-application/evidence/
+native-product-boundary respectively. A `3→4?` classification requires diagnosis
+before changing production. An upstream-owned behavior is not automatically a
+gap; an application-usage issue must be proven against upstream semantics.
+
+Source keys: **Flow** = `vaadin-desktop-flow/.../flow/{ipc,transport}`;
+**Host** = `native-hosts/macos/Sources/VaadinDesktopHost`;
+**Core** = `vaadin-desktop-core/.../desktop`. **A/** denotes
+`test-support/native-host-macos-acceptance/bin/`. Commands below are evidence
+entry points; required arguments, manifests and OS actions are specified in
+[acceptance-tools.md](acceptance-tools.md), not implied by the short names.
+
+### Flow Shared Contracts
+
+| ID / contract and baseline acceptance | Owner / source | Implementation | Verification / representative evidence entry | Gap and priority |
+| --- | --- | --- | --- | --- |
+| F01 Bundle, routes and resources: initial and lazy navigation load JS/CSS/transitive imports; one official client; no localhost UI fallback | Host `FlowIpcWebAppSchemeHandler`, Flow `StandardFlowIpcRuntime` | I | H/L: standard framework acceptance; A/run with framework flags; retained broad trace is not proof of final host exit | 3; B/E: arbitrary dependency graphs later |
+| F02 Event → Java listener → UIDL and push-visible state, with correct scope/correlation | Flow `SidecarMessageLoop`, opaque HTTP adapter | I | H/S: framework route (button/value/layout/resource probes), `bin/flow-ipc-scope-smoke`, HTTP bridge smoke | 3; B: healthy round trip plus failed request, no component decoding |
+| F03 Java↔JS RPC, structured values, Promise result/error conversion | Official Flow RPC through generic IPC | I | H/S: A/run-structured-rpc; inspector structured-RPC assertions | 3; B: positive and rejection/serialization cases, no custom decoder |
+| F04 Lazy data identity, query, selection and refresh across recycled rows; exact-count and unknown-size providers | Official Flow data provider, generic transport | P | H/S: A/run-lazy-grid-query, A/run-lazy-grid-selected-removal, A/run-flow-lazy-multi-select-combo-box | 3, then 1/2 if reproduced; B/E: selected-item mutation and bounded repeated resets required, arbitrary combinations later |
+| F05 Hierarchy, renderer lifecycle and buffered editor/Binder validation | Official Flow; framework route samples | I | H/S: framework TreeGrid, ComponentRenderer/LitRenderer and Editor/Binder assertions | 3; B: expand/collapse, callback/update, save/cancel/reject/recover; deeper trees later |
+| F06 Collection/value fields and owner-bound picker/menu keyboard behavior | Official components + Host input routing | I | H/S: A/run-flow-input-popup, run-flow-menu-popup, run-flow-multi-select-combo-box, run-flow-picker-validation | 3; B/E: representative families, not every picker/menu permutation |
+| F07 Overlay stack ownership, Escape/outside click, modal suppression and focus return | Official overlays + Host WKWebView | I | H/S: A/run-flow-overlay-stack (modal/modeless/mixed three-layer samples) | 3; B/E: bounded stack, not arbitrary depth |
+| F08 Localized values and validation, formatting without changing Java meaning | Official Flow/Binder; app locale configuration | P | H/S: A/run-flow-localized-number, run-flow-localized-number-validation, run-flow-localized-input-popup | 3/2; B/E: en-US/de-DE value and invalid-input recovery; broader locales, RTL/currency proposed extensions |
+
+### Real Desktop Interaction Contracts
+
+| ID / contract and baseline acceptance | Owner / source | Implementation | Verification / representative evidence entry | Gap and priority |
+| --- | --- | --- | --- | --- |
+| D01 Active/key window, WKWebView responder, trusted pointer/key path and focus restoration after reload/owner change | Host `main.swift`; test-only `FlowIpcNativeInputActivation` | P | R/H: A/run-recovery-termination stalls at initial activation in latest completed attempt; generated-event paths exist elsewhere | 3→4?; B blocker. External activation may establish test preconditions but cannot prove automatic activation |
+| D02 Native Edit menu, plain-text cut/copy/paste and bounded undo/redo, isolated across owners | Host `NativeApplicationMenu`, responder chain | I | H/S: A/run-flow-native-edit, run-flow-native-clipboard-edit, run-flow-native-edit-isolation/reopen/recovery | 3; B/E: plain-text baseline, rich-text/non-text/history permutations later |
+| D03 IME composition and physical keyboard/pointing input do not duplicate/drop Java changes | WKWebView/system input; official Flow | P | U: generated key events are not IME or physical hardware evidence; no dedicated baseline operator receipt located | 3→4?; B: Chinese Pinyin composition/cancel/commit, pointer selection and keyboard traversal |
+| D04 Accessibility across native window and web content: names, roles, values, traversal and modal focus | WKWebView accessibility + official component semantics | P | H for DOM/ARIA assertions; U for VoiceOver baseline | 3→4?; B: actual VoiceOver control/field/grid/dialog task; ARIA alone cannot close it |
+| D05 Drag/drop within Flow and external Finder file ingestion with provenance, exact bytes and Java result | Official DnD/Upload + system drag session | P | H: A/run-flow-dnd; U: A/run-flow-external-file-drop has verifier but no accepted real Finder transfer established | 3→4?; B: separate internal DnD and external Finder evidence, no DOM-trust substitution |
+
+### Continuity and Durability Contracts
+
+| ID / contract and baseline acceptance | Owner / source | Implementation | Verification / representative evidence entry | Gap and priority |
+| --- | --- | --- | --- | --- |
+| R01 Push retry/ack, reconnect and gap-resync produce consistent DOM without cross-scope replay | Flow `StandardFlowIpcPushDelivery`, push bridge | I | H/S: A/run-flow-push-delivery, run-flow-push-recovery; push bridge and inspector negatives | 3; B: dropped final delivery, reconnect, resync and fresh normal push |
+| R02 Multiple window/session owners, close/reopen and stale callback rejection | Flow `StandardFlowIpcSessions`, `SidecarNativeBridge`; Host retired scopes | I | H/S: A/run-flow-capability-context-reopen, run-flow-retired-scope-production-host, run-flow-main-window-close-recovery | 3; B/E: three owners and ten bounded churn cycles proposed; higher fan-out later |
+| R03 Startup/ready timeout, ordinary Quit, fatal shutdown and exact process exit; failed shutdown retains fenced ownership | Host `JavaSidecar`, `FlowIpcSidecarController`, resource cleanup | I | L/S: A/run-host-ready-timeout, run-host-shutdown-termination, run-flow-file-read-grant-fatal-shutdown; process callback doubles | 3; B: cooperative/blocked child and resource drain; OS signal refusal remains separate from callback simulation |
+| R04 Unexpected sidecar exit, restart budget, retained windows and fresh document/session; interrupted request fails explicitly | Host controller, Flow scope/session teardown | P | R/H/S: A/run-recovery-termination blocked before recovery; A/run-sidecar-recovery-exhaustion and run-flow-in-flight-request-recovery provide narrower historical contracts | 3→4?; B: latest changes need real three-generation regression, no promise of old Java state preservation |
+| R05 Upload/Download progress, cancel, retry/Range-resume, concurrent isolation and finite endurance | Flow streaming adapters; official UploadHandler/DownloadHandler | P | H/L/S: A/run-flow-large-upload-retry, run-flow-large-multipart-upload-retry, run-flow-large-download-resume, run-flow-request-fanout, run-flow-cross-session-multipart-upload, run-sidecar-write-backpressure | 3/1; B/E: finite load profile below; transparent cross-process continuation not implemented |
+| R06 Product planned replacement: authorized trigger, validated candidate, ready/failure/rollback result and bounded retirement | Host controller; product trigger still absent | M (low-level pieces exist) | S/H only for termination/development paths; current `requestReplacement` rejects standard bundle with `unsupported-mode` | 4; B: remain required, do not count dev reload or unexpected recovery as completion |
+
+### Native Product Contracts
+
+| ID / contract and baseline acceptance | Owner / source | Implementation | Verification / representative evidence entry | Gap and priority |
+| --- | --- | --- | --- | --- |
+| N01 Manifest permissions, startup fail-closed, window scope and explicit captured async capability context | Core `DesktopCapabilityContext`; Flow native bridge; Host `CapabilityManifest` | I | H/S: A/run-flow-capability-package-policy/default-deny/permission/context-reopen/generation-recovery; CLI and scope contracts | 3; B: allowed/denied/malformed/stale owner, including no ambient background-context borrowing |
+| N02 Public window create/title/close and last-window lifetime, owner removal without affecting siblings | Core `DesktopWindows`; Host window owner | I | H/L/S: A/run-flow-last-window-close, run-flow-main-window-close-recovery, run-flow-capability-owner-window-close | 3; B/E: existing window contract; extra window affordances later |
+| N03 Notification authorization/result correlation and foreground system presentation | Core `DesktopNotificationResult`; Host notification adapters | P | L/S: A/run-flow-notification-outcomes and run-flow-notification-delivery; retained trace explicitly has `bannerVisibilityClaimed=false` | 3/4; B: consent branches plus separately observed banner under eligible settings; never promise OS-guaranteed delivery |
+| N04 Sandbox-safe selected read grant, bounded range read/release, owner isolation and lifecycle revocation | Core `DesktopFileReadGrant`; Host executor/security scope | I | L/H/S: A/run-flow-file-read-grant-sandbox/range/isolation/replay/fatal-shutdown; actual selected-read/sibling-denial evidence | 3; B: in-flight invalidation and replacement coverage not implied by idle-grant evidence |
+| N05 Sandbox-safe create-new write, chunk progress/cancel/release, stale token and owner isolation | Core write grant API; Host `NativeFileWriteIO` | I | L/H/S: A/run-flow-file-write-grant-sandbox and cancel/isolation/owner-close/sidecar-exit/host-shutdown/replay variants | 3; B: in-flight races and current shutdown semantics need aligned evidence; no overwrite/atomic-transaction promise |
+| N06 Persistent file authorization, bookmarks, overwrite/transaction and durable cross-process resume | Native file product contract | M/P (transient grants only) | U: no complete public contract or end-to-end gate located | 4; E?: explicitly defer only with approval; these remain in long-term original scope |
+| N07 Async native operation lifecycle: context correlation, progress where meaningful, cancel/retry and terminal invalidation | Core APIs, Flow bridge, Host resource tracker | P | H/S across notification/file/owner-close tests, not a uniform all-capabilities continuation contract | 4/3; B/E: define per operation; reject unsupported resume rather than claim generic support |
+| N08 Plain-text clipboard read/write typed outcomes and bounded retry without owner leakage or overwriting unrelated changes during test cleanup | Core `DesktopClipboard`; Host pasteboard operations | I | H/S: A/run-flow-clipboard-outcomes; Java contracts and pasteboard fake-provider smoke; native Edit uses this surface but is D02 | 3; B/E: plain text with real pasteboard contention case; rich formats deferred only by approval |
+| N09 Native file-panel selection/cancel/deny/error and in-flight owner invalidation, without treating a path as persistent authorization | Core `DesktopFileDialog`; Host panel owner | I | H/S: A/run-flow-file-dialog-outcomes, run-flow-capability-owner-window-close, run-flow-capability-generation-recovery | 3; B: real panel outcomes; actual authorized I/O belongs to N04/N05 |
+
+### Proposed First Acceptance Baseline (Awaiting Approval)
+
+The four original categories map to F01–F08, D01–D05, R01–R06 and N01–N09.
+Permissions and file grants are not duplicated under transfer; transfer is R05,
+authorization is N04/N05. Browser ARIA and generated input do not duplicate the
+actual OS/AT evidence in D03–D05. Progress/cancel/retry/resume are operation-specific
+contracts, not four mandatory verbs for every API (for example a synchronous
+clipboard read).
+
+Proposed profile, not an already-supported or already-passed guarantee:
+
+- macOS on the available Apple Silicon host, system WKWebView, root-POM Vaadin
+  version and standard production bundle/opaque IPC. Record exact OS build,
+  JDK, architecture, bundle digest and source revision on every accepted run.
+  Other macOS/JDK combinations require a separate compatibility claim.
+- Up to three windows, ten close/reopen cycles, three sequential unexpected
+  recoveries and one successful/one failed-candidate planned replacement with
+  rollback. Confirm no cross-owner state, stale capability success or orphan
+  process; state loss across JVM replacement must be explicit.
+- Exact-count and unknown-size lazy datasets of 1,000 items, page size 50, ten
+  filter/sort/refresh cycles and selected-item mutation; two-level hierarchy and
+  at most three overlay layers. These are proposed test bounds, not new product
+  limits or a claim that current fixtures already reach them.
+- Raw/multipart upload and download through 256 MiB, three active requests per
+  window, two concurrent transfer windows, a 30-minute mixed run. Require exact
+  bytes, isolated cancellation, progress, fresh-request retry, supported Range
+  resume, bounded configured queues/timeouts and no retained operations/temp
+  files after drain. Collect memory/descriptor trends; a memory ceiling/SLO is
+  a separate decision, not fabricated from one run.
+- D03 physical input/Chinese Pinyin, D04 VoiceOver and D05 real Finder transfer
+  each need one bounded operator scenario in addition to automated regression.
+  New OS permission choices, clipboard mutation and external interactions use
+  explicit per-run authorization; old one-time approvals cannot be reused.
+- N04/N05 cover transient selected read and create-new write, their applicable
+  lifecycle branches and replacement invalidation. N03 requires an observed
+  eligible-settings banner, while API success means scheduling, not delivery.
+
+All B rows, and the bounded part of B/E rows, must pass before this baseline is
+declared complete. Proposed extensions are: N06 persistent/transactional file
+operations; transparent cross-process transfer continuation; richer clipboard
+formats/edit histories; further locales/RTL/currency; deeper combinations and
+higher/longer load. These are **proposed deferrals**, not silently removed
+requirements. Product planned replacement, accessibility and Finder interaction
+are deliberately not deferred by default. User approval freezes the profile;
+new independent capabilities require a scope change, while defects inside the
+approved profile always block completion.
+
+Stage A delivers this inventory and decision list, not a green matrix. Stage B
+starts only after approval. See [roadmap.md](roadmap.md) for dependencies and
+[acceptance-tools.md](acceptance-tools.md) for evidence admissibility.
+
 ## Current Verified Surface
+
+The following is the accumulated focused surface, not current baseline-wide
+certification. Apply the matrix statuses above, particularly unresolved
+activation/recovery regressions and missing OS/AT evidence.
 
 Validation covers representative bootstrap, UIDL, events, server patches, push,
 input components including explicitly enabled Slider, shell layout through

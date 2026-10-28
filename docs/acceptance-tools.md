@@ -3,6 +3,47 @@
 These tools verify repository and runtime contracts. They are not public
 framework APIs.
 
+## Capability Matrix Evidence Rules
+
+The canonical capability IDs and statuses live in the
+[runtime matrix](flow-over-ipc-runtime.md#product-capability-matrix); do not keep
+a second status table in this document. Its A/ command names refer to the
+acceptance bin directory. Use the full commands and prerequisites below when
+executing them; a named runner is not proof that it passed.
+
+- Source/driver inspection establishes implementation and intended coverage,
+  not execution. Synthetic inspector positives/negatives establish the verifier's
+  discrimination, not an OS or WKWebView outcome. Non-window smoke never closes
+  physical input, Finder, VoiceOver, system permission or banner visibility.
+- A retained trace may be rechecked using `bin/flow-ipc-trace-inspect` without
+  launching the app. Passing establishes only that trace's focused contract;
+  record source/bundle provenance or mark it historical/unknown. An acceptance
+  marker alone is insufficient, and intentional fatal tests may correctly
+  contain their narrowly specified error event.
+- Accepted baseline evidence must identify capability IDs, source revision,
+  dirty state, host/bundle digest, OS/JDK/architecture, command and parameters,
+  input method, gate version/result, explicit exclusions and operator actions
+  where required. Keep full traces and receipts in CI/external artifacts, not
+  Git. Require actual exit/cleanup evidence when lifecycle is part of the claim.
+- Current failures override historical green results for the affected contract.
+  A canceled run, empty overwritten log, missing output or stale app cannot
+  establish success. Preserve completed evidence before retry; shared runner
+  filenames are working files, not an immutable evidence archive.
+- UI activation by an external operator/tool may be a declared setup action.
+  It does not prove automatic activation. Generated AppKit input, physical
+  keyboard/IME, accessibility interaction and cross-app Finder transfer must
+  be labeled separately. Do not weaken active/key or provenance gates to pass.
+- Stage A is a source/evidence audit, not a requirement to rerun all gates.
+  Revalidation is targeted by changed ownership/transport/capability code;
+  final Stage B certification uses the approved frozen profile and revision.
+
+Baseline criteria proposed in the runtime matrix are not automatically supplied
+by existing runners. In particular three-window churn, the proposed endurance
+profile, VoiceOver/operator tasks and product planned replacement need gap work
+before a complete baseline run can be claimed. Per-operation semantics must
+distinguish cancellation from revocation, fresh-request retry from resume, and
+transient grants from persistent/transactional authorization.
+
 ## Non-Window Suite
 
 ```bash

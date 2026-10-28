@@ -12,7 +12,8 @@ Java 编程模型、标准 production bundle 和官方 Flow client/server；nati
 窗口、生命周期与原生能力，opaque IPC 只承载通用 request、push 和
 command/result，不解释组件或 UIDL 语义。
 
-当前 completion gate 聚焦三条主线：
+长期产品 completion gate 聚焦三条主线；当前阶段 A 只做矩阵与基线提案，不执行
+下列所有实现任务：
 
 1. **Flow 能力面**：补齐代表性组件族、数据与资源行为、真实输入、焦点、无障碍和
    状态同步的共享能力矩阵。
@@ -156,7 +157,44 @@ command/result，不解释组件或 UIDL 语义。
 具体已验证分支、focused 限制和执行命令统一维护在 runtime 与 acceptance 文档中，
 不在 roadmap 重复展开。
 
-## 当前推进顺序
+## 阶段 A 交付与基线决策
+
+唯一状态清单是 [runtime 能力矩阵](flow-over-ipc-runtime.md#product-capability-matrix)。
+矩阵共 28 项共享契约，包含四类原始范围；源码与工具定位不等于全面验证。
+当前提案尚待确认，既有详细缺口列表仍保留，但不再把每个“更广/更多/更长”的扩展
+自动追加为本轮完成门槛。
+
+需要用户确认的决策：
+
+1. 接受矩阵中的量化基线建议，还是调整三窗口、十次 churn、1,000 项数据、256 MiB
+   传输和 30 分钟耐久性范围。这些是建议验收配置，不是已有支持承诺。
+2. 是否同意延期 N06 持久书签/覆盖写事务，以及 R05 透明跨进程传输恢复、丰富剪贴板、
+   更多 locale/RTL 和任意组合深度。它们仍属长期目标，不因本轮盘点被取消。
+3. 是否接受 R06 产品 planned replacement、实际 VoiceOver 和 Finder 边界为首个
+   基线必选。推荐保留；若要延期，必须明确缩小“首个基线”的声明，不称全面 parity。
+4. 确认可供系统交互验收的 macOS/硬件环境和操作窗口；涉及权限、剪贴板或外部文件的
+   具体操作另行获取授权。人工等待项与可自动推进项分开排期。
+
+## 基线获批后的建议顺序
+
+阶段 A 到交付矩阵为止。以下是阶段 B 的实施建议，不是自动执行指令：
+
+1. **证据与输入前提（D01）**：定位 active/key 激活失败，区分系统拒绝、外部输入
+   前提和 host bug；保留失败 trace，建立不覆盖上一轮证据的运行收集方式。
+2. **生命周期主链（R03/R04 → R06）**：先通过最新代码的三代恢复回归，再定义并实现
+   产品 replacement 触发、授权、候选/rollback 与状态丢失契约；复用退出监督而非
+   绕过 development-only guard。R06 完成后复验 N04/N05/N07 在途授权失效。
+3. **共享 Flow 行为（F01–F08、R01/R02、D02）**：重用已有代表性样本；优先补
+   真正缺失的 unknown-size selected mutation、限定 churn 和当前基线回归，避免
+   重复扩展组件排列组合。
+4. **真实系统边界（D03–D05、N03–N05）**：安排物理/IME、VoiceOver、Finder、
+   通知横幅与 Sandbox 操作；记录外部来源和用户观察，不用合成事件冒充。
+5. **并发和耐久性（R05）**：在基础功能与 owner 隔离通过后执行量化负载；补齐
+   progress/cancel/retry/resume 的逐操作支持表，排除误称跨 JVM continuation。
+6. **冻结候选验收**：同一源码 revision/bundle 身份下运行必选回归和证据审查，
+   全量非窗口 smoke 加真实门禁；任何范围内失败阻止基线完成。
+
+## 长期能力扩展清单
 
 ### 1. 闭合 Flow 共享能力矩阵
 
@@ -353,7 +391,10 @@ command/result，不解释组件或 UIDL 语义。
 
 ## 完成门槛
 
-只有以下条件同时满足，才能宣布当前 macOS 产品功能 parity 完成：
+阶段 A 完成按 `docs/goal.md` 的矩阵交付条件判定；阶段 B 完成按获批的有限基线判定。
+两者均不等于下面的长期全面产品 parity 完成。
+
+只有以下条件同时满足，才能宣布 macOS 全面产品功能 parity 完成：
 
 - 代表性组件族和行为族的共享能力矩阵已闭合，且没有组件专用 production 例外；
 - 所声明能力均通过真实 WKWebView、标准 production bundle、官方 Flow client/server

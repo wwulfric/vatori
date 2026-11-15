@@ -4,6 +4,7 @@ set -euo pipefail
 ROOT="$(cd "$(dirname "${BASH_SOURCE[0]}")/.." && pwd)"
 
 bash "$ROOT/bin/repository-hygiene-check"
+node "$ROOT/test-support/native-host-macos-acceptance/Tests/artifact-storage-smoke.mjs"
 bash "$ROOT/bin/native-host-trace-boundary-smoke"
 bash "$ROOT/bin/native-host-retired-scope-smoke"
 bash "$ROOT/bin/native-host-resource-cleanup-smoke"

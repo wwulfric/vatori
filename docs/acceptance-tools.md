@@ -3,6 +3,24 @@
 These tools verify repository and runtime contracts. They are not public
 framework APIs.
 
+## Local Artifact Storage
+
+The macOS acceptance package lock checks `.build/native-hosts/macos` before
+starting another run. Its default budget is 8192 MiB; at or above that budget it
+exits with status 73 and reports the largest entries. This is a between-run
+guard, not a quota on a running test. `du` can count APFS shared blocks more than
+once, so the budget is deliberately conservative. Set
+`VATORI_ACCEPTANCE_ARTIFACT_LIMIT_MIB` to a larger MiB value when needed, or `0`
+to disable the guard. Direct builds outside the acceptance lock are not covered.
+
+Archive evidence needed for review to CI artifacts or external storage, then
+remove completed local runs. The guard never deletes evidence or running apps.
+Baseline evidence app copies use macOS `cp -cRp`: APFS clones share unchanged
+blocks while subsequent signing, fixture mutations and source deletion remain
+independent. macOS falls back to a normal copy where cloning is unsupported.
+New builds, full traces, source archives and modified files still consume space;
+cloning is not an evidence retention policy.
+
 ## Capability Matrix Evidence Rules
 
 The canonical capability IDs and statuses live in the

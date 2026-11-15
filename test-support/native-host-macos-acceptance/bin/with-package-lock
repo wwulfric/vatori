@@ -286,6 +286,26 @@ done
 LOCK_HELD=1
 printf '%s\n' "$$" > "$OWNER_FILE"
 
+# Retained bundles/traces are evidence, so never silently evict them. Bound
+# accumulation between runs instead; du is conservative for APFS shared blocks.
+ARTIFACT_LIMIT_MIB="${VATORI_ACCEPTANCE_ARTIFACT_LIMIT_MIB:-8192}"
+if [[ ! "$ARTIFACT_LIMIT_MIB" =~ ^(0|[1-9][0-9]{0,6})$ ]] \
+    || (( ARTIFACT_LIMIT_MIB > 1048576 )); then
+  echo 'VATORI_ACCEPTANCE_ARTIFACT_LIMIT_MIB must be 0..1048576 (0 disables the budget).' >&2
+  exit 2
+fi
+if (( ARTIFACT_LIMIT_MIB > 0 )); then
+  ARTIFACT_USAGE="$(du -sk "$LOCK_PARENT")"
+  ARTIFACT_USAGE_KIB="${ARTIFACT_USAGE%%[[:space:]]*}"
+  if (( ARTIFACT_USAGE_KIB >= ARTIFACT_LIMIT_MIB * 1024 )); then
+    echo "Acceptance artifacts exceed ${ARTIFACT_LIMIT_MIB} MiB: $LOCK_PARENT" >&2
+    echo 'Archive required evidence externally and remove completed runs before retrying, or explicitly raise VATORI_ACCEPTANCE_ARTIFACT_LIMIT_MIB.' >&2
+    echo 'Largest entries (KiB; APFS shared blocks may be counted more than once):' >&2
+    du -sk "$LOCK_PARENT"/* 2>/dev/null | sort -nr | sed -n '1,10p' >&2 || true
+    exit 73
+  fi
+fi
+
 if run_child "$@"; then
   COMMAND_STATUS=0
 else

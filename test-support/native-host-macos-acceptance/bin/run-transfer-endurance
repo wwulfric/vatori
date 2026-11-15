@@ -1,0 +1,126 @@
+#!/usr/bin/env bash
+set -euo pipefail
+ROOT="$(cd "$(dirname "${BASH_SOURCE[0]}")/../../.." && pwd)"
+ACCEPTANCE="$ROOT/test-support/native-host-macos-acceptance"
+BUILD="$ROOT/.build/native-hosts/macos"
+PREPARED=""
+if [[ $# == 2 && "$1" == --prepared-app && "$2" == /* && -d "$2" ]]; then PREPARED="$2";
+elif [[ $# != 0 ]]; then echo "Usage: $0 [--prepared-app PATH]" >&2; exit 2; fi
+if [[ "$(uname -s)" != Darwin ]]; then echo 'Requires macOS.' >&2; exit 2; fi
+if [[ -z "${JAVA_HOME:-}" || ! -x "$JAVA_HOME/bin/java" ]]; then echo 'Set JAVA_HOME to a local JDK.' >&2; exit 2; fi
+if [[ "${VATORI_NATIVE_HOST_MACOS_ACCEPTANCE_PACKAGE_LOCK_HELD:-}" != 1 ]]; then
+  exec env VATORI_NATIVE_HOST_MACOS_ACCEPTANCE_PACKAGE_LOCK_HELD=1 \
+    bash "$ACCEPTANCE/bin/with-package-lock" -- bash "$0" "$@"
+fi
+umask 077
+mkdir -p "$BUILD"
+cd "$ROOT"
+EVIDENCE="$(mktemp -d "$BUILD/transfer-endurance-evidence.XXXXXX")"
+APP="$EVIDENCE/VaadinDesktopHost.app"
+EXE="$APP/Contents/MacOS/VaadinDesktopHost"
+JAR="$APP/Contents/Resources/Sidecar/application.jar"
+OPEN_PID=""
+SAMPLER_PID=""
+echo "Evidence directory: $EVIDENCE"
+owned_pids() {
+  ps -axo pid=,command= | awk -v host="$EXE" -v jar="$JAR" -v java="$JAVA_HOME/bin/java" '
+    { pid=$1; $1=""; sub(/^ +/, "");
+      if ($0 == host || $0 == java " -jar " jar) print pid; }'
+}
+finish() {
+  local status="$1" remaining attempt=0 pid
+  trap - EXIT
+  if [[ -n "$SAMPLER_PID" ]]; then kill -TERM "$SAMPLER_PID" 2>/dev/null || true; wait "$SAMPLER_PID" 2>/dev/null || true; fi
+  trap '' HUP INT TERM
+  printf '%s\n' "$status" > "$EVIDENCE/primary-exit-status.txt"
+  if ! remaining="$(owned_pids)"; then
+    status=1
+    echo 'Unable to inspect owned processes; app and evidence retained.' >&2
+  elif [[ -n "$remaining" ]]; then
+    # Cleanup must never turn a failed/external-deadline run into a PASS.
+    status=1
+    printf '%s\n' "$remaining" > "$EVIDENCE/cleanup-required-pids.txt"
+    for pid in $remaining; do kill -TERM "$pid" 2>/dev/null || true; done
+    while [[ -n "$remaining" && "$attempt" -lt 30 ]]; do
+      sleep 0.1
+      attempt=$((attempt + 1))
+      remaining="$(owned_pids)" || break
+    done
+    for pid in $remaining; do kill -KILL "$pid" 2>/dev/null || true; done
+    sleep 0.1
+  fi
+  if [[ -n "$OPEN_PID" ]]; then kill -TERM "$OPEN_PID" 2>/dev/null || true; wait "$OPEN_PID" 2>/dev/null || true; fi
+  if remaining="$(owned_pids)" && [[ -z "$remaining" ]]; then
+    printf '%s\n' absent > "$EVIDENCE/final-process-state.txt"
+  else
+    status=1
+    printf '%s\n' unconfirmed > "$EVIDENCE/final-process-state.txt"
+  fi
+  printf '%s\n' "$status" > "$EVIDENCE/runner-exit-status.txt"
+  exit "$status"
+}
+trap 'finish "$?"' EXIT
+trap 'finish 130' INT
+trap 'finish 143' TERM
+trap 'finish 129' HUP
+git -C "$ROOT" rev-parse HEAD > "$EVIDENCE/source-revision.txt"
+git -C "$ROOT" status --porcelain=v1 > "$EVIDENCE/source-status.txt"
+git ls-files --cached --others --exclude-standard -z > "$EVIDENCE/source-files.nul"
+xargs -0 shasum -a 256 < "$EVIDENCE/source-files.nul" > "$EVIDENCE/source-sha256.txt"
+tar -czf "$EVIDENCE/source.tar.gz" --null -T "$EVIDENCE/source-files.nul"
+sw_vers > "$EVIDENCE/macos-version.txt"
+uname -m > "$EVIDENCE/architecture.txt"
+"$JAVA_HOME/bin/java" -version > "$EVIDENCE/jdk-version.txt" 2>&1
+printf '%s\n' 'R05; windows=2; active=3/window; large=256MiB; duration>=1800s; input=browser-programmatic' \
+  'background launch; internal deadline=2100s; external deadline=2160s' \
+  'excludes: native input, activation, whole-matrix certification' \
+  'command: bash test-support/native-host-macos-acceptance/bin/run-transfer-endurance' > "$EVIDENCE/profile.txt"
+# Reject inherited automation/fixture knobs; this profile never authorizes native side effects.
+while IFS= read -r name; do
+  case "$name" in VAADIN_DESKTOP_*|VATORI_FILE_*|VATORI_TEST_*|VATORI_APPLICATION_RESOURCES) unset "$name" ;; esac
+done < <(compgen -e)
+if [[ -z "$PREPARED" ]]; then
+bash "$ROOT/bin/vaadin-desktop" package test-apps/flow-over-ipc-framework-app \
+  2>&1 | tee "$EVIDENCE/package.log"
+bash "$ACCEPTANCE/bin/build-host" "$ROOT" test-apps/flow-over-ipc-framework-app flow-ipc \
+  2>&1 | tee "$EVIDENCE/build-host.log"
+PREPARED="$BUILD/VaadinDesktopHost.app"
+fi
+printf '%s\n' "$PREPARED" > "$EVIDENCE/prepared-source.txt"
+cp -cRp "$PREPARED" "$APP"
+plutil -replace CFBundleIdentifier -string "dev.vatori.acceptance.endurance.$(uuidgen | tr '[:upper:]' '[:lower:]')" "$APP/Contents/Info.plist"
+codesign --force --sign - "$APP" > "$EVIDENCE/sign.log" 2>&1
+codesign --verify --strict "$APP" >> "$EVIDENCE/sign.log" 2>&1
+# Retain the exact bundle as well as all input digests; never infer identity from the shared stage later.
+rg --files --hidden --no-ignore -0 "$APP" | xargs -0 shasum -a 256 > "$EVIDENCE/bundle-sha256.txt"
+shasum -a 256 "$0" "$ACCEPTANCE/Tests/transfer-endurance-verify.mjs" \
+  "$ACCEPTANCE/Tests/transfer-endurance-resources.mjs" > "$EVIDENCE/verifier-sha256.txt"
+ditto "$ACCEPTANCE/Tests/transfer-endurance-verify.mjs" "$EVIDENCE/verify.mjs"
+ditto "$ACCEPTANCE/Tests/transfer-endurance-resources.mjs" "$EVIDENCE/resources.mjs"
+shasum -a 256 -c "$EVIDENCE/source-sha256.txt" > "$EVIDENCE/source-check.log"
+open -n -W -g -o "$EVIDENCE/host.out.log" --stderr "$EVIDENCE/host.err.log" \
+  --env "PATH=$PATH" --env "JAVA_HOME=$JAVA_HOME" \
+  --env "VAADIN_DESKTOP_ACCEPTANCE_REPO_ROOT=$ROOT" \
+  --env VAADIN_DESKTOP_MACOS_NO_ACTIVATE=1 \
+  --env VAADIN_DESKTOP_FLOW_IPC_AUTO_TRANSFER_ENDURANCE=1 \
+  --env VAADIN_DESKTOP_TEST_TRANSFER_ENDURANCE=1 \
+  --env VAADIN_DESKTOP_FLOW_IPC_AUTO_SHUTDOWN=1 \
+  --env VAADIN_DESKTOP_FLOW_IPC_AUTO_SHUTDOWN_TIMEOUT_SECONDS=2100 \
+  --env VAADIN_DESKTOP_FLOW_IPC_TRACE_DETAIL=full "$APP" &
+OPEN_PID=$!
+node "$EVIDENCE/resources.mjs" "$EXE" "$JAVA_HOME/bin/java" "$JAR" "$EVIDENCE/resources.jsonl" &
+SAMPLER_PID=$!
+started=$SECONDS
+while kill -0 "$OPEN_PID" 2>/dev/null; do
+  if (( SECONDS - started > 2160 )); then echo 'External runtime deadline exceeded.' >&2; exit 124; fi
+  sleep 1
+done
+wait "$OPEN_PID"
+OPEN_PID=""
+kill -TERM "$SAMPLER_PID" 2>/dev/null || true
+wait "$SAMPLER_PID" || true
+SAMPLER_PID=""
+node "$EVIDENCE/verify.mjs" "$EVIDENCE/host.out.log" "$EVIDENCE/resources.jsonl" \
+  2>&1 | tee "$EVIDENCE/verifier.log"
+shasum -a 256 -c "$EVIDENCE/source-sha256.txt" > "$EVIDENCE/final-source-check.log"
+shasum -a 256 -c "$EVIDENCE/bundle-sha256.txt" > "$EVIDENCE/bundle-check.log"

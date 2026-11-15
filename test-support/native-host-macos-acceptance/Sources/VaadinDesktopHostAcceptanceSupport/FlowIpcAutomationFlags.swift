@@ -39,6 +39,7 @@ final class FlowIpcAcceptanceRuntimeObserver: HostRuntimeObserver {
         }
         if flag("nativeClipboardEdit") {
             restoreNativeClipboardEditPasteboardOnTermination()
+            restoreNativeCopyEditPasteboardOnTermination()
         }
         if flag("fileReadGrantHostShutdown") {
             host.observeFileReadGrantHostShutdown()
@@ -130,6 +131,9 @@ final class FlowIpcAcceptanceRuntimeObserver: HostRuntimeObserver {
             "lazyGridQuery",
             from: "VAADIN_DESKTOP_FLOW_IPC_AUTO_LAZY_GRID_QUERY",
             environment: environment)
+        setFlag("lazyDataBaseline", from: "VAADIN_DESKTOP_FLOW_IPC_AUTO_LAZY_DATA_BASELINE", environment: environment)
+        setFlag("windowChurn", from: "VAADIN_DESKTOP_FLOW_IPC_AUTO_WINDOW_CHURN", environment: environment)
+        setFlag("transferEndurance", from: "VAADIN_DESKTOP_FLOW_IPC_AUTO_TRANSFER_ENDURANCE", environment: environment)
         setFlag(
             "lazyGridSelectedRemoval",
             from: "VAADIN_DESKTOP_FLOW_IPC_AUTO_LAZY_GRID_SELECTED_REMOVAL",

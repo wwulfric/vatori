@@ -854,6 +854,9 @@ public final class StandardBundleTraceInspector {
         private JsonNode flowClipboardOutcomesAcceptance;
         private int flowClipboardOutcomesAcceptanceOrder;
         private boolean clipboardDeniedProbeLeaked;
+        private final List<OrderedEventTrace> clipboardContentionStarts = new ArrayList<>();
+        private final List<OrderedEventTrace> clipboardContentionResults = new ArrayList<>();
+        private final List<OrderedEventTrace> clipboardContentionReads = new ArrayList<>();
         private final List<OrderedEventTrace> clipboardOutcomesPointerEvents =
                 new ArrayList<>();
         private JsonNode flowMainWindowCloseRecoveryAcceptance;
@@ -1680,6 +1683,15 @@ public final class StandardBundleTraceInspector {
                                         messageCount,
                                         "recv".equals(text(
                                                 root, "direction"))));
+                case "clipboardOutcomes.retryObserved" ->
+                        clipboardContentionReads.add(new OrderedEventTrace(
+                                payload, messageCount, "recv".equals(text(root, "direction"))));
+                case "clipboardOutcomes.contenderStarted" ->
+                        clipboardContentionStarts.add(new OrderedEventTrace(
+                                payload, messageCount, "recv".equals(text(root, "direction"))));
+                case "clipboardOutcomes.controlledContention" ->
+                        clipboardContentionResults.add(new OrderedEventTrace(
+                                payload, messageCount, "recv".equals(text(root, "direction"))));
                 case "clipboardOutcomes.nativePointerDispatch" ->
                         clipboardOutcomesPointerEvents.add(new OrderedEventTrace(
                                 payload,
@@ -4594,6 +4606,12 @@ public final class StandardBundleTraceInspector {
         private void requireFlowCapabilityGenerationRecovery(
                 List<String> missing) {
             JsonNode acceptance = flowCapabilityGenerationRecoveryAcceptance;
+            int firstCommandOrder = desktopCommands.stream()
+                    .filter(command -> "fileDialog.openFile".equals(command.command))
+                    .mapToInt(command -> command.order).min().orElse(messageCount);
+            String mainCommands = permissionManifestCommands("main", firstCommandOrder, missing);
+            require(missing, List.of(mainCommands.split(",")).contains("fileDialog.openFile"),
+                    "generation main manifest grants openFile");
             require(missing, acceptance != null,
                     "capability generation recovery acceptance result");
             if (acceptance != null) {
@@ -4799,7 +4817,7 @@ public final class StandardBundleTraceInspector {
                             && correlated(generationTwo, generationTwoResult),
                     "generation-two command/result correlation and scope");
             require(missing,
-                    exactCanceledOpenPanelPayload(generationTwoResult.payload),
+                    exactCanceledOpenPanelPayload(generationTwoResult.payload, mainCommands),
                     "exact canceled generation-two open panel result");
 
             require(missing,
@@ -6918,6 +6936,12 @@ public final class StandardBundleTraceInspector {
 
         private void requireFlowFileDialogOutcomes(List<String> missing) {
             JsonNode acceptance = flowFileDialogOutcomesAcceptance;
+            int firstCommandOrder = desktopCommands.stream()
+                    .filter(command -> "fileDialog.openFile".equals(command.command))
+                    .mapToInt(command -> command.order).min().orElse(messageCount);
+            String mainCommands = permissionManifestCommands("main", firstCommandOrder, missing);
+            require(missing, List.of(mainCommands.split(",")).contains("fileDialog.openFile"),
+                    "file-dialog main manifest grants openFile");
             require(missing, acceptance != null,
                     "file-dialog outcomes acceptance result");
             if (acceptance != null) {
@@ -7029,9 +7053,9 @@ public final class StandardBundleTraceInspector {
                                 "secondaryRecoveryGeneration").asInt(-1) == 0,
                         "file-dialog outcomes without recovery");
                 require(missing,
-                        expectedFileDialogFirstStatus().equals(text(
+                        expectedFileDialogFirstStatus(mainCommands).equals(text(
                                 acceptance, "firstStatus"))
-                                && expectedFileDialogConcurrentStatus().equals(
+                                && expectedFileDialogConcurrentStatus(mainCommands).equals(
                                 text(acceptance, "concurrentStatus"))
                                 && expectedFileDialogDeniedStatus().equals(text(
                                 acceptance, "deniedStatus")),
@@ -7158,11 +7182,11 @@ public final class StandardBundleTraceInspector {
                             denied.correlationId),
                     "unique exact file-dialog command/result correlations");
             require(missing,
-                    exactNormalCanceledFileDialogPayload(firstResult.payload),
+                    exactNormalCanceledFileDialogPayload(firstResult.payload, mainCommands),
                     "exact normal canceled file-dialog result payload");
             require(missing,
                     exactConcurrentFileDialogErrorPayload(
-                            concurrentResult.payload),
+                            concurrentResult.payload, mainCommands),
                     "exact concurrent file-dialog error payload");
             require(missing,
                     exactDeniedFileDialogPayload(deniedResult.payload),
@@ -12399,6 +12423,13 @@ public final class StandardBundleTraceInspector {
 
         private void requireFlowClipboardOutcomes(List<String> missing) {
             JsonNode acceptance = flowClipboardOutcomesAcceptance;
+            int firstCommandOrder = desktopCommands.stream()
+                    .filter(command -> command.command.startsWith("clipboard."))
+                    .mapToInt(command -> command.order).min().orElse(messageCount);
+            String mainCommands = permissionManifestCommands("main", firstCommandOrder, missing);
+            require(missing, List.of(mainCommands.split(",")).containsAll(
+                    List.of("clipboard.readText", "clipboard.writeText")),
+                    "clipboard main manifest grants read and write");
             require(missing, acceptance != null,
                     "clipboard outcomes acceptance result");
             if (acceptance != null) {
@@ -12427,13 +12458,7 @@ public final class StandardBundleTraceInspector {
                     require(missing, bool(acceptance, field),
                             "clipboard outcomes " + field);
                 }
-                require(missing,
-                        acceptance.path("nativePasteboardContendedObserved")
-                                .isBoolean()
-                                && !acceptance.path(
-                                "nativePasteboardContendedObserved")
-                                .asBoolean(),
-                        "clipboard outcomes pasteboard remained uncontended");
+                requireClipboardContention(acceptance, missing);
                 require(missing,
                         acceptance.path("pushObserved").isBoolean()
                                 && !acceptance.path("pushObserved").asBoolean(),
@@ -12539,9 +12564,10 @@ public final class StandardBundleTraceInspector {
             List<DesktopResultTrace> results = desktopResults.stream()
                     .filter(result -> isClipboardCommand(result.command))
                     .toList();
-            require(missing, commands.size() == 5,
+            int expectedCommands = bool(acceptance, "controlledContentionRequested") ? 7 : 5;
+            require(missing, commands.size() == expectedCommands,
                     "exactly five clipboard outcome commands");
-            require(missing, results.size() == 5,
+            require(missing, results.size() == expectedCommands,
                     "exactly five clipboard outcome results");
             require(missing,
                     results.stream().allMatch(DesktopResultTrace::traceShape),
@@ -12589,7 +12615,7 @@ public final class StandardBundleTraceInspector {
                             ready.payload, "transport")),
                     "one clipboard outcome Java sidecar ready");
 
-            if (commands.size() != 5 || results.size() != 5
+            if (commands.size() != expectedCommands || results.size() != expectedCommands
                     || clipboardOutcomesPointerEvents.size() != 3
                     || acceptance == null || launch == null || start == null
                     || ready == null) {
@@ -12639,13 +12665,13 @@ public final class StandardBundleTraceInspector {
                             && distinctCorrelations(commands),
                     "unique exact clipboard command/result correlations");
             require(missing,
-                    exactNoTextClipboardPayload(noTextResult.payload),
+                    exactNoTextClipboardPayload(noTextResult.payload, mainCommands),
                     "exact no-text clipboard result without redacted text");
             require(missing,
-                    exactWrittenClipboardPayload(emptyWriteResult.payload),
+                    exactWrittenClipboardPayload(emptyWriteResult.payload, mainCommands),
                     "exact empty clipboard write result");
             require(missing,
-                    exactEmptyTextClipboardPayload(emptyReadResult.payload),
+                    exactEmptyTextClipboardPayload(emptyReadResult.payload, mainCommands),
                     "exact empty-text clipboard result with redacted text");
             require(missing,
                     exactDeniedClipboardPayload(
@@ -12751,7 +12777,74 @@ public final class StandardBundleTraceInspector {
             return true;
         }
 
-        private static boolean exactNoTextClipboardPayload(JsonNode payload) {
+        private void requireClipboardContention(JsonNode acceptance, List<String> missing) {
+            if (!bool(acceptance, "controlledContentionRequested")) {
+                require(missing, acceptance.path("nativePasteboardContendedObserved").isBoolean()
+                                && !bool(acceptance, "nativePasteboardContendedObserved")
+                                && clipboardContentionStarts.isEmpty() && clipboardContentionResults.isEmpty()
+                                && clipboardContentionReads.isEmpty(),
+                        "clipboard outcomes pasteboard remained uncontended");
+                return;
+            }
+            require(missing, bool(acceptance, "nativePasteboardContendedObserved")
+                            && clipboardContentionStarts.size() == 1 && clipboardContentionResults.size() == 1,
+                    "clipboard controlled contention has one writer and result");
+            if (clipboardContentionStarts.size() != 1 || clipboardContentionResults.size() != 1) return;
+            OrderedEventTrace start = clipboardContentionStarts.getFirst();
+            OrderedEventTrace result = clipboardContentionResults.getFirst();
+            JsonNode p = result.payload;
+            int before = p.path("beforeChangeCount").asInt(-1), cleared = p.path("clearedChangeCount").asInt(-1);
+            int written = p.path("writtenChangeCount").asInt(-1), pid = p.path("processIdentifier").asInt(-1);
+            List<DesktopCommandTrace> commands = desktopCommands.stream().filter(c -> isClipboardCommand(c.command)).toList();
+            List<DesktopResultTrace> results = desktopResults.stream().filter(r -> isClipboardCommand(r.command)).toList();
+            int lastCommandResult = results.size() >= 5 ? results.get(4).order : messageCount;
+            require(missing, start.traceShape && result.traceShape && start.order > lastCommandResult
+                            && result.order > start.order && result.order < flowClipboardOutcomesAcceptanceOrder
+                            && pid > 0 && start.payload.path("processIdentifier").asInt(-1) == pid
+                            && start.payload.path("ownedChangeCount").asInt(-1) == before
+                            && p.equals(acceptance.path("controlledContention"))
+                            && before >= 0 && cleared > before && written >= cleared
+                            && p.path("writerExitStatus").asInt(-1) == 0 && bool(p, "fixtureMatches")
+                            && p.path("oldOwnerRejectedAttempts").asInt(-1) == 2
+                            && p.path("oldOwnerRestoreWrites").asInt(-1) == 0
+                            && p.path("afterFirstRejectedChangeCount").asInt(-1) == written
+                            && p.path("afterSecondRejectedChangeCount").asInt(-1) == written
+                            && p.path("recoveryAttempts").asInt(-1) == 1
+                            && p.path("freshReadAttempts").asInt(-1) == 2
+                            && bool(p, "snapshotRestoredAndVerified")
+                            && p.path("restoredChangeCount").asInt(-1) > written,
+                    "clipboard controlled contention ordering, no-write retries and conditional verified recovery");
+            require(missing, commands.size() == 7 && results.size() == 7 && clipboardContentionReads.size() == 2
+                            && p.path("freshReadReceipts").isArray() && p.path("freshReadReceipts").size() == 2,
+                    "clipboard contention has exactly two fresh public reads");
+            if (commands.size() != 7 || results.size() != 7 || clipboardContentionReads.size() != 2) return;
+            int previous = start.order;
+            for (int i = 0; i < 2; i++) {
+                DesktopCommandTrace c = commands.get(5 + i);
+                DesktopResultTrace r = results.get(5 + i);
+                OrderedEventTrace observed = clipboardContentionReads.get(i);
+                JsonNode o = observed.payload;
+                require(missing, exactClipboardCommand(c, "clipboard.readText", "main", "flow-ipc-session", "main", -1)
+                                && correlated(c, r) && c.order > previous && observed.order > r.order
+                                && observed.order < result.order && observed.traceShape && bool(r.payload, "success")
+                                && bool(r.payload, "textPresent") && bool(r.payload, "textRedacted")
+                                && r.payload.path("textLength").asInt(-1) == 20 && !r.payload.has("text")
+                                && exactPermissionAudit(r.payload, "allowed", "manifest-allow", "window:main",
+                                        permissionManifestCommands("main", c.order, missing))
+                                && mainScope(o, "windowId", "sessionId", "uiId")
+                                && o.path("attempt").asInt(-1) == i + 1
+                                && "browser-programmatic-public-read".equals(text(o, "inputMode"))
+                                && o.path("changeCount").asInt(-1) == written
+                                && ("Clipboard no text: outcome=TEXT textPresent=true length=20 client=true count=" + (i + 2)).equals(text(o, "status"))
+                                && o.path("requestCount").asInt(-1) > o.path("requestBaseline").asInt(-1)
+                                && o.path("requestCount").asInt(-1) == o.path("responseCount").asInt(-2)
+                                && o.equals(p.path("freshReadReceipts").path(i)),
+                        "clipboard fresh read retry correlation, typed result and scoped UIDL");
+                previous = observed.order;
+            }
+        }
+
+        private static boolean exactNoTextClipboardPayload(JsonNode payload, String mainCommands) {
             return payload.isObject() && payload.size() == 12
                     && bool(payload, "success")
                     && "clipboard.readText".equals(text(payload, "command"))
@@ -12763,10 +12856,10 @@ public final class StandardBundleTraceInspector {
                     && !payload.has("written") && !payload.has("error")
                     && exactPermissionAudit(payload, "allowed",
                     "manifest-allow", "window:main",
-                    clipboardMainManifestCommands());
+                    mainCommands);
         }
 
-        private static boolean exactWrittenClipboardPayload(JsonNode payload) {
+        private static boolean exactWrittenClipboardPayload(JsonNode payload, String mainCommands) {
             return payload.isObject() && payload.size() == 12
                     && bool(payload, "success")
                     && "clipboard.writeText".equals(text(payload, "command"))
@@ -12777,10 +12870,10 @@ public final class StandardBundleTraceInspector {
                     && !payload.has("textPresent") && !payload.has("error")
                     && exactPermissionAudit(payload, "allowed",
                     "manifest-allow", "window:main",
-                    clipboardMainManifestCommands());
+                    mainCommands);
         }
 
-        private static boolean exactEmptyTextClipboardPayload(JsonNode payload) {
+        private static boolean exactEmptyTextClipboardPayload(JsonNode payload, String mainCommands) {
             return payload.isObject() && payload.size() == 13
                     && bool(payload, "success")
                     && "clipboard.readText".equals(text(payload, "command"))
@@ -12792,7 +12885,7 @@ public final class StandardBundleTraceInspector {
                     && !payload.has("error")
                     && exactPermissionAudit(payload, "allowed",
                     "manifest-allow", "window:main",
-                    clipboardMainManifestCommands());
+                    mainCommands);
         }
 
         private static boolean exactDeniedClipboardPayload(
@@ -12839,12 +12932,6 @@ public final class StandardBundleTraceInspector {
 
         private static String clipboardOutcomeStages() {
             return "main-no-text,main-empty,secondary-denied";
-        }
-
-        private static String clipboardMainManifestCommands() {
-            return "clipboard.readText,clipboard.writeText,fileDialog.openFile,"
-                    + "fileTransfer.download,notification.show,window.close,"
-                    + "window.setTitle";
         }
 
         private static String expectedClipboardNoTextStatus() {
@@ -12917,7 +13004,7 @@ public final class StandardBundleTraceInspector {
         }
 
         private static boolean exactNormalCanceledFileDialogPayload(
-                JsonNode payload) {
+                JsonNode payload, String mainCommands) {
             JsonNode paths = payload.path("paths");
             return payload.isObject() && payload.size() == 15
                     && bool(payload, "success")
@@ -12926,7 +13013,7 @@ public final class StandardBundleTraceInspector {
                     && "Flow file dialog normal cancel".equals(text(
                     payload, "title"))
                     && bool(payload, "canceled")
-                    && paths.isArray() && paths.isEmpty()
+                    && emptyOrRedactedPanelPaths(paths)
                     && !payload.has("path") && !payload.has("cancelReason")
                     && payload.path("allowsMultipleSelection").isBoolean()
                     && !payload.path("allowsMultipleSelection").asBoolean()
@@ -12934,11 +13021,11 @@ public final class StandardBundleTraceInspector {
                     && !payload.path("securityScoped").asBoolean()
                     && !payload.has("error")
                     && exactPermissionAudit(payload, "allowed", "manifest-allow",
-                    "window:main", fileDialogMainManifestCommands());
+                    "window:main", mainCommands);
         }
 
         private static boolean exactConcurrentFileDialogErrorPayload(
-                JsonNode payload) {
+                JsonNode payload, String mainCommands) {
             JsonNode paths = payload.path("paths");
             return payload.isObject() && payload.size() == 16
                     && payload.path("success").isBoolean()
@@ -12948,7 +13035,7 @@ public final class StandardBundleTraceInspector {
                     && "Flow file dialog concurrent invocation".equals(text(
                     payload, "title"))
                     && bool(payload, "canceled")
-                    && paths.isArray() && paths.isEmpty()
+                    && emptyOrRedactedPanelPaths(paths)
                     && !payload.has("path") && !payload.has("cancelReason")
                     && payload.path("allowsMultipleSelection").isBoolean()
                     && !payload.path("allowsMultipleSelection").asBoolean()
@@ -12957,7 +13044,7 @@ public final class StandardBundleTraceInspector {
                     && "File dialog already in progress".equals(text(
                     payload, "error"))
                     && exactPermissionAudit(payload, "allowed", "manifest-allow",
-                    "window:main", fileDialogMainManifestCommands());
+                    "window:main", mainCommands);
         }
 
         private static boolean exactDeniedFileDialogPayload(JsonNode payload) {
@@ -12998,25 +13085,19 @@ public final class StandardBundleTraceInspector {
                     && finiteCoordinate(event.payload, "windowY");
         }
 
-        private static String fileDialogMainManifestCommands() {
-            return "clipboard.readText,clipboard.writeText,fileDialog.openFile,"
-                    + "fileTransfer.download,notification.show,window.close,"
-                    + "window.setTitle";
-        }
-
-        private static String expectedFileDialogFirstStatus() {
+        private static String expectedFileDialogFirstStatus(String mainCommands) {
             return fileDialogStatus("File dialog first", "CANCELED", true,
                     "true", "none", "allowed", "manifest-allow",
-                    "window:main", fileDialogMainManifestCommands(), false)
+                    "window:main", mainCommands, false)
                     + " capabilityContextCaptured=true"
                     + " backgroundSessionAbsent=true";
         }
 
-        private static String expectedFileDialogConcurrentStatus() {
+        private static String expectedFileDialogConcurrentStatus(String mainCommands) {
             return fileDialogStatus("File dialog concurrent", "ERROR", false,
                     "true", "File dialog already in progress", "allowed",
                     "manifest-allow", "window:main",
-                    fileDialogMainManifestCommands(), true);
+                    mainCommands, true);
         }
 
         private static String expectedFileDialogDeniedStatus() {
@@ -13817,7 +13898,7 @@ public final class StandardBundleTraceInspector {
                     && "Flow owner window close file dialog".equals(text(
                     payload, "title"))
                     && bool(payload, "canceled")
-                    && paths.isArray() && paths.isEmpty()
+                    && emptyOrRedactedPanelPaths(paths)
                     && !payload.has("path")
                     && payload.path("allowsMultipleSelection").isBoolean()
                     && !payload.path("allowsMultipleSelection").asBoolean()
@@ -14050,7 +14131,14 @@ public final class StandardBundleTraceInspector {
                     && result.order > command.order;
         }
 
-        private static boolean exactCanceledOpenPanelPayload(JsonNode payload) {
+        private static boolean emptyOrRedactedPanelPaths(JsonNode paths) {
+            // Current production tracing redacts even an empty path list.
+            // Outcome/selection state is independently checked in Java/UI receipts.
+            return (paths.isArray() && paths.isEmpty())
+                    || (paths.isTextual() && "[redacted]".equals(paths.asText()));
+        }
+
+        private static boolean exactCanceledOpenPanelPayload(JsonNode payload, String mainCommands) {
             JsonNode paths = payload.path("paths");
             return payload.isObject() && payload.size() == 15
                     && bool(payload, "success")
@@ -14059,7 +14147,7 @@ public final class StandardBundleTraceInspector {
                     && "Flow file dialog generation two".equals(text(
                     payload, "title"))
                     && bool(payload, "canceled")
-                    && paths.isArray() && paths.isEmpty()
+                    && emptyOrRedactedPanelPaths(paths)
                     && !payload.has("path")
                     && payload.path("allowsMultipleSelection").isBoolean()
                     && !payload.path("allowsMultipleSelection").asBoolean()
@@ -14069,10 +14157,7 @@ public final class StandardBundleTraceInspector {
                     payload,
                     "allowed",
                     "manifest-allow",
-                    "window:main",
-                    "clipboard.readText,clipboard.writeText,fileDialog.openFile,"
-                            + "fileTransfer.download,notification.show,"
-                            + "window.close,window.setTitle");
+                    "window:main", mainCommands);
         }
 
         private static boolean exactInvalidation(OrderedEventTrace event) {
@@ -14341,9 +14426,15 @@ public final class StandardBundleTraceInspector {
                                 acceptance, "secondaryUiId")),
                         "acceptance and command scope correlation");
             }
-            require(missing, exactAllowedPermissionPayload(mainResult.payload),
+            String mainGrants = permissionManifestCommands("main", mainCommand.order, missing);
+            String secondaryGrants = permissionManifestCommands("permission-secondary", secondaryCommand.order, missing);
+            require(missing, List.of(mainGrants.split(",")).contains("window.setTitle")
+                            && !List.of(secondaryGrants.split(",")).contains("window.setTitle")
+                            && !List.of(secondaryGrants.split(",")).contains("*"),
+                    "loaded manifest independently allows main and denies secondary title");
+            require(missing, exactAllowedPermissionPayload(mainResult.payload, mainGrants),
                     "exact main allowed permission payload");
-            require(missing, exactDeniedPermissionPayload(secondaryResult.payload),
+            require(missing, exactDeniedPermissionPayload(secondaryResult.payload, secondaryGrants),
                     "exact secondary denied permission payload");
             require(missing,
                     flowCapabilityPermissionAcceptanceOrder > mainResult.order
@@ -14529,7 +14620,29 @@ public final class StandardBundleTraceInspector {
                     && result.order > command.order;
         }
 
-        private static boolean exactAllowedPermissionPayload(JsonNode payload) {
+        private String permissionManifestCommands(String window, int beforeOrder, List<String> missing) {
+            require(missing, capabilityManifests.size() == 1, "one loaded permission manifest");
+            if (capabilityManifests.size() != 1) return "";
+            CapabilityManifestTrace manifest = capabilityManifests.getFirst();
+            JsonNode p = manifest.payload;
+            require(missing, manifest.traceShape && manifest.order < beforeOrder
+                            && bool(p, "loaded") && text(p, "parseError").isEmpty()
+                            && "manifest-enforced".equals(text(p, "permissionMode"))
+                            && "$APP/Contents/Resources/desktop-capabilities.json".equals(text(p, "path")),
+                    "valid permission manifest precedes command");
+            JsonNode entries = p.path("commandsByWindow").path(window);
+            List<String> commands = new ArrayList<>();
+            boolean canonical = entries.isArray();
+            for (JsonNode entry : entries) {
+                canonical &= entry.isTextual() && !entry.asText().isBlank() && !entry.asText().contains(",");
+                commands.add(entry.asText());
+            }
+            canonical &= commands.equals(commands.stream().distinct().sorted().toList());
+            require(missing, canonical, "canonical permission manifest commands for " + window);
+            return String.join(",", commands);
+        }
+
+        private static boolean exactAllowedPermissionPayload(JsonNode payload, String commands) {
             return payload.isObject() && payload.size() == 11
                     && bool(payload, "success")
                     && "window.setTitle".equals(text(payload, "command"))
@@ -14541,12 +14654,10 @@ public final class StandardBundleTraceInspector {
                     "allowed",
                     "manifest-allow",
                     "window:main",
-                    "clipboard.readText,clipboard.writeText,fileDialog.openFile,"
-                            + "fileTransfer.download,notification.show,"
-                            + "window.close,window.setTitle");
+                    commands);
         }
 
-        private static boolean exactDeniedPermissionPayload(JsonNode payload) {
+        private static boolean exactDeniedPermissionPayload(JsonNode payload, String commands) {
             return payload.isObject() && payload.size() == 10
                     && payload.path("success").isBoolean()
                     && !payload.path("success").asBoolean()
@@ -14558,7 +14669,7 @@ public final class StandardBundleTraceInspector {
                     "denied",
                     "manifest-denied",
                     "window:permission-secondary",
-                    "window.close,window.open");
+                    commands);
         }
 
         private static boolean exactDefaultDeniedPermissionPayload(
@@ -19618,6 +19729,13 @@ public final class StandardBundleTraceInspector {
     }
 
     private static boolean headerNamed(JsonNode payload, String expected) {
+        JsonNode headers = payload.path("headers");
+        if (!headers.isMissingNode()) {
+            // Full traces retain the actual object; compact traces retain names.
+            // Never let compact metadata override a present full-trace object.
+            return headers.isObject() && headers.propertyNames().stream()
+                    .anyMatch(expected::equalsIgnoreCase);
+        }
         for (String name : text(payload, "headerNames").split(",")) {
             if (expected.equalsIgnoreCase(name.trim())) {
                 return true;

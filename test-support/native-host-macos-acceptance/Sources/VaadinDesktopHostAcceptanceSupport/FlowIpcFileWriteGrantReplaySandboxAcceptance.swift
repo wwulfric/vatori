@@ -383,6 +383,20 @@ private final class FlowIpcFileWriteGrantReplaySandboxAcceptance {
             "handoffVerified": true, "rawGrantApiObserved": true,
             "nativePointerEventCount": dispatched.count, "nativePointerTrustedEventCount": observed.count]) { _, value in value }
         trace("recv", "\(Self.tracePrefix).exitPrepared", payload)
+        if FileGrantProductReplacement.enabled {
+            guard initialPID > 0, host.sidecarProcessIdentifier == initialPID, failedPID == 0 else {
+                fail("product-replacement-identity"); return
+            }
+            failedPID = initialPID
+            recoveryDeadline = Date().addingTimeInterval(60)
+            index = 5
+            phase = .recovering
+            resetQuiet()
+            FileGrantProductReplacement.request(host) { dispatched in
+                if dispatched { self.schedule() } else { self.fail("product-replacement-action") }
+            }
+            return
+        }
         guard let pid = host.sidecarProcessIdentifier, pid == initialPID, pid > 0, failedPID == 0,
               Darwin.kill(pid, SIGKILL) == 0 else { fail("sidecar-failure-injection"); return }
         failedPID = pid

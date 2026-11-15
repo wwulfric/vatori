@@ -46,6 +46,7 @@ private final class FlowIpcRecoveryTerminationAcceptance {
     private var baseline: Snapshot?
     private var initialSettled: Snapshot?
     private var currentDocumentMarker = ""
+    private var currentBrowserDocumentMarker = ""
     private var currentDocumentOrigin = 0.0
     private var quietSignature = ""
     private var quietPolls = 0
@@ -53,6 +54,14 @@ private final class FlowIpcRecoveryTerminationAcceptance {
     private var pointerPhase = "not-started"
     private var pointerPhaseStartedAt = 0.0
     private var pointerGeometry: Geometry?
+    private var activationObservers: [NSObjectProtocol] = []
+    private var activationObservationCount = 0
+    private var activationObservationDropped = 0
+    private let sequenceMode = ProcessInfo.processInfo.environment["VAADIN_DESKTOP_TEST_RECOVERY_SEQUENCE"] == "1"
+    private let passiveActivation = ProcessInfo.processInfo.environment["VAADIN_DESKTOP_TEST_PASSIVE_ACTIVATION"] == "1"
+    private var sequencePIDs: Set<Int32> = []
+    private var sequenceDocuments: Set<String> = []
+    private var sequenceBrowserDocuments: Set<String> = []
 
     init(host: WebViewHost, context: FlowIpcWindowContext, timeoutSeconds: Double) {
         self.host = host
@@ -68,6 +77,20 @@ private final class FlowIpcRecoveryTerminationAcceptance {
     }
 
     func start() {
+        if sequenceMode {
+            guard initialPID > 0, timeout.isFinite, timeout > 0, timeout <= 600 else {
+                fail("invalid-sequence-configuration"); return
+            }
+            runId = UUID().uuidString
+            fixtureGeneration = 0 // The reused route has no startup-fault fixture in this mode.
+            sequencePIDs.insert(initialPID)
+            observeActivation()
+            let work = DispatchWorkItem { [weak self] in self?.fail("sequence-deadline") }
+            timeoutWorkItem = work
+            DispatchQueue.main.asyncAfter(deadline: .now() + timeout, execute: work)
+            schedule()
+            return
+        }
         let leaf = URL(fileURLWithPath: runDirectory).lastPathComponent
         guard timeout.isFinite, timeout > 0, timeout <= 600, initialPID > 0,
               runDirectory.hasPrefix("/"),
@@ -95,10 +118,57 @@ private final class FlowIpcRecoveryTerminationAcceptance {
             fail("initial-process-marker")
             return
         }
+        observeActivation()
         let work = DispatchWorkItem { [weak self] in self?.fail("deadline") }
         timeoutWorkItem = work
         DispatchQueue.main.asyncAfter(deadline: .now() + timeout, execute: work)
         schedule()
+    }
+
+    // Diagnostics belong to this test driver, not the product activation policy.
+    // Observe only our app/window; never record another application's identity.
+    private func observeActivation() {
+        let center = NotificationCenter.default
+        let events: [(Notification.Name, AnyObject, String)] = [
+            (NSApplication.didBecomeActiveNotification, NSApp, "app-active"),
+            (NSApplication.didResignActiveNotification, NSApp, "app-inactive"),
+            (NSWindow.didBecomeKeyNotification, context.window, "window-key"),
+            (NSWindow.didResignKeyNotification, context.window, "window-not-key"),
+            (NSWindow.didMiniaturizeNotification, context.window, "window-miniaturized"),
+            (NSWindow.didDeminiaturizeNotification, context.window, "window-restored")
+        ]
+        for (name, object, reason) in events {
+            activationObservers.append(center.addObserver(
+                forName: name, object: object, queue: .main
+            ) { [weak self] _ in self?.recordActivation(reason) })
+        }
+        recordActivation("observer-start")
+    }
+
+    private func recordActivation(_ reason: String) {
+        guard !terminal else { return }
+        // Repeated activation requests must not make diagnostics unbounded.
+        guard activationObservationCount < 128 else {
+            activationObservationDropped += 1
+            return
+        }
+        activationObservationCount += 1
+        trace("recv", "flowRecoveryTermination.activationObservation", [
+            "sequence": activationObservationCount, "reason": reason,
+            "uptimeSeconds": ProcessInfo.processInfo.systemUptime,
+            "phase": phase.rawValue, "pointerPhase": pointerPhase,
+            "recoveryGeneration": context.recoveryGeneration,
+            "activeApplication": NSApp.isActive,
+            "keyWindow": context.window.isKeyWindow,
+            "applicationKeyWindowMatches": NSApp.keyWindow === context.window,
+            "windowVisible": context.window.isVisible,
+            "windowMiniaturized": context.window.isMiniaturized
+        ])
+    }
+
+    private func stopObservingActivation() {
+        for observer in activationObservers { NotificationCenter.default.removeObserver(observer) }
+        activationObservers.removeAll()
     }
 
     private func retained() -> Bool {
@@ -157,23 +227,52 @@ private final class FlowIpcRecoveryTerminationAcceptance {
             guard state.fixtureGeneration == self.fixtureGeneration,
                   state.processIdentifier == process,
                   UUID(uuidString: state.documentMarker) != nil,
+                  UUID(uuidString: state.browserDocumentMarker) != nil,
+                  state.browserDocumentRetained,
+                  state.observedTimeOriginMillis.isFinite, state.observedTimeOriginMillis > 0,
                   state.documentTimeOriginMillis.isFinite, state.documentTimeOriginMillis > 0,
                   state.identityText == "Recovery termination: generation=\(self.fixtureGeneration) pid=\(process) document=\(state.documentMarker)" else {
                 self.fail("document-identity")
                 return
             }
             if self.currentDocumentMarker.isEmpty {
+                if self.sequenceMode {
+                    guard self.sequenceDocuments.insert(state.documentMarker).inserted,
+                          self.sequenceBrowserDocuments.insert(state.browserDocumentMarker).inserted else {
+                        self.fail("sequence-document-reused"); return
+                    }
+                }
                 if let old = self.initialSettled,
                    (old.documentMarker == state.documentMarker
+                    || old.browserDocumentMarker == state.browserDocumentMarker
                     || old.documentTimeOriginMillis == state.documentTimeOriginMillis) {
                     self.fail("document-not-replaced")
                     return
                 }
                 self.currentDocumentMarker = state.documentMarker
+                self.currentBrowserDocumentMarker = state.browserDocumentMarker
                 self.currentDocumentOrigin = state.documentTimeOriginMillis
             }
             guard self.currentDocumentMarker == state.documentMarker,
+                  self.currentBrowserDocumentMarker == state.browserDocumentMarker,
                   self.currentDocumentOrigin == state.documentTimeOriginMillis else {
+                // Keep both sides before terminating: a marker change and a
+                // floating-point origin change require different diagnoses.
+                trace("recv", "flowRecoveryTermination.documentIdentityMismatch", [
+                    "recoveryGeneration": epoch,
+                    "expectedDocumentMarker": self.currentDocumentMarker,
+                    "observedDocumentMarker": state.documentMarker,
+                    "expectedBrowserDocumentMarker": self.currentBrowserDocumentMarker,
+                    "observedBrowserDocumentMarker": state.browserDocumentMarker,
+                    "liveTimeOriginMillis": state.observedTimeOriginMillis,
+                    "expectedTimeOriginMillis": self.currentDocumentOrigin,
+                    "observedTimeOriginMillis": state.documentTimeOriginMillis,
+                    "expectedTimeOriginBits": String(self.currentDocumentOrigin.bitPattern),
+                    "observedTimeOriginBits": String(state.documentTimeOriginMillis.bitPattern),
+                    "requestCount": state.requestCount,
+                    "responseCount": state.responseCount,
+                    "pointerReceiptCount": state.pointerReceiptCount
+                ])
                 self.fail("document-changed-within-epoch")
                 return
             }
@@ -213,7 +312,8 @@ private final class FlowIpcRecoveryTerminationAcceptance {
             ]) { _, replacement in replacement }
             trace("recv", "flowRecoveryTermination.stageObserved", payload)
             stages.append(stage)
-            if recoveryGeneration == 0 { injectInitialFailure(state) }
+            if sequenceMode && recoveryGeneration < 3 { injectSequenceFailure(state) }
+            else if !sequenceMode && recoveryGeneration == 0 { injectInitialFailure(state) }
             else { phase = .drain; quietSignature = ""; quietPolls = 0; schedule() }
         case .drain:
             guard resultMatches(state), quiet(state, required: 6) else { schedule(); return }
@@ -229,6 +329,7 @@ private final class FlowIpcRecoveryTerminationAcceptance {
         state.counterText == "Recovery counter: 1"
             && state.pushText == "Recovery push: generation=\(fixtureGeneration) pid=\(currentPID) document=\(state.documentMarker) count=1 client=true backgroundSessionAbsent=true"
             && state.pointerReceiptCount == 1 && state.pointerTrustedCount == 1
+            && state.pushConsumed
     }
 
     private func quiet(_ state: Snapshot, required: Int) -> Bool {
@@ -236,10 +337,9 @@ private final class FlowIpcRecoveryTerminationAcceptance {
             quietSignature = ""; quietPolls = 0
             return false
         }
-        // Six polls leave at least five 100 ms intervals for the official
-        // client's asynchronous push callback and a possible transport retry.
-        // Optional ACK diagnostics reset this quiet window when they advance;
-        // the trace gate, not this delay, proves a consuming acknowledgement.
+        // The result phase separately requires an ACK whose last-seen sync id
+        // covers the observed push. Quiet polls only check subsequent stability;
+        // elapsed time cannot substitute for a consuming acknowledgement.
         let lastAck = state.lastAckServerSyncId.map(String.init) ?? "unavailable"
         let signature = "\(phase):\(state.requestCount):\(state.responseCount):\(state.pushMessageCount):\(lastAck)"
         quietPolls = quietSignature == signature ? quietPolls + 1 : 1
@@ -273,6 +373,7 @@ private final class FlowIpcRecoveryTerminationAcceptance {
     }
 
     private func awaitRecovery() {
+        if sequenceMode { awaitSequenceRecovery(); return }
         guard retained(), context.recoveryGeneration <= 1 else {
             fail("recovery-owner-or-generation")
             return
@@ -323,7 +424,7 @@ private final class FlowIpcRecoveryTerminationAcceptance {
             currentPID = recoveredPID
             recoveryGeneration = 1
             fixtureGeneration = 3
-            currentDocumentMarker = ""; currentDocumentOrigin = 0
+            currentDocumentMarker = ""; currentBrowserDocumentMarker = ""; currentDocumentOrigin = 0
             baseline = nil; quietSignature = ""; quietPolls = 0
             phase = .ready
             schedule()
@@ -348,7 +449,11 @@ private final class FlowIpcRecoveryTerminationAcceptance {
             self.setPointerPhase("activation-pending")
             FlowIpcNativeInputActivation.prepare(
                 context: self.context, deadline: self.deadline,
-                onFailure: { _ in
+                passive: self.passiveActivation,
+                onFailure: { observation in
+                    if self.passiveActivation {
+                        trace("recv", "flowRecoveryTermination.passiveActivationFailed", observation)
+                    }
                     self.setPointerPhase("activation-failed")
                     self.fail("native-activation")
                 }
@@ -378,6 +483,10 @@ private final class FlowIpcRecoveryTerminationAcceptance {
                     "inputMode": "appkit-window-pointer-event", "button": "primary",
                     "activeApplication": NSApplication.shared.isActive,
                     "keyWindow": self.context.window.isKeyWindow,
+                    "activationMode": self.passiveActivation ? "passive" : "assisted",
+                    "webViewOwnsResponder": (self.context.window.firstResponder as? NSView).map {
+                        $0 === webView || $0.isDescendant(of: webView)
+                    } ?? false,
                     "webViewX": geometry.x, "webViewY": geometry.y,
                     "windowX": point.x, "windowY": point.y,
                     "dispatchedAt": Date().timeIntervalSince1970 * 1000,
@@ -411,6 +520,8 @@ private final class FlowIpcRecoveryTerminationAcceptance {
             "runId": runId, "fixtureGeneration": fixtureGeneration,
             "processIdentifier": currentPID, "recoveryGeneration": recoveryGeneration,
             "documentMarker": state.documentMarker,
+            "browserDocumentMarker": state.browserDocumentMarker,
+            "browserDocumentRetained": state.browserDocumentRetained,
             "documentTimeOriginMillis": state.documentTimeOriginMillis,
             "firstMeaningfulPaint": state.firstMeaningfulPaint,
             "flowClientCount": state.flowClientCount,
@@ -421,21 +532,45 @@ private final class FlowIpcRecoveryTerminationAcceptance {
     }
 
     private func finish(_ state: Snapshot) {
+        if sequenceMode {
+            guard stages == ["initial", "recovered", "recovered", "recovered"],
+                  recoveryGeneration == 3, sequencePIDs.count == 4,
+                  sequenceDocuments.count == 4, sequenceBrowserDocuments.count == 4,
+                  retained(), host.sidecarProcessIdentifier == currentPID, resultMatches(state) else {
+                fail("sequence-final-invariants"); return
+            }
+            stopObservingActivation()
+            terminal = true
+            timeoutWorkItem?.cancel()
+            var payload = frame(state)
+            payload["complete"] = true
+            payload["recoveries"] = 3
+            payload["settledStages"] = 4
+            trace("recv", "flowRecoverySequence.frameworkAcceptance", payload)
+            context.window.close()
+            return
+        }
         guard let old = initialSettled, stages == ["initial", "recovered"], injected,
               blockedObserved, retained(), recoveryGeneration == 1,
               host.sidecarProcessIdentifier == recoveredPID,
               old.documentMarker != state.documentMarker,
+              old.browserDocumentMarker != state.browserDocumentMarker,
               old.documentTimeOriginMillis != state.documentTimeOriginMillis else {
             fail("final-invariants"); return
         }
+        recordActivation("acceptance-complete")
+        stopObservingActivation()
         terminal = true
         timeoutWorkItem?.cancel()
         var payload = frame(state)
         payload.merge([
             "complete": true,
+            "activationObservationCount": activationObservationCount,
+            "activationObservationDropped": activationObservationDropped,
             "initialProcessIdentifier": initialPID, "blockedProcessIdentifier": blockedPID,
             "recoveredProcessIdentifier": recoveredPID,
             "initialDocumentMarker": old.documentMarker,
+            "initialBrowserDocumentMarker": old.browserDocumentMarker,
             "initialDocumentTimeOriginMillis": old.documentTimeOriginMillis,
             "initialRecoveryGeneration": 0, "finalRecoveryGeneration": 1,
             "initialRequestCount": old.requestCount, "initialResponseCount": old.responseCount,
@@ -456,14 +591,58 @@ private final class FlowIpcRecoveryTerminationAcceptance {
         context.window.close()
     }
 
+    private func injectSequenceFailure(_ state: Snapshot) {
+        guard retained(), context.recoveryGeneration == recoveryGeneration,
+              recoveryGeneration < 3, stages.count == recoveryGeneration + 1,
+              host.sidecarProcessIdentifier == currentPID, currentPID > 0 else {
+            fail("sequence-injection-owner"); return
+        }
+        if initialSettled == nil { initialSettled = state }
+        phase = .recovering
+        guard Darwin.kill(currentPID, SIGKILL) == 0 else { fail("sequence-signal"); return }
+        var payload = frame(state)
+        payload["signal"] = Int(SIGKILL)
+        payload["targetProcessIdentifier"] = currentPID
+        payload["interactionSettled"] = true
+        trace("send", "flowRecoverySequence.failureInjected", payload)
+        quietSignature = ""; quietPolls = 0
+        schedule()
+    }
+
+    private func awaitSequenceRecovery() {
+        let nextEpoch = recoveryGeneration + 1
+        guard retained(), context.recoveryGeneration <= nextEpoch else {
+            fail("sequence-owner-or-generation"); return
+        }
+        guard context.recoveryGeneration == nextEpoch, context.navigationFinished,
+              let nextPID = host.sidecarProcessIdentifier, nextPID > 0, nextPID != currentPID else {
+            schedule(); return
+        }
+        errno = 0
+        guard Darwin.kill(currentPID, 0) == -1, errno == ESRCH,
+              sequencePIDs.insert(nextPID).inserted else {
+            fail("sequence-process-not-replaced"); return
+        }
+        currentPID = nextPID
+        recoveryGeneration = nextEpoch
+        currentDocumentMarker = ""; currentBrowserDocumentMarker = ""; currentDocumentOrigin = 0
+        baseline = nil; quietSignature = ""; quietPolls = 0
+        phase = .ready
+        schedule()
+    }
+
     private func fail(_ code: String) {
         guard !terminal else { return }
+        recordActivation("acceptance-failed")
+        stopObservingActivation()
         terminal = true
         timeoutWorkItem?.cancel()
         let responder = context.window.firstResponder
         let responderView = responder as? NSView
         var payload: [String: Any] = [
             "code": "recoveryTermination-" + code, "phase": phase.rawValue,
+            "activationObservationCount": activationObservationCount,
+            "activationObservationDropped": activationObservationDropped,
             "initialProcessIdentifier": initialPID, "blockedProcessIdentifier": blockedPID,
             "recoveredProcessIdentifier": recoveredPID,
             "recoveryGeneration": context.recoveryGeneration,
@@ -534,15 +713,18 @@ private final class FlowIpcRecoveryTerminationAcceptance {
         let windowId: String; let sessionId: String; let uiId: String
         let recoveryGeneration: Int; let fixtureGeneration: Int; let processIdentifier: Int32
         let documentMarker: String; let documentTimeOriginMillis: Double
+        let browserDocumentMarker: String; let browserDocumentRetained: Bool
+        let observedTimeOriginMillis: Double
         let identityText: String; let routeReady: Bool; let firstMeaningfulPaint: Bool
         let flowClientCount: Int; let counterText: String; let pushText: String
         let pointerReceiptCount: Int; let pointerTrustedCount: Int
         let requestCount: Int; let responseCount: Int; let pushMessageCount: Int
         let lastAckServerSyncId: Int?
+        let pushConsumed: Bool
         let errorFree: Bool
     }
 
-    private static let preparePointer = """
+    private static let preparePointer = FlowIpcRecoveryPushSettlement.source + "\n" + """
     (() => {
       const button=document.getElementById('framework-flow-recovery-termination-invoke');
       if (!button) return JSON.stringify({ready:false,x:0,y:0});
@@ -568,13 +750,18 @@ private final class FlowIpcRecoveryTerminationAcceptance {
       const prefix='framework-flow-recovery-termination-';
       const identity=document.getElementById(prefix+'identity');
       const p=window.VatoriRecoveryTerminationPointer||{};
+      const documentIdentity=window.VatoriRecoveryDocumentIdentity?.()||{};
       return JSON.stringify({
         windowId:String(c.windowId||''),sessionId:String(c.sessionId||''),uiId:String(c.uiId||''),
         recoveryGeneration:Number(window.VaadinDesktopHostRecoveryGeneration||0),
         fixtureGeneration:Number(identity?.getAttribute('data-generation')||0),
         processIdentifier:Number(identity?.getAttribute('data-process-id')||0),
         documentMarker:String(identity?.getAttribute('data-document-marker')||''),
-        documentTimeOriginMillis:Number(performance.timeOrigin),identityText:String(identity?.textContent||''),
+        browserDocumentMarker:String(documentIdentity.marker||''),
+        browserDocumentRetained:documentIdentity.retained===true,
+        documentTimeOriginMillis:Number(documentIdentity.timeOriginMillis||0),
+        observedTimeOriginMillis:Number(documentIdentity.observedTimeOriginMillis||0),
+        identityText:String(identity?.textContent||''),
         routeReady:!!document.getElementById(prefix+'route')&&!!document.getElementById(prefix+'invoke')
           &&location.pathname.endsWith('/flow-recovery-termination'),
         firstMeaningfulPaint:d.standardBundleFirstMeaningfulPaintReported===true,
@@ -587,6 +774,7 @@ private final class FlowIpcRecoveryTerminationAcceptance {
         pushMessageCount:Number(d.standardBundlePushMessageCount||0),
         lastAckServerSyncId:Number.isSafeInteger(d.standardBundlePushLastAckServerSyncId)
           ?d.standardBundlePushLastAckServerSyncId:null,
+        pushConsumed:window.VatoriRecoveryPushSettlement?.consumed()===true,
         errorFree:!d.standardBundleBrowserError&&!d.standardBundleOpaqueRequestError
           &&!d.standardBundleOpaqueResponseError&&!d.standardBundlePushError
       });

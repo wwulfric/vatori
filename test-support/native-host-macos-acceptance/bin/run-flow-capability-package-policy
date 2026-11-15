@@ -4,18 +4,23 @@ set -euo pipefail
 ROOT="$(cd "$(dirname "${BASH_SOURCE[0]}")/../../.." && pwd)"
 ACCEPTANCE_ROOT="$ROOT/test-support/native-host-macos-acceptance"
 BUILDER="$ROOT/bin/vaadin-desktop-build-macos-host"
-DEFAULT_DENY_RUNNER="$ACCEPTANCE_ROOT/bin/run-flow-capability-default-deny"
+DEFAULT_DENY_RUNNER="$ACCEPTANCE_ROOT/bin/run-capability-baseline"
 TRACE_INSPECTOR="$ROOT/bin/flow-ipc-trace-inspect"
-PACKAGED_APP="$ROOT/.build/native-hosts/macos/VaadinDesktopHost.app"
-PACKAGED_HOST_EXE="$PACKAGED_APP/Contents/MacOS/VaadinDesktopHost"
-PACKAGED_RESOURCES="$PACKAGED_APP/Contents/Resources"
-PACKAGED_MANIFEST="$PACKAGED_RESOURCES/desktop-capabilities.json"
+MODE=full
+if [[ "${1:-}" == --negative-only ]]; then MODE=negative-only; shift; fi
+[[ $# -le 1 && ( $# -eq 0 || "$MODE" == negative-only ) ]] || {
+  echo "Usage: $0 [--negative-only [absolute-prepared-app]]" >&2; exit 2;
+}
+PREPARED_APP="${1:-}"
+[[ -z "$PREPARED_APP" || ( "$PREPARED_APP" == /* && -d "$PREPARED_APP" ) ]] || exit 2
 
 if [[ "$(uname -s)" != "Darwin" ]]; then
   echo "Capability package-policy acceptance requires macOS." >&2
   exit 1
 fi
 if [[ "${VATORI_NATIVE_HOST_MACOS_ACCEPTANCE_PACKAGE_LOCK_HELD:-}" != "1" ]]; then
+  # Preserve the consumed mode flag when re-entering under the package lock.
+  if [[ "$MODE" == negative-only ]]; then set -- --negative-only "$@"; fi
   exec env VATORI_NATIVE_HOST_MACOS_ACCEPTANCE_PACKAGE_LOCK_HELD=1 \
     bash "$ACCEPTANCE_ROOT/bin/with-package-lock" -- bash "$0" "$@"
 fi
@@ -32,7 +37,11 @@ if [[ ! -f "$TRACE_INSPECTOR" ]]; then
   exit 1
 fi
 
-WORK="$(mktemp -d "${TMPDIR:-/tmp}/vatori-capability-package-policy.XXXXXX")"
+cd "$ROOT"
+umask 077
+mkdir -p "$ROOT/.build/native-hosts/macos"
+WORK="$(mktemp -d "$ROOT/.build/native-hosts/macos/capability-policy-evidence.XXXXXX")"
+echo "Evidence: $WORK"
 PROBE_ROOT="$WORK/product-root"
 APPLICATION_JAR="$WORK/application.jar"
 WEBAPP_ROOT="$WORK/webapp"
@@ -43,6 +52,17 @@ STAGED_MANIFEST="$STAGED_RESOURCES/desktop-capabilities.json"
 PRESERVATION_MARKER="$STAGED_RESOURCES/policy-preservation.marker"
 EXPECTED_STAGED_MANIFEST="$WORK/expected-staged-manifest.json"
 PACKAGED_MANIFEST_BACKUP="$WORK/packaged-desktop-capabilities.json"
+PACKAGED_APP="$PROBE_ROOT/.build/native-hosts/macos/VaadinDesktopHost.app"
+PACKAGED_HOST_EXE="$PACKAGED_APP/Contents/MacOS/VaadinDesktopHost"
+PACKAGED_RESOURCES="$PACKAGED_APP/Contents/Resources"
+PACKAGED_MANIFEST="$PACKAGED_RESOURCES/desktop-capabilities.json"
+PACKAGED_JAR="$PACKAGED_RESOURCES/Sidecar/application.jar"
+[[ -x "${JAVA_HOME:?Set JAVA_HOME}/bin/java" ]]
+
+owned_pids() {
+  ps -axo pid=,command= | awk -v host="$PACKAGED_HOST_EXE" -v jar="$PACKAGED_JAR" -v java="$JAVA_HOME/bin/java" '
+    {pid=$1; $1=""; sub(/^ +/, ""); if ($0 == host || $0 == java " -jar " jar) print pid;}'
+}
 
 restore_packaged_manifest() {
   if [[ ! -f "$PACKAGED_MANIFEST_BACKUP" ]]; then
@@ -56,13 +76,40 @@ restore_packaged_manifest() {
 }
 
 cleanup() {
-  local status=$?
+  local status=$? remaining pid attempt=0
   trap - EXIT
+  trap '' HUP INT TERM
+  printf '%s\n' "$status" > "$WORK/primary-exit-status.txt"
+  if ! remaining="$(owned_pids)"; then status=1
+  elif [[ -n "$remaining" ]]; then
+    status=1
+    printf '%s\n' "$remaining" > "$WORK/cleanup-required-pids.txt"
+    for pid in $remaining; do kill -TERM "$pid" 2>/dev/null || true; done
+    while [[ -n "$(owned_pids)" && "$attempt" -lt 30 ]]; do sleep 0.1; attempt=$((attempt+1)); done
+    for pid in $(owned_pids); do kill -KILL "$pid" 2>/dev/null || true; done
+    sleep 0.1
+  fi
   restore_packaged_manifest || status=1
-  rm -rf "$WORK" || status=1
+  if remaining="$(owned_pids)" && [[ -z "$remaining" ]]; then
+    printf 'absent\n' > "$WORK/final-process-state.txt"
+  else status=1; printf 'unconfirmed\n' > "$WORK/final-process-state.txt"; fi
+  printf '%s\n' "$status" > "$WORK/runner-exit-status.txt"
   exit "$status"
 }
 trap cleanup EXIT
+trap 'exit 130' INT
+trap 'exit 143' TERM
+trap 'exit 129' HUP
+git rev-parse HEAD > "$WORK/source-revision.txt"
+git status --porcelain=v1 > "$WORK/source-status.txt"
+git ls-files --cached --others --exclude-standard -z > "$WORK/source-files.nul"
+xargs -0 shasum -a 256 < "$WORK/source-files.nul" > "$WORK/source-sha256.txt"
+tar -czf "$WORK/source.tar.gz" --null -T "$WORK/source-files.nul"
+sw_vers > "$WORK/macos-version.txt"
+"$JAVA_HOME/bin/java" -version > "$WORK/jdk-version.txt" 2>&1
+while IFS= read -r name; do
+  case "$name" in VAADIN_DESKTOP_*|VATORI_FILE_*|VATORI_TEST_*|VATORI_APPLICATION_RESOURCES) unset "$name" ;; esac
+done < <(compgen -e)
 
 mkdir -p "$WEBAPP_ROOT" "$(dirname "$APPLICATION_ICON")" "$STAGED_RESOURCES"
 printf 'sidecar sentinel\n' > "$APPLICATION_JAR"
@@ -109,6 +156,7 @@ probe_rejected_permission_mode() {
     manifest-enforced > "$probe_stdout" 2> "$probe_stderr"
   status=$?
   set -e
+  printf '%s\n' "$status" > "$WORK/$permission_mode.exit-status.txt"
 
   if [[ "$status" -ne 2 ]]; then
     echo "Product builder did not reject $permission_mode with exit code 2; got $status." >&2
@@ -123,6 +171,8 @@ probe_rejected_permission_mode() {
     exit 1
   fi
   assert_staging_preserved "$permission_mode"
+  cp "$EXPLICIT_MANIFEST" "$WORK/$permission_mode.manifest.json"
+  printf 'unchanged\n' > "$WORK/$permission_mode.staging-preserved.txt"
 }
 
 probe_rejected_permission_mode allow-all-dev
@@ -130,9 +180,25 @@ probe_rejected_permission_mode trace-only-dry-run
 
 echo "Capability package-policy build-time rejection probes passed."
 
-VAADIN_DESKTOP_MAVEN_OFFLINE="${VAADIN_DESKTOP_MAVEN_OFFLINE:-1}" \
-  bash "$ROOT/bin/vaadin-desktop" package \
-  test-apps/flow-over-ipc-framework-app
+if [[ -z "$PREPARED_APP" ]]; then
+  VAADIN_DESKTOP_MAVEN_OFFLINE=1 bash "$ROOT/bin/vaadin-desktop" package \
+    test-apps/flow-over-ipc-framework-app > "$WORK/package.log" 2>&1
+  PREPARED_APP="$ROOT/.build/native-hosts/macos/VaadinDesktopHost.app"
+fi
+printf '%s\n' "$PREPARED_APP" > "$WORK/prepared-assets-origin.txt"
+# Reuse only the standard app assets, never an acceptance host executable.
+# The real product builder compiles exclusively the copied production sources.
+mkdir -p "$PROBE_ROOT/native-hosts"
+ditto "$ROOT/native-hosts/macos" "$PROBE_ROOT/native-hosts/macos"
+INPUT_RESOURCES="$PREPARED_APP/Contents/Resources"
+bash "$BUILDER" "$PROBE_ROOT" flow-ipc \
+  "$INPUT_RESOURCES/Sidecar/application.jar" "$INPUT_RESOURCES/FlowWebApp" \
+  "$INPUT_RESOURCES/desktop-capabilities.json" "" "" \
+  "$INPUT_RESOURCES/AppIcon.icns" "" "" manifest-enforced > "$WORK/build-host.log" 2>&1
+shasum -a 256 -c "$WORK/source-sha256.txt" > "$WORK/source-check.log"
+(cd "$WORK"; find product-root/.build/native-hosts/macos/VaadinDesktopHost.app -type f \
+  -exec shasum -a 256 {} + > bundle-sha256.txt)
+printf '%s\n' 'N01: real product builder and production-only host; six negative probes; startup must stop before NSApplication/JVM. Reused Java/bundle assets retain their original provenance and are never launched by the negative probes. No WKWebView, input, OS permission or clipboard evidence is claimed by these probes.' > "$WORK/profile.txt"
 
 if [[ ! -x "$PACKAGED_HOST_EXE" ]]; then
   echo "Packaged production host executable is missing: $PACKAGED_HOST_EXE" >&2
@@ -151,18 +217,32 @@ probe_invalid_packaged_manifest() {
   local probe_trace="$WORK/$probe_name.out.log"
   local probe_stderr="$WORK/$probe_name.err.log"
   local expected_stderr="$WORK/$probe_name.expected-stderr.log"
-  local status
+  local status host_pid started
 
   printf '%s\n' "$manifest_document" > "$PACKAGED_MANIFEST"
+  cp "$PACKAGED_MANIFEST" "$WORK/$probe_name.manifest.json"
   printf 'desktop-capabilities.json is invalid: %s\n' \
     "$expected_reason" > "$expected_stderr"
 
-  set +e
   VAADIN_DESKTOP_MACOS_NO_ACTIVATE=1 \
   VAADIN_DESKTOP_FLOW_IPC_TRACE_DETAIL=full \
-    "$PACKAGED_HOST_EXE" > "$probe_trace" 2> "$probe_stderr"
+    "$PACKAGED_HOST_EXE" > "$probe_trace" 2> "$probe_stderr" &
+  host_pid=$!
+  printf '%s\n' "$host_pid" > "$WORK/$probe_name.host-pid.txt"
+  started=$SECONDS
+  while kill -0 "$host_pid" 2>/dev/null; do
+    if (( SECONDS - started > 10 )); then
+      echo "Manifest startup probe exceeded deadline: $probe_name" >&2; exit 124
+    fi
+    sleep 0.1
+  done
+  set +e
+  wait "$host_pid"
   status=$?
   set -e
+  printf '%s\n' "$status" > "$WORK/$probe_name.exit-status.txt"
+  [[ -z "$(owned_pids)" ]] || { echo 'Probe left owned processes alive' >&2; exit 1; }
+  printf 'absent\n' > "$WORK/$probe_name.process-state.txt"
 
   if [[ "$status" -ne 2 ]]; then
     echo "Packaged production host did not reject $probe_name with exit code 2; got $status." >&2
@@ -191,7 +271,7 @@ probe_invalid_packaged_manifest() {
 
   bash "$TRACE_INSPECTOR" \
     --require-flow-ipc-capability-manifest-startup-failure \
-    "$probe_trace"
+    "$probe_trace" > "$WORK/$probe_name.verification.log" 2>&1
 
   restore_packaged_manifest
 }
@@ -216,9 +296,9 @@ probe_invalid_packaged_manifest \
 restore_packaged_manifest
 echo "Capability manifest pre-NSApplication rejection probes passed."
 
-rm -rf "$WORK"
-trap - EXIT
-# The positive gate inspects the completed log itself. Avoid a competing live
-# log follower while LaunchServices gives its trusted AppKit input window focus.
-export VAADIN_DESKTOP_MACOS_LOG_FOLLOW=0
-exec bash "$DEFAULT_DENY_RUNNER" "$@"
+(cd "$WORK"; shasum -a 256 -c bundle-sha256.txt) > "$WORK/bundle-check.log"
+if [[ "$MODE" == full ]]; then
+  bash "$DEFAULT_DENY_RUNNER" default-deny > "$WORK/default-deny.log" 2>&1
+fi
+shasum -a 256 -c "$WORK/source-sha256.txt" > "$WORK/final-source-check.log"
+echo "PASS: $WORK"

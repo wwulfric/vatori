@@ -482,6 +482,11 @@ extension FlowIpcAcceptanceRuntimeObserver {
             return
         }
         if host.config.flowIpcAutoNativeClipboardEdit {
+            if ProcessInfo.processInfo.environment["VATORI_TEST_NATIVE_COPY_EDIT"] == "1" {
+                scheduleNativeCopyEditAcceptance(host: host, context: context,
+                    timeoutSeconds: verificationSchedule.autoShutdownTimeoutSeconds)
+                return
+            }
             scheduleNativeClipboardEditAcceptance(
                 host: host,
                 context: context,
@@ -577,6 +582,18 @@ extension FlowIpcAcceptanceRuntimeObserver {
                 host: host,
                 context: context,
                 timeoutSeconds: verificationSchedule.autoShutdownTimeoutSeconds)
+            return
+        }
+        if flag("lazyDataBaseline") {
+            scheduleLazyDataBaseline(host: host, context: context, timeout: verificationSchedule.autoShutdownTimeoutSeconds)
+            return
+        }
+        if flag("windowChurn") {
+            scheduleWindowChurn(host: host, context: context, timeout: verificationSchedule.autoShutdownTimeoutSeconds)
+            return
+        }
+        if flag("transferEndurance") {
+            scheduleTransferEndurance(host: host, context: context)
             return
         }
         if host.config.flowIpcAutoLazyGridQuery {

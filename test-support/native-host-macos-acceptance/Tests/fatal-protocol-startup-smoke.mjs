@@ -11,8 +11,21 @@ assert.ok(process.env.JAVA_HOME, 'JAVA_HOME is required');
 const work = mkdtempSync(join(realpathSync(tmpdir()), 'vatori-fatal-protocol-smoke-'));
 const classes = join(work, 'classes');
 mkdirSync(classes);
+// Compile a temporary test copy with a pre-publication barrier. No hook is
+// added to the test app artifact or framework runtime. This forces mutation
+// after the poll's first validation but before it observes the trigger.
+const source = readFileSync(join(root, 'test-apps/flow-over-ipc-framework-app/src/main/java/dev/vatori/ipcframework/FlowFatalProtocolStartup.java'), 'utf8');
+const marker = 'Path trigger = directory.resolve(TRIGGER);';
+assert.equal(source.split(marker).length, 2);
+const sourceCopy = join(work, 'FlowFatalProtocolStartup.java');
+writeFileSync(sourceCopy, source.replace(marker, `
+if ("1".equals(System.getenv("VATORI_FATAL_SMOKE_BARRIER"))) {
+    System.out.println("PROBE_PREPUBLICATION"); System.out.flush();
+    System.in.read();
+}
+${marker}`));
 const compile = spawnSync(join(process.env.JAVA_HOME, 'bin/javac'), ['-d', classes,
-  join(root, 'test-apps/flow-over-ipc-framework-app/src/main/java/dev/vatori/ipcframework/FlowFatalProtocolStartup.java'),
+  sourceCopy,
   join(root, 'test-support/native-host-macos-acceptance/Fixtures/FatalProtocolStartupProbe.java')], { encoding: 'utf8', timeout: 30000 });
 const variable = 'VAADIN_DESKTOP_TEST_FATAL_PROTOCOL_DIR';
 const fault = 'VFIPC {"version":2,"type":"error","payload":{},"error":null}';
@@ -26,19 +39,21 @@ async function run(name, setup, action, expected, extraEnv = {}) {
   delete env[variable];
   delete env.VAADIN_DESKTOP_TEST_HOST_SHUTDOWN_DIR;
   delete env.VAADIN_DESKTOP_TEST_RECOVERY_TERMINATION_DIR;
+  delete env.VATORI_FATAL_SMOKE_BARRIER;
   Object.assign(env, extraEnv);
   if (environment !== false) env[variable] = environment;
   const child = spawn(join(process.env.JAVA_HOME, 'bin/java'), ['-cp', classes,
-    'dev.vatori.ipcframework.FatalProtocolStartupProbe'], { env, stdio: ['ignore', 'pipe', 'pipe'] });
+    'dev.vatori.ipcframework.FatalProtocolStartupProbe'], { env, stdio: ['pipe', 'pipe', 'pipe'] });
   let out = '', err = '', acted = false, failure;
   const timer = setTimeout(() => { failure = new Error(`${name}: child exceeded 5s`); child.kill('SIGKILL'); }, 5000);
   child.stdout.on('data', bytes => {
     out += bytes;
-    if (!acted && out.includes('PROBE_READY')) {
+    if (!acted && out.includes(extraEnv.VATORI_FATAL_SMOKE_BARRIER === '1' ? 'PROBE_PREPUBLICATION' : 'PROBE_READY')) {
       acted = true;
       try {
         if (environment !== false) assert.equal(readFileSync(join(dir, 'startup.pid'), 'utf8'), `${child.pid}\n`);
         action?.(dir);
+        if (extraEnv.VATORI_FATAL_SMOKE_BARRIER === '1') child.stdin.end('\n');
       } catch (error) { failure = error; child.kill('SIGKILL'); }
     }
   });
@@ -85,6 +100,13 @@ try {
     const p = join(dir, 'startup.pid');
     writeFileSync(p, readFileSync(p, 'utf8').replace(/\d/g, '0')); trigger(dir);
   }, 'trigger-rejected');
+  await run('startup changed between validation and publication', null, dir => {
+    const p = join(dir, 'startup.pid');
+    writeFileSync(p, readFileSync(p, 'utf8').replace(/\d/g, '0')); trigger(dir);
+  }, 'trigger-rejected', { VATORI_FATAL_SMOKE_BARRIER: '1' });
+  await run('extra entry between validation and publication', null, dir => {
+    writeFileSync(join(dir, 'extra'), 'x'); trigger(dir);
+  }, 'trigger-rejected', { VATORI_FATAL_SMOKE_BARRIER: '1' });
   await run('conflicting shutdown fixture', null, null, 'startup-rejected', { VAADIN_DESKTOP_TEST_HOST_SHUTDOWN_DIR: work });
   await run('conflicting recovery fixture', null, null, 'startup-rejected', { VAADIN_DESKTOP_TEST_RECOVERY_TERMINATION_DIR: work });
   assert.ok(existsSync(classes));

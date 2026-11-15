@@ -2,6 +2,14 @@
 set -euo pipefail
 
 ROOT="$(cd "$(dirname "${BASH_SOURCE[0]}")/../../.." && pwd)"
+if [[ "${VAADIN_DESKTOP_FLOW_IPC_AUTO_TRANSFER_ENDURANCE:-}" == "1" ]]; then
+  echo "Transfer endurance requires its isolated runner." >&2
+  exit 2
+fi
+if [[ "${VAADIN_DESKTOP_FLOW_IPC_AUTO_WINDOW_CHURN:-}" == "1" ]]; then
+  echo "Window churn requires a private-evidence runner and independent interaction/ACK gate; shared-log execution is disabled." >&2
+  exit 2
+fi
 if [[ "${VAADIN_DESKTOP_FLOW_IPC_AUTO_SIDECAR_WRITE_BACKPRESSURE:-}" == "1" ]]; then
   echo "Sidecar write-backpressure requires the isolated run-sidecar-write-backpressure runner." >&2
   exit 2
@@ -101,6 +109,7 @@ acceptance_environment_names=(
   VAADIN_DESKTOP_FLOW_IPC_AUTO_CONCURRENT_MULTIPART_UPLOAD
   VAADIN_DESKTOP_FLOW_IPC_AUTO_CROSS_SESSION_MULTIPART_UPLOAD
   VAADIN_DESKTOP_FLOW_IPC_AUTO_LAZY_GRID_QUERY
+  VAADIN_DESKTOP_FLOW_IPC_AUTO_LAZY_DATA_BASELINE
   VAADIN_DESKTOP_FLOW_IPC_AUTO_LAZY_GRID_SELECTED_REMOVAL
   VAADIN_DESKTOP_FLOW_IPC_AUTO_LAZY_MULTI_SELECT_COMBO_BOX
   VAADIN_DESKTOP_FLOW_IPC_AUTO_MULTI_SELECT_COMBO_BOX
@@ -267,6 +276,8 @@ if [[ "$status" == "0" && "${VAADIN_DESKTOP_FLOW_IPC_AUTO_SHUTDOWN:-}" == "1" ]]
     require_completed_trace "flowConcurrentMultipartUpload.frameworkAcceptance" || status=1
   elif [[ "${VAADIN_DESKTOP_FLOW_IPC_AUTO_CROSS_SESSION_MULTIPART_UPLOAD:-}" == "1" ]]; then
     require_completed_trace "flowCrossSessionMultipartUpload.frameworkAcceptance" || status=1
+  elif [[ "${VAADIN_DESKTOP_FLOW_IPC_AUTO_LAZY_DATA_BASELINE:-}" == "1" ]]; then
+    node "$ROOT/test-support/native-host-macos-acceptance/Tests/lazy-data-baseline-verify.mjs" "$host_log" || status=1
   elif [[ "${VAADIN_DESKTOP_FLOW_IPC_AUTO_LAZY_GRID_SELECTED_REMOVAL:-}" == "1" ]]; then
     require_completed_trace "lazyGridSelectedRemoval.frameworkAcceptance" || status=1
   elif [[ "${VAADIN_DESKTOP_FLOW_IPC_AUTO_LAZY_GRID_QUERY:-}" == "1" ]]; then

@@ -48,26 +48,14 @@ final class FlowFatalProtocolStartup {
                 long deadline = System.nanoTime() + Duration.ofMinutes(10).toNanos();
                 try {
                     while (System.nanoTime() < deadline) {
-                        if (!key.equals(checkDirectory(directory))) throw new IOException();
-                        if (!startupKey.equals(checkFile(startup, pid.length()))) throw new IOException();
-                        var bytes = java.nio.ByteBuffer.allocate(32);
-                        try (var channel = Files.newByteChannel(startup,
-                                Set.of(StandardOpenOption.READ, LinkOption.NOFOLLOW_LINKS))) {
-                            while (bytes.hasRemaining() && channel.read(bytes) >= 0) { }
-                        }
-                        if (!startupKey.equals(checkFile(startup, pid.length()))
-                                || bytes.position() != pid.length()
-                                || !pid.equals(new String(bytes.array(), 0, bytes.position(),
-                                        java.nio.charset.StandardCharsets.US_ASCII))) throw new IOException();
-                        try (var entries = Files.newDirectoryStream(directory)) {
-                            for (Path entry : entries) {
-                                if (!Set.of(STARTUP, TRIGGER).contains(entry.getFileName().toString()))
-                                    throw new IOException();
-                            }
-                        }
+                        checkPreparation(directory, key, startup, startupKey, pid);
                         Path trigger = directory.resolve(TRIGGER);
                         if (Files.exists(trigger, LinkOption.NOFOLLOW_LINKS)) {
                             checkFile(trigger, 0);
+                            // The producer writes preparation state before publishing
+                            // the trigger. Validate again after observing publication:
+                            // an earlier poll may have read the old valid startup file.
+                            checkPreparation(directory, key, startup, startupKey, pid);
                             // No application data or path enters the wire. This tests
                             // the real version rejection, not a direct host callback.
                             System.out.println("VFIPC {\"version\":2,\"type\":\"error\",\"payload\":{},\"error\":null}");
@@ -84,6 +72,27 @@ final class FlowFatalProtocolStartup {
             });
         } catch (IOException | RuntimeException failure) {
             throw invalidConfiguration();
+        }
+    }
+
+    private static void checkPreparation(Path directory, Object key, Path startup,
+            Object startupKey, String pid) throws IOException {
+        if (!key.equals(checkDirectory(directory))) throw new IOException();
+        if (!startupKey.equals(checkFile(startup, pid.length()))) throw new IOException();
+        var bytes = java.nio.ByteBuffer.allocate(32);
+        try (var channel = Files.newByteChannel(startup,
+                Set.of(StandardOpenOption.READ, LinkOption.NOFOLLOW_LINKS))) {
+            while (bytes.hasRemaining() && channel.read(bytes) >= 0) { }
+        }
+        if (!startupKey.equals(checkFile(startup, pid.length()))
+                || bytes.position() != pid.length()
+                || !pid.equals(new String(bytes.array(), 0, bytes.position(),
+                        java.nio.charset.StandardCharsets.US_ASCII))) throw new IOException();
+        try (var entries = Files.newDirectoryStream(directory)) {
+            for (Path entry : entries) {
+                if (!Set.of(STARTUP, TRIGGER).contains(entry.getFileName().toString()))
+                    throw new IOException();
+            }
         }
     }
 

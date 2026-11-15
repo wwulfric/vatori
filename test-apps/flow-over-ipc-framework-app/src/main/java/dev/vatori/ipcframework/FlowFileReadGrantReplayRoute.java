@@ -87,6 +87,7 @@ public final class FlowFileReadGrantReplayRoute extends VerticalLayout {
         });
         close.setId(PREFIX + "close-secondary");
         add(close, closeStatus);
+        add(FileGrantReplacementAction.button());
         // Main navigation after recovery must not erase the owner's handoff.
         // Only successful final release consumes it; runner EXIT is the backstop.
     }
@@ -130,6 +131,7 @@ public final class FlowFileReadGrantReplayRoute extends VerticalLayout {
         DesktopCommandResult result = select(bridge, OLD_TITLE);
         String token = selectedToken(result);
         Path path = FileReadGrantReplayHandoff.configuredPath();
+        FileGrantReplacementAction.prepareReadHandoff(path);
         long pid = ProcessHandle.current().pid();
         FileReadGrantReplayHandoff.Snapshot snapshot =
                 FileReadGrantReplayHandoff.create(path, token, pid);

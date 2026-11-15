@@ -1,0 +1,158 @@
+#!/usr/bin/env bash
+set -euo pipefail
+ROOT="$(cd "$(dirname "${BASH_SOURCE[0]}")/../../.." && pwd)"
+ACCEPTANCE="$ROOT/test-support/native-host-macos-acceptance"
+MODE="${1:-success}"
+if [[ $# -gt 1 || ( "$MODE" != success && "$MODE" != rollback && "$MODE" != rejection && "$MODE" != rollback-failure && "$MODE" != blocked-retirement && "$MODE" != blocked-candidate && "$MODE" != blocked-rollback && "$MODE" != burst && "$MODE" != generation-conflict && "$MODE" != owner-isolation && "$MODE" != owner-reopen && "$MODE" != owner-active-close ) ]]; then
+  echo "Usage: $0 [success|rollback|rejection|rollback-failure|blocked-retirement|blocked-candidate|blocked-rollback|burst|generation-conflict|owner-isolation|owner-reopen|owner-active-close]" >&2; exit 2
+fi
+if [[ "$(uname -s)" != Darwin ]]; then echo 'Requires macOS.' >&2; exit 2; fi
+if [[ -z "${JAVA_HOME:-}" || ! -x "$JAVA_HOME/bin/java" || ! -x "$JAVA_HOME/bin/javac" || ! -x "$JAVA_HOME/bin/jar" ]]; then
+  echo 'Set JAVA_HOME to a local JDK.' >&2; exit 2
+fi
+if [[ "${VATORI_NATIVE_HOST_MACOS_ACCEPTANCE_PACKAGE_LOCK_HELD:-}" != 1 ]]; then
+  exec env VATORI_NATIVE_HOST_MACOS_ACCEPTANCE_PACKAGE_LOCK_HELD=1 \
+    bash "$ACCEPTANCE/bin/with-package-lock" -- bash "$0" "$MODE"
+fi
+cd "$ROOT"
+umask 077
+mkdir -p "$ROOT/.build/native-hosts/macos"
+EVIDENCE="$(mktemp -d "$ROOT/.build/native-hosts/macos/product-$MODE-evidence.XXXXXX")"
+APP="$EVIDENCE/VaadinDesktopHost.app"
+EXE="$APP/Contents/MacOS/VaadinDesktopHost"
+JAR="$APP/Contents/Resources/Sidecar/application.jar"
+CANDIDATE_JAR="$APP/Contents/Resources/RuntimeCandidates/next/application.jar"
+OPEN_PID=""
+echo "Evidence directory: $EVIDENCE"
+owned_pids() {
+  ps -axo pid=,command= | awk -v host="$EXE" -v jar="$JAR" -v candidate="$CANDIDATE_JAR" -v java="$JAVA_HOME/bin/java" '
+    { pid=$1; $1=""; sub(/^ +/, "");
+      if ($0 == host || $0 == java " -jar " jar || $0 == java " -jar " candidate) print pid; }'
+}
+finish() {
+  local run_status="$1" remaining attempt=0 pid
+  trap - EXIT
+  trap '' HUP INT TERM
+  printf '%s\n' "$run_status" > "$EVIDENCE/primary-exit-status.txt"
+  if ! remaining="$(owned_pids)"; then
+    run_status=1
+  elif [[ -n "$remaining" ]]; then
+    run_status=1
+    printf '%s\n' "$remaining" > "$EVIDENCE/cleanup-required-pids.txt"
+    for pid in $remaining; do kill -TERM "$pid" 2>/dev/null || true; done
+    while [[ -n "$remaining" && "$attempt" -lt 30 ]]; do
+      sleep 0.1; attempt=$((attempt + 1))
+      remaining="$(owned_pids)" || break
+    done
+    for pid in $remaining; do kill -KILL "$pid" 2>/dev/null || true; done
+    sleep 0.1
+  fi
+  if [[ -n "$OPEN_PID" ]]; then kill -TERM "$OPEN_PID" 2>/dev/null || true; wait "$OPEN_PID" 2>/dev/null || true; fi
+  if remaining="$(owned_pids)" && [[ -z "$remaining" ]]; then
+    printf '%s\n' absent > "$EVIDENCE/final-process-state.txt"
+  else
+    run_status=1
+    printf '%s\n' unconfirmed > "$EVIDENCE/final-process-state.txt"
+  fi
+  printf '%s\n' "$run_status" > "$EVIDENCE/runner-exit-status.txt"
+  exit "$run_status"
+}
+trap 'finish "$?"' EXIT
+trap 'finish 130' INT
+trap 'finish 143' TERM
+trap 'finish 129' HUP
+git rev-parse HEAD > "$EVIDENCE/source-revision.txt"
+git status --porcelain=v1 > "$EVIDENCE/source-status.txt"
+sw_vers > "$EVIDENCE/macos-version.txt"
+uname -m > "$EVIDENCE/architecture.txt"
+"$JAVA_HOME/bin/java" -version > "$EVIDENCE/jdk-version.txt" 2>&1
+printf '%s\n' "mode=$MODE; input=browser-programmatic; framework deadline=180s; external deadline=240s" \
+  'same-build candidate copies for success; exit-before-ready fixture for rollback' \
+  'excludes: physical input, activation, in-flight native grants, whole-matrix certification' > "$EVIDENCE/profile.txt"
+while IFS= read -r name; do
+  case "$name" in VAADIN_DESKTOP_*|VATORI_FILE_*|VATORI_APPLICATION_RESOURCES) unset "$name" ;; esac
+done < <(compgen -e)
+bash "$ROOT/bin/vaadin-desktop" package test-apps/flow-over-ipc-framework-app > "$EVIDENCE/package.log" 2>&1
+bash "$ACCEPTANCE/bin/build-host" "$ROOT" test-apps/flow-over-ipc-framework-app flow-ipc > "$EVIDENCE/build-host.log" 2>&1
+cp -cRp "$ROOT/.build/native-hosts/macos/VaadinDesktopHost.app" "$APP"
+node - "$APP/Contents/Resources/VatoriHost.json" "$MODE" <<'JS'
+const fs = require('fs'), path = require('path'), file = process.argv[2];
+const manifest = JSON.parse(fs.readFileSync(file)), root = path.dirname(file);
+const candidate = path.join(root, 'RuntimeCandidates/next');
+fs.mkdirSync(candidate, {recursive: true});
+fs.copyFileSync(path.join(root, manifest.sidecarJar), path.join(candidate, 'application.jar'));
+fs.cpSync(path.join(root, manifest.webApp), path.join(candidate, 'webapp'), {recursive: true});
+manifest.runtimeCandidates = {next: {sidecarJar: 'RuntimeCandidates/next/application.jar', webApp: 'RuntimeCandidates/next/webapp'}};
+if (process.argv[3] === 'rejection') manifest.runtimeCandidates = {};
+fs.writeFileSync(file, JSON.stringify(manifest));
+JS
+PROFILE=1
+if [[ "$MODE" == burst ]]; then PROFILE=burst; fi
+if [[ "$MODE" == generation-conflict ]]; then PROFILE=generation-conflict; fi
+if [[ "$MODE" == owner-isolation ]]; then PROFILE=owner-isolation; fi
+if [[ "$MODE" == owner-reopen ]]; then PROFILE=owner-reopen; fi
+if [[ "$MODE" == owner-active-close ]]; then PROFILE=owner-active-close; fi
+if [[ "$MODE" == rejection ]]; then PROFILE=rejection; fi
+if [[ "$MODE" == blocked-candidate ]]; then
+  PROFILE=rollback
+  mkdir "$EVIDENCE/hung-candidate-classes"
+  "$JAVA_HOME/bin/javac" -d "$EVIDENCE/hung-candidate-classes" "$ACCEPTANCE/Tests/HangBeforeReady.java"
+  "$JAVA_HOME/bin/jar" --create --file "$CANDIDATE_JAR" --main-class HangBeforeReady -C "$EVIDENCE/hung-candidate-classes" .
+fi
+if [[ "$MODE" == rollback || "$MODE" == rollback-failure || "$MODE" == blocked-rollback ]]; then
+  PROFILE=rollback
+  mkdir "$EVIDENCE/candidate-classes"
+  "$JAVA_HOME/bin/javac" -d "$EVIDENCE/candidate-classes" "$ACCEPTANCE/Tests/FailBeforeReady.java"
+  "$JAVA_HOME/bin/jar" --create --file "$CANDIDATE_JAR" --main-class FailBeforeReady -C "$EVIDENCE/candidate-classes" .
+fi
+if [[ "$MODE" == blocked-rollback ]]; then
+  mkdir "$EVIDENCE/blocked-rollback-classes"
+  "$JAVA_HOME/bin/javac" -d "$EVIDENCE/blocked-rollback-classes" "$ACCEPTANCE/Tests/BlockOnSecondLaunch.java"
+  "$JAVA_HOME/bin/jar" --update --file "$JAR" --main-class BlockOnSecondLaunch -C "$EVIDENCE/blocked-rollback-classes" .
+fi
+if [[ "$MODE" == rollback-failure ]]; then
+  mkdir "$EVIDENCE/stable-launcher-classes"
+  "$JAVA_HOME/bin/javac" -d "$EVIDENCE/stable-launcher-classes" "$ACCEPTANCE/Tests/FailOnSecondLaunch.java"
+  "$JAVA_HOME/bin/jar" --update --file "$JAR" --main-class FailOnSecondLaunch -C "$EVIDENCE/stable-launcher-classes" .
+fi
+if [[ "$MODE" == blocked-retirement || "$MODE" == owner-active-close ]]; then
+  mkdir "$EVIDENCE/blocked-launcher-classes"
+  "$JAVA_HOME/bin/javac" -d "$EVIDENCE/blocked-launcher-classes" "$ACCEPTANCE/Tests/BlockOnShutdown.java"
+  "$JAVA_HOME/bin/jar" --update --file "$JAR" --main-class BlockOnShutdown -C "$EVIDENCE/blocked-launcher-classes" .
+fi
+plutil -replace CFBundleIdentifier -string "dev.vatori.acceptance.replacement.$(uuidgen | tr '[:upper:]' '[:lower:]')" "$APP/Contents/Info.plist"
+codesign --force --sign - "$APP" > "$EVIDENCE/sign.log" 2>&1
+codesign --verify --strict "$APP" >> "$EVIDENCE/sign.log" 2>&1
+rg --files --hidden --no-ignore -0 "$APP" | xargs -0 shasum -a 256 > "$EVIDENCE/bundle-sha256.txt"
+shasum -a 256 "$0" "$ACCEPTANCE/Tests/runtime-product-replacement-trace-verify.mjs" \
+  "$ACCEPTANCE/Tests/resync-replay-trace-verify.mjs" \
+  "$ACCEPTANCE/Tests/FailBeforeReady.java" "$ACCEPTANCE/Tests/FailOnSecondLaunch.java" "$ACCEPTANCE/Tests/BlockOnShutdown.java" \
+  "$ACCEPTANCE/Tests/HangBeforeReady.java" \
+  "$ACCEPTANCE/Tests/BlockOnSecondLaunch.java" \
+  "$ACCEPTANCE/Tests/runtime-product-rollback-failure-trace-verify.mjs" > "$EVIDENCE/verifier-sha256.txt"
+open -n -W -g -o "$EVIDENCE/host.out.log" --stderr "$EVIDENCE/host.err.log" \
+  --env "JAVA_HOME=$JAVA_HOME" --env "PATH=$PATH" \
+  --env "VATORI_ACCEPTANCE_ROLLBACK_MARKER=$EVIDENCE/stable-launched.marker" \
+  --env "VAADIN_DESKTOP_FLOW_IPC_AUTO_PRODUCT_REPLACEMENT=$PROFILE" \
+  --env VAADIN_DESKTOP_FLOW_IPC_AUTO_SHUTDOWN_TIMEOUT_SECONDS=180 \
+  --env VAADIN_DESKTOP_MACOS_NO_ACTIVATE=1 --env VAADIN_DESKTOP_FLOW_IPC_TRACE_DETAIL=full \
+  --env VAADIN_DESKTOP_FLOW_IPC_AUTO_FRAMEWORK_UPDATE=1 --env VAADIN_DESKTOP_FLOW_IPC_AUTO_SHUTDOWN=1 "$APP" &
+OPEN_PID=$!
+started=$SECONDS
+while kill -0 "$OPEN_PID" 2>/dev/null; do
+  if (( SECONDS - started > 240 )); then echo 'External runtime deadline exceeded.' >&2; exit 124; fi
+  sleep 1
+done
+wait "$OPEN_PID"
+OPEN_PID=""
+if [[ "$MODE" == rollback-failure || "$MODE" == blocked-rollback ]]; then
+  node "$ACCEPTANCE/Tests/runtime-product-rollback-failure-trace-verify.mjs" "$EVIDENCE/host.out.log" "$MODE" \
+    2>&1 | tee "$EVIDENCE/product-verifier.log"
+  exit 0
+fi
+bash "$ROOT/bin/flow-ipc-trace-inspect" --require-flow-ipc-standard-bundle-runtime \
+  --require-flow-ipc-standard-bundle-framework-app "$EVIDENCE/host.out.log" > "$EVIDENCE/inspector.log" 2>&1
+node "$ACCEPTANCE/Tests/runtime-product-replacement-trace-verify.mjs" "$EVIDENCE/host.out.log" "$MODE" \
+  2>&1 | tee "$EVIDENCE/product-verifier.log"
+node "$ACCEPTANCE/Tests/resync-replay-trace-verify.mjs" "$EVIDENCE/host.out.log" \
+  2>&1 | tee "$EVIDENCE/resync-replay-verifier.log"

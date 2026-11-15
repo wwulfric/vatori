@@ -164,6 +164,17 @@ import java.util.stream.Stream;
 @Route("")
 @JsModule("./vatori-vite-hmr-probe.js")
 public class FlowOverIpcFrameworkView extends VerticalLayout {
+    private static final AtomicReference<dev.vatori.desktop.DesktopCapabilityContext>
+            RETAINED_RUNTIME_CONTEXT = new AtomicReference<>();
+
+    private static boolean retiredRuntimeResult(dev.vatori.desktop.DesktopCommandResult result,
+            String command) {
+        return !result.success()
+                && Boolean.TRUE.equals(result.payload().get("canceled"))
+                && Boolean.TRUE.equals(result.payload().get("operationInvalidated"))
+                && "owner-window-closed".equals(result.payload().get("cancelReason"))
+                && command.equals(result.payload().get("command"));
+    }
     private final VerticalLayout updateList = new VerticalLayout();
     private int revision;
     private String priorityValue = "standard";
@@ -187,6 +198,87 @@ public class FlowOverIpcFrameworkView extends VerticalLayout {
         EffectiveMavenProfileProbe effectiveMavenProfileProbe =
                 new EffectiveMavenProfileProbe();
         FlowRpcProbe flowRpcProbe = new FlowRpcProbe();
+        Span runtimeStatus = new Span("not-queried");
+        runtimeStatus.setId("framework-runtime-replacement-status");
+        Span runtimeCaptured = new Span("not-captured");
+        runtimeCaptured.setId("framework-runtime-captured");
+        Button queryRuntimeStatus = new Button("Query runtime replacement status", event -> {
+            runtimeStatus.setText("querying");
+            var ui = event.getSource().getUI().orElseThrow();
+            var capabilities = Desktop.current().captureCapabilityContext();
+            java.util.concurrent.CompletableFuture.runAsync(() -> {
+                var result = capabilities.runtime().replacementStatus();
+                boolean retained = result.success() && "replaced".equals(result.payload().get("status"));
+                if (retained) RETAINED_RUNTIME_CONTEXT.set(capabilities);
+                ui.access(() -> {
+                    runtimeStatus.setText(result.success()
+                            ? String.valueOf(result.payload().get("status")) : "query-failed");
+                    if (retained) runtimeCaptured.setText("captured");
+                });
+            });
+        });
+        queryRuntimeStatus.setId("framework-runtime-replacement-query");
+        Span runtimeRequestResult = new Span("not-requested");
+        runtimeRequestResult.setId("framework-runtime-replacement-request-result");
+        Button replaceRuntime = new Button("Replace runtime with declared next candidate", event -> {
+            var ui = event.getSource().getUI().orElseThrow();
+            var capabilities = Desktop.current().captureCapabilityContext();
+            java.util.concurrent.CompletableFuture.runAsync(() -> {
+                var result = capabilities.runtime().requestReplacement("framework-product-request", "next");
+                ui.access(() -> runtimeRequestResult.setText(String.valueOf(result.payload().get(
+                        result.success() ? "status" : "errorCode"))));
+            });
+        });
+        replaceRuntime.setId("framework-runtime-replacement-request");
+        Button burstRuntime = new Button("Concurrent runtime replacement requests", event -> {
+            var capabilities = Desktop.current().captureCapabilityContext();
+            var barrier = new java.util.concurrent.CyclicBarrier(4);
+            var workers = java.util.concurrent.Executors.newFixedThreadPool(4);
+            for (int i = 0; i < 4; i++) {
+                String requestId = "framework-burst-" + (i % 2);
+                workers.submit(() -> {
+                    try {
+                        barrier.await(5, java.util.concurrent.TimeUnit.SECONDS);
+                        capabilities.runtime().requestReplacement(requestId, "next");
+                    } catch (Exception failure) {
+                        System.err.println("Runtime request burst failed: " + failure);
+                    }
+                });
+            }
+            workers.shutdown();
+        });
+        burstRuntime.setId("framework-runtime-replacement-burst");
+        Button openRuntimeObserver = new Button("Open independent runtime observer", event ->
+                Desktop.current().windows().open(DesktopWindow.builder("runtime-observer")
+                        .title("Runtime status observer").size(1000, 760).route("").build()));
+        openRuntimeObserver.setId("framework-runtime-observer-open");
+        Button closeRuntimeObserver = new Button("Close runtime observer", event ->
+                Desktop.current().windows().close("runtime-observer"));
+        closeRuntimeObserver.setId("framework-runtime-observer-close");
+        Span staleRuntimeStatus = new Span("not-probed");
+        staleRuntimeStatus.setId("framework-runtime-stale-status");
+        Button probeStaleRuntime = new Button("Probe retired runtime context", event -> {
+            var retained = RETAINED_RUNTIME_CONTEXT.get();
+            var ui = event.getSource().getUI().orElseThrow();
+            boolean fromClient = event.isFromClient();
+            staleRuntimeStatus.setText("probing");
+            java.util.concurrent.CompletableFuture.runAsync(() -> {
+                boolean background = com.vaadin.flow.server.VaadinSession.getCurrent() == null;
+                if (retained == null) {
+                    ui.access(() -> staleRuntimeStatus.setText("missing-context"));
+                    return;
+                }
+                var query = retained.runtime().replacementStatus();
+                var request = retained.runtime().requestReplacement("stale-owner-probe", "next");
+                String result = "query=" + retiredRuntimeResult(query, "runtime.replacement.status")
+                        + " request=" + retiredRuntimeResult(request, "runtime.replacement.request")
+                        + " background=" + background + " client=" + fromClient;
+                ui.access(() -> staleRuntimeStatus.setText(result));
+            });
+        });
+        probeStaleRuntime.setId("framework-runtime-stale-probe");
+        add(queryRuntimeStatus, runtimeStatus, replaceRuntime, runtimeRequestResult, burstRuntime,
+                openRuntimeObserver, closeRuntimeObserver, runtimeCaptured, probeStaleRuntime, staleRuntimeStatus);
         Button openLazyFrontend = new Button("Open lazy frontend route", event ->
                 event.getSource().getUI()
                         .ifPresent(ui -> ui.navigate(LazyFrontendRoute.class)));
@@ -420,6 +512,9 @@ public class FlowOverIpcFrameworkView extends VerticalLayout {
                                 FlowLazyGridSelectionRoute.class)));
         openFlowLazyGridSelection.setId(
                 "framework-flow-lazy-grid-selection-open-route");
+        Button openLazyDataBaseline = new Button("Open bounded lazy-data baseline", event ->
+                event.getSource().getUI().ifPresent(ui -> ui.navigate(FlowLazyDataBaselineRoute.class)));
+        openLazyDataBaseline.setId("lazy-data-baseline-open");
         Button openFlowMultiSelectComboBox = new Button(
                 "Open Flow MultiSelectComboBox route", event ->
                 event.getSource().getUI()
@@ -2938,6 +3033,7 @@ public class FlowOverIpcFrameworkView extends VerticalLayout {
                 openFlowMainWindowCloseRecovery,
                 openFlowLastWindowClose,
                 openFlowLazyGridSelection,
+                openLazyDataBaseline,
                 openFlowMultiSelectComboBox,
                 openFlowLazyMultiSelectComboBox,
                 openFlowLocalizedNumber,

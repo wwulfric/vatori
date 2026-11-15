@@ -11,7 +11,8 @@ public class FlowOverIpcFrameworkApplication {
     public static void main(String[] args) {
         FlowFatalProtocolStartup.initialize();
         FlowHostShutdownTerminationStartup.initialize();
-        FlowRecoveryTerminationStartup.initialize();
+        boolean recoverySequence = "1".equals(System.getenv("VAADIN_DESKTOP_TEST_RECOVERY_SEQUENCE"));
+        if (!recoverySequence) FlowRecoveryTerminationStartup.initialize();
         if ("exit-before-ready".equals(STARTUP_MODE)) {
             System.exit(42);
         }
@@ -22,8 +23,12 @@ public class FlowOverIpcFrameworkApplication {
                                 .size(1040, 760)
                                 .route(FlowHostShutdownTerminationStartup.enabled()
                                         ? "flow-host-shutdown-termination"
-                                        : FlowRecoveryTerminationStartup.enabled()
-                                                ? "flow-recovery-termination" : "")
+                                        : (recoverySequence || FlowRecoveryTerminationStartup.enabled())
+                                                ? "flow-recovery-termination"
+                                                : "1".equals(System.getenv("VAADIN_DESKTOP_TEST_WINDOW_CHURN"))
+                                                        ? "flow-window-churn"
+                                                        : "1".equals(System.getenv("VAADIN_DESKTOP_TEST_TRANSFER_ENDURANCE"))
+                                                                ? "flow-transfer-endurance" : "")
                                 .build())
                         .build(),
                 DesktopFlowApplication.builder(
@@ -36,6 +41,8 @@ public class FlowOverIpcFrameworkApplication {
                                 FlowRecoveryTerminationRoute.class,
                                 FlowHostShutdownTerminationRoute.class,
                                 FlowCapabilityContextReopenRoute.class,
+                                FlowWindowChurnRoute.class,
+                                FlowTransferEnduranceRoute.class,
                                 FlowCapabilityPermissionRoute.class,
                                 FlowClipboardOutcomesRoute.class,
                                 FlowNotificationOutcomesRoute.class,
@@ -61,6 +68,7 @@ public class FlowOverIpcFrameworkApplication {
                                 FlowNativeEditRoute.class,
                                 FlowExternalFileDropRoute.class,
                                 FlowLazyGridSelectionRoute.class,
+                                FlowLazyDataBaselineRoute.class,
                                 FlowLazyMultiSelectComboBoxRoute.class,
                                 FlowMultiSelectComboBoxRoute.class,
                                 FlowLargeDownloadRoute.class,

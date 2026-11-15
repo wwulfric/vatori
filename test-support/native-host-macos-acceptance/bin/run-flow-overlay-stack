@@ -2,15 +2,90 @@
 set -euo pipefail
 
 ROOT="$(cd "$(dirname "${BASH_SOURCE[0]}")/../../.." && pwd)"
-HOST_LOG="$ROOT/.build/native-hosts/macos/host.out.log"
-
-export VAADIN_DESKTOP_FLOW_IPC_AUTO_OVERLAY_STACK=1
-export VAADIN_DESKTOP_FLOW_IPC_AUTO_SHUTDOWN=1
-export VAADIN_DESKTOP_FLOW_IPC_AUTO_SHUTDOWN_TIMEOUT_SECONDS=45
-
-bash "$ROOT/test-support/native-host-macos-acceptance/bin/run" \
-  dev test-apps/flow-over-ipc-framework-app
-
-bash "$ROOT/bin/flow-ipc-trace-inspect" \
-  --require-flow-ipc-flow-overlay-stack \
-  "$HOST_LOG"
+ACCEPTANCE="$ROOT/test-support/native-host-macos-acceptance"
+[[ $# -le 1 ]] || { echo "Usage: $0 [prepared-app]" >&2; exit 2; }
+PREPARED_APP="${1:-}"
+[[ -z "$PREPARED_APP" || ( "$PREPARED_APP" == /* && -d "$PREPARED_APP" ) ]] || exit 2
+[[ "$(uname -s)" == Darwin && -x "${JAVA_HOME:?Set JAVA_HOME}/bin/java" ]]
+if [[ "${VATORI_NATIVE_HOST_MACOS_ACCEPTANCE_PACKAGE_LOCK_HELD:-}" != 1 ]]; then
+  exec env VATORI_NATIVE_HOST_MACOS_ACCEPTANCE_PACKAGE_LOCK_HELD=1 \
+    bash "$ACCEPTANCE/bin/with-package-lock" -- bash "$0" "$@"
+fi
+cd "$ROOT"
+umask 077
+mkdir -p "$ROOT/.build/native-hosts/macos"
+EVIDENCE="$(mktemp -d "$ROOT/.build/native-hosts/macos/overlay-stack-evidence.XXXXXX")"
+APP="$EVIDENCE/Launched.app"
+EXE="$APP/Contents/MacOS/VaadinDesktopHost"
+JAR="$APP/Contents/Resources/Sidecar/application.jar"
+OPEN_PID=""
+echo "Evidence: $EVIDENCE"
+owned_pids() {
+  ps -axo pid=,command= | awk -v host="$EXE" -v jar="$JAR" -v java="$JAVA_HOME/bin/java" '
+    {pid=$1; $1=""; sub(/^ +/, ""); if ($0 == host || $0 == java " -jar " jar) print pid;}'
+}
+finish() {
+  local status="$1" remaining pid attempt=0
+  trap - EXIT
+  trap '' HUP INT TERM
+  printf '%s\n' "$status" > "$EVIDENCE/primary-exit-status.txt"
+  if ! remaining="$(owned_pids)"; then status=1
+  elif [[ -n "$remaining" ]]; then
+    status=1
+    printf '%s\n' "$remaining" > "$EVIDENCE/cleanup-required-pids.txt"
+    for pid in $remaining; do kill -TERM "$pid" 2>/dev/null || true; done
+    while [[ -n "$(owned_pids)" && "$attempt" -lt 30 ]]; do sleep 0.1; attempt=$((attempt+1)); done
+    remaining="$(owned_pids)"
+    for pid in $remaining; do kill -KILL "$pid" 2>/dev/null || true; done
+    sleep 0.1
+  fi
+  if [[ -n "$OPEN_PID" ]]; then kill -TERM "$OPEN_PID" 2>/dev/null || true; wait "$OPEN_PID" 2>/dev/null || true; fi
+  if remaining="$(owned_pids)" && [[ -z "$remaining" ]]; then
+    printf 'absent\n' > "$EVIDENCE/final-process-state.txt"
+  else status=1; printf 'unconfirmed\n' > "$EVIDENCE/final-process-state.txt"; fi
+  printf '%s\n' "$status" > "$EVIDENCE/runner-exit-status.txt"
+  exit "$status"
+}
+trap 'finish "$?"' EXIT
+trap 'finish 130' INT
+trap 'finish 143' TERM
+trap 'finish 129' HUP
+git rev-parse HEAD > "$EVIDENCE/source-revision.txt"
+git status --porcelain=v1 > "$EVIDENCE/source-status.txt"
+git ls-files --cached --others --exclude-standard -z > "$EVIDENCE/source-files.nul"
+xargs -0 shasum -a 256 < "$EVIDENCE/source-files.nul" > "$EVIDENCE/source-sha256.txt"
+tar -czf "$EVIDENCE/source.tar.gz" --null -T "$EVIDENCE/source-files.nul"
+sw_vers > "$EVIDENCE/macos-version.txt"
+"$JAVA_HOME/bin/java" -version > "$EVIDENCE/jdk-version.txt" 2>&1
+while IFS= read -r name; do
+  case "$name" in VAADIN_DESKTOP_*|VATORI_FILE_*|VATORI_TEST_*|VATORI_APPLICATION_RESOURCES) unset "$name" ;; esac
+done < <(compgen -e)
+if [[ -n "$PREPARED_APP" ]]; then
+  printf '%s\n' "$PREPARED_APP" > "$EVIDENCE/prepared-app-origin.txt"
+  cp -cRp "$PREPARED_APP" "$APP"
+else
+  bash "$ROOT/bin/vaadin-desktop" package test-apps/flow-over-ipc-framework-app > "$EVIDENCE/package.log" 2>&1
+  bash "$ACCEPTANCE/bin/build-host" "$ROOT" test-apps/flow-over-ipc-framework-app flow-ipc > "$EVIDENCE/build-host.log" 2>&1
+  cp -cRp "$ROOT/.build/native-hosts/macos/VaadinDesktopHost.app" "$APP"
+fi
+shasum -a 256 -c "$EVIDENCE/source-sha256.txt" > "$EVIDENCE/source-check.log"
+(cd "$EVIDENCE"; find Launched.app -type f -exec shasum -a 256 {} + > bundle-sha256.txt)
+printf '%s\n' 'F07; standard production bundle; opaque Flow IPC; browser-programmatic setup and generated AppKit input; no physical/AT evidence. A reused app retains its original source provenance; source.tar.gz describes this invocation.' > "$EVIDENCE/profile.txt"
+open -n -W -o "$EVIDENCE/host.out.log" --stderr "$EVIDENCE/host.err.log" \
+  --env "JAVA_HOME=$JAVA_HOME" \
+  --env VAADIN_DESKTOP_FLOW_IPC_AUTO_OVERLAY_STACK=1 \
+  --env VAADIN_DESKTOP_FLOW_IPC_AUTO_SHUTDOWN=1 \
+  --env VAADIN_DESKTOP_FLOW_IPC_AUTO_SHUTDOWN_TIMEOUT_SECONDS=45 \
+  --env VAADIN_DESKTOP_FLOW_IPC_TRACE_DETAIL=full "$APP" &
+OPEN_PID=$!
+started=$SECONDS
+while kill -0 "$OPEN_PID" 2>/dev/null; do
+  if (( SECONDS - started > 75 )); then echo 'External overlay deadline exceeded' >&2; exit 124; fi
+  sleep 1
+done
+wait "$OPEN_PID"
+OPEN_PID=""
+bash "$ROOT/bin/flow-ipc-trace-inspect" --require-flow-ipc-flow-overlay-stack \
+  "$EVIDENCE/host.out.log" > "$EVIDENCE/verification.log" 2>&1
+shasum -a 256 -c "$EVIDENCE/source-sha256.txt" > "$EVIDENCE/final-source-check.log"
+echo "PASS: $EVIDENCE"

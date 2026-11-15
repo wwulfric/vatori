@@ -5,15 +5,44 @@ enum FlowIpcNativeInputActivation {
     static func prepare(
         context: FlowIpcWindowContext,
         deadline: Date,
+        passive: Bool = false,
         onFailure: @escaping ([String: Any]) -> Void,
         completion: @escaping () -> Void
     ) {
+        if passive {
+            observe(context: context, deadline: deadline, onFailure: onFailure, completion: completion)
+            return
+        }
         request(context: context)
         wait(
             context: context,
             deadline: deadline,
             onFailure: onFailure,
             completion: completion)
+    }
+
+    // D01 observes product-owned readiness. It must not activate, order, unhide
+    // or repair the responder before declaring that the product is ready.
+    private static func observe(
+        context: FlowIpcWindowContext, deadline: Date,
+        onFailure: @escaping ([String: Any]) -> Void,
+        completion: @escaping () -> Void
+    ) {
+        let view = context.window.firstResponder as? NSView
+        let ownsResponder = view === context.webView || view?.isDescendant(of: context.webView) == true
+        if NSApp.isActive && context.window.isKeyWindow && ownsResponder {
+            completion(); return
+        }
+        guard Date() < deadline else {
+            onFailure(["message": "Product native input readiness was not observed",
+                       "activeApplication": NSApp.isActive,
+                       "keyWindow": context.window.isKeyWindow,
+                       "webViewOwnsResponder": ownsResponder])
+            return
+        }
+        DispatchQueue.main.asyncAfter(deadline: .now() + 0.1) {
+            observe(context: context, deadline: deadline, onFailure: onFailure, completion: completion)
+        }
     }
 
     private static func request(context: FlowIpcWindowContext) {

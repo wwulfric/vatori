@@ -45,13 +45,44 @@ final class RecoveryTerminationTraceGate {
         requireLifecycle(starts, launches);
         requireStages();
         requireTransport();
+        requireActivationDiagnostics();
         check(events.stream().noneMatch(e -> Set.of("error", "webview.error", "sidecar.startFailed",
                 "sidecar.recoveryEscalationFailed", "sidecar.replacementRequested",
                 "opaqueHttpStreamError", "opaqueHttpStreamCancel", "opaquePushError").contains(e.type())
                 || e.type().startsWith(PREFIX) && !Set.of(PREFIX + "nativePointerDispatch",
                 PREFIX + "stageObserved", PREFIX + "failureInjected", PREFIX + "blockedShutdownObserved",
-                PREFIX + "frameworkAcceptance").contains(e.type())),
+                PREFIX + "frameworkAcceptance", PREFIX + "activationObservation").contains(e.type())),
                 "no hidden error, replacement, or unknown acceptance event");
+    }
+
+    private void requireActivationDiagnostics() {
+        List<Event> observations = of(PREFIX + "activationObservation");
+        if (observations.isEmpty()) return; // Older retained traces have no timeline.
+        check(observations.size() <= 128
+                && number(accepted.p(), "activationObservationCount", observations.size())
+                && integer(accepted.p(), "activationObservationDropped") >= 0,
+                "bounded activation diagnostic counts");
+        double previous = -1;
+        for (int i = 0; i < observations.size(); i++) {
+            Event event = observations.get(i);
+            JsonNode p = event.p();
+            double uptime = p.path("uptimeSeconds").isNumber()
+                    ? p.path("uptimeSeconds").asDouble() : Double.NaN;
+            check(event.recv() && event.order < accepted.order
+                    && exact(p, "sequence", "reason", "uptimeSeconds", "phase", "pointerPhase",
+                        "recoveryGeneration", "activeApplication", "keyWindow", "applicationKeyWindowMatches",
+                        "windowVisible", "windowMiniaturized")
+                    && number(p, "sequence", i + 1) && finitePositive(p, "uptimeSeconds") && uptime >= previous
+                    && Set.of("observer-start", "app-active", "app-inactive", "window-key", "window-not-key",
+                        "window-miniaturized", "window-restored", "acceptance-complete").contains(text(p, "reason"))
+                    && Set.of("ready", "clicking", "result", "recovering", "drain").contains(text(p, "phase"))
+                    && p.path("pointerPhase").isString()
+                    && (number(p, "recoveryGeneration", 0) || number(p, "recoveryGeneration", 1))
+                    && List.of("activeApplication", "keyWindow", "applicationKeyWindowMatches",
+                        "windowVisible", "windowMiniaturized").stream().allMatch(k -> p.path(k).isBoolean()),
+                    "ordered typed activation diagnostic " + i);
+            previous = uptime;
+        }
     }
 
     private void requireLifecycle(List<Event> starts, List<Event> launches) {
@@ -143,9 +174,9 @@ final class RecoveryTerminationTraceGate {
         }
     }
 
-    private static final Set<String> FRAME_KEYS = Set.of("windowId", "sessionId", "uiId", "runId", "fixtureGeneration", "processIdentifier", "recoveryGeneration", "documentMarker", "documentTimeOriginMillis", "firstMeaningfulPaint", "flowClientCount", "mainContextRetained", "mainWindowRetained", "mainWebViewRetained", "mainWindowNumber");
+    private static final Set<String> FRAME_KEYS = Set.of("windowId", "sessionId", "uiId", "runId", "fixtureGeneration", "processIdentifier", "recoveryGeneration", "documentMarker", "browserDocumentMarker", "browserDocumentRetained", "documentTimeOriginMillis", "firstMeaningfulPaint", "flowClientCount", "mainContextRetained", "mainWindowRetained", "mainWebViewRetained", "mainWindowNumber");
     private static final List<String> FRAME_TRUE = List.of("firstMeaningfulPaint", "mainContextRetained",
-            "mainWindowRetained", "mainWebViewRetained");
+            "mainWindowRetained", "mainWebViewRetained", "browserDocumentRetained");
     private static final List<String> ACCEPTED_TRUE = List.of("complete", "initialJavaListenerObserved",
             "recoveredJavaListenerObserved", "initialUidlObserved", "recoveredUidlObserved", "initialPushObserved",
             "recoveredPushObserved", "blockedShutdownHookObserved", "blockedProcessAbsent", "newDocumentObserved",
@@ -155,7 +186,8 @@ final class RecoveryTerminationTraceGate {
         List<Event> pointers = of(PREFIX + "nativePointerDispatch"), stages = of(PREFIX + "stageObserved");
         Event injected = one(PREFIX + "failureInjected"), hook = one(PREFIX + "blockedShutdownObserved");
         check(pointers.size() == 2 && stages.size() == 2
-                && events.stream().filter(e -> e.type().startsWith(PREFIX)).count() == 7,
+                && events.stream().filter(e -> e.type().startsWith(PREFIX)
+                    && !e.type().equals(PREFIX + "activationObservation")).count() == 7,
                 "exact two generated AppKit inputs and Java/push receipts");
         if (pointers.size() != 2 || stages.size() != 2 || injected == null || hook == null) return;
         for (int i = 0; i < 2; i++) {
@@ -199,6 +231,7 @@ final class RecoveryTerminationTraceGate {
         String runId = text(initial, "runId");
         check(runId.equals(text(recovered, "runId")) && runId.equals(text(hook.p(), "runId"))
                 && !text(initial, "documentMarker").equals(text(recovered, "documentMarker"))
+                && !text(initial, "browserDocumentMarker").equals(text(recovered, "browserDocumentMarker"))
                 && finitePositive(initial, "documentTimeOriginMillis") && finitePositive(recovered, "documentTimeOriginMillis")
                 && initial.path("documentTimeOriginMillis").asDouble() < recovered.path("documentTimeOriginMillis").asDouble()
                 && number(initial, "mainWindowNumber", integer(recovered, "mainWindowNumber")),
@@ -222,8 +255,10 @@ final class RecoveryTerminationTraceGate {
                 "blocked exact second-process shutdown hook with untouched native owner");
         Set<String> acceptedKeys = new HashSet<>(FRAME_KEYS);
         acceptedKeys.addAll(ACCEPTED_TRUE);
+        if (!of(PREFIX + "activationObservation").isEmpty())
+            acceptedKeys.addAll(List.of("activationObservationCount", "activationObservationDropped"));
         acceptedKeys.addAll(List.of("initialProcessIdentifier", "blockedProcessIdentifier", "recoveredProcessIdentifier",
-                "initialDocumentMarker", "initialDocumentTimeOriginMillis", "initialRecoveryGeneration",
+                "initialDocumentMarker", "initialBrowserDocumentMarker", "initialDocumentTimeOriginMillis", "initialRecoveryGeneration",
                 "finalRecoveryGeneration", "initialRequestCount", "initialResponseCount", "initialPushMessageCount",
                 "recoveredRequestCount", "recoveredResponseCount", "recoveredPushMessageCount",
                 "nativePointerEventCount", "nativePointerTrustedEventCount", "nativePointerStages"));
@@ -236,6 +271,7 @@ final class RecoveryTerminationTraceGate {
                 && number(a, "nativePointerTrustedEventCount", 2)
                 && "initial,recovered".equals(text(a, "nativePointerStages"))
                 && text(initial, "documentMarker").equals(text(a, "initialDocumentMarker"))
+                && text(initial, "browserDocumentMarker").equals(text(a, "initialBrowserDocumentMarker"))
                 && initial.path("documentTimeOriginMillis").equals(a.path("initialDocumentTimeOriginMillis")),
                 "strict final receipt including retained owner and fresh-document boundaries");
         for (int i = 0; i < 2; i++) {
@@ -251,6 +287,7 @@ final class RecoveryTerminationTraceGate {
 
     private boolean frame(JsonNode p, int generation, int epoch) {
         return scope(p) && uuid(text(p, "runId")) && uuid(text(p, "documentMarker"))
+                && uuid(text(p, "browserDocumentMarker"))
                 && number(p, "fixtureGeneration", generation) && number(p, "processIdentifier", pids[generation - 1])
                 && number(p, "recoveryGeneration", epoch) && number(p, "flowClientCount", 1)
                 && integer(p, "mainWindowNumber") > 0 && finitePositive(p, "documentTimeOriginMillis")

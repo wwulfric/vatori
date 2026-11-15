@@ -35,6 +35,7 @@ public final class RecoveryTerminationTraceGateSmokeMain {
     public static void main(String[] args) {
         List<ObjectNode> valid = valid();
         expect(valid, true, "three generations, blocked TERM, bounded escalation and recovered Flow push");
+        activationDiagnostics(valid);
         List<ObjectNode> finalExit = copy(valid);
         finalExit.add(object("at", 100_000L, "direction", "recv", "type", "sidecar.exit", "payload",
                 object("generation", 3, "processIdentifier", LAST_PID, "status", 0, "reason", 1, "expected", true)));
@@ -59,6 +60,34 @@ public final class RecoveryTerminationTraceGateSmokeMain {
         }
         System.out.printf("Recovery termination trace gate smoke passed: %d positives, %d rejections%n",
                 positive, rejected);
+    }
+
+    private static void activationDiagnostics(List<ObjectNode> valid) {
+        List<ObjectNode> timeline = copy(valid);
+        ObjectNode observation = object("at", 1L, "direction", "recv",
+                "type", PREFIX + "activationObservation", "payload", object(
+                    "sequence", 1, "reason", "observer-start", "uptimeSeconds", 1.25,
+                    "phase", "ready", "pointerPhase", "not-started", "recoveryGeneration", 0,
+                    "activeApplication", false, "keyWindow", false, "applicationKeyWindowMatches", false,
+                    "windowVisible", true, "windowMiniaturized", false));
+        timeline.add(0, observation);
+        timeline.stream().filter(e -> type(e).equals(PREFIX + "frameworkAcceptance")).forEach(e ->
+                payload(e).put("activationObservationCount", 1).put("activationObservationDropped", 0));
+        expect(timeline, true, "optional typed diagnostic is not an extra input receipt");
+        for (String key : List.of("sequence", "reason", "uptimeSeconds", "activeApplication", "unexpected")) {
+            List<ObjectNode> bad = copy(timeline);
+            payload(bad.getFirst()).put(key, "invalid");
+            expect(bad, false, "reject malformed activation diagnostic " + key);
+        }
+        List<ObjectNode> missing = copy(timeline);
+        missing.removeFirst();
+        expect(missing, false, "diagnostic counters require observations");
+        List<ObjectNode> duplicate = copy(timeline);
+        duplicate.add(1, observation.deepCopy());
+        expect(duplicate, false, "diagnostic count and sequence cannot be duplicated");
+        List<ObjectNode> mismatch = copy(timeline);
+        payload(mismatch.getFirst()).put("reason", "acceptance-failed");
+        expect(mismatch, false, "failed diagnostic cannot coexist with acceptance");
     }
 
     private static void missingAndDuplicate(List<ObjectNode> valid) {
@@ -330,6 +359,13 @@ public final class RecoveryTerminationTraceGateSmokeMain {
             }
         }
         expect(sameDocument, false, "self-consistent but reused old document");
+        List<ObjectNode> sameBrowserDocument = copy(valid);
+        for (ObjectNode event : sameBrowserDocument) {
+            if (payload(event).has("browserDocumentMarker")) {
+                payload(event).put("browserDocumentMarker", "00000000-0000-4000-8000-000000000001");
+            }
+        }
+        expect(sameBrowserDocument, false, "fresh route UUID and timestamp cannot conceal reused browser Document");
         List<ObjectNode> wrongRun = copy(valid);
         payload(wrongRun.get(find(wrongRun, PREFIX + "blockedShutdownObserved", 0)))
                 .put("runId", "ad7ffb59-cd9f-45ec-be31-8f142ad9bf70");
@@ -379,6 +415,7 @@ public final class RecoveryTerminationTraceGateSmokeMain {
         ObjectNode accepted = frame(1).put("initialProcessIdentifier", FIRST_PID)
                 .put("blockedProcessIdentifier", BLOCKED_PID).put("recoveredProcessIdentifier", LAST_PID)
                 .put("initialDocumentMarker", FIRST_DOCUMENT).put("initialDocumentTimeOriginMillis", 1000.0)
+                .put("initialBrowserDocumentMarker", "00000000-0000-4000-8000-000000000001")
                 .put("initialRecoveryGeneration", 0).put("finalRecoveryGeneration", 1)
                 .put("initialRequestCount", 2).put("initialResponseCount", 2).put("initialPushMessageCount", 1)
                 .put("recoveredRequestCount", 2).put("recoveredResponseCount", 2).put("recoveredPushMessageCount", 1)
@@ -394,6 +431,8 @@ public final class RecoveryTerminationTraceGateSmokeMain {
         return scope().put("runId", RUN).put("fixtureGeneration", epoch == 0 ? 1 : 3)
                 .put("processIdentifier", epoch == 0 ? FIRST_PID : LAST_PID).put("recoveryGeneration", epoch)
                 .put("documentMarker", epoch == 0 ? FIRST_DOCUMENT : LAST_DOCUMENT)
+                .put("browserDocumentMarker", epoch == 0 ? "00000000-0000-4000-8000-000000000001" : "00000000-0000-4000-8000-000000000002")
+                .put("browserDocumentRetained", true)
                 .put("documentTimeOriginMillis", epoch == 0 ? 1000.0 : 20_000.0)
                 .put("firstMeaningfulPaint", true).put("flowClientCount", 1).put("mainContextRetained", true)
                 .put("mainWindowRetained", true).put("mainWebViewRetained", true).put("mainWindowNumber", 101);

@@ -3,9 +3,27 @@
   "permissionMode": "manifest-enforced",
   "windows": [
     {
+      "label": "transfer-secondary",
+      "commands": ["window.open", "window.close"]
+    },
+    {
+      "label": "churn-secondary",
+      "commands": ["window.open", "window.close", "window.setTitle"]
+    },
+    {
+      "label": "churn-sibling",
+      "commands": ["window.open", "window.close", "window.setTitle"]
+    },
+    {
+      "label": "runtime-observer",
+      "commands": ["window.open", "window.close", "runtime.replacement.status", "runtime.replacement.request"]
+    },
+    {
       "label": "main",
       "commands": [
         "window.setTitle",
+        "runtime.replacement.status",
+        "runtime.replacement.request",
         "clipboard.writeText",
         "clipboard.readText",
         "notification.show",

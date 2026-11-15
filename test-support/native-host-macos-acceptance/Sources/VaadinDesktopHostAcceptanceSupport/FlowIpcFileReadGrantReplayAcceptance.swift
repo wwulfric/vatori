@@ -92,6 +92,15 @@ private final class FlowIpcFileReadGrantReplayAcceptance {
     init(host: WebViewHost, deadline: Date) {
         self.host = host
         self.deadline = deadline
+        if FileGrantProductReplacement.enabled {
+            if let path = ProcessInfo.processInfo.environment["VAADIN_DESKTOP_FLOW_IPC_SANDBOX_SELECTED_PATH"],
+               path.hasPrefix("/") {
+                fixtureURL = URL(fileURLWithPath: path)
+                // The external runner owns this file; sandbox access is not granted yet.
+                fixtureCreated = true
+            }
+            return
+        }
         let root = ProcessInfo.processInfo.environment[
             "VAADIN_DESKTOP_FLOW_IPC_FILE_READ_GRANT_FIXTURE_ROOT"
         ].map { URL(fileURLWithPath: $0, isDirectory: true) }
@@ -250,6 +259,15 @@ private final class FlowIpcFileReadGrantReplayAcceptance {
                     "nativePointerTrustedEventCount": self.trustedStages.count,
                     "nativePointerStages": self.dispatchedStages.joined(separator: ",")
                 ])
+                if FileGrantProductReplacement.enabled {
+                    self.failedPID = self.initialPID
+                    self.phase = .recovering
+                    FileGrantProductReplacement.request(self.host) { dispatched in
+                        if dispatched { self.schedule() }
+                        else { self.fail("fileReadGrantProductReplacementAction") }
+                    }
+                    return
+                }
                 guard self.killOriginalSidecar() else {
                     self.fail("fileReadGrantReplayFailureInjectionRejected"); return
                 }
@@ -495,6 +513,12 @@ private final class FlowIpcFileReadGrantReplayAcceptance {
               panel.isVisible, Self.panels.count == 1,
               Self.panels.first === panel else { schedule(0.05); return }
         if !observedPanels.contains(where: { $0 === panel }) {
+            if FileGrantProductReplacement.enabled {
+                guard (!old || FileGrantProductReplacement.readSandboxProbe(stage: stage + "-target-before", selected: true)),
+                      FileGrantProductReplacement.readSandboxProbe(stage: stage + "-sibling-before", selected: false) else {
+                    fail("fileReadGrantSandboxAccessNotDenied"); return
+                }
+            }
             guard observedPanels.count == (old ? 0 : 1) else {
                 fail("fileReadGrantReplayUnexpectedPanel"); return
             }
@@ -648,6 +672,11 @@ private final class FlowIpcFileReadGrantReplayAcceptance {
     }
 
     private func finish(_ main: FlowIpcWindowContext, _ state: Snapshot) {
+        if FileGrantProductReplacement.enabled {
+            guard FileGrantProductReplacement.readSandboxProbe(stage: "released-sibling", selected: false) else {
+                fail("fileReadGrantSandboxReleaseAccessNotDenied"); return
+            }
+        }
         let pointers = dispatchedStages == Self.stages && receivedStages == Self.stages
         let trusted = trustedStages == Self.stages
         let statuses = oldSelectionObserved && oldReadObserved && oldReleaseObserved
@@ -734,7 +763,7 @@ private final class FlowIpcFileReadGrantReplayAcceptance {
             "nativePointerStages": dispatchedStages.joined(separator: ","),
             "browserProgrammaticSetupObserved": browser,
             "browserProgrammaticStages": browserStages.joined(separator: ","),
-            "physicalInput": false, "sandboxEnforced": false, "errorFree": state.errorFree,
+            "physicalInput": false, "sandboxEnforced": FileGrantProductReplacement.enabled, "errorFree": state.errorFree,
             "gracefulCloseRequested": true, "recoveryGeneration": main.recoveryGeneration
         ])
         terminal = true

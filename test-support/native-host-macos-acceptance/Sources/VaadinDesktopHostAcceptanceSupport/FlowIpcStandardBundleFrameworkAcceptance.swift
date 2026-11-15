@@ -4,6 +4,20 @@ import WebKit
 
 private enum FlowIpcStandardBundleFrameworkPhase {
     case waitingForReady
+    case waitingForRuntimeStatus
+    case waitingForProductReplacement
+    case waitingForProductRejection
+    case waitingForProductRejectionStatus
+    case waitingForProductReplacementResult
+    case waitingForProductGenerationConflict
+    case waitingForProductGenerationConflictStatus
+    case waitingForRuntimeObserverReady
+    case waitingForRuntimeObserverStatus
+    case waitingForRuntimeOwnerStatus
+    case waitingForRuntimeObserverClosed
+    case waitingForRuntimeRequesterResult
+    case waitingForStaleRuntimeResult
+    case waitingForActiveRuntimeOwnerClose
     case waitingForLazyFrontendRoute
     case waitingForLazyFrontendClient
     case waitingForLazyFrontendServer
@@ -83,6 +97,7 @@ private enum FlowIpcStandardBundleFrameworkPhase {
     case waitingForLoginOverlayActionPostSubmit
     case waitingForLoginFormActionPostSubmit
     case waitingForLoginVariants
+    case waitingForLoginVariantsOpen
     case waitingForLoginFormSubmitButton
     case waitingForLoginFormShowError
     case waitingForLoginFormEnabled
@@ -180,6 +195,8 @@ private var flowIpcStandardBundleFrameworkPhase =
     FlowIpcStandardBundleFrameworkPhase.waitingForReady
 private var flowIpcStandardBundleFrameworkDeadline = Date.distantPast
 private var flowIpcStandardBundleFrameworkTracedPhase = ""
+private var flowIpcRuntimeOwnerReopened = false
+private var flowIpcRuntimeOriginalOwnerSession = ""
 
 extension WebViewHost {
     func scheduleStandardBundleFrameworkAcceptance(
@@ -491,6 +508,8 @@ extension WebViewHost {
                 ])
             }
 
+            let ownerReopenMode = ProcessInfo.processInfo.environment["VAADIN_DESKTOP_FLOW_IPC_AUTO_PRODUCT_REPLACEMENT"] == "owner-reopen"
+            let activeOwnerCloseMode = ProcessInfo.processInfo.environment["VAADIN_DESKTOP_FLOW_IPC_AUTO_PRODUCT_REPLACEMENT"] == "owner-active-close"
             switch flowIpcStandardBundleFrameworkPhase {
             case .waitingForReady:
                 guard state["ready"] as? Bool == true else {
@@ -502,12 +521,309 @@ extension WebViewHost {
                 }
                 self.dispatchStandardBundleFrameworkAction(
                     context.webView,
+                    script: "(() => { const button = document.querySelector('#framework-runtime-replacement-query'); if (!button) return false; button.click(); return true; })()") { dispatched in
+                        self.advanceStandardBundleFrameworkAcceptance(
+                            context, dispatched: dispatched, next: .waitingForRuntimeStatus,
+                            failureReason: "runtime-status-query-dispatch-failed")
+                    }
+            case .waitingForRuntimeStatus:
+                guard state["runtimeReplacementStatus"] as? String == "none" else {
+                    self.retryOrFailStandardBundleFrameworkAcceptance(
+                        context, reason: "runtime-status-query-not-settled", state: state)
+                    return
+                }
+                trace("recv", "standardBundle.runtimeReplacementStatus", ["status": "none", "observedInDom": true])
+                if ownerReopenMode || activeOwnerCloseMode {
+                    self.dispatchStandardBundleFrameworkAction(context.webView,
+                        script: "(() => { const button = document.querySelector('#framework-runtime-observer-open'); if (!button) return false; button.click(); return true; })()") { dispatched in
+                            self.advanceStandardBundleFrameworkAcceptance(context, dispatched: dispatched,
+                                next: .waitingForRuntimeObserverReady, failureReason: "requester-open-dispatch-failed")
+                        }
+                    return
+                }
+                if ["1", "rollback", "rejection", "burst", "generation-conflict", "owner-isolation"].contains(ProcessInfo.processInfo.environment["VAADIN_DESKTOP_FLOW_IPC_AUTO_PRODUCT_REPLACEMENT"] ?? "") {
+                    let requestButton = ProcessInfo.processInfo.environment["VAADIN_DESKTOP_FLOW_IPC_AUTO_PRODUCT_REPLACEMENT"] == "burst"
+                        ? "framework-runtime-replacement-burst" : "framework-runtime-replacement-request"
+                    self.dispatchStandardBundleFrameworkAction(
+                        context.webView,
+                        script: "(() => { const button = document.querySelector('#\(requestButton)'); if (!button) return false; button.click(); return true; })()") { dispatched in
+                            self.advanceStandardBundleFrameworkAcceptance(context, dispatched: dispatched,
+                                next: ProcessInfo.processInfo.environment["VAADIN_DESKTOP_FLOW_IPC_AUTO_PRODUCT_REPLACEMENT"] == "rejection"
+                                    ? .waitingForProductRejection : .waitingForProductReplacement,
+                                failureReason: "product-replacement-dispatch-failed")
+                        }
+                    return
+                }
+                self.dispatchStandardBundleFrameworkAction(
+                    context.webView,
+                    script: Self.standardFrameworkLazyFrontendOpenAction) { dispatched in
+                        self.advanceStandardBundleFrameworkAcceptance(context, dispatched: dispatched,
+                            next: .waitingForLazyFrontendRoute, failureReason: "lazy-frontend-navigation-dispatch-failed")
+                    }
+            case .waitingForProductRejection:
+                guard state["runtimeReplacementRequestResult"] as? String == "invalid-candidate",
+                      context.recoveryGeneration == 0 else {
+                    self.retryOrFailStandardBundleFrameworkAcceptance(context,
+                        reason: "product-rejection-not-observed", state: state)
+                    return
+                }
+                trace("recv", "standardBundle.productReplacementRejected", [
+                    "errorCode": "invalid-candidate", "observedInDom": true, "recoveryGeneration": 0])
+                self.dispatchStandardBundleFrameworkAction(context.webView,
+                    script: "(() => { const button = document.querySelector('#framework-runtime-replacement-query'); if (!button) return false; button.click(); return true; })()") { dispatched in
+                        self.advanceStandardBundleFrameworkAcceptance(context, dispatched: dispatched,
+                            next: .waitingForProductRejectionStatus, failureReason: "rejection-status-query-dispatch-failed")
+                    }
+            case .waitingForProductRejectionStatus:
+                guard state["runtimeReplacementStatus"] as? String == "none",
+                      context.recoveryGeneration == 0 else {
+                    self.retryOrFailStandardBundleFrameworkAcceptance(context,
+                        reason: "rejection-status-not-observed", state: state)
+                    return
+                }
+                trace("recv", "standardBundle.productRejectionStatus", ["status": "none", "observedInDom": true])
+                self.dispatchStandardBundleFrameworkAction(context.webView,
+                    script: Self.standardFrameworkLazyFrontendOpenAction) { dispatched in
+                        self.advanceStandardBundleFrameworkAcceptance(context, dispatched: dispatched,
+                            next: .waitingForLazyFrontendRoute, failureReason: "lazy-frontend-navigation-dispatch-failed")
+                    }
+            case .waitingForProductReplacement:
+                guard context.recoveryGeneration > 0, state["ready"] as? Bool == true else {
+                    self.retryOrFailStandardBundleFrameworkAcceptance(
+                        context, reason: "product-replacement-reload-not-observed", state: state)
+                    return
+                }
+                if ownerReopenMode {
+                    self.advanceStandardBundleFrameworkAcceptance(context, dispatched: true,
+                        next: .waitingForRuntimeObserverReady, failureReason: "requester-reload-not-ready")
+                    return
+                }
+                self.dispatchStandardBundleFrameworkAction(context.webView,
+                    script: "(() => { const button = document.querySelector('#framework-runtime-replacement-query'); if (!button) return false; button.click(); return true; })()") { dispatched in
+                        self.advanceStandardBundleFrameworkAcceptance(context, dispatched: dispatched,
+                            next: .waitingForProductReplacementResult, failureReason: "replacement-result-query-dispatch-failed")
+                    }
+            case .waitingForProductReplacementResult:
+                let expected = activeOwnerCloseMode ? "none" : (ProcessInfo.processInfo.environment["VAADIN_DESKTOP_FLOW_IPC_AUTO_PRODUCT_REPLACEMENT"] == "rollback"
+                    ? "rolled-back" : "replaced")
+                guard state["runtimeReplacementStatus"] as? String == expected else {
+                    self.retryOrFailStandardBundleFrameworkAcceptance(
+                        context, reason: "product-replacement-result-not-observed", state: state)
+                    return
+                }
+                trace("recv", "standardBundle.productReplacement", ["status": expected, "observedInDom": true,
+                    "recoveryGeneration": context.recoveryGeneration])
+                if ProcessInfo.processInfo.environment["VAADIN_DESKTOP_FLOW_IPC_AUTO_PRODUCT_REPLACEMENT"] == "owner-isolation" {
+                    self.dispatchStandardBundleFrameworkAction(context.webView,
+                        script: "(() => { const button = document.querySelector('#framework-runtime-observer-open'); if (!button) return false; button.click(); return true; })()") { dispatched in
+                            self.advanceStandardBundleFrameworkAcceptance(context, dispatched: dispatched,
+                                next: .waitingForRuntimeObserverReady, failureReason: "runtime-observer-open-dispatch-failed")
+                        }
+                    return
+                }
+                if ProcessInfo.processInfo.environment["VAADIN_DESKTOP_FLOW_IPC_AUTO_PRODUCT_REPLACEMENT"] == "generation-conflict" {
+                    self.dispatchStandardBundleFrameworkAction(context.webView,
+                        script: "(() => { const button = document.querySelector('#framework-runtime-replacement-request'); if (!button) return false; button.click(); return true; })()") { dispatched in
+                            self.advanceStandardBundleFrameworkAcceptance(context, dispatched: dispatched,
+                                next: .waitingForProductGenerationConflict, failureReason: "generation-conflict-dispatch-failed")
+                        }
+                    return
+                }
+                self.dispatchStandardBundleFrameworkAction(
+                    context.webView,
                     script: Self.standardFrameworkLazyFrontendOpenAction) { dispatched in
                         self.advanceStandardBundleFrameworkAcceptance(
                             context,
                             dispatched: dispatched,
                             next: .waitingForLazyFrontendRoute,
                             failureReason: "lazy-frontend-navigation-dispatch-failed")
+                    }
+            case .waitingForProductGenerationConflict:
+                guard state["runtimeReplacementRequestResult"] as? String == "request-conflict",
+                      context.recoveryGeneration == 1 else {
+                    self.retryOrFailStandardBundleFrameworkAcceptance(context,
+                        reason: "generation-conflict-not-observed", state: state)
+                    return
+                }
+                trace("recv", "standardBundle.productGenerationConflict", [
+                    "errorCode": "request-conflict", "observedInDom": true, "recoveryGeneration": 1])
+                self.dispatchStandardBundleFrameworkAction(context.webView,
+                    script: "(() => { const button = document.querySelector('#framework-runtime-replacement-query'); if (!button) return false; button.click(); return true; })()") { dispatched in
+                        self.advanceStandardBundleFrameworkAcceptance(context, dispatched: dispatched,
+                            next: .waitingForProductGenerationConflictStatus, failureReason: "conflict-status-query-dispatch-failed")
+                    }
+            case .waitingForProductGenerationConflictStatus:
+                guard state["runtimeReplacementStatus"] as? String == "replaced",
+                      context.recoveryGeneration == 1 else {
+                    self.retryOrFailStandardBundleFrameworkAcceptance(context,
+                        reason: "conflict-terminal-status-not-observed", state: state)
+                    return
+                }
+                trace("recv", "standardBundle.productConflictStatus", ["status": "replaced", "observedInDom": true])
+                self.dispatchStandardBundleFrameworkAction(context.webView,
+                    script: Self.standardFrameworkLazyFrontendOpenAction) { dispatched in
+                        self.advanceStandardBundleFrameworkAcceptance(context, dispatched: dispatched,
+                            next: .waitingForLazyFrontendRoute, failureReason: "lazy-frontend-navigation-dispatch-failed")
+                    }
+            case .waitingForRuntimeObserverReady:
+                guard let observer = self.flowIpcWindowContext("runtime-observer") else {
+                    self.retryOrFailStandardBundleFrameworkAcceptance(context, reason: "runtime-observer-not-open", state: state)
+                    return
+                }
+                self.evaluateStandardBundleFrameworkState(observer.webView) { observerState in
+                    if let error = observerState?["error"] as? String, !error.isEmpty {
+                        self.finishStandardBundleFrameworkAcceptance(context, success: false,
+                            reason: "runtime-observer-browser-error", state: observerState ?? [:])
+                        return
+                    }
+                    guard observerState?["ready"] as? Bool == true else {
+                        self.retryOrFailStandardBundleFrameworkAcceptance(context, reason: "runtime-observer-not-ready", state: observerState ?? [:])
+                        return
+                    }
+                    if (ownerReopenMode && !flowIpcRuntimeOwnerReopened) || activeOwnerCloseMode {
+                        if context.recoveryGeneration == 0 {
+                            flowIpcRuntimeOriginalOwnerSession = observer.scope.sessionId
+                        } else if observer.scope.sessionId != flowIpcRuntimeOriginalOwnerSession {
+                            self.finishStandardBundleFrameworkAcceptance(context, success: false,
+                                reason: "requester-scope-not-retained", state: observerState ?? [:])
+                            return
+                        }
+                        let request = context.recoveryGeneration == 0
+                        let button = request ? "framework-runtime-replacement-request" : "framework-runtime-replacement-query"
+                        self.dispatchStandardBundleFrameworkAction(observer.webView,
+                            script: "(() => { const button = document.querySelector('#\(button)'); if (!button) return false; button.click(); return true; })()") { dispatched in
+                                self.advanceStandardBundleFrameworkAcceptance(context, dispatched: dispatched,
+                                    next: activeOwnerCloseMode ? .waitingForActiveRuntimeOwnerClose : (request ? .waitingForProductReplacement : .waitingForRuntimeRequesterResult),
+                                    failureReason: "requester-command-dispatch-failed")
+                            }
+                        return
+                    }
+                    if ownerReopenMode && observer.scope.sessionId == flowIpcRuntimeOriginalOwnerSession {
+                        self.finishStandardBundleFrameworkAcceptance(context, success: false,
+                            reason: "reopened-owner-reused-session", state: observerState ?? [:])
+                        return
+                    }
+                    self.dispatchStandardBundleFrameworkAction(observer.webView,
+                        script: "(() => { const button = document.querySelector('#framework-runtime-replacement-query'); if (!button) return false; button.click(); return true; })()") { dispatched in
+                            self.advanceStandardBundleFrameworkAcceptance(context, dispatched: dispatched,
+                                next: .waitingForRuntimeObserverStatus, failureReason: "observer-status-query-dispatch-failed")
+                        }
+                }
+            case .waitingForActiveRuntimeOwnerClose:
+                guard context.recoveryGeneration == 0,
+                      let observer = self.flowIpcWindowContext("runtime-observer") else {
+                    self.finishStandardBundleFrameworkAcceptance(context, success: false,
+                        reason: "active-owner-close-window-missed", state: state)
+                    return
+                }
+                context.webView.evaluateJavaScript("window.VaadinDesktopIpcDiagnostics?.standardBundleSidecarDisconnected === true") { result, error in
+                    guard error == nil, result as? Bool == true else {
+                        self.retryOrFailStandardBundleFrameworkAcceptance(context,
+                            reason: "replacement-disconnection-not-observed", state: state)
+                        return
+                    }
+                    trace("recv", "standardBundle.activeRuntimeOwnerClose", observer.scope.tracePayload)
+                    observer.window.performClose(nil)
+                    self.advanceStandardBundleFrameworkAcceptance(context,
+                        dispatched: self.flowIpcWindowContext("runtime-observer") == nil,
+                        next: .waitingForProductReplacement, failureReason: "active-owner-close-failed")
+                }
+            case .waitingForRuntimeRequesterResult:
+                guard let observer = self.flowIpcWindowContext("runtime-observer") else {
+                    self.finishStandardBundleFrameworkAcceptance(context, success: false, reason: "requester-disappeared", state: state)
+                    return
+                }
+                self.evaluateStandardBundleFrameworkState(observer.webView) { observerState in
+                    guard observerState?["runtimeReplacementStatus"] as? String == "replaced",
+                          observerState?["runtimeCaptured"] as? String == "captured",
+                          (observerState?["error"] as? String ?? "").isEmpty else {
+                        self.retryOrFailStandardBundleFrameworkAcceptance(context, reason: "requester-result-not-observed", state: observerState ?? [:])
+                        return
+                    }
+                    var receipt = observer.scope.tracePayload
+                    receipt["status"] = "replaced"
+                    receipt["observedInDom"] = true
+                    receipt["recoveryGeneration"] = observer.recoveryGeneration
+                    trace("recv", "standardBundle.productReplacement", receipt)
+                    trace("recv", "standardBundle.runtimeContextCaptured", observer.scope.tracePayload)
+                    self.dispatchStandardBundleFrameworkAction(context.webView,
+                        script: "(() => { const button = document.querySelector('#framework-runtime-observer-close'); if (!button) return false; button.click(); return true; })()") { dispatched in
+                            self.advanceStandardBundleFrameworkAcceptance(context, dispatched: dispatched,
+                                next: .waitingForRuntimeObserverClosed, failureReason: "requester-close-dispatch-failed")
+                        }
+                }
+            case .waitingForRuntimeObserverStatus:
+                guard let observer = self.flowIpcWindowContext("runtime-observer") else {
+                    self.finishStandardBundleFrameworkAcceptance(context, success: false, reason: "runtime-observer-disappeared", state: state)
+                    return
+                }
+                self.evaluateStandardBundleFrameworkState(observer.webView) { observerState in
+                    guard observerState?["runtimeReplacementStatus"] as? String == "none",
+                          (observerState?["error"] as? String ?? "").isEmpty else {
+                        self.retryOrFailStandardBundleFrameworkAcceptance(context, reason: "foreign-runtime-status-not-none", state: observerState ?? [:])
+                        return
+                    }
+                    var receipt = observer.scope.tracePayload
+                    receipt["status"] = "none"
+                    receipt["observedInDom"] = true
+                    trace("recv", "standardBundle.runtimeObserverIsolation", receipt)
+                    self.dispatchStandardBundleFrameworkAction(context.webView,
+                        script: "(() => { const button = document.querySelector('#framework-runtime-replacement-query'); if (!button) return false; button.click(); return true; })()") { dispatched in
+                            self.advanceStandardBundleFrameworkAcceptance(context, dispatched: dispatched,
+                                next: .waitingForRuntimeOwnerStatus, failureReason: "owner-status-requery-dispatch-failed")
+                        }
+                }
+            case .waitingForRuntimeOwnerStatus:
+                let expected = ownerReopenMode ? "none" : "replaced"
+                guard state["runtimeReplacementStatus"] as? String == expected else {
+                    self.retryOrFailStandardBundleFrameworkAcceptance(context, reason: "owner-terminal-not-preserved", state: state)
+                    return
+                }
+                trace("recv", "standardBundle.runtimeOwnerPreserved", ["status": expected, "observedInDom": true])
+                if ownerReopenMode {
+                    self.dispatchStandardBundleFrameworkAction(context.webView,
+                        script: "(() => { const button = document.querySelector('#framework-runtime-stale-probe'); if (!button) return false; button.click(); return true; })()") { dispatched in
+                            self.advanceStandardBundleFrameworkAcceptance(context, dispatched: dispatched,
+                                next: .waitingForStaleRuntimeResult, failureReason: "stale-runtime-probe-dispatch-failed")
+                        }
+                    return
+                }
+                self.dispatchStandardBundleFrameworkAction(context.webView,
+                    script: "(() => { const button = document.querySelector('#framework-runtime-observer-close'); if (!button) return false; button.click(); return true; })()") { dispatched in
+                        self.advanceStandardBundleFrameworkAcceptance(context, dispatched: dispatched,
+                            next: .waitingForRuntimeObserverClosed, failureReason: "observer-close-dispatch-failed")
+                    }
+            case .waitingForStaleRuntimeResult:
+                let result = state["runtimeStaleStatus"] as? String ?? ""
+                guard result == "query=true request=true background=true client=true" else {
+                    self.retryOrFailStandardBundleFrameworkAcceptance(context, reason: "stale-runtime-not-invalidated", state: state)
+                    return
+                }
+                trace("recv", "standardBundle.runtimeStaleContext", ["result": result, "observedInDom": true,
+                    "retiredSessionId": flowIpcRuntimeOriginalOwnerSession])
+                self.dispatchStandardBundleFrameworkAction(context.webView,
+                    script: "(() => { const button = document.querySelector('#framework-runtime-observer-close'); if (!button) return false; button.click(); return true; })()") { dispatched in
+                        self.advanceStandardBundleFrameworkAcceptance(context, dispatched: dispatched,
+                            next: .waitingForRuntimeObserverClosed, failureReason: "stale-probe-observer-close-failed")
+                    }
+            case .waitingForRuntimeObserverClosed:
+                guard self.flowIpcWindowContext("runtime-observer") == nil else {
+                    self.retryOrFailStandardBundleFrameworkAcceptance(context, reason: "runtime-observer-still-open", state: state)
+                    return
+                }
+                if ownerReopenMode && !flowIpcRuntimeOwnerReopened {
+                    flowIpcRuntimeOwnerReopened = true
+                    self.dispatchStandardBundleFrameworkAction(context.webView,
+                        script: "(() => { const button = document.querySelector('#framework-runtime-observer-open'); if (!button) return false; button.click(); return true; })()") { dispatched in
+                            self.advanceStandardBundleFrameworkAcceptance(context, dispatched: dispatched,
+                                next: .waitingForRuntimeObserverReady, failureReason: "requester-reopen-dispatch-failed")
+                        }
+                    return
+                }
+                self.dispatchStandardBundleFrameworkAction(context.webView,
+                    script: Self.standardFrameworkLazyFrontendOpenAction) { dispatched in
+                        self.advanceStandardBundleFrameworkAcceptance(context, dispatched: dispatched,
+                            next: .waitingForLazyFrontendRoute, failureReason: "lazy-frontend-navigation-dispatch-failed")
                     }
             case .waitingForLazyFrontendRoute:
                 guard state["lazyFrontendRouteObserved"] as? Bool == true else {
@@ -1889,8 +2205,23 @@ extension WebViewHost {
                         self.advanceStandardBundleFrameworkAcceptance(
                             context,
                             dispatched: dispatched,
-                            next: .waitingForLoginVariants,
+                            next: .waitingForLoginVariantsOpen,
                             failureReason: "login-variants-dispatch-failed")
+                    }
+            case .waitingForLoginVariantsOpen:
+                guard self.standardFrameworkString(state, "loginOverlaySubmitButtonStatus")
+                    .contains("LoginOverlay submit button opened: true"),
+                      state["loginOverlaySubmitButtonReady"] as? Bool == true else {
+                    self.retryOrFailStandardBundleFrameworkAcceptance(
+                        context, reason: "login-variants-open-not-observed", state: state)
+                    return
+                }
+                self.dispatchStandardBundleFrameworkAction(
+                    context.webView,
+                    script: Self.standardFrameworkLoginVariantsSubmitAction) { dispatched in
+                        self.advanceStandardBundleFrameworkAcceptance(
+                            context, dispatched: dispatched, next: .waitingForLoginVariants,
+                            failureReason: "login-variants-submit-dispatch-failed")
                     }
             case .waitingForLoginVariants:
                 guard self.standardFrameworkString(state, "loginOverlaySubmitButtonStatus")
@@ -3931,11 +4262,96 @@ extension WebViewHost {
           const clients = window.Vaadin?.Flow?.clients
             ? Object.keys(window.Vaadin.Flow.clients).filter((name) => name !== 'TypeScript')
             : [];
-          if (Number(diagnostics.standardBundlePushMessageCount || 0) >= 1
+          const clientsIdle = clients.length > 0 && clients.every((name) => {
+            const client = window.Vaadin.Flow.clients[name];
+            return typeof client.isActive === 'function' && client.isActive() === false;
+          });
+          // Read-only acceptance diagnostics: upstream server objects retain
+          // pending Promise callbacks even when resync replaces their DOM nodes.
+          const rpcOwners = diagnostics.frameworkRpcOwners ||= [];
+          const rememberRpcOwners = (root) => {
+            for (const element of root.querySelectorAll('*')) {
+              if (element.$server && !rpcOwners.some((owner) => owner.server === element.$server)) {
+                const owner = {server: element.$server, tag: element.localName,
+                  id: element.id, methods: Object.keys(element.$server), calls: {}};
+                rpcOwners.push(owner);
+                // Acceptance-only observation; preserve return identity, thrown
+                // errors and receiver. Never attach handlers to returned Promises.
+                const callbacks = () => Object.getOwnPropertyNames(owner.server)
+                  .map((key) => owner.server[key]?.promises).find(Array.isArray);
+                for (const method of owner.methods) {
+                  const descriptor = Object.getOwnPropertyDescriptor(owner.server, method);
+                  const original = descriptor?.value;
+                  if (typeof original !== 'function' || !descriptor.writable) continue;
+                  Object.defineProperty(owner.server, method, {...descriptor, value: function(...args) {
+                    const before = callbacks()?.length || 0;
+                    try { return Reflect.apply(original, this, args); }
+                    finally {
+                      const current = callbacks();
+                      if (current) for (let index = before; index < current.length; index++) {
+                        if (current[index]) owner.calls[index] = method;
+                      }
+                      // Keep only live callbacks; never retain arguments/results.
+                      for (const index of Object.keys(owner.calls)) {
+                        if (!current?.[index]) delete owner.calls[index];
+                      }
+                    }
+                  }});
+                }
+              }
+              if (element.shadowRoot) rememberRpcOwners(element.shadowRoot);
+            }
+          };
+          rememberRpcOwners(document);
+          const pendingRpcOwners = rpcOwners.flatMap((owner) => {
+            const pending = Object.getOwnPropertyNames(owner.server).flatMap((key) => {
+              const callbacks = owner.server[key]?.promises;
+              return Array.isArray(callbacks) ? callbacks.flatMap((entry, index) =>
+                Array.isArray(entry) && typeof entry[0] === 'function' && typeof entry[1] === 'function'
+                  ? [index] : []) : [];
+            });
+            return pending.length ? [{tag: owner.tag, id: owner.id, methods: owner.methods, pending,
+              calls: pending.map((index) => ({index, method: owner.calls[index] || 'unobserved'}))}] : [];
+          });
+          diagnostics.frameworkPendingRpcOwners = pendingRpcOwners;
+          if (clientsIdle && Number(diagnostics.standardBundlePushMessageCount || 0) >= 1
               && Number(diagnostics.standardBundlePushReconnectCount || 0) === 0
               && !diagnostics.standardBundlePushReconnectTriggered) {
             diagnostics.standardBundlePushReconnectTriggered = true;
+            diagnostics.frameworkResyncRpcRequests = [...(diagnostics.frameworkRpcRequests || [])];
             const push = window.VaadinDesktopPush;
+            if (push && typeof push.receive === 'function') {
+              const originalReceive = push.receive;
+              push.receive = function(envelope) {
+                if (envelope?.type !== 'opaquePush' || envelope.payload?.resync !== true) {
+                  return Reflect.apply(originalReceive, this, arguments);
+                }
+                push.receive = originalReceive;
+                const result = Reflect.apply(originalReceive, this, arguments);
+                const before = {
+                  messages: Number(diagnostics.standardBundlePushMessageCount || 0),
+                  resyncs: Number(diagnostics.standardBundlePushResyncCount || 0),
+                  duplicates: Number(diagnostics.standardBundlePushDuplicateCount || 0),
+                  acks: Number(diagnostics.standardBundlePushAckCount || 0)
+                };
+                // Replay an unchanged, actual server snapshot. No UIDL parsing,
+                // synthetic snapshot, delayed ACK or Promise interception.
+                Reflect.apply(originalReceive, this, [envelope]);
+                diagnostics.frameworkResyncReplay = {
+                  source: 'test-replay-of-server-envelope',
+                  connectionId: envelope.payload.connectionId,
+                  sequence: envelope.payload.pushSequence,
+                  messagesDelta: Number(diagnostics.standardBundlePushMessageCount || 0) - before.messages,
+                  resyncsDelta: Number(diagnostics.standardBundlePushResyncCount || 0) - before.resyncs,
+                  duplicatesDelta: Number(diagnostics.standardBundlePushDuplicateCount || 0) - before.duplicates,
+                  acksDelta: Number(diagnostics.standardBundlePushAckCount || 0) - before.acks
+                };
+                const replay = diagnostics.frameworkResyncReplay;
+                replay.observed = replay.messagesDelta === 0 && replay.resyncsDelta === 0
+                  && replay.duplicatesDelta === 1 && replay.acksDelta === 1;
+                return result;
+              };
+            }
             push?.reconnect?.();
             const connectionId = diagnostics.standardBundlePushActiveConnectionId;
             if (connectionId) {
@@ -6176,7 +6592,14 @@ extension WebViewHost {
                 'Nested lazy route module: transitive server patched');
           const resourceFetch = window.VaadinDesktopFrameworkResourceFetch || {};
           return JSON.stringify({
+            pendingRpcOwners,
+            resyncReplay: diagnostics.frameworkResyncReplay || {},
+            rpcRequests: diagnostics.frameworkRpcRequests || [],
+            resyncRpcRequests: diagnostics.frameworkResyncRpcRequests || [],
+            rpcObservedSends: diagnostics.frameworkRpcObservedSends || 0,
+            rpcRequestObserverInstalled: diagnostics.frameworkRpcRequestObserverInstalled === true,
             ready: diagnostics.standardBundleFirstMeaningfulPaintReported === true
+              && diagnostics.frameworkResyncReplay?.observed === true
               && diagnostics.standardBundleCookieBridgeInstalled === true
               && diagnostics.standardBundlePushBridgeInstalled === true
               && diagnostics.standardBundlePushConnected === true
@@ -6412,6 +6835,10 @@ extension WebViewHost {
               && !!document.querySelector('#framework-nested-lazy-open')
               && !!document.querySelector('#framework-apply')
               && !error,
+            runtimeReplacementStatus: document.querySelector('#framework-runtime-replacement-status')?.textContent || '',
+            runtimeCaptured: document.querySelector('#framework-runtime-captured')?.textContent || '',
+            runtimeStaleStatus: document.querySelector('#framework-runtime-stale-status')?.textContent || '',
+            runtimeReplacementRequestResult: document.querySelector('#framework-runtime-replacement-request-result')?.textContent || '',
             lazyFrontendRouteObserved,
             lazyFrontendClientObserved,
             lazyFrontendServerObserved,
@@ -6666,6 +7093,15 @@ extension WebViewHost {
               && !!loginFormActionPostSubmit,
             loginFormActionPostStatus: document.querySelector('#framework-login-form-action-post-status')?.textContent || '',
             loginOverlaySubmitButtonStatus: document.querySelector('#framework-login-overlay-submit-button-status')?.textContent || '',
+            loginOverlaySubmitButtonReady: (() => {
+              const overlay = document.querySelector('#framework-login-overlay-submit-button');
+              if (!overlay?.opened) return false;
+              return ['vaadin-text-field', 'vaadin-password-field', 'vaadin-button'].every(tag => {
+                const control = findDeepFrom(overlay, element => element.localName === tag
+                  && (tag !== 'vaadin-button' || (element.textContent || '').includes('Sign in')));
+                return !!control && !control.disabled && control.getBoundingClientRect().height > 0;
+              });
+            })(),
             loginOverlayEnterStatus: document.querySelector('#framework-login-overlay-enter-status')?.textContent || '',
             loginFormShowErrorStatus: document.querySelector('#framework-login-form-show-error-status')?.textContent || '',
             loginFormSubmitButtonObserved,
@@ -7059,6 +7495,12 @@ extension WebViewHost {
                 && standardFrameworkInteger(state, "pushResyncCount") >= 1,
             "errorFree": standardFrameworkString(state, "error").isEmpty,
             "error": standardFrameworkString(state, "error"),
+            "pendingRpcOwners": state["pendingRpcOwners"] ?? [],
+            "resyncReplay": state["resyncReplay"] ?? [:],
+            "rpcRequests": state["rpcRequests"] ?? [],
+            "resyncRpcRequests": state["resyncRpcRequests"] ?? [],
+            "rpcObservedSends": state["rpcObservedSends"] ?? 0,
+            "rpcRequestObserverInstalled": state["rpcRequestObserverInstalled"] as? Bool == true,
             "requestCount": standardFrameworkInteger(state, "requestCount"),
             "responseCount": standardFrameworkInteger(state, "responseCount"),
             "pushMessageCount": standardFrameworkInteger(state, "pushMessageCount"),
@@ -10343,142 +10785,19 @@ extension WebViewHost {
 
     private static let standardFrameworkLoginVariantsAction = """
     (() => {
-      const findDeep = (root, predicate) => {
-        const visit = (node) => {
-          if (!node) return null;
-          if (node.nodeType === 1 && predicate(node)) return node;
-          if (node.shadowRoot) {
-            const shadowResult = visit(node.shadowRoot);
-            if (shadowResult) return shadowResult;
-          }
-          const children = node.children || node.childNodes || [];
-          for (const child of children) {
-            const result = visit(child);
-            if (result) return result;
-          }
-          return null;
-        };
-        return visit(root);
-      };
-      const setValue = (element, value) => {
-        if (!element) return false;
-        const apply = (target) => {
-          if (target.localName === 'input') {
-            const descriptor = Object.getOwnPropertyDescriptor(
-              HTMLInputElement.prototype, 'value');
-            if (descriptor?.set) {
-              descriptor.set.call(target, value);
-            } else {
-              target.value = value;
-            }
-          } else {
-            target.value = value;
-          }
-          target.dispatchEvent(new Event('input', { bubbles: true, composed: true }));
-          target.dispatchEvent(new Event('change', { bubbles: true, composed: true }));
-        };
-        apply(element);
-        const input = element.localName === 'input'
-          ? element
-          : findDeep(element, (candidate) => candidate.localName === 'input');
-        if (input && input !== element) {
-          apply(input);
-        }
-        return true;
-      };
-      const controls = (container) => {
-        const usernameField = findDeep(container, (element) =>
-          element.localName === 'vaadin-text-field')
-          || findDeep(container, (element) =>
-            element.localName === 'input'
-              && (element.type || '').toLowerCase() !== 'password');
-        const passwordField = findDeep(container, (element) =>
-          element.localName === 'vaadin-password-field')
-          || findDeep(container, (element) =>
-            element.localName === 'input'
-              && (element.type || '').toLowerCase() === 'password');
-        const submit = findDeep(container, (element) =>
-          (element.localName === 'vaadin-button'
-            && (element.textContent || '').includes('Sign in'))
-            || (element.localName === 'button'
-              && (((element.type || '').toLowerCase() === 'submit')
-                || (element.textContent || '').includes('Sign in'))));
-        const form = findDeep(container, (element) => element.localName === 'form');
-        return { usernameField, passwordField, submit, form };
-      };
-      const submitLogin = (selector, username, password, statusSelector, expectedStatus) => {
-        const container = document.querySelector(selector);
-        if (!container) return false;
-        container.scrollIntoView({ block: 'center', inline: 'center' });
-        const emitLogin = () => {
-          container.dispatchEvent(new CustomEvent('login', {
-            bubbles: true,
-            composed: true,
-            detail: { username, password }
-          }));
-        };
-        const parts = controls(container);
-        if (!parts.usernameField || !parts.passwordField) {
-          emitLogin();
-          return true;
-        }
-        setValue(parts.usernameField, username);
-        setValue(parts.passwordField, password);
-        if (!parts.submit || typeof parts.submit.click !== 'function') {
-          emitLogin();
-          return true;
-        }
-        parts.submit.click();
-        if (statusSelector && expectedStatus) {
-          setTimeout(() => {
-            const status = document.querySelector(statusSelector)?.textContent || '';
-            if (!status.includes(expectedStatus)) {
-              emitLogin();
-            }
-          }, 450);
-        }
-        return true;
-      };
-      const openOverlay = (statusSelector, eventName) => {
-        const status = document.querySelector(statusSelector);
-        if (!status) return false;
-        status.dispatchEvent(new Event(eventName, { bubbles: true, composed: true }));
-        return true;
-      };
-      const steps = [
-        () => {
-          if (!openOverlay(
-              '#framework-login-overlay-submit-button-status',
-              'vatori-login-overlay-submit-button-open')) return false;
-          setTimeout(() => submitLogin(
-            '#framework-login-overlay-submit-button',
-            'overlay-button-user',
-            'flowpass',
-            '#framework-login-overlay-submit-button-status',
-            'LoginOverlay submit button submitted:'), 500);
-          setTimeout(() => {
-            const overlay = document.querySelector('#framework-login-overlay-submit-button');
-            if (overlay) {
-              overlay.opened = false;
-              overlay.removeAttribute('opened');
-            }
-          }, 850);
-          return true;
-        }
-      ];
-      window.VaadinDesktopFrameworkLoginVariants = { dispatched: true };
-      steps.forEach((step, index) => {
-        setTimeout(() => {
-          try {
-            step();
-          } catch (error) {
-            window.VaadinDesktopFrameworkLoginVariants.error = String(error?.message || error);
-          }
-        }, index * 900);
-      });
+      const status = document.querySelector('#framework-login-overlay-submit-button-status');
+      if (!status) return false;
+      status.dispatchEvent(new Event('vatori-login-overlay-submit-button-open',
+        { bubbles: true, composed: true }));
       return true;
     })()
     """
+
+    private static let standardFrameworkLoginVariantsSubmitAction =
+        standardFrameworkLoginOverlayActionPostSubmitAction
+            .replacingOccurrences(of: "#framework-login-overlay-action-post",
+                                  with: "#framework-login-overlay-submit-button")
+            .replacingOccurrences(of: "overlay-action-user", with: "overlay-button-user")
 
     private static let standardFrameworkTabsAction = """
     (() => {

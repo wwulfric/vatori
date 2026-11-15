@@ -54,6 +54,7 @@ public final class FlowFileWriteGrantReplayRoute extends VerticalLayout {
         operation("fresh-release", this::releaseFresh);
         operation("fresh-write-after-release", this::writeAfterRelease);
         operation("close-secondary", this::closeSecondary);
+        add(FileGrantReplacementAction.button());
         // A recovered main route must not clear the owner's private handoff.
         // Successful final release removes the record; runner cleanup is the backstop.
     }

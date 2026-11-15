@@ -183,6 +183,64 @@ public final class StandardBundleTraceInspectorSmokeMain {
                             "\"browserProgrammaticStages\":\"navigate,main-invoke\""),
                     "capability permission browser-programmatic setup stages");
 
+            String permissionTrace = validCapabilityPermissionTrace();
+            String permissionManifest = capabilityPermissionManifest();
+            assertCapabilityPermissionRejected(trace,
+                    permissionTrace.replace(permissionManifest, ""),
+                    "one loaded permission manifest");
+            assertCapabilityPermissionRejected(trace,
+                    permissionTrace.replace(permissionManifest,
+                            permissionManifest + permissionManifest),
+                    "one loaded permission manifest");
+            assertCapabilityPermissionRejected(trace,
+                    permissionTrace.replace(permissionManifest, "") + permissionManifest,
+                    "valid permission manifest precedes command");
+            for (String invalidManifest : List.of(
+                    permissionManifest.replace("\"loaded\":true", "\"loaded\":false"),
+                    permissionManifest.replace("manifest-enforced", "allow-all-dev"),
+                    permissionManifest.replace("\"parseError\":\"\"", "\"parseError\":\"invalid\""),
+                    permissionManifest.replace("\"direction\":\"recv\"", "\"direction\":\"send\""))) {
+                assertCapabilityPermissionRejected(trace,
+                        permissionTrace.replace(permissionManifest, invalidManifest),
+                        "valid permission manifest precedes command");
+            }
+            assertCapabilityPermissionRejected(trace,
+                    permissionTrace.replace("[\"window.close\",\"window.open\"]",
+                            "[\"window.close\",\"window.open\",\"window.setTitle\"]"),
+                    "loaded manifest independently allows main and denies secondary title");
+            assertCapabilityPermissionRejected(trace,
+                    permissionTrace.replace("[\"window.close\",\"window.open\"]",
+                            "[\"window.open\",\"window.close\"]"),
+                    "canonical permission manifest commands for permission-secondary");
+            assertCapabilityPermissionRejected(trace,
+                    permissionTrace.replace("[\"window.close\",\"window.open\"]",
+                            "[\"window.close\",\"window.close\",\"window.open\"]"),
+                    "canonical permission manifest commands for permission-secondary");
+            String oldMainGrants = "clipboard.readText,clipboard.writeText,fileDialog.openFile,"
+                    + "fileTransfer.download,notification.show,window.close,window.setTitle";
+            String expandedMainGrants = "clipboard.readText,clipboard.writeText,fileDialog.openFile,"
+                    + "fileDialog.saveNewWriteGrant,fileGrant.cancelWrite,fileGrant.releaseWrite,fileGrant.write,"
+                    + "fileTransfer.download,notification.show,runtime.replacement.request,"
+                    + "runtime.replacement.status,window.close,window.setTitle";
+            String expandedPermissionTrace = permissionTrace
+                    .replace(oldMainGrants, expandedMainGrants);
+            assertCapabilityPermissionRejected(trace, expandedPermissionTrace,
+                    "exact main allowed permission payload");
+            expandedPermissionTrace = expandedPermissionTrace.replace(
+                    "\"" + oldMainGrants.replace(",", "\",\"") + "\"",
+                    "\"" + expandedMainGrants.replace(",", "\",\"") + "\"");
+            Files.writeString(trace, expandedPermissionTrace, StandardCharsets.UTF_8);
+            output.reset();
+            errors.reset();
+            exitCode = StandardBundleTraceInspector.run(new String[]{
+                    "--require-flow-ipc-capability-permission", trace.toString()
+            }, new PrintStream(output), new PrintStream(errors));
+            if (exitCode != 0 || !errors.toString(StandardCharsets.UTF_8).isEmpty()) {
+                throw new IllegalStateException("Expanded manifest grants were rejected:\n"
+                        + output.toString(StandardCharsets.UTF_8)
+                        + errors.toString(StandardCharsets.UTF_8));
+            }
+
             Files.writeString(
                     trace,
                     validCapabilityGenerationRecoveryTrace(),
@@ -1117,6 +1175,52 @@ public final class StandardBundleTraceInspectorSmokeMain {
                                 + summary
                                 + errors.toString(StandardCharsets.UTF_8));
             }
+            for (String[] redactedScene : new String[][] {
+                    {"file-dialog-outcomes", validFileDialogOutcomesTrace()},
+                    {"capability-owner-window-close", validCapabilityOwnerWindowCloseTrace()},
+                    {"capability-generation-recovery", validCapabilityGenerationRecoveryTrace()}
+            }) {
+                String redactedTrace = redactedScene[1]
+                        .replace("\"paths\":[]", "\"paths\":\"[redacted]\"")
+                        .replace(oldMainGrants, expandedMainGrants)
+                        .replace("\"" + oldMainGrants.replace(",", "\",\"") + "\"",
+                                "\"" + expandedMainGrants.replace(",", "\",\"") + "\"");
+                Files.writeString(trace, redactedTrace, StandardCharsets.UTF_8);
+                output.reset();
+                errors.reset();
+                exitCode = StandardBundleTraceInspector.run(new String[]{
+                        "--require-flow-ipc-" + redactedScene[0], trace.toString()
+                }, new PrintStream(output), new PrintStream(errors));
+                if (exitCode != 0 || !errors.toString(StandardCharsets.UTF_8).isEmpty()) {
+                    throw new IllegalStateException("Redacted panel trace rejected: " + redactedScene[0]
+                            + "\n" + output.toString(StandardCharsets.UTF_8) + errors.toString(StandardCharsets.UTF_8));
+                }
+            }
+            assertFileDialogOutcomesRejected(trace,
+                    validFileDialogOutcomesTrace().replace("\"paths\":[]", "\"paths\":\"unknown\""),
+                    "exact normal canceled file-dialog result payload");
+            String dialogManifest = capabilityPermissionManifest()
+                    .replace("permission-secondary", "file-dialog-outcomes-secondary");
+            assertFileDialogOutcomesRejected(trace,
+                    validFileDialogOutcomesTrace().replace(dialogManifest, ""),
+                    "one loaded permission manifest");
+            assertFileDialogOutcomesRejected(trace,
+                    validFileDialogOutcomesTrace().replace(oldMainGrants, expandedMainGrants),
+                    "exact normal canceled file-dialog result payload");
+            String expandedDialogTrace = validFileDialogOutcomesTrace()
+                    .replace(oldMainGrants, expandedMainGrants)
+                    .replace("\"" + oldMainGrants.replace(",", "\",\"") + "\"",
+                            "\"" + expandedMainGrants.replace(",", "\",\"") + "\"");
+            Files.writeString(trace, expandedDialogTrace, StandardCharsets.UTF_8);
+            output.reset();
+            errors.reset();
+            exitCode = StandardBundleTraceInspector.run(new String[]{
+                    "--require-flow-ipc-file-dialog-outcomes", trace.toString()
+            }, new PrintStream(output), new PrintStream(errors));
+            if (exitCode != 0 || !errors.toString(StandardCharsets.UTF_8).isEmpty()) {
+                throw new IllegalStateException("Expanded file-dialog manifest rejected:\n"
+                        + output.toString(StandardCharsets.UTF_8) + errors.toString(StandardCharsets.UTF_8));
+            }
             assertFileDialogOutcomesRejected(
                     trace,
                     validFileDialogOutcomesTrace().replace(
@@ -1485,6 +1589,60 @@ public final class StandardBundleTraceInspectorSmokeMain {
                         "Clipboard outcomes inspector rejected a valid trace:\n"
                                 + summary
                                 + errors.toString(StandardCharsets.UTF_8));
+            }
+            List<String> freshReadReceipts = new java.util.ArrayList<>();
+            StringBuilder freshReadEvents = new StringBuilder();
+            for (int attempt = 1; attempt <= 2; attempt++) {
+                String id = "clipboard-retry-" + attempt;
+                String receipt = "{\"attempt\":" + attempt + ",\"inputMode\":\"browser-programmatic-public-read\","
+                        + "\"windowId\":\"main\",\"sessionId\":\"flow-ipc-session\",\"uiId\":\"main\","
+                        + "\"changeCount\":12,\"requestBaseline\":" + (attempt + 4)
+                        + ",\"requestCount\":" + (attempt + 5) + ",\"responseCount\":" + (attempt + 5)
+                        + ",\"status\":\"Clipboard no text: outcome=TEXT textPresent=true length=20 client=true count=" + (attempt + 1) + "\"}";
+                freshReadReceipts.add(receipt);
+                freshReadEvents.append(clipboardOutcomesCommandEvent(id, "clipboard.readText", "main", "flow-ipc-session", "main", -1));
+                freshReadEvents.append(clipboardEmptyReadResultEvent().replace("clipboard-empty-read", id)
+                        .replace("\"textLength\":0", "\"textLength\":20"));
+                freshReadEvents.append(protocolPreservingStringWhitespace("recv", "clipboardOutcomes.retryObserved", receipt));
+            }
+            String contentionReceipt = """
+                    {"processIdentifier":222,"beforeChangeCount":10,"clearedChangeCount":11,
+                    "writtenChangeCount":12,"fixtureMatches":true,"writerExitStatus":0,
+                    "oldOwnerRejectedAttempts":2,"oldOwnerRestoreWrites":0,
+                    "afterFirstRejectedChangeCount":12,"afterSecondRejectedChangeCount":12,
+                    "recoveryAttempts":1,"snapshotRestoredAndVerified":true,"restoredChangeCount":13}
+                    """.replaceAll("\\s+", "");
+            contentionReceipt = contentionReceipt.substring(0, contentionReceipt.length() - 1)
+                    + ",\"freshReadAttempts\":2,\"freshReadReceipts\":[" + String.join(",", freshReadReceipts) + "]}";
+            String contentionStart = protocol("recv", "clipboardOutcomes.contenderStarted",
+                    "{\"processIdentifier\":222,\"ownedChangeCount\":10}");
+            String contentionResult = protocolPreservingStringWhitespace("recv", "clipboardOutcomes.controlledContention", contentionReceipt);
+            String controlledClipboardTrace = clipboardOutcomesTrace.replace(
+                    clipboardOutcomesAcceptanceEvent(), contentionStart + freshReadEvents + contentionResult
+                            + clipboardOutcomesAcceptanceEvent().replace(
+                            "\"nativePasteboardContendedObserved\":false",
+                            "\"nativePasteboardContendedObserved\":true,\"controlledContentionRequested\":true,"
+                                    + "\"controlledContention\":" + contentionReceipt))
+                    .replace(oldMainGrants, expandedMainGrants)
+                    .replace("\"" + oldMainGrants.replace(",", "\",\"") + "\"",
+                            "\"" + expandedMainGrants.replace(",", "\",\"") + "\"");
+            Files.writeString(trace, controlledClipboardTrace, StandardCharsets.UTF_8);
+            output.reset(); errors.reset();
+            exitCode = StandardBundleTraceInspector.run(new String[]{
+                    "--require-flow-ipc-clipboard-outcomes", trace.toString()
+            }, new PrintStream(output), new PrintStream(errors));
+            if (exitCode != 0 || !errors.toString(StandardCharsets.UTF_8).isEmpty()) {
+                throw new IllegalStateException("Controlled clipboard contention rejected:\n"
+                        + output.toString(StandardCharsets.UTF_8) + errors.toString(StandardCharsets.UTF_8));
+            }
+            assertClipboardOutcomesRejected(trace, controlledClipboardTrace.replace(contentionStart, ""),
+                    "clipboard controlled contention has one writer and result");
+            for (String invalid : List.of(
+                    controlledClipboardTrace.replace("\"oldOwnerRestoreWrites\":0", "\"oldOwnerRestoreWrites\":1"),
+                    controlledClipboardTrace.replace("\"afterSecondRejectedChangeCount\":12", "\"afterSecondRejectedChangeCount\":14"),
+                    controlledClipboardTrace.replace("\"snapshotRestoredAndVerified\":true", "\"snapshotRestoredAndVerified\":false"))) {
+                assertClipboardOutcomesRejected(trace, invalid,
+                        "clipboard controlled contention ordering, no-write retries and conditional verified recovery");
             }
             assertClipboardOutcomesRejected(
                     trace,
@@ -2000,6 +2158,29 @@ public final class StandardBundleTraceInspectorSmokeMain {
                         "In-flight request recovery inspector rejected a valid trace:\n"
                                 + summary
                                 + errors.toString(StandardCharsets.UTF_8));
+            }
+
+            for (var headerCase : Map.of(
+                    "\"headers\":{\"Content-Type\":\"application/octet-stream\",\"X-Filename\":\"probe.bin\"}", true,
+                    "\"headers\":{\"content-type\":\"application/octet-stream\",\"x-filename\":\"probe.bin\"}", true,
+                    "\"headers\":{\"Content-Type\":\"application/octet-stream\"}", false,
+                    "\"headers\":{\"Content-Type\":\"application/octet-stream\",\"X-Filename-Other\":\"probe.bin\"}", false,
+                    "\"headers\":{},\"headerNames\":\"Content-Type,X-Filename\"", false,
+                    "\"headers\":null,\"headerNames\":\"Content-Type,X-Filename\"", false,
+                    "\"headers\":[\"Content-Type\",\"X-Filename\"]", false
+            ).entrySet()) {
+                Files.writeString(trace, validInFlightRequestRecoveryTrace().replace(
+                        "\"headerNames\":\"Content-Type,X-Filename\"", headerCase.getKey()),
+                        StandardCharsets.UTF_8);
+                output.reset();
+                errors.reset();
+                exitCode = StandardBundleTraceInspector.run(new String[]{
+                        "--require-flow-ipc-in-flight-request-recovery", trace.toString()
+                }, new PrintStream(output), new PrintStream(errors));
+                if (exitCode != (headerCase.getValue() ? 0 : 2)) {
+                    throw new IllegalStateException("In-flight full/compact header contract failed: "
+                            + headerCase.getKey() + "\n" + errors.toString(StandardCharsets.UTF_8));
+                }
             }
 
             Files.writeString(
@@ -11342,6 +11523,7 @@ public final class StandardBundleTraceInspectorSmokeMain {
         StringBuilder trace = new StringBuilder();
         trace.append(protocol(
                 "recv", "launch", "{\"transport\":\"flow-ipc\"}"));
+        trace.append(capabilityPermissionManifest());
         trace.append(protocol(
                 "send", "launch.sidecar",
                 "{\"generation\":1,\"transport\":\"flow-ipc\"}"));
@@ -11620,6 +11802,8 @@ public final class StandardBundleTraceInspectorSmokeMain {
         StringBuilder trace = new StringBuilder();
         trace.append(protocol(
                 "recv", "launch", "{\"transport\":\"flow-ipc\"}"));
+        trace.append(capabilityPermissionManifest()
+                .replace("permission-secondary", "file-dialog-outcomes-secondary"));
         trace.append(protocol(
                 "send", "launch.sidecar",
                 "{\"generation\":1,\"transport\":\"flow-ipc\"}"));
@@ -13086,6 +13270,8 @@ public final class StandardBundleTraceInspectorSmokeMain {
         StringBuilder trace = new StringBuilder();
         trace.append(protocol(
                 "recv", "launch", "{\"transport\":\"flow-ipc\"}"));
+        trace.append(capabilityPermissionManifest()
+                .replace("permission-secondary", "clipboard-outcomes-secondary"));
         trace.append(protocol(
                 "send", "launch.sidecar",
                 "{\"generation\":1,\"transport\":\"flow-ipc\"}"));
@@ -15353,8 +15539,17 @@ public final class StandardBundleTraceInspectorSmokeMain {
                 capabilityPermissionEvents() + shutdown);
     }
 
+    private static String capabilityPermissionManifest() {
+        return protocolPreservingStringWhitespace("recv", "capabilityManifest", """
+                {"path":"$APP/Contents/Resources/desktop-capabilities.json",
+                "loaded":true,"permissionMode":"manifest-enforced","parseError":"",
+                "commandsByWindow":{"main":["clipboard.readText","clipboard.writeText","fileDialog.openFile","fileTransfer.download","notification.show","window.close","window.setTitle"],
+                "permission-secondary":["window.close","window.open"]}}
+                """);
+    }
+
     private static String capabilityPermissionEvents() {
-        StringBuilder trace = new StringBuilder();
+        StringBuilder trace = new StringBuilder(capabilityPermissionManifest());
         trace.append(protocolPreservingStringWhitespace("recv", "command", """
                 {"source":"java-sidecar","transport":"flow-ipc",
                 "envelope":{"version":1,"type":"command",

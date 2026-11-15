@@ -1,0 +1,32 @@
+#!/usr/bin/env bash
+set -euo pipefail
+ROOT="$(cd "$(dirname "${BASH_SOURCE[0]}")/.." && pwd)"
+SOURCE="$ROOT/native-hosts/macos/Sources/VaadinDesktopHost"
+BUILD="$ROOT/.build/test-support/native-host-file-replacement-smoke"
+mkdir -p "$BUILD"
+# Mechanical test compilation only: preserve production bytes, append private
+# same-file tests, remove only the executable startup from the host composition.
+node - "$SOURCE" "$BUILD" "$ROOT" <<'JS'
+const fs = require('fs'), path = require('path');
+const [source, build, root] = process.argv.slice(2);
+const main = fs.readFileSync(path.join(source,'main.swift'),'utf8');
+const boundary = '\nlet config: HostConfig\n';
+if (main.split(boundary).length !== 2) throw Error('host entrypoint boundary changed');
+fs.writeFileSync(path.join(build,'HostComposition.swift'),main.split(boundary)[0]);
+fs.writeFileSync(path.join(build,'ExecutorUnderTest.swift'),
+  fs.readFileSync(path.join(source,'DesktopCommandExecutor.swift'),'utf8')+'\n'+
+  fs.readFileSync(path.join(root,'test-support/native-host-macos-acceptance/Tests/native-file-replacement-smoke.swift'),'utf8'));
+const resources = path.join(build,'resources'); fs.mkdirSync(resources,{recursive:true});
+for (const name of ['app.jar','opaque.js','push.js']) fs.writeFileSync(path.join(resources,name),'inert');
+fs.mkdirSync(path.join(resources,'webapp'),{recursive:true});
+fs.writeFileSync(path.join(resources,'capabilities.json'),JSON.stringify({schemaVersion:1,permissionMode:'manifest-enforced',windows:[{label:'main',commands:['fileGrant.read','fileGrant.write','fileGrant.resume']}]}));
+fs.writeFileSync(path.join(resources,'VatoriHost.json'),JSON.stringify({version:1,transport:'flow-ipc',sidecarJar:'app.jar',webApp:'webapp',opaqueBridge:'opaque.js',pushBridge:'push.js',capabilityManifest:'capabilities.json',recovery:{restartLimit:1,readyTimeoutSeconds:15}}));
+JS
+sources=()
+for source in "$SOURCE"/*.swift; do
+  case "${source##*/}" in main.swift|DesktopCommandExecutor.swift) ;; *) sources+=("$source");; esac
+done
+CLANG_MODULE_CACHE_PATH="$ROOT/.build/clang-module-cache" /usr/bin/swiftc \
+  "${sources[@]}" "$BUILD/HostComposition.swift" "$BUILD/ExecutorUnderTest.swift" \
+  -framework UserNotifications -o "$BUILD/smoke"
+"$BUILD/smoke" "$BUILD/resources"

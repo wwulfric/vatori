@@ -1,0 +1,155 @@
+#!/usr/bin/env bash
+set -euo pipefail
+ROOT="$(cd "$(dirname "${BASH_SOURCE[0]}")/../../.." && pwd)"
+ACCEPTANCE="$ROOT/test-support/native-host-macos-acceptance"
+MODE="${1:-}"
+PREPARED="${2:-}"
+if [[ $# -gt 2 || ( "$MODE" != read && "$MODE" != write ) ]]; then
+  echo "Usage: $0 read|write [prepared-app]" >&2; exit 2
+fi
+if [[ "${VATORI_NATIVE_HOST_MACOS_ACCEPTANCE_PACKAGE_LOCK_HELD:-}" != 1 ]]; then
+  exec env VATORI_NATIVE_HOST_MACOS_ACCEPTANCE_PACKAGE_LOCK_HELD=1 \
+    bash "$ACCEPTANCE/bin/with-package-lock" -- bash "$0" "$@"
+fi
+[[ "$(uname -s)" == Darwin && -x "${JAVA_HOME:?Set JAVA_HOME}/bin/java" ]]
+cd "$ROOT"
+umask 077
+mkdir -p "$ROOT/.build/native-hosts/macos"
+EVIDENCE="$(mktemp -d "$ROOT/.build/native-hosts/macos/file-$MODE-replacement-evidence.XXXXXX")"
+APP="$EVIDENCE/Launched.app"
+EXE="$APP/Contents/MacOS/VaadinDesktopHost"
+JAVA="$APP/Contents/JavaRuntime/bin/java"
+OPEN_PID=""
+echo "Evidence: $EVIDENCE"
+owned_pids() {
+  ps -axo pid=,command= | awk -v host="$EXE" -v java="$JAVA" '
+    {pid=$1; $1=""; sub(/^ +/, ""); if ($0 == host || index($0, java " -jar ") == 1) print pid;}'
+}
+finish() {
+  local status="$1" remaining pid attempt=0
+  trap - EXIT
+  trap '' INT TERM HUP
+  printf '%s\n' "$status" > "$EVIDENCE/primary-exit-status.txt"
+  remaining="$(owned_pids)" || status=1
+  if [[ -n "$remaining" ]]; then
+    status=1
+    printf '%s\n' "$remaining" > "$EVIDENCE/cleanup-required-pids.txt"
+    for pid in $remaining; do kill -TERM "$pid" 2>/dev/null || true; done
+    while [[ -n "$(owned_pids)" && "$attempt" -lt 30 ]]; do sleep 0.1; attempt=$((attempt+1)); done
+    remaining="$(owned_pids)"
+    for pid in $remaining; do kill -KILL "$pid" 2>/dev/null || true; done
+    sleep 0.1
+  fi
+  if [[ -n "$OPEN_PID" ]]; then kill -TERM "$OPEN_PID" 2>/dev/null || true; wait "$OPEN_PID" 2>/dev/null || true; fi
+  if remaining="$(owned_pids)" && [[ -z "$remaining" ]]; then
+    printf 'absent\n' > "$EVIDENCE/final-process-state.txt"
+  else status=1; printf 'unconfirmed\n' > "$EVIDENCE/final-process-state.txt"; fi
+  printf '%s\n' "$status" > "$EVIDENCE/runner-exit-status.txt"
+  exit "$status"
+}
+trap 'finish "$?"' EXIT
+trap 'finish 130' INT
+trap 'finish 143' TERM
+trap 'finish 129' HUP
+git rev-parse HEAD > "$EVIDENCE/source-revision.txt"
+git status --porcelain=v1 > "$EVIDENCE/source-status.txt"
+git diff --binary > "$EVIDENCE/tracked-source.patch"
+sw_vers > "$EVIDENCE/macos-version.txt"
+"$JAVA_HOME/bin/java" -version > "$EVIDENCE/jdk-version.txt" 2>&1
+cp "$ACCEPTANCE/Tests/file-grant-product-replacement-verify.mjs" "$EVIDENCE/verify.mjs"
+cp "$ACCEPTANCE/Tests/verify-file-write-grant-output.mjs" "$EVIDENCE/verify-output.mjs"
+while IFS= read -r flag; do
+  case "$flag" in VAADIN_DESKTOP_*|VATORI_FILE_*|VATORI_TEST_*) unset "$flag" ;; esac
+done < <(compgen -e)
+if [[ -z "$PREPARED" ]]; then
+  bash "$ROOT/bin/vaadin-desktop" package test-apps/flow-over-ipc-framework-app > "$EVIDENCE/package.log" 2>&1
+  bash "$ACCEPTANCE/bin/build-host" "$ROOT" test-apps/flow-over-ipc-framework-app flow-ipc > "$EVIDENCE/build-host.log" 2>&1
+  PREPARED="$ROOT/.build/native-hosts/macos/VaadinDesktopHost.app"
+fi
+[[ -f "$PREPARED/Contents/Resources/VatoriHost.json" && -x "$PREPARED/Contents/MacOS/VaadinDesktopHost" ]]
+printf '%s\n' "$PREPARED" > "$EVIDENCE/prepared-app-origin.txt"
+cp -cRp "$PREPARED" "$APP"
+if [[ ! -d "$APP/Contents/JavaRuntime" ]]; then ditto "$JAVA_HOME" "$APP/Contents/JavaRuntime"; fi
+cmp "$JAVA_HOME/bin/java" "$JAVA"
+cmp "$JAVA_HOME/lib/server/libjvm.dylib" "$APP/Contents/JavaRuntime/lib/server/libjvm.dylib"
+node - "$APP/Contents/Resources/VatoriHost.json" "$MODE" "$ACCEPTANCE" <<'JS'
+const fs = require('fs'), path = require('path');
+const [file, mode, support] = process.argv.slice(2), root = path.dirname(file);
+const manifest = JSON.parse(fs.readFileSync(file));
+const candidate = path.join(root, 'RuntimeCandidates/next');
+fs.mkdirSync(candidate, {recursive:true});
+fs.copyFileSync(path.join(root, manifest.sidecarJar), path.join(candidate, 'application.jar'));
+fs.cpSync(path.join(root, manifest.webApp), path.join(candidate, 'webapp'), {recursive:true});
+manifest.runtimeCandidates = {next:{sidecarJar:'RuntimeCandidates/next/application.jar',webApp:'RuntimeCandidates/next/webapp'}};
+manifest.capabilityManifest = 'desktop-capabilities.json';
+const name = mode === 'read' ? 'file-read-grant-replay' : 'sandbox-file-write-grant-replay';
+const capabilities = JSON.parse(fs.readFileSync(path.join(support,'Fixtures',name+'-capabilities.json')));
+capabilities.windows.find(w => w.label === 'main').commands.push('runtime.replacement.request');
+fs.writeFileSync(path.join(root, manifest.capabilityManifest), JSON.stringify(capabilities));
+fs.writeFileSync(file, JSON.stringify(manifest));
+JS
+BUNDLE_ID="dev.vatori.desktop.host.macos.file-$MODE-replacement"
+plutil -replace CFBundleIdentifier -string "$BUNDLE_ID" "$APP/Contents/Info.plist"
+codesign --force --sign - --entitlements "$ACCEPTANCE/Fixtures/sandbox-file-$MODE-grant.entitlements.plist" "$APP"
+codesign --verify --strict "$APP"
+mkdir "$EVIDENCE/fixtures" "$EVIDENCE/fixtures/original" "$EVIDENCE/fixtures/recovered"
+SELECTED="$EVIDENCE/fixtures/original/vatori-file-$MODE-grant-fixture.bin"
+FRESH="$EVIDENCE/fixtures/recovered/vatori-file-$MODE-grant-fixture.bin"
+SIBLING="$EVIDENCE/fixtures/original/unselected-sibling.txt"
+FRESH_SIBLING="$EVIDENCE/fixtures/recovered/unselected-sibling.txt"
+if [[ "$MODE" == read ]]; then
+  SELECTED="$EVIDENCE/fixtures/original/vatori-file-read-grant-fixture.txt"
+  printf '%s' 'vatori-file-read-grant-fixture::0123456789::tail' > "$SELECTED"
+  FRESH="$SELECTED"
+fi
+printf '%s' 'unselected-sandbox-sibling-must-stay-unchanged' > "$SIBLING"
+printf '%s' 'unselected-sandbox-sibling-must-stay-unchanged' > "$FRESH_SIBLING"
+HANDOFF="$HOME/Library/Containers/$BUNDLE_ID/Data/tmp/vatori-file-$MODE-grant-replay.${EVIDENCE##*.}/old-grant-token.bin"
+[[ ! -e "${HANDOFF%/*}" && ! -L "${HANDOFF%/*}" ]]
+printf '%s\n' "first=$SELECTED" "second=$FRESH" "mode=$MODE" > "$EVIDENCE/panel-paths.txt"
+(
+  cd "$EVIDENCE"
+  find Launched.app -type f -exec shasum -a 256 {} + > bundle-sha256.txt
+)
+echo "Build ready. First selection: $SELECTED"
+echo "Second selection: $FRESH"
+echo "Waiting for $EVIDENCE/start (external start gate; no app launched)."
+gate_start=$SECONDS
+while [[ ! -f "$EVIDENCE/start" ]]; do
+  if (( SECONDS - gate_start > 1800 )); then echo 'Start gate timed out.' >&2; exit 124; fi
+  sleep 1
+done
+DRIVER=VAADIN_DESKTOP_FLOW_IPC_AUTO_FILE_READ_GRANT_REPLAY
+HANDOFF_KEY=VATORI_FILE_READ_GRANT_REPLAY_HANDOFF
+if [[ "$MODE" == write ]]; then
+  DRIVER=VAADIN_DESKTOP_FLOW_IPC_AUTO_FILE_WRITE_GRANT_REPLAY_SANDBOX
+  HANDOFF_KEY=VATORI_FILE_WRITE_GRANT_REPLAY_HANDOFF
+fi
+open -n -W -o "$EVIDENCE/host.out.log" --stderr "$EVIDENCE/host.err.log" \
+  --env "JAVA_HOME=$APP/Contents/JavaRuntime" --env VAADIN_DESKTOP_MACOS_NO_ACTIVATE=0 \
+  --env "$DRIVER=1" --env VATORI_TEST_FILE_GRANT_PRODUCT_REPLACEMENT=1 \
+  --env "$HANDOFF_KEY=$HANDOFF" \
+  --env "VAADIN_DESKTOP_FLOW_IPC_SANDBOX_SELECTED_PATH=$SELECTED" \
+  --env "VAADIN_DESKTOP_FLOW_IPC_SANDBOX_SIBLING_PATH=$SIBLING" \
+  --env "VAADIN_DESKTOP_FLOW_IPC_SANDBOX_RECOVERED_SELECTED_PATH=$FRESH" \
+  --env "VAADIN_DESKTOP_FLOW_IPC_SANDBOX_RECOVERED_SIBLING_PATH=$FRESH_SIBLING" \
+  --env VAADIN_DESKTOP_FLOW_IPC_AUTO_SHUTDOWN=1 \
+  --env VAADIN_DESKTOP_FLOW_IPC_AUTO_SHUTDOWN_TIMEOUT_SECONDS=600 \
+  --env VAADIN_DESKTOP_FLOW_IPC_TRACE_DETAIL=full "$APP" &
+OPEN_PID=$!
+started=$SECONDS
+while kill -0 "$OPEN_PID" 2>/dev/null; do
+  if (( SECONDS - started > 630 )); then exit 124; fi
+  sleep 1
+done
+wait "$OPEN_PID"
+OPEN_PID=""
+node "$EVIDENCE/verify.mjs" "$EVIDENCE/host.out.log" "$MODE" > "$EVIDENCE/verification.log" 2>&1
+if [[ "$MODE" == write ]]; then
+  node "$EVIDENCE/verify-output.mjs" "$SELECTED" "$SIBLING" >> "$EVIDENCE/verification.log" 2>&1
+  node "$EVIDENCE/verify-output.mjs" "$FRESH" "$FRESH_SIBLING" >> "$EVIDENCE/verification.log" 2>&1
+fi
+[[ ! -e "$HANDOFF" && ! -L "$HANDOFF" ]]
+# Java consumes its private record; remove only its now-empty unique leaf.
+if [[ -d "${HANDOFF%/*}" && ! -L "${HANDOFF%/*}" ]]; then rmdir "${HANDOFF%/*}"; fi
+echo "PASS: $EVIDENCE"

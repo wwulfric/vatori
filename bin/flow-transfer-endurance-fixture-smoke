@@ -1,0 +1,15 @@
+#!/usr/bin/env bash
+set -euo pipefail
+ROOT="$(cd "$(dirname "${BASH_SOURCE[0]}")/.." && pwd)"
+if ! command -v mvn >/dev/null 2>&1; then
+  set +u
+  source /Users/bytedance/.sdkman/bin/sdkman-init.sh
+  set -u
+fi
+mvn -o -q -f "$ROOT/pom.xml" -Dmaven.repo.local="$ROOT/.m2/repository" \
+  -pl test-apps/flow-over-ipc-framework-app -am test-compile
+mvn -o -q -f "$ROOT/test-apps/flow-over-ipc-framework-app/pom.xml" \
+  -Dmaven.repo.local="$ROOT/.m2/repository" \
+  org.codehaus.mojo:exec-maven-plugin:3.6.2:java \
+  -Dexec.mainClass=dev.vatori.ipcframework.FlowTransferEnduranceFixtureSmokeMain \
+  -Dexec.classpathScope=test

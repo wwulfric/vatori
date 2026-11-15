@@ -116,6 +116,13 @@ private final class FlowIpcClipboardOutcomesAcceptance {
     private var semanticUidlStages: [String] = []
     private var drainKey = ""
     private var drainBalancedPolls = 0
+    private var contenderProcess: Process?
+    private var controlledContentionComplete = false
+    private var controlledContentionEvidence: [String: Any] = [:]
+    private var controlledReadReceipts: [[String: Any]] = []
+    private var contenderPath: String? {
+        ProcessInfo.processInfo.environment["VATORI_TEST_CLIPBOARD_CONTENDER"]
+    }
 
     init(host: WebViewHost, deadline: Date) {
         self.host = host
@@ -127,6 +134,9 @@ private final class FlowIpcClipboardOutcomesAcceptance {
     }
 
     func restorePasteboardOnApplicationTermination() {
+        if let contenderProcess, contenderProcess.isRunning {
+            contenderProcess.terminate()
+        }
         _ = restorePasteboardIfOwned()
     }
 
@@ -492,6 +502,10 @@ private final class FlowIpcClipboardOutcomesAcceptance {
     }
 
     private func prepareNoTextPasteboard() -> Bool {
+        if contenderPath != nil,
+           ProcessInfo.processInfo.environment["VATORI_TEST_CLIPBOARD_AUTHORIZED"] != "1" {
+            return false
+        }
         guard originalSnapshot == nil else {
             return nativeNoTextSetupObserved
         }
@@ -839,6 +853,14 @@ private final class FlowIpcClipboardOutcomesAcceptance {
         secondary: FlowIpcWindowContext,
         secondarySnapshot: Snapshot
     ) {
+        if contenderPath != nil && !controlledContentionComplete {
+            guard contenderProcess == nil else { return }
+            beginControlledContention {
+                self.finish(main: main, mainSnapshot: mainSnapshot,
+                            secondary: secondary, secondarySnapshot: secondarySnapshot)
+            }
+            return
+        }
         guard restorePasteboardIfOwned() else {
             fail(
                 code: nativePasteboardContendedObserved
@@ -911,6 +933,8 @@ private final class FlowIpcClipboardOutcomesAcceptance {
                 nativeSnapshotRestoredObserved,
             "nativePasteboardContendedObserved":
                 nativePasteboardContendedObserved,
+            "controlledContentionRequested": contenderPath != nil,
+            "controlledContention": controlledContentionEvidence,
             "scopeIsolatedObserved": scopeIsolatedObserved,
             "nativePointerObserved": nativePointerObserved,
             "nativePointerTrustedObserved":
@@ -1056,6 +1080,150 @@ private final class FlowIpcClipboardOutcomesAcceptance {
                 "\(prefix)ResponseError": responseError,
                 "\(prefix)PushError": pushError
             ]
+        }
+    }
+
+    private func beginControlledContention(completion: @escaping () -> Void) {
+        guard let path = contenderPath, path.hasPrefix("/"),
+              ProcessInfo.processInfo.environment["VATORI_TEST_CLIPBOARD_AUTHORIZED"] == "1",
+              let originalSnapshot, pasteboardSetupOwned,
+              NSPasteboard.general.changeCount == testOwnedChangeCount else {
+            fail(code: "clipboardContentionPreconditionFailed")
+            return
+        }
+        let owned = testOwnedChangeCount
+        let attemptsBefore = pasteboardRestoreAttempts
+        let process = Process()
+        let output = Pipe()
+        process.executableURL = URL(fileURLWithPath: path)
+        process.arguments = [String(owned)]
+        process.standardOutput = output
+        process.standardError = FileHandle.nullDevice
+        process.terminationHandler = { finished in
+            let data = output.fileHandleForReading.readDataToEndOfFile()
+            DispatchQueue.main.async {
+                let pasteboard = NSPasteboard.general
+                guard finished.terminationStatus == 0,
+                      let receipt = try? JSONSerialization.jsonObject(with: data) as? [String: Any],
+                      receipt["processIdentifier"] as? Int == Int(finished.processIdentifier),
+                      receipt["beforeChangeCount"] as? Int == owned,
+                      let cleared = receipt["clearedChangeCount"] as? Int, cleared > owned,
+                      let written = receipt["writtenChangeCount"] as? Int, written >= cleared,
+                      receipt["fixtureMatches"] as? Bool == true,
+                      pasteboard.changeCount == written,
+                      pasteboard.string(forType: .string) == "vatori-n08-contender",
+                      pasteboard.changeCount == written else {
+                    self.fail(code: "clipboardContentionWriterFailed")
+                    return
+                }
+                self.readContendedText(written: written, attempt: 1) {
+                // The original owner must refuse even an explicit second
+                // restore request, with no clear/write and no ownership adoption.
+                let firstRejected = !self.restorePasteboardIfOwned()
+                let afterFirst = pasteboard.changeCount
+                let secondRejected = !self.restorePasteboardIfOwned()
+                let afterSecond = pasteboard.changeCount
+                guard firstRejected, secondRejected,
+                      self.nativePasteboardContendedObserved,
+                      !self.nativeSnapshotRestoredObserved,
+                      self.pasteboardRestoreAttempts == attemptsBefore,
+                      afterFirst == written, afterSecond == written,
+                      pasteboard.string(forType: .string) == "vatori-n08-contender" else {
+                    self.fail(code: "clipboardContentionOldOwnerMutated")
+                    return
+                }
+                // This is separate recovery by the explicitly authorized test
+                // writer, not adoption by the rejected original cleanup owner.
+                // One conditional attempt only; unrelated changes stop recovery.
+                let recovery = originalSnapshot.restore(to: pasteboard, onlyIfChangeCount: written)
+                guard recovery.restored, !recovery.contended,
+                      let restoredCount = recovery.ownedChangeCount,
+                      pasteboard.changeCount == restoredCount else {
+                    self.fail(code: "clipboardContentionRecoveryFailed")
+                    return
+                }
+                self.nativeSnapshotRestoredObserved = true
+                self.pasteboardSetupOwned = false
+                self.controlledContentionComplete = true
+                self.controlledContentionEvidence = receipt.merging([
+                    "writerExitStatus": Int(finished.terminationStatus),
+                    "oldOwnerRejectedAttempts": 2,
+                    "oldOwnerRestoreWrites": self.pasteboardRestoreAttempts - attemptsBefore,
+                    "afterFirstRejectedChangeCount": afterFirst,
+                    "afterSecondRejectedChangeCount": afterSecond,
+                    "recoveryAttempts": 1, "snapshotRestoredAndVerified": true,
+                    "freshReadAttempts": self.controlledReadReceipts.count,
+                    "freshReadReceipts": self.controlledReadReceipts,
+                    "restoredChangeCount": restoredCount
+                ]) { _, new in new }
+                trace("recv", "clipboardOutcomes.controlledContention",
+                      self.controlledContentionEvidence)
+                completion()
+                }
+            }
+        }
+        contenderProcess = process
+        do { try process.run() }
+        catch { fail(code: "clipboardContentionWriterLaunchFailed"); return }
+        trace("recv", "clipboardOutcomes.contenderStarted", [
+            "processIdentifier": Int(process.processIdentifier), "ownedChangeCount": owned
+        ])
+    }
+
+    private func readContendedText(written: Int, attempt: Int,
+                                   baseline: Int? = nil, completion: @escaping () -> Void) {
+        guard !terminal, Date() < deadline,
+              let main = host.flowIpcWindowContext("main"),
+              NSPasteboard.general.changeCount == written,
+              NSPasteboard.general.string(forType: .string) == "vatori-n08-contender",
+              NSPasteboard.general.changeCount == written else {
+            fail(code: "clipboardContentionReadPreconditionFailed")
+            return
+        }
+        inspect(main) { snapshot in
+            guard let snapshot, snapshot.errorFree else {
+                self.fail(code: "clipboardContentionReadInspectionFailed")
+                return
+            }
+            guard let baseline else {
+                // Two explicit, read-only public API retries through the existing
+                // Java listener. These clicks are browser-programmatic, not native.
+                main.webView.evaluateJavaScript("""
+                (() => { const b = document.querySelector('#framework-flow-clipboard-outcomes-read-no-text');
+                if (!b) return false; b.click(); return true; })()
+                """) { result, error in
+                    guard error == nil, result as? Bool == true else {
+                        self.fail(code: "clipboardContentionReadDispatchFailed")
+                        return
+                    }
+                    self.readContendedText(written: written, attempt: attempt,
+                                           baseline: snapshot.requestCount, completion: completion)
+                }
+                return
+            }
+            let expected = "Clipboard no text: outcome=TEXT textPresent=true length=20 client=true count=\(attempt + 1)"
+            guard snapshot.noTextStatus == expected,
+                  snapshot.requestCount > baseline,
+                  snapshot.requestCount == snapshot.responseCount else {
+                DispatchQueue.main.asyncAfter(deadline: .now() + 0.1) {
+                    self.readContendedText(written: written, attempt: attempt,
+                                           baseline: baseline, completion: completion)
+                }
+                return
+            }
+            var receipt = main.scope.tracePayload
+            receipt["attempt"] = attempt
+            receipt["inputMode"] = "browser-programmatic-public-read"
+            receipt["changeCount"] = written
+            receipt["status"] = snapshot.noTextStatus
+            receipt["requestBaseline"] = baseline
+            receipt["requestCount"] = snapshot.requestCount
+            receipt["responseCount"] = snapshot.responseCount
+            self.controlledReadReceipts.append(receipt)
+            trace("recv", "clipboardOutcomes.retryObserved", receipt)
+            if attempt < 2 {
+                self.readContendedText(written: written, attempt: attempt + 1, completion: completion)
+            } else { completion() }
         }
     }
 

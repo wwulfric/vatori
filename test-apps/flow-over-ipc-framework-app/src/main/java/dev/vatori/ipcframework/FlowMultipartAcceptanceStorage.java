@@ -21,6 +21,7 @@ final class FlowMultipartAcceptanceStorage {
     }
 
     static DesktopFlowMultipartConfig config() {
+        boolean endurance = "1".equals(System.getenv("VAADIN_DESKTOP_TEST_TRANSFER_ENDURANCE"));
         try {
             deleteTree(ROOT);
             Files.createDirectories(ROOT);
@@ -31,8 +32,8 @@ final class FlowMultipartAcceptanceStorage {
         return DesktopFlowMultipartConfig.builder()
                 .location(ROOT)
                 .memoryThresholdBytes(THRESHOLD_BYTES)
-                .maxFileSizeBytes(16L * 1024 * 1024)
-                .maxRequestSizeBytes(32L * 1024 * 1024)
+                .maxFileSizeBytes((endurance ? 256L : 16L) * 1024 * 1024)
+                .maxRequestSizeBytes((endurance ? 257L : 32L) * 1024 * 1024)
                 .maxPartCount(64)
                 .build();
     }

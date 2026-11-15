@@ -4,8 +4,23 @@ set -euo pipefail
 ROOT="$(cd "$(dirname "${BASH_SOURCE[0]}")/../../.." && pwd)"
 ACCEPTANCE_ROOT="$ROOT/test-support/native-host-macos-acceptance"
 BUILD_ROOT="$ROOT/.build/native-hosts/macos"
-if [[ $# -ne 0 ]]; then
-  echo "Usage: $0" >&2
+WAIT_FOR_START=0
+SEQUENCE=0
+PASSIVE_ACTIVATION=0
+for option in "$@"; do
+  case "$option" in
+    --sequence) [[ "$SEQUENCE" == 0 ]] || exit 2; SEQUENCE=1 ;;
+    --passive-activation) [[ "$PASSIVE_ACTIVATION" == 0 ]] || exit 2; PASSIVE_ACTIVATION=1 ;;
+    --wait-for-start) [[ "$WAIT_FOR_START" == 0 ]] || exit 2; WAIT_FOR_START=1 ;;
+    --wait-for-start-file) [[ "$WAIT_FOR_START" == 0 ]] || exit 2; WAIT_FOR_START=2 ;;
+    *) echo "Usage: $0 [--sequence [--passive-activation]] [--wait-for-start|--wait-for-start-file]" >&2; exit 2 ;;
+  esac
+done
+if [[ "$PASSIVE_ACTIVATION" == 1 && "$SEQUENCE" != 1 ]]; then
+  echo '--passive-activation requires --sequence.' >&2; exit 2
+fi
+if [[ "$WAIT_FOR_START" == 1 && -t 0 ]]; then
+  echo "Terminal stdin cannot cross the background package-lock group; use --wait-for-start-file." >&2
   exit 2
 fi
 if [[ "$(uname -s)" != Darwin ]]; then
@@ -21,17 +36,46 @@ if [[ "${VATORI_NATIVE_HOST_MACOS_ACCEPTANCE_PACKAGE_LOCK_HELD:-}" != 1 ]]; then
     bash "$ACCEPTANCE_ROOT/bin/with-package-lock" -- bash "$0" "$@"
 fi
 export VAADIN_DESKTOP_FLOW_IPC_SIDECAR_RESTART_LIMIT=2
+if [[ "$SEQUENCE" == 1 ]]; then export VAADIN_DESKTOP_FLOW_IPC_SIDECAR_RESTART_LIMIT=3; fi
 export VAADIN_DESKTOP_FLOW_IPC_SIDECAR_RECOVERY_READY_TIMEOUT_SECONDS=15
 export VAADIN_DESKTOP_FLOW_IPC_SIDECAR_RECOVERY_STABLE_RUN_SECONDS=30
 unset VAADIN_DESKTOP_ACCEPTANCE_CAPABILITY_MANIFEST
 unset VAADIN_DESKTOP_ACCEPTANCE_OMIT_CAPABILITY_MANIFEST
-HOST_LOG="$BUILD_ROOT/host-recovery-termination.out.log"
-HOST_ERR_LOG="$BUILD_ROOT/host-recovery-termination.err.log"
 mkdir -p "$BUILD_ROOT"
+umask 077
+# Each attempt owns new evidence, including attempts that fail during build.
+# Never truncate a shared trace: a retry must not erase an earlier diagnosis.
+EVIDENCE_DIR="$(mktemp -d "$BUILD_ROOT/recovery-evidence.XXXXXX")"
+HOST_LOG="$EVIDENCE_DIR/host.out.log"
+HOST_ERR_LOG="$EVIDENCE_DIR/host.err.log"
+echo "Evidence directory: $EVIDENCE_DIR"
+record_exit() {
+  local status="$1"
+  trap - EXIT
+  # Installed before probes/build, and called at the end of clone cleanup so this
+  # records the final outcome, not a provisional inspector success.
+  if ! printf '%s\n' "$status" > "$EVIDENCE_DIR/runner-exit-status.txt"; then
+    echo "Cannot retain runner exit status: $EVIDENCE_DIR" >&2
+    exit 1
+  fi
+  exit "$status"
+}
+trap 'record_exit "$?"' EXIT
 : > "$HOST_LOG"
 : > "$HOST_ERR_LOG"
-bash "$ROOT/bin/vaadin-desktop" package test-apps/flow-over-ipc-framework-app
-bash "$ACCEPTANCE_ROOT/bin/build-host" "$ROOT" test-apps/flow-over-ipc-framework-app flow-ipc
+git -C "$ROOT" rev-parse HEAD > "$EVIDENCE_DIR/source-revision.txt" 2>/dev/null \
+  || printf '%s\n' unavailable > "$EVIDENCE_DIR/source-revision.txt"
+git -C "$ROOT" status --porcelain=v1 > "$EVIDENCE_DIR/source-status.txt" 2>/dev/null \
+  || printf '%s\n' unavailable > "$EVIDENCE_DIR/source-status.txt"
+# Capture narrow reproducibility facts, not the full environment or host name.
+# Failed probes retain their output and stop before any app is built/launched.
+sw_vers > "$EVIDENCE_DIR/macos-version.txt" 2>&1
+uname -m > "$EVIDENCE_DIR/architecture.txt" 2>&1
+"$JAVA_HOME/bin/java" -version > "$EVIDENCE_DIR/jdk-version.txt" 2>&1
+bash "$ROOT/bin/vaadin-desktop" package test-apps/flow-over-ipc-framework-app \
+  2>&1 | tee "$EVIDENCE_DIR/package.log"
+bash "$ACCEPTANCE_ROOT/bin/build-host" "$ROOT" test-apps/flow-over-ipc-framework-app flow-ipc \
+  2>&1 | tee "$EVIDENCE_DIR/build-host.log"
 
 umask 077
 WORK="$(mktemp -d "$BUILD_ROOT/recovery-termination.XXXXXX")"
@@ -60,7 +104,7 @@ cleanup() {
   local remaining pid attempt=0
   if ! remaining="$(owned_pids)"; then
     echo "Cannot inspect owned recovery processes; retaining clone: $WORK" >&2
-    exit 1
+    record_exit 1
   fi
   if [[ -n "$remaining" ]]; then
     status=1
@@ -70,7 +114,7 @@ cleanup() {
       attempt=$((attempt + 1))
       if ! remaining="$(owned_pids)"; then
         echo "Cannot inspect owned recovery processes; retaining clone: $WORK" >&2
-        exit 1
+        record_exit 1
       fi
     done
     if [[ -n "$remaining" ]]; then
@@ -84,18 +128,24 @@ cleanup() {
   fi
   if ! remaining="$(owned_pids)" || [[ -n "$remaining" ]]; then
     echo "Owned recovery processes could not be confirmed stopped; retaining clone: $WORK" >&2
-    exit 1
+    record_exit 1
+  fi
+  if [[ "${PASSIVE_ACTIVATION:-0}" == 1 ]]; then
+    printf '%s\n' absent > "$EVIDENCE_DIR/final-process-state.txt"
   fi
   # Only this mktemp-owned leaf is disposable. Trace files remain outside it.
   if [[ "${WORK%/*}" == "$BUILD_ROOT" \
       && "${WORK##*/}" =~ ^recovery-termination\.[[:alnum:]]{6}$ \
       && -d "$WORK" && ! -L "$WORK" ]]; then
-    rm -rf -- "$WORK"
+    if ! rm -rf -- "$WORK"; then
+      echo "Cannot remove owned recovery clone: $WORK" >&2
+      status=1
+    fi
   else
     echo "Refusing cleanup of unexpected clone path: $WORK" >&2
     status=1
   fi
-  exit "$status"
+  record_exit "$status"
 }
 trap 'cleanup "$?"' EXIT
 trap 'cleanup 130' INT
@@ -110,10 +160,53 @@ plutil -replace CFBundleIdentifier -string \
 plutil -replace CFBundleName -string "Vatori recovery termination" "$HOST_APP/Contents/Info.plist"
 codesign --force --sign - "$HOST_APP"
 codesign --verify --strict --verbose=2 "$HOST_APP"
+shasum -a 256 "$HOST_EXE" "$SIDECAR_JAR" "$HOST_APP/Contents/Info.plist" \
+  > "$EVIDENCE_DIR/bundle-input-sha256.txt"
 echo "Recovery acceptance clone: $HOST_APP"
 echo "Private three-generation test state: $STATE"
 echo "Trace: $HOST_LOG"
+if [[ "$SEQUENCE" == 1 ]]; then
+  shasum -a 256 "$0" "$ACCEPTANCE_ROOT/Tests/recovery-sequence-process-verify.mjs" \
+    "$ACCEPTANCE_ROOT/Tests/recovery-sequence-interaction-verify.mjs" > "$EVIDENCE_DIR/verifier-sha256.txt"
+fi
+if [[ "$PASSIVE_ACTIVATION" == 1 ]]; then
+  cp -cRp "$HOST_APP" "$EVIDENCE_DIR/Launched.app"
+  rg --files --hidden --no-ignore -0 "$EVIDENCE_DIR/Launched.app" | xargs -0 shasum -a 256 \
+    > "$EVIDENCE_DIR/retained-bundle-sha256.txt"
+  cp "$ACCEPTANCE_ROOT/Tests/recovery-sequence-process-verify.mjs" \
+    "$ACCEPTANCE_ROOT/Tests/recovery-sequence-interaction-verify.mjs" "$EVIDENCE_DIR/"
+fi
 echo "Only this clone's test sidecars are fault-injected; no notification or OS permission action is used."
+if [[ "$WAIT_FOR_START" != 0 ]]; then
+  if [[ "$WAIT_FOR_START" == 2 ]]; then
+    echo "READY: app built; write start to $EVIDENCE_DIR/start.request within 300 seconds (no app is running yet)."
+    handoff_started=$SECONDS
+    while [[ ! -e "$EVIDENCE_DIR/start.request" && ! -L "$EVIDENCE_DIR/start.request" ]]; do
+      if (( SECONDS - handoff_started >= 300 )); then
+        echo "Start file handoff timed out; no app was launched." >&2
+        exit 124
+      fi
+      sleep 0.1
+    done
+    if [[ ! -f "$EVIDENCE_DIR/start.request" || -L "$EVIDENCE_DIR/start.request" ]]; then
+      echo "Invalid start file; no app was launched." >&2
+      exit 2
+    fi
+    start_response="$(cat "$EVIDENCE_DIR/start.request")"
+  else
+    echo "READY: app built; enter start within 300 seconds to launch (no app is running yet)."
+    if ! IFS= read -r -t 300 start_response; then
+      echo "Start handoff timed out or stdin closed; no app was launched." >&2
+      exit 124
+    fi
+  fi
+  if [[ "$start_response" != start ]]; then
+    echo "Start handoff canceled; no app was launched." >&2
+    exit 2
+  fi
+  printf '%s\n' 'explicit-start-handoff; activation/input provenance must be recorded separately' \
+    > "$EVIDENCE_DIR/start-handoff.txt"
+fi
 for acceptance_flag in $(compgen -v VAADIN_DESKTOP_FLOW_IPC_AUTO_); do
   unset "$acceptance_flag"
 done
@@ -121,6 +214,8 @@ unset VAADIN_DESKTOP_FLOW_IPC_STOP_INITIAL_NAVIGATION
 open -n -W -o "$HOST_LOG" --stderr "$HOST_ERR_LOG" \
   --env "JAVA_HOME=$JAVA_HOME" \
   --env "VAADIN_DESKTOP_TEST_RECOVERY_TERMINATION_DIR=$STATE" \
+  --env "VAADIN_DESKTOP_TEST_RECOVERY_SEQUENCE=$SEQUENCE" \
+  --env "VAADIN_DESKTOP_TEST_PASSIVE_ACTIVATION=$PASSIVE_ACTIVATION" \
   --env VAADIN_DESKTOP_MACOS_NO_ACTIVATE=0 \
   --env VAADIN_DESKTOP_FLOW_IPC_AUTO_RECOVERY_TERMINATION=1 \
   --env VAADIN_DESKTOP_FLOW_IPC_AUTO_SHUTDOWN=1 \
@@ -137,5 +232,17 @@ while kill -0 "$OPEN_WAIT_PID" 2>/dev/null; do
 done
 wait "$OPEN_WAIT_PID"
 OPEN_WAIT_PID=""
-bash "$ROOT/bin/flow-ipc-trace-inspect" \
-  --require-flow-ipc-recovery-termination "$HOST_LOG"
+if [[ "$SEQUENCE" == 1 ]]; then
+  verifier_options=()
+  verifier="$ACCEPTANCE_ROOT/Tests/recovery-sequence-interaction-verify.mjs"
+  if [[ "$PASSIVE_ACTIVATION" == 1 ]]; then
+    verifier_options+=(--passive-activation)
+    verifier="$EVIDENCE_DIR/recovery-sequence-interaction-verify.mjs"
+  fi
+  node "$verifier" "$HOST_LOG" "${verifier_options[@]}" \
+    2>&1 | tee "$EVIDENCE_DIR/inspector.log"
+else
+  bash "$ROOT/bin/flow-ipc-trace-inspect" \
+    --require-flow-ipc-recovery-termination "$HOST_LOG" \
+    2>&1 | tee "$EVIDENCE_DIR/inspector.log"
+fi

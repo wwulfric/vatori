@@ -39,7 +39,7 @@ private final class FlowIpcFileDialogOutcomesAcceptance {
     private static let secondaryWindowId =
         "file-dialog-outcomes-secondary"
     private static let firstTitle = "Flow file dialog normal cancel"
-    private static let firstStatus = resultStatus(
+    private var firstStatus: String { Self.resultStatus(
         prefix: "File dialog first",
         outcome: "CANCELED",
         success: true,
@@ -50,8 +50,8 @@ private final class FlowIpcFileDialogOutcomesAcceptance {
         scope: "window:main",
         commands: mainManifestCommands)
         + " capabilityContextCaptured=true"
-        + " backgroundSessionAbsent=true"
-    private static let concurrentStatus = resultStatus(
+        + " backgroundSessionAbsent=true" }
+    private var concurrentStatus: String { Self.resultStatus(
         prefix: "File dialog concurrent",
         outcome: "ERROR",
         success: false,
@@ -60,7 +60,7 @@ private final class FlowIpcFileDialogOutcomesAcceptance {
         decision: "allowed",
         reason: "manifest-allow",
         scope: "window:main",
-        commands: mainManifestCommands) + " client=true"
+        commands: mainManifestCommands) + " client=true" }
     private static let deniedStatus = resultStatus(
         prefix: "File dialog denied",
         outcome: "DENIED",
@@ -73,9 +73,10 @@ private final class FlowIpcFileDialogOutcomesAcceptance {
         commands: "window.close,window.open")
         + " capabilityContextCaptured=true"
         + " backgroundSessionAbsent=true client=true"
-    private static let mainManifestCommands =
-        "clipboard.readText,clipboard.writeText,fileDialog.openFile,"
-        + "fileTransfer.download,notification.show,window.close,window.setTitle"
+    private var mainManifestCommands: String {
+        host.config.capabilityManifest.commandsByWindow["main", default: []]
+            .sorted().joined(separator: ",")
+    }
 
     private let host: WebViewHost
     private let deadline: Date
@@ -257,7 +258,7 @@ private final class FlowIpcFileDialogOutcomesAcceptance {
             guard pointerObserved(
                     stage: "main-concurrent",
                     snapshot: mainSnapshot),
-                  mainSnapshot.concurrentStatus == Self.concurrentStatus,
+                  mainSnapshot.concurrentStatus == concurrentStatus,
                   let openPanel = main.window.attachedSheet as? NSOpenPanel,
                   panelIdentifier == ObjectIdentifier(openPanel),
                   openPanel.title == Self.firstTitle,
@@ -297,7 +298,7 @@ private final class FlowIpcFileDialogOutcomesAcceptance {
             phase = .normalCanceled
             schedulePoll(after: 0.1)
         case .normalCanceled:
-            guard mainSnapshot.firstStatus == Self.firstStatus,
+            guard mainSnapshot.firstStatus == firstStatus,
                   let panel,
                   panelIdentifier == ObjectIdentifier(panel),
                   panel.sheetParent == nil,
@@ -395,8 +396,8 @@ private final class FlowIpcFileDialogOutcomesAcceptance {
                       secondarySnapshot.deniedStatus == Self.deniedStatus,
                       secondary.window.attachedSheet == nil,
                       Self.visibleOpenPanels().isEmpty,
-                      mainSnapshot.firstStatus == Self.firstStatus,
-                      mainSnapshot.concurrentStatus == Self.concurrentStatus else {
+                      mainSnapshot.firstStatus == self.firstStatus,
+                      mainSnapshot.concurrentStatus == self.concurrentStatus else {
                     self.retryOrFail(
                         code: "fileDialogOutcomesDeniedResultTimeout",
                         details: self.mergedPayload(
@@ -803,8 +804,8 @@ private final class FlowIpcFileDialogOutcomesAcceptance {
             "deniedOutcomeObserved": deniedOutcomeObserved,
             "deniedPanelAbsentObserved": deniedPanelAbsentObserved,
             "permissionPayloadPreservedObserved":
-                mainSnapshot.firstStatus == Self.firstStatus
-                && mainSnapshot.concurrentStatus == Self.concurrentStatus
+                mainSnapshot.firstStatus == firstStatus
+                && mainSnapshot.concurrentStatus == concurrentStatus
                 && secondarySnapshot.deniedStatus == Self.deniedStatus,
             "scopeIsolationObserved":
                 scopeIsolated(mainSnapshot, secondarySnapshot),
@@ -817,8 +818,8 @@ private final class FlowIpcFileDialogOutcomesAcceptance {
                 browserProgrammaticStages == expectedBrowserStages,
             "balancedDrainObserved": drainBalancedPolls >= 2,
             "resultStableAfterDrain":
-                mainSnapshot.firstStatus == Self.firstStatus
-                && mainSnapshot.concurrentStatus == Self.concurrentStatus
+                mainSnapshot.firstStatus == firstStatus
+                && mainSnapshot.concurrentStatus == concurrentStatus
                 && secondarySnapshot.deniedStatus == Self.deniedStatus,
             "errorFree": mainSnapshot.errorFree
                 && secondarySnapshot.errorFree,

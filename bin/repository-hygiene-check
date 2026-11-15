@@ -490,6 +490,8 @@ check_runtime_boundary_contract() {
       vaadin-desktop-cli/src/main/java/dev/vatori/desktop/cli/VaadinDesktopCli.java \
       || ! grep -Fq 'applicationResources' bin/vaadin-desktop-build-macos-host \
       || ! grep -Fq 'VATORI_APPLICATION_RESOURCES' \
+      native-hosts/macos/Sources/VaadinDesktopHost/JavaSidecarLaunchPlan.swift \
+      || ! grep -Fq 'process.environment = launchPlan.environment' \
       native-hosts/macos/Sources/VaadinDesktopHost/JavaSidecar.swift; then
     fail "application-owned desktop bundle resources are no longer staged end to end"
   fi

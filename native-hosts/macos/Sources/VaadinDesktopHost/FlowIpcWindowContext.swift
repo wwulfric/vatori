@@ -84,6 +84,7 @@ struct FlowIpcWindowScope: Equatable {
 }
 
 final class FlowIpcWindowContext {
+    let lifetimeId = UUID()
     let scope: FlowIpcWindowScope
     let window: NSWindow
     let webView: WKWebView

@@ -26,6 +26,11 @@ struct CapabilityManifest {
 
         let data: Data
         do {
+            let attributes = try FileManager.default.attributesOfItem(
+                atPath: url.resolvingSymlinksInPath().path)
+            guard attributes[.type] as? FileAttributeType == .typeRegular else {
+                return invalid(path: path, loaded: true, error: "manifest-not-regular-file")
+            }
             data = try Data(contentsOf: url)
         } catch {
             return invalid(

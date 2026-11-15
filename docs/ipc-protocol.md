@@ -4,6 +4,30 @@ The Java sidecar and native host use one bidirectional protocol for Flow UI
 transport, native capabilities and lifecycle. It is independent of whether
 WKWebView loads a packaged bundle or a loopback URL.
 
+## Runtime Replacement Status Query
+
+The native command `runtime.replacement.status` uses the existing
+`command`/`capabilityResult` envelopes. It takes an empty argument object and
+requires the same named capability permission on the requesting Flow IPC window.
+No caller-supplied owner, window or operation selector is accepted. A successful
+query returns `mode=host-runtime-replacement` and `status=none` or a record status
+(`pending`, `replaced`, `rolled-back`, `rollback-failed`, `retirement-failed`,
+`interrupted`). Record results also carry `operationId`, `requestId`, `candidateId`
+and `requestingGeneration`. These records are native-window-lifetime scoped and
+host-memory only. Query success does not imply replacement success. Development
+CLI replacement results are not product records.
+
+`runtime.replacement.request` takes exactly `requestId` and `candidateId`, both
+bounded sidecar identifiers, not paths. It requires explicit permission in
+`manifest-enforced` mode and a live Flow IPC owner/current generation. Candidate
+preflight precedes retirement. Acceptance returns `status=pending`, `operationId`
+and `duplicate=false`; an identical retained request may return its existing
+record with `duplicate=true`. Conflict/busy/capacity/invalid-candidate rejection
+does not retire a process. Acceptance is not completion, and the old JVM may
+exit before receiving the receipt. The new JVM queries the native owner's
+latest record. `replaced` means valid ready and resource handoff/reload; no Java
+heap state retention or application-specific health check is implied.
+
 ## Framing And Version
 
 Each message is a single JSON object prefixed by the stable text `VFIPC ` and
@@ -93,6 +117,12 @@ Java to browser:
 
 Senders may not exceed receiver-issued credit. Sequence numbers, terminal counts
 and declared lengths are validated.
+
+After successful request handling, the response terminal is emitted only after
+the request terminator has been validated. A handler may return or close its input without reading the
+whole body; the exchange still owns that stream and drains it under the same
+credit and cancellation rules before retiring the request id. This is independent
+of request URL or Flow request type.
 
 ## Push
 

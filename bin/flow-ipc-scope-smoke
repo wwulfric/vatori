@@ -39,6 +39,11 @@ mvn -q -o -Dmaven.repo.local="$MAVEN_REPO" \
   org.codehaus.mojo:exec-maven-plugin:3.6.2:java
 mvn -q -o -Dmaven.repo.local="$MAVEN_REPO" \
   -pl vaadin-desktop-core \
+  -Dexec.mainClass=dev.vatori.desktop.DesktopRuntimeContractSmokeMain \
+  -Dexec.classpathScope=test \
+  org.codehaus.mojo:exec-maven-plugin:3.6.2:java
+mvn -q -o -Dmaven.repo.local="$MAVEN_REPO" \
+  -pl vaadin-desktop-core \
   -Dexec.mainClass=dev.vatori.desktop.DesktopNotificationContractSmokeMain \
   -Dexec.classpathScope=test \
   org.codehaus.mojo:exec-maven-plugin:3.6.2:java

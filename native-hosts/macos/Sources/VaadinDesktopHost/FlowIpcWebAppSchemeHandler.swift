@@ -6,7 +6,7 @@ final class FlowIpcWebAppSchemeHandler: NSObject, WKURLSchemeHandler {
     static let virtualRequestBaseURL = "https://app.vatori.invalid/"
     private static let pushBridgePath = "/__vatori/FlowIpcPushBridge.js"
 
-    private let source: FlowWebAppSource?
+    private var source: FlowWebAppSource?
     private let pushBridgeURL: URL
     private let rootTracePath: String
     private let proxyTaskLock = NSLock()
@@ -41,6 +41,14 @@ final class FlowIpcWebAppSchemeHandler: NSObject, WKURLSchemeHandler {
         case nil:
             return false
         }
+    }
+
+    func installPackagedSource(_ root: URL) {
+        precondition(Thread.isMainThread)
+        // Product replacement is restricted to packaged sources. Resources
+        // are served synchronously and no development proxy task is carried.
+        precondition(source?.isDevelopment != true)
+        source = .packaged(root.standardizedFileURL.resolvingSymlinksInPath())
     }
 
     var entryURL: URL {

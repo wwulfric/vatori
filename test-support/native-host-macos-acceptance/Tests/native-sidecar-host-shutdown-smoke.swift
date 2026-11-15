@@ -65,9 +65,12 @@ struct HostConfig {
     let sidecarJarURL = URL(fileURLWithPath: CommandLine.arguments[0])
 }
 struct JavaSidecarLaunchPlan {
+    let currentDirectoryURL = URL(fileURLWithPath: CommandLine.arguments[0]).deletingLastPathComponent()
+    let environment = ProcessInfo.processInfo.environment
     let executable: String
     let arguments: [String]
     let commandSummary = "test-owned-host-shutdown-child"
+    let jarDisplayPath = "$TEST/owned-child"
     static func make(config: HostConfig) -> Self {
         Self(executable: URL(fileURLWithPath: CommandLine.arguments[0]).standardizedFileURL.path,
              arguments: ["--child", config.mode])

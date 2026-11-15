@@ -26,6 +26,14 @@ deadline and recovery settings. Recovery defines the restart limit, recovery
 `..` are rejected. The app can be moved out of the source repository after
 staging.
 
+Before sidecar launch, the launch manifest, capability manifest, JAR and
+opaque/push bridge paths must resolve to regular files, and the packaged webapp
+path must resolve to a directory. Special-file manifests are rejected before
+synchronous reads, which could otherwise block before lifecycle deadlines exist.
+Existing bundle-relative containment checks also apply to symlink targets.
+This is resource-shape validation, not JAR validity, frontend compatibility,
+content authentication or protection against concurrent bundle mutation.
+
 The CLI selects an application-provided
 `src/main/desktop/macos/AppIcon.icns` when present and otherwise uses the vatori
 brand icon as a fallback. Common and macOS-specific application resource trees
@@ -202,6 +210,35 @@ See Apple's [Sandbox file-access contract](https://developer.apple.com/documenta
 for panel-provided access; closing one owned grant does not establish process-wide
 revocation of implicit Powerbox access.
 
+### Per-operation lifecycle boundary
+
+Native capabilities do not share a generic progress/cancel/retry/resume facade.
+The approved baseline uses these operation-specific contracts:
+
+| Operation | Progress and terminal result | Cancel / retry / resume boundary |
+| --- | --- | --- |
+| File panel selection | Selected, canceled, denied or error; a selected path alone is not persistent authorization | User cancellation or owner/generation retirement ends an outstanding panel. A later call opens a new panel; no restoration of the old selection operation |
+| Read grant | One bounded range result or an explicit failure; release closes the owned handle | A live grant permits explicit offset reads, not durable transfer continuation. No public per-read cancel. Replacement invalidates the grant; reselect and obtain a fresh grant |
+| Create-new write grant | Each confirmed block reports bytes written and next offset; release/cancel reports terminal closure | `cancel()` cooperatively stops future work and retains the written prefix. A lost/interrupted reply does not prove zero bytes or safe replay. No automatic block retry, overwrite, transaction or cross-JVM resume |
+| Notification | OS authorization and scheduling result, not a presentation/delivery receipt | No public cancellation or delivery-resume API. Outstanding-operation cleanup is best effort; retry is a new request and may duplicate a side effect after an ambiguous result |
+| Plain-text clipboard | One typed read/write outcome; not a stream | No cancellation or continuation. Application-driven bounded retry must account for concurrent pasteboard changes; the framework does not promise exclusive clipboard ownership |
+| Runtime replacement | Admission receipt plus host-held terminal record queried by the same window lifetime | Matching request-ID retries in the same generation deduplicate admission. This is not replay of arbitrary native operations or migration of Java futures; see the product replacement contract below |
+
+All asynchronous native completions retain their original owner and generation.
+Invalidation settles active executor operations once and suppresses late success;
+it does not undo an already admitted OS side effect. A retired JVM may no longer
+receive its terminal reply, and that reply is never redirected to a new JVM.
+Successful release/cancel caching on a Java grant facade is local idempotence,
+not persisted authorization. Unimplemented commands such as `fileGrant.resume`
+remain rejected even if listed in a capability manifest; a permission entry
+does not implement a capability.
+
+The read/write worker races and unsupported-command boundary are covered by
+`bin/native-host-file-replacement-smoke`; typed outcome, interruption and local
+idempotence contracts are covered by `bin/flow-ipc-scope-smoke`. These checks do
+not replace real Sandbox selection/I/O, visible notification, clipboard
+contention or final aligned-build evidence in the product capability matrix.
+
 Sandbox validation must first establish that the selected JVM and WebKit child
 processes can start under the signed host's actual policy and reach a Flow
 first paint; Java `ready` or window creation alone is insufficient. Only then
@@ -316,14 +353,133 @@ next attempt, not a successful signal call. Signal failure is traced without
 claiming exit. This is event-loop-scheduled escalation, not a hard real-time OS
 guarantee or a guarantee that shutdown hooks, file transactions or external
 effects finish. Ordinary host Quit uses the separate asynchronous retirement
-contract above, also used by fatal host shutdown. Planned replacement still has
-its own termination path and lacks noncooperative-child exit confirmation.
+contract above, also used by fatal host shutdown. Recovery and planned
+replacement share the low-level retirement mechanism: exact Process/PID/
+generation ownership, a one-second TERM-to-KILL deadline and actual-exit
+confirmation before another process starts. A failed signal or missing exit
+callback is fatal and retains ownership for host shutdown; this does not by
+itself implement a product replacement transaction.
 Unexpected process recovery and planned development replacement use distinct
 host states. Planned replacement is allowed only for the generic development
 webapp mode and does not consume the unexpected-exit restart budget. If a
 candidate cannot reach `ready`, the host waits for the CLI-owned stable-JAR
 restore, starts that asset and reloads retained WebViews only after rollback
 `ready`.
+
+### Product Planned Replacement Completion Contract
+
+The public product entry is `DesktopRuntime.requestReplacement(requestId,
+candidateId)`, with the remaining R06 acceptance contract below. The existing
+`HostControlChannel` is a CLI-owned development stdin channel; the CLI's
+`SidecarJarReplacement` backs up and overwrites the staged JAR, then restores it
+after a failed candidate. Neither is a product authorization or candidate-store
+contract. Removing the development-mode guard would expose a lifecycle without
+these owners. Unexpected recovery of the same bundled JAR is not a substitute.
+
+The product path must establish the following boundaries before it is enabled:
+
+The host manifest loader supports an optional `runtimeCandidates` dictionary as
+the asset-declaration foundation. Each key is a sidecar identifier (not a path);
+each value requires `sidecarJar` and `webApp`, with optional
+`applicationResources`, all relative to the app's resources directory. Nonempty
+catalogs require packaged Flow IPC, not compatibility HTTP or a development
+server. At startup every entry is checked for containment, a regular JAR file,
+a webapp directory with a regular contained `index.html`, and an optional
+resource directory. Omitting the dictionary preserves existing startup behavior.
+
+This is only structural validation of host-declared assets. The manifest
+publisher remains responsible for pairing the JAR with its frontend build;
+these checks do not establish runnable-JAR validity, version compatibility,
+content authentication or safety under concurrent bundle mutation. Candidates
+cannot replace the host's bridge or capability manifest through this structure.
+The current CLI does not stage alternate candidates automatically. No candidate
+is selected or launched by declaring it, and this grants no replacement
+authority. The public request path separately requires the named
+`runtime.replacement.request` permission in `manifest-enforced` mode; development
+defaults and trace-only permission modes do not grant it. The existing stdin
+replacement entry retains its development-only guard.
+
+The host has a side-effect-free candidate configuration preflight. It accepts
+only an identifier from the startup-captured catalog, rechecks file shape and
+containment, rejects changed resolved asset paths, and returns the candidate's
+JAR/frontend/optional resources together. It retains the host's captured bridges,
+capability permissions and lifecycle policy; it does not reread the manifest or
+mutate the current configuration. The product request invokes this preflight
+before retirement. Preflight itself neither authorizes nor launches a process, and does not
+freeze file contents against concurrent mutation or authenticate a build.
+
+`RuntimeReplacementRecords` provides the host-memory result-store foundation,
+owned by the host and connected to native-window close/shutdown, product request
+admission, lifecycle settlement and the public read-only status command. Its caller
+must authorize a live native owner and current generation before admission.
+Records bind a host-generated operation UUID to a native-window lifetime UUID,
+caller request ID, candidate ID and requesting generation. Queries use the
+native lifetime identity, allowing a later JVM to retrieve the result without
+giving a reopened window with the same label access. Only one operation can be
+active globally; duplicate matching requests return the existing record, while
+conflicting requests are rejected. Terminal outcomes cannot be overwritten by
+late callbacks. Owner retirement hides its active record without releasing the
+active-operation fence; only explicit settlement releases that fence.
+In particular, reusing a settled request ID from a later JVM generation is a
+`request-conflict`, not a duplicate success or a new replacement. A fresh status
+query from that retained native owner still returns the original terminal record.
+
+The store retains at most 256 records and refuses new admission at capacity,
+rather than evicting idempotency guards. Closing native owners releases their
+settled records. Shutdown marks the active record interrupted and prevents new
+admission. Records do not persist across host exit, and recorded outcomes alone
+are not evidence of actual JVM exit, candidate readiness or rollback.
+
+`DesktopContext.runtime().replacementStatus()` (also on a captured capability
+context) uses `runtime.replacement.status` permission for the requesting window.
+The command takes no arguments: the host selects the live native owner's latest
+record, never a caller-supplied owner or window label. Normal command-generation
+and scope fences still apply. A successful query returns `status=none` when no
+record exists; it is not a successful replacement. Compatibility HTTP has no
+Flow IPC native owner and cannot use this query. Fresh-host queries return `none`;
+development replacements do not populate this store.
+
+An accepted product request returns a pending receipt and schedules retirement
+on the next host main-loop iteration. Receipt delivery to the old JVM is not
+guaranteed. The controller fences native operations and opaque transport, waits
+for actual old-process exit, then launches the declared candidate. Valid ready
+must retain the main-window identity. Only then does it install candidate
+frontend ownership, reload retained windows and record `replaced`. This means
+ready/asset handoff, not an application-specific health check. Candidate failure
+uses the retained stable configuration for host-owned rollback after exact
+candidate retirement; it does not ask the CLI to overwrite a JAR. Subsequent
+unexpected recovery launches the committed active configuration. Product
+failure/rollback, owner races and in-flight capability invalidation still require
+dedicated real baseline validation; successful handoff alone does not close R06.
+
+Initial sidecar launch binds the JAR arguments, working directory and framework
+environment in one launch plan. Transport, frontend mode and application-resource
+directory come from the current host configuration; an absent optional value
+removes the inherited environment key rather than borrowing another runtime's
+value. Unrelated application environment variables remain inherited. This is
+initial-launch isolation, not candidate selection or replacement settlement.
+
+| Boundary | Required behavior and acceptance |
+| --- | --- |
+| Request authority and correlation | Define the public trigger and its authorization separately from development stdin. Bind a bounded operation identity to the requesting owner and host generation. Denied, stale, duplicate and busy requests cannot retire the current process or select another candidate. |
+| Candidate and stable asset ownership | A host-owned validated candidate identity must resolve to a complete runnable sidecar and its matching standard production resources. Validate before retiring the current process; retain the stable asset until commit or rollback settlement. Do not accept a browser-supplied executable path or silently pair a new JAR with unrelated frontend resources. Acquisition, signing and update delivery remain outside this baseline. |
+| Retirement and handoff | Fence old native operations and opaque bridges, retain native window ownership, and confirm the exact previous JVM's actual exit before starting the candidate. In-flight requests fail explicitly; old capabilities and callbacks cannot succeed against the new generation. No Java heap or UI state preservation is implied. |
+| Candidate success and rollback | Validate the candidate's standard ready contract within a bounded deadline. Only then install its resource ownership and reload retained windows. Candidate failure must retire that exact child before restarting the retained stable asset; rollback succeeds only after stable ready and fresh Flow interaction, not after a file copy. Rollback failure retains a terminal/fenced host state and must not become an unbounded retry loop. |
+| Terminal result and lifecycle races | The result must survive destruction of the requesting JVM: an old Java future cannot be the sole completion record. Define host-owned result retrieval/delivery and explicit outcomes for successful replacement, rejected request, failed candidate with successful rollback, failed rollback and shutdown interruption. Quit/last-window close wins without orphaning either process or replaying an obsolete result. |
+
+Acceptance must exercise the authorized public product entry using the standard
+bundle and opaque IPC, not a test-only controller call or dev-vite reload.
+Require success, invalid-candidate rejection before retirement, failed candidate
+with successful rollback, and bounded rollback/retirement failure handling.
+Correlate request/result, candidate/stable asset identities, actual process
+exits, retained windows, fresh documents and Java listener/UIDL/push in the new
+or restored runtime. Resource-grant and concurrent-request invalidation must be
+checked at handoff. Dedicated subprocess and synthetic tests support these
+claims but cannot replace the real WKWebView product entry evidence.
+
+The candidate catalog, public request/status API and host-owned result channel
+are implemented as described above. Their focused evidence does not close the
+remaining lifecycle-race, failure and resource-invalidation acceptance boundaries.
 
 CLI development commands execute the bundled host process directly so its exit
 status is authoritative. Normal close exits zero. Fatal launch or capability

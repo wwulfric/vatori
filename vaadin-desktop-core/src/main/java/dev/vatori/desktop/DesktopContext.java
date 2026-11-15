@@ -14,6 +14,7 @@ public final class DesktopContext {
     private final DesktopFileTransfer fileTransfer;
     private final DesktopWindows windows;
     private final DesktopResources resources;
+    private final DesktopRuntime runtime;
 
     public DesktopContext(DesktopApplication application, URI appUri, NativeBridge nativeBridge,
                           Map<String, String> launchArguments) {
@@ -27,6 +28,7 @@ public final class DesktopContext {
         this.fileTransfer = new DesktopFileTransfer(nativeBridge);
         this.windows = new DesktopWindows(nativeBridge);
         this.resources = DesktopResources.fromLaunchEnvironment();
+        this.runtime = new DesktopRuntime(nativeBridge);
     }
 
     public DesktopApplication application() {
@@ -67,6 +69,10 @@ public final class DesktopContext {
 
     public DesktopResources resources() {
         return resources;
+    }
+
+    public DesktopRuntime runtime() {
+        return runtime;
     }
 
     /**

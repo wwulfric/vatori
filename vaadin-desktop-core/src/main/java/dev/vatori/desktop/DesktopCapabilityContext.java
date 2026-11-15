@@ -16,6 +16,7 @@ public final class DesktopCapabilityContext {
     private final DesktopFileDialog fileDialog;
     private final DesktopFileTransfer fileTransfer;
     private final DesktopWindows windows;
+    private final DesktopRuntime runtime;
 
     DesktopCapabilityContext(NativeBridge nativeBridge) {
         this.nativeBridge = Objects.requireNonNull(nativeBridge, "nativeBridge");
@@ -24,6 +25,7 @@ public final class DesktopCapabilityContext {
         this.fileDialog = new DesktopFileDialog(nativeBridge);
         this.fileTransfer = new DesktopFileTransfer(nativeBridge);
         this.windows = new DesktopWindows(nativeBridge);
+        this.runtime = new DesktopRuntime(nativeBridge);
     }
 
     public DesktopNotification notifications() {
@@ -48,6 +50,10 @@ public final class DesktopCapabilityContext {
 
     public NativeBridge nativeBridge() {
         return nativeBridge;
+    }
+
+    public DesktopRuntime runtime() {
+        return runtime;
     }
 
     public DesktopCommandResult setWindowTitle(String title) {

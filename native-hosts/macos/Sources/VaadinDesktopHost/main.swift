@@ -12,6 +12,7 @@ final class WebViewHost: NSObject, NSApplicationDelegate, NSWindowDelegate, WKNa
 
     let config: HostConfig
     private let capabilityManifest: CapabilityManifest
+    private let replacementRecords = RuntimeReplacementRecords()
     private let resourceCleanup: NativeResourceCleanupTracker
     private var terminationState = TerminationState.running
     private var failureExitRequested = false
@@ -88,6 +89,10 @@ final class WebViewHost: NSObject, NSApplicationDelegate, NSWindowDelegate, WKNa
 
         let sidecarController = FlowIpcSidecarController(
             config: config,
+            replacementRecords: replacementRecords,
+            onProductAssetsReady: { [weak self] selected in
+                if let root = selected.webAppURL { self?.flowWebAppSchemeHandler.installPackagedSource(root) }
+            },
             flowIpcWindows: { [weak self] in
                 guard let self else {
                     return []
@@ -149,6 +154,7 @@ final class WebViewHost: NSObject, NSApplicationDelegate, NSWindowDelegate, WKNa
 
     private func beginApplicationTermination(_ sender: NSApplication) {
         terminationState = .draining
+        replacementRecords.shutdown()
         hostControlChannel?.stop()
         // Fence incoming work before invalidation can settle its callbacks.
         sidecarController?.prepareForHostShutdown()
@@ -510,6 +516,12 @@ final class WebViewHost: NSObject, NSApplicationDelegate, NSWindowDelegate, WKNa
                 terminateAfterFailure()
                 return
             }
+            if sidecarController?.isProductReplacementInProgress == true,
+               let previous = sidecarReady,
+               previous.application.mainWindow.id != ready.application.mainWindow.id {
+                _ = sidecarController?.handleReadyFailure(cause: "candidate-main-window-mismatch")
+                return
+            }
             sidecarReady = ready
             mainScope = scope
             flowWebAppSchemeHandler.setEnabledFeatureFlags(ready.enabledFeatureFlags)
@@ -676,6 +688,31 @@ final class WebViewHost: NSObject, NSApplicationDelegate, NSWindowDelegate, WKNa
         let command = payload["command"] as? String ?? "unknown"
         let args = payload["args"] as? [String: Any] ?? [:]
         let correlationId = (object["correlationId"] as? String) ?? (object["id"] as? String) ?? ""
+        if command == RuntimeReplacementRequestCommand.name {
+            let result = RuntimeReplacementRequestCommand.execute(
+                args: args, hasOwner: ownerContext != nil, windowId: scope.windowId,
+                manifest: capabilityManifest) { requestId, candidateId in
+                    guard let ownerContext, let sidecarController = self.sidecarController else {
+                        return ["success": false, "error": "Runtime unavailable"]
+                    }
+                    return sidecarController.requestProductReplacement(
+                        owner: ownerContext.lifetimeId, requestId: requestId,
+                        candidateId: candidateId, expectedGeneration: sidecarGeneration)
+                }
+            sendCapabilityResult(result, command: command, correlationId: correlationId,
+                object: object, scope: scope, sidecarGeneration: sidecarGeneration, ownerContext: ownerContext)
+            return
+        }
+        if command == RuntimeReplacementStatusCommand.name {
+            let result = RuntimeReplacementStatusCommand.execute(
+                args: args, owner: ownerContext?.lifetimeId, windowId: scope.windowId,
+                manifest: capabilityManifest, records: replacementRecords)
+            sendCapabilityResult(
+                result, command: command, correlationId: correlationId,
+                object: object, scope: scope,
+                sidecarGeneration: sidecarGeneration, ownerContext: ownerContext)
+            return
+        }
         if command == "window.open" {
             let result = openWindowCommand(args)
             sendCapabilityResult(
@@ -1083,6 +1120,7 @@ final class WebViewHost: NSObject, NSApplicationDelegate, NSWindowDelegate, WKNa
             "uiId": context.scope.uiId
         ])
         rememberClosedWindow(context.scope)
+        replacementRecords.forgetOwner(context.lifetimeId)
         context.commandExecutor.invalidateNativeOperations(
             reason: "owner-window-closed")
         sendWindowClosed(context.scope)

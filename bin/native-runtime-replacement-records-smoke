@@ -1,0 +1,15 @@
+#!/usr/bin/env bash
+set -euo pipefail
+ROOT="$(cd "$(dirname "${BASH_SOURCE[0]}")/.." && pwd)"
+BUILD_DIR="$ROOT/.build/test-support/runtime-replacement-records-smoke"
+MODULE_CACHE="$ROOT/.build/clang-module-cache"
+mkdir -p "$BUILD_DIR" "$MODULE_CACHE"
+CLANG_MODULE_CACHE_PATH="$MODULE_CACHE" /usr/bin/swiftc \
+  "$ROOT/native-hosts/macos/Sources/VaadinDesktopHost/SidecarProtocol.swift" \
+  "$ROOT/native-hosts/macos/Sources/VaadinDesktopHost/CapabilityManifest.swift" \
+  "$ROOT/native-hosts/macos/Sources/VaadinDesktopHost/RuntimeReplacementRecords.swift" \
+  "$ROOT/native-hosts/macos/Sources/VaadinDesktopHost/RuntimeReplacementStatusCommand.swift" \
+  "$ROOT/native-hosts/macos/Sources/VaadinDesktopHost/RuntimeReplacementRequestCommand.swift" \
+  "$ROOT/test-support/native-host-macos-acceptance/Tests/runtime-replacement-records-smoke.swift" \
+  -o "$BUILD_DIR/smoke"
+"$BUILD_DIR/smoke"

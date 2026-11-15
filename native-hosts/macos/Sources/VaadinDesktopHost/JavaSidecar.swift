@@ -79,7 +79,7 @@ final class JavaSidecar {
     }
 
     @discardableResult
-    func start() -> Bool {
+    func start(configuration: HostConfig? = nil) -> Bool {
         guard !shutdownRequested,
               process == nil else {
             return false
@@ -87,21 +87,12 @@ final class JavaSidecar {
         generation += 1
         let launchGeneration = generation
         let process = Process()
-        process.currentDirectoryURL = config.sidecarJarURL.deletingLastPathComponent()
-        let launchPlan = JavaSidecarLaunchPlan.make(config: config)
+        let launchPlan = JavaSidecarLaunchPlan.make(config: configuration ?? config)
+        process.currentDirectoryURL = launchPlan.currentDirectoryURL
         process.executableURL = URL(fileURLWithPath: launchPlan.executable)
         process.arguments = launchPlan.arguments
 
-        var environment = ProcessInfo.processInfo.environment
-        environment["VAADIN_DESKTOP_TRANSPORT"] = config.transport.rawValue
-        if let source = config.flowWebAppSource {
-            environment["VAADIN_DESKTOP_FLOW_FRONTEND_MODE"] = source.mode
-        }
-        if let applicationResourcesURL = config.applicationResourcesURL {
-            environment["VATORI_APPLICATION_RESOURCES"] =
-                applicationResourcesURL.path
-        }
-        process.environment = environment
+        process.environment = launchPlan.environment
 
         let stdinPipe = Pipe()
         let stdoutPipe = Pipe()
@@ -199,7 +190,7 @@ final class JavaSidecar {
 
         trace("send", "launch.sidecar", [
             "command": launchPlan.commandSummary,
-            "jar": "$APP/Contents/Resources/Sidecar/application.jar",
+            "jar": launchPlan.jarDisplayPath,
             "transport": config.transport.rawValue,
             "generation": launchGeneration
         ])

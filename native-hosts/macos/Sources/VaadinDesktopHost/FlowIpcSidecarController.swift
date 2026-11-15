@@ -25,6 +25,10 @@ private enum SidecarReplacementPhase {
 
 final class FlowIpcSidecarController {
     private let config: HostConfig
+    private var activeConfiguration: HostConfig
+    private let replacementRecords: RuntimeReplacementRecords
+    private let onProductAssetsReady: (HostConfig) -> Void
+    private var productReplacement: (id: UUID, configuration: HostConfig)?
     private let flowIpcWindows: () -> [FlowIpcWindowContext]
     private let terminateApplication: () -> Void
     private var sidecar: JavaSidecar!
@@ -36,7 +40,7 @@ final class FlowIpcSidecarController {
     private var restartAttempts = 0
     private var exitedProcessIdentifier: Int32?
     private let onLifecycleReady: () -> Void
-    private let onReplacementResult: (
+    private let developmentReplacementResult: (
         String,
         HostControlReplacementStatus,
         String
@@ -44,6 +48,8 @@ final class FlowIpcSidecarController {
 
     init(
         config: HostConfig,
+        replacementRecords: RuntimeReplacementRecords = RuntimeReplacementRecords(),
+        onProductAssetsReady: @escaping (HostConfig) -> Void = { _ in },
         flowIpcWindows: @escaping () -> [FlowIpcWindowContext],
         onSidecarEnvelope: @escaping (String, [String: Any], Int) -> Void,
         onLifecycleReady: @escaping () -> Void,
@@ -55,10 +61,13 @@ final class FlowIpcSidecarController {
         terminateApplication: @escaping () -> Void
     ) {
         self.config = config
+        self.activeConfiguration = config
+        self.replacementRecords = replacementRecords
+        self.onProductAssetsReady = onProductAssetsReady
         self.flowIpcWindows = flowIpcWindows
         self.terminateApplication = terminateApplication
         self.onLifecycleReady = onLifecycleReady
-        self.onReplacementResult = onReplacementResult
+        self.developmentReplacementResult = onReplacementResult
         self.sidecar = JavaSidecar(
             config: config,
             onSidecarEnvelope: onSidecarEnvelope,
@@ -92,6 +101,8 @@ final class FlowIpcSidecarController {
             return
         }
         hostShutdownRequested = true
+        replacementRecords.shutdown()
+        productReplacement = nil
         initialReadyPending = false
         recoveryInProgress = false
         replacementPhase = nil
@@ -154,6 +165,89 @@ final class FlowIpcSidecarController {
 
     var processIdentifier: Int32? {
         sidecar.processIdentifier
+    }
+
+    var isProductReplacementInProgress: Bool { productReplacement != nil }
+
+    func requestProductReplacement(owner: UUID, requestId: String,
+                                   candidateId: String, expectedGeneration: Int) -> [String: Any] {
+        guard config.transport == .flowIpc, config.flowWebAppSource?.isDevelopment == false,
+              canExecuteSidecarCommand(expectedGeneration: expectedGeneration),
+              flowIpcWindows().contains(where: { $0.lifetimeId == owner }) else {
+            return ["success": false, "error": "Runtime is unavailable for product replacement"]
+        }
+        let candidate: HostConfig
+        do { candidate = try activeConfiguration.configuration(forRuntimeCandidate: candidateId) }
+        catch { return ["success": false, "error": "Candidate preflight failed", "errorCode": "invalid-candidate"] }
+        switch replacementRecords.begin(owner: owner, requestId: requestId, candidateId: candidateId,
+                                         requestingGeneration: expectedGeneration) {
+        case .rejected(let reason):
+            return ["success": false, "error": "Replacement request rejected", "errorCode": reason.rawValue]
+        case .duplicate(let record):
+            return ["success": true, "operationId": record.operationId.uuidString,
+                    "status": record.outcome?.rawValue ?? "pending", "duplicate": true]
+        case .accepted(let record):
+            productReplacement = (record.operationId, candidate)
+            // Leave the capability result path available for this main-loop
+            // iteration. The returned receipt is not a terminal result.
+            DispatchQueue.main.async { [weak self] in
+                guard let self, self.productReplacement?.id == record.operationId else { return }
+                guard self.canExecuteSidecarCommand(expectedGeneration: expectedGeneration),
+                      self.flowIpcWindows().contains(where: { $0.lifetimeId == owner }),
+                      let pid = self.sidecar.processIdentifier else {
+                    self.replacementRecords.finish(operationId: record.operationId, outcome: .interrupted)
+                    self.productReplacement = nil
+                    return
+                }
+                let request = SidecarReplacementRequest(requestId: record.operationId.uuidString,
+                    reason: "product-replacement", previousProcessIdentifier: pid)
+                self.replacementPhase = .terminatingCurrent(request)
+                self.exitedProcessIdentifier = pid
+                let windows = self.flowIpcWindows()
+                self.disconnectBrowserBridges(windows)
+                self.invalidateNativeOperations(windows, reason: "sidecar-replacement")
+                trace("recv", "sidecar.productReplacementRequested", [
+                    "operationId": record.operationId.uuidString, "requestId": requestId,
+                    "candidateId": candidateId, "processIdentifier": pid,
+                    "requestingGeneration": expectedGeneration])
+                guard self.sidecar.terminateForReplacement(reason: request.reason) else {
+                    self.replacementRecords.finish(operationId: record.operationId, outcome: .retirementFailed)
+                    self.productReplacement = nil
+                    self.terminateApplication()
+                    return
+                }
+            }
+            return ["success": true, "operationId": record.operationId.uuidString,
+                    "status": "pending", "duplicate": false]
+        }
+    }
+
+    private func onReplacementResult(_ requestId: String, _ status: HostControlReplacementStatus,
+                                     _ cause: String) {
+        guard let product = productReplacement, product.id.uuidString == requestId else {
+            developmentReplacementResult(requestId, status, cause)
+            return
+        }
+        if status == .failed {
+            // Candidate failure is not terminal until rollback settles. Wait
+            // for exact child exit through the existing retirement state.
+            DispatchQueue.main.async { [weak self] in
+                guard self?.productReplacement?.id == product.id else { return }
+                _ = self?.requestRollback(requestId: requestId, reason: "product-rollback")
+            }
+            return
+        }
+        let outcome: RuntimeReplacementRecords.Outcome
+        switch status {
+        case .ready: outcome = .replaced
+        case .rolledBack: outcome = .rolledBack
+        case .rollbackFailed: outcome = .rollbackFailed
+        case .failed: return
+        }
+        replacementRecords.finish(operationId: product.id, outcome: outcome)
+        trace("recv", "sidecar.productReplacementResult", [
+            "operationId": requestId, "status": outcome.rawValue, "cause": cause])
+        productReplacement = nil
     }
 
     @discardableResult
@@ -345,6 +439,11 @@ final class FlowIpcSidecarController {
         guard !hostShutdownRequested else {
             return true
         }
+        if case .rollbackRunning(let request, _) = replacementPhase {
+            onReplacementResult(request.requestId, .rollbackFailed, cause)
+            terminateApplication()
+            return true
+        }
         guard case .candidateRunning(let request) = replacementPhase else {
             return false
         }
@@ -382,6 +481,13 @@ final class FlowIpcSidecarController {
                 cause)
             terminateApplication()
             return
+        }
+        if let product = productReplacement {
+            let outcome: RuntimeReplacementRecords.Outcome
+            if case .terminatingCurrent = replacementPhase { outcome = .retirementFailed }
+            else { outcome = .rollbackFailed }
+            replacementRecords.finish(operationId: product.id, outcome: outcome)
+            productReplacement = nil
         }
         trace("send", "error", [
             "code": cause == "unsupported-sidecar-version"
@@ -510,7 +616,7 @@ final class FlowIpcSidecarController {
             "previousProcessIdentifier":
                 request.previousProcessIdentifier
         ])
-        guard sidecar.start() else {
+        guard sidecar.start(configuration: productReplacement?.configuration ?? activeConfiguration) else {
             replacementPhase = .awaitingRollback(
                 request, cause: "candidate-start-failed")
             trace("send", "sidecar.replacementFailed", [
@@ -592,7 +698,7 @@ final class FlowIpcSidecarController {
                 "attempt": attempt,
                 "previousProcessIdentifier": self.exitedProcessIdentifier ?? 0
             ])
-            guard self.sidecar.start() else {
+            guard self.sidecar.start(configuration: self.activeConfiguration) else {
                 self.scheduleRecovery()
                 return
             }
@@ -644,6 +750,10 @@ final class FlowIpcSidecarController {
     private func completeReplacement(
         request: SidecarReplacementRequest
     ) {
+        if let product = productReplacement, product.id.uuidString == request.requestId {
+            activeConfiguration = product.configuration
+            onProductAssetsReady(activeConfiguration)
+        }
         let currentProcessIdentifier = sidecar.processIdentifier ?? 0
         let reload = reloadWindows()
         trace("recv", "sidecar.replacementReady", [
@@ -737,7 +847,7 @@ final class FlowIpcSidecarController {
             "reason": request.reason,
             "replacementFailure": cause
         ])
-        guard sidecar.start() else {
+        guard sidecar.start(configuration: activeConfiguration) else {
             replacementPhase = nil
             trace("send", "sidecar.rollbackFailed", [
                 "requestId": request.requestId,

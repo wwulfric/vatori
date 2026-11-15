@@ -47,6 +47,7 @@ public final class FlowIpcScopeSmokeMain {
         verifyOpaqueRequestBodyCancelUnblocksReader();
         verifyOpaqueResponseBackpressureAndCancel();
         verifyOpaqueExchangeRegistryLifecycle();
+        verifyEarlyResponseWaitsForRequestEnd();
         verifyOpaqueSessionRegistry();
         verifyPushDeliveryAcknowledgement();
         verifyWindowCloseScopeBeforeCancellation();
@@ -446,6 +447,29 @@ public final class FlowIpcScopeSmokeMain {
                     || !reopenedResult.get().success()) {
                 throw new IllegalStateException(
                         "Reopened scope could not create a fresh captured context");
+            }
+            // Exercise the public runtime facade after the fresh owner has
+            // already completed a capability. Reusing a window label must not
+            // revive either reads or mutating requests from the retired owner.
+            int bytesBeforeRetiredRuntimeCalls = capturedOutput.size();
+            if (VaadinSession.getCurrent() != null) {
+                throw new IllegalStateException("Runtime probe inherited a Flow session");
+            }
+            DesktopCommandResult retiredStatus = originalContext.runtime()
+                    .replacementStatus();
+            DesktopCommandResult retiredRequest = originalContext.runtime()
+                    .requestReplacement("stale-owner-probe", "next");
+            if (!isOwnerWindowClosed(retiredStatus)
+                    || !isOwnerWindowClosed(retiredRequest)
+                    || !Boolean.TRUE.equals(retiredStatus.payload().get("canceled"))
+                    || !Boolean.TRUE.equals(retiredRequest.payload().get("canceled"))
+                    || !"runtime.replacement.status".equals(
+                            retiredStatus.payload().get("command"))
+                    || !"runtime.replacement.request".equals(
+                            retiredRequest.payload().get("command"))
+                    || capturedOutput.size() != bytesBeforeRetiredRuntimeCalls) {
+                throw new IllegalStateException(
+                        "Retired runtime facade emitted IPC or lost typed invalidation");
             }
         } finally {
             VaadinSession.setCurrent(null);
@@ -1140,6 +1164,9 @@ public final class FlowIpcScopeSmokeMain {
                 || credits.get() != 2) {
             throw new IllegalStateException("Opaque request stream did not replenish consumed chunk credits");
         }
+        if (body.read() != -1 || body.read(new byte[1]) != -1) {
+            throw new IllegalStateException("Opaque request EOF must remain terminal");
+        }
 
         OpaqueHttpRequestBodyInputStream invalid =
                 new OpaqueHttpRequestBodyInputStream(-1, ignored -> {
@@ -1343,6 +1370,40 @@ public final class FlowIpcScopeSmokeMain {
                             "{\"requestId\":\"reusable-request\"}"));
         } finally {
             session.close();
+        }
+    }
+
+    private static void verifyEarlyResponseWaitsForRequestEnd() throws Exception {
+        for (int length : new int[]{0, 6, -1}) {
+            ByteArrayOutputStream captured = new ByteArrayOutputStream();
+            FlowIpcScope scope = new FlowIpcScope("main", "early-response-" + length, "main");
+            SidecarOutput output = new SidecarOutput(new PrintStream(captured, true,
+                    StandardCharsets.UTF_8), "", scope);
+            DesktopFlowOpaqueHttpSession session = DesktopFlowOpaqueHttpSession.create(
+                    scope.sessionId(), "early-response", "", ScopeSmokeView.class);
+            CountDownLatch handled = new CountDownLatch(1);
+            VaadinSession state = vaadinSession(session);
+            state.lock();
+            try {
+                state.addRequestHandler((ignored, request, response) -> {
+                    response.setStatus(204);
+                    handled.countDown();
+                    return true;
+                });
+            } finally { state.unlock(); }
+            try (StandardFlowIpcExchanges exchanges = new StandardFlowIpcExchanges(output)) {
+                exchanges.open(scope, session, streamEnvelope("opaqueHttpStreamOpen", "early",
+                        "{\"requestId\":\"early\",\"method\":\"POST\",\"url\":\"https://app.vatori.invalid/early\",\"headers\":{},\"contentLength\":" + length + "}"), "early", "early");
+                if (!handled.await(2, TimeUnit.SECONDS)) throw new AssertionError("handler not reached");
+                Thread.sleep(50);
+                if (captured.toString(StandardCharsets.UTF_8).contains("\"type\":\"opaqueHttpStreamResponseEnd\""))
+                    throw new AssertionError("response completed before request terminator");
+                if (length != 0) exchanges.acceptChunk(scope, streamEnvelope("opaqueHttpStreamChunk", "chunk",
+                        "{\"requestId\":\"early\",\"chunkSequence\":0,\"bodyBase64\":\"YWJjZGVm\"}"));
+                exchanges.finishRequest(scope, streamEnvelope("opaqueHttpStreamEnd", "end",
+                        "{\"requestId\":\"early\",\"chunkCount\":" + (length == 0 ? 0 : 1) + ",\"bodyBytes\":" + (length == 0 ? 0 : 6) + "}"));
+                awaitOutput(captured, "\"type\":\"opaqueHttpStreamResponseEnd\"");
+            } finally { session.close(); }
         }
     }
 

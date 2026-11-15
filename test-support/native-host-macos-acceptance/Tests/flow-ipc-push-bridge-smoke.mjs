@@ -158,6 +158,14 @@ const resyncAck = messages.shift();
 assert.equal(resyncAck.type, 'opaquePushAck');
 assert.equal(resyncAck.payload.pushSequence, 5);
 assert.equal(resyncAck.payload.lastSeenServerSyncId, 9);
+context.VaadinDesktopPush.receive({
+  version: 1, type: 'opaquePush',
+  payload: {connectionId, pushSequence: 5, flowServerSyncId: 9,
+    deliveryAttempt: 2, uidl: 'must not redeliver resync', resync: true}
+});
+assert.equal(receivedBodies.length, 2);
+assert.equal(messages.shift().type, 'opaquePushAck');
+assert.equal(context.VaadinDesktopIpcDiagnostics.standardBundlePushResyncCount, 1);
 
 context.VaadinDesktopPush.receive({
   version: 1,
@@ -174,6 +182,16 @@ context.VaadinDesktopPush.receive({
 assert.equal(context.VaadinDesktopIpcDiagnostics.standardBundlePushRedeliveryCount, 1);
 assert.equal(messages.shift().type, 'opaquePushAck');
 
+context.VaadinDesktopPush.receive({
+  version: 1, type: 'opaquePush',
+  payload: {connectionId, pushSequence: 5, flowServerSyncId: 9,
+    deliveryAttempt: 3, uidl: 'stale snapshot must not roll back client', resync: true}
+});
+assert.equal(receivedBodies.length, 3);
+assert.equal(lastSeenServerSyncId, 10);
+assert.equal(messages.shift().type, 'opaquePushAck');
+assert.equal(context.VaadinDesktopIpcDiagnostics.standardBundlePushLastSequence, 6);
+
 context.VaadinDesktopPush.reconnect();
 assert.equal(reconnecting, 1);
 const reconnectMessages = messages.splice(0, 2);
@@ -185,7 +203,7 @@ assert.equal(reconnectMessages[1].payload.lastSeenServerSyncId, 10);
 assert.equal(messages.length, 0);
 assert.equal(context.VaadinDesktopIpcDiagnostics.standardBundlePushReconnectCount, 1);
 assert.equal(context.VaadinDesktopIpcDiagnostics.standardBundlePushResyncCount, 1);
-assert.equal(context.VaadinDesktopIpcDiagnostics.standardBundlePushAckCount, 4);
+assert.equal(context.VaadinDesktopIpcDiagnostics.standardBundlePushAckCount, 6);
 context.VaadinDesktopPush.receive({
   version: 1,
   type: 'opaquePushConnected',

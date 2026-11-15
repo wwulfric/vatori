@@ -87,6 +87,9 @@ final class OpaqueHttpRequestBodyInputStream extends InputStream {
         if (length == 0) {
             return 0;
         }
+        if (current != null && current.end) {
+            return -1;
+        }
         while (current == null || offset == current.bytes.length) {
             if (current != null && !current.end && !current.cancel) {
                 creditSender.accept(1);

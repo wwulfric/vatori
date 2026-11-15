@@ -4,6 +4,8 @@ import dev.vatori.desktop.flow.transport.DesktopFlowHttpResponseHead;
 import dev.vatori.desktop.flow.transport.DesktopFlowOpaqueHttpSession;
 
 import java.io.IOException;
+import java.io.FilterInputStream;
+import java.io.OutputStream;
 import java.nio.charset.StandardCharsets;
 import java.util.Base64;
 import java.util.LinkedHashMap;
@@ -266,10 +268,19 @@ final class StandardFlowIpcExchanges implements AutoCloseable {
                         method,
                         url,
                         headers,
-                        requestBody,
+                        new FilterInputStream(requestBody) {
+                            @Override
+                            public void close() {
+                                // The exchange owns the wire stream, not the request handler.
+                            }
+                        },
                         contentLength,
                         responseBody::start,
                         responseBody);
+                // A handler may return without consuming its request body. Keep the
+                // exchange registered until the validated request terminator arrives;
+                // otherwise an early response races the final request frame.
+                requestBody.transferTo(OutputStream.nullOutputStream());
                 responseBody.finish();
             } catch (IOException | RuntimeException error) {
                 handleFailure(error);

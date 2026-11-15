@@ -172,7 +172,10 @@
         Number(diagnostics.standardBundlePushDeferredWhileResyncCount || 0) + 1;
       return;
     }
-    if (!payload.resync && sequence <= subscription.lastPushSequence) {
+    // Resync snapshots use the same monotonic delivery sequence as other
+    // pushes. Re-delivering an already applied snapshot would reset the client
+    // a second time, including calls created after the first application.
+    if (sequence <= subscription.lastPushSequence) {
       diagnostics.standardBundlePushDuplicateCount =
         Number(diagnostics.standardBundlePushDuplicateCount || 0) + 1;
       acknowledgeMessage(subscription, payload);

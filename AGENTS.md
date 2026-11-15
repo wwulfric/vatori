@@ -53,16 +53,11 @@ fixture、compatibility transport 或未完成的产品边界，就明确说明�
 
 ## 构建和运行
 
-本机 Maven 通过 SDKMAN 可用。直接调用 Maven前先加载：
+从仓库根目录运行构建。使用 PATH 中的 Maven 3.9+ 和 JDK 21+，
+将 JAVA_HOME 指向该 JDK，使用仓库本地 Maven repository：
 
 ```bash
-source /Users/bytedance/.sdkman/bin/sdkman-init.sh
-```
-
-使用仓库本地 Maven repository：
-
-```bash
-mvn -o -Dmaven.repo.local=/Users/bytedance/IdeaProjects/vatori/.m2/repository -DskipTests compile
+mvn -o -Dmaven.repo.local="$PWD/.m2/repository" -DskipTests compile
 ```
 
 需要 Python 时统一使用 `uv` 管理运行时和依赖，不要直接使用裸 `python3` 或

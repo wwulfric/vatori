@@ -490,7 +490,6 @@ The R05 profile uses two real WKWebViews, the standard production bundle and
 public raw/multipart `UploadHandler` and Range-capable `DownloadHandler` APIs:
 
 ```bash
-source "${SDKMAN_DIR:-$HOME/.sdkman}/bin/sdkman-init.sh"
 bash test-support/native-host-macos-acceptance/bin/run-transfer-endurance
 ```
 
@@ -1082,7 +1081,6 @@ Sandbox/Powerbox boundary.
 Sandbox-selected read access has a separate entry:
 
 ```bash
-source /Users/bytedance/.sdkman/bin/sdkman-init.sh
 bash test-support/native-host-macos-acceptance/bin/run-flow-file-read-grant-sandbox
 ```
 
@@ -1140,7 +1138,6 @@ assertion of this gate.
 Sandbox-selected create-new write access has its own entry:
 
 ```bash
-source /Users/bytedance/.sdkman/bin/sdkman-init.sh
 bash test-support/native-host-macos-acceptance/bin/run-flow-file-write-grant-sandbox
 ```
 

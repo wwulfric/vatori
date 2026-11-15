@@ -59,8 +59,7 @@ When reviewing or proposing changes:
 Compile:
 
 ```bash
-source /Users/bytedance/.sdkman/bin/sdkman-init.sh
-mvn -o -Dmaven.repo.local=/Users/bytedance/IdeaProjects/vatori/.m2/repository -DskipTests compile
+mvn -o -Dmaven.repo.local="$PWD/.m2/repository" -DskipTests compile
 ```
 
 Run smoke app:

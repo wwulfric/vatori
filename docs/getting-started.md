@@ -6,7 +6,8 @@
 - Maven 3.9+
 - macOS with `/usr/bin/swiftc`
 
-Repository commands use `.m2/repository` as the local Maven cache.
+Set `JAVA_HOME` to your JDK and make `java`, `javac`, and `mvn` available on
+`PATH`. Repository commands use `.m2/repository` as the local Maven cache.
 
 ## Run Pure Flow
 

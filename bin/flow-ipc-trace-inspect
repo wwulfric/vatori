@@ -2,12 +2,6 @@
 set -euo pipefail
 
 ROOT="$(cd "$(dirname "$0")/.." && pwd)"
-if [[ -f /Users/bytedance/.sdkman/bin/sdkman-init.sh ]]; then
-  # shellcheck source=/dev/null
-  set +u
-  source /Users/bytedance/.sdkman/bin/sdkman-init.sh
-  set -u
-fi
 
 TRACE_INSPECTOR_POM="$ROOT/test-support/vaadin-desktop-trace-inspector/pom.xml"
 mvn -q -o -Dmaven.repo.local="$ROOT/.m2/repository" \

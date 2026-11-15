@@ -4,12 +4,6 @@ set -euo pipefail
 ROOT="$(cd "$(dirname "${BASH_SOURCE[0]}")/../../.." && pwd)"
 APP="$ROOT/test-apps/flow-over-ipc-framework-app"
 
-if [[ -f "$HOME/.sdkman/bin/sdkman-init.sh" ]]; then
-  set +u
-  # shellcheck source=/dev/null
-  source "$HOME/.sdkman/bin/sdkman-init.sh"
-  set -u
-fi
 if ! command -v javac >/dev/null 2>&1 || ! command -v java >/dev/null 2>&1; then
   echo "Private write-grant replay handoff smoke requires a JDK." >&2
   exit 1

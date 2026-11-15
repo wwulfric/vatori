@@ -55,8 +55,8 @@ executing them; a named runner is not proof that it passed.
   Revalidation is targeted by changed ownership/transport/capability code;
   final Stage B certification uses the approved frozen profile and revision.
 
-Baseline criteria proposed in the runtime matrix are not automatically supplied
-by existing runners. In particular three-window churn, the proposed endurance
+Baseline criteria approved in the runtime matrix are not automatically supplied
+by existing runners. In particular three-window churn, the approved endurance
 profile, VoiceOver/operator tasks and product planned replacement need gap work
 before a complete baseline run can be claimed. Per-operation semantics must
 distinguish cancellation from revocation, fresh-request retry from resume, and
@@ -75,9 +75,294 @@ The script currently covers:
 - Flow IPC scope, backpressure, cancellation and capability correlation;
 - launcher transport, ready payload, pure Flow EOF and optional Spring context lifecycle;
 - application bundle input discovery and safe packaged-resource lookup;
+- `bin/native-host-config-resource-smoke`: production manifest loader rejects
+  directory-as-file, file-as-webapp and FIFO sidecar/manifest inputs before JVM launch,
+  with externally bounded child probes for potentially blocking manifest reads,
+  while retaining internal-link and bundle-containment behavior; observer is
+  stubbed, with no AppKit window or Java process;
+  it also checks optional runtime-candidate catalog decoding, allowed mode,
+  identifiers, required paired asset paths and contained regular web entry;
+  launch-plan checks cover authoritative transport/frontend/resource environment
+  values, removal of absent optional values and preservation of unrelated values.
+  Bounded inert subprocess probes verify actual environment and working-directory
+  delivery; these are not JVM or WKWebView evidence;
+  candidate preflight checks paired configuration, unchanged host policy,
+  missing/special/retargeted assets after initial load, unknown IDs and refusal
+  to acquire a newly added manifest candidate. These are focused non-window
+  checks, not evidence of an active candidate switch;
+  this does not validate replacement authorization, launch or rollback;
+- `bin/native-runtime-replacement-records-smoke`: focused host-memory result
+  admission/replay, request conflict, native-owner isolation, bounded retention,
+  immutable outcomes, detached-owner settlement, shutdown, and status-command
+  permission/owner/argument checks. For every terminal outcome it closes the
+  active record's owner twice, requires the global busy fence to survive an
+  unrelated completion, and checks hidden results and capacity-one reuse only
+  after exact-operation settlement. A late old completion/close must not change
+  the next owner's pending operation; detached shutdown remains closed and does
+  not republish the old result. These are record-store checks, not controller
+  scheduling, actual process exit or real-window close-race evidence;
+- `Tests/runtime-replacement-status-trace-verify.mjs` in the native acceptance
+  module checks the framework app's public read-only query: Java command, scoped
+  native result and subsequent DOM `none` observation. Its companion smoke rejects
+  missing/reordered/cross-owner/cross-generation and denied evidence. This proves
+  an empty-record query only, not replacement or cross-JVM terminal retrieval;
+- `Tests/runtime-product-replacement-trace-verify.mjs` checks focused success and
+  exit-before-ready rollback profiles, enabled only in the acceptance host by
+  `VAADIN_DESKTOP_FLOW_IPC_AUTO_PRODUCT_REPLACEMENT=1` or `rollback` alongside the
+  framework-app driver. The test bundle must declare `next` and explicitly permit request/status.
+  It checks public request/receipt, actual old-child exit before candidate launch,
+  distinct PID and candidate JAR path, correlated terminal query in generation two,
+  DOM observation and actual final child exit. Rollback additionally requires
+  candidate exit 42 before stable-JAR launch, third-generation query/DOM result,
+  and no unexpected-recovery budget consumption. Use the standard runtime/framework
+  gates as well. Companion synthetic negatives are not process evidence. These
+  profiles do not prove version compatibility, blocked candidate retirement or
+  in-flight native-grant invalidation;
 - browser request and push bridge contracts.
 
 The script itself is the source of truth for its subcommands.
+
+### Product Replacement Focused Profiles
+
+With a local JDK selected, run:
+
+```bash
+bash test-support/native-host-macos-acceptance/bin/run-product-replacement success
+bash test-support/native-host-macos-acceptance/bin/run-product-replacement rollback
+bash test-support/native-host-macos-acceptance/bin/run-product-replacement rejection
+bash test-support/native-host-macos-acceptance/bin/run-product-replacement rollback-failure
+bash test-support/native-host-macos-acceptance/bin/run-product-replacement blocked-retirement
+bash test-support/native-host-macos-acceptance/bin/run-product-replacement blocked-candidate
+bash test-support/native-host-macos-acceptance/bin/run-product-replacement blocked-rollback
+bash test-support/native-host-macos-acceptance/bin/run-product-replacement burst
+bash test-support/native-host-macos-acceptance/bin/run-product-replacement generation-conflict
+bash test-support/native-host-macos-acceptance/bin/run-product-replacement owner-isolation
+bash test-support/native-host-macos-acceptance/bin/run-product-replacement owner-reopen
+bash test-support/native-host-macos-acceptance/bin/run-product-replacement owner-active-close
+```
+
+The runner uses the package lock, builds the standard production bundle and an
+explicit acceptance host, then signs a private app copy with a `next` catalog
+entry. Success uses the same build's JAR/frontend at separate paths. Rollback
+uses the standalone test-only `FailBeforeReady` candidate, not a fault switch in
+production code. Both exercise the public request/status API via a Java listener.
+The rejection profile omits `next` from the host catalog but invokes the same
+public request. Its verifier requires permission-allowed `invalid-candidate`,
+Java-to-DOM rejection, a subsequent fresh `none` query, no replacement/recovery
+admission or process switch, and the original JVM's graceful final exit. It also
+runs the full framework gate afterward. Unknown-candidate rejection is not
+evidence for stale owners, busy/duplicate requests or concurrent asset mutation.
+The rollback-failure profile adds a test-only launcher to the private stable JAR
+before signing. It delegates the first launch to the real framework app and
+uses an atomic marker in the private evidence directory to exit 43 on its second
+launch. The candidate exits 42. No running bundle mutation or production fault
+flag is used. Its dedicated verifier requires the public Java request, initial
+WKWebView DOM query, correlated permission receipt, three exact JVM identities
+and actual exits, candidate/stable JAR paths, `rollback-failed`, resource drain
+and host failure-shutdown status 1 within 30 seconds of the request. A fourth
+launch or unexpected-recovery retry is rejected; the runner also checks final
+process absence. This expected-fatal profile does not run or claim the aggregate
+post-recovery framework gate and cannot query a record after the host exits.
+It does not cover a hung rollback child or OS refusal to terminate a process.
+The blocked-retirement profile installs `BlockOnShutdown` only in the private
+initial JAR before signing; the copied candidate remains the normal app. A
+shutdown hook blocks graceful JVM exit. The verifier requires hook entry,
+generation/PID-correlated product retirement and escalation after the one-second
+grace period, actual signal-9 exit before candidate launch, fresh JVM result/DOM
+and the full runtime/framework gates. It rejects extra generations, premature
+escalation and missing exit confirmation. This covers a blocked initial JVM,
+not a hung candidate/rollback process, OS signal refusal or physical input.
+The blocked-candidate profile packages the standalone `HangBeforeReady` fixture
+only as the candidate. It never emits ready and blocks graceful shutdown. The
+verifier requires the existing 15-second candidate ready deadline, correlated
+failure, candidate-PID TERM-to-KILL escalation, actual signal-9 exit before
+stable-JAR launch, third-generation `rolled-back` query/DOM and the full framework
+gate. It rejects early/late timeout, wrong-PID escalation and extra generations;
+the stable app and production host remain unchanged. This is not evidence for
+blocked rollback retirement or OS signal refusal.
+The blocked-rollback profile uses `BlockOnSecondLaunch` in the private stable JAR:
+the first launch delegates to the real Flow app; after candidate exit 42, the
+second launch never becomes ready and blocks its shutdown hook. The expected-fatal
+verifier requires a 15-second rollback timeout, correlated `rollback-failed`
+before host drain, generation-three shutdown TERM/KILL, actual signal-9 exit
+before host shutdown completion, status-1 failure shutdown and no fourth launch.
+It does not claim a recovered framework gate, post-host-exit query or OS signal
+refusal coverage. All fault code and the private launch marker remain test-only.
+The burst profile starts four concurrent public requests from one captured
+capability owner, using two request IDs twice each. It requires all four commands
+to reach the host, exactly one admitted operation and two total JVM generations.
+Every extra command must have a correlated duplicate/busy receipt or an explicit
+old-generation lifecycle drop. The verifier reports which branches actually ran;
+a fenced command does not count as real duplicate/busy receipt coverage. The
+single admitted operation must still pass cross-JVM status/DOM and the complete
+runtime/framework gates. This is bounded concurrency, not all scheduling orders,
+cross-owner isolation or Quit/owner-close coverage.
+The generation-conflict profile completes one public replacement, then invokes
+the same request ID and candidate from the new JVM in the retained native window.
+It requires manifest permission allowed plus `request-conflict`, no third JVM,
+and a fresh public status query proving the original operation and requesting
+generation remain unchanged. Browser DOM receipts and the complete framework
+and resync-replay gates must still pass. This proves cross-generation request-ID
+reuse rejection, not delivery of a stale command from the retired JVM or isolation
+after native owner close/reopen.
+The owner-isolation profile completes replacement in the main window, opens an
+independent native observer window through the public API and queries from that
+window's own captured capability context. Both queries must be manifest-allowed:
+the observer receives `none` without operation/request/candidate/generation
+fields; a fresh main-window query still returns the original `replaced` record.
+The verifier correlates distinct full scope tuples, actual observer create/close,
+two JVM lifetimes and both visible results. The observer closes before the main
+window continues the complete framework gate. This does not prove forgetting
+records of a closed requester or rejection of its stale commands.
+The owner-reopen profile makes the secondary window the authorized replacement
+requester. It requires a positive `replaced` query from that retained owner in the
+new JVM before closing it. Only after its actual close does the main window open
+the same label again. The new session must differ, and both the reopened owner
+and the unrelated main owner must receive manifest-allowed `none` without old
+operation metadata. The verifier checks both native create/close lifetimes,
+the positive-before-negative ordering, one process handoff and subsequent main
+framework/resync-replay gates. Before the first close, the requester retains its
+captured public capability context and exposes capture completion in the DOM.
+After both fresh-owner queries, a main-window client event uses that old context
+from a background worker with no Vaadin session. Both runtime status and
+replacement request must return command-specific canceled/invalidated results
+with `owner-window-closed`. The verifier requires the resulting DOM receipt,
+its retired session identity and ordering, and rejects any extra runtime command
+or third JVM launch. This covers settled-owner context retirement, not closing
+an active replacement or injecting a late native result.
+The `owner-active-close` profile instead requests replacement from the secondary
+window and uses the test-only blocked-shutdown launcher in the initial JAR.
+After observing the bridge's disconnection, the acceptance host calls AppKit
+`performClose` on the requester. The verifier requires the native `windowWillClose`
+delegate's `window.closeRequested` plus `windowClosedDropped` with reason
+`sidecar-lifecycle-unavailable` after admission but before the original JVM's
+actual exit. The retiring sidecar must not accept a `windowClosed` envelope.
+It also requires bounded shutdown
+escalation, candidate startup, a `replaced` lifecycle result and a manifest-allowed main-owner
+query returning `none` without operation metadata. The full framework and resync
+gates follow. It must fail if the closure misses the active interval. This is
+programmatic AppKit closure, not a physical close-button click, and does not
+exercise last-window Quit, close-before-admission or injected late native results.
+Result matching and lifecycle filtering include sidecar generation: correlation
+IDs can restart in a new JVM. Repeated results within one generation still fail.
+The aggregate framework driver waits for the official Flow clients' `isActive()`
+to return false before its deliberate push reconnect/gap injection. This is
+test-only scheduling, not a product resync barrier. Upstream
+resync rejects pending RPC promises; injecting during initial UIDL or an active
+request would conflate that expected upstream cancellation with the capability
+under test. The browser-error gate is unchanged. The extracted-script
+`framework-resync-idle-smoke.mjs` checks busy/missing-client refusal and one-time
+injection after idle; it is not standalone WKWebView evidence. Pending-RPC
+diagnostics do not defer injection or mask the in-flight case. The check cannot
+exclude new calls during the asynchronous resync
+round trip. The startup/resync regression was linked to repeated delivery of the
+same snapshot sequence. Generic deduplication has real controlled-replay and
+observed server-retry evidence; branch receipts alone do not close the profile.
+The push-bridge smoke separately requires duplicate and stale resync snapshots
+to be acknowledged without a second client delivery or state rollback, just as
+ordinary sequenced pushes are deduplicated.
+The framework driver also replays the first actual server-generated resync
+envelope once through the production bridge in WKWebView, without changing its
+body or sequence. This is explicit test-injected delivery, not a claim that the
+server retry timer fired. Readiness requires one extra duplicate and ACK but no
+extra client message or resync application. The observer restores the original
+receiver immediately. Inspect a retained framework trace independently with:
+
+```bash
+node test-support/native-host-macos-acceptance/Tests/resync-replay-trace-verify.mjs /absolute/path/to/host.out.log
+```
+
+This verifier also requires the actual incoming snapshot, two outgoing ACKs,
+subsequent normal push in the same JVM generation, and successful complete
+framework acceptance. Its smoke rejects missing, contradictory and cross-JVM
+evidence. Native input and service retry-timer behavior are not implied.
+Successful product replacement profiles run this verifier automatically and
+retain its output and hash. Fatal rollback profiles do not claim this gate.
+Test-only diagnostics retain RPC owner references across DOM replacement and
+report pending callback owners on completion/failure. Pass-through method
+observers associate newly allocated callback indices with method names; calls
+before observation remain explicitly unobserved. They preserve the receiver,
+arguments, return identity and thrown errors, retain no argument/result values,
+and never attach Promise handlers or suppress rejection. A later passing run does not resolve the earlier
+intermittent failure. Re-inspection with a corrected verifier must be distinguished
+from the original runner exit status and retain both verifier identities.
+Document-start test observation additionally records bounded RPC metadata from
+string XHR bodies (up to 64 KiB): node, method, Promise index and send ordinal,
+never parameters or body content. It counts actual sends and snapshots the
+metadata at fault injection; installation alone is not evidence of capture.
+They launch in the background with browser-programmatic input; they do not prove
+automatic activation or physical input. The runner clears inherited automation
+knobs, retains full bundle/logs/hashes in a unique evidence directory, applies a
+180-second framework budget plus a 240-second external runtime deadline, and checks exact host plus stable/candidate
+JVM paths during cleanup. Cleanup cannot turn a failed run into a pass. The
+guard/matcher smoke covers early input/JDK rejection and exact process matching,
+not all runner failure branches. Lifecycle races and in-flight resource invalidation need
+separate evidence.
+
+### Bounded Lazy-Data Baseline Preparation
+
+The test-app route `flow-lazy-data-baseline` prepares independent exact-count
+and fetch-only datasets with 1,000 stable IDs and page size 50. Each exposes ten
+public filter/sort/refresh actions and an explicit deselect/remove/refresh action.
+The unknown-size view uses the official unknown-count API with estimate/increase
+100; that estimate is not an asserted final count. Status records actual fetch
+and count callback totals and per-action baselines, while query output records
+offset, limit, returned IDs and direction.
+
+`bash bin/flow-lazy-data-baseline-fixture-smoke` instantiates the actual public
+Flow objects without a UI session and directly queries both providers through
+all bounded pages and ten filter/sort/refresh actions. It checks exact ordered
+IDs, limits, terminal pages, exact-count callbacks versus fetch-only behavior,
+explicit selected-item deselection/removal, no-op repeat removal and independent
+provider state. Actions are server-originated and must not claim client input.
+This is a fixture regression, not viewport/estimate-growth, browser event,
+Java client-listener, UIDL, native input or IPC acceptance.
+
+The test-only `VAADIN_DESKTOP_FLOW_IPC_AUTO_LAZY_DATA_BASELINE` probe navigates via
+the public route button and uses browser-programmatic button/cell clicks and
+Grid scrolling. It aims to retain 50 indexed snapshots: top/tail at initial state
+and each of ten cycles for each provider, plus selection, removal and survivor
+reselection. Snapshots include actual rendered IDs, query/status output and
+balanced request/response counters. `lazyDataBaseline.browserRunCompleted`
+explicitly carries `independentGatePassed=false`: it is not a baseline PASS.
+
+`node test-support/native-host-macos-acceptance/Tests/lazy-data-baseline-verify.mjs TRACE`
+independently checks all 50 ordered snapshots, owner/scope, action baselines,
+query IDs, visible contiguous order, selection/removal and balanced monotonic
+IPC counters. Its synthetic positive/negative smoke is included in `verify-smoke`.
+The acceptance runner invokes this verifier for the lazy-data profile instead
+of treating a browser completion marker as success.
+The command also runs a separate wire-profile check: standard bundle/official
+Flow client startup, one PID/generation, connected push transport, every opaque
+request/response correlation, scope, sequential redacted chunk byte totals and
+terminal frames, snapshot counters bounded by prior wire traffic, and graceful
+actual sidecar exit after completion. It does not inspect request URLs or UIDL
+bodies, and push connection does not establish push delivery. Synthetic wire
+negatives exercise missing/duplicate/reordered or malformed protocol evidence.
+
+The snapshot and wire checks establish only this browser-programmatic bounded
+profile, not native input or whole-matrix certification.
+
+`bash test-support/native-host-macos-acceptance/bin/run-lazy-data-baseline`
+builds under the package lock, retains a private signed app copy and writes logs
+directly to a fresh `lazy-data-evidence.*` directory. It records source revision
+and dirty state, OS/JDK/architecture, all bundle file digests, verifier digests,
+profile parameters, primary/final status and process absence. Build failures also
+retain their own evidence; shared logs are never read or overwritten. Inherited
+automation flags are cleared, and the app launches in the background with only
+the explicit lazy-data profile. Its internal/external runtime deadlines are
+600/660 seconds. Cleanup matches only the private executable and exact JVM/JAR
+command; cleanup being necessary fails the run rather than rescuing a PASS.
+The retained app and logs are generated artifacts, not Git inputs. Stubbed runner
+tests do not prove real LaunchServices, deadline or signal behavior.
+
+The dedicated runner has focused real-WKWebView coverage with retained bundle,
+snapshot/wire checks and process absence without cleanup intervention. An aligned
+final-build acceptance run is still required. Compiling the fixture or passing its
+server-only smoke is insufficient. Background estimate growth can require many
+sequential page fetches; preserve an incomplete/deadline run rather than skipping
+cycles. Existing 80-item/page-5 and 67→93→72-item focused gates remain
+independent regressions and do not establish the 1,000/50/10 profile.
 
 `bash test-support/native-host-macos-acceptance/bin/check-fatal-protocol-startup`
 checks the test application's opt-in, one-shot invalid-version trigger in owned
@@ -132,6 +417,25 @@ Route setup is browser-programmatic; the two preparation clicks are generated
 AppKit input and the panel is operated through Computer Use. This does not
 establish physical input, App Sandbox, in-flight I/O or all fatal causes.
 
+For retained baseline evidence without rebuilding unchanged application assets,
+use the existing lifecycle runner's fatal profile:
+
+```bash
+VATORI_TEST_FATAL_FILE_AUTHORIZED=1 bash test-support/native-host-macos-acceptance/bin/run-lifecycle-baseline fatal cooperative /absolute/Prepared.app
+```
+
+The environment opt-in is valid only after fresh authorization for one generated
+file selection; it is not permission by itself. This profile rejects `blocked`,
+stages the fatal-only manifest and zero restart limit in an isolated clone,
+freezes the existing exit verifier and pauses at the printed evidence `start`
+file before launch. Announce the fixture root before starting; the driver creates
+one randomly named subdirectory at runtime, so confirm the exact generated file
+before selecting it. The independent watcher publishes the fault only after
+the grant preparation is complete. The same original inspector and pre-cleanup
+exit checks apply. Source/bundle hashes, the private state, file, full trace and
+authorization/UI receipts are retained rather than deleted. Reused assets keep
+their original build provenance; these probes do not claim a new product build.
+
 Within that suite, `bash bin/flow-ipc-scope-smoke` also verifies the public
 captured-capability contract. It captures an exact secondary opaque UUID while a
 Vaadin session is current, clears the current session and invokes from a virtual
@@ -148,6 +452,12 @@ requires a capability result containing a JSON `null` value to settle without
 leaving its caller blocked. It also requires an exact closed secondary tuple to
 remain non-registrable after teardown while a fresh UUID for the same public id
 registers normally.
+After the reopened owner successfully completes a fresh capability, this smoke
+also invokes `runtime().replacementStatus()` and `requestReplacement(...)`
+through the retired captured context with no current Vaadin session. Both must
+return command-specific `canceled` / `operationInvalidated` results with reason
+`owner-window-closed`, without emitting any IPC bytes. This is an in-process
+Java bridge regression, not real-window replacement/close-race evidence.
 
 The scope smoke also exercises the stdin admission fence across A→B→C use of one
 public id. It admits and tears down A before B/new-UUID work, then tears down B
@@ -174,6 +484,44 @@ Separate bridge assertions require a failed registration transaction to release
 its exact session mapping without retiring the live default lifecycle, while a
 close tombstone installed concurrently remains non-reactivatable.
 
+### Mixed Transfer Endurance Baseline
+
+The R05 profile uses two real WKWebViews, the standard production bundle and
+public raw/multipart `UploadHandler` and Range-capable `DownloadHandler` APIs:
+
+```bash
+source /Users/bytedance/.sdkman/bin/sdkman-init.sh
+bash test-support/native-host-macos-acceptance/bin/run-transfer-endurance
+```
+
+Each owner first transfers 256 MiB, then repeats 4 MiB mixed batches for at least
+30 minutes. Every batch cancels a raw upload and retries with a fresh request,
+completes a sibling multipart upload, and cancels/resumes a download using Range.
+The browser verifies download bytes; Java verifies upload ownership, bytes and
+length. The independent streaming verifier correlates scoped request ids,
+credit/chunk counts, exact raw retry lengths, multipart framing, Range responses,
+two-window three-request overlap, Java listener receipts and real elapsed time.
+Final owner observations require idle clients, zero active handlers and empty
+multipart storage; the runner separately checks actual owned-process absence.
+
+The runner retains a private signed test bundle, hashes, full invocation source
+snapshot and environment metadata, full trace, frozen verifier/sampler scripts and five-second host/JVM
+RSS and descriptor samples. It reports trends, not an invented memory SLO.
+Internal/external deadlines are 2,100/2,160 seconds after launch. Failed evidence
+is retained, and forced cleanup cannot turn failure into success. A prepared,
+traceable acceptance bundle can be reused with `--prepared-app ABSOLUTE_PATH`;
+the caller must retain its original source/build provenance separately from the
+invocation snapshot. Source and bundle hashes are checked around the run; the
+prepared copy uses APFS cloning. Never infer its identity from whatever
+later occupies the shared stage directory.
+
+The input is browser-programmatic and test-generated; no physical-input,
+external-file, system-permission or transparent cross-JVM resume claim is made.
+This profile does not require foreground activation. The multipart size override
+is test-app-only; other fixture defaults are unchanged. Non-window checks are
+`bin/flow-transfer-endurance-fixture-smoke` and the `transfer-endurance-*-smoke.mjs`
+tests included in `bin/verify-smoke`; they do not replace the real duration gate.
+
 ## macOS Acceptance Build
 
 Normal CLI and host builds contain only production sources. The repository-only
@@ -191,6 +539,15 @@ bash test-support/native-host-macos-acceptance/bin/run \
   dev test-apps/flow-over-ipc-framework-app
 ```
 
+The framework LoginOverlay submit-button sample is phase-driven: observe the
+Java open status and rendered/enabled controls, click the actual component
+button, then await its Java listener result. It does not synthesize a fallback
+`login` event or close the overlay on a fixed timer. The application listener
+owns closure. This remains browser-programmatic input, not physical keyboard or
+pointer evidence. `framework-login-submit-smoke.mjs` checks these action and
+readiness contracts with a synthetic DOM; the aggregate real-window gate checks
+the subsequent Java status and runtime evidence.
+
 Acceptance flags, DOM inspection, snapshots and fault injection must remain in
 test-support. Production host code may expose a neutral runtime observer, but
 the production CLI, builder and launcher cannot know acceptance variables,
@@ -201,6 +558,14 @@ the selected acceptance family and exits nonzero when the app closes without
 reaching it.
 
 Opaque push delivery acknowledgement has a focused real-WKWebView entry:
+
+`run-flow-push-baseline delivery|recovery [absolute-prepared-app]` collects
+isolated evidence for the two existing push gates below, preserving their
+30-second deadlines. Each invocation retains the launched app, hashes,
+invocation source snapshot, trace, gate result and actual exit receipt in
+`push-<profile>-evidence.*`. Prepared apps keep their original source provenance.
+Timeout or forced cleanup cannot count as PASS. These scenarios are
+browser-programmatic with test-only loss/gap injection, not physical input.
 
 ```bash
 bash test-support/native-host-macos-acceptance/bin/run-flow-push-delivery
@@ -237,6 +602,24 @@ a focused real-WKWebView entry:
 ```bash
 bash test-support/native-host-macos-acceptance/bin/run-flow-in-flight-request-recovery
 ```
+
+For isolated candidate-aligned evidence without rebuilding, use the existing
+baseline runner with the original app's build provenance retained:
+
+```bash
+bash test-support/native-host-macos-acceptance/bin/run-flow-push-baseline \
+  in-flight /absolute/path/to/Launched.app
+bash test-support/native-host-macos-acceptance/bin/run-flow-push-baseline \
+  exhaustion /absolute/path/to/Launched.app
+```
+
+Both profiles keep private app/source/hash/trace evidence and require actual
+host/JVM absence; fallback cleanup fails the run. In-flight reuses the app
+unchanged. Exhaustion changes only the isolated copy's public recovery policy
+to two attempts/30-second stability, re-signs it and requires the directly
+executed host to exit exactly 1. No clipboard, permission prompt or file-panel
+action is involved. These are browser-programmatic recovery tests, not physical
+input or preservation of the retired Java heap.
 
 The test application uses a public raw Flow `UploadHandler` only as a large
 request probe. Test-support waits until more than 256 KiB has reached the Java
@@ -421,6 +804,23 @@ real-WKWebView entry:
 bash test-support/native-host-macos-acceptance/bin/run-flow-capability-permission
 ```
 
+For isolated baseline evidence, use:
+
+```bash
+bash test-support/native-host-macos-acceptance/bin/run-capability-baseline permission [absolute-prepared-app]
+bash test-support/native-host-macos-acceptance/bin/run-capability-baseline default-deny
+```
+
+Both profiles retain an isolated app, source snapshot/checksums, full trace,
+verification result and final owned-process absence receipt. A reused permission
+app retains its original build provenance; the invocation snapshot alone is not
+its binary provenance. `default-deny` rejects a prepared app: it must withhold the
+source manifest through the test-support omission hook and run the actual product
+builder, then check its staged empty enforced manifest. Neither profile requests
+OS permissions or performs clipboard/file-panel operations. Verifier-only fixes
+may replay a retained trace; preserve the original failed outcome separately
+from the recheck and its verifier sources.
+
 The public desktop API issues the same `window.setTitle` command from two
 isolated Flow sessions. The manifest permits it for `main` and denies it for
 `permission-secondary`. Two generated AppKit primary clicks must reach the
@@ -429,8 +829,12 @@ update round trip in each real WKWebView. The allowed command changes only the
 main native window title; the denied command returns its error and complete
 permission audit payload to Java while leaving the secondary title unchanged.
 Full-detail trace inspection dynamically correlates each command/result pair by
-correlation id and exact window/session/UI scope, then checks the allow/deny
-payloads. Navigation and opening the secondary window are the only
+correlation id and exact window/session/UI scope, then checks the complete
+allow/deny payloads against the canonical grant lists in the single valid loaded
+manifest preceding the commands. This binds the audit result to the actual
+manifest rather than an old fixture-specific grant list. The manifest must
+independently allow the main title command and deny the secondary one.
+Navigation and opening the secondary window are the only
 browser-programmatic setup stages; the gate does not make raw envelope counts a
 contract.
 
@@ -475,19 +879,38 @@ Explicit permissive-manifest package rejection has a focused entry:
 bash test-support/native-host-macos-acceptance/bin/run-flow-capability-package-policy
 ```
 
+When the real-WKWebView default-deny scenario is already closed, run only its
+complementary startup/build negatives, optionally reusing traceable assets:
+
+```bash
+bash test-support/native-host-macos-acceptance/bin/run-flow-capability-package-policy --negative-only /absolute/Prepared.app
+```
+
+The runner retains an isolated product root, source snapshot/checksums, app,
+per-probe input manifest, exact diagnostics, exit status, trace and verification
+results. Prepared-app reuse takes only the JAR, standard bundle, icon and manifest;
+the real product builder always compiles a new host from the current production
+sources, without acceptance support. The original asset provenance remains
+distinct from that host's source snapshot. Probes mutate only the isolated
+generated manifest and restore it afterward; whole-app checksums must still match.
+Each host process has a bounded deadline and must actually exit; cleanup cannot
+turn a failed or lingering probe into a pass. `--negative-only` never starts the
+positive window scenario and does not replace its required evidence.
+
 The runner invokes the real product builder once with an explicit
 `allow-all-dev` manifest and once with an explicit `trace-only-dry-run`
 manifest. Each negative probe must exit with status `2`, emit
 `Product capability manifest must use permissionMode=manifest-enforced; found: <mode>`,
 and retain byte identity for a pre-existing staged enforced manifest and marker.
-It then packages the real framework application and mutates only its staged
-capability manifest through malformed JSON, unsupported schema, unsupported
+It then stages the real framework application assets with a production-only host
+and mutates only its isolated capability manifest through malformed JSON, unsupported schema, unsupported
 mode and invalid window-entry cases. Each direct production-host probe must exit
 `2`, emit its exact stable diagnostic, and pass
 `--require-flow-ipc-capability-manifest-startup-failure`: exactly one manifest
 diagnostic followed by its matching error, with no host `launch`/`ready`, sidecar,
-Java or window event. The runner restores the staged manifest before executing
-the complete source-missing default-deny gate above. These negative probes do
+Java or window event. In full mode, the runner restores the staged manifest before
+executing `run-capability-baseline default-deny`, which retains the complete
+source-missing default-deny evidence separately. These negative probes do
 not launch a WKWebView; the delegated gate provides the real-WKWebView, trusted
 AppKit click, Java, UIDL, trace and graceful shutdown evidence.
 
@@ -518,6 +941,37 @@ entry:
 ```bash
 bash test-support/native-host-macos-acceptance/bin/run-flow-file-dialog-outcomes
 ```
+
+The existing retained-evidence runner also accepts three panel profiles with a
+traceable prepared app, without rebuilding the standard bundle:
+
+```bash
+bash test-support/native-host-macos-acceptance/bin/run-capability-baseline \
+  file-dialog-outcomes /absolute/path/to/Launched.app
+bash test-support/native-host-macos-acceptance/bin/run-capability-baseline \
+  capability-owner-window-close /absolute/path/to/Launched.app
+bash test-support/native-host-macos-acceptance/bin/run-capability-baseline \
+  capability-generation-recovery /absolute/path/to/Launched.app
+```
+
+These profiles do not select files or read their contents. The first and third
+inspect the complete main grant list from the loaded manifest instead of an old
+fixture-specific list. Production trace redaction replaces `paths`, including
+empty arrays, with `[redacted]`; the gates accept that exact marker or historical
+empty arrays while independently requiring the Java/UI outcome, panel lifecycle,
+scope and ordering. A redacted value alone does not prove empty selection. Keep
+the original result and a separate recheck when only inspector assumptions change.
+
+The bounded SELECTED operator scenario uses the same app's public
+`flow-file-dialog-outcomes` route without an automatic panel driver: obtain one
+explicit selection authorization, generate a test-only file, invoke “Start first
+file dialog” once and select that exact file in the real system panel. Retain the
+visible Java `SELECTED`/exact-path and `client=true` start receipt, correlated native
+result, same-scope post-result push/ACK, artifact provenance and actual process
+absence after normal close. Raw trace redacts path and UIDL, so the UI receipt is
+necessary. This returns only a path; the application performs no content I/O and
+acquires no persistent grant. Normal OS preview may display the generated file.
+System-interface automation is not physical hardware or VoiceOver evidence.
 
 The first generated AppKit primary click reaches a client-originated Flow
 listener, which calls `Desktop.current().captureCapabilityContext()` before
@@ -919,6 +1373,49 @@ active-map generation-mismatch injection, in-flight I/O, physical/AT input or
 fsync durability. A temporary record's forced flush is not a write-grant commit
 guarantee.
 
+Product replacement is separate from the SIGKILL replay gates:
+
+```bash
+bash test-support/native-host-macos-acceptance/bin/run-file-grant-product-replacement write
+bash test-support/native-host-macos-acceptance/bin/run-file-grant-product-replacement read
+bash bin/native-host-file-replacement-smoke
+```
+
+Both read and write profiles have real Sandbox replacement evidence; final
+aligned-build validation remains required. Each profile uses an isolated app
+identity, the standard production bundle and opaque Flow IPC. The fixture calls
+the public `DesktopRuntime.requestReplacement` API through a browser-programmatic
+button; other fixture actions use generated AppKit events. Actual Open/Save
+panels are selected externally (human or explicitly disclosed UI automation),
+never by an in-process panel URL hook. This is not physical-input evidence.
+Read needs two selections of its generated 48-byte input; write needs two
+create-new selections in distinct directories, each yielding 65,542 exact bytes.
+Obtain specific authorization before either profile. Wait for `panelObserved`
+after setting the printed path and before confirming Open/Save.
+
+The runner retains a unique `file-{read,write}-replacement-evidence.*` directory
+with the launched app, bundle hashes, frozen verifier, logs, output files and
+exit/process receipts. It stops at an explicit `start` file gate after building;
+create that file only when ready for the authorized panel operations. An optional
+second argument reuses a traceable prepared app instead of rebuilding. Keep its
+original provenance: the current working tree is not necessarily the source of
+a reused app. A failed run is retained, including any private handoff record;
+successful release consumes that record and cleanup removes only its empty leaf.
+The verifier correlates the public request, candidate generation, replacement
+result, grant invalidation/close, denied stale commands, fresh operations and
+graceful drain. The old unexpected-exit gate is not relaxed or relabeled.
+`file-grant-product-replacement-verifier-smoke.mjs TRACE read|write` replays a real
+positive and negative trace mutations without changing the original evidence.
+
+The native replacement smoke appends test-only private setup to a generated,
+unchanged copy of the executor source; production sources expose no test hook.
+It drives real read/write workers before execution and after I/O return but
+before main-thread completion. Replacement must settle each operation once as
+invalidated, suppress late success, and close the descriptor with an empty
+cleanup tracker. These deterministic cases are not Sandbox authorization tests,
+and neither they nor settled-grant real runs imply OS-wide permission revocation,
+rollback of admitted writes, persistent grants or transparent cross-JVM resume.
+
 Settled write-grant cleanup on normal AppKit Quit has a separate Sandbox entry:
 
 ```bash
@@ -1078,6 +1575,22 @@ Public final-window close has a separate focused entry:
 ```bash
 bash test-support/native-host-macos-acceptance/bin/run-flow-last-window-close
 ```
+
+For isolated retained evidence with a traceable prepared acceptance app, use the
+existing baseline runner (the app's original build provenance remains required):
+
+```bash
+bash test-support/native-host-macos-acceptance/bin/run-capability-baseline \
+  last-window-close /absolute/path/to/Launched.app
+```
+
+It preserves a source snapshot, bundle hashes, original gate result and external
+process-absence check. Prepared apps use isolated copy-on-write files on APFS;
+they are not hard-linked to the original evidence. Any cleanup-required process
+makes the run fail. These window profiles perform no file selection, clipboard
+operation or OS permission request. Observe their auto-closing lifecycle via
+retained logs; attaching an app-control tool after exit can relaunch the app and
+invalidate the run's process-absence evidence.
 
 The driver navigates to the lifecycle route programmatically. A generated
 AppKit click prepares closure and must produce a trusted browser receipt,
@@ -1295,6 +1808,31 @@ entry:
 bash test-support/native-host-macos-acceptance/bin/run-flow-clipboard-outcomes
 ```
 
+The approved plain-text contention baseline reuses a prepared acceptance app
+through the capability runner. Each invocation requires fresh explicit consent:
+
+```bash
+# Only after fresh explicit authorization for this invocation:
+VATORI_TEST_CLIPBOARD_AUTHORIZED=1 \
+  bash test-support/native-host-macos-acceptance/bin/run-capability-baseline \
+  clipboard-contention /absolute/path/to/Launched.app
+```
+
+After the initial five outcomes and quiet drain described below, a separate
+test-only process conditionally writes a fixed marker to the actual pasteboard.
+Two browser-programmatic clicks then invoke the public Java read API; each must
+return `TEXT` with the expected length and reach a fresh, balanced UIDL update
+without advancing the writer's pasteboard epoch. Two old-owner cleanup attempts
+must reject that changed epoch with zero writes. A separate conditional cleanup
+then restores and verifies the in-memory original snapshot's bytes and types.
+The extended gate requires seven unique command/results, writer PID/exit and
+epoch evidence, two read receipts and the final restoration receipt. Legacy
+outcome fields describe the initial quiet checkpoint; separate retry receipts
+prove the later updates. The runner also requires actual host/JVM/writer absence,
+and any fallback process cleanup makes the run fail. This controlled case does
+not prove atomic replacement, adversarial writer races, forced AppKit write
+failure, lazy-provider identity restoration, physical input or crash recovery.
+
 Three generated trusted AppKit primary clicks reach public Flow listeners. The
 main scope first reads an AppKit pasteboard with no string value and must return
 public `NO_TEXT`. It then writes an explicit empty string and reads it back as
@@ -1314,7 +1852,7 @@ and full-detail command/result traces. macOS activation is cooperative: the
 host must be frontmost and key before the native-input stages, so bring its
 title bar to the foreground if another application retains focus; the gate
 times out rather than dispatching into an inactive window. Inspection
-with `--require-flow-ipc-clipboard-outcomes` requires exactly five unique
+with `--require-flow-ipc-clipboard-outcomes` in ordinary mode requires exactly five unique
 correlations in operation order, exact result shapes and permission audits,
 three trusted pointer stages, scoped UIDL completion, redaction metadata,
 balanced quiet drain, no recovery and graceful shutdown. The core contract
@@ -1547,6 +2085,79 @@ focused real-WKWebView entry:
 bash test-support/native-host-macos-acceptance/bin/run-flow-capability-context-reopen
 ```
 
+The R02 bounded lifecycle prerequisite can be inspected independently:
+
+```bash
+node test-support/native-host-macos-acceptance/Tests/window-churn-lifecycle-verify.mjs TRACE
+```
+
+It requires one actual JVM lifetime, three simultaneous public window owners,
+two retained siblings and eleven incarnations of the third owner (ten reopens).
+Every incarnation has a distinct session; every reopen follows the previous
+scope-exact native `window.closeRequested` and delivered `windowClosed`.
+Intent-only close traces do not count. All owners must close before the matching
+successful actual JVM exit. Recovery, replacement, dropped close delivery and
+compatibility transport are rejected for this uninterrupted profile.
+
+This is a lifecycle-only subgate, with synthetic tests and composed real-window
+coverage through `run-window-churn`, not a standalone R02 acceptance result. It does not establish DOM readiness,
+Java listener/UIDL/push consumption, stale callback rejection, native object
+identity, physical input or external process absence. The expanded real scenario
+must separately prove these applicable contracts, preserve private per-run
+evidence and verify sibling state throughout all ten cycles. The older context-reopen runner
+below still covers only A→B→C and reads shared host logs; it must not be presented
+as a retained three-window/ten-cycle baseline run.
+
+The test application's `flow-window-churn` route supplies the expanded scenario:
+main opens `churn-sibling` and `churn-secondary` through public window APIs;
+only the secondary's probe captures contexts, once per document, for eleven
+incarnations. Each probe calls every earlier captured context before and after
+a fresh title operation, from a virtual thread without a current Vaadin session.
+Only typed `owner-window-closed` invalidation counts as rejection. UUID document
+markers and independent per-view counters allow the driver to check sibling
+state throughout churn. Captured contexts are intentionally retained in this
+test application for the bounded JVM lifetime; they are not a framework registry.
+
+`bash bin/flow-window-churn-fixture-smoke` validates server-side state isolation
+and the rejection predicate using a fake public bridge. It does not execute the
+native window sequence. The test-only `FlowIpcWindowChurnAcceptance` driver uses
+browser-programmatic clicks, retains the two sibling owners and all eleven
+secondary native identities, and records three scope-exact state observations
+per incarnation. It waits for official client inactivity, balanced browser
+requests and a passive metadata observer's consuming-ACK fence for the probe
+result. Client inactivity and request balance alone do not prove consumption;
+the independent verifier additionally requires a scope/connection/sequence/Flow-UI
+matched ACK with sufficient server sync ID before the recorded observation. The application
+startup selector `VAADIN_DESKTOP_TEST_WINDOW_CHURN=1` and acceptance-only flag
+`VAADIN_DESKTOP_FLOW_IPC_AUTO_WINDOW_CHURN=1` select this scenario; neither is a
+production host setting. The isolated entry is:
+
+```bash
+bash test-support/native-host-macos-acceptance/bin/run-window-churn
+```
+
+It retains a unique app bundle, logs, source status, environment metadata and
+bundle/verifier digests under `window-churn-evidence.*`. The internal deadline is
+600 seconds, external deadline 660 seconds. Required cleanup makes the run fail;
+final exact-path host/JVM absence is recorded separately. The independent
+`window-churn-interaction-verify.mjs` combines the lifecycle subgate with 33 owner
+observations, retained sibling state, eleven fresh title command/results, all
+retired-context results, balanced request/response counts and consuming push ACKs.
+Stale title commands reaching the host fail the gate. This is browser-programmatic
+coverage with all 48 actions checked in profile order: each requires an owner-scoped
+POST and successful response/end before the next action. The 24 public open/close
+commands and eleven fresh title commands each require an exact correlated,
+permission-allowed result; native create/close events must follow the matching
+public command. Missing actions or replies cannot be replaced by a final snapshot.
+This remains
+focused evidence, not physical input, in-flight capability races or final-build
+matrix certification. Driver completion alone cannot replace the verifier.
+The bounded entry has focused real WKWebView evidence after adding the passive
+consuming-ACK wait; an earlier run with correct visible state failed the same
+independent ACK gate. Both outcomes are retained separately. This establishes
+the stated settled-owner profile, not pending native operations, arbitrary late
+callbacks or simultaneous close/replacement schedules.
+
 Incarnations A, B and C share `capability-reopen-secondary` as their public
 window/UI id but must have pairwise-distinct host-generated opaque UUID sessions
 and native window/WebView identities. A generated trusted AppKit click in A
@@ -1614,6 +2225,16 @@ focused real-WKWebView entry:
 ```bash
 bash test-support/native-host-macos-acceptance/bin/run-flow-main-window-close-recovery
 ```
+
+The same gate can retain isolated evidence without rebuilding a traceable app:
+
+```bash
+bash test-support/native-host-macos-acceptance/bin/run-capability-baseline \
+  main-window-close-recovery /absolute/path/to/Launched.app
+```
+
+This profile follows the source/hash/process retention contract of the
+`last-window-close` profile above and includes one test-only JVM failure.
 
 Browser-programmatic setup navigates the main document and opens one secondary
 on the same non-root route. A generated AppKit primary click in the secondary
@@ -1836,6 +2457,13 @@ A heterogeneous three-level overlay stack has a focused real-WKWebView entry:
 bash test-support/native-host-macos-acceptance/bin/run-flow-overlay-stack
 ```
 
+The runner retains an isolated `overlay-stack-evidence.*` directory containing
+the launched app, hashes, source snapshot, trace, inspector result and actual
+process-exit receipt. An optional absolute prepared-app argument reuses a
+traceable acceptance bundle without packaging again; preserve the recorded
+origin's source evidence, since the invocation source snapshot does not redefine
+the reused binary's provenance. Timeout or forced cleanup cannot count as PASS.
+
 The gate uses browser-programmatic setup and Flow Java listeners to open a modal
 Dialog, an anchored modeless Popover and an auto-added modal ConfirmDialog. It
 then delivers generated AppKit window events to the real WKWebView: Escape
@@ -1853,6 +2481,18 @@ Owner-bound input popups have a focused real-WKWebView entry:
 ```bash
 bash test-support/native-host-macos-acceptance/bin/run-flow-input-popup
 ```
+
+For isolated baseline evidence, use `run-flow-popup-baseline` with one of
+`input`, `collection`, `validation` or `menu`, optionally followed by an absolute
+prepared-app path. These map to the existing input-popup, multi-select-combo-box,
+picker-validation and menu-popup gates, without changing their deadlines or
+assertions. Each invocation retains its own app, source snapshot, hashes, trace,
+verification and process-exit receipt in `popup-<profile>-evidence.*`. Reused apps
+retain their original build provenance; the invocation snapshot alone is not
+proof that the binary was built from the current worktree. Failure or forced
+cleanup cannot produce PASS. Validation input is browser-programmatic; the other
+profiles retain their documented mix of scripted setup and generated AppKit
+events, not physical hardware or assistive-technology evidence.
 
 The gate uses ComboBox, Select and DatePicker as probes of the shared
 Flow/browser path. It requires ComboBox owner focus, combobox accessibility state,
@@ -1973,6 +2613,15 @@ Localized owner-bound time input has a separate focused entry:
 bash test-support/native-host-macos-acceptance/bin/run-flow-localized-input-popup
 ```
 
+For isolated F08 baseline evidence, `run-flow-localized-baseline` accepts
+`number`, `validation` or `time`, optionally followed by an absolute prepared-app
+path. It uses the corresponding existing gate and deadline, retaining a private
+`localized-<profile>-evidence.*` app, hashes, source snapshot, trace, verification
+and actual process-exit receipt. A prepared app keeps its original build-source
+provenance; the current invocation snapshot does not replace it. Forced cleanup
+or deadline failure cannot count as PASS. These profiles use generated AppKit
+input and browser navigation/observation, not physical hardware, IME or AT.
+
 The gate uses TimePicker as a probe with `Locale.US`, a 12:00-14:00 range,
 30-minute steps and an initial 13:00 value. It requires the official 12-hour
 display and listbox accessibility, initial owner-input focus without a focused
@@ -2063,6 +2712,42 @@ targets and automatic validation. It does not send editing actions, touch the
 clipboard, create a window or prove all responder-chain owners at runtime.
 
 Native editing history has a separate focused real-WKWebView entry:
+
+`run-flow-edit-baseline history|isolation|reopen|recovery [absolute-prepared-app]`
+collects isolated evidence for the four non-clipboard editing profiles below.
+It retains each launched app, hashes, invocation source snapshot, trace, original
+gate result and actual process-exit receipt in `edit-<profile>-evidence.*`, with
+the original profile deadlines. Reused apps retain their original build-source
+provenance. Forced cleanup cannot produce PASS. This entry does not authorize
+or execute Cut/Copy/Paste and does not replace their real pasteboard evidence.
+The additional `clipboard` profile runs the existing Cut/Paste gate only after
+fresh specific user authorization and `VATORI_TEST_CLIPBOARD_AUTHORIZED=1`.
+This explicit runner guard is not itself authorization. The gate requires
+successful guarded restoration and verification before PASS; it does not test
+Copy, authorize contention, or reuse previous one-time approvals.
+
+`run-flow-edit-baseline copy` adds a separately authorized Copy/Paste profile.
+It requires `VATORI_TEST_CLIPBOARD_AUTHORIZED=1`, a fresh acceptance build (old
+prepared hosts may interpret the shared clipboard flag as Cut), and pauses at
+the printed evidence `start` gate before opening the test app. It types `x`,
+selects all, and sends real Cmd+C through the application Edit responder chain.
+A trusted target-owned copy event, unchanged field/Java history for at least
+1000 monotonic milliseconds and three quiet polls, and an advanced native
+pasteboard epoch containing the test text are required. Native Backspace then
+clears the selected test field; Cmd+V restores `x`. These three actual changes
+must have exact Java history, trusted input events and separate completed
+post-key UIDL responses. Copy itself must not fabricate a Java change or UIDL.
+
+The Copy driver shares the existing private byte-preservation guard, with
+trusted Copy plus unchanged selection/value as its native-write adoption
+precondition; the Cut driver's deletion precondition is unchanged. Both retain
+the same incomplete-snapshot refusal, bounded owned restoration and race/crash
+limitations. Original contents never enter trace output. Independent
+`native-copy-edit-verify.mjs` checks ordered scope/native/DOM/Java/wire evidence,
+restoration and graceful drain/exit. Replay a retained trace with
+`node test-support/native-host-macos-acceptance/Tests/native-copy-edit-verifier-smoke.mjs TRACE`
+to check a real positive and negative mutations without clipboard I/O. Preserve
+the original frozen verifier/result separately when rechecking later versions.
 
 ```bash
 bash test-support/native-host-macos-acceptance/bin/run-flow-native-edit
@@ -2371,6 +3056,19 @@ Structured Flow JavaScript RPC semantics have a focused real-WKWebView entry:
 bash test-support/native-host-macos-acceptance/bin/run-structured-rpc
 ```
 
+The runner builds once under the package lock, then launches an isolated retained
+app in the background with only the structured-RPC automation flag. It clears
+inherited acceptance controls and records source revision/status, a source
+archive and file hashes, the launched bundle and hashes, logs, gate result and
+external process-absence receipt in a unique `structured-rpc-evidence.*`
+directory. Source hashes are checked before launch and after verification.
+The original 45-second internal deadline remains; an independent 75-second
+deadline bounds the LaunchServices waiter. Forced cleanup is never a PASS.
+No file permission, notification or clipboard operation is part of this profile.
+It is browser-programmatic RPC evidence in real WKWebView, not physical/AT or
+activation evidence. The retained app can seed other isolated final-build
+profiles only with explicit provenance and their own required permissions.
+
 The gate sends a nested bean/list argument through `@ClientCallable`, verifies
 the Promise resolves with a nested list/map response, passes a Java bean to
 `executeJs`, converts the browser result through
@@ -2474,6 +3172,18 @@ bash test-support/native-host-macos-acceptance/bin/run-host-ready-timeout cooper
 bash test-support/native-host-macos-acceptance/bin/run-host-ready-timeout blocked
 ```
 
+For retained R03 baseline evidence, use
+`run-lifecycle-baseline shutdown|ready cooperative|blocked [absolute-prepared-app]`.
+This preserves the existing scenario gates and independent exit verifiers in
+isolated `lifecycle-<profile>-<mode>-evidence.*` directories, together with the
+app, hashes, source provenance, private markers and actual process-exit receipt.
+Prepared bundles retain their original build provenance; only clone-local
+startup/recovery configuration, capability manifest and (for ready timeout)
+the test sidecar are changed and re-signed. Ordinary shutdown remains a real
+Flow/WKWebView scene; ready timeout is a no-window negative probe. A forced
+cleanup cannot produce PASS. The private evidence is retained rather than
+deleted after successful exit; old shared-log runners below remain unchanged.
+
 It packages the standard app with a short product-level initial-ready deadline
 and substitutes a test-support Java sidecar only in a private app clone. Neither
 mode sends `ready`; the cooperative shutdown hook returns, while the blocked
@@ -2548,9 +3258,67 @@ An unresponsive recovery process has a separate standard-bundle entry:
 bash test-support/native-host-macos-acceptance/bin/run-recovery-termination
 ```
 
+For an operator-coordinated foreground run, prefer `--wait-for-start-file`. The
+runner builds/signs its private clone first and prints `READY` with a private
+`start.request` path. Publish a regular, non-symlink file containing `start` at
+that path within 300 seconds to launch; publish atomically to avoid a partial
+write being rejected. Timeout, wrong content or wrong file type aborts without
+launching. This avoids terminal job-control stops in the package-lock child.
+`--wait-for-start` retains the stdin-line variant for a pipe, not a foreground
+terminal handoff through that lock. EOF/timeout or another line aborts without
+launching, retains evidence and cleans the unused clone. The
+package lock remains held during this bounded handoff. `start-handoff.txt`
+records only the launch handoff, not a physical click, foreground retention or
+automatic activation; record actual operator actions separately. The normal
+no-argument automation path is unchanged.
+
+The three-generation termination profile is **one completed recovery**, not
+three sequential successful recoveries: its middle JVM never becomes ready.
+For the quantitative baseline, the independent process-chain subgate is:
+
+```bash
+node test-support/native-host-macos-acceptance/Tests/recovery-sequence-process-verify.mjs TRACE
+```
+
+It requires four distinct actual JVM starts/exits, three ordered unexpected
+exit → scheduled restart → actual start → recovery-ready cycles, correlated
+previous/current PIDs and generation counters, and a clean final exit. It
+rejects replacement/rollback substitution and a never-ready middle process.
+Its synthetic regression runs in `verify-smoke`. A PASS explicitly reports
+`processChainOnly=true` and `uiBaselineProven=false`: each cycle still needs
+fresh document, listener/UIDL/push consumption and relevant native input
+evidence. The dedicated three-successful-cycle mode is:
+
+```bash
+bash test-support/native-host-macos-acceptance/bin/run-recovery-termination --sequence
+```
+
+It uses a three-restart budget and the same private-clone, evidence-retention,
+deadline, start-handoff and exact-process cleanup rules. It selects the test-only
+`VAADIN_DESKTOP_TEST_RECOVERY_SEQUENCE=1` branch: it bypasses the never-ready
+startup fixture, reuses the same public Flow listener/push route, and requires
+four distinct JVM/document identities with settled input and consuming ACKs
+before each of three exact-PID kills. The independent
+`recovery-sequence-interaction-verify.mjs` combines the process-chain subgate
+with four ordered native dispatch/settled receipts, retained window/scope,
+distinct documents, scoped request/response correlation and consuming push ACKs
+before each injection. Its synthetic regression is in `verify-smoke`. This is
+generated AppKit input, never physical keyboard/mouse evidence. Completion is
+not established by compiling the driver or passing the process-only gate.
+The complete sequence mode has focused real WKWebView evidence through all four
+settled interactions and three unexpected recoveries, with runner success and
+owned-process cleanup. It does not erase retained activation failures in other
+runs or substitute for aligned-final-build and physical-system evidence.
+
 The runner creates a private app clone and private three-generation test state.
 Gen1 establishes a trusted generated AppKit click, Java listener, UIDL and push
-before the driver kills only its held PID. Gen2 is test-app-only: it never sends
+before the driver kills only its held PID. Before recording either settled
+interaction, a passive test-only wrapper observes opaque push metadata and
+requires a matching connection/sequence ACK whose last-seen server sync id covers
+that push. It forwards the unchanged envelope to the existing receiver, never
+parses UIDL or synthesizes ACKs. Quiet polls follow this consumption condition;
+they do not replace it. The independent trace gate still verifies the underlying
+push/ACK order. Gen2 is test-app-only: it never sends
 `ready` and blocks inside its SIGTERM shutdown hook. The driver reads its exact
 PID/run marker but does not terminate it. Production must hit the 15-second
 ready deadline, request TERM, escalate after one second, observe actual exit,
@@ -2561,8 +3329,59 @@ state. The test does not require notification or other OS permission choices.
 `--require-flow-ipc-recovery-termination` checks ordered PID/generation-bound
 lifecycle evidence, two independent document traffic epochs, trusted DOM
 receipts, balanced requests and acknowledged pushes, and graceful final
-shutdown. Logs remain in `host-recovery-termination.out.log` and `.err.log` under
-the normal host build directory. The owned clone/state are removed only after
+shutdown. Each invocation prints a new private `recovery-evidence.XXXXXX`
+directory under the normal host build directory before building. It retains
+`host.out.log`, `host.err.log`, package/build output, inspector output when
+reached, source revision/dirty status and the launched executable/JAR/plist
+digests. Before building it also records `sw_vers`, `uname -m` and the selected
+`JAVA_HOME/bin/java -version` in separate files; a failed environment probe
+retains its output and stops before launch. It does not dump all environment
+variables. Retries, build failures and cleanup do not truncate earlier evidence;
+`runner-exit-status.txt` records the final shell exit status after owned-process
+cleanup, including probe/build/launch/inspection and cleanup failures. Status
+`0` is not sufficient by itself: inspect the gate output and trace, and attach
+operator/input provenance. A missing status file means the runner's outcome is
+unconfirmed (for example, it was killed before its exit trap could execute).
+Legacy shared logs are not read as current evidence. These are local generated
+artifacts, not an immutable or full-bundle archival attestation; export accepted
+evidence to CI/external storage and attach input/operator provenance separately.
+OS/JDK metadata cannot be retroactively attributed to older runs that lack it.
+The test driver also records a bounded activation timeline for its own app and
+window (active/inactive, key/resigned-key, miniaturize/restore), with monotonic
+uptime, recovery epoch and input phase. It records no other app identities,
+does not alter the activation policy, and removes observers before terminal
+window cleanup. Terminal results report emitted/dropped counts; a truncated
+timeline must not be treated as complete. These observations diagnose setup or
+focus loss; they are not additional proof of physical input or automatic
+activation, and do not relax the existing active/key gate.
+
+For the controlled D01 ordinary-launch/reload profile, use
+`run-recovery-termination --sequence --passive-activation --wait-for-start-file`.
+This reuses the existing recovery sequence; it does not expand R04's requirements.
+Passive readiness only observes active application, key window and WebView-owned
+first responder. It never activates/unhides/orders windows or repairs the responder.
+The independent verifier requires passive mode and responder ownership before
+every generated AppKit dispatch, in addition to the existing listener/UIDL/push
+consumption and process-chain gates. Assisted traces cannot pass this profile.
+Coordinate the explicit start handoff and obtain an operator receipt confirming
+whether any title-bar/content click or application switch occurred. A successful
+controlled run proves that bounded foreground setup, not guaranteed activation
+against competing applications, physical input or the cause of every old failure.
+The passive runner retains `Launched.app`, its full file digests and frozen
+verifier modules before launch; normal cleanup removes only the temporary launch
+clone and records confirmed process absence. Retain operator provenance separately.
+Document identity combines the Java route UUID with an independent browser UUID
+and a retained Document reference captured by a test-only document-start script.
+`documentTimeOriginMillis` is captured once by that script; live readings are
+diagnostic only, because [WebKit bug 258572](https://bugs.webkit.org/show_bug.cgi?id=258572)
+describes time-origin drift within one Document. The injected hook cannot be
+replaced or reset in the same global object. A changed Document reference or UUID
+still fails; no tolerance is applied to disguise replacement. The gate requires
+these fields, so earlier traces without browser identity are historical evidence,
+not passes of the current contract. An identity failure retains both identities
+and captured/live origins for diagnosis. The script smoke uses synthetic JS
+contexts and cannot replace the real recovery gate.
+The owned clone/state are removed only after
 its exact host/JVM processes are confirmed stopped. Runner mock smoke checks
 ownership matching and cleanup without launching a GUI; the production-process
 regression is `bash bin/native-host-sidecar-recovery-termination-smoke`.

@@ -838,7 +838,7 @@ sidecar and window creation. This does not prove signature-backed protection
 against a post-build replacement that is still a syntactically valid manifest.
 Beyond the focused sandbox-selected read and create-new write gates, persistent
 selected-file grants, overwrite/transaction and write-lifecycle recovery boundaries, broader
-Clipboard formats and pasteboard contention, macOS authorization states,
+Clipboard formats and adversarial pasteboard contention, macOS authorization states,
 broader asynchronous progress/cancellation/retry/resume contracts, physical
 input hardware, touch and assistive-technology interoperability remain open.
 Sandbox enforcement evidence requires successful JVM and WebKit startup
@@ -974,14 +974,123 @@ rather than consuming the unexpected-exit restart budget.
 The current `requestReplacement` entry explicitly rejects a standard production
 bundle with `unsupported-mode`; its only allowed webapp source is development.
 Thus development replacement evidence does not establish a product-runtime
-planned-replacement API. A product trigger, authorization, candidate validation
-and rollback contract remain open. The low-level recovery and replacement
+planned-replacement API. The separate `DesktopRuntime.requestReplacement` path
+now connects explicit manifest authority, candidate preflight, bounded retirement,
+active asset handoff and host-owned rollback/result records; lifecycle-race and
+resource-invalidation coverage remain open. Initial launch binds the JAR, working
+directory and framework environment to the current host configuration, clearing
+inherited resource/frontend values when absent. Configuration and inert-child
+checks cover that isolation; they do not establish candidate switching.
+Host candidate configuration preflight revalidates the captured catalog and
+returns paired assets without changing current runtime state or host permissions.
+It is called before a product request can retire the active process.
+The host-memory replacement record store has focused admission, ownership and
+terminal-fencing tests and a permission-scoped public status query, with native
+owner-close/shutdown wiring and product controller admission/settlement. Its
+records alone must not be mistaken for process-exit/ready evidence.
+The empty-record query has focused real WKWebView evidence through a Java
+listener, captured capability context, correlated native result and DOM update;
+manifest denial is also observed. A separate focused product run exercises
+explicit request permission, actual old-child exit, candidate launch from a
+separate bundled JAR path and a nonempty terminal query/DOM update in the new JVM,
+followed by the framework-app gate. The candidate copies the same build's JAR
+and frontend. A separate focused rollback profile launches a test-only candidate
+that exits with status 42 before ready, observes its actual exit and automatic
+stable-JAR restart in a third generation, then queries `rolled-back` through the
+public API and DOM before passing the full framework gate. It does not consume
+the unexpected-recovery budget. These are real WKWebView, browser-programmatic
+checks, not physical input evidence. A separate expected-fatal profile first runs
+the real Flow app, then forces both the candidate and stable rollback JVM to exit
+before ready using private test-only JAR launchers. It verifies all three actual
+process exits, a correlated `rollback-failed` terminal record, resource drain,
+failure shutdown and final process absence without a fourth launch. This does
+not establish post-failure Java result retrieval (the host exits), a successful
+post-recovery framework gate, hung-child retirement or OS signal-refusal handling.
+Different-version compatibility, lifecycle races and in-flight native-capability
+handoff remain unverified.
+A focused unknown-candidate profile also exercises the public request with
+manifest permission allowed but no matching catalog entry. It observes the
+correlated `invalid-candidate` result in Java/DOM, a fresh `none` status query,
+the unchanged JVM and subsequent full framework gate. This proves pre-admission
+rejection without retirement, not busy/duplicate/stale-owner or mutation races.
+The focused generation-conflict profile repeats the original request ID and
+candidate through the public API after replacement, from the retained native
+window's new JVM. It observes manifest-allowed `request-conflict`, the unchanged
+operation/requesting-generation in a fresh status query and DOM, exactly two JVM
+lifetimes and subsequent full framework/resync-replay gates. This closes bounded
+cross-generation request-ID reuse rejection, not stale retired-JVM command
+delivery, owner close/reopen isolation or close/Quit races.
+The owner-isolation profile additionally creates a second native window after
+replacement. Its independently captured public capability context receives
+manifest-allowed `none` with no operation/request/candidate/generation fields,
+while a fresh query by the original owner retains its `replaced` record. Actual
+distinct scope tuples, observer create/close, two JVM lifetimes and subsequent
+main-window framework/resync-replay gates are verified. This is live cross-owner
+query isolation, not forgetting a closed requester's record or rejecting its
+stale callbacks after reopening the label.
+The owner-reopen profile covers settled-record retirement itself: a secondary
+native owner requests replacement and queries its `replaced` result in the new
+JVM, then actually closes. Reopening the same label creates a distinct session;
+its manifest-allowed query returns `none` without old operation metadata, as does
+the unrelated main owner. Both native create/close lifetimes, ordered positive
+and negative queries, two JVM lifetimes and later main framework/resync-replay
+gates have real evidence. The retained requester also captures its public
+capability context before closing. After same-label reopen and fresh-owner
+queries, a client event invokes status and replacement request through that old
+context from a background worker without a Vaadin session. Focused real evidence
+shows command-specific `owner-window-closed` cancellation/invalidation in the
+DOM, no extra runtime command or third JVM, and subsequent framework/resync
+gates passing. A separate active-owner-close profile now has focused real
+evidence during old-child retirement: the secondary requester is closed through
+AppKit after bridge disconnection and before the blocked original JVM actually
+exits. The native close callback forgets its record; `windowClosedDropped`
+documents the retiring sidecar's refusal of lifecycle delivery. Bounded
+escalation, candidate-ready `replaced`, an unrelated main-owner `none` query,
+two JVM lifetimes and full framework/resync gates pass. This does not prove
+physical close input, last-window Quit, close-before-admission, all candidate/
+rollback close schedules, competing admission during detachment or injected
+late native results. Those remain separate race contracts.
+A bounded four-request burst has real evidence of one admission, one matching
+duplicate and two busy rejections with a single process handoff, new-JVM status
+query and full runtime/framework gates. A generation-aware verifier is required
+because correlation IDs can recur after JVM replacement. The contract remains
+open beyond that bounded schedule. Startup/resync failures were traced to
+re-delivery of the same resync sequence: the bridge previously deduplicated only
+ordinary pushes and could apply the same full snapshot twice, cancelling calls
+created after its first application. All pushes now share the monotonic-sequence
+deduplication rule; duplicate/stale snapshots are acknowledged without invoking
+the official client again. New snapshots still apply normally. This is generic
+transport handling, not component adaptation or Promise-rejection suppression.
+Synthetic duplicate/stale snapshot checks and real replacement/framework
+regression pass. A controlled replay of an unchanged Java snapshot in WKWebView
+observes an extra duplicate/ACK with no extra client application; the same run
+also observed actual server retry (`deliveryAttempt=2`) and subsequent successful
+framework completion. This closes the duplicate-snapshot regression, not all
+replacement isolation or arbitrary resync/cancellation combinations.
+`isActive()` covers initial UIDL, active requests and deferred commands; it does
+not prove every server-call Promise has settled. The aggregate does not wait for
+pending RPCs to clear before fault injection. Arbitrary first-time resync with
+pending application calls is not certified merely by deduplicating re-delivery.
+The low-level recovery and replacement
 retirement paths now share a one-second TERM-to-KILL deadline bound to the
 retained Process/PID/generation. The first request owns the deadline and reason,
 including mixed requests; actual exit cancels it, and host shutdown takes over
 ownership. Real owned non-Java child tests cover cooperative and ignored-TERM
 exit, early exit/new-generation protection and shutdown contention. These are
-not controller, JVM or real-WKWebView replacement evidence. A failed KILL reports
+not themselves controller, JVM or real-WKWebView replacement evidence. A separate
+focused product profile blocks the initial real JVM in a test-only shutdown hook,
+then verifies PID/generation-bound escalation, actual signal-9 exit before
+candidate launch, cross-JVM result/DOM and the full runtime/framework gates.
+Another focused product profile withholds candidate ready and blocks its
+shutdown hook. It verifies the 15-second candidate deadline, candidate-PID
+escalation and actual exit before stable launch, followed by third-generation
+`rolled-back` query/DOM and the full framework gate without consuming recovery
+budget. An expected-fatal profile also blocks the stable rollback before ready
+and in its shutdown hook. It verifies the rollback ready timeout, `rollback-failed`
+before host drain, generation/PID-bound shutdown TERM/KILL, actual signal-9 exit
+before host failure completion and absence of further launches. This is not a
+successful recovery or post-host-exit result query. These profiles do not prove
+signal refusal by the OS. A failed KILL reports
 a fatal retirement failure immediately; absence of the actual exit callback two
 seconds after the first retirement request reports a fatal confirmation timeout.
 Both retain ownership for the existing fenced host-shutdown path, rather than
@@ -990,7 +1099,8 @@ invalidates the old timeout. A test-only callback scheduling double covers real
 child exit with delayed callback, one failure notification and late-callback
 shutdown settlement for both retirement kinds. It is not OS signal-error or
 real-WKWebView fault evidence; timers depend on main-loop scheduling and cannot
-guarantee process exit. Product replacement failure settlement remains open.
+guarantee process exit. Remaining product lifecycle races and in-flight resource
+invalidation still require real evidence.
 This is distinct from automatic
 unexpected-exit recovery of the existing bundled sidecar.
 If the initial sidecar exits before valid `ready`, the host exits nonzero before
@@ -1032,16 +1142,66 @@ certification; **L** = retained local trace inspected for a focused path, not a
 fresh run of the audit revision; **S** = non-window contract/synthetic evidence;
 **U** = missing required evidence; **R** = unresolved real-run regression.
 Multiple codes describe different parts of a row, not interchangeable levels of
-confidence. No row is certified for the proposed full baseline by this audit.
-The latest completed recovery run was reported as failing before the first
-click at active/key activation. Its shared log was subsequently truncated by an
-interrupted rerun, so the failure remains unresolved and the present empty log
-cannot independently reproduce or supersede it. Other unretained historical
-runs stay H rather than being promoted from documentation alone.
+confidence. No row is certified for the approved full baseline by this audit.
+Recovery has retained focused real-window evidence of active/key startup and
+post-recovery generated input without an external activation action. It also has
+only one completed recovery in the three-JVM termination profile: its middle
+process never reaches ready. Three starts or three injected exits must not be
+counted as the three-successful-recovery baseline. The separate `--sequence`
+profile now has focused real evidence of four distinct JVMs and three causal
+ready cycles. Each fresh document completes generated AppKit input, a Java
+listener/UIDL round trip and consuming push ACK before the next failure;
+retained native context/window/WebView and distinct Java/browser document
+identities are checked. The independent process and interaction gates pass.
+This closes the bounded three-successful-cycle evidence gap, not physical input,
+all-window recovery combinations or aligned-final-build certification.
+Recovery also has
+retained failure evidence of delayed initial activation and post-recovery
+active/key loss blocking the second click. These failed attempts remain evidence,
+not retroactively relabeled successes. The controlled foreground D01 profile now
+has a real passive-readiness run: ordinary launch and retained-window reload
+reach active/key/WebView-responder readiness without the driver activating,
+ordering or repairing focus. Generated AppKit input, Java listeners, UIDL and
+consuming push ACKs pass before and after recovery; the operator confirmed no
+clicks or application switches. This closes that bounded baseline scenario,
+pending the final aligned build, not arbitrary competing-application activation
+or an explanation of every historical focus loss.
+An activation timeout alone does not establish a Flow/sidecar defect: macOS
+cooperative activation is not guaranteed, and the same inactive/non-key state
+can occur in a standalone regular-policy AppKit app without Java or a WebView.
+Explicit operator activation remains a declared setup action, not proof of
+automatic activation or of the cause of later focus loss. The recovery runner retains
+separate per-attempt evidence, including failed builds and launches. Other
+unretained historical runs stay H rather than being promoted from documentation
+alone.
+The recovery-termination gate now requires an independent document-start browser
+UUID and retained Document reference as well as the Java route identity. A
+captured-once time origin is metadata; repeated live time-origin equality is not
+a reliable document identity test on WebKit. Older traces lacking this identity
+contract require revalidation, and an older unexplained identity failure is not
+retroactively classified as clock drift.
+A recovery evidence-ordering race was identified: quiet polls alone could inject
+the initial failure before a push consumption acknowledgement was emitted. The
+driver now passively tracks the target connection/sequence/server sync id and
+waits for a matching consuming ACK before recording a settled interaction or
+injecting failure. The independent inspector continues to reject receipt-only
+ACKs even when visible state succeeds. The new fence has actual-bridge tests
+with client/transport doubles and a focused real recovery revalidation using
+explicit operator title-bar activation. This proves the consuming-ACK fence
+under that setup, not automatic activation or the three-recovery baseline.
+A longer fixed quiet delay is not a completion contract.
 
-Priority: **B** = proposed baseline requirement, **B/E** = bounded baseline with
-explicit extensions proposed for later, **E?** = proposed deferral requiring user
-approval. Gap classes **1/2/3/4** mean framework/upstream-or-application/evidence/
+The aggregate standard-framework-app gate has focused real-WKWebView evidence
+after replacing its LoginOverlay submit-button timer/fallback with explicit
+open/readiness and Java-result phases. That sample clicks the official component
+button rather than fabricating a login event. The runtime and aggregate gates
+pass under browser-programmatic input; this is not physical-input evidence or
+aligned final-build certification of the entire matrix. Separate bounded
+lazy-data and controlled recovery contracts retain their own scope.
+
+Priority: **B** = approved baseline requirement, **B/E** = bounded baseline with
+explicit extensions deferred, **E** = approved deferral retained in the long-term
+scope. Gap classes **1/2/3/4** mean framework/upstream-or-application/evidence/
 native-product-boundary respectively. A `3→4?` classification requires diagnosis
 before changing production. An upstream-owned behavior is not automatically a
 gap; an application-usage issue must be proven against upstream semantics.
@@ -1057,20 +1217,20 @@ entry points; required arguments, manifests and OS actions are specified in
 
 | ID / contract and baseline acceptance | Owner / source | Implementation | Verification / representative evidence entry | Gap and priority |
 | --- | --- | --- | --- | --- |
-| F01 Bundle, routes and resources: initial and lazy navigation load JS/CSS/transitive imports; one official client; no localhost UI fallback | Host `FlowIpcWebAppSchemeHandler`, Flow `StandardFlowIpcRuntime` | I | H/L: standard framework acceptance; A/run with framework flags; retained broad trace is not proof of final host exit | 3; B/E: arbitrary dependency graphs later |
-| F02 Event → Java listener → UIDL and push-visible state, with correct scope/correlation | Flow `SidecarMessageLoop`, opaque HTTP adapter | I | H/S: framework route (button/value/layout/resource probes), `bin/flow-ipc-scope-smoke`, HTTP bridge smoke | 3; B: healthy round trip plus failed request, no component decoding |
-| F03 Java↔JS RPC, structured values, Promise result/error conversion | Official Flow RPC through generic IPC | I | H/S: A/run-structured-rpc; inspector structured-RPC assertions | 3; B: positive and rejection/serialization cases, no custom decoder |
-| F04 Lazy data identity, query, selection and refresh across recycled rows; exact-count and unknown-size providers | Official Flow data provider, generic transport | P | H/S: A/run-lazy-grid-query, A/run-lazy-grid-selected-removal, A/run-flow-lazy-multi-select-combo-box | 3, then 1/2 if reproduced; B/E: selected-item mutation and bounded repeated resets required, arbitrary combinations later |
+| F01 Bundle, routes and resources: initial and lazy navigation load JS/CSS/transitive imports; one official client; no localhost UI fallback | Host `HostConfig`, `FlowIpcWebAppSchemeHandler`, Flow `StandardFlowIpcRuntime` | I | H/L: standard framework acceptance; A/run with framework flags; resource-shape validation has non-window negatives and a real no-activate WKWebView positive with graceful JVM exit and external process-absence check | 3; B/E: focused browser-programmatic evidence, not final baseline certification; arbitrary dependency graphs later |
+| F02 Event → Java listener → UIDL and push-visible state, with correct scope/correlation | Flow `SidecarMessageLoop`, opaque HTTP adapter | I | H/L/S: framework route (button/value/layout/resource probes) with retained aggregate gate evidence, `bin/flow-ipc-scope-smoke`, HTTP bridge smoke | 3; B: healthy round trip plus failed request, no component decoding; aligned final-build certification remains required |
+| F03 Java↔JS RPC, structured values, Promise result/error conversion | Official Flow RPC through generic IPC | I | L/H/S: A/run-structured-rpc retains independent app, source snapshot/hashes and trace; original structured-RPC gate covers positive/rejection, cancellation, owner visibility/detach and modality semantics | 3; B: baseline scene satisfied, pending final aligned-build collection; browser-programmatic in real WKWebView, no custom decoder or physical-input claim |
+| F04 Lazy data identity, query, selection and refresh across recycled rows; exact-count and unknown-size providers | Official Flow data provider, generic transport | P | H/L/S: A/run-lazy-data-baseline retains private bundle/evidence for bounded 1,000/50/10 WKWebView snapshot semantics and opaque wire, browser-programmatic only; older A/run-lazy-grid-query, A/run-lazy-grid-selected-removal and A/run-flow-lazy-multi-select-combo-box remain focused regressions | 3, then 1/2 if reproduced; B/E: bounded profile has focused evidence, aligned final-build certification remains open; arbitrary combinations later |
 | F05 Hierarchy, renderer lifecycle and buffered editor/Binder validation | Official Flow; framework route samples | I | H/S: framework TreeGrid, ComponentRenderer/LitRenderer and Editor/Binder assertions | 3; B: expand/collapse, callback/update, save/cancel/reject/recover; deeper trees later |
 | F06 Collection/value fields and owner-bound picker/menu keyboard behavior | Official components + Host input routing | I | H/S: A/run-flow-input-popup, run-flow-menu-popup, run-flow-multi-select-combo-box, run-flow-picker-validation | 3; B/E: representative families, not every picker/menu permutation |
 | F07 Overlay stack ownership, Escape/outside click, modal suppression and focus return | Official overlays + Host WKWebView | I | H/S: A/run-flow-overlay-stack (modal/modeless/mixed three-layer samples) | 3; B/E: bounded stack, not arbitrary depth |
-| F08 Localized values and validation, formatting without changing Java meaning | Official Flow/Binder; app locale configuration | P | H/S: A/run-flow-localized-number, run-flow-localized-number-validation, run-flow-localized-input-popup | 3/2; B/E: en-US/de-DE value and invalid-input recovery; broader locales, RTL/currency proposed extensions |
+| F08 Localized values and validation, formatting without changing Java meaning | Official Flow/Binder; app locale configuration | P | H/S: A/run-flow-localized-number, run-flow-localized-number-validation, run-flow-localized-input-popup | 3/2; B/E: en-US/de-DE value and invalid-input recovery; broader locales, RTL/currency deferred |
 
 ### Real Desktop Interaction Contracts
 
 | ID / contract and baseline acceptance | Owner / source | Implementation | Verification / representative evidence entry | Gap and priority |
 | --- | --- | --- | --- | --- |
-| D01 Active/key window, WKWebView responder, trusted pointer/key path and focus restoration after reload/owner change | Host `main.swift`; test-only `FlowIpcNativeInputActivation` | P | R/H: A/run-recovery-termination stalls at initial activation in latest completed attempt; generated-event paths exist elsewhere | 3→4?; B blocker. External activation may establish test preconditions but cannot prove automatic activation |
+| D01 Active/key window, WKWebView responder, trusted pointer/key path and focus restoration after reload/owner change | Host `main.swift`; test-only `FlowIpcNativeInputActivation` | I | L/H/S: A/run-recovery-termination --sequence --passive-activation has controlled ordinary-launch/reload evidence with no activation/responder assistance, operator-confirmed no intervention, generated pointer/listener/UIDL/consuming ACKs and actual process exits; older activation failures remain retained | 3; B: controlled foreground baseline satisfied, final aligned-build/input coverage still required. OS cooperative activation is conditional; this does not guarantee focus stealing or physical input |
 | D02 Native Edit menu, plain-text cut/copy/paste and bounded undo/redo, isolated across owners | Host `NativeApplicationMenu`, responder chain | I | H/S: A/run-flow-native-edit, run-flow-native-clipboard-edit, run-flow-native-edit-isolation/reopen/recovery | 3; B/E: plain-text baseline, rich-text/non-text/history permutations later |
 | D03 IME composition and physical keyboard/pointing input do not duplicate/drop Java changes | WKWebView/system input; official Flow | P | U: generated key events are not IME or physical hardware evidence; no dedicated baseline operator receipt located | 3→4?; B: Chinese Pinyin composition/cancel/commit, pointer selection and keyboard traversal |
 | D04 Accessibility across native window and web content: names, roles, values, traversal and modal focus | WKWebView accessibility + official component semantics | P | H for DOM/ARIA assertions; U for VoiceOver baseline | 3→4?; B: actual VoiceOver control/field/grid/dialog task; ARIA alone cannot close it |
@@ -1080,28 +1240,28 @@ entry points; required arguments, manifests and OS actions are specified in
 
 | ID / contract and baseline acceptance | Owner / source | Implementation | Verification / representative evidence entry | Gap and priority |
 | --- | --- | --- | --- | --- |
-| R01 Push retry/ack, reconnect and gap-resync produce consistent DOM without cross-scope replay | Flow `StandardFlowIpcPushDelivery`, push bridge | I | H/S: A/run-flow-push-delivery, run-flow-push-recovery; push bridge and inspector negatives | 3; B: dropped final delivery, reconnect, resync and fresh normal push |
-| R02 Multiple window/session owners, close/reopen and stale callback rejection | Flow `StandardFlowIpcSessions`, `SidecarNativeBridge`; Host retired scopes | I | H/S: A/run-flow-capability-context-reopen, run-flow-retired-scope-production-host, run-flow-main-window-close-recovery | 3; B/E: three owners and ten bounded churn cycles proposed; higher fan-out later |
+| R01 Push retry/ack, reconnect and gap-resync produce consistent DOM without cross-scope replay | Flow `StandardFlowIpcPushDelivery`, push bridge | I | L/H/S: product replacement profiles include controlled unchanged resync replay and later normal push; actual server retry also observed. A/run-flow-push-delivery, run-flow-push-recovery; push bridge and inspector negatives | 3; B: dropped final delivery, reconnect, resync and fresh normal push; aligned final-build coverage still required |
+| R02 Multiple window/session owners, close/reopen and stale callback rejection | Flow `StandardFlowIpcSessions`, `SidecarNativeBridge`; Host retired scopes | I | L/H/S: A/run-window-churn has focused real three-owner/ten-reopen evidence, retained sibling state, eleven fresh native owners/documents, all earlier captured contexts rejected before/after each fresh title, scoped request/response and consuming push ACKs, private bundle/logs and external process absence; older context-reopen/retired-scope/main-close-recovery gates cover complementary boundaries | 3; B/E: browser-programmatic settled-owner profile, not physical input or in-flight callback races; aligned final-build coverage still required; higher fan-out later |
 | R03 Startup/ready timeout, ordinary Quit, fatal shutdown and exact process exit; failed shutdown retains fenced ownership | Host `JavaSidecar`, `FlowIpcSidecarController`, resource cleanup | I | L/S: A/run-host-ready-timeout, run-host-shutdown-termination, run-flow-file-read-grant-fatal-shutdown; process callback doubles | 3; B: cooperative/blocked child and resource drain; OS signal refusal remains separate from callback simulation |
-| R04 Unexpected sidecar exit, restart budget, retained windows and fresh document/session; interrupted request fails explicitly | Host controller, Flow scope/session teardown | P | R/H/S: A/run-recovery-termination blocked before recovery; A/run-sidecar-recovery-exhaustion and run-flow-in-flight-request-recovery provide narrower historical contracts | 3→4?; B: latest changes need real three-generation regression, no promise of old Java state preservation |
-| R05 Upload/Download progress, cancel, retry/Range-resume, concurrent isolation and finite endurance | Flow streaming adapters; official UploadHandler/DownloadHandler | P | H/L/S: A/run-flow-large-upload-retry, run-flow-large-multipart-upload-retry, run-flow-large-download-resume, run-flow-request-fanout, run-flow-cross-session-multipart-upload, run-sidecar-write-backpressure | 3/1; B/E: finite load profile below; transparent cross-process continuation not implemented |
-| R06 Product planned replacement: authorized trigger, validated candidate, ready/failure/rollback result and bounded retirement | Host controller; product trigger still absent | M (low-level pieces exist) | S/H only for termination/development paths; current `requestReplacement` rejects standard bundle with `unsupported-mode` | 4; B: remain required, do not count dev reload or unexpected recovery as completion |
+| R04 Unexpected sidecar exit, restart budget, retained windows and fresh document/session; interrupted request fails explicitly | Host controller, Flow scope/session teardown | P | L/H/S: A/run-recovery-termination --sequence proves four JVMs/three recoveries, fresh documents and listener/UIDL/consuming push ACKs; the original profile proves a never-ready middle process; A/run-flow-push-baseline in-flight/exhaustion have frozen-candidate request failure/fresh retry and actual nonzero host-exit evidence | 3; B: representative recovery/fault scenarios satisfied, final evidence admission remains; D01's controlled activation/reload baseline is satisfied, historical failures retained; no physical-input or old Java state preservation claim |
+| R05 Upload/Download progress, cancel, retry/Range-resume, concurrent isolation and finite endurance | Flow streaming adapters; official UploadHandler/DownloadHandler | I | L/H/S: A/run-transfer-endurance has real two-window 256 MiB / three-active-transfers-per-window / at-least-30-minute mixed evidence, exact bytes, isolated cancel/fresh retry/Range, drained storage, RSS/descriptor samples and external process absence; earlier focused transfer gates remain complementary | 3; B/E: bounded browser-programmatic baseline satisfied, aligned final-build rerun required; transparent cross-process continuation deferred |
+| R06 Product planned replacement: authorized trigger, validated candidate, ready/failure/rollback result and bounded retirement | DesktopRuntime, host controller, candidate catalog and host-held records | P (product request/asset handoff/automatic rollback implemented) | L/S: focused public success including blocked initial-JVM retirement, unknown-candidate rejection, candidate exit or ready-timeout/blocked-retirement with stable rollback, and stable rollback exit or ready-timeout/blocked-shutdown with bounded fatal completion. Bounded burst duplicate/busy and new-JVM reuse of the same request ID (`generation-conflict`) have real query/DOM and process evidence; an independent native owner receives no original-owner record while the original terminal remains unchanged; a settled requester closes and its same-label replacement with a fresh session sees no old record. Healthy paths include framework/resync-replay gates, fatal paths do not. Same-build assets, not version compatibility. Structural, permission and record-fencing smokes support this | 4/3; B: [required product contract](native-host.md#product-planned-replacement-completion-contract); broader admission schedules, stale-owner/close races, resource invalidation and aligned final build remain open; dev reload is not product evidence |
 
 ### Native Product Contracts
 
 | ID / contract and baseline acceptance | Owner / source | Implementation | Verification / representative evidence entry | Gap and priority |
 | --- | --- | --- | --- | --- |
 | N01 Manifest permissions, startup fail-closed, window scope and explicit captured async capability context | Core `DesktopCapabilityContext`; Flow native bridge; Host `CapabilityManifest` | I | H/S: A/run-flow-capability-package-policy/default-deny/permission/context-reopen/generation-recovery; CLI and scope contracts | 3; B: allowed/denied/malformed/stale owner, including no ambient background-context borrowing |
-| N02 Public window create/title/close and last-window lifetime, owner removal without affecting siblings | Core `DesktopWindows`; Host window owner | I | H/L/S: A/run-flow-last-window-close, run-flow-main-window-close-recovery, run-flow-capability-owner-window-close | 3; B/E: existing window contract; extra window affordances later |
+| N02 Public window create/title/close and last-window lifetime, owner removal without affecting siblings | Core `DesktopWindows`; Host window owner | I | H/L/S: A/run-capability-baseline last-window-close/main-window-close-recovery uses the frozen candidate; R02 supplies sibling/churn isolation | 3; B: bounded window lifecycle satisfied; extra window affordances later |
 | N03 Notification authorization/result correlation and foreground system presentation | Core `DesktopNotificationResult`; Host notification adapters | P | L/S: A/run-flow-notification-outcomes and run-flow-notification-delivery; retained trace explicitly has `bannerVisibilityClaimed=false` | 3/4; B: consent branches plus separately observed banner under eligible settings; never promise OS-guaranteed delivery |
-| N04 Sandbox-safe selected read grant, bounded range read/release, owner isolation and lifecycle revocation | Core `DesktopFileReadGrant`; Host executor/security scope | I | L/H/S: A/run-flow-file-read-grant-sandbox/range/isolation/replay/fatal-shutdown; actual selected-read/sibling-denial evidence | 3; B: in-flight invalidation and replacement coverage not implied by idle-grant evidence |
-| N05 Sandbox-safe create-new write, chunk progress/cancel/release, stale token and owner isolation | Core write grant API; Host `NativeFileWriteIO` | I | L/H/S: A/run-flow-file-write-grant-sandbox and cancel/isolation/owner-close/sidecar-exit/host-shutdown/replay variants | 3; B: in-flight races and current shutdown semantics need aligned evidence; no overwrite/atomic-transaction promise |
-| N06 Persistent file authorization, bookmarks, overwrite/transaction and durable cross-process resume | Native file product contract | M/P (transient grants only) | U: no complete public contract or end-to-end gate located | 4; E?: explicitly defer only with approval; these remain in long-term original scope |
-| N07 Async native operation lifecycle: context correlation, progress where meaningful, cancel/retry and terminal invalidation | Core APIs, Flow bridge, Host resource tracker | P | H/S across notification/file/owner-close tests, not a uniform all-capabilities continuation contract | 4/3; B/E: define per operation; reject unsupported resume rather than claim generic support |
-| N08 Plain-text clipboard read/write typed outcomes and bounded retry without owner leakage or overwriting unrelated changes during test cleanup | Core `DesktopClipboard`; Host pasteboard operations | I | H/S: A/run-flow-clipboard-outcomes; Java contracts and pasteboard fake-provider smoke; native Edit uses this surface but is D02 | 3; B/E: plain text with real pasteboard contention case; rich formats deferred only by approval |
-| N09 Native file-panel selection/cancel/deny/error and in-flight owner invalidation, without treating a path as persistent authorization | Core `DesktopFileDialog`; Host panel owner | I | H/S: A/run-flow-file-dialog-outcomes, run-flow-capability-owner-window-close, run-flow-capability-generation-recovery | 3; B: real panel outcomes; actual authorized I/O belongs to N04/N05 |
+| N04 Sandbox-safe selected read grant, bounded range read/release, owner isolation and lifecycle revocation | Core `DesktopFileReadGrant`; Host executor/security scope | I | L/H/S: A/run-flow-file-read-grant-sandbox/range/isolation/replay/fatal-shutdown; run-file-grant-product-replacement read proves real Sandbox replacement, stale read/release rejection, fresh bounded read/release and sibling denial. In-flight invalidation has separate deterministic executor tests | 3; B: read replacement baseline scene satisfied, pending aligned final-build verification; not OS-wide permission revocation or persistent grants |
+| N05 Sandbox-safe create-new write, chunk progress/cancel/release, stale token and owner isolation | Core write grant API; Host `NativeFileWriteIO` | I | L/H/S: A/run-flow-file-write-grant-sandbox variants; run-file-grant-product-replacement write proves real Sandbox replacement/stale-token rejection/fresh write and release, with independent exact-file checks. Native executor replacement races have deterministic tests | 3; B: write replacement baseline scene satisfied, pending aligned final-build verification; no overwrite/atomic-transaction promise |
+| N06 Persistent file authorization, bookmarks, overwrite/transaction and durable cross-process resume | Native file product contract | M/P (transient grants only) | U: no complete public contract or end-to-end gate located | 4; E: approved deferral; these remain in long-term original scope |
+| N07 Async native operation lifecycle: context correlation, progress where meaningful, cancel/retry and terminal invalidation | Core APIs, Flow bridge, Host resource tracker | P | H/S across notification/file/owner-close tests; real read/write replacement plus deterministic in-flight invalidation; [per-operation lifecycle boundary](native-host.md#per-operation-lifecycle-boundary) defines the supported contract, including no generic continuation | 4/3; B/E: file replacement and contract explicit; remaining real OS boundaries and final evidence alignment still required; reject unsupported resume rather than claim generic support |
+| N08 Plain-text clipboard read/write typed outcomes and bounded retry without owner leakage or overwriting unrelated changes during test cleanup | Core `DesktopClipboard`; Host pasteboard operations | I | H/L/S: A/run-capability-baseline clipboard-contention; independent pasteboard writer, two public read retries and conditional snapshot restoration; native Edit uses this surface but is D02 | 3; B/E: controlled plain-text contention baseline satisfied; rich formats and adversarial races deferred |
+| N09 Native file-panel selection/cancel/deny/error and in-flight owner invalidation, without treating a path as persistent authorization | Core `DesktopFileDialog`; Host panel owner | I | H/L/S: A/run-capability-baseline panel profiles plus explicitly authorized real system selection and visible Java SELECTED/path receipt | 3; B: bounded panel outcomes and owner/generation invalidation satisfied; actual authorized I/O belongs to N04/N05 |
 
-### Proposed First Acceptance Baseline (Awaiting Approval)
+### First Acceptance Baseline (Approved)
 
 The four original categories map to F01–F08, D01–D05, R01–R06 and N01–N09.
 Permissions and file grants are not duplicated under transfer; transfer is R05,
@@ -1110,7 +1270,7 @@ actual OS/AT evidence in D03–D05. Progress/cancel/retry/resume are operation-s
 contracts, not four mandatory verbs for every API (for example a synchronous
 clipboard read).
 
-Proposed profile, not an already-supported or already-passed guarantee:
+Approved acceptance profile, not an already-supported or already-passed guarantee:
 
 - macOS on the available Apple Silicon host, system WKWebView, root-POM Vaadin
   version and standard production bundle/opaque IPC. Record exact OS build,
@@ -1122,7 +1282,7 @@ Proposed profile, not an already-supported or already-passed guarantee:
   process; state loss across JVM replacement must be explicit.
 - Exact-count and unknown-size lazy datasets of 1,000 items, page size 50, ten
   filter/sort/refresh cycles and selected-item mutation; two-level hierarchy and
-  at most three overlay layers. These are proposed test bounds, not new product
+  at most three overlay layers. These are approved test bounds, not new product
   limits or a claim that current fixtures already reach them.
 - Raw/multipart upload and download through 256 MiB, three active requests per
   window, two concurrent transfer windows, a 30-minute mixed run. Require exact
@@ -1139,20 +1299,77 @@ Proposed profile, not an already-supported or already-passed guarantee:
   eligible-settings banner, while API success means scheduling, not delivery.
 
 All B rows, and the bounded part of B/E rows, must pass before this baseline is
-declared complete. Proposed extensions are: N06 persistent/transactional file
+declared complete. Approved deferred extensions are: N06 persistent/transactional file
 operations; transparent cross-process transfer continuation; richer clipboard
 formats/edit histories; further locales/RTL/currency; deeper combinations and
-higher/longer load. These are **proposed deferrals**, not silently removed
+higher/longer load. These are **approved deferrals**, not removed long-term
 requirements. Product planned replacement, accessibility and Finder interaction
-are deliberately not deferred by default. User approval freezes the profile;
+remain baseline requirements. User approval freezes the profile;
 new independent capabilities require a scope change, while defects inside the
 approved profile always block completion.
 
-Stage A delivers this inventory and decision list, not a green matrix. Stage B
-starts only after approval. See [roadmap.md](roadmap.md) for dependencies and
+Stage A delivered this inventory, not a green matrix. Stage B now implements
+and verifies the approved baseline. See [roadmap.md](roadmap.md) for dependencies and
 [acceptance-tools.md](acceptance-tools.md) for evidence admissibility.
 
 ## Current Verified Surface
+
+### 阶段 B 有限收口清单
+
+本清单是上述批准范围的一次核对结果；只收敛执行，不改变量化负载、权限及真实证据
+要求。S = 已有符合所列基线场景的真实证据，停止加固、待最终统一构建复验；
+E = 已实现但缺必要证据（含历史场景待可追溯复验）；D = 已知未关闭的实际失败，
+原因仍须分类；X = 基线外延期。S 不等于全基线完成。下文历史“更广/更多/所有组合”
+限制不自动扩展本清单；确定性测试用于组合覆盖，不要求逐个组合新建真实场景。
+
+| 分类 / 矩阵项 | 已满足场景或具体缺口 | 最小证明方法与关闭条件 |
+| --- | --- | --- |
+| S — F01/F02/F05 的 aggregate 场景 | 标准 bundle/resources、Java listener/UIDL、组件族及 hierarchy/editor/Binder 已有真实 framework gate | 复用既有 gate；最终构建核对批准的两层 hierarchy 与正负例，不新增组件适配或排列组合 |
+| S — F04 | exact/unknown-size 1,000/50/10、selected mutation 的独立真实场景已满足 | 保留 lazy-data bundle/trace，最终统一构建复验；停止扩展 mutation 组合 |
+| S — R02 | 三窗、十次 close/reopen、兄弟状态、旧 context 拒绝与新 owner 可用已满足 | 已保留 run-window-churn 原始结果及增强检查器重检；最终复验，不追加全部在途回调排列 |
+| S — R04 三次恢复及既有故障分支 | 四 JVM/三次完整恢复和每代 listener/UIDL/push ACK 已满足；冻结候选的在途请求中断/旧文档拒绝/新请求精确完成，以及两次恢复后预算耗尽、host 实际退出 1 且无 orphan，均已有独立真实证据 | 产品源码与 JAR 不变；exhaustion 仅修改隔离副本的公开恢复策略并重签。保留 in-flight 完整 headers 检查器原失败和离线重检。三次恢复及原 never-ready profile 随最终证据集合归并；不追加“三窗 × 每种恢复”组合，D01 单独关闭 |
+| S — R06 产品 replacement | 公开请求/权限、成功交接、候选失败稳定回退、有界退休及 owner 隔离已有真实证据；额外 burst/关闭场景也已存在 | 冻结已有成功/拒绝/回退代表场景，最终构建复验。文件授权失效归入 N04/N05/N07；更多准入/关闭时序不另开 R06 gate，除非发现实际产品缺陷 |
+| S — F03 | RPC 正负例、结构化值、取消/Future、visibility/detach 与 modality 语义已在真实 WKWebView 通过原门禁；保留独立 app、源码快照、hash、trace 与进程退出证据 | 不新增解码器或语义组合；待最终统一构建证据归并，输入层级仍为 browser-programmatic |
+| S — F07 | 三层 modal/modeless/mixed overlay 的原真实门禁已通过；逐层关闭、父层保留、焦点返回、Java lifecycle/UIDL 与退出证据均保存在独立 app/trace 中 | 待最终统一构建复验；browser-programmatic setup 与 generated AppKit 输入，不是物理键鼠或 VoiceOver；不扩展深度与组件组合 |
+| S — F06 | 输入 popup、集合值字段、picker 校验与菜单四项原门禁均有独立可追溯真实 WKWebView 证据；包含 Java listener/UIDL、owner focus、正负校验与恢复及正常退出 | 待最终统一构建复验；picker 校验为 browser-programmatic，其他场景混合脚本 setup 与 generated AppKit 输入；不扩展 picker/menu 排列组合 |
+| S — F08 | en-US/de-DE 小数输入与格式切换、Binder 拒绝/恢复、美式时间 popup 三项原门禁已在真实 WKWebView 通过，独立保存 app、源码来源、hash、trace 与退出证据 | 待最终统一构建复验；generated AppKit 输入，不代表物理键盘、IME 或 AT，不增加 locale/RTL/currency 范围 |
+| S — D02 | 单窗口 Undo/Redo、双窗口独立历史、同 ID 关闭重开、settled-edit recovery、分别授权的真实 Cut/Paste 与 Copy/Paste 均通过。Copy 的可信事件及系统剪贴板 epoch、至少 1 秒不改字段/Java 历史、清空后粘贴及精确 listener/UIDL 已核验；两项剪贴板测试均恢复并核验原字节、未观察到竞争 | 冻结待最终统一构建复验；剪贴板操作须重新授权。受控恢复不是系统级原子锁或崩溃恢复保证；generated AppKit 不等于物理键盘/IME/AT |
+| S — R01 | 丢失末次 push 后同序列重试/ACK、disconnect/reconnect、gap-resync 及后续正常 push 更新 DOM 均通过原真实门禁，保留独立 app/trace 与 scope 关联 | 待最终统一构建复验；browser-programmatic 加 test-only 丢失/缺口注入，不代表跨 JVM 消息持久化 |
+| S — R03 | 普通退出与 initial-ready 超时的合作/阻塞 JVM 四项原门禁已有独立证据；阻塞分支通过产品 TERM→KILL 有界退出。经具体授权的真实系统文件选择、Java SELECTED/UIDL 后，unsupported-version fatal 触发空闲读授权撤销、descriptor close/security-scope stop、资源排空及 host/JVM 实际退出，已有独立 app、原门禁、UI 操作回执与清理前 PID 消失证据 | 冻结待最终统一构建复验；文件选择需新授权。ready 超时为无窗口负例，fatal 为 generated AppKit 准备及系统面板选择，不代表物理输入、Sandbox、在途 I/O 或所有 fatal 原因；OS 信号拒绝仍是明确测试边界 |
+| S — N01 | 分窗 allow/deny、完整 manifest 审计和真实 builder 缺省拒绝已有独立 WKWebView、Java/UIDL 与 native command/result 证据；permissive package 拒绝且 staging 不变，以及四类非法 staged manifest 在纯 production host 中启动失败，均保留输入、严格诊断、退出、源码和产物校验。旧 context 拒绝已有 R02 证据，显式 captured context 与无 ambient 借用按 scope contract 验证 | 冻结待最终统一构建复验；保留分窗原检查器失败和修复后重检，不追加权限组合。窗口输入为 generated AppKit；启动负例必须在 JVM/窗口前失败，不冒充 WKWebView 或 OS 权限验证 |
+| S — N02 | 冻结候选的独立 app 已通过公开最后窗口关闭后正常退出，以及主窗口关闭、副窗口保留、一次 sidecar 恢复后主窗口不重建；副窗口 route/scope、Java listener/UIDL 与原生标题调用均通过原门禁，产物字节相同且无需兜底清理。兄弟窗口隔离复用 R02 | 纳入候选证据集合；browser-programmatic setup 与 generated AppKit 输入，不代表物理输入。保留失败/干扰运行，不扩展窗口组合；在途面板失效仍归 N09 |
+| S — N09 | 真实系统选择已显示 Java SELECTED/精确路径及 client-originated listener，并核对 scoped command/result、push/ACK；取消/并发错误/拒绝、owner 关闭及 JVM 换代失效均有独立真实面板、Java/UI、原门禁或修正后重检及无兜底清理退出证据 | 产品源码、JAR、前端与冻结候选一致；仅 outcomes 的测试驱动修复过时权限列表预期并重编验收 host，其余使用原 app。保留脱敏路径检查器原失败和离线重检；选择为系统界面自动化，其余为 generated AppKit/脚本准备，不代表物理输入、AT、Sandbox 或文件内容授权 |
+| S — D01 | 受控普通启动及 retained-window reload 已通过只观察模式：驱动不激活/排序窗口或设置 responder，用户确认无点击或切换；active/key/responder、generated AppKit 输入、listener/UIDL/消费 ACK 均通过 | 待最终统一构建复验。范围为 unlocked desktop 的正常前台启动、无竞争切换；系统不保证任意抢焦点。历史失败保留，未断言所有历史失焦根因；出现新的范围内失败时重开，不用人工激活替代 |
+| E — D03 | 无物理输入/中文拼音完成证据 | 一次有操作回执的 composition/cancel/commit、指针选择及键盘遍历场景；Java 变更不丢失/不重复，不能用 generated events 替代 |
+| E — D04 | 无实际 VoiceOver 基线证据 | 一个 control/field/grid/dialog 任务，记录名称/角色/值、遍历和 modal focus；实际 AT 操作与应用结果一致即关闭 |
+| E — D05 | 内部 DnD 有历史证据，真实 Finder transfer 尚未闭合 | 授权后完成一个真实 Finder 文件拖入，外部来源、精确字节及 Java 结果通过现成 gate；内部 DnD 随最终构建复验 |
+| E — N03 | 授权分支有证据，未确认实际 eligible-settings 横幅 | 新授权下运行既有通知场景并取得明确横幅观察；API scheduled 不能代替可见通知；不承诺 OS 保证送达 |
+| S — N04/N05 replacement 场景；E — N07 其余系统边界 | transient read/create-new write 已有真实 Sandbox 产品 replacement：旧 token 拒绝 I/O/释放、新授权精确 I/O/释放、sibling 拒绝、资源排空及进程退出；真实 native executor 的 read/write 在途结算竞态已通过 | 两场景冻结待最终统一构建。真实场景证明 OS 授权，确定性测试证明在途终态/不误报成功，不混淆两类证据；逐操作契约已归并，unsupported resume 不伪装为透明 continuation；其他真实系统边界仍按对应行验收 |
+| S — N08 | 单次授权的真实 pasteboard 竞争已通过：七个关联命令覆盖 NO_TEXT、空文本写读、分窗 DENIED 及独立进程写入后的两次公开只读重试；旧清理两次拒绝、零写入，随后一次条件恢复逐字节/类型核验成功，所有进程退出且无需兜底清理 | 产品输入与冻结候选一致，仅测试 overlay 改动；前三阶段为 generated AppKit，竞争后两次重试为 browser-programmatic，均有 Java/UIDL 回执。不声称物理输入、原子 compare-and-swap、强制 AppKit 写失败、惰性 provider 身份恢复或崩溃恢复；rich formats 不加入 |
+| S — R05 | 256 MiB raw/multipart 上传和下载、两窗各三活跃传输重叠、至少 30 分钟混合运行已有独立真实证据；精确字节、隔离、取消/新请求重试/Range、排空、资源趋势及进程退出已满足 | 保留 run-transfer-endurance 的独立 bundle/trace/verifier，待最终统一构建复验；停止扩展负载或组合，透明跨 JVM continuation 仍延期 |
+| X — N06 与各 B/E 扩展 | 持久书签、覆盖/事务、透明跨 JVM resume、rich clipboard/history、更多 locale、任意组合/更大规模，以及开发体验/分发/跨平台 | 保持延期，不阻塞本基线，不因历史文档含“仍需”而自动恢复为任务 |
+| E — 全部基线最终收口 | 尚无同一源码 revision、可追溯构建的完整必选证据集合 | 候选代码冻结后复用 bundle 分场景隔离运行；必要权限单独授权，全部必选通过、无范围内缺陷/证据缺失/生产测试泄漏后完成。仅相关行为变化重新打开已满足场景 |
+
+**R05 固定场景已满足，待最终统一构建复验。** 公开 UploadHandler/DownloadHandler
+经标准 production bundle 和 opaque IPC 完成每窗首批 256 MiB，随后以 4 MiB 混合批次
+持续至少 30 分钟。每批包含 raw 取消及新请求重试、独立 multipart 上传和取消后的
+Range 下载；检查器同时核对六请求活跃重叠、scoped wire credit/字节/终态、Java
+listener 结果、客户端排空、临时存储及真实进程退出，并保留内存/descriptor 趋势。
+不虚构未批准的内存 SLO，也不将 browser-programmatic 输入称为物理或外部文件证据。
+
+该场景发现并修复了通用早响应生命周期竞态：handler 未消费输入就返回时，exchange
+现在保留对输入流的所有权，在正常处理后的响应终态前排空并验证请求终止帧，避免
+迟到的合法请求终止帧被误判为未知请求。EOF 重复读取保持终态；空体、已知和未知
+长度的早响应有确定性回归。实现不识别请求 URL、Flow 类型或组件。
+
+**N04/N05 replacement 授权生命周期场景已满足。** D01 的受控启动/恢复已满足固定
+场景，不扩大为抢占其他应用焦点的保证。继续归并 transient read/create-new write 的
+Sandbox I/O、replacement 授权失效、在途结算及回收。read/write replacement 场景已满足，
+逐操作边界已明确，不主动扩展；继续其余有限验收场景和未闭合的真实系统边界。
+在途 read/write 测试使用真实 executor 和工作队列，分别控制 worker 执行前与返回后、
+主线程尚未结算的时序，要求一次失效结果、迟到完成丢弃与句柄关闭；这不是物理输入、
+真实 Sandbox 竞态或跨 JVM future 送达保证。真实授权操作另行取得具体同意。
+已满足场景保持冻结，最终统一构建再归并；物理输入、Finder、VoiceOver 不由此替代。
 
 The following is the accumulated focused surface, not current baseline-wide
 certification. Apply the matrix statuses above, particularly unresolved
@@ -1808,7 +2025,7 @@ bash bin/vaadin-desktop dev-compat test-apps/vaadin-desktop-smoke-app
   of an exit-revoked token, Sandbox boundaries beyond selected read and
   create-new bounded write, persistent bookmarks, write-lifecycle races,
   overwrite/transaction semantics and cross-process recovery, broader
-  Clipboard formats and pasteboard contention, asynchronous capability
+  Clipboard formats and adversarial pasteboard contention, asynchronous capability
   progress/cancellation/retry/resume behavior, and broader macOS authorization
   states.
 

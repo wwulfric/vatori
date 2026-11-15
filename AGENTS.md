@@ -160,9 +160,11 @@ bash bin/repository-hygiene-check
 
 ## 工作选择规则
 
-- 推进 Flow parity 时，每轮只选择一个最小、可验证、可收口的 slice。
+- 推进 Flow parity 时，以 `docs/goal.md` 的当前批准范围为准，一次交付一个完整、
+  可验证的开发者行为或基线场景；开工固定通过条件，满足后关闭，不自动扩展组合。
 - 不为过程记录创建 `docs/goal-*.md`、归档目录或版本化源码名称。
 - 当前状态收敛到现有 runtime、acceptance、roadmap 文档和可执行验收面。
 - 单次运行证据优先保留在最终回答、git history、CI artifact 或 release asset。
-- 本轮无法闭合产品 slice 时，优先补齐能解除阻塞的 adapter、inspector、smoke 或
-  文档契约。
+- adapter、fixture、inspector、runner 和 smoke 是完整场景的内部步骤；只补齐直接
+  阻塞该场景的部分，不在没有实际阻塞时拆成连续 helper 交付。额外组合进入后续
+  backlog；范围内已知产品缺陷必须修复。验证分层、证据复用与收口遵循 `docs/goal.md`。

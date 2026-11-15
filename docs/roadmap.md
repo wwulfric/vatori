@@ -12,8 +12,8 @@ Java 编程模型、标准 production bundle 和官方 Flow client/server；nati
 窗口、生命周期与原生能力，opaque IPC 只承载通用 request、push 和
 command/result，不解释组件或 UIDL 语义。
 
-长期产品 completion gate 聚焦三条主线；当前阶段 A 只做矩阵与基线提案，不执行
-下列所有实现任务：
+长期产品 completion gate 聚焦三条主线；当前阶段 B 只执行已批准的有限基线，
+不把下列所有扩展事项自动加入本阶段：
 
 1. **Flow 能力面**：补齐代表性组件族、数据与资源行为、真实输入、焦点、无障碍和
    状态同步的共享能力矩阵。
@@ -157,40 +157,95 @@ command/result，不解释组件或 UIDL 语义。
 具体已验证分支、focused 限制和执行命令统一维护在 runtime 与 acceptance 文档中，
 不在 roadmap 重复展开。
 
-## 阶段 A 交付与基线决策
+## 已批准基线与执行前提
 
 唯一状态清单是 [runtime 能力矩阵](flow-over-ipc-runtime.md#product-capability-matrix)。
 矩阵共 28 项共享契约，包含四类原始范围；源码与工具定位不等于全面验证。
-当前提案尚待确认，既有详细缺口列表仍保留，但不再把每个“更广/更多/更长”的扩展
+基线与延期项已获用户确认，既有详细缺口列表仍保留，但不再把每个“更广/更多/更长”的扩展
 自动追加为本轮完成门槛。
 
-需要用户确认的决策：
+已确认范围与仍需逐次满足的执行前提：
 
-1. 接受矩阵中的量化基线建议，还是调整三窗口、十次 churn、1,000 项数据、256 MiB
-   传输和 30 分钟耐久性范围。这些是建议验收配置，不是已有支持承诺。
-2. 是否同意延期 N06 持久书签/覆盖写事务，以及 R05 透明跨进程传输恢复、丰富剪贴板、
+1. 三窗口、十次 churn、1,000 项数据、256 MiB 传输和 30 分钟耐久性已批准为验收
+   配置；尚不表示现有实现已通过这些配置。
+   三窗口/十次 churn 的 settled-owner profile 已有独立保留证据：兄弟状态不变、
+   每代旧 captured context 拒绝、新 title 成功与 consuming ACK 均经过真实 WKWebView
+   验证。输入为 browser-programmatic；在途 callback 竞态及最终同构建复验不由此替代。
+2. 延期 N06 持久书签/覆盖写事务，以及 R05 透明跨进程传输恢复、丰富剪贴板、
    更多 locale/RTL 和任意组合深度。它们仍属长期目标，不因本轮盘点被取消。
-3. 是否接受 R06 产品 planned replacement、实际 VoiceOver 和 Finder 边界为首个
-   基线必选。推荐保留；若要延期，必须明确缩小“首个基线”的声明，不称全面 parity。
+3. R06 产品 planned replacement、实际 VoiceOver 和 Finder 边界保留为首个基线
+   必选；不能将 development replacement 或 DOM 证据当作替代。
 4. 确认可供系统交互验收的 macOS/硬件环境和操作窗口；涉及权限、剪贴板或外部文件的
    具体操作另行获取授权。人工等待项与可自动推进项分开排期。
 
-## 基线获批后的建议顺序
+## 阶段 B 推进顺序
 
-阶段 A 到交付矩阵为止。以下是阶段 B 的实施建议，不是自动执行指令：
+阶段 A 已交付。阶段 B 以 runtime 的“阶段 B 有限收口清单”和 docs/goal.md 的
+场景级交付规则为当前执行契约；以下保留依赖背景，不把已经通过的场景重新打开。
+长期扩展清单不是阶段 B 阻塞清单。R05 的量化混合传输场景已满足、待最终统一构建
+复验；D01 受控普通激活/owner reload 也已通过只观察模式，不扩展为任意抢焦点保证。
+N04/N05 的真实 Sandbox read/write replacement 场景已满足，待最终统一构建复验；
+read/write 在途失效有真实 executor 的确定性测试，N07 逐操作契约已明确。
+N01 的分窗 allow/deny、源 manifest 缺省后的 builder/runtime 默认拒绝、permissive
+package 拒绝及非法 staged manifest 的启动失败场景已满足，保留 manifest 关联审计、
+纯 production host 负向探针和独立证据；待最终统一构建复验，不追加权限组合。
+R03 的普通退出、ready 超时及 unsupported-version fatal 空闲文件授权回收场景已满足；
+保留具体授权、系统面板选择和清理前进程退出证据，不扩展 fatal 原因或 I/O 组合。
+N02 的最后窗口退出及关闭主窗口后副窗口跨 sidecar 恢复已用冻结候选通过原门禁。
+N09 的系统选择、取消/错误/拒绝及 owner/generation 面板失效也已满足；产品输入保持
+冻结，仅 outcomes 验收驱动修正权限预期。保留产物关联、原检查器失败及离线重检，
+不将路径选择视为文件内容授权，不扩展面板状态组合。
+N08 的受控真实 pasteboard 竞争场景已满足：独立进程写入后两次公开读取完成 Java/UIDL，
+旧清理两次拒绝且零写入，条件恢复核验原快照并确认进程退出。产品输入保持冻结，
+仅验收 overlay 扩展；不扩大为 rich formats、原子替换或任意对抗性竞争保证。
+R04 的既有在途请求中断及恢复预算耗尽分支已取得冻结候选证据：旧请求终止失败、
+新请求精确完成，以及 host 预期非零退出和进程无残留。保留完整 headers 检查器修复前
+的失败与离线重检；不扩大故障组合，继续最终构建证据关联。
+继续补齐其余有限场景及真实系统边界；真实权限/外部操作重新取得具体授权。
 
 1. **证据与输入前提（D01）**：定位 active/key 激活失败，区分系统拒绝、外部输入
-   前提和 host bug；保留失败 trace，建立不覆盖上一轮证据的运行收集方式。
+   前提和 host bug；受控普通启动及恢复已有 passive-readiness 真实证据、无人工干预
+   回执和独立门禁，待最终统一构建复验。保留旧失败，不宣称系统必然授予激活。
 2. **生命周期主链（R03/R04 → R06）**：先通过最新代码的三代恢复回归，再定义并实现
    产品 replacement 触发、授权、候选/rollback 与状态丢失契约；复用退出监督而非
    绕过 development-only guard。R06 完成后复验 N04/N05/N07 在途授权失效。
+   三代恢复回归的中间 JVM 不 ready，只有一次成功恢复，不能抵扣三次连续恢复基线。
+   独立 `--sequence` 模式已有真实四进程/三次成功恢复证据；四轮 generated AppKit
+   点击、listener/UIDL、push 消费 ACK、原生窗口保留和新文档身份均通过独立门禁。
+   三次恢复基线场景已满足，待最终统一构建复验；D01 单独关闭，不追加所有多窗口组合，
+   也不据此声明物理输入完成。
+   产品请求已连接显式权限、候选预检、退出监督、资产切换和 host 结果记录；成功交接
+   与新 JVM 查询有 focused 证据；候选在 ready 前实际退出后，自动稳定包回退、新 JVM
+   终态查询及后续 framework 门禁也已有 focused 证据。未声明候选的拒绝已验证不退休
+   当前 JVM，且后续 framework 门禁通过。稳定包在回退 ready 前退出也已有真实终态/
+   失败关闭证据，不计为恢复成功。初始 JVM 阻塞退出后的升级终止、实际退出及候选
+   接管也已有真实证据。候选不 ready 且阻塞退出后的超时、升级终止及稳定包回退也已
+   通过 focused 验收。回退自身不 ready 且阻塞退出后的有界失败关闭也已有真实证据。
+   四请求 burst 已有 duplicate/busy 准入、跨 JVM 查询及完整门禁通过的 trace，验收器
+   已按 generation 区分重用的 correlation ID。启动/resync 的 RPC 拒绝已关联到同序号
+   resync 被重复交付；bridge 已统一普通 push 与 resync 的序号去重，smoke 覆盖重投及
+   旧 snapshot 晚到。真实 WKWebView 已通过原样快照受控重放，并在同次运行观察到
+   服务端 attempt=2 重投、后续 push 与完整门禁通过；重复快照回归已闭合。
+   验收不等待 RPC 结算来绕过竞态。同一 native owner 的新 JVM 复用旧请求 ID 已有
+   公开 API 拒绝、原终态保持及无第三次启动的真实覆盖；不等同于已退休 JVM 的命令
+   投递或关闭后重开 owner 的隔离。另一个新 native owner 查询为 none、原 owner
+   重新查询仍为 replaced 已通过真实双窗口隔离验收。secondary 请求者先查询 replaced、
+   实际关闭后同标签以新 session 重开查询 none，也已有真实证据，覆盖已结算记录清理。
+   关闭前捕获的旧 context 在同标签重开后调用 runtime 查询和请求，也已有真实
+   `owner-window-closed` 失效、无额外 IPC/第三次 JVM 启动及完整门禁证据。
+   active replacement 的旧 JVM 退休阶段关闭 secondary requester 已有真实证据：
+   原生关闭先于实际退出，旧 sidecar 拒绝关闭消息，候选接管后主 owner 查询 none，
+   完整 framework/resync 门禁通过。R06 批准的代表性产品场景已满足，待最终统一构建
+   复验；其他关闭/准入时序不主动追加，实际缺陷仍须修复。必要在途授权失效归入
+   N04/N05/N07，不能依赖即将退出的旧 JVM future 保存终态。
 3. **共享 Flow 行为（F01–F08、R01/R02、D02）**：重用已有代表性样本；优先补
    真正缺失的 unknown-size selected mutation、限定 churn 和当前基线回归，避免
    重复扩展组件排列组合。
 4. **真实系统边界（D03–D05、N03–N05）**：安排物理/IME、VoiceOver、Finder、
    通知横幅与 Sandbox 操作；记录外部来源和用户观察，不用合成事件冒充。
-5. **并发和耐久性（R05）**：在基础功能与 owner 隔离通过后执行量化负载；补齐
-   progress/cancel/retry/resume 的逐操作支持表，排除误称跨 JVM continuation。
+5. **并发和耐久性（R05）**：两窗各三活跃传输、256 MiB 与至少 30 分钟混合运行
+   已满足固定场景；保留公开 API 的 progress/cancel/fresh retry/Range 证据及资源趋势，
+   待最终构建复验。通用早响应请求退休竞态已修复；不追加规模或误称跨 JVM continuation。
 6. **冻结候选验收**：同一源码 revision/bundle 身份下运行必选回归和证据审查，
    全量非窗口 smoke 加真实门禁；任何范围内失败阻止基线完成。
 
@@ -391,7 +446,7 @@ command/result，不解释组件或 UIDL 语义。
 
 ## 完成门槛
 
-阶段 A 完成按 `docs/goal.md` 的矩阵交付条件判定；阶段 B 完成按获批的有限基线判定。
+阶段 A 已交付能力清单、证据分级、缺口分类与获批基线；阶段 B 完成按获批的有限基线判定。
 两者均不等于下面的长期全面产品 parity 完成。
 
 只有以下条件同时满足，才能宣布 macOS 全面产品功能 parity 完成：

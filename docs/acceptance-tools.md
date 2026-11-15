@@ -490,7 +490,7 @@ The R05 profile uses two real WKWebViews, the standard production bundle and
 public raw/multipart `UploadHandler` and Range-capable `DownloadHandler` APIs:
 
 ```bash
-source /Users/bytedance/.sdkman/bin/sdkman-init.sh
+source "${SDKMAN_DIR:-$HOME/.sdkman}/bin/sdkman-init.sh"
 bash test-support/native-host-macos-acceptance/bin/run-transfer-endurance
 ```
 

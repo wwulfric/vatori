@@ -3,7 +3,7 @@ set -euo pipefail
 ROOT="$(cd "$(dirname "${BASH_SOURCE[0]}")/.." && pwd)"
 if ! command -v mvn >/dev/null 2>&1; then
   set +u
-  source /Users/bytedance/.sdkman/bin/sdkman-init.sh
+  source "${SDKMAN_DIR:-$HOME/.sdkman}/bin/sdkman-init.sh"
   set -u
 fi
 mvn -o -q -f "$ROOT/pom.xml" -Dmaven.repo.local="$ROOT/.m2/repository" \
